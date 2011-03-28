@@ -78,11 +78,31 @@
 								<option value="">select</option>
 								<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') ], $$variable{'Event'}->id() ); ) ?>
 							</select>
+						</li>
+						<li><label>Address:</label>
+								
 							<input type="text" name="address" id="address"/>
-							<input type="text" name="postalcode" id="postalcode"/>
+						</li>
+						<li><label>Postal Code:</label><input type="text" name="postalcode" id="postalcode"/></li>
+						<li><label>City:</label>
 							<input type="text" name="city" id="city"/>
 							<select id="city_id" name="city_id">
-								<? echo ( ssi::make_drop_down( openprint::Location->dropdown(), $$variable{'Event'}->city_id() ); ) ?> 
+								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'city'}), $$variable{'Event'}->city_id() ); ) ?> 
+							</select>
+						</li>
+						<li><label>State/Province:</label>
+							<input type="text" name="state" id="state"/>
+							<select id="state_id" name="state_id">
+								<option value="">select</option>
+								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'state'}), $$variable{'Event'}->state_id() ); ) ?> 
+								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'province'}), $$variable{'Event'}->state_id() ); ) ?> 
+							</select>
+						</li>
+						<li><label>Country:</label>
+							<input type="text" name="country" id="country"/>
+							<select id="country_id" name="country_id">
+								<option value="">select</option>
+								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'country'}), $$variable{'Event'}->country_id() ); ) ?> 
 							</select>
 						</li>
 					</ul>

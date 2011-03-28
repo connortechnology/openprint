@@ -10,7 +10,9 @@ CREATE TABLE Location_Types (
 
 CREATE TABLE Locations (
 	id SERIAL NOT NULL,
+	parent_id	INTEGER, FOREIGN KEY (parent_id) REFERENCES Locations (id),
 	name	TEXT,UNIQUE(name),
+	short	TEXT,
 	coordinates	TEXT,
 	type_id		INTEGER, FOREIGN KEY (type_id) REFERENCES Location_types (id),
 	created_on	timestamp with time zone not null default NOW(),

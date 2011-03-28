@@ -626,9 +626,15 @@ sub find {
 
 sub find_one {
 	my $type = shift;
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = eval($type.'->find(\%params);');
+	 
+	my $params;
+	if ( @_ == 1 ) {
+		$params = $_[0];
+	} else {
+		%{$params} = @_;
+	} # end if
+	$$params{'limit'}=1;
+	my @Results = eval($type.'->find($params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -661,5 +667,10 @@ sub to_string {
     return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %$fields );
 }
 
+sub dropdown {
+	my $type = shift;
+$log->debug("dropdown");
+	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+} # end sub dropdown
 1;
 __END__

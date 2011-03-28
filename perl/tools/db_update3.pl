@@ -201,6 +201,17 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	$dbh->do('ALTER TABLE Locations add type_id INTEGER');
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(type_id) REFERENCES Location_types (id)');
 	} # end if
+	if ( ! exists $$data{'short'} ) {
+	$dbh->do('ALTER TABLE Locations add short text');
+	} # end if
+	if ( ! exists $$data{'parent_id'} ) {
+	$dbh->do('ALTER TABLE Locations add parent_id integer');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(parent_id) REFERENCES Locations (id)');
+	} # end if
+	if ( ! exists $$data{'created_on'} ) {
+	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+		
 } # end if
 if ( ! sets::isin( 'messages', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Messages.sql' ) );

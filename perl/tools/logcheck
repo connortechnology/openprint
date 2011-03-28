@@ -18,7 +18,7 @@ use vars qw( $log $dbh %config);
 *dbh = \$openprint::dbh;
 #*config = \%openprint::config;
 $log = logger->new();
-$log->{level} = 'warn';
+$log->{level} = 'debug';
 
 use Getopt::Long;
 use File::Basename qw(basename);
