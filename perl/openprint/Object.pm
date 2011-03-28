@@ -193,7 +193,7 @@ sub save {
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
+				$log->debug('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} else {

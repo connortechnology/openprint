@@ -122,6 +122,39 @@ sub view {
 		} else {
 			delete $param{'category_id'};
 		} # end if
+		if ( $param{'country'} ) {
+			my $Country = openprint::Location->find_one('name_lc'=> lc $param{'country'}, 'type'=>'country' );
+			if ( ! $Country ) {
+				$Country = new openprint::Location();
+				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
+			} # end if
+			$param{'country_id'} = $Country->id();
+		} # end if
+		if ( $param{'state'} ) {
+			my $State = openprint::Location->find_one('name_lc'=> lc $param{'state'}, 'type'=>['state','province']);
+			if ( ! $State ) {
+				$State = new openprint::Location();
+				$variable{'error'} .= $State->save({'name'=>$param{'state'}, 'type'=>'state', 'parent_id'=>$param{'country_id'}});
+			} # end if
+			$param{'state_id'} = $State->id();
+		} # end if
+		if ( $param{'city'} ) {
+			my $City = openprint::Location->find_one('name_lc'=> lc $param{'city'}, 'type'=>'city');
+			if ( ! $City ) {
+				$City = new openprint::Location();
+				$variable{'error'} .= $City->save({'name'=>$param{'city'}, 'type'=>'city', 'parent_id'=>$param{'state_id'}});
+			} # end if
+			$param{'city_id'} = $City->id();
+		} # end if
+		if ( $param{'location'} ) {
+			my $Location = openprint::Location->find_one('name_lc'=> lc $param{'location'} );
+			if ( ! $Location ) {
+				$Location = new openprint::Location();
+				$variable{'error'} .= $Location->save({'name'=>$param{'location'}, 'parent_id'=>$param{'city_id'}, 'type'=>'place'});
+			} # en dif
+			$param{'location_id'} = $Location->id();
+		} # end if
+			
 		$variable{'error'} .= $Event->save(\%param);
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
