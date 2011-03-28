@@ -82,6 +82,10 @@ body #Header #Logo table {
 	margin-left: auto;
 	margin-right: auto;
 }
+#Logo img {
+	width: 47px;
+	height: 49px;
+}
 #Header #Logo a {
 	color: white;
 }
