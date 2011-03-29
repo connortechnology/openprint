@@ -3,10 +3,11 @@ package openprint::Location;
 
 use strict;
 use openprint ();
-use vars qw( %variable $log $dbh );
+use vars qw( %variable $log $dbh $debug );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$debug = 1;
 
 require sql;
 
