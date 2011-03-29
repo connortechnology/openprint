@@ -1,0 +1,3 @@
+<? eval (
+	$session{'menuoff'} = $param{'menuoff'};
+) ?>

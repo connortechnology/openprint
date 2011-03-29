@@ -189,6 +189,7 @@ my %variables = (
 		'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 		'txtPressSheetComboItems'=>['save'],
 		'txtSpreadSize' => ['save'],
+		'hdnBreakdown1'	=> ['save','output'], 'hdnBreakdown2'	=> ['save','output'], 'hdnBreakdown3'	=> ['save','output'], 
 		);
 
 sub variables {
@@ -1537,7 +1538,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tAqueous Front Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideOne Run Cost','SideOne Units','SideOne Quantity','SideOne Total'} );
 	$breakdown .= sprintf("\tAqueous Back Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideTwo Run Cost','SideTwo Units','SideTwo Quantity','SideTwo Total'} );
 	} # end if
-	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
+	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} == $$price{'Run Total'};
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
 	my $plate_costs = $$price{'Plate Costs'};
@@ -2456,7 +2457,7 @@ sub calc_price {
 				$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
 			} # end if
 			$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
-			$price{'Roll2SheetCost'} = $R2SPrice{'Price'};
+			$price{'Roll2SheetRunCost'} = $R2SPrice{'Price'};
 			$price{'Comparison Cost'} += $price{'Roll2SheetRunCharge'};
 			$price{'Total Cost'} += $price{'Roll2SheetRunCharge'};
 			$run_cost += $price{'Roll2SheetRunCharge'};
@@ -2634,7 +2635,7 @@ $openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colou
 	$price{'Press Wash Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WashUp', undef, $Press );
 	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
 
-	$setup_cost += $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
+	$setup_cost += $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Roll2SheetMakeReady'};
 	$price{'Setup Total'} = $setup_cost;
 
 	my $total_cost = $run_cost + $setup_cost + $price{'Ink Price'} + $varnish_price{'run_price'} + $varnish_price{'Material Total'};
@@ -3277,7 +3278,7 @@ sub filter_colours {
 sub compare_signatures_runstyle {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-		foreach my $key ( 'ddmRunStyle', 'ddmPress','txtSignatureSpreadQuantity' ) {
+		foreach my $key ( 'ddmRunStyle', 'ddmPress','txtSignatureSpreadQuantity','txtPlateChangeQuantity' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 				$openprint::log->debug("Compare_signatures not equal due to $key$q_i $$sig1{$key.$q_i} ne $$sig2{$key.$q_i}") if $debug;
 				return 0;

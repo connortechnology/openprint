@@ -1,17 +1,17 @@
 	
-ul#menubar {
+#menubar {
 	list-style: none;
 	margin: 0px;
 	padding: 0px;
 }
-ul#menubar li {
+#menubar li {
 	width: 100%;
 	height: auto;
 	list-style: none;
 	margin: 0px;
 	padding: 0px;
 }
-ul#menubar li a {
+#menubar li a {
 	color: white;
 	padding: 5px;
 	padding-left: 15px;
@@ -23,15 +23,11 @@ ul#menubar li a {
 	width: 170px;
 }
 
-ul#menubar li ul li {
+#menubar li ul li {
 	background-color: #BBA971;
 	border-bottom: 1px solid #D3C18A;
     list-style: none;
 }
-ul#menubar li ul li a{
-	outline: 0;
-}
-	
 
 #menubar li.off ul, #menubar li.on ul {
     /*put the subnavs below and hide them all*/
@@ -73,11 +69,3 @@ ul#menubar li ul li a{
     z-index: 6000;
     */
 }
-
-#menubar li.off:hover a {
-}
-#menubar li.off a:hover {
-}
-#menubar li:hover a {
-}
-

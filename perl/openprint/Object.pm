@@ -380,7 +380,7 @@ sub find {
 					push @values, lc $params{$k.'_lc'};
 					delete $params{$k.'_lc'};
 				} # end if
-				if ( defined $params{$k.'_null'} ) {
+				if ( exists $params{$k.'_null'} ) {
 					if ( $params{$k.'_null'} ) {
 						$sql .= " AND $$f{$k} IS NULL";
 					} else {
@@ -412,7 +412,7 @@ sub find {
 	foreach my $k ( keys %params ) {
 		next if $k eq 'order';
 		next if $k eq 'limit';
-		$log->error("Unknown paramter in find: $k => $params{$k}");
+		$log->error("Unknown paramter in $type find: $k => $params{$k}");
 	} # end foreach k
 
     if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {

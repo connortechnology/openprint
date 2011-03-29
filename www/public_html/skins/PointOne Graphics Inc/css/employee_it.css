@@ -13,7 +13,6 @@
 	padding: 0px;
 }
 .ZM_Monitors .Montage ul li {
-	width: 250px;
 	height: auto;
 	float: left;
 	margin: 5px;
@@ -32,12 +31,9 @@
 }
 
 img.stream {
-	width: 250px;
-	height: auto;
 }
 
 #Viewing li {
-	width: 250px;
 }
 #Available li {
 	width: 100px;

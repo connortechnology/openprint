@@ -288,7 +288,7 @@ $openprint::log->debug("NEVER Got fold" . $Fold->description()) if $debug;
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin' );
+	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin NULLS FIRST' );
 } # end sub Specifications
 
 sub specification {

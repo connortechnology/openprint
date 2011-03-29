@@ -3,14 +3,18 @@ package openprint::Location;
 
 use strict;
 use openprint ();
-use vars qw( %variable $log $dbh );
+use vars qw( %variable $log $dbh $debug );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+$debug = 1;
 
 require sql;
 
 sub find {
+	if ( $_[0] eq 'openprint::Location' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	if ( $params{'id'} ) {
 		return new openprint::Location( $params{'id'} );
@@ -26,18 +30,30 @@ sub find {
 				$sql .= q{ AND parent_id IS NULL};
 			} # end if
 		} # end if
+		if ( exists $params{'parent_id_is_null'} ) {
+			if ( $params{'parent_id_is_null'} ) {
+				$sql .= q{ AND parent_id IS NULL};
+			} else {
+				$sql .= q{ AND parent_id IS NOT NULL};
+			} # end if
+		} # end if
 		if ( $params{'name'} ) {
 			$sql .= q{ AND lower(name) = lower(?)};
 			push @values, $params{'name'};
 		} # end if
-		#$_ .= " AND owner_id=$params{'owner_id'}" if $params{'owner_id'};
 		if ( $params{'order_by'} ) {
-		$sql .= " ORDER BY $params{'order_by'}";
+			$sql .= " ORDER BY $params{'order_by'}";
 		} # en if
 		if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
+			$sql .= " ORDER BY $params{'order'}";
 		} # en if
 		my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+		if ( ! $data ) {
+			$openprint::log->error( "Error loading Location: ($sql) (@values)" );
+			return;
+		} elsif ( $debug ) {
+			$openprint::log->debug( "loading Location: ($sql) (@values) " . @$data );
+		} # end if
 		return map { new openprint::Location( $_->{id}, $_ ) } @$data;
 	} # end if
 
@@ -90,8 +106,7 @@ sub delete {
 } # end sub delete
 
 sub children {
-	my $self = shift;
-	return openprint::Location::find( 'parent_id' => $$self{'id'} );
+	return openprint::Location::find( 'parent_id' => $_[0]{'id'} );
 } # end sub children
 
 sub get_all_children {
