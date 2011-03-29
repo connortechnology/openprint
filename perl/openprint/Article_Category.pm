@@ -15,12 +15,14 @@ $serial = 'article_categories_id_seq';
 	'position'			=>	'position',
 	'permalink'			=>	'permalink',
 	'image_filename'	=>	'image_filename',
+	'deleted'			=>	'deleted',
 );
 
 %transforms = (
 );
 %defaults = (
 	'position'		=>	undef,
+	'deleted'		=>	0,
 );
 
 1;
