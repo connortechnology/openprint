@@ -121,7 +121,12 @@
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/print_overview.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+	my @presses = openprint::Equipment->find(
+		( $session{'/employee/production/print_overview.html?category'} ? 
+		  ( 'category'=>$session{'/employee/production/print_overview.html?category'} ) : ()
+		),
+		'useinscheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)'
+		);
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
@@ -349,7 +354,6 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 			} # end foreach delta day
 
 			$html .= '</div>';
-$log->debug("html for $$E{name} : $html");
 		} # end foreach press
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );

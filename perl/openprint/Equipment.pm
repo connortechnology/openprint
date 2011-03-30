@@ -15,7 +15,7 @@ use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %d
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',

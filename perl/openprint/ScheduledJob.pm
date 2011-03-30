@@ -1,10 +1,10 @@
+use strict;
 package openprint::ScheduledJob;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -45,6 +45,10 @@ $serial = 'schedule_id_seq';
 	'servicetype_id'	=>	'servicetype_id',
 );
 
+%find_fields = (
+	'servicetype'	=>	'(SELECT name FROM service_types WHERE id=servicetype_id)',
+);
+
 %transforms = (
 	'id'			=>	[ 's/\D//g' ],
 	'project_id'	=>	[ 's/\D//g' ],
@@ -57,140 +61,6 @@ $serial = 'schedule_id_seq';
 	'created_on'	=>	'NOW()',
 	'stock_verified'	=>	0,
 );
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	my @values;
-	my $sql = "SELECT * FROM $table WHERE 1>0";
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( exists $params{'equipment_id'} ) {
-		$sql .= ' AND equipment_id=?';
-		push @values, $params{'equipment_id'};
-	} # end if
-	if ( exists $params{'equipment_id !='} ) {
-		$sql .= ' AND equipment_id != ?';
-		push @values, $params{'equipment_id !='};
-	} # end if
-	if ( $params{'servicetype_id'} ) {
-		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
-			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
-			push @values, @{$params{'servicetype_id'}};
-		} else {
-			$sql .= ' AND servicetype_id=?';
-			push @values, $params{'servicetype_id'};
-		} # end if
-	} # end if
-	if ( $params{'servicetype'} ) {
-		$sql .= ' AND servicetype_id=(SELECT id FROM service_types WHERE name=?)';
-		push @values, $params{'servicetype'};
-	} # end if
-	if ( $params{'project_id'} ) {
-		if ( substr($params{'project_id'},0,1) == '!' ) {
-			$sql .= ' AND projectindex != ?';
-			push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
-		} else {
-			$sql .= ' AND projectindex=?';
-			push @values, $params{'project_id'};
-		} # end if
-	} # end if
-	if ( $params{'service_id'} ) {
-		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= ' AND service_id={?}';
-			push @values, $params{'service_id'};
-		} else {
-			$sql .= ' AND ? = ANY(service_id)';
-			push @values, $params{'service_id'};
-		} # end if
-	} # end if
-	if ( $params{'pertains_id'} ) {
-		if ( ref $params{'pertains_id'} eq 'ARRAY' ) {
-			$sql .= ' AND pertains_id={?}';
-			push @values, $params{'pertains_id'};
-		} else {
-			$sql .= ' AND ? = ANY(pertains_id)';
-			push @values, $params{'pertains_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'startdate'} ) {
-		$sql .= ' AND date(starttime) = ?';
-		push @values, $params{'startdate'};
-	} 
-	if ( $params{'starttime'} ) {
-		$sql .= ' AND starttime = ?';
-		push @values, $params{'starttime'};
-	} 
-	if ( exists $params{'starttime is null'} ) {
-		$sql .= ' AND starttime IS ' . ($params{'starttime is null'} ? '' : 'NOT ' ) . ' NULL';
-	} # end if
-	if ( $params{'starttime <'} ) {
-		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime <'};
-	} # end if
-	if ( $params{'starttime >='} ) {
-		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime >='};
-	} # end if
-
-	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
-		push @values, @params{'starttime_start','starttime_end'};
-	} elsif ( $params{'starttime_start'} ) {
-		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime_start'};
-	} elsif ( $params{'starttime_end'} ) {
-		$sql .= ' AND starttime <= ?';
-		push @values, $params{'starttime_end'};
-	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
-		$sql .= ' AND starttime IS NULL';
-	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
-		$sql .= ' AND starttime IS NULL';
-	} # end if
-	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
-		$sql .= ' AND ( endtime BETWEEN ? AND ? )';
-		push @values, @params{'endtime_start','endtime_end'};
-	} elsif ( $params{'endtime_start'} ) {
-		$sql .= ' AND endtime >= ?';
-		push @values, $params{'endtime_start'};
-	} elsif ( $params{'endtime_end'} ) {
-		$sql .= ' AND endtime <= ?';
-		push @values, $params{'endtime_end'};
-	} elsif ( $params{'endtime <'} ) {
-		$sql .= ' AND endtime < ?';
-		push @values, $params{'endtime <'};
-	} elsif ( $params{'endtime >'} ) {
-		$sql .= ' AND endtime > ?';
-		push @values, $params{'endtime >'};
-	} elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
-		$sql .= ' AND endtime IS NULL';
-	} elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
-		$sql .= ' AND endtime IS NULL';
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading ScheduledJobs SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No ScheduledJobs loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded ScheduledJobs ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::ScheduledJob( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub runtime_seconds {
 	my $self = shift;
