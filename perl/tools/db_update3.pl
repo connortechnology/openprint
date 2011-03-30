@@ -211,6 +211,16 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{'created_by'} ) {
+	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
+	} # end if
+	if ( ! exists $$data{'postalcode'} ) {
+	$dbh->do('ALTER TABLE Locations add postalcode text');
+	} # end if
+	if ( ! exists $$data{'address'} ) {
+	$dbh->do('ALTER TABLE Locations add address text');
+	} # end if
 		
 } # end if
 if ( ! sets::isin( 'messages', \@tables ) ) {

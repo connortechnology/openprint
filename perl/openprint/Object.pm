@@ -374,8 +374,8 @@ sub find_operators {
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
 	} 
-	if ( exists $$params{$k.'_ilike'} ) {
-		push @{$results{'_ilike'}}, $f.'::text ILIKE ?', $$params{$k.'_ilike'};
+	if ( exists $$params{$k.' ilike'} ) {
+		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $$params{$k.' ilike'};
 	} 
 	if ( exists $$params{$k.'_start'} ) {
 		push @{$results{'_start'}}, $f.' >= ?', $$params{$k.'_start'};

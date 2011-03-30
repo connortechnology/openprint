@@ -19,11 +19,15 @@ $serial = 'locations_id_seq';
 	# type refers to state/country/postalcode, etc... to help search the location db in other ways
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
+	'created_by'	=>	'created_by',
+	'postalcode'	=>	'postalcode',
+	'address'		=>	'address',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %defaults = (
+	'created_by'	=>	q`$session{user_id}`,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
 	'parent_id'		=>	undef,
@@ -92,6 +96,22 @@ sub type {
 	} # end if
 	return $_[0]{'type'};
 } # end sub type
+
+# find an ancestor that fits some criteria, so if we wanted to find the city that something is located in, we could call this with a tpye of city
+sub ancestor {
+	my $self = shift;
+	return if ! @_;
+	my ( $value ) = $self->get( $_[0] );
+	if ( sets::isin( $value, $_[1] ) ) {
+		return $self;
+	} else {
+		$openprint::log->debug( "Location: $_[0] ($_[0]) ($value) != $_[1]($$self{$_[1]})");
+	} # end if
+	if ( $$self{'parent_id'} ) {
+		return $self->Parent()->ancestor( @_ );
+	} # end if
+	return;
+} # end sub ancestor
 
 
 1;

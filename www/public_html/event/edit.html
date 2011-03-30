@@ -6,6 +6,9 @@
 		mode : "textareas",
 		theme : "advanced"
 	});
+	function getSelectionId(text, li) {
+		alert (li.id);
+	}
 -->
 </script>
 <div class="Event"><div class="Edit">
@@ -73,37 +76,36 @@
 				<div class="content">
 					<ul>
 						<li><label>Location:</label>
-							<input type="text" name="location" id="location" onkeyup="filterDDM(this, $('location_id') );"/>
-							<select name="location_id" id="location_id" onchange="$('location').value='';">
-								<option value="">select</option>
-								<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)','type not in'=>['city','country','state','province']) ], $$variable{'Event'}->id() ); ) ?>
-							</select>
+							<input type="text" name="location" id="location" value="<? echo ( $$variable{'Event'}->Location()->name() ) ?>" />
+							<div id="location_autocomplete" class="autocomplete" style="display: none;"></div>
+							<script type="text/javascript">
+								new Ajax.Autocompleter('location','location_autocomplete', '_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectionId } );
+							</script>
 						</li>
 						<li><label>Address:</label>
-							<input type="text" name="address" id="address"/>
+							<input type="text" name="address" id="address" value="<? echo ( $$variable{'Event'}->Location()->address() ) ?>" />
 						</li>
 						<li><label>Postal Code:</label><input type="text" name="postalcode" id="postalcode"/></li>
 						<li><label>Country:</label>
-							<input type="text" name="country" id="country" onkeyup="filterDDM( this, $('country_id') );"/>
-							<select id="country_id" name="country_id" onchange="$('country').value='';Country_onchange(this, this.form.ddmStateProvince );">
-								<option value="">select</option>
-								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'country'}), $$variable{'Event'}->country_id() ); ) ?> 
-							</select>
+							<input type="text" name="country" id="country" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>'country') ) ? $_->name() : '' ); ) ?>"/>
+							<div id="country_autocomplete" class="autocomplete" style="display: none;"></div>
+							<script type="text/javascript">
+								new Ajax.Autocompleter('country','country_autocomplete', '_locations.html?type=country', { minChars: 2,afterUpdateElement : getSelectionId } );
+							</script>
 						</li>
 						<li><label>State/Province:</label>
-							<input type="text" name="state" id="state" onkeyup="filterDDM( this, $('state_id') );"/>
-							<select id="state_id" name="state_id" onchange="$('state').value='';">
-								<option value="">select</option>
-								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'state'}), $$variable{'Event'}->state_id() ); ) ?> 
-								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'province'}), $$variable{'Event'}->state_id() ); ) ?> 
-							</select>
+							<input type="text" name="state" id="state" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>['state','province']) ) ? $_->name() : '' ); ) ?>"/>
+							<div id="state_autocomplete" class="autocomplete" style="display: none;"></div>
+							<script type="text/javascript">
+								new Ajax.Autocompleter('state','state_autocomplete', '_locations.html?type=state', { minChars: 2,afterUpdateElement : getSelectionId } );
+							</script>
 						</li>
 						<li><label>City:</label>
-							<input type="text" name="city" id="city" onkeyup="filterDDM( this, $('city_id') );"/>
-							<select id="city_id" name="city_id" onchange="$('city').value='';">
-								<option value="">select</option>
-								<? echo ( ssi::make_drop_down( openprint::Location->dropdown({'type'=>'city'}), $$variable{'Event'}->city_id() ); ) ?> 
-							</select>
+							<input type="text" name="city" id="city" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>'city') ) ? $_->name() : '' ); ) ?>" />
+							<div id="city_autocomplete" class="autocomplete" style="display: none;"></div>
+							<script type="text/javascript">
+								new Ajax.Autocompleter('city','city_autocomplete', '_locations.html?type=city', { minChars: 2,afterUpdateElement : getSelectionId } );
+							</script>
 						</li>
 					</ul>
 				</div>

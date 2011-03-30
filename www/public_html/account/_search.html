@@ -5,7 +5,7 @@
 		if ( ! ( $param{'name'} =~ /%/ ) ) {
 			$param{'name'} .= '%';
 		} # end if
-		@Users = openprint::User->find('name_ilike'=>$param{'name'});
+		@Users = openprint::User->find('name ilike'=>$param{'name'});
 	} else {
 		@Users = openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),

@@ -81,6 +81,9 @@ sub edit {
 	} # end if
 } # end sub edit
 
+sub _locations {
+} # end sub _locations
+
 sub list {
 } # end sub list
 

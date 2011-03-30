@@ -17,6 +17,9 @@ CREATE TABLE Locations (
 	type_id		INTEGER, FOREIGN KEY (type_id) REFERENCES Location_types (id),
 	created_on	timestamp with time zone not null default NOW(),
 	updated_on	timestamp with time zone not null default NOW(),
+	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),
+	postalcode	text,
+	address		text,
 	PRIMARY KEY (id)
 );
 
