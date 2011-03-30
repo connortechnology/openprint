@@ -1417,10 +1417,10 @@ $log->debug("ES: " . $NextES->name() );
 		if ( ! $start_time ) {
 			last;
         } elsif ( ! $$row{starttime} ) {
-            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+            $row->Project()->add_to_log( @session{'company_id','user_id'}, 'Scheduled on ' . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
         } # end if
 
-        $start_time += $run_time;
+        $start_time += $$row{'tentative'} ? 1 : $run_time;
 
     } # end while @order
 	while ( @order ) {
@@ -1522,7 +1522,7 @@ sub _li_change {
 		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 		$sql{'stock_verified'} = $param{'stock_verified'} if exists $param{'stock_verified'} and $param{'stock_verified'} != $$Job{'stock_verified'};
 		$sql{'stock'} = $param{'stock'} if exists $param{'stock'} and $param{'stock'} ne $$Job{'stock'};
-
+		$sql{'tentative'} = $param{'tentative'} if ( exists $param{'tentative'} ) and ( $param{'tentative'} != $$Job{'tentative'} );
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 			$Job->service_id( $sql{'service_id'} ) if $sql{'service_id'}; # needed for impressions calculation

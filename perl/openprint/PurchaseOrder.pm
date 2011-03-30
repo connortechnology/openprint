@@ -1,8 +1,8 @@
+use strict;
 package openprint::PurchaseOrder;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
 use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -228,6 +228,7 @@ $log->debug("Sacving PO");
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes() ) {
+		$Tax->PurchaseOrder( $self );
 		$Tax->amount(undef);
 	} # end foreach Tax
 	$self->total(undef);
@@ -235,13 +236,11 @@ $log->debug("Sacving PO");
 		my $Currency = openprint::Currency::get_current();
 		$$self{'currency_id'} = $Currency->id();
 	} # end if
-$log->debug("Sacving PO");
 	my $error = $self->SUPER::save( $param );
-$log->debug("Sacving PO $error");
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {
-		$error .= $T->save();
+		$error .= $T->save({'purchaseorder_id'=>$$self{'id'}, 'PurchaseOrder'=>$self});
 	} # end foreach
 
 	return $error;
@@ -365,18 +364,20 @@ sub send_to_vendor {
 } # end sub send_to_vendor
 
 sub subtotal {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{'subtotal'} = $_[1];
-	}
-	if ( ! defined $$self{'subtotal'} ) {
-		$$self{'subtotal'} = 0;
-		foreach my $C ( $self->Contents() ) {
-			$$self{'subtotal'} += $C->total();
-		} # end foreach
-		$$self{'subtotal'} = sprintf( '%.2f', $$self{'subtotal'} );
+	if ( @_ > 1 ) {
+		$_[0]{'subtotal'} = $_[1];
 	} # end if
-	return $$self{'subtotal'};
+	if ( ! defined $_[0]{'subtotal'} ) {
+		$_[0]{'subtotal'} = 0;
+$openprint::log->debug("subtotal");
+		foreach my $C ( $_[0]->Contents() ) {
+$openprint::log->debug("Content : " . $C->total() );
+			$_[0]{'subtotal'} += $C->total();
+		} # end foreach
+		$_[0]{'subtotal'} = sprintf( '%.2f', $_[0]{'subtotal'} );
+	} # end if
+$openprint::log->debug("subtotal: $_[0]{subtotal}");
+	return $_[0]{'subtotal'};
 } # end sub subtotal
 
 sub total {
@@ -474,14 +475,10 @@ sub Manifest {
 
 sub Taxes {
     my ( $self ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		return ();
-	} # end if
-    if ( ! $$self{'Taxes'} ) {
+    if ( $$self{'id'} and ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
     } # end if
-    if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! @{$$self{'Taxes'}} ) {
+    if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! ( $$self{'Taxes'} and @{$$self{'Taxes'}} ) ) {
         foreach my $Tax ( openprint::Tax->find(
                     'period_start_null_or_<='   =>  $$self{'created_on'},
                     'period_end_null_or_>='     =>  $$self{'created_on'},
@@ -489,15 +486,18 @@ sub Taxes {
                     'state'     =>  $self->Supplier()->state(),
                 ) ) {
             my $T = new openprint::PurchaseOrder_Tax();
-            $T->save({
-                'purchaseorder_id'	=>  $$self{'id'},
+            $T->set({
+				'PurchaseOrder'		=>	$self,
                 'tax_id'    		=>  $$Tax{'id'},
                 'rate'      		=>  $$Tax{'rate'},
             });
+			if ( $$self{'id'} ) {
+				$T->save({'purchaseorder_id'	=>  $$self{'id'}});
+			} # end if
             push @{$$self{'Taxes'}}, $T;
         } # end foreach Tax
     } # end if
-	if ( @_ > 1 ) {
+	if ( @_ > 1 and $$self{'id'} ) {
 		my @new_taxes = openprint::Tax->find(
 				'period_start_null_or_<='   =>  $$self{'created_on'},
 				'period_end_null_or_>='     =>  $$self{'created_on'},
@@ -526,7 +526,7 @@ sub Taxes {
 			} # end foreach Tax	
 		} # end if have new taxes
 	} # end if recalculate
-    return @{$$self{'Taxes'}};
+    return $$self{'Taxes'} ? @{$$self{'Taxes'}} : ();
 } # end sub Taxes
 
 sub Tax {
