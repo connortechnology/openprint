@@ -107,14 +107,19 @@ sub find {
 } # end sub find
 
 sub delete {
-    my $self = shift;
-    my $ac = sql::start_transaction( );
-	$self->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ ? ' Reason: ' . $_[0] : '' ) );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $$self{'id'} );
-    sql::end_transaction( undef, $ac );
-	$self->Paper()->allocated(undef,undef);
-	$self->Paper()->available(undef);
-	return;
+	if ( $_[0]{'id'} ) {
+		my $ac = sql::start_transaction( );
+		if ( $_[0]{'project_id'} ) {
+			$_[0]->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ > 1 ? ' Reason: ' . $_[1] : '' ) );
+		} # end if
+		sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $_[0]{'id'} );
+		sql::end_transaction( undef, $ac );
+		$_[0]->Paper()->allocated(undef,undef);
+		$_[0]->Paper()->available(undef);
+		return;
+	} else {
+		return 'already deleted.';
+	} # end if
 } # end sub delete
 
 sub Paper {

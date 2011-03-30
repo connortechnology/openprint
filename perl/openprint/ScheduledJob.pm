@@ -43,6 +43,7 @@ $serial = 'schedule_id_seq';
 	'stock_verified'	=>	'stock_verified',
 	'stock'				=>	'stock',
 	'servicetype_id'	=>	'servicetype_id',
+	'tentative'			=>	'tentative',
 );
 
 %transforms = (
@@ -56,6 +57,7 @@ $serial = 'schedule_id_seq';
 	'speed'			=>	undef,
 	'created_on'	=>	undef,
 	'stock_verified'	=>	0,
+	'tentative'			=>	0,
 );
 sub find_one {
 	my %params = @_;
@@ -408,6 +410,7 @@ sub get_li {
 			$colour .= ' rush';
 		} # end if
 	} # end if
+	$colour .= ' tentative' if $$self{'tentative'};
 
 	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
 			( $colour ? ' class="'.$colour.'"' : '' ), 

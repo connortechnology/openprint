@@ -29,6 +29,13 @@
 			</span>
 		</li>
 <? endif ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
+		<li>
+			<label>Tentative:</label>
+			<input type="radio" id="tentative1" name="tentative" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'tentative'} ); ) ?> />
+			<label class="radio" for="tentative1">Yes</label>
+			<input type="radio" id="tentative0" name="tentative" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'tentative'} ); ) ?> />
+			<label class="radio" for="tentative0">No</label>
+		</li>
 <? if ( $$variable{'Job'}->project_id() ) ?>
 		<li>
 			<label>Impressions:</label>
