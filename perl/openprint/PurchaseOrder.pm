@@ -619,7 +619,7 @@ sub Taxes {
 			} # end foreach Tax	
 		} # end if have new taxes
 	} # end if recalculate
-    return @{$$self{'Taxes'}};
+    return $$self{'Taxes'} ? @{$$self{'Taxes'}} : ();
 } # end sub Taxes
 
 sub Tax {
