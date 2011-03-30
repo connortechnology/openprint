@@ -199,13 +199,17 @@ sub set {
 	my %fields = eval ('%'.$type.'::fields');
 
 	foreach my $field ( keys %fields ) {
-$openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
+$openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
-				$$self{$field} = $$params{$field} if defined $fields{$field};
+				if ( defined $fields{$field} ) {
+					$$self{$field} = $$params{$field};
+					push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
+				} # end if
+$openprint::log->debug("Running $field") if $debug;
 				eval "\$self->$field( \$\$params{\$field} );";
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
+				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 
@@ -473,7 +477,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+    return $type . ': '. join(' ' , map { "$_ => $_[0]{$_}" } keys %$fields );
 }
 
 1;
