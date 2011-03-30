@@ -108,10 +108,20 @@
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
 		<div class="presses">
-		<ul><li><label>Equipment:</label>
+		<ul>
+			<li>
+				<label>Category:</label>
+				<select name="category" id="category" onchange="f1.submit();">
+					<option value="">All</option>
+				<? echo (
+	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/print_overview.html?category'} );
+	) ?>
+				</select>
+			</li>
+<li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/print_overview.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
@@ -167,6 +177,15 @@
 					) ?>
 				</select>
 			</li>
+			<li>
+				<label>Quick Views:</label>
+				<? echo (
+					my $html = ssi::writeButton( $log, $dbh, 'Today', 'today.gif', '', '/employee/production/print_overview.html?action=Today', 'Today' );
+					$html .= ssi::writeButton( $log, $dbh, 'twoday', '2day.gif', '', '/employee/production/print_overview.html?action=2day', '2day' );
+					$html .= ssi::writeButton( $log, $dbh, 'threeday', '3day.gif', '', '/employee/production/print_overview.html?action=3day', '3day' );
+					$html .= ssi::writeButton( $log, $dbh, '1week', '1week.gif', '', '/employee/production/print_overview.html?action=1week', '1week' );
+				) ?>
+			</li>
 			</ul>
 		</div>
 		<div class="legend">
@@ -219,11 +238,11 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
+			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-                $html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
-            } # end if
-            $html .= '<br/><span id="message'.$E->id().'" class="message">';
+				$html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
+			} # end if
+			$html .= '<br/><span id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
 			$html .= '</span>';
 			$html .= '</div>';
@@ -235,7 +254,7 @@
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -300,7 +319,7 @@
 								if ( $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow) ) {
 									push @NewShifts, $Shift;
 								} else {
-									$log->error("Bad shift! " . $Shift->to_string() );
+									$log->error("Bad shift! " . $Shift->to_string()  . " today: $today tomorrow: $tomorrow");
 								} # end if
 							} # end if ! found
 
@@ -330,6 +349,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 			} # end foreach delta day
 
 			$html .= '</div>';
+$log->debug("html for $$E{name} : $html");
 		} # end foreach press
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );

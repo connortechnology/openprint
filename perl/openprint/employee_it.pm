@@ -138,5 +138,8 @@ sub _blacklist_popup {
 	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
 } # end sub _blacklist_popup
 
+sub logs {
+} # end sub logs
+
 1;
 __END__

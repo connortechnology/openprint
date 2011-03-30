@@ -90,14 +90,30 @@ my %variables = (
 		'YellowSideOneCoverage'	=>	['save'],
 		'BlackSideOneCoverage'	=>	['save'],
 		'chkColourCoating1SideOne' => ['save'], 'ColourCoatingType1SideOne' => ['save'], 'ColourCoatingColour1SideOne' => ['save'],'ColourCoatingCoverage1SideOne' => ['save'],
+'ColourCoatingPrice1SideOne' => ['save'], 'ColourCoatingMileage1SideOne' => ['save'],
+
 		'chkColourCoating2SideOne' => ['save'], 'ColourCoatingType2SideOne' => ['save'], 'ColourCoatingColour2SideOne' => ['save'],'ColourCoatingCoverage2SideOne' => ['save'],
+'ColourCoatingPrice2SideOne' => ['save'], 'ColourCoatingMileage2SideOne' => ['save'],
 		'chkColourCoating3SideOne' => ['save'], 'ColourCoatingType3SideOne' => ['save'], 'ColourCoatingColour3SideOne' => ['save'],'ColourCoatingCoverage3SideOne' => ['save'],
+'ColourCoatingPrice3SideOne' => ['save'], 'ColourCoatingMileage3SideOne' => ['save'],
 		'chkColourCoating4SideOne' => ['save'], 'ColourCoatingType4SideOne' => ['save'], 'ColourCoatingColour4SideOne' => ['save'],'ColourCoatingCoverage4SideOne' => ['save'],
+'ColourCoatingPrice4SideOne' => ['save'], 
+'ColourCoatingMileage4SideOne' => ['save'],
 		'chkColourCoating5SideOne' => ['save'], 'ColourCoatingType5SideOne' => ['save'], 'ColourCoatingColour5SideOne' => ['save'],'ColourCoatingCoverage5SideOne' => ['save'],
+'ColourCoatingPrice5SideOne' => ['save'], 
+'ColourCoatingMileage5SideOne' => ['save'],
 		'chkColourCoating6SideOne' => ['save'], 'ColourCoatingType6SideOne' => ['save'], 'ColourCoatingColour6SideOne' => ['save'],'ColourCoatingCoverage6SideOne' => ['save'],
+'ColourCoatingPrice6SideOne' => ['save'], 
+'ColourCoatingMileage6SideOne' => ['save'],
 		'chkColourCoating7SideOne' => ['save'], 'ColourCoatingType7SideOne' => ['save'], 'ColourCoatingColour7SideOne' => ['save'],'ColourCoatingCoverage7SideOne' => ['save'],
+'ColourCoatingPrice7SideOne' => ['save'], 
+'ColourCoatingMileage7SideOne' => ['save'],
 		'chkColourCoating8SideOne' => ['save'], 'ColourCoatingType8SideOne' => ['save'], 'ColourCoatingColour8SideOne' => ['save'],'ColourCoatingCoverage8SideOne' => ['save'],
+'ColourCoatingPrice8SideOne' => ['save'], 
+'ColourCoatingMileage8SideOne' => ['save'],
 		'chkColourCoating9SideOne' => ['save'], 'ColourCoatingType9SideOne' => ['save'], 'ColourCoatingColour9SideOne' => ['save'],'ColourCoatingCoverage9SideOne' => ['save'],
+'ColourCoatingPrice9SideOne' => ['save'], 
+'ColourCoatingMileage9SideOne' => ['save'],
 
 		'CyanSpotSideTwoCoverage'	=>	['save'],
 		'MagentaSpotSideTwoCoverage'	=>	['save'],
@@ -112,14 +128,32 @@ my %variables = (
 		'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
 		'chkProcessColourSideTwo' => ['save'],
 		'chkColourCoating1SideTwo' => ['save'], 'ColourCoatingType1SideTwo' => ['save'], 'ColourCoatingColour1SideTwo' => ['save'],'ColourCoatingCoverage1SideTwo' => ['save'],
+'ColourCoatingPrice1SideTwo' => ['save'], 
+'ColourCoatingMileage1Sidetwo' => ['save'],
 		'chkColourCoating2SideTwo' => ['save'], 'ColourCoatingType2SideTwo' => ['save'], 'ColourCoatingColour2SideTwo' => ['save'],'ColourCoatingCoverage2SideTwo' => ['save'],
+'ColourCoatingPrice2SideTwo' => ['save'], 
+'ColourCoatingMileage2Sidetwo' => ['save'],
 		'chkColourCoating3SideTwo' => ['save'], 'ColourCoatingType3SideTwo' => ['save'], 'ColourCoatingColour3SideTwo' => ['save'],'ColourCoatingCoverage3SideTwo' => ['save'],
+'ColourCoatingPrice3SideTwo' => ['save'], 
+'ColourCoatingMileage3Sidetwo' => ['save'],
 		'chkColourCoating4SideTwo' => ['save'], 'ColourCoatingType4SideTwo' => ['save'], 'ColourCoatingColour4SideTwo' => ['save'],'ColourCoatingCoverage4SideTwo' => ['save'],
+'ColourCoatingPrice4SideTwo' => ['save'], 
+'ColourCoatingMileage4Sidetwo' => ['save'],
 		'chkColourCoating5SideTwo' => ['save'], 'ColourCoatingType5SideTwo' => ['save'], 'ColourCoatingColour5SideTwo' => ['save'],'ColourCoatingCoverage5SideTwo' => ['save'],
+'ColourCoatingPrice5SideTwo' => ['save'], 
+'ColourCoatingMileage5Sidetwo' => ['save'],
 		'chkColourCoating6SideTwo' => ['save'], 'ColourCoatingType6SideTwo' => ['save'], 'ColourCoatingColour6SideTwo' => ['save'],'ColourCoatingCoverage6SideTwo' => ['save'],
+'ColourCoatingPrice6SideTwo' => ['save'], 
+'ColourCoatingMileage6Sidetwo' => ['save'],
 		'chkColourCoating7SideTwo' => ['save'], 'ColourCoatingType7SideTwo' => ['save'], 'ColourCoatingColour7SideTwo' => ['save'],'ColourCoatingCoverage7SideTwo' => ['save'],
+'ColourCoatingPrice7SideTwo' => ['save'], 
+'ColourCoatingMileage7Sidetwo' => ['save'],
 		'chkColourCoating8SideTwo' => ['save'], 'ColourCoatingType8SideTwo' => ['save'], 'ColourCoatingColour8SideTwo' => ['save'],'ColourCoatingCoverage8SideTwo' => ['save'],
+'ColourCoatingPrice8SideTwo' => ['save'], 
+'ColourCoatingMileage8Sidetwo' => ['save'],
 		'chkColourCoating9SideTwo' => ['save'], 'ColourCoatingType9SideTwo' => ['save'], 'ColourCoatingColour9SideTwo' => ['save'],'ColourCoatingCoverage9SideTwo' => ['save'],
+'ColourCoatingPrice9SideTwo' => ['save'], 
+'ColourCoatingMileage9Sidetwo' => ['save'],
 		'sides_the_same'	=> ['save'],
 		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
 		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
@@ -252,6 +286,8 @@ sub variables {
 				push @v, 'ColourCoatingType'.$index.$side;
 				push @v, 'ColourCoatingColour'.$index.$side;
 				push @v, 'ColourCoatingCoverage'.$index.$side;
+				push @v, 'ColourCoatingPrice'.$index.$side;
+				push @v, 'ColourCoatingMileage'.$index.$side;
 			} # end if
 		} # end foreach k
 	} # end foreach side
@@ -313,9 +349,11 @@ sub setup_project {
 		$project{print_sides} = 2;
 	} # end if
 	$project{'side_one_colours'} = $side_one_colours;	
+	$project{'side_one_colour_names'} = [ map { $$_{'name'} } @{$side_one_colours} ];
 	$project{'side_two_colours'} = $side_two_colours;	
+	$project{'side_two_colour_names'} = [ map { $$_{'name'}} @{$side_two_colours} ];
 	$project{'inkCoverage'} = $inkCoverage;
-	my @filtered_colours = filter_colours( @$side_one_colours, @$side_two_colours );
+	my @filtered_colours = filter_colours( @{$project{'side_one_colours'}}, @{$project{'side_two_colours'}} );
 	my %mixed_colours;
 	my %washed_colours;
 
@@ -323,10 +361,10 @@ sub setup_project {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 		next if $$sig_specs{'pages_supplied'} eq 'Y';
-		foreach my $colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
-			$mixed_colours{$colour} = 1;
+		foreach my $Colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
+			$mixed_colours{$$Colour{'name'}} = 1;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				$washed_colours{$colour.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} += 1;
+				$washed_colours{$$Colour{'name'}.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} += 1;
 			} # end foreach
 		} # end foreach
 	} # end for each
@@ -397,6 +435,8 @@ sub setup_project {
 	return \%project;
 } # end sub setup_project
 
+# This used to just return the names, while mangling the variable hash
+# Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
 	my @colours;
@@ -409,33 +449,37 @@ sub get_colours {
 
 	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
 		if ( $$specs{'chk'.$colour.$side.$signature} ) {
-			push @colours, "$colour Spot Colour";
+			push @colours, { 'name'=>"$colour Spot Colour"};
 		} # end if
 	} # end foreach
 
 	if ( $$specs{'chkProcessColour'.$side.$signature} ) {
-		push @colours, 'Cyan','Magenta','Yellow','Black';
+		foreach my $c ( 'Cyan','Magenta','Yellow','Black' ) {
+			push @colours, { 'name' => $c };
+		} # end foreach c
 	} # end if
 
 	foreach my $k ( keys %$specs ) {
 		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
 			next if ! $$specs{"chkColourCoating$index$side$signature"};
-			my $type = $$specs{"ColourCoatingType$index$side$signature"};
-			next if ! $type;
+			my $c = {};
+			$$c{'type'} = $$specs{"ColourCoatingType$index$side$signature"};
+			next if ! $$c{'type'};
 			next if $$specs{'ColourCoatingColour'.$index.$side.$signature} eq 'None';
 			#$openprint::log->debug("Found Colour $index.$side $signature $type");
-			if ( $type =~ /PMS/ ) {
+			if ( $$c{'type'} =~ /^PMS/ ) {
 				if ( ! $$specs{'ColourCoatingColour'.$index.$side.$signature} ) {
 					$$specs{'ColourCoatingColour'.$index.$side.$signature} = "PMS $index";
 					$$v{'ColourCoatingColour'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side.$signature}} ) ];
 				} #end if
-				push @colours, $$specs{'ColourCoatingColour'.$index.$side.$signature};
+				$$c{'name'} = $$specs{'ColourCoatingColour'.$index.$side.$signature};
 			} else {
 # Non-PMS doesn't enter the Colour NAME
 				$$specs{'ColourCoatingColour'.$index.$side.$signature} = '';
 				$$v{'ColourCoatingColour'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingColour'.$index.$side.$signature}} ) ];
-				push @colours, $type;
+				$$c{'name'} = $$c{'type'};
 			} # end if type eq PMS
+			push @colours, $c;
 		} # end if
 	} # end foreach
 	return @colours;
@@ -861,12 +905,12 @@ sub get_Stocks {
 } # end sub get_Stocks
 
 sub get_impositions {
-	my ( $Project, $specs, $project, $side_one_colours, $side_two_colours, $qty, $qty_index, $Presses, $Papers ) = @_;
+	my ( $Project, $specs, $project, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 	my $services = $Project->services();
-		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-		my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall', @Coatings ], [ @$side_one_colours, @$side_two_colours ] );
+	my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+	my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall', @Coatings ], [ map { $$_{'name'} } ( @{$$project{'side_one_colours'}}, @{$$project{'side_two_colours'}} ) ] );
 
 	if ( $$project{print_sides} == 2 ) {
 		# We will be considering W&T, so we will need the coatings array
@@ -915,7 +959,7 @@ sub get_impositions {
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{'Runstyles'} ) ] ) ) {
 			$openprint::log->debug("** This Press Can't Perfect - Perfecting not in runstyles ***") if $debug;
 			$do_perfecting = 0;
-		} elsif ( @$side_one_colours > int($number_of_colours/2) or @$side_two_colours > int($number_of_colours/2) ) {
+		} elsif ( @{$$project{'side_one_colours'}} > int($number_of_colours/2) or @{$$project{'side_two_colours'}} > int($number_of_colours/2) ) {
 			$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 			$do_perfecting = 0;
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
@@ -1680,8 +1724,6 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-
-
 	if ( $$services{'NoPrinting'} ) {
 		foreach my $k ('txtImposition','ddmRunStyle','hdnImpositionColumns','hdnImpositionRows','hdnImpositionDutchColumns','hdnImpositionDutchRows','StockWidth','StockHeight' ) {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -1717,7 +1759,7 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 	} # end foreach
 	@available_printingtypes = sets::union( @available_printingtypes );
 
-$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
 	my %prices;
 
@@ -1759,13 +1801,13 @@ $log->warn("There are no quantities!");
 # Figure out how many spreads we need!
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
-$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
-$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 		} # end if
 
-$openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		# We have to match the stock type and grain direction of previous sigs
 		delete $$specs{'PreviousStockType'};
 		delete $$specs{'PreviousGrainDirection'};
@@ -1776,7 +1818,7 @@ $openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( 
 			$$specs{'PreviousGrainDirection'} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 			last;
 		} # end foreach
-$openprint::log->debug("Master time after Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time after Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		$$specs{'PrintingTypes'} = get_printing_types( $Project, $service_index, $printing_specs, $specs, $qty_index, \@available_printingtypes );
 		if ( $debug or 1 ) {
@@ -1804,7 +1846,7 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
-$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
 			$variables{'ddmPress'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmPress'.$qty_index} ) ];
@@ -1860,7 +1902,7 @@ $openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previ
 		} # end if
 
 $openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		my %impositions = get_impositions( $Project, $specs, $project, \@side_one_colours, \@side_two_colours, $qty, $qty_index, \@possible_presses, \@Papers );
+		my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
 $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( ! values %impositions ) {
@@ -1891,7 +1933,7 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 
 		%stitching_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
-$openprint::log->debug("versions: @versions");
+#$openprint::log->debug("versions: @versions");
 # Only thread qtys 2 and 3
 		if ( $threading and ($qty_index > 1) ) {
 			$threads{$qty_index} = threads->create( sub { 
@@ -2977,7 +3019,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
 							$$specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $specs, $qty_index, \@available_printingtypes, $imp );
 	$openprint::log->debug("PrintingTypes: $$specs{'PrintingTypes'}");
-							my %impositions = get_impositions( $Project, $specs, $project, \@side_one_colours, \@side_two_colours, $qty, $qty_index, \@possible_presses, \@Papers );
+							my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
 							$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
@@ -3113,7 +3155,7 @@ sub calc_price {
 	$$specs{'hdnImageOrientation'.$qty_index} = $$Imposition{image_orientation};
 	$$specs{"PageQuantity$qty_index"} = $Imposition->pages();
 	$$specs{'txtStockGSM'} = $Paper->gsm();
-	$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
+	$$specs{'txtSpecificStockCalliper'} = $Paper->calliper();
 
 	my %price;
 	$price{'Imposition'} = $Imposition;
@@ -3123,16 +3165,16 @@ sub calc_price {
 
 #$log->debug("\n\n************ START OF CALC PRINT PRICE QTY: $qty 1: @$side_one_colours, @$side_two_colours CAL: $paper_calliper DT: $dry_trap  STYLE: $run_style ********* \n\n\n");
 	my ( $is_sheetwork, $is_perfecting );
-	if ( sets::isin( $$Imposition{runstyle},['Sheet Work','Web'] ) ) {
+	if ( sets::isin( $$Imposition{'runstyle'}, ['Sheet Work','Web'] ) ) {
 		$is_sheetwork = 1;
 		$is_perfecting = 0;
 		@colours = @{$$project{'side_one_colours'}};
-		if ( ( $$specs{'sides_the_same'} eq 'Y' ) and ( $$Imposition{runstyle} eq 'Sheet Work' ) ) {
+		if ( ( $$specs{'sides_the_same'} eq 'Y' ) and ( $$Imposition{'runstyle'} eq 'Sheet Work' ) ) {
 		} else {
 			push @colours, @{$$project{'side_two_colours'}};
 		} # end if
 
-	} elsif ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+	} elsif ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $Paper->grade(), $Press );
@@ -3152,7 +3194,7 @@ sub calc_price {
 	my $imposition = $$Imposition{imposition};
 	if ( $$specs{'Versions'} > 1 ) {
 # When W&T, each half has to be a multiple of the versions
-		if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
+		if ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
 			$imposition = int($imposition/2);
 			if ( $imposition < $$specs{'Versions'} ) {
 #i.e. if imp = 12 and ver = 30 then only 10 of the slots get used.
@@ -3494,7 +3536,11 @@ $openprint::log->debug("Using cached folding");
 	my %mixed_colours = %{$$project{'mixed_colours'}};
 	my %washed_colours = %{$$project{'washed_colours'}};
 	my @left_over_colours;
-	foreach my $real_colour ( @colours ) {
+my $colourstarttime = gettimeofday();
+$openprint::log->debug("Colours: @colours");
+	foreach my $Colour ( @colours ) {
+		my $real_colour = $$Colour{'name'};
+$openprint::log->debug("Colour: $real_colour");
 		my $colour;
 		if ( ( $real_colour =~ /UV/ ) or ( $real_colour =~ /Aqueous/ ) ) {
 			push @left_over_colours, $real_colour;
@@ -3506,14 +3552,13 @@ $openprint::log->debug("Using cached folding");
 		if ( $real_colour =~ /Varnish/ ) {
 			#$price{'Press Washes'} += 1;
 			$colour = $real_colour;
-			if ( sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble'] ) ) {
-				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) ) {
+			if ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
+				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) ) {
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
 			} # end if
-			$colour =~ s/ ?Overall ?//;
-			$colour =~ s/ ?Spot ?//;
 			if ( $real_colour =~ /Spot/ ) {
+				$colour =~ s/ ?Spot ?//;
 				# Add Blanket Cut
 				my %BlanketCut = openprint::service::get_price_object( $real_colour.' BlanketCut', undef, $Press );
 				%BlanketCut = openprint::service::get_price_object( 'BlanketCut', undef, $Press ) if ! %BlanketCut;
@@ -3521,8 +3566,9 @@ $openprint::log->debug("Using cached folding");
 					$price{'Ink breakdown'} .= sprintf(' Blanket: $%.2f', $BlanketCut{'Price'} );
 					$price{'Ink Price'} += $BlanketCut{'Price'};
 				} # end if
+			} else {
+				$colour =~ s/ ?Overall ?//;
 			} # end if
-
 		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
 			$colour = $1.'Ink';
 		} elsif ( $real_colour =~ /PMS/i ) {
@@ -3532,13 +3578,14 @@ $openprint::log->debug("Using cached folding");
 		} else { 
 			$colour = $real_colour . 'Ink';
 		} # end if
-		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) {
+		my $washed_index = $real_colour.'-'.$$Press{'strid'}.'-'.$qty_index;
+		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$washed_index} ) {
 		} else {
 			$plate_count += 1;
 		} # end if
 
 # Each Ink/Coating has MakeReady, Mix, Material, Service
-		if ( ! ( $real_colour =~ /Varnish/ and $washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) ) {
+		if ( ! ( $real_colour =~ /Varnish/ and $washed_colours{$washed_index} ) ) {
 			my %InkMakeReady = openprint::service::get_price_object( $real_colour.' MakeReady', undef, $Press );
 			if ( %InkMakeReady ) {
 				$price{'Ink breakdown'} .= sprintf(' MR: %.2f', $InkMakeReady{'Price'} );
@@ -3569,13 +3616,17 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 
 # Washed_colours contains each colour used in the other signatures
-			if ( ! $washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) {
+			if ( ! $washed_colours{$washed_index} ) {
 				# Perfecting uses another set of units, but the second side won't add because of the colour already being washed
-				if ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+				if (
+						sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and 
+						sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and 
+						sets::isin( $real_colour, $$project{'side_two_colour_names'} ) 
+				   ) {
 					$price{'Press Washes'} += $$project{'special_colours'}{$real_colour}{washups};
 				} # end if
 				$price{'Press Washes'} += $$project{'special_colours'}{$real_colour}{washups};
-				$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} = 1;
+				$washed_colours{$washed_index} = 1;
 			} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
@@ -3592,57 +3643,56 @@ $openprint::log->debug("Using cached folding");
 				$mixed_colours{$real_colour} = 1;
 			} # end if
 
-			if ( ! $washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) {
-				if ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+			if ( ! $washed_colours{$washed_index} ) {
+				if ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 					$price{'Press Washes'} += 1;
 				} # end if
 				$price{'Press Washes'} += 1;
-				$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} = 1;
+				$washed_colours{$washed_index} = 1;
 			} # end if
 		} # end if
 		if ( ! %ink_price ) {
-#$openprint::log->debug("Getting price for $colour");
-			if ( my @Materials = openprint::Material->find('name'=>$colour) ) {
-#$openprint::log->debug("Got price for $colour");
-				$InkMaterial = $Materials[0];
-				%ink_price = $Materials[0]->get_price( undef, $Press );
+			if ( $InkMaterial = openprint::Material->find_one('name'=>$colour) ) {
+				%ink_price = $InkMaterial->get_price( undef, $Press );
 			} # end if
 		} # end if
 		if ( ! ( $InkMaterial and %ink_price ) ) {
-			$price{'Ink breakdown'} .= '<br/>';
+			$price{'Ink breakdown'} .= 'No price<br/>';
 			next;
 		} # end if
 
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
-		$area /= 2 if $Imposition->runstyle() eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
-		my $grade = $Imposition->Paper()->grade();
+		$area /= 2 if $$Imposition{'runstyle'} eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
+		my $grade = $Paper->grade();
 		$grade = 4 if ! $grade;
 
 		if ( lc $ink_price{'units'} eq 'per cartridge' ) {
-			if ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
 			my $coverage = $InkMaterial->specification('Coverage', $grade);
 			my $qty = sprintf('%.2f', $area/$coverage ) if $coverage;
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$price{'Ink Price'} += $ink_price{'Price'} * $qty;
-			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage,$qty, $ink_price{'Price'},$ink_price{'units'},$ink_price{'Price'} * $qty);
+			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$price{'Ink Price'} += $ink_price{'Total'};
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage, $qty, @ink_price{'Price','units','Total'});
 		} elsif ( lc $ink_price{'units'} eq 'per kg' ) {
-			if ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
 			my $coverage = $InkMaterial->specification('Coverage', $grade);
 			my $qty = sprintf('%.2f', $area/$coverage ) if $coverage;
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$price{'Ink Price'} += $ink_price{'Price'} * $qty;
-			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage,$qty, $ink_price{'Price'},$ink_price{'units'},$ink_price{'Price'} * $qty);
+			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$price{'Ink Price'} += $ink_price{'Total'};
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage,$qty, @ink_price{'Price','units','Total'});
 		} elsif ( lc $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
-			my $p = $ink_price{'Price'} * $area;
-			$price{'Ink Price'} += $p;
-			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
+			$ink_price{'Total'} = $ink_price{'Price'} * $area;
+			$price{'Ink Price'} += $ink_price{'Total'};
+			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units','Total'} );
 		} elsif ( lc $ink_price{'units'} eq 'per unit' ) {
-			if ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
 			my $sheets_per_ink_unit = 750000;
@@ -3661,6 +3711,7 @@ $openprint::log->debug("Using cached folding");
 		} # end if
 		$price{'Ink breakdown'} .= '<br/>';
 	} # end foreach colour/coating
+$openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colourstarttime])*1000) );
 
 	$plate_count *= $plate_runs;
 	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};
@@ -4357,7 +4408,7 @@ sub press_setup_cost {
 	
 	my %Price;
 	$Price{'Setup Count'} = $setup_count + $plate_change_qty;
-	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press ) ) ) {
+	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
 	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
@@ -4367,18 +4418,18 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} elsif ( $Price{'units'} eq 'Total' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if
 		
 		$Price{'Total'} = $Price{'Price'};
 	} elsif ( $Price{'units'} eq 'Per Side' ) {
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if
 		
 	} else { # Per Unit
-		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
@@ -4388,8 +4439,8 @@ sub press_setup_cost {
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle().$Imposition->sides().'Sided', undef, $Press );
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press ) if ! %PlateSetupPrice;
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}.$Imposition->sides().'Sided', undef, $Press );
+	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}, undef, $Press ) if ! %PlateSetupPrice;
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
@@ -4418,41 +4469,39 @@ sub press_setup_cost {
 # This is only called for work and turn
 sub filter_colours {
 	my ( @colours ) = @_;
-	my @filtered_colours = ();
+	my %filtered_colours = ();
 
 #$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
 
-	foreach my $colour ( @colours ) {
-		if ( ! sets::isin( $colour, \@filtered_colours ) ) {
+	foreach my $Colour ( @colours ) {
+		#if ( ! $filtered_colours{$$Colour{'name'}} ) {
 # We only need one black
-			if ( $colour eq 'Black' ) {
-				if ( ! sets::isin('Black Spot Colour', \@filtered_colours) and ! sets::isin('Black', \@filtered_colours) ) {
-					push @filtered_colours, $colour;
-				} # end if
-			} elsif ( $colour eq 'Black Spot Colour' ) {
-				if ( ! sets::isin('Black', \@filtered_colours) and ! sets::isin('Black Spot Colour', \@filtered_colours ) ) {
-					push @filtered_colours, $colour;
-				} # end if
-			} elsif ( $colour eq 'Overall Gloss Varnish' ) {
+			#if ( $$Colour{'name'} eq 'Black' ) {
+				#if ( ! ( $filtered_colours{'Black Spot Colour'} and $filtered_colours{'Black'} ) ) {
+					#$filtered_colours{$$Colour{'name'}} = $Colour;
+				#} # end if
+			#} elsif ( $$colour eq 'Black Spot Colour' ) {
+				#if ( ! ( $filtered_colours{'Black'} and $filtered_colours{'Black Spot Colour'} ) ) {
+					#$filtered_colours{$$Colour{'name'}} = $Colour;
+				#} # end if
+			#} elsif ( $colour eq 'Overall Gloss Varnish' ) {
+## Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
+				##if ( ! sets::isin('Spot Gloss Varnish', \@colours ) ) {
+					#$filtered_colours{$$Colour{'name'}} = $Colour;
+				#} # end if
+			#} elsif ( $colour eq 'Overall Matte Varnish' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Gloss Varnish', \@colours ) ) {
-					push @filtered_colours, $colour;
-				} # end if
-			} elsif ( $colour eq 'Overall Matte Varnish' ) {
-# Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Matte Varnish', \@colours ) ) {
-					push @filtered_colours, $colour;
-				} # end if
-			} else {
-				if ( ! sets::isin( $colour, \@filtered_colours) ) {
+				#if ( ! sets::isin('Spot Matte Varnish', \@colours ) ) {
+					#$filtered_colours{$$Colour{'name'}} = $Colour;
+				#} # end if
+			#} else {
 #$log->debug("****** ADDING COLOUR: $colour ***********");
-					push @filtered_colours, $colour;
-				} # end if
-			} # end if
-		} # end if
+				$filtered_colours{$$Colour{'name'}} = $Colour;
+			#} # end if
+		#} # end if
 	} # end foreach
 #$log->debug("*************** END OF FILTER COLOURS colours: @filtered_colours **************************");
-	return @filtered_colours;
+	return values %filtered_colours;
 } # end sub
 
 sub compare_signatures_runstyle {
@@ -4547,7 +4596,7 @@ sub runtime {
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my @colours;
 	if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-		@colours = openprint::Estimating::Printing::filter_colours( @side_one_colours, @side_two_colours );
+		@colours = filter_colours( @side_one_colours, @side_two_colours );
 	} else {
 		@colours = ( @side_one_colours, @side_two_colours );
 	} # end if
