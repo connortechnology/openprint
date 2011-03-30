@@ -90,6 +90,9 @@ div.PressColumn li.inprepress, li.inprepress {
 div.PressColumn li.complete, li.complete {
 	background-color: #FAC6FF;
 }
+div.PressColumn li.tentative, li.tentative {
+	background-color: #d7f5ff;
+}
 div.PressColumn li.approval, li.approval {
 	background-color: #FF0000;
 	color: black;
