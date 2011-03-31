@@ -195,6 +195,7 @@ sub calc_setup_object {
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
@@ -208,6 +209,7 @@ sub calc_setup_object {
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
@@ -401,7 +403,7 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
 			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $image_height );
-			$openprint::log->debug(" CHECK 1 Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
+			$openprint::log->debug("CHECK 1 Stock: $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
 			fix_height( $setup1, $specs );
 			if ( check_setup( $setup1, $specs ) ) {
 				$openprint::log->debug(" CHECK 1 Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
