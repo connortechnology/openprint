@@ -1,7 +1,7 @@
-package openprint::Location;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Location;
+our @ISA = qw( openprint::Object );
+
 use openprint ();
 use vars qw( %variable $log $dbh $debug );
 *variable = \%openprint::variable;
