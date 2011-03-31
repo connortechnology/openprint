@@ -1,0 +1,16 @@
+<? echo (
+	my $Location = new openprint::Location( $param{'location_id'} );
+	return sprintf(q`
+$('address').value = '%s';
+$('postalcode').value = '%s';
+$('city').value = '%s';
+$('state').value = '%s';
+$('country').value = '%s';
+		`, map { $_ =~ s/'/\\'/g; $_;} (
+			$Location->address(), $Location->postalcode(), 
+			( ( $_ = $Location->ancestor({'type'=>'city'}) ) ? $_->name() : '' ),
+			( ( $_ = $Location->ancestor({'type'=>'state'}) ) ? $_->name() : '' ),
+			( ( $_ = $Location->ancestor({'type'=>'country'}) ) ? $_->name() : '' ),
+			)
+		);
+) ?>

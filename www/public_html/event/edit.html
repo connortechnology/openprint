@@ -7,7 +7,9 @@
 		theme : "advanced"
 	});
 	function getSelectionId(text, li) {
-		alert (li.id);
+		if ( li.id ) {
+			new Ajax.Request( '_load_location.json', { parameters: { location_id: li.id } } );
+		} // end if
 	}
 -->
 </script>
@@ -85,7 +87,7 @@
 						<li><label>Address:</label>
 							<input type="text" name="address" id="address" value="<? echo ( $$variable{'Event'}->Location()->address() ) ?>" />
 						</li>
-						<li><label>Postal Code:</label><input type="text" name="postalcode" id="postalcode"/></li>
+						<li><label>Postal Code:</label><input type="text" name="postalcode" id="postalcode" value="<? echo ( $$variable{'Event'}->Location()->postalcode() ) ?>"/></li>
 						<li><label>Country:</label>
 							<input type="text" name="country" id="country" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>'country') ) ? $_->name() : '' ); ) ?>"/>
 							<div id="country_autocomplete" class="autocomplete" style="display: none;"></div>
