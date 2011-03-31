@@ -43,6 +43,7 @@ $serial = 'schedule_id_seq';
 	'stock_verified'	=>	'stock_verified',
 	'stock'				=>	'stock',
 	'servicetype_id'	=>	'servicetype_id',
+	'tentative'			=>	'tentative',
 );
 
 %find_fields = (
@@ -60,6 +61,7 @@ $serial = 'schedule_id_seq';
 	'speed'			=>	undef,
 	'created_on'	=>	'NOW()',
 	'stock_verified'	=>	0,
+	'tentative'			=>	0,
 );
 
 sub runtime_seconds {
@@ -270,6 +272,7 @@ sub get_li {
 			$colour .= ' rush';
 		} # end if
 	} # end if
+	$colour .= ' tentative' if $$self{'tentative'};
 
 	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
 			( $colour ? ' class="'.$colour.'"' : '' ), 
