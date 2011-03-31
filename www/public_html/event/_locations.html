@@ -3,7 +3,7 @@
 		my $html;
 		foreach my $Location ( openprint::Location->find({'name ilike'=>$param{'location'}.'%', 'type'=>$param{'type'}, 'limit'=>10, 'order'=>'lower(name)'}) ) {
 			my $City = $Location->ancestor('type'=>'city');
-			$html .= sprintf(q`<li><a href="#">%s<span class="informal">%s</span></a></li>`, $Location->name(), join(', ', ( $City ? $City->name() : () ) ) );
+			$html .= sprintf(q`<li id="%d">%s<span class="informal">%s</span></li>`, $Location->id(), $Location->name(), join(', ', ( $City ? $City->name() : () ) ) );
 		} # end foreach Location
 		return $html;
 	) ?>
