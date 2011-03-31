@@ -133,6 +133,14 @@ sub max_index {
 	return $max_index;
 } # end sub max_index
 
+sub equal {
+	my ( $array1, $array2 ) = @_;
+	return 0 if @{$array1} != @{$array2};
+	for ( my $i = 0; $i < @{$array1}; $i += 1 ) {
+		return 0 if $$array1[$i] != $$array2[$i];
+	} # end for
+	return 1;
+} # end sub equal
 1;
 
 __END__
