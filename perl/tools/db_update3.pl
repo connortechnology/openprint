@@ -221,6 +221,8 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	if ( ! exists $$data{'address'} ) {
 	$dbh->do('ALTER TABLE Locations add address text');
 	} # end if
+	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
+	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
 		
 } # end if
 if ( ! sets::isin( 'messages', \@tables ) ) {
@@ -230,6 +232,20 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='messages'", 'column_name');
 	if ( ! exists $$data{'conversation_id'} ) {
 		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
+	} # end if
+} # end if
+if ( sets::isin( 'log', \@tables ) ) {
+	$dbh->do('ALTER TABLE log RENAME TO logs');
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+} # en dif
+if ( ! sets::isin( 'logs', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Logs.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='logs'", 'column_name');
+	if ( exists $$data{'action_type'} ) {
+		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
+		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
 } # end if
 

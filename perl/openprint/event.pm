@@ -178,6 +178,7 @@ sub view {
 		} # end if
 			
 		$variable{'error'} .= $Event->save(\%param);
+		new openprint::Log()->save({'action'=>'Create Event', 'object'=>$Event});
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {

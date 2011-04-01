@@ -17,6 +17,8 @@ sub list {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $Album->save(\%param);
+		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+
         if ( $param{'filename'} ) {
             my $upload = $r->upload('filename');
             if ( ! $upload ) {
@@ -32,6 +34,7 @@ sub list {
 					my $Photo = new openprint::Photo_in_Album();
 					$variable{'error'} .= $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$Album->id()});	
 					$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+					new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 				} # end if
             } # end if
         } # end if

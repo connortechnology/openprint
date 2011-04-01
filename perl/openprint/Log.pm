@@ -1,10 +1,10 @@
+use strict;
 package openprint::Log;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 require openprint::User;
-require openprint::logAction;
+require openprint::Log_Action;
 require openprint::Host;
-use strict;
 
 use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults %types );
 $debug = 0;
@@ -15,21 +15,18 @@ $serial = 'log_id_seq';
 	'user_id'		=>	'user_id',
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
-	'action_type'	=>	'action_type',
+	'action_id'	=>	'action_id',
+	'action'			=>	undef,
 	'note'			=>	'note',
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",
+	'user_id'	=>	q`$openprint::session{'user_id'}`,
+	'company_id'	=>	q`$openprint::session{'company_id'}`,
 );
 
-%types = (
-	2	=> 'Successful Login',
-	3	=>	'Logout', 
-	78	=>	'Failed Login',
-	79	=> '',
-);
 use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -45,8 +42,8 @@ sub Company {
 } # end sub Company
 
 sub Action {
-	my $self = shift;
-	return new openprint::logAction( $$self{action_type} );	
+	$_[0]{'Action'} = new openprint::Log_Action( $_[0]{'action_id'} ) if ! $_[0]{'Action'};
+	return $_[0]{'Action'};
 } # end sub Action
 
 sub hostname {
@@ -86,6 +83,16 @@ sub Host {
 		
 	return new openprint::Host( $_[0]{'host_id'} );
 } # end sub Host
+
+sub action {
+	if ( @_ > 1 ) {
+		my $Action = openprint::Log_Action->find_one( 'name'=>$_[1] );
+		$Action->save({'name'=>$_[1], 'description'=>$_[1]}) if $_[1] and ! $Action;
+		$_[0]{'Action'} = $Action;
+		return $Action->name();
+	} # end if
+	return $_[0]->Action()->name();
+} # end sub action
 
 1;
 __END__
