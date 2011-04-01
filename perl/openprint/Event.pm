@@ -55,7 +55,7 @@ sub Category {
 } # end sub Category
 
 sub where {
-	return join(',', map { $_->name() } $_[0]->Location(), $_[0]->Location()->Parents() );
+	return join(', ', map { $_->name() } $_[0]->Location(), $_[0]->Location()->Parents() );
 } # end sub where
 
 sub Asset {

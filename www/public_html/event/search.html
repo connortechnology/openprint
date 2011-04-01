@@ -29,7 +29,6 @@
 -->
 </script>	 
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $session{'user_id'} ) ?>
 <div class="Event"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/event/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
@@ -46,11 +45,11 @@
 			<li>
 				<label>When:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
 				</span>
 					to 
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
 				</span>
 			</li>
 			</ul>
@@ -58,9 +57,9 @@
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_events(f1);", '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', '/event/edit.html', 'New Event' ),
+					ssi::button( 'ShowResults', { 'onclick'=> 'load_events(f1);', 'text'=>'Show Results' } ),
+					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::button( 'New', { 'href'=> '/event/edit.html', 'text'=>'New Event' } ),
 					); ) ?>
 			</p>
 		</fieldset>
@@ -68,6 +67,3 @@
 	</form>
 	</div>
 </div>
-<? else ( $session{'user_id'} ) ?>
-	Only logged in customers have a event search.
-<? endif ( $session{'user_id'} ) ?>

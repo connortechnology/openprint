@@ -6,9 +6,9 @@ require openprint::User;
 require openprint::Log_Action;
 require openprint::Host;
 
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types );
 $debug = 0;
-$table = 'log';
+$table = 'logs';
 $serial = 'log_id_seq';
 %fields = (
 	'id'	=>	'id',
@@ -28,8 +28,6 @@ $serial = 'log_id_seq';
 );
 
 use openprint ();
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 sub User {
 	my $self = shift;
@@ -87,8 +85,12 @@ sub Host {
 sub action {
 	if ( @_ > 1 ) {
 		my $Action = openprint::Log_Action->find_one( 'name'=>$_[1] );
-		$Action->save({'name'=>$_[1], 'description'=>$_[1]}) if $_[1] and ! $Action;
+		if ( $_[1] and ! $Action ) {
+			$Action = new openprint::Log_Action();
+			$Action->save({'name'=>$_[1], 'description'=>$_[1]});
+		} # end if
 		$_[0]{'Action'} = $Action;
+		$_[0]{'action_id'} = $Action->id();
 		return $Action->name();
 	} # end if
 	return $_[0]->Action()->name();

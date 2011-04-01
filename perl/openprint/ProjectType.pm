@@ -2,7 +2,7 @@ package openprint::ProjectType;
 @ISA = qw(openprint::Object);
 use strict;
 require openprint::Object;
-require openprint::logs;
+require openprint::Log;
 require openprint::ProjectType_Template;
 use openprint ();
 
@@ -101,7 +101,7 @@ sub delete {
 	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
-	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
+	new openprint::Log()->save({'action'=>'Delete Project Type', 'note' => "Project Type ID: $$self{id} Project Type: $$self{name}"});
 } # end sub delete
 
 sub Templates {

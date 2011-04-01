@@ -28,19 +28,17 @@ sub history {
 	} # end if
 
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/event/history.html', 'starting_on_start', -31 );
-		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
 		ssi::setup_date_select( '/event/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/event/history.html', 'created_on_end', '' );
+		ssi::setup_date_select( '/event/history.html', 'starting_on_start', 0 );
+		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
 	} # end if
 	ssi::save_params( '/event/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'published_on_start_year','published_on_start_month','published_on_start_day',
-				'published_on_end_year','published_on_end_month','published_on_end_day',
-				'published','employee_id','company_id', 'category_id' ) );
-
-	$session{'/event/history.html?published'} = '0' if ! $session{'/event/history.html?published'};
+				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'company_id', 'category_id' ) );
 } # end sub history
 
 sub _history {
@@ -48,6 +46,8 @@ sub _history {
 		ssi::save_params( '/event/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
 				'employee_id','company_id', 'category_id' ) );
 	} # end if
 } # end sub _history
@@ -176,9 +176,13 @@ sub view {
 			} # end if
 			$param{'location_id'} = $Location->id();
 		} # end if
-			
-		$variable{'error'} .= $Event->save(\%param);
-		new openprint::Log()->save({'action'=>'Create Event', 'object'=>$Event});
+		if ( ( ! $param{'event_id'} ) and ( $Event = openprint::Event->find_one('location_id'=>$param{'location_id'}, 'starting_on'=>$param{'starting_on'}, 'name'=>$param{'name'} ) ) ) {
+			$variable{'Event'} = $Event;
+			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
+		} else {
+			$variable{'error'} .= $Event->save(\%param);
+			new openprint::Log()->save({'action'=>'Create Event', 'object'=>$Event});
+		} # end if
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {

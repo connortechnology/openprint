@@ -1,44 +1,44 @@
-package openprint::Product;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Product;
+our @ISA = qw( openprint::Object );
+
 require openprint::ProductCategory;
-require openprint::logs;
+require openprint::Log;
 
 require sql;
 
-my $debug = 0;
 
-use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
+use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
+$debug = 0;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'products';
 $serial = 'products_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',
+	'id'		=>	'id',
+	'name'		=>	'name',
 	'description'	=>	'description',
-	'weight'		=>	'weight',
+	'weight'	=>	'weight',
 	'taxexempt1'	=>	'taxexempt1',
 	'taxexempt2'	=>	'taxexempt2',
-	'sort'			=>	'sort',
+	'sort'		=>	'sort',
 	'category_id'	=>	'category_id',
 	'project_id'	=>	'project_id',
-	'deleted'		=>	'deleted',
-	'owner_id'		=>	'owner_id',
+	'deleted'	=>	'deleted',
+	'owner_id'	=>	'owner_id',
 );
 
 %transforms = (
 );
 %defaults = (
-	'weight'		=>	undef,
+	'weight'	=>	undef,
 	'taxexempt1'	=>	'N',
 	'taxexempt2'	=>	'N',
-	'sort'			=>	undef,
+	'sort'		=>	undef,
 	'category_id'	=>	undef,
 	'project_id'	=>	undef,
-	'deleted'		=>	0,
+	'deleted'	=>	0,
 );
 
 sub destroy {
@@ -53,11 +53,9 @@ sub destroy {
 	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product".
-	openprint::logs::insertLogRecord('17', "Product ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
+	new openprint::Log()->save({'action'=>'Delete Product', 'note'=> "Product ID: $$self{id} Name: $$self{name}"});
 } # end sub destroy
 
-# Returns a copy of the paper object.
-# Will also save the data to db
 sub copy {
 	my $self = shift;
 	my $Product = new openprint::Product( );
@@ -76,6 +74,7 @@ sub prices {
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
+
 sub Prices {
 	my $self = shift;
 	return $self->prices();

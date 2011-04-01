@@ -1,6 +1,6 @@
-package openprint::Company;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Company;
+our @ISA = qw( openprint::Object );
 use Text::Unaccent;
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
@@ -133,7 +133,7 @@ sub destroy {
 	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
-   openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'} $$self{name}");
+   new openprint::Log()->save({'action'=>'Destroy Company', 'note'=>"Company ID: $$self{id} $$self{name}"});
 } # end sub destroy
 
 sub save {

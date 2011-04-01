@@ -1,39 +1,43 @@
 <p class="error"><?error?></p>
 <? if ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
-	<? if ( $param{'ddmCompany'} ) ?>
-		Any actions you perform during the course of this login will be stored in <? echo ( new openprint::Company($session{company_id})->name() ) ?>'s history.<br/>
-<br>
   <? eval ( $$variable{'Company'} = new openprint::Company( $session{'company_id'} ); ) ?>
-  The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
+	<? if ( $param{'ddmCompany'} ) ?>
+		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{'Company'}->name() ) ?>'s history.<br/>
+		<br>
+		<? if ( $$variable{'Company'}->salesrep_id() ) ?>
+		The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
+		<? else ( $$variable{'Company'}->salesrep_id() ) ?>
+		There is no CSR assigned for <? echo ( $$variable{'Company'}->name() ) ?>.<br/>
+		<? endif ( $$variable{'Company'}->salesrep_id() ) ?>
 		<br/>
 		Prices will be displayed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name() ) ?>.<br/>
 		<br/>
-<fieldset><legend>Last 10 Login Attempts</legend>
-    <table class="List">
-		<tr>
-			<th class="When">When</th>
-			<th class="User">Who</th>
-			<th align="left">From</th>
-			<th align="left">Type</th>
-			<th align="left">Result</th>
-		</tr>
-		<? echo ( 
-			require openprint::Log;
-			my $html = '';
-			foreach my $Log ( openprint::Log->find('company_id'=>$session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
-			     $html .= sprintf('<tr><td>%s</td><td><a href="/account/view.html?user_id=%d">%s</a></td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
-					Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
-					$Log->user_id(), $Log->User()->name(),
-					$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
+		<fieldset><legend>Last 10 Login Attempts</legend>
+			<table class="List">
+				<tr>
+					<th class="When">When</th>
+					<th class="User">Who</th>
+					<th align="left">From</th>
+					<th align="left">Type</th>
+					<th align="left">Result</th>
+				</tr>
+				<? echo ( 
+					require openprint::Log;
+					my $html = '';
+					foreach my $Log ( openprint::Log->find('company_id'=>$session{'company_id'}, 'action_id'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
+						 $html .= sprintf('<tr><td>%s</td><td><a href="/account/view.html?user_id=%d">%s</a></td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
+							Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+							$Log->user_id(), $Log->User()->name(),
+							$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
 
-			} # end foreach
-			return $html;
-		) ?>
-	</table>
-</fieldset>
+					} # end foreach
+					return $html;
+				) ?>
+			</table>
+		</fieldset>
 	<? else ( $param{'ddmCompany'} ) ?>
 	<br/>
-	You are currently representing <? echo ( new openprint::Company( $session{'company_id'} )->name(); ) ?>.<br/>
+	You are currently representing <? echo ( $$variable{'Company'}->name(); ) ?>.<br/>
 	To represent another company, please select it from the dropdown and click submit. <br/>
 	Any orders or quotes you make will be recorded in the selected company's history.<br/>
 	<form name="f1" action="select_company.html" method="post">
@@ -43,11 +47,9 @@
 				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
 				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">Select a Company</option>
-	<? echo ( 
-	 openprint::obj_customer::get_customer_dropdown( $log, $dbh, $session{'company_id'} );
-	) ?>
+					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
 				</select>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'f1.submit();', '', 'Submit' ); ) ?>
+				<? echo ( ssi::button( 'Submit', { 'onclick'=>'f1.submit();' } ); ) ?>
 			</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction" value="SelectCompany"/>

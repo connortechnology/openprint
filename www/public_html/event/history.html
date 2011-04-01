@@ -29,45 +29,46 @@
 -->
 </script>	 
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $session{'user_id'} ) ?>
 <div class="Events"><div class="History">
 	<form id="f1" name="f1" method="post" action="/event/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
+				<ul>
 <? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
-			<p>
+			<li>
 				<label>Company:</label>
 				<select name="company_id" id="company_id" onchange="load_events(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/event/history.html?company_id'} ); ) ?>
 				</select>
-			</p>
+			</li>
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 <? if ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
-			<p><label>Category:</label>
+			<li><label>Category:</label>
 				<select name="category_id" id="category_id" onchange="load_events(this.form);">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/history.html?category_id'} ); ) ?>
 				</select>
-			</p>
+			</li>
 <? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
-			<p>
+			<li>
 				<label>When:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+				</span>
 					to 
-				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+				<? echo ( ssi::date_select_session( '/event/history.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
 				</span>
-			</p>
+			</li>
+				</ul>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_events(f1);", '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', '/event/edit.html', 'New Event' ),
+					ssi::button( 'ShowResults', { 'onclick'=>'load_events(f1);', 'text'=>'Show Results' } ),
+					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::button( 'New', { 'href'=> '/event/edit.html', 'text'=> 'New Event' } ),
 					); ) ?>
 			</p>
 		</fieldset>
@@ -75,6 +76,3 @@
 	</form>
 	</div>
 </div>
-<? else ( $session{'user_id'} ) ?>
-	Only logged in customers have a event history.
-<? endif ( $session{'user_id'} ) ?>

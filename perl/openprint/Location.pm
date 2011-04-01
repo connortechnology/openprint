@@ -26,6 +26,10 @@ $serial = 'locations_id_seq';
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
+%transforms = (
+	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
+	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
+);
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
 	'created_on'	=>	q`'NOW()'`,
