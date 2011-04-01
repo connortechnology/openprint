@@ -1899,5 +1899,8 @@ sub bindery_schedule {
 sub prepress_overview {
 } # end sub prepress_overview
 
+sub _add_docket {
+} # end sub _add_docket
+
 1;
 __END__
