@@ -1302,7 +1302,7 @@ sub reorder_jobs {
 
 	foreach my $Job ( @order ) {
 		my $Project = $Job->Project();
-		$log->debug($Job->id() .' ' . $Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() . ' Due: (' . $Project->due_date().')' );
+		$log->debug($Job->id() .' ' . $Project->docket() . ' ' . $Project->Company()->name() . ' Due: (' . $Project->due_date().')' );
 		if ( ! $Project->due_date() ) {
 			$log->debug("Saving project");
 			if ( $_ = $Project->save({'due_date'=>$Project->get_due_date()}) ) {
@@ -1358,9 +1358,9 @@ $log->debug("ES: " . $NextES->name() );
 			return;
 		} # end if ! NextES
 		push @Shifts, $NextES->emanantise( $start_time );
-	} # end if
+	} # end if ! @Shifts
+
 	my $Shift = shift @Shifts;
-	push @{$variable{'changed'}}, $Shift->ul_id();
 	
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
@@ -1371,17 +1371,25 @@ $log->debug("ES: " . $NextES->name() );
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 		} # end if
+		# Tentative jobs do not affect non-tentative jobs
+		if ( $order[$i]{'tentative'} ) {
+			splice @order, $i, 1;
+			$i -= 1;
+		} # end if
 	} # end for
 
+	my @jobs_in_shift;
 	while ( @order ) {
 		my $row = shift @order;
 		my $run_time = $row->runtime_seconds();
+
 		my $old_start_time = $start_time - $run_time;
 
 		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
 			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
-			shift @fixed_jobs;
+			my $Job = shift @fixed_jobs;
+			push @jobs_in_shift, $$Job{'id'};
 		} # end while
 
 # Time to move on to next shift
@@ -1392,8 +1400,8 @@ $log->debug("ES: " . $NextES->name() );
 						'starttime >='	=>	$Shift->Equipment_Shift()->endtime(),
 						'order'			=>	'starttime',
 						);
-$log->debug("ES: " . $Shift->Equipment_Shift()->name() );
-$log->debug("ES: " . $NextES->name() );
+#$log->debug("ES: " . $Shift->Equipment_Shift()->name() );
+#$log->debug("ES: " . $NextES->name() );
 				if ( ! $NextES ) {
 					$NextES = openprint::Equipment_Shift->find_one( 
 							'equipment_id'		=>	$$row{'equipment_id'}, 
@@ -1402,12 +1410,24 @@ $log->debug("ES: " . $NextES->name() );
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
 				$start_time = $Shift->starttime_seconds();
+				push @{$variable{'changed'}}, $Shift->ul_id();
 			} else {
+				my @old_jobs = map { $$_{'id'} } ( $Shift->schedule() );
+				if ( ! sets::equal( \@old_jobs, \@jobs_in_shift ) ) {
+#$openprint::log->debug("Shift " . $Shift->ul_id() . " has changed @old_jobs != @jobs_in_shift ");
+# only update if the job list is different
+					push @{$variable{'changed'}}, $Shift->ul_id();
+				#} else {
+#$openprint::log->debug("Shift " . $Shift->ul_id() . " has not changed");
+				} # end if
+
 				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
 			} # end if
-			push @{$variable{'changed'}}, $Shift->ul_id();
+			@jobs_in_shift = ();
 		} # end while
+
+		push @jobs_in_shift, $$row{'id'};
 
 		$row->operator_id( $Shift->operator_id() );
 		last if $row->save({
@@ -1420,14 +1440,23 @@ $log->debug("ES: " . $NextES->name() );
             $row->Project()->add_to_log( @session{'company_id','user_id'}, 'Scheduled on ' . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
         } # end if
 
-        $start_time += $$row{'tentative'} ? 1 : $run_time;
-
+        $start_time += $run_time;
     } # end while @order
+
+	my @old_jobs = $Shift->schedule();
+	if ( ! sets::equal( \@old_jobs, \@jobs_in_shift ) ) {
+		#$openprint::log->debug("Shift " . $Shift->ul_id() . " has changed");
+	# only update if the job list is different
+		push @{$variable{'changed'}}, $Shift->ul_id();
+	#} else {
+		#$openprint::log->debug("Shift " . $Shift->ul_id() . " has not changed");
+	} # end if
+
+	# Anything else gets dropped on pending, which should only happen if it couldn't add shifts
 	while ( @order ) {
 		my $row = shift @order;
-		last if $row->save({
-				'starttime'	=> undef,
-				} );
+		last if $row->save({ 'starttime' => undef } );
+		push @{$variable{'changed'}}, $row->Shift()->ul_id();
 	} # end while @order
     sql::end_transaction( $dbh, $ac );
 } # end sub reorder_jobs

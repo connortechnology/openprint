@@ -1011,6 +1011,7 @@ sub get_impositions {
 						$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
 					}
 				} # end if
+				$project{'Perfecting_colour_bar_size'} = $Press->specification('Perfecting Colour Bar Size');
 			} else {
 				$$project{'colour_bar_size'} = 0;
 			} # end if

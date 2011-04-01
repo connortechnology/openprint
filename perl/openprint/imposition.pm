@@ -235,10 +235,15 @@ sub calc_setup_object {
 	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
-	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+	if ( $run_style eq 'Perfecting' ) {
+		$setup1->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+	} else {
+		$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	$setup2->paper( $Paper->clone() );
@@ -248,10 +253,15 @@ sub calc_setup_object {
 	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
-	$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
+	if ( $run_style eq 'Perfecting' ) {
+		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+	} else {
+		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
+	} # end if
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	# Grain is on the second dimension by default (according to Rick)
