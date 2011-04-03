@@ -7,6 +7,8 @@ require misc;
 require logger;
 require configuration;
 require openprint::Object;
+require openprint::Log;
+require openprint::Log_Action;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -246,6 +248,26 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 	if ( exists $$data{'action_type'} ) {
 		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
+	} # end if
+} # end if
+my $LoginFailed = openprint::Log_Action->find_one('name'=>'Login Failed');
+if ( $LoginFailed ) {
+	if ( $LoginFailed->id() != 78 ) {
+		my $Real78 = openprint::Log_Action->find_one('id'=>78);
+		if ( ! $Real78 ) {
+			my $New = $LoginFailed->copy();
+			$New->save({'id'=>78});
+			foreach my $Log ( openprint::Log->find('action_id'=>$LoginFailed->id()) ) {
+				$Log->save({'action_id'=>78});
+			} # end foreach Log
+		} elsif ( $Real78->name() eq 'Login Failed' ) {
+			foreach my $Log ( openprint::Log->find('action_id'=>$LoginFailed->id()) ) {
+				$Log->save({'action_id'=>78});
+			} # end foreach Log
+		} else {
+			die "Need to manually update 78 Login Failed entries";
+		} # end if
+		$LoginFailed->destroy();
 	} # end if
 } # end if
 

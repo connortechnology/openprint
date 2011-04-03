@@ -7,7 +7,7 @@ require openprint::Log_Action;
 require openprint::Host;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults %types );
-$debug = 0;
+$debug = 1;
 $table = 'logs';
 $serial = 'log_id_seq';
 %fields = (
@@ -20,11 +20,15 @@ $serial = 'log_id_seq';
 	'note'			=>	'note',
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
+	'url'			=>	'url',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",
 	'user_id'	=>	q`$openprint::session{'user_id'}`,
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
+	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
+	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{'host_id'};`,
+
 );
 
 use openprint ();
@@ -55,16 +59,18 @@ sub hostname {
 } # end sub hostname
 
 sub ip_address {
-	my ( $self, $new ) = @_;
-	my $Host = $self->Host();
+	my $Host = $_[0]->Host();
 
-	if ( defined $new ) {
-		$Host = openprint::Host->find_one( 'ip'=>$new );
+	if ( @_ > 1 ) {
+		if ( ! defined $_[1] ) {
+			$_[1] = $ENV{'REMOTE_ADDR'};
+		} # end if
+		$Host = openprint::Host->find_one( 'ip'=>$_[1] );
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
-			$Host->save({'ip'=>$new});
+			$Host->save({'ip'=>$_[1]});
 		} # end if
-		$$self{'host_id'} = $Host->id();
+		$_[0]{'host_id'} = $Host->id();
 	} # end if
 	return $Host->ip();
 } # end sub ip_address
