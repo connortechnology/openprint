@@ -55,6 +55,20 @@
 		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'paid_on_end', { 'onchange'=>'load_expenses(this.form);', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 						</span>
 					</li>
+					<li>
+						<label>Category:</label>
+						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( ssi::make_drop_down( openprint::Expense_Category->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?category_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Recipient:</label>
+						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( ssi::make_drop_down( openprint::Company->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+						</select>
+					</li>
 				</ul>
 			</div>
 		</div>
