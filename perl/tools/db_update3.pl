@@ -271,6 +271,10 @@ if ( $LoginFailed ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'comments', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 1;
 __END__

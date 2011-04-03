@@ -1,0 +1,18 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo (
+	my $html;
+	foreach my $Comment ( $$variable{'Article'}->Comments() ) {
+		$html .= sprintf( q`
+			<div class="comment">At %s %s said:<br/>%s</div>
+		`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+	} # end foreach Comment
+	return $html;
+) ?>
+<div class="comment">
+	<h1>Add</h1>
+	<form id="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" name="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" action="list.html" method="post">
+		<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>"/>
+		<textarea name="text" id="text-<? echo ( $$variable{'Article'}->id() ) ?>"></textarea>
+		<? echo ( ssi::button( 'SaveComment'.$$variable{'Article'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '_comments.html', { parameters: \$('comment-form-$$variable{Article}{id}').serialize() } );` } ); ) ?>
+	</form>
+</div>

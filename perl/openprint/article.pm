@@ -137,5 +137,24 @@ sub _view {
 	$Article->set( \%param );
 } # end sub _view
 
+sub _comments {
+	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	if ( $param{'text'} ) {
+		if ( ! openprint::Comment->find_one(
+			'user_id'	=>	$session{'user_id'},
+			'text'		=>	$param{'text'},
+			'object_id'	=>	$Article->id(),
+			'object_type'	=>	'openprint::Article',
+			) ) {
+
+			$variable{'error'} .= new openprint::Comment()->save({
+					'text'			=>	$param{'text'},
+					'object_type'	=>	'openprint::Article',
+					'object_id'		=>	$Article->id(),
+					});
+		} # end if comment already exists
+	} # end if
+} # end sub _comments
+
 1;
 __END__
