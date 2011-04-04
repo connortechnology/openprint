@@ -159,6 +159,17 @@ sub _comments {
 					'approved'		=>	$approved,
 					});
 		} # end if comment already exists
+	} elsif ( $param{'action'} eq 'approve' ) {
+		if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $$Article{'user_id'} ) {
+			my $Comment = openprint::Comment->find_one('object_id'=>$$Article{'id'}, 'object_type'=>'openprint::Article', 'id'=>$param{'comment_id'} );
+			if ( $Comment ) {
+				$Comment->save({'approved'=>1});
+			} else {
+				$variable{'error'} .= 'Comment not found.';
+			} # end if
+		} else {
+			$variable{'error'} .= 'You are not authorized to approve this comment.';
+		} # end if
 	} # end if
 } # end sub _comments
 
