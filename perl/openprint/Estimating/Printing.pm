@@ -728,23 +728,38 @@ sub get_Stocks {
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
-		if ( ! $$specs{'ddmStockBrand'} ) {
-			$$specs{'alert'} .= 'Please select a stock.';
-			return @Papers;
+
+		if ( $openprint::config{$Project->Type()->name().'StockOptions'} ) {
+			foreach my $option ( split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ) ) {
+				if ( ! $$specs{'ddmStock'.$option} ) {
+					$$specs{'alert'} .= 'Please select a stock ' . lc $option .'.';
+					return @Papers;
+				} # end if
+			} # end foreach option
+		} else {
+			if ( ! $$specs{'ddmStockBrand'} ) {
+				$$specs{'alert'} .= 'Please select a stock.';
+				return @Papers;
+			} # end if
+			if ( ! $$specs{'ddmStockFinish'} ) {
+				$$specs{'alert'} .= 'Please select a stock finish.';
+				return @Papers;
+			} # end if
+			if ( ! $$specs{'ddmStockColour'} ) {
+				$$specs{'alert'} .= 'Please select a stock colour.';
+				return @Papers;
+			} # end if
+			if ( ! $$specs{'ddmStockWeight'} ) {
+				$$specs{'alert'} .= 'Please select a stock weight.';
+				return @Papers;
+			} # end if
 		} # end if
-		if ( ! $$specs{'ddmStockFinish'} ) {
-			$$specs{'alert'} .= 'Please select a stock finish.';
-			return @Papers;
-		} # end if
-		if ( ! $$specs{'ddmStockColour'} ) {
-			$$specs{'alert'} .= 'Please select a stock colour.';
-			return @Papers;
-		} # end if
-		if ( ! $$specs{'ddmStockWeight'} ) {
-			$$specs{'alert'} .= 'Please select a stock weight.';
-			return @Papers;
-		} # end if
-		@Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+		@Papers = openprint::Paper::find( 
+				( exists $$specs{'ddmStockName'} ? ( 'name'=> $$specs{'ddmStockName'} ) : () ),
+				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
+				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
+				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
+				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.

@@ -113,6 +113,37 @@
 			</p>
 		</div><!-- Specific -->
 		<div id="HouseStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ? 'none' : 'block' ) ?>;">
+			<? if ( $config{$$variable{'ProjectType'}->name().'StockOptions'} ) ?>
+<? echo (
+	my $html;
+	my @types = ('Sheet');
+	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
+		push @types, 'Roll';
+	} # end if
+	my %find = (
+			'project_type_id'	=>	$$variable{'ProjectType'}->id(),
+			'supplied'			=>	[undef, $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0],
+			'type'				=>	\@types,
+	);
+
+	foreach my $option ( split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} ) ) {
+		my @Papers = openprint::Paper::find( %find );
+		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $option ); } @Papers ) ) );
+		$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $options[0] if @options == 2;
+		$find{lc $option} = $$variable{'ddmStock'.$option.$$variable{'Signature'}} if $$variable{'ddmStock'.$option.$$variable{'Signature'}};
+		$html .= sprintf(q`<li><label>Stock %1$s</label>
+				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
+				<option value=""> Please select </option>
+				%3$s
+				</select>
+			</li>
+			`, $option, $$variable{'Signature'}, 
+			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{'Signature'}} ),
+		);
+	} # end foreach option
+	return $html;
+) ?>
+			<? else ( $config{$$variable{'ProjectType'}->name().'StockOptions'} ) ?>
 			<p>
 				<label>Stock Name:</label>
 				<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
@@ -196,6 +227,7 @@
                 </select>
             </p>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
+			<? endif ( $config{$$variable{'ProjectType'}->name().'StockOptions'} ) ?>
 		</div><!-- House -->
 	</fieldset>
 </div>

@@ -1,5 +1,10 @@
 <div id="Configuration">
 <form id="f1" name="f1" method="post">
+<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', q`popup_window('_configuration_popup.html');`, '', 'New' ); ) ?>
+</p>
 <? echo (
 	my $html;
 	my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration ORDER BY category, lower(name)' );
@@ -31,10 +36,10 @@
             $html .= qq{</select>};
         } elsif ( $type eq 'yes/no' ) {
             $html .= qq{<input type="radio" id="}.$name.qq{Y" name="$name" value="Y"};
-            $html .= ' checked' if $value eq 'Y';
+            $html .= ssi::checked( $value eq 'Y' );
             $html .= qq{ /><label class="radio" for="}.$name.qq{Y">Yes</label>\n};
             $html .= qq{<input type="radio" id="}.$name.qq{N" name="$name" value="N"};
-            $html .= ' checked' if $value eq 'N';
+            $html .= ssi::checked( $value eq 'N' );
             $html .= qq{ /><label class="radio" for="}.$name.qq{N">No</label>\n};
         } elsif ( $type eq 'textarea' ) {
 			my @rows = split "\n", $value;
