@@ -368,3 +368,67 @@ function dimensions_onChange( form ) {
 	calc(form.name);
 } // end function dimensions_onChange
 
+function Stock_onchange( element, id ) {
+    var form = element.form;
+    if ( gettingNewPrice ) {
+        if ( timeout ) clearTimeout( timeout );
+        timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+        return;
+    } // end if
+    timeout = null;
+
+	var h = new Hash();
+	h.set('project_id', form.elements['ProjectIndex'].value );
+	h.set('selected', element.name );
+	h.set('form', form.id );
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		var filter = form.elements['ddmStock'+filters[index]];
+		if ( filter) {
+			h.set(filters[index], filter.getValue() );
+			filter.disabled = true;
+		} // end if filter exists
+	} // end for 
+	new Ajax.Request( '_paper.json', { parameters: h, evalScripts: true } );
+} // end function Stock_onChange
+
+function cbStockFillResults( results ) {
+	var form = $(results.get('form'));
+	if ( ! form ) {
+		alert('No form for ' + results.get('form') );
+		gettingNewPrice = false;
+		return;
+	} // end if
+	results.unset('form');
+
+    var keys = results.keys();
+    for ( var index = 0, len = keys.length; index < len; ++index ) {
+        var key = keys[index];
+        var value = results.get(key);
+		var ddm = form.elements['ddmStock'+key];
+		if ( ! ddm ) {
+			alert("No ddm for " + key );
+			continue;
+		} // end if
+		var selectedValue = ddm.getValue();
+		var options = new Array();
+		options[0] = create_option( '', 'select one' );
+		for( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+			options[options.length] = create_option( value[ddm_index], value[ddm_index] );
+		} 	
+		fill_ddm( ddm, options );
+		if ( options.length == 2 ) {
+			ddm_select_by_index( ddm, 1 );
+		} else {
+			ddm_select_by_value( ddm, selectedValue );
+		} // end if
+	} // end for
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		var filter = form.elements['ddmStock'+filters[index]];
+		if ( filter) {
+			filter.disabled = false;
+		} // end if filter exists
+	} // end for 
+	gettingNewPrice = false;
+} // end function Stock_Fill

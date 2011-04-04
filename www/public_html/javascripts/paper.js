@@ -41,6 +41,7 @@ function get_parameters( form, id, selected ) {
 	return parameters;
 } // end function get_parameters( form )
 
+
 function filter_onChange( element, id, selected ) {
 	var form = element.form;
 
