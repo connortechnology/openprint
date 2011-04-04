@@ -274,6 +274,12 @@ if ( $LoginFailed ) {
 if ( ! sets::isin( 'comments', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='comments'", 'column_name');
+	if ( ! exists $$data{'approved'} ) {
+	$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
+	} # endif
 }
 $dbh->disconnect();
 1;

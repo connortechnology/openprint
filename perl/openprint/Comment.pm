@@ -13,6 +13,7 @@ $serial = 'comments_id_seq';
 	'object_id'		=>	'object_id',
 	'created_on'	=>	'created_on',
 	'deleted'		=>	'deleted',
+	'approved'		=>	'approved',
 	'text'			=>	'text',
 	'approved'		=>	'approved',
 );
@@ -21,6 +22,7 @@ $serial = 'comments_id_seq';
 	'deleted'		=>	0,
 	'approved'		=>	0,
 	'user_id'		=> q`$openprint::session{user_id}`,
+	'approved'		=>	0,
 );
 
 1;
