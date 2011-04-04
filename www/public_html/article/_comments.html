@@ -1,7 +1,13 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
 	my $html;
-	foreach my $Comment ( $$variable{'Article'}->Comments() ) {
+	$html .= 'The following comments require approval:<br/>';
+	foreach my $Comment ( $$variable{'Article'}->Comments( {'approved' => 0} ) ) {
+		$html .= sprintf( q`
+			<div class="comment">At %s %s said:<br/>%s</div>
+		`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+	} # end foreach Comment
+	foreach my $Comment ( $$variable{'Article'}->Comments( { 'approved' => 1 } ) ) {
 		$html .= sprintf( q`
 			<div class="comment">At %s %s said:<br/>%s</div>
 		`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );

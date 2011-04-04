@@ -147,10 +147,16 @@ sub _comments {
 			'object_type'	=>	'openprint::Article',
 			) ) {
 
+			my $approved = 0;
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $Article->created_by() ) {
+				$approved = 1;
+			} # endif
+
 			$variable{'error'} .= new openprint::Comment()->save({
 					'text'			=>	$param{'text'},
 					'object_type'	=>	'openprint::Article',
 					'object_id'		=>	$Article->id(),
+					'approved'		=>	$approved,
 					});
 		} # end if comment already exists
 	} # end if
