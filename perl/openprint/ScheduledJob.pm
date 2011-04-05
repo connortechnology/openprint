@@ -82,6 +82,10 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( exists $params{'tentative'} ) {
+		$sql .= ' AND tentative = ?';
+		push @values, $params{'tentative'};
+	} # end if
 	if ( exists $params{'id !='} ) {
 		$sql .= ' AND id != ?';
 		push @values, $params{'id !='};
@@ -766,14 +770,14 @@ sub bump {
 	if ( $self->Equipment()->smartscheduling() ) {
 		if ( ! $$self{'starttime'} ) {
 			my $LastJob = openprint::ScheduledJob::find_one(
-				'order'	=>	'starttime DESC',
+				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'id !='			=>	$$self{'id'},
 			);
 			my $starttime_seconds;
 			if ( $LastJob ) {
-				$starttime_seconds = $LastJob->endtime() + 1;
+				$starttime_seconds = $LastJob->endtime_seconds() + 1;
 			} # end if
 			if ( $starttime_seconds < time ) {
 				$starttime_seconds = time;
@@ -795,14 +799,14 @@ sub bump {
 	} else {
 		if ( ! $$self{'starttime'} ) {
 			my $LastJob = openprint::ScheduledJob::find_one(
-				'order'	=>	'starttime DESC',
+				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'id !='			=>	$$self{'id'},
 			);
 			my $starttime_seconds = $LastJob->endtime_seconds() + 1 if $LastJob;
 			# NOW() might not fall on a shift.
-			$starttime_seconds = time if ! $starttime_seconds;
+			$starttime_seconds = time if $starttime_seconds < time;
 			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 		} else {
 			my $NextShift = $self->Shift()->Next();

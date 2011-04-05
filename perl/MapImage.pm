@@ -51,6 +51,7 @@ sub handler {
 	$r = Apache2::Request->new( $request );
 	$r->content_type('image/gif');
 	$r->no_cache(1);
+	$log = $r->log;
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $r->dir_config('db_name'),
 			'driver'	=> $r->dir_config('db_driver'), 
@@ -105,7 +106,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 			my $pi = new Image::Magick;
 			$pi->Read(join('/', $path, $P->Parent()->name().'.gif'));
-			$r->log->debug("Scaling from: " . $P->name() . ' to ' . $P->Parent()->name() );
+			$log->debug("Scaling from: " . $P->name() . ' to ' . $P->Parent()->name() );
 			my ( $pw, $ph ) = $pi->Get( 'width','height' );
 			#my ( $px1, $py1, $px2, $py2 ) = split(',', $P->coordinates() );
 			my ( $x1, $y1, $x2, $y2 ) = split(',', $P->coordinates() );
@@ -115,8 +116,8 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 			my $y_ratio = ($y2-$y1)/$ph;
 			#$r->log->debug("Scaling to ($x1,$py1)x($px2,$py2)->($x1,$y1)x($x2,$y2)");
 
-			$r->log->debug(sprintf('Scaling box to (%d,%d)->(%d,%d)', $x1, $y1, $x1*$x_ratio, $y1*$y_ratio) );
-			$r->log->debug(sprintf('Scaling highlight to (%d,%d)x(%d,%d)->(%d,%d)x(%d,%d)', $lx1, $ly1, $lx2,$ly2, $lx1*$x_ratio, $ly1*$y_ratio, $lx2*$x_ratio, $ly2*$y_ratio) );
+			$log->debug(sprintf('Scaling box to (%d,%d)->(%d,%d)', $x1, $y1, $x1*$x_ratio, $y1*$y_ratio) );
+			$log->debug(sprintf('Scaling highlight to (%d,%d)x(%d,%d)->(%d,%d)x(%d,%d)', $lx1, $ly1, $lx2,$ly2, $lx1*$x_ratio, $ly1*$y_ratio, $lx2*$x_ratio, $ly2*$y_ratio) );
 			$lx1 = sprintf('%.0f', $lx1*$x_ratio );
 			$ly1 = sprintf('%.0f', $ly1*$y_ratio );
 			$lx2 = sprintf('%.0f', $lx2*$x_ratio );
@@ -145,10 +146,10 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 		undef $image;
 
 	} else {
-		$r->log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
+		$log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
 		if ( ! $selected ) {
 			if ( ! -e $r->filename ) {
-		$r->log->debug("Trying to make " . $r->filename );
+		$log->debug("Trying to make " . $r->filename );
 				if ( ! mkdir $r->filename ) {
 					$r->log->error("Unable to mkdir ".$r->filename . ':' . $!);
 				}
