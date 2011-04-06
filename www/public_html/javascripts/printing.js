@@ -252,7 +252,7 @@ function cbFillPrintResults( results ) {
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
-					ddm.options[ddm.options.length] = new Option( width + 'x' + height, width + 'x' + height, true );
+					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
 				} // end if
 			} else if ( type == 'Roll' ) {
 				if ( ! ddm_select_by_value( ddm, width, false ) ) {
@@ -381,16 +381,22 @@ function Stock_onchange( element, id ) {
 	h.set('project_id', form.elements['ProjectIndex'].value );
 	h.set('selected', element.name );
 	h.set('form', form.id );
+	if ( form.elements['rdbSuppliedStock'+id] ) {
+		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
+	} else {
+		alert( "No supplied seting");
+	} // end if
+
 	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		var filter = form.elements['ddmStock'+filters[index]];
+		var filter = form.elements['ddmStock'+filters[index]+id];
 		if ( filter) {
 			h.set(filters[index], filter.getValue() );
 			filter.disabled = true;
 		} // end if filter exists
 	} // end for 
 	new Ajax.Request( '_paper.json', { parameters: h, evalScripts: true } );
-} // end function Stock_onChange
+} // end function Stock_onchange
 
 function cbStockFillResults( results ) {
 	var form = $(results.get('form'));
@@ -402,33 +408,54 @@ function cbStockFillResults( results ) {
 	results.unset('form');
 
     var keys = results.keys();
+
     for ( var index = 0, len = keys.length; index < len; ++index ) {
         var key = keys[index];
         var value = results.get(key);
-		var ddm = form.elements['ddmStock'+key];
-		if ( ! ddm ) {
-			alert("No ddm for " + key );
-			continue;
-		} // end if
-		var selectedValue = ddm.getValue();
+
+		if ( key == 'SheetSize' ) {
+			var options = new Array();
+			options[0] = create_option( '', 'select one' );
+			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+				var size = value[ddm_index].split('x');
+				options[options.length] = create_option( value[ddm_index], size.each(function(item){return item+"&quot;";}).join( ' x ' ) );
+			} // end for
+		} else {
+
 		var options = new Array();
 		options[0] = create_option( '', 'select one' );
-		for( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+		for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
 			options[options.length] = create_option( value[ddm_index], value[ddm_index] );
-		} 	
-		fill_ddm( ddm, options );
-		if ( options.length == 2 ) {
-			ddm_select_by_index( ddm, 1 );
-		} else {
-			ddm_select_by_value( ddm, selectedValue );
-		} // end if
-	} // end for
-	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
+		} // end for
+
+			var ddm = form.elements['ddmStock'+key];
+			if ( ! ddm ) {
+//alert('No ddmStock'+key+suffix);
+				continue;
+			} // end if
+			var selectedValue = ddm.getValue();
+			fill_ddm( ddm, options );
+			if ( options.length == 2 ) {
+				ddm_select_by_index( ddm, 1 );
+			} else {
+				ddm_select_by_value( ddm, selectedValue );
+			} // end if
+		} // end if SheetSize or oTher
+	} // end for each key
+
+	// turn drop downs back on
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
-		var filter = form.elements['ddmStock'+filters[index]];
-		if ( filter) {
-			filter.disabled = false;
-		} // end if filter exists
+		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+			var suffix = suffixes[suffix_index];
+			var filter = form.elements['ddmStock'+filters[index]+suffix];
+			if ( filter ) {
+				filter.disabled = false;
+			} // end if filter exists
+		} // end foreach suffix
 	} // end for 
+	for ( var index = 1; index <= 3; index += 1 ) {
+		
+	} // end foreach qty_index
 	gettingNewPrice = false;
 } // end function Stock_Fill
