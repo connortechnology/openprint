@@ -1,0 +1,36 @@
+<? echo (
+	my $debug = 0;
+	my %specs;
+	$specs{'form'} = $param{'form'};
+	my $Project = new openprint::Project( $param{'project_id'} );
+	my @options = split(',', $config{$Project->Type()->name().'StockOptions'} );
+
+	if ( @options ) {
+		my %find = (
+			'project_type_id'	=>	$Project->type_id(),
+			);
+		foreach my $option ( @options ) {
+			if ( $param{$option} ) {
+				$find{lc $option} = $param{$option};
+			} # end if
+			last if 'ddmStock'.$option eq $param{'selected'};
+		} # end foreach option
+
+		my @Stocks = openprint::Paper::find( %find );
+
+		my $option_index = 0;
+		for ( ; $option_index < @options; $option_index += 1 ) {
+			last if 'ddmStock'.$options[$option_index] eq $param{'selected'};
+		} # end for
+		$option_index += 1;
+		for ( my $i = $option_index; $i < @options; $i += 1 ) {
+			@{$specs{$options[$i]}} = ();
+			foreach my $Stock ( @Stocks ) {
+				@{$specs{$options[$i]}} = sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) );
+			} # end foreach Stock
+		} # end foreach option
+	} # end if
+	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+) ?>
