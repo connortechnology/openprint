@@ -560,6 +560,10 @@ sub operator_id {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				next if ! $sig_id;
 				my $Service = $Project->Service( $sig_id );
+				if ( $Service->service_id() != $sig_id ) {
+					$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
+					next;
+			} # end if
 				if ( $Service->operator_id() != $operator_id ) {
 					$openprint::log->debug($Service->to_string());
 					$Service->save({'operator_id'=>$operator_id});
