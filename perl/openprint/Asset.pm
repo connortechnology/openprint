@@ -52,10 +52,12 @@ sub Type {
 sub on_disk_path {
 	return $openprint::config{'AssetPath'}.'/'.$_[0]->on_disk_filename();
 } # end sub on_disk_path
+
 sub on_disk_filename {
 	return '' if ! $_[0]{'id'};
 	return $_[0]{'id'}.'_'.$_[0]{'filename'};
 } # end sub on_disk_filename
+
 sub url {
 	return '/assets/'.$_[0]->on_disk_filename();
 }
@@ -67,9 +69,9 @@ sub on_disk_thumbnail_path {
 		$openprint::log->error( "No src for Asset: " . $_[0]->to_string() );
 		return '';
 	} # end if
-#$openprint::log->debug("Asset::on_disk_thumbnail_path: $src");
+$openprint::log->debug("Asset::on_disk_thumbnail_path: $src");
 	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
-#$openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::config{'AssetPath'}/thumbnails");
+$openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::config{'AssetPath'}/thumbnails");
 		mkdir $openprint::config{'AssetPath'}.'/thumbnails';
 		if ( $! ) {
 			$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
@@ -95,8 +97,22 @@ sub thumbnail_filename {
 	if ( $path =~ /thumbnails/ ) {
 		return '/thumbnails/'.$_[0]->on_disk_filename();
 	} # end if
-	return $_[0]->on_disk_filename();
+	return $_[0]->url();
 } # end sub thumbnail_filename
 
+sub Comments {
+	if ( $_[1] ) {
+		$_[1]{'object_id'} = $_[0]{'id'};
+		$_[1]{'object_type'} = 'openprint::Asset';
+		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+
+		return openprint::Comment->find($_[1]);
+	} # end if
+
+	if ( ! defined $_[0]{'Comments'} ) {
+		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>'openprint::Asset', 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	} # end if
+	return @{$_[0]{'Comments'}};
+} # end sub Comments
 1;
 __END__
