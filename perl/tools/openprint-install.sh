@@ -6,7 +6,7 @@ apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-ca
 apt-get -y install libemail-valid-perl libdigest-hmac-perl libdigest-sha1-perl libmailtools-perl libnet-dns-perl libnet-domain-tld-perl libtimedate-perl libcrypt-ssleay-perl
 apt-get -y install libtext-unaccent-perl libauthen-captcha-perl libdbi-perl libapache-dbi-perl libdbd-pg-perl libunicode-string-perl libsoap-lite-perl
 apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl
-apt-get -f -y --force-yes install perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl
+apt-get -f -y --force-yes install perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl libmath-round-perl
 # Also need Barcode-Code128-2.00
 
 ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/

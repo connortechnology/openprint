@@ -147,12 +147,29 @@ sub _comments {
 			'object_type'	=>	'openprint::Article',
 			) ) {
 
+			my $approved = 0;
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $Article->created_by() ) {
+				$approved = 1;
+			} # endif
+
 			$variable{'error'} .= new openprint::Comment()->save({
 					'text'			=>	$param{'text'},
 					'object_type'	=>	'openprint::Article',
 					'object_id'		=>	$Article->id(),
+					'approved'		=>	$approved,
 					});
 		} # end if comment already exists
+	} elsif ( $param{'action'} eq 'approve' ) {
+		if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $$Article{'user_id'} ) {
+			my $Comment = openprint::Comment->find_one('object_id'=>$$Article{'id'}, 'object_type'=>'openprint::Article', 'id'=>$param{'comment_id'} );
+			if ( $Comment ) {
+				$Comment->save({'approved'=>1});
+			} else {
+				$variable{'error'} .= 'Comment not found.';
+			} # end if
+		} else {
+			$variable{'error'} .= 'You are not authorized to approve this comment.';
+		} # end if
 	} # end if
 } # end sub _comments
 
