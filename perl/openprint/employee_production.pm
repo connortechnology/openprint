@@ -3,6 +3,10 @@ use strict;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
 use MIME::QuotedPrint;
 use URI::Escape;
+use Time::Local;
+use DateTime;
+#use DateTime::Format::Strptime;
+use DateTime::Format::Pg;
 
 use openprint ();
 
@@ -1680,58 +1684,73 @@ sub _shift_popup {
 
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{'shift_id'} );
+
+	# Always update the shift
+	push @{$variable{'changed'}}, $Shift->ul_id();
+
 	if ( $param{'action'} eq 'delete' ) {
 		$variable{'error'} .= $Shift->delete();
 	} else {
-		my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
-		my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
+		my $new_start_datetime = DateTime->new(
+				year      => $param{'starttime_year'}, month  => $param{'starttime_month'}, day => $param{'starttime_day'},
+				hour      => $param{'starttime_hour'}, minute => $param{'starttime_minute'},
+				time_zone => 'America/Toronto'
+				);
 
-		if ( $new_starttime > $new_endtime ) {
+		my $new_end_datetime = DateTime->new(
+				year      => $param{'endtime_year'}, month  => $param{'endtime_month'}, day => $param{'endtime_day'},
+				hour      => $param{'endtime_hour'}, minute => $param{'endtime_minute'},
+				time_zone => 'America/Toronto'
+				);
+
+		if ( $new_start_datetime > $new_end_datetime ) {
 			$variable{'error'} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
 			return;
 		} # end if
 
+		my $parser = 'DateTime::Format::Pg';
+
 		# Prevent starttime changing from excluding jobs
 		foreach my $J ( $Shift->Schedule() ) {
 			next if ! $J->locked();
-			if ( $J->starttime_seconds() > $new_starttime ) {
-				$new_starttime = $J->starttime_seconds();
+			my $st = $parser->parse_datetime($J->starttime());
+			if ( $st < $new_start_datetime ) {
 				$variable{'alert'} .= 'Start time has been adjusted to include docket ' . $J->Project()->docket().'.<br/>';
+				$new_start_datetime = $st;
 			} # end if
-			if ( $J->starttime_seconds() > $new_endtime ) {
-				$new_endtime = $J->starttime_seconds();
+			if ( $st > $new_end_datetime ) {
+				$new_end_datetime = $st;
 				$variable{'alert'} .= 'Ending time has been adjusted to include docket ' . $J->Project()->docket().'.<br/>';
 			} # end if
 		} # end foreach J
 
 		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift::find(
-					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
+					'starttime_<='	=>	$parser->format_datetime( $new_start_datetime ), 
+					'endtime_>'		=>	$parser->format_datetime( $new_start_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
 			next if $S->id() == $Shift->id();
-			$new_starttime = $S->endtime_seconds();
-			$new_endtime = $new_starttime if $new_starttime > $new_endtime;
+			$new_start_datetime = $parser->parse_datetime( $S->endtime() );
+			$new_end_datetime = $new_start_datetime if $new_start_datetime > $new_end_datetime;
 			$variable{'alert'} .= 'Start time has been adjusted to not overlap shift ' . $S->ul_id() . '<br/>';
 			last;
 		} # end foreach
 		foreach my $S ( openprint::Shift::find(
-					'starttime_>='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'starttime_<'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
+					'starttime_>='	=>	$parser->format_datetime( $new_start_datetime ),
+					'starttime_<'	=>	$parser->format_datetime( $new_end_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
 			next if $S->id() == $Shift->id();
-			$new_endtime = $S->starttime_seconds();
-			$new_starttime = $new_endtime if $new_starttime > $new_endtime;
+			$new_end_datetime = $parser->parse_datetime( $S->starttime() );
+			$new_start_datetime = $new_end_datetime if $new_start_datetime > $new_end_datetime;
 			$variable{'alert'} .= 'Ending time has been adjusted to not overlap shift ' . $S->to_string() . '<br/>';
 			last;
 		} # end foreach
 
-		push @{$variable{'changed'}}, $Shift->ul_id();
 		$variable{'error'} .= $Shift->save({
-				'starttime_seconds'	=>	$new_starttime,
-				'endtime_seconds'	=>	$new_endtime,
-				'operator_id'		=>	$param{'operator_id'},
-				'shift_id'			=>	$param{'equipmentshift_id'},
+				'starttime'		=>	$parser->format_datetime( $new_start_datetime ),
+				'endtime'		=>	$parser->format_datetime( $new_end_datetime ),
+				'operator_id'	=>	$param{'operator_id'},
+				'shift_id'		=>	$param{'equipmentshift_id'},
 				});
 
 	} # end if

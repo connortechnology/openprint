@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-apt-get -y install postgresql
+apt-get -y install postgresql libdatetime-format-pg-perl libdatetime-perl
 apt-get -y install apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl
 
 apt-get -y install libmail-sendmail-perl
