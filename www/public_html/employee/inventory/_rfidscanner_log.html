@@ -1,4 +1,4 @@
-<? if ( @{$$variable{'Entries'}} ) ?>
+<? if ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>
 <table class="List">
 	<tr>
 		<th align="left">When</th>
@@ -15,6 +15,6 @@
 		</tr>
 	<? endwhile ( $$variable{'Entry'} = shift @{$$variable{'Entries'}} ) ?>	
 </table>
-<? else ( @{$$variable{'Entries'}} ) ?>
+<? else ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>
 No results
-<? endif ( @{$$variable{'Entries'}} ) ?>
+<? endif ( $$variable{'Entries'} and @{$$variable{'Entries'}} ) ?>
