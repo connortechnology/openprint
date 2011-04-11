@@ -367,6 +367,14 @@ fieldset ul li input[type="text"] {
 	width: 60%;
 }
 
+.dialog li {
+	padding-left: 80px;
+}
+.dialog li label {
+	margin-left: -80px;
+	width: 75px;
+}
+
 fieldset.filters {
 	margin-left: 0px;
 	margin-right: 0px;
@@ -596,11 +604,11 @@ span.DateSelectorCT {
 	float: left;
 	width: 300px;
 }
-span.DateTimeSelector {
-	float: left;
-	width: 400px;
+.DateTimeSelector {
+	display: inline-block;
+	min-width: 400px;
 }
-span.DateSelector select, span.DateTimeSelector select {
+.DateSelector select, .DateTimeSelector select {
 	width: auto;
 	max-width: none;
 }
