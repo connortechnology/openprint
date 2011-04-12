@@ -1,16 +1,11 @@
 <? eval (
-	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
+	$$variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} ) if ! $$variable{'Project'};
 	$$variable{'Company'} = $$variable{'Project'}->Company();
-	my %services = $$variable{'Project'}->get_services();
-	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $openprint::param{'ProjectIndex'}, $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) );
+	my $services = $$variable{'Project'}->services();
+	my $Service = $$variable{'Project'}->Service( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] );
+	$$variable{'Operator'} = $Service->Operator() if $Service;
 ) ?>
 <style type="text/css">
-	body {
-	font-family: Arial, Helvetica, Sans-Serif;
-}
-	br.spacer {
-		clear: both;
-	}
 	table.Docket .label {
 		text-align: right;
 		font-weight: bold;
@@ -39,19 +34,10 @@
 	input {
 		display: none;
 	}
-	.box {
-		display: -moz-inline-block;
-		display: inline-block;
-		width: 12px;
-		height: 12px;
-		border: 1px solid black;
-		margin: 2px;
-		vertical-align:middle;
-	}
 </style>
 <div style="float: left; text-align: center;">
 Project #<br/>
-<img src="/barcode.png?code=P<? echo ( $openprint::param{'ProjectIndex'} ) ?>+"/>
+<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+"/>
 </div>
 <div style="float: right; text-align: center;">
 Submit<br/>
@@ -79,11 +65,12 @@ Submit<br/>
 		<? echo ( 
 			my @presses;
 			foreach my $signature_service_index ( $$variable{'Project'}->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $openprint::param{'ProjectIndex'}, $signature_service_index );
+				my $Service = $$variable{'Project'}->Service( $signature_service_index );
+				my $sig_specs = $Service->specs();
 				$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
 				push @presses, $$sig_specs{'UsePress'} if ! sets::isin( $$sig_specs{'UsePress'}, \@presses );
 			} # end foreach
-			return join(',', sql::execute( $log, $dbh, q{SELECT strName FROM tbl_Equipment WHERE strID IN ('}.join("','", @presses ).q{')} ) );
+			return join(', ', sql::execute( $log, $dbh, q{SELECT strName FROM tbl_Equipment WHERE strID IN ('}.join("','", @presses ).q{')} ) );
 		) ?>
 		<br/>
 		<br/>
