@@ -31,6 +31,6 @@
 		return 'Unknown label type.';
 	} else {
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
-		return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+		return ssi::variable_substitution( \$content, $variable );
 	} # end if
 ) ?>

@@ -412,6 +412,9 @@ sub find_operators {
 	if ( exists $$params{$k.'_in'} ) {
 		push @{$results{'_in'}}, "? IN $f", $$params{$k.'_in'};
 	} # end if
+	if ( exists $$params{$k.' in'} ) {
+		push @{$results{' in'}}, "? IN $f", $$params{$k.' in'};
+	} # end if
 	if ( exists $$params{$k.' not in'} ) {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
