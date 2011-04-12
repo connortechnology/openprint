@@ -233,6 +233,22 @@ if ( $$variable{'HiddenSignatures'} ) {
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<tr>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<td class="unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<td align="right"><b>Value for shipping:</b></td>
+			<td align="right"><? echo ( 
+				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
+				$price = 5000 * ( int( $price/5000 ) );
+				return openprint::Currency::format( $price );
+				) ?>
+			</td>
+			<td></td>
+		</tr>
+		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
