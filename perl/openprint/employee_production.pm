@@ -1902,9 +1902,6 @@ sub _add_maintenance {
 	$variable{'referer'} = $referer;
 } # end sub _add_maintenance
 
-sub skid_label {
-} # end sub skid_label
-
 sub bindery_schedule {
 } # end sub bindery_schedule
 
