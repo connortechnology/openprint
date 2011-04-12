@@ -31,7 +31,35 @@ sub _label {
 } # end sub _label
 
 sub label {
+	my $Label = $variable{'Label'} = new openprint::Label( $param{'id'} );
+	if ( $param{'action'} eq 'Send' ) {
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		my @attachments;
+		my %info;
+		$info{'ReplacementText'} = $param{'body'};
+		$info{'Label'} = $Label;
+
+        $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+        push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/label.html' );
+		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+
+		my $Email = new openprint::Email();
+        $variable{'information'} .= $Email->send(
+                TO  =>  'iconnor@point-one.com',
+                #TO  =>  [ split(',', $param{'to'}) ],
+                FROM    =>  $param{'from'},
+                SUBJECT =>  $param{'subject'},
+                ATTACHMENTS =>  \@attachments,
+                );
+
+	} # end if
 } # end sub label
+
+sub _send_email {
+	$variable{'Label'} = new openprint::Label( $param{'id'} );
+} # end _send_email
 
 1;
 __END__
