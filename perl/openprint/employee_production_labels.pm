@@ -11,6 +11,7 @@ use vars qw{ $log $dbh %config %variable %param };
 
 require openprint::Label;
 require openprint::LabelType;
+require openprint::Email;
 
 sub index {
 } # end sub index
@@ -39,11 +40,11 @@ sub label {
 		$info{'ReplacementText'} = $param{'body'};
 		$info{'Label'} = $Label;
 
-        $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+        $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
         push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/label.html' );
-		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
 
 		my $Email = new openprint::Email();
         $variable{'information'} .= $Email->send(
