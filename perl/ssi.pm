@@ -99,10 +99,10 @@ sub do_new_substitution {
 } # end sub do_new_substitution
 
 sub include {
-    my ( $file, $variable ) = @_;
-    $variable = \%variable if ! $variable;
-    my $blah = misc::load_file( $log, $file );
-    return variable_substitution( $r, $log, $dbh, \$blah, $variable );
+	my ( $file, $variable ) = @_;
+	$variable = \%variable if ! $variable;
+	my $blah = misc::load_file( $log, $file );
+	return variable_substitution( $r, $log, $dbh, \$blah, $variable );
 }
 
 sub do_include {
@@ -392,6 +392,35 @@ sub get_start_end_dates {
 
 } # end sub get_start_end_dates
 
+sub button {
+	my ( $name, $options ) = @_;
+
+	$$options{'href'} = '#' if ! $$options{'href'};
+	$$options{'text'} = $name if ! $$options{'text'};
+
+	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	if ( $$options{'onclick'} ) {
+		$html .= 'onclick="';
+		#if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
+				#$html .= "btnOff('$name');";
+		##} # end if
+		$html .= $$options{'onclick'}."return false;\" ";
+	} # end if
+	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+	$html .= '>';
+	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
+		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
+		if ( $$options{'text'} ) {
+			$html .= "alt=\"$$options{text}\"";
+		} # end if
+		$html .= "/>";
+	} else {
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+	}
+	$html .= "</a>\n";
+	return $html;
+} # end sub button
+
 sub writeButton {
 	my ( $log, $dbh, $name, $gif, $onclick, $href, $text ) = @_;
 	if ( $href eq '' ) {
@@ -432,16 +461,16 @@ return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) 
 }
 
 sub setup_date_select {
-    my ( $page, $prefix, $delta ) = @_;
-    if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+	my ( $page, $prefix, $delta ) = @_;
+	if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
 		if ( $delta ne '' ) {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
 		} else {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
 		} # end if
-    } else {
-        @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
-    } # end if
+	} else {
+		@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
+	} # end if
 } # end sub setup_date_select
 
 sub date_select {
@@ -578,11 +607,11 @@ sub save_params {
 } # end sub save_params
 
 sub count_lines {
-    if ( $_[0] ) {
-        return scalar split( "\n", $_[0] );
-    } else {
-        return 2;
-    } # end if
+	if ( $_[0] ) {
+		return scalar split( "\n", $_[0] );
+	} else {
+		return 2;
+	} # end if
 } # end sub count_lines
 
 

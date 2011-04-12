@@ -1,17 +1,13 @@
 html {
-	overflow-y: scroll;
-	height: 100%;
 }
 #Content {
-	top: 0px;
+	top: 0;
 	position: relative;
 	background-color: #DEDCB7;
 	color: #22275E;
 	height: 100%;
-	margin: 0px;
-	margin-left: 190px;
-	padding: 10px;
-	padding-top: 0px;
+	margin: 0 0 0 190px;
+	padding: 0 10px 10px 10px;
 
 }
 #Content:after {
@@ -23,10 +19,6 @@ html {
     visibility: hidden;
 
 }
-/* Hides from IE-mac \*/
-* html #Content {height: 1%;}
-#Content {display: block;}
-/* End hide from IE-mac */
 
 #ContentInner {
 	padding: 0px;
