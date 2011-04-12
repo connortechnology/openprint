@@ -54,6 +54,9 @@ require openprint::Payment;
 	'terms_accepted'			=>	'terms_accepted',
 	);
 sub find {
+	if ( $_[0] eq 'openprint::Order' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE 1>0';
