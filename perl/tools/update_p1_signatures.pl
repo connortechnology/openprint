@@ -29,8 +29,8 @@ $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
 foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
-sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
-sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+	sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+	sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
 foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {

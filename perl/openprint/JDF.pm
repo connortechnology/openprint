@@ -577,7 +577,7 @@ sub JDF_ImpositionIntent {
 	$ImpositionIntent->setAttribute('DescriptiveName', $summary );
 
 	my @Papers = openprint::Paper::find(
-			'name'      => $$sig_specs{'ddmStockBrand'},
+			'name'      => $$sig_specs{'ddmStockName'},
 			'finish'    => $$sig_specs{'ddmStockFinish'},
 			'colour'    => $$sig_specs{'ddmStockColour'},
 			'weight'    => $$sig_specs{'ddmStockWeight'},

@@ -11,13 +11,14 @@
 		'project_type_id'	=>	$Project->type_id(),
 		( exists $param{'Supplied'} ? ( 'supplied'			=>	[ undef, $param{'Supplied'} ] ) : () ),
 		);
+	$param{'selected'} =~ s/ddmStock//;
 
-	if ( sets::isin( $param{'selected'}, @options ) ) {
+	if ( sets::isin( $param{'selected'}, \@options ) ) {
 		foreach my $option ( @options ) {
 			if ( $param{$option} ) {
 				$find{lc $option} = $param{$option};
 			} # end if
-			last if 'ddmStock'.$option eq $param{'selected'};
+			last if $option eq $param{'selected'};
 		} # end foreach option
 	} # end if
 
@@ -103,16 +104,16 @@
 	} # end if Presses
 
 	my $option_index = 0;
-	if ( sets::isin( $param{'selected'}, @options ) ) {
+	if ( sets::isin( $param{'selected'}, \@options ) ) {
 		for ( ; $option_index < @options; $option_index += 1 ) {
-			last if 'ddmStock'.$options[$option_index] eq $param{'selected'};
+			last if $options[$option_index] eq $param{'selected'};
 		} # end for
 		$option_index += 1;
 	} # end if
 	for ( my $i = $option_index; $i < @options; $i += 1 ) {
 		@{$specs{$options[$i]}} = ();
 		foreach my $Stock ( @Stocks ) {
-			@{$specs{$options[$i]}} = sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) );
+			@{$specs{$options[$i]}} = sort( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
 		} # end foreach Stock
 	} # end foreach option
 	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};

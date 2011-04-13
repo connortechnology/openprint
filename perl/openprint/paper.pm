@@ -47,7 +47,7 @@ sub get_paper {
 	} # end foreach
 
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$names{$_}, $_ } sort keys %names ) if ($specs{'Selected'} eq 'Manufacturer') or ! $specs{'Selected'};
+	push @results, jsrs::encode_array( 'Name', map {$names{$_}, $_ } sort keys %names ) if ($specs{'Selected'} eq 'Manufacturer') or ! $specs{'Selected'};
 	push @results, jsrs::encode_array( 'Finish', map { $finishes{$_}, $_ } sort keys %finishes ) if ( ! $specs{'Finish'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $colours{$_}, $_ } sort keys %colours ) if ( ! $specs{'Colour'} ) or ! sets::isin( $specs{'Selected'}, [ 'Finish','Weight' ] );
 	if ( $specs{'Selected'} ne 'Weight' ) {
@@ -106,7 +106,7 @@ sub select_paper {
 	} # end foreach
 
 	my @results;
-	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ! sets::isin( $selected, ['Name','Finish','Colour','Weight'] );
+	push @results, jsrs::encode_array( 'Name', map {$_, $_ } sort keys %names ) if ! sets::isin( $selected, ['Name','Finish','Colour','Weight'] );
 	push @results, jsrs::encode_array( 'Finish', map { $_, $_ } sort keys %finishes ) if ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
 	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ( ! $colour ) or ! sets::isin( $selected, [ 'Weight','Colour' ] );
 	if ( $selected ne 'Weight' ) {

@@ -179,9 +179,9 @@ function calc_print( formName, force ) {
 		div.show();
 	} // end if
 	gettingNewPrice = true;
-	var h = form.serialize(true);
-	h.ServiceType = 'Printing';
-	h.callback = 'cbFillPrintResults';
+	var h = $H(form.serialize(true));
+	h.set('ServiceType', 'Printing' );
+	h.set( 'callback', 'cbFillPrintResults' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc_print
 
@@ -383,8 +383,6 @@ function Stock_onchange( element, id ) {
 	h.set('form', form.id );
 	if ( form.elements['rdbSuppliedStock'+id] ) {
 		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
-	} else {
-		alert( "No supplied seting");
 	} // end if
 
 	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
@@ -395,7 +393,7 @@ function Stock_onchange( element, id ) {
 			filter.disabled = true;
 		} // end if filter exists
 	} // end for 
-	new Ajax.Request( '_paper.json', { parameters: h, evalScripts: true } );
+	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
 } // end function Stock_onchange
 
 function cbStockFillResults( results ) {
@@ -412,38 +410,36 @@ function cbStockFillResults( results ) {
     for ( var index = 0, len = keys.length; index < len; ++index ) {
         var key = keys[index];
         var value = results.get(key);
+		var options = new Array();
+		options[0] = create_option( '', 'select one' );
 
 		if ( key == 'SheetSize' ) {
-			var options = new Array();
-			options[0] = create_option( '', 'select one' );
 			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
 				var size = value[ddm_index].split('x');
 				options[options.length] = create_option( value[ddm_index], size.each(function(item){return item+"&quot;";}).join( ' x ' ) );
 			} // end for
 		} else {
-
-		var options = new Array();
-		options[0] = create_option( '', 'select one' );
-		for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
-			options[options.length] = create_option( value[ddm_index], value[ddm_index] );
-		} // end for
-
 			var ddm = form.elements['ddmStock'+key];
 			if ( ! ddm ) {
 //alert('No ddmStock'+key+suffix);
 				continue;
 			} // end if
 			var selectedValue = ddm.getValue();
+
+			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+				options[options.length] = create_option( value[ddm_index], value[ddm_index] );
+			} // end for
 			fill_ddm( ddm, options );
 			if ( options.length == 2 ) {
 				ddm_select_by_index( ddm, 1 );
 			} else {
 				ddm_select_by_value( ddm, selectedValue );
 			} // end if
-		} // end if SheetSize or oTher
+		} // end if SheetSize or Other
 	} // end for each key
 
 	// turn drop downs back on
+	var suffixes = new Array ( '', '1', '2', '3' );
 	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
@@ -454,8 +450,6 @@ function cbStockFillResults( results ) {
 			} // end if filter exists
 		} // end foreach suffix
 	} // end for 
-	for ( var index = 1; index <= 3; index += 1 ) {
-		
-	} // end foreach qty_index
 	gettingNewPrice = false;
+	calc(form.name);
 } // end function Stock_Fill

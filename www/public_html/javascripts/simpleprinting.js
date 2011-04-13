@@ -44,9 +44,9 @@ function calc( formName, force ) {
 		return;
 	} // end if
 	gettingNewPrice = true;
-	var h = form.serialize(true);
-	h.ServiceType = 'Project';
-	h.callback = 'cbCalc';
+	var h = $H(form.serialize(true));
+	h.set( 'ServiceType', 'Project' );
+	h.set( 'callback', 'cbCalc' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	remove_div('Buttons');
 	add_div('Processing');
@@ -91,7 +91,7 @@ function Dimensions_onchange( select, signature ) {
 	remove_div('OrderButton');
 	// Refreshes Paper: we do this so that we don't get any stocks in the list that are smaller than our size.
 	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
-	rdbSuppliedStock_onchange( select, signature );
+	Stock_onchange( select, signature );
 	//calc( select.form.name );
 } // end if
 
