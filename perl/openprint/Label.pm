@@ -1,18 +1,14 @@
+use strict;
 package openprint::Label;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 
 require sql;
-require ssi;
-require misc;
 
 $debug = 1;
 $table = 'labels';
@@ -59,10 +55,9 @@ sub save {
 } # end sub save
 
 sub delete {
-    my $self = shift;
     my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $$self{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM Label_data WHERE label_id=?}, $_[0]{'id'} );
+    sql::execute( undef, undef, q{DELETE FROM Labels WHERE id=?}, $_[0]{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
 

@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title><? echo ( $config{'SiteTitle'} ) ?></title>
+        <style type="text/css">
+        <? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/email.css' ); ) ?>
+        <? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/employee_production_labels.css' ); ) ?>
+        </style>
+        <base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+    </head>
+    <body>
+		<div class="Label">
+			<? echo (
+				if ( ! $$variable{'Label'}->type_id() ) {
+					return 'Unknown label type.';
+				} else {
+					my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'_view.html' );
+					return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+				} # end if
+			) ?>
+		</div>
+	</body>
+</html>
