@@ -1,0 +1,35 @@
+<form id="config_form" name="config_form">
+	<input type="hidden" name="btnFunction" value="New"/>
+	<fieldset><legend>New Configuration Entry</legend>
+		<div class="content">
+			<ul>
+				<li><label>Name:</label>
+					<input type="text" id="name" name="name"/>
+				</li>
+				<li><label>Description:</label>
+					<textarea id="description" name="description" cols="" rows="" onkeyup="textarea_resize(this);"></textarea>
+				</li>
+				<li><label>Type:</label>
+					<select id="type" name="type">
+					<? echo ( ssi::make_drop_down( [ map { $_, $_ } ( 'Supplier', 'pricelist', 'currency', 'yes/no', 'textarea', 'text','list' ) ] ); ) ?>
+					</select>
+				</li>
+				<li><label>Category:</label>
+					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );"/>
+					<select name="category" id="category">
+						<option value="">create new</option>
+						<? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration' ) ] ); ) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+		<p class="buttons">
+			<? echo (
+				return join('',
+					ssi::writeButton( $log, $dbh, 'SaveNew', 'save.gif', q`$('config_form').submit();`, '', 'Save' ),
+					ssi::writeButton( $log, $dbh, 'CancelNew', 'cancel.gif', q`popupWin.destroy();`, '', 'Cancel' ),
+				);
+			) ?>
+		</p>
+	</fieldset>
+</form>

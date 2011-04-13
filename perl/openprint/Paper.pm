@@ -32,7 +32,11 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
+<<<<<<< HEAD
 $debug = 0;
+=======
+my $debug = 1;
+>>>>>>> 8e1cb44d01f6732fa504861fa8a53b4d2bcf5ec6
 
 my @fields = (
 		'id', 'created_on',
@@ -251,7 +255,7 @@ sub find {
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading papers SQL($sql)" . DBI->errstr );
+		$openprint::log->error("Error loading papers SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
 		$openprint::log->debug('No papers loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {

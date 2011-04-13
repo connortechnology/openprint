@@ -3,35 +3,35 @@
 		<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<p>
 			<label>Customer supplied:</label>
-			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();rdbSuppliedStock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>Y" name="rdbSuppliedStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').show();Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').hide();rdbSuppliedStock_onchange(this,'<?Signature?>');" />
+			<input type="radio" id="SuppliedStock<?Signature?>N" name="rdbSuppliedStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('SuppliedStockWarning<?Signature?>').hide();Stock_onchange(this,'<?Signature?>');" />
 			<label class="radio" for="SuppliedStock<?Signature?>N">No</label><br/>
- <span id="SuppliedStockWarning<?Signature?>" class="error" <? echo ( 'style="display:none;"' if $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ) ?>>Prices shown will not include the price of the stock.</span>
+			<span id="SuppliedStockWarning<?Signature?>" class="error" <? echo ( 'style="display:none;"' if $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} ne 'Y' ) ?>>Prices shown will not include the price of the stock.</span>
 		</p>
 		<p>
 			<label>Unlisted stock:</label>
-			<input type="radio" id="SpecificStock<?Signature?>Y" name="rdbSpecificStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="remove_div('HouseStock<?Signature?>');add_div('SpecificStock<?Signature?>');if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);" />
+			<input type="radio" id="SpecificStock<?Signature?>Y" name="rdbSpecificStock<?Signature?>" value="Y" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('HouseStock<?Signature?>').hide();$('SpecificStock<?Signature?>').show();if(this.form.ddmStockSheetSize1){clear_ddm(this.form.ddmStockSheetSize1);};if(this.form.ddmStockSheetSize2){clear_ddm(this.form.ddmStockSheetSize2);};if(this.form.ddmStockSheetSize3){clear_ddm(this.form.ddmStockSheetSize3);};calc(this.form.name);" />
 			<label class="radio" for="SpecificStock<?Signature?>Y">Yes</label>
-			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="remove_div('SpecificStock<?Signature?>');add_div('HouseStock<?Signature?>');ddmStockWeight_onchange(this,'<?Signature?>');calc(this.form.name);" />
+			<input type="radio" id="SpecificStock<?Signature?>N" name="rdbSpecificStock<?Signature?>" value="N" <? echo ( ssi::checked( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('SpecificStock<?Signature?>').hide();$('HouseStock<?Signature?>').show();Stock_onchange(this,'<?Signature?>');calc(this.form.name);" />
 			<label class="radio" for="SpecificStock<?Signature?>N">No</label>
 		</p>
 		<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
 		<div id="SpecificStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} ne 'Y' ? 'none' : 'block' ) ?>;">
 			<p><label>Brand:</label>
-			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockBrand_onKeyUp(this);" />
+			<input type="text" name="txtSpecificStockBrand<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockBrand'.$$variable{'Signature'}} ) ?>" />
 			</p>
 			<p><label>Finish:</label>
-			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockFinish_onKeyUp(this);" />
+			<input type="text" name="txtSpecificStockFinish<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockFinish'.$$variable{'Signature'}} ) ?>" />
 			</p>
 			<p><label>Colour:</label>
-			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} ? $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} : 'White' ) ?>" onkeyup="txtSpecificStockColour_onKeyUp(this);" />
+			<input type="text" name="txtSpecificStockColour<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} ? $$variable{'txtSpecificStockColour'.$$variable{'Signature'}} : 'White' ) ?>" />
 			</p>
 			<p><label>Weight:</label>
-			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{'Signature'}} ) ?>" onkeyup="txtSpecificStockWeight_onKeyUp(this);" />
+			<input type="text" name="txtSpecificStockWeight<?Signature?>" value="<? echo ( $$variable{'txtSpecificStockWeight'.$$variable{'Signature'}} ) ?>" />
 			</p>
 			<p><label>Calliper:</label>
-				<input type="text" name="txtSpecificStockCalliper<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockCalliper'.$$variable{'Signature'}} ) ?>" onchange="calc('f1');" onkeyup="txtSpecificStockCalliper_onKeyUp(this);" />
+				<input type="text" name="txtSpecificStockCalliper<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockCalliper'.$$variable{'Signature'}} ) ?>" onchange="calc(this.form.name);" onkeyup="this.value=this.value.replace(/[^\d\-\.]/g, '' );" />
 				<span class="smTbl">Inches</span>
 			</p>
 <? eval (
@@ -113,74 +113,46 @@
 			</p>
 		</div><!-- Specific -->
 		<div id="HouseStock<?Signature?>" style="display: <? echo ( $$variable{'rdbSpecificStock'.$$variable{'Signature'}} eq 'Y' ? 'none' : 'block' ) ?>;">
-			<p>
-				<label>Stock Name:</label>
-				<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
+			<ul>
+<? echo (
+	my $html;
+	my @types = ('Sheet');
+	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
+		push @types, 'Roll';
+	} # end if
+	my %find = (
+			'project_type_id'	=>	$$variable{'ProjectType'}->id(),
+			'supplied'			=>	[undef, $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0],
+			'type'				=>	\@types,
+	);
+
+	my @StockOptions = split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} );
+	@StockOptions = split( ',', $config{'StockOptions'} ) if ! @StockOptions;
+	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+
+	foreach my $option ( @StockOptions ) {
+		my @Papers = openprint::Paper::find( %find );
+		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $option ); } @Papers ) ) );
+		$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $options[0] if @options == 2;
+
+		# Special case for Name which used to be called Brand
+		if ( ( $option eq 'Name' ) and ( ! $$variable{'ddmStock'.$option.$$variable{'Signature'}} ) and ( $$variable{'ddmStockBrand'.$$variable{'Signature'}} ) ) {
+			$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $$variable{'ddmStockBrand'.$$variable{'Signature'}};
+		} # end if
+		$find{lc $option} = $$variable{'ddmStock'.$option.$$variable{'Signature'}} if $$variable{'ddmStock'.$option.$$variable{'Signature'}};
+		$html .= sprintf(q`<li><label>Stock %1$s</label>
+				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
 				<option value=""> Please select </option>
-				<? echo (
-						my @options = openprint::paper::get_names( $$variable{'ProjectType'}->name(), @$variable{
-							 'ddmStockBrand'.$$variable{'Signature'},
-							 'ddmStockFinish'.$$variable{'Signature'},
-							 'ddmStockColour'.$$variable{'Signature'},
-							 'ddmStockWeight'.$$variable{'Signature'},
-							 'rdbSuppliedStock'.$$variable{'Signature'},
-							 } );
-						$$variable{'ddmStockBrand'.$$variable{'Signature'}} = $options[0] if @options == 2;
-						ssi::make_drop_down( \@options, $$variable{'ddmStockBrand'.$$variable{'Signature'}} );
-				) ?>
+				%3$s
 				</select>
-			</p>
-			<p>
-				<label><? echo ( ssi::writeTip( 'Stock Finish' ); ) ?>:</label>
-				<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
-					<option value=""> Please select </option>
-					<? echo (
-							my @options = openprint::paper::get_finishes( $$variable{'ProjectType'}->name(), @$variable{
-								'ddmStockBrand'.$$variable{'Signature'},
-								'ddmStockFinish'.$$variable{'Signature'},
-								'ddmStockColour'.$$variable{'Signature'},
-								'ddmStockWeight'.$$variable{'Signature'},
-								'rdbSuppliedStock'.$$variable{'Signature'},
-								} );
-							$$variable{'ddmStockFinish'.$$variable{'Signature'}} = $options[0] if @options == 2;
-							ssi::make_drop_down( \@options, $$variable{'ddmStockFinish'.$$variable{'Signature'}} );
-					) ?>
-				</select>
-			</p>
-			<p>
-				<label><? echo ( ssi::writeTip('Stock Colour'); ) ?>:</label>
-				<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
-				<option value=""> Please select </option>
-				<? echo (
-						my @options = openprint::paper::get_colours( $$variable{'ProjectType'}->name(), @$variable{
-								'ddmStockBrand'.$$variable{'Signature'},
-								'ddmStockFinish'.$$variable{'Signature'},
-								'ddmStockColour'.$$variable{'Signature'},
-								'ddmStockWeight'.$$variable{'Signature'},
-								'rdbSuppliedStock'.$$variable{'Signature'},
-								} );
-						$$variable{'ddmStockColour'.$$variable{'Signature'}} = $options[0] if @options == 2;
-						ssi::make_drop_down( \@options, $$variable{'ddmStockColour'.$$variable{'Signature'}} );
-						) ?>
-					</select>
-			</p>
-			<p>
-				<label><? echo ( ssi::writeTip('Stock Weight'); ) ?>:</label>
-				<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
-				<option value=""> Please select </option>
-				<? echo (
-						my @options =openprint::paper::get_weights( $$variable{'ProjectType'}->name(), @$variable{
-								'ddmStockBrand'.$$variable{'Signature'},
-								'ddmStockFinish'.$$variable{'Signature'},
-								'ddmStockColour'.$$variable{'Signature'},
-								'ddmStockWeight'.$$variable{'Signature'},
-								'rdbSuppliedStock'.$$variable{'Signature'},
-								} );
-						$$variable{'ddmStockWeight'.$$variable{'Signature'}} = $options[0] if @options == 2;
-						ssi::make_drop_down( \@options, $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
-				  ) ?>
-				</select>
-			</p>
+			</li>
+			`, $option, $$variable{'Signature'}, 
+			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{'Signature'}} ),
+		);
+	} # end foreach option
+	return $html;
+) ?>
+		</ul>
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
             <p><label>Stock Size:</label>
                 <select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">

@@ -774,23 +774,22 @@ sub get_Stocks {
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
-		if ( ! $$specs{'ddmStockBrand'} ) {
-			$$specs{'alert'} .= 'Please select a stock.';
-			return @Papers;
-		} # end if
-		if ( ! $$specs{'ddmStockFinish'} ) {
-			$$specs{'alert'} .= 'Please select a stock finish.';
-			return @Papers;
-		} # end if
-		if ( ! $$specs{'ddmStockColour'} ) {
-			$$specs{'alert'} .= 'Please select a stock colour.';
-			return @Papers;
-		} # end if
-		if ( ! $$specs{'ddmStockWeight'} ) {
-			$$specs{'alert'} .= 'Please select a stock weight.';
-			return @Papers;
-		} # end if
-		@Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+		my @StockOptions = split (',', $openprint::config{$Project->Type()->name().'StockOptions'} );
+		@StockOptions = split (',', $openprint::config{'StockOptions'} ) if ! @StockOptions;
+		@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+
+		foreach my $option ( @StockOptions ) {
+			if ( ! $$specs{'ddmStock'.$option} ) {
+				$$specs{'alert'} .= 'Please select a stock ' . lc $option .'.';
+				return @Papers;
+			} # end if
+		} # end foreach option
+		@Papers = openprint::Paper::find( 
+				( exists $$specs{'ddmStockName'} ? ( 'name'=> $$specs{'ddmStockName'} ) : () ),
+				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
+				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
+				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
+				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
@@ -1976,11 +1975,19 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 		#my %best_price = %{$b_price};
 		#*best_price = $b_price;
 
+<<<<<<< HEAD
 
 		my $Imposition = $$best_price{'Imposition'};
 		if ( ! $Imposition ) {
 			$openprint::log->error("No imposition in best_price");
 			$$specs{'alert'} .= 'Unable to calculate.<br/>';
+=======
+		my $Imposition = $best_price{'Imposition'};
+		if ( ! $Imposition ) {
+	$openprint::log->error("No imposition in best_price");
+			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
+			$$specs{'Status'} = 'uncalculated';
+>>>>>>> 8e1cb44d01f6732fa504861fa8a53b4d2bcf5ec6
 			next;
 		} # end if
 		my $Paper = $Imposition->Paper();
@@ -3238,7 +3245,8 @@ sub calc_price {
 		$net_sheets *= $Paper->parts() if $Paper->parts();
 	} # end if
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
+	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
+	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
 	my $overs = 0;
 
 	my $setup_rate;
@@ -3247,6 +3255,7 @@ sub calc_price {
 	} else {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $$Imposition{'runstyle'}, scalar @colours );
 	} # end if
+	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
 	my $setup_overs;
@@ -3794,8 +3803,10 @@ $openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colours
 	# Recalculate Overs, etc using Plate Count now
 	if ( $$project{'print_sides'} == 1 ) {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$Paper->material(), $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	} else {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$Paper->material(), $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	} # end if
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
@@ -3803,7 +3814,9 @@ $openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colours
 	} elsif ( $setup_rate ) {
 		$setup_overs = int( $setup_rate * $plate_setup{'Plate Count'} );
  	} else {
-		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
+$log->debug("Overs rate " . $Paper->material() . " $setup_overs");
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
 	$setup_overs += $fm_overs;
@@ -3825,7 +3838,9 @@ $openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colours
 	} # end if
 	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
 
-	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
+	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
+$log->debug("Overs min " . $Paper->material() . " $min_overs");
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
 	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 

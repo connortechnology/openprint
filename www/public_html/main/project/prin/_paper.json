@@ -1,0 +1,124 @@
+<? echo (
+	my $debug = 0;
+	my %specs;
+	$specs{'form'} = $param{'form'};
+	my $Project = new openprint::Project( $param{'project_id'} );
+	my @options = split(',', $config{$Project->Type()->name().'StockOptions'} );
+	@options = split(',', $config{'StockOptions'} ) if ! @options;
+	@options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
+
+	my %find = (
+		'project_type_id'	=>	$Project->type_id(),
+		( exists $param{'Supplied'} ? ( 'supplied'			=>	[ undef, $param{'Supplied'} ] ) : () ),
+		);
+
+	if ( sets::isin( $param{'selected'}, @options ) ) {
+		foreach my $option ( @options ) {
+			if ( $param{$option} ) {
+				$find{lc $option} = $param{$option};
+			} # end if
+			last if 'ddmStock'.$option eq $param{'selected'};
+		} # end foreach option
+	} # end if
+
+	my @Stocks = openprint::Paper::find( %find );
+    my @presses = openprint::Equipment::find( 'category'=>'Printing' );
+	if ( @presses ) {
+
+		my $min_width = -1;
+		my $max_width = -1;
+		my $min_height = -1;
+		my $max_height = -1;
+		foreach my $Press ( @presses ) {
+			if ( $_ = $Press->specification('Minimum Sheet Width') and ( $_ < $min_width ) or ( -1 == $min_width ) ) {
+				$min_width = $_;
+			} # end if
+			if ( $_ = $Press->specification('Maximum Sheet Width') and ( $_ > $max_width ) or ( -1 == $max_width ) ) {
+				$max_width = $_;
+			} # end if
+			if ( $_ = $Press->specification('Minimum Sheet Length') and ( $_ < $min_height ) or ( -1 == $min_height ) ) {
+				$min_height = $_;
+			} # end if
+			if ( $_ = $Press->specification('Maximum Sheet Length') and ( $_ > $max_height ) or ( -1 == $max_height ) ) {
+				$max_height = $_;
+			} # end if
+		} # end foreach Press
+
+		my %results;
+		foreach my $Stock ( @Stocks ) {
+			if ( $Stock->type() eq 'Roll' ) {
+				$results{$Stock->width()} = 1;
+			} else {
+				my ( $width, $height ) = ( $Stock->width(), $Stock->height() );
+				# cuts paper until it fits
+				if ( $max_width and $max_height ) {
+					if ( $Stock->cuttable() ) {
+						while (
+								( $width > $max_width or $height > $max_height )
+								and
+								( $width > $max_height or $height > $max_width )
+							  ) {
+							if ( $height > $width ) {
+								$height /= 2;
+							} else {
+								$width /= 2;
+							} # end if
+						} # end while
+					} else {
+						next if ( $width > $max_width or $height > $max_height ) and ( $width > $max_height or $height > $max_width );
+					} # end if
+				} # end if
+
+				if ( $min_width and $min_height ) {
+					# while the paper fits on a press
+					while (
+							( ( $width >= $min_width ) and ( $height >= $min_height ) )
+							or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
+						  ) {
+
+						last if $results{$width.'x'.$height};
+						$results{$width.'x'.$height} = 1;
+						last if ! $Stock->cuttable();
+
+						$openprint::log->debug("Cut: $width x $height") if $debug;
+						if ( $height > $width ) {
+							$height /= 2;
+						} else {
+							$width /= 2;
+						} # end if
+					} # end while
+				} # end if
+			} # end if type
+		} # end foreach Stock
+
+		@{$specs{'SheetSize'}} = map { $_ } sort {
+			my ( $w1, $h1 ) = split('x', $a );
+			my ( $w2, $h2 ) = split('x', $b );
+			return -1 if $w1 < $w2;
+			return 1 if $w1 > $w2;
+			return -1 if $h1 < $h2;
+			return 1 if $h1 > $h2;
+			return 0;
+		} keys %results;
+	} # end if Presses
+
+	my $option_index = 0;
+	if ( sets::isin( $param{'selected'}, @options ) ) {
+		for ( ; $option_index < @options; $option_index += 1 ) {
+			last if 'ddmStock'.$options[$option_index] eq $param{'selected'};
+		} # end for
+		$option_index += 1;
+	} # end if
+	for ( my $i = $option_index; $i < @options; $i += 1 ) {
+		@{$specs{$options[$i]}} = ();
+		foreach my $Stock ( @Stocks ) {
+			@{$specs{$options[$i]}} = sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) );
+		} # end foreach Stock
+	} # end foreach option
+	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
+#foreach my $k ( keys %specs ) {
+#$log->debug("$k => $specs{$k}");
+#}
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+) ?>

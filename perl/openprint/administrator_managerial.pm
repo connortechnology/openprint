@@ -35,7 +35,15 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub configuration {
 
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'New' ) {
+		sql::insert( $log, $dbh, 'configuration', {
+			'name'	=>	$param{'name'},
+			'description'	=>	$param{'description'},
+			'type'			=>	$param{'type'},
+			'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+			'value'			=>	$param{'value'},
+		} );
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type FROM Configuration ORDER BY lower(category), name' );
 		while ( my ( $name, $value, $type ) = splice @config,0,3 ) {
 			my $newvalue = $param{$name};
@@ -51,6 +59,9 @@ sub configuration {
 		openprint::logs::insertLogRecord('77',);
 	} # end if
 } # end sub configuration
+
+sub _configuration_popup {
+} # end sub
 
 sub taxes {
 
