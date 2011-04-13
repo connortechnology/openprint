@@ -299,6 +299,22 @@ if ( $$variable{'HiddenSignatures'} ) {
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<tr>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<td class="unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<td align="right"><b>Value for shipping:</b></td>
+			<td align="right"><? echo ( 
+				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
+				$price = 5000 * ( int( $price/5000 ) );
+				return openprint::Currency::format( $price );
+				) ?>
+			</td>
+			<td></td>
+		</tr>
+		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
@@ -310,8 +326,6 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<span style="float: left;">
 		<? echo ( join('',
 		ssi::writeButton( $log, $dbh, 'DocketButton', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
-		ssi::writeButton( $log, $dbh, 'DocketLabel', 'label.gif', "open_window('/employee/production/label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket Label' ),
-		ssi::writeButton( $log, $dbh, 'SkidLabel', 'label.gif', "open_window('/employee/production/skid_label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Skid Label' ),
 		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
 		 ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' ),
 		 ssi::writeButton( $log, $dbh, 'ExportJDF', 'exportjdf.gif', "f1.btnFunction.value='Export JDF';f1.submit();", '', 'JDF' ),

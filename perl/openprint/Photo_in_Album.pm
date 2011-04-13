@@ -50,6 +50,23 @@ sub thumbnail_url {
 	return $Asset->thumbnail_filename();
 } # end sub thumbnail_url 
 
+sub url {
+	my $Asset = $_[0]->Asset();
+	return $Asset->url();
+} # end sub url 
+
+sub Album {
+	return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
+
+sub id {
+	return $_[0]{'album_id'}.'-'.$_[0]{'asset_id'};
+} # end sub id
+
+sub Comments {
+	my $self = shift;
+	return $self->Asset()->Comments( @_ );
+} # end sub Comments
 1;
 __END__
 

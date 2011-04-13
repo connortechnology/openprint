@@ -437,12 +437,8 @@ sub button {
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
-		#if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
-			#$html .= "btnOff('$name');";
-		##} # end if
 		$html .= $$options{'onclick'}."return false;\" ";
 	} # end if
-	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
 		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
@@ -453,7 +449,7 @@ sub button {
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
 	}
-	$html .= '</a>';
+	$html .= "</a>\n";
 	return $html;
 } # end sub button
 
@@ -498,16 +494,16 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 }
 
 sub setup_date_select {
-    my ( $page, $prefix, $delta ) = @_;
-    if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+	my ( $page, $prefix, $delta ) = @_;
+	if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
 		if ( $delta ne '' ) {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
 		} else {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
 		} # end if
-    } else {
-        @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
-    } # end if
+	} else {
+		@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
+	} # end if
 } # end sub setup_date_select
 
 sub date_select {

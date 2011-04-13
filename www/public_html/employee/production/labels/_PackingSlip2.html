@@ -1,7 +1,9 @@
 <? eval (
 	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} ) if ! $$variable{'Label'};
+	my $changed = 0;
 	if ( ! $$variable{'Label'}->get_data('date') ) {
 		$$variable{'Label'}->set_data('date'=>Date::Format::time2str($config{'DateFormat'}, time ) );
+		$changed = 1;
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('from') ) {
 		if ( $$variable{'Project'} ) {
@@ -41,6 +43,7 @@
 				} # end if
 			} # end if
 
+		$changed = 1;
 
 		} # end if
 	} # endif
@@ -73,6 +76,7 @@
 						$Company->get('postalcode'),
 						) );
 		} # end if ! To
+		$changed = 1;
 	} # end if ! To and Project
 
 	if ( ! $$variable{'Label'}->get_data('description') ) {
@@ -87,6 +91,7 @@
 			} # end if
 		} # end if
 		$$variable{'Label'}->set_data('description'=>$html);
+		$changed = 1;
 	} # end if
 	#if ( 1 ) {
 	if ( ! $$variable{'Label'}->get_data('quantity_lines') ) {
@@ -150,9 +155,10 @@
 			} # end if
 			$quantity_lines = 1 if ! $quantity_lines;	
 			$$variable{'Label'}->set_data('quantity_lines'=>$quantity_lines);
+		$changed = 1;
 		} # end if
 	} # end if
-	$$variable{'Label'}->save();
+	$$variable{'Label'}->save() if $changed;
 ) ?>
 <script type="text/javascript">
 // <![CDATA[
@@ -176,33 +182,8 @@ theme_advanced_buttons2 : '',
 	} // end function update_contents
 // ]]>
 </script>
-<div>
+<div class="PackingSlip">
 	<form name="PackingSlip" action="" method="get">
-	<style type="text/css">
-		table {
-			table-layout: fixed;
-			width: 100%;
-		}
-		#Label {
-			font-size: 22pt;
-		}
-		table tr td {
-			vertical-align: top;
-			font-family: Arial, Helvetica, Sans-Serif;
-			padding: 5px;
-		} 
-		table tr td textarea {
-			width: 98%;
-		}
-		p {
-			margin: 2px;
-		}
-		.edit {
-			display: block;
-			width: 100%;
-	border: 1px solid black;
-		}
-	</style>
 	<table style="height: .5in;">
 		<tr>
 			<td style="font-size: 28PT;">PACKING SLIP</td>

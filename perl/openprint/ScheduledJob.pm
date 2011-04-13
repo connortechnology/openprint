@@ -414,6 +414,10 @@ sub operator_id {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				next if ! $sig_id;
 				my $Service = $Project->Service( $sig_id );
+				if ( $Service->service_id() != $sig_id ) {
+					$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
+					next;
+			} # end if
 				if ( $Service->operator_id() != $operator_id ) {
 					$openprint::log->debug($Service->to_string());
 					$Service->save({'operator_id'=>$operator_id});
@@ -624,14 +628,14 @@ sub bump {
 	if ( $self->Equipment()->smartscheduling() ) {
 		if ( ! $$self{'starttime'} ) {
 			my $LastJob = openprint::ScheduledJob::find_one(
-				'order'	=>	'starttime DESC',
+				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'id !='			=>	$$self{'id'},
 			);
 			my $starttime_seconds;
 			if ( $LastJob ) {
-				$starttime_seconds = $LastJob->endtime() + 1;
+				$starttime_seconds = $LastJob->endtime_seconds() + 1;
 			} # end if
 			if ( $starttime_seconds < time ) {
 				$starttime_seconds = time;
@@ -653,14 +657,14 @@ sub bump {
 	} else {
 		if ( ! $$self{'starttime'} ) {
 			my $LastJob = openprint::ScheduledJob::find_one(
-				'order'	=>	'starttime DESC',
+				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'id !='			=>	$$self{'id'},
 			);
 			my $starttime_seconds = $LastJob->endtime_seconds() + 1 if $LastJob;
 			# NOW() might not fall on a shift.
-			$starttime_seconds = time if ! $starttime_seconds;
+			$starttime_seconds = time if $starttime_seconds < time;
 			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 		} else {
 			my $NextShift = $self->Shift()->Next();
