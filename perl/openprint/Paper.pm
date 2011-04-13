@@ -1211,7 +1211,7 @@ sub load_from_signature {
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
 		$$Paper{'custom'} = 1;
-		$Paper->name( $$specs{'txtSpecificStockBrand'} );
+		$Paper->name( $$specs{'txtSpecificStockName'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
 		$Paper->weight( $$specs{'txtSpecificStockWeight'} );
@@ -1253,14 +1253,14 @@ sub load_from_signature {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 $openprint::log->debug("Loading paper using paper_id") if $debug;
 			$Paper = $Paper->id() ? $Paper : undef;
-		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
+		} elsif ( ! ( $$specs{'ddmStockName'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
 
 		if ( ! $Paper ) {
 			my %params = (
 					'supplied'	=> $$specs{'rdbSuppliedStock'},
-					'name'      => $$specs{'ddmStockBrand'},
+					'name'      => $$specs{'ddmStockName'},
 					'finish'    => $$specs{'ddmStockFinish'},
 					'colour'    => $$specs{'ddmStockColour'},
 					'weight'    => $$specs{'ddmStockWeight'},
@@ -1287,7 +1287,7 @@ $openprint::log->debug("Loading paper using paper_id") if $debug;
 			if ( ! @Papers ) {
 				$openprint::log->warn("No papers found");
 				$Paper = new openprint::Paper();
-				$Paper->name( $$specs{'ddmStockBrand'} );
+				$Paper->name( $$specs{'ddmStockName'} );
 				$Paper->finish( $$specs{'ddmStockFinish'} );
 				$Paper->colour( $$specs{'ddmStockColour'} );
 				$Paper->weight( $$specs{'ddmStockWeight'} );

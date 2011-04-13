@@ -6,6 +6,7 @@ use strict;
 require openprint::Imposition;
 
 my $debug = 0;
+<<<<<<< HEAD
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -31,6 +32,8 @@ use vars qw( %blocks );
 		24	=>	[ [6,4],[4,6],[2,12],[12,2],[3,8],[8,3] ],
 		32	=>	[ [8,4],[4,8],[2,16],[16,2] ],
 		);
+=======
+>>>>>>> d726b7a90071bc6317daaaeb99f0cf6d2ed61d96
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;

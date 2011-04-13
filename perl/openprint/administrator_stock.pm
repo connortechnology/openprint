@@ -361,10 +361,10 @@ sub usage {
 	} else {
 		@{$variable{'Groups'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
-	if ( $param{'ddmStockBrand'} ) {
-		@{$variable{'Brands'}} = ( $param{'ddmStockBrand'} );
+	if ( $param{'ddmStockName'} ) {
+		@{$variable{'Names'}} = ( $param{'ddmStockName'} );
 	} else {
-		@{$variable{'Brands'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
+		@{$variable{'Names'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
 	if ( $param{'ddmStockFinish'} ) {
 		@{$variable{'Finishes'}} = ( $param{'ddmStockFinish'} );
@@ -399,8 +399,8 @@ sub usage {
 		while ( my ( $project_index, $docket_number, $qty_index, $company ) = splice @projects, 0, 4 ) {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $signature_service_index ( $Project->signatures() ) {
-				my $specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-				if ( ! sets::isin( $$specs{'ddmStockBrand'}, @{$variable{'Brands'}} ) ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+				if ( ! sets::isin( $$specs{'ddmStockName'}, @{$variable{'Names'}} ) ) {
 					next;
 				} # end if
 				if ( ! sets::isin( $$specs{'ddmStockFinish'}, @{$variable{'Finishes'}} ) ) {
@@ -414,7 +414,7 @@ sub usage {
 				} # end if
 				my %paper;
 				@paper{'index','mweight'} = sql::execute( $log, $dbh, "SELECT lngIndex,MWeight FROM Paper\n"
-						. "WHERE name='$$specs{'ddmStockBrand'}'\n"
+						. "WHERE name='$$specs{'ddmStockName'}'\n"
 						. "AND finish='$$specs{'ddmStockFinish'}'\n"
 						. "AND colour='$$specs{'ddmStockColour'}'\n"
 						. "AND calliper=$$specs{'ddmStockWeight'}\n"
@@ -423,7 +423,7 @@ sub usage {
 						);
 				if ( $paper{'index'} ) {
 					my $price = openprint::paper::get_price( $log, $dbh, \%variable, \%paper, @$specs{'ddmPress','hdnGrossSheetCount'.$qty_index} );
-					push @{$variable{'Results'.$$specs{'ddmStockBrand'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
+					push @{$variable{'Results'.$$specs{'ddmStockName'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
 						 sprintf( '$%.2f', $$specs{'hdnGrossSheetCount'.$qty_index}*$$price{'Price'} ),
 						 sprintf( '$%.2f', $$specs{'UsedSheetQuantity'}*$$price{'Price'} );
 				} # end if
