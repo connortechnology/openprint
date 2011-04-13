@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Estimating::Printing;
 
-my $debug = 0;
+my $debug = 1;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -41,8 +41,8 @@ sub variables {
 	my $Project = new openprint::Project( $p_id );
 	foreach my $ss_id ( $Project->signatures() ) {
 		foreach my $stock_index ( 1 .. 4 ) {
-			last if ! $$specs{"id-$ss_id-$stock_index"};
-			push @v, "id-$ss_id-$stock_index";
+			#last if ! exists $$specs{"qty-$ss_id-$stock_index"};
+			#push @v, "id-$ss_id-$stock_index";
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				push @v, "qty-$ss_id-$stock_index-$qty_index";
 				push @v, "sheets-$ss_id-$stock_index-$qty_index";
@@ -59,6 +59,7 @@ sub variables {
 			push @v, "sheets-$stock_index-$qty_index";
 		} # end foreach qty_index
 	} # end foreach stock_index
+$openprint::log->debug( "Variables: @v");
 	return @v;
 } # end sub variables
 
@@ -220,7 +221,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 			} # end if
 			$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 			#if ( $Paper->type() eq 'Sheet' ) {
-				$totals{$paper_id}{"Cost"} = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
+				$totals{$paper_id}{'Cost'}[$qty_index] = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
 				#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100;
 			#} else {
 				#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $totals{$paper_id}[$qty_index] / 100;
@@ -243,7 +244,7 @@ $openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"}
 				$$specs{"qty-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};
 				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} / $Paper->start_sheet_weight() ) if $Paper->start_sheet_weight();
 			} # end if
-			$$specs{"txtPrice$qty_index"} += $$specs{"qty-$stock_index-$qty_index"} * $totals{$paper_id}{"Cost"} / 100;
+			$$specs{"txtPrice$qty_index"} += $$specs{"qty-$stock_index-$qty_index"} * $totals{$paper_id}{"Cost"}[$qty_index] / 100;
 			$stock_index += 1;
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
@@ -289,7 +290,7 @@ sub display {
 			my ( $price, $discount );
 
 			if ( $totals{$id}{Index} ) {
-				my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
+				my $list_id = openprint::pricing::get_pricelist_id();
 				$price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', 1 );
 				my $discounted_price = openprint::pricing::get_best_price( $log, $dbh, $$variable{'company_id'}, $totals{$id}{Index}, $list_id, 'openprint::paper_priceset', $totals{$id}{'hdnGrossSheetCount'.$qty_index} );
 				$discount = $price - $discounted_price;
