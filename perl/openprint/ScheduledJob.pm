@@ -60,6 +60,9 @@ $serial = 'schedule_id_seq';
 	'tentative'			=>	0,
 );
 sub find_one {
+	if ( $_[0] eq 'openprint::ScheduledJob' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -68,6 +71,9 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	if ( $_[0] eq 'openprint::ScheduledJob' ) {
+		shift;
+	} # end if
 	my %params = @_;
 
 	my @values;
