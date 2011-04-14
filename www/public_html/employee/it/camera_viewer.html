@@ -13,12 +13,12 @@
 ) ?>
 <script type="text/javascript">
 	function stop_stream( camera_id ) {
-		new Ajax.Updater( 'Available', '_cameras_available.html', { parameters: { camera_id: camera_id } } );
+		new Ajax.Updater( 'Available', '/employee/it/_cameras_available.html', { parameters: { camera_id: camera_id } } );
 		var camera = $('camera_'+camera_id);
 		if ( camera ) camera.parentNode.removeChild( camera );
 	} // end function stop_stream( camera_id )
 	function start_stream( camera_id ) {
-		new Ajax.Updater( 'Viewing', '_cameras_viewing.html', { parameters: { camera_id: camera_id } } );
+		new Ajax.Updater( 'Viewing', '/employee/it/_cameras_viewing.html', { parameters: { camera_id: camera_id } } );
 		var camera = $('camera_'+camera_id);
 		if ( camera ) camera.parentNode.removeChild( camera );
 	} // end function start_stream( camera_id )
@@ -33,10 +33,10 @@
 <div class="ZM_Monitors">
 <div class="Montage">
 	<fieldset><legend>Streams Viewing</legend>
-		<div id="Viewing"><!--#include virtual="_cameras_viewing.html"--></div>
+		<div id="Viewing"><!--#include virtual="/employee/it/_cameras_viewing.html"--></div>
 	</fieldset>
 	<fieldset><legend>Available Streams</legend>
-		<div id="Available"><!--#include virtual="_cameras_available.html"--></div>
+		<div id="Available"><!--#include virtual="/employee/it/_cameras_available.html"--></div>
 	</fieldset>
 </div><!--Montage-->
 </div>
