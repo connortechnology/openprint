@@ -2361,6 +2361,23 @@ sub calc_price {
 
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'SpinePaste' );
 	} # end if
+	if ( $$project{'HasPerforating'} ) {
+$openprint::log->debug("Perforating");
+$$specs{'Runspeed'} = $run_speed;
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
+$openprint::log->debug("Perforating");
+		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
+			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Perforating Breakdown'} .= "Perforating Price: $perforating_results{'Price'} Runspeed: $perforating_results{'Runspeed'}<br/>";
+			$price{'Comparison Cost'} += $perforating_results{'Price'};
+		} # end if
+		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
+		if ( $perforating_results{'Runspeed'} and $perforating_results{'Runspeed'} < $run_speed ) {
+			$run_speed = $perforating_results{'Runspeed'};
+		} # end if
+	} # end if
 	$price{'Run Speed'} = $run_speed;
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	$min_overs = $Press->specification( 'Press Run Overs Minimum', $plate_setup{'Plate Count'} );
@@ -2684,18 +2701,6 @@ $openprint::log->debug("Scoring REsults: $scoring_results{'Status'} $scoring_res
 		} else {
 			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
-		} # end if
-		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
-	} # end if
-	if ( $$project{'HasPerforating'} ) {
-$openprint::log->debug("Perforating");
-		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
-		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
-			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} else {
-			$price{'Perforating Breakdown'} .= "Perforating Price: $perforating_results{'Price'}<br/>";
-			$price{'Comparison Cost'} += $perforating_results{'Price'};
 		} # end if
 		#return if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Scoring' );
 	} # end if

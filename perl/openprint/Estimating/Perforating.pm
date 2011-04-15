@@ -165,7 +165,7 @@ sub signature_calc {
 # Can only use the stitcher for scoring if we are stitching.  There are also thickness constraints
 	$stitching_service_index = $$services{'LoopStitching'}[0] if ( ! $stitching_service_index) and $$services{'LoopStitching'};
 
-	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Perforating Capable'=>'Y'}, 'UseInEstimating'=>'Y') if ! @all_equipment;
+	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y') if ! @all_equipment;
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y') if ! @stitchers;
 	my @equipment;
 
@@ -265,8 +265,9 @@ sub signature_calc {
 			@impositions = @cut_impositions;
 		} # end if
 
+		my $Runspeed = $Equipment->Specification('PerfScoreRunSpeed');
 		my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'PerforationMakeReady', undef, $Equipment );
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice);
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
 
 		foreach my $imposition ( @impositions ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= "Imposition: " . $imposition->imposition() .": ";
@@ -284,7 +285,6 @@ sub signature_calc {
 			my %materialPrice;
 			my $materialPrice = 0;
 
-
 			if ( $scor_equipment eq $Equipment->strid() and $scor_imposition == $imposition->imposition() ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "\tSame equipment as scoring, no service price needed.<br/>";
 			} else {
@@ -293,12 +293,24 @@ sub signature_calc {
 #$servicePrice *= $$specs{"txtQty-$signature_index"};
 			} # end if
 
+			my $runspeed = 0;
+
+			if ( $$Runspeed{'units'} eq 'Percent' ) {
+if ( ! $$sig_specs{'Runspeed'} ) {
+$openprint::log->debug("No printing runspeed");
+}
+				$runspeed = int( $$sig_specs{'Runspeed'} - ( $$sig_specs{'Runspeed'} * $$Runspeed{'value'}/100 ) );
+			} else {
+				$runspeed = $$Runspeed{'value'};
+			} # end if
+$openprint::log->debug("Runspeed setting on $$Equipment{strid} $$Runspeed{value}$$Runspeed{'units'} $runspeed");
+
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * ($qty/$imposition->imposition())/ 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d = $%.2f<br/>', @servicePrice{'Price','units'}, $qty/$imposition->imposition(), $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
-				if ( int ( $_ = $Equipment->specification('PerfScoreRunSpeed') ) ) {
-					my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed');
+				if ( $runspeed ) {
+					my $hours = $qty / $runspeed;
 					$servicePrice = $servicePrice{'Price'} * $hours;
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s @ %d%s = $%.2f<br/>', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
@@ -313,7 +325,7 @@ sub signature_calc {
 					my $length = ( $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} );
 					$materialPrice = $materialPrice{'Price'} * $length;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2finches=%.2f<br/>', @materialPrice{'Price','units'}, $length, $materialPrice );
-				} elsif ( $materialPrice{'units'} eq 'per foot' ) {
+				} elsif ( lc $materialPrice{'units'} eq 'per foot' ) {
 					my $length = ( $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} ) /12;
 					$materialPrice = $materialPrice{'Price'} * $length;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2ffeet=%.2f<br/>', @materialPrice{'Price','units'}, $length, $materialPrice );
@@ -334,6 +346,7 @@ sub signature_calc {
 				$bestServicePrice = $servicePrice;
 				$bestEquipment = $Equipment;
 				$bestImposition = $imposition;
+				$Results{'Runspeed'} = $runspeed;
 			} # end if
 		} # end foreach imposition
 	} # end foreach equipment
@@ -371,7 +384,7 @@ sub get_specs {
 	my $Project = new openprint::Project( $project_index );
 	@{$$variable{'SignatureGroups'}} = ();
 
-	@{$$variable{'EquipmentArray'}} = map{ $_->id() } openprint::Equipment::find( 'Specifications' => {'Perforating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'EquipmentArray'}} = map{ $_->id() } openprint::Equipment::find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );

@@ -60,6 +60,9 @@ $serial = 'schedule_id_seq';
 	'tentative'			=>	0,
 );
 sub find_one {
+	if ( $_[0] eq 'openprint::ScheduledJob' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -68,6 +71,9 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	if ( $_[0] eq 'openprint::ScheduledJob' ) {
+		shift;
+	} # end if
 	my %params = @_;
 
 	my @values;
@@ -122,11 +128,11 @@ sub find {
 	} # end if
 	if ( $params{'service_id'} ) {
 		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= ' AND service_id={?}';
+			$sql .= ' AND service_id && ?';
 			push @values, $params{'service_id'};
 		} else {
-			$sql .= ' AND ? = ANY(service_id)';
-			push @values, $params{'service_id'};
+			$sql .= ' AND ? <@ service_id';
+			push @values, [$params{'service_id'}];
 		} # end if
 	} # end if
 	if ( $params{'pertains_id'} ) {
@@ -931,7 +937,7 @@ sub split {
 
 sub to_string {
 	my $self = $_[0];
-	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', @{$self->service_id()}), $self->Equipment()->name(), $self->starttime() );
+	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
 
 sub pertains_id {
