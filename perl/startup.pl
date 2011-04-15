@@ -38,6 +38,7 @@ BEGIN {
 	use Date::Calc;
 	use Date::Format;
 	use Date::Parse;
+	use DateTime::Format::Pg;
 
 	use openprint::Object;
 	use openprint::Company;

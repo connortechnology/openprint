@@ -21,6 +21,7 @@ $serial = 'hosts_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'count'			=>	'count',
+	'deleted'		=>	'deleted',
 );
 %transforms = (
 );
@@ -33,6 +34,7 @@ $serial = 'hosts_id_seq';
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
 	'count'		=>	undef,
+	'deleted'	=>	0,
 );
 sub resolve {
 	my ( $self ) = @_;
@@ -51,6 +53,16 @@ sub get_mac {
 $openprint::log->debug("Mac: $mac");
 	return $mac;
 } # end sub get_mac
+
+sub destroy {
+	my $error;
+	foreach my $Log ( openprint::Log->find('host_id'=>$_[0]{'id'}) ) {
+		$error .= $Log->destroy();
+		return $error if $error;
+	} # end foreach Log
+	$error .= $_[0]->SUPER::destroy();
+	return $error;
+} # end sub destroy
 
 1;
 __END__
