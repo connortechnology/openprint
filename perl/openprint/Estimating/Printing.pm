@@ -744,7 +744,15 @@ sub get_Stocks {
 			$$specs{'alert'} .= 'Please select a stock weight.';
 			return @Papers;
 		} # end if
-		@Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+		if ( $$specs{'ddmStockSheetSize'} ) {
+			@$specs{'ddmStockSheetSizeWidth','ddmStockSheetSizeHeight'} = $$specs{'ddmStockSheetSize'} =~ /^([\d\.]+)x([\d\.]+)$/;
+		}
+		@Papers = openprint::Paper::find( 
+			( exists $$specs{'ddmStockBrand'} ? ( 'name'=> $$specs{'ddmStockBrand'} ) : () ),
+ ( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ), 
+( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ), 
+( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
+( exists $$specs{'ddmStockSheetSize'} ? ( 'width'=>$$specs{'ddmStockSheetSizeWidth'}, 'height'=>$$specs{'ddmStockSheetSizeHeight'} ) : () ),
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
