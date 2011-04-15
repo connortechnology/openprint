@@ -44,7 +44,7 @@ sub edit {
 		} # end if
 		$Material->save( \%openprint::param );
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $List ( openprint::Pricelist->find( 'id'=>$openprint::param{'ddmPriceList'} ) ) {
+		foreach my $List ( openprint::Pricelist->find( ) ) {
 			my $list = $List->id();
 			my $price_set = new openprint::material_priceset( $log, $dbh, $list, $Material->id() );
 			foreach my $key ( %openprint::param ) {

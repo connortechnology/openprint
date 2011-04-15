@@ -47,6 +47,7 @@ BEGIN {
 	use Date::Parse;
 	use Math::Round;
 	use Number::Format;
+	use DateTime::Format::Pg;
 
 	use openprint::Object;
 	use openprint::Company;
