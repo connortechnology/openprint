@@ -784,7 +784,7 @@ sub get_Stocks {
 				return @Papers;
 			} # end if
 		} # end foreach option
-		@Papers = openprint::Paper::find( 
+		@Papers = openprint::Paper->find( 
 				( exists $$specs{'ddmStockName'} ? ( 'name'=> $$specs{'ddmStockName'} ) : () ),
 				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),

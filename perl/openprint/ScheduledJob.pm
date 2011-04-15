@@ -627,7 +627,7 @@ sub bump {
 	my $error;
 	if ( $self->Equipment()->smartscheduling() ) {
 		if ( ! $$self{'starttime'} ) {
-			my $LastJob = openprint::ScheduledJob::find_one(
+			my $LastJob = openprint::ScheduledJob->find_one(
 				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},
@@ -656,7 +656,7 @@ sub bump {
 		} # end if
 	} else {
 		if ( ! $$self{'starttime'} ) {
-			my $LastJob = openprint::ScheduledJob::find_one(
+			my $LastJob = openprint::ScheduledJob->find_one(
 				'order'	=>	'starttime DESC NULLS LAST',
 				'tentative'	=>	0,
 				'equipment_id'	=>	$$self{'equipment_id'},

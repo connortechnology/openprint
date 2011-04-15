@@ -107,6 +107,9 @@ if ( ! exists $$data{'created_on'} ) {
 if ( ! exists $$data{'updated_on'} ) {
 	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 } # end if
+if ( ! exists $$data{'deleted'} ) {
+	$dbh->do('ALTER TABLE hosts add deleted BOOLEAN NOT NULL DEFAULT FALSE');
+} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {
