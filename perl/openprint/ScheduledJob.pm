@@ -128,11 +128,11 @@ sub find {
 	} # end if
 	if ( $params{'service_id'} ) {
 		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= ' AND service_id={?}';
+			$sql .= ' AND service_id && ?';
 			push @values, $params{'service_id'};
 		} else {
-			$sql .= ' AND ? = ANY(service_id)';
-			push @values, $params{'service_id'};
+			$sql .= ' AND ? <@ service_id';
+			push @values, [$params{'service_id'}];
 		} # end if
 	} # end if
 	if ( $params{'pertains_id'} ) {
