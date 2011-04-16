@@ -314,8 +314,8 @@ sub signature_calc {
 		$Runspeed = $Equipment->Specification('Perforating Runspeed') if ! $Runspeed;
 		my $setupPrice = openprint::service::get_price( 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
-		my $Rule = openprint::Material->find_one('name'=>'PerforatingRule') );
-		my $Wheel = openprint::Material->find_one('name'=>'PerforatingWheel') );
+		my $Rule = openprint::Material->find_one('name'=>'PerforatingRule');
+		my $Wheel = openprint::Material->find_one('name'=>'PerforatingWheel');
 
 		foreach my $imposition ( @impositions ) {
 			$Results{'Breakdown'} .= "Imposition: " . $imposition->imposition() .": ";
@@ -461,15 +461,11 @@ sub get_specs {
 	my $services = $Project->services();
 	@{$$variable{'SignatureGroups'}} = ();
 
-<<<<<<< HEAD
 	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 
 	if ( $$services{'Folding'} ) {
 		push @{$$variable{'Equipment'}}, openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>'When Folding'}, 'useinestimating'=>1,'order'=>'strName');
 	} # end if
-=======
-	@{$$variable{'EquipmentArray'}} = map{ $_->id() } openprint::Equipment::find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
->>>>>>> c302e114c3f7cf8663158e3f8490d03e2533aaac
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
