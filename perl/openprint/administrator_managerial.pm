@@ -11,9 +11,9 @@ require email;
 require openprint::Currency;
 require openprint::User;
 require openprint::logs;
-require openprint::customer;
 require openprint::address;
 require openprint::Company;
+require openprint::Company_Profile;
 require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
@@ -56,7 +56,7 @@ sub configuration {
 		} # end while
 
 		# Add record to audit log - action "Update Configuration".
-		openprint::logs::insertLogRecord('77',);
+		new openprint::Log()->save({'action'=>'Update Configuration'});
 	} # end if
 } # end sub configuration
 

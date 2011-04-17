@@ -4,11 +4,12 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 use strict;
 use openprint ();
 require sets;
-use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
+*config = \%openprint::config;
 
 my $debug = 0;
 my $debug_all = 0;

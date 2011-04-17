@@ -1,4 +1,4 @@
-<form id="config_form" name="config_form">
+<form id="config_form" name="config_form" action="/administrator/managerial/configuration.html" method="post">
 	<input type="hidden" name="btnFunction" value="New"/>
 	<fieldset><legend>New Configuration Entry</legend>
 		<div class="content">
@@ -16,7 +16,7 @@
 				</li>
 				<li><label>Category:</label>
 					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );"/>
-					<select name="category" id="category">
+					<select name="category" id="category" onchange="$('new_category').value='';">
 						<option value="">create new</option>
 						<? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration' ) ] ); ) ?>
 					</select>

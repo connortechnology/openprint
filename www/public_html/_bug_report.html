@@ -1,5 +1,12 @@
 <? if ( $param{'btnFunction'} eq 'Send' ) ?>
 	<? eval (
+		require openprint::Bug;
+		my $Bug = new openprint::Bug();
+		$Bug->save({
+			'description'	=>	join("\n", @param{'comment','page','server'} ),
+			} 
+		);
+			
 		my @body = ('', "
 			<fieldset><legend>Bug Report</legend>
 				<p><label>Server:</label>$param{'server'}</p>
@@ -15,7 +22,7 @@
 			SMTP   => $config{'Mail Server'},
 			FROM   => sprintf('"%s %s" <%s>', new openprint::User( $session{user_id} )->get('firstname','lastname','email') ),
 			TO     => 'iconnor@connortechnology.com',
-			SUBJECT => "Bug Report",
+			SUBJECT => 'Bug Report',
 	);
 		misc::send_email_with_attachment( $log, \%mail, @body );
 

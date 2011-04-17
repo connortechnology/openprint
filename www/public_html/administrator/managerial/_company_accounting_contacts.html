@@ -1,6 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
-	my @Users = openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() )],'order'=>'lower(firstname),lower(lastname)' );
+	my @accounting_contacts = sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() );
+	my @Users = openprint::User->find('id'=>\@accounting_contacts,'order'=>'lower(firstname),lower(lastname)' ) if @accounting_contacts;
 	
 	my $html;
 	foreach my $User ( @Users ) {
@@ -11,10 +12,6 @@
 		$html .= '<br/>';
 	} # end foreach
 	$html .= '<br/>' if ! @Users;
-	return $html;
-) ?>
-<? echo ( 
-	my $html = '';
 	my $company_id = $param{'accounting_contact_company_id'} ? $param{'accounting_contact_company_id'} : $$variable{'Company'}->id();
 	if ( $session{'user_type'} eq 'A' ) {
 		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" onchange="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );">`;

@@ -253,24 +253,29 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
 } # end if
-my $LoginFailed = openprint::Log_Action->find_one('name'=>'Login Failed');
-if ( $LoginFailed ) {
-	if ( $LoginFailed->id() != 78 ) {
-		my $Real78 = openprint::Log_Action->find_one('id'=>78);
-		if ( ! $Real78 ) {
-			my $New = $LoginFailed->copy();
-			$New->save({'id'=>78});
-			foreach my $Log ( openprint::Log->find('action_id'=>$LoginFailed->id()) ) {
-				$Log->save({'action_id'=>78});
+my %config_actions = (
+	'Update Configuration' => 77,
+	'Login Failed'	=> 78,
+);
+	foreach my $config_action ( keys %config_actions ) {
+my $Action = openprint::Log_Action->find_one('name'=>$config_action);
+if ( $Action ) {
+	if ( $Action->id() != $config_actions{$config_action} ) {
+		my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
+		if ( ! $RealAction ) {
+			my $New = $Action->copy();
+			$New->save({'id'=>$config_actions{$config_action}});
+			foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+				$Log->save({'action_id'=>$config_actions{$config_action}});
 			} # end foreach Log
-		} elsif ( $Real78->name() eq 'Login Failed' ) {
-			foreach my $Log ( openprint::Log->find('action_id'=>$LoginFailed->id()) ) {
-				$Log->save({'action_id'=>78});
+		} elsif ( $RealAction->name() eq $config_action ) {
+			foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+				$Log->save({'action_id'=>$config_actions{$config_action}});
 			} # end foreach Log
 		} else {
-			die "Need to manually update 78 Login Failed entries";
+			die "Need to manually update $config_actions{$config_action} $config_action entries";
 		} # end if
-		$LoginFailed->destroy();
+		$Action->destroy();
 	} # end if
 } # end if
 

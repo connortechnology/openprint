@@ -6,7 +6,7 @@ require openprint::User;
 require openprint::Log_Action;
 require openprint::Host;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 1;
 $table = 'logs';
 $serial = 'log_id_seq';
@@ -21,6 +21,9 @@ $serial = 'log_id_seq';
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
 	'url'			=>	'url',
+);
+%find_fields = (
+	'action'	=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
 );
 %defaults = (
 	'date_time'	=>	"'NOW()'",

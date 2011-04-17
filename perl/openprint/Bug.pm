@@ -22,8 +22,10 @@ $serial = 'bugs_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'user_id'		=>	q`$session{'user_id'}`,
+	'owner_id'		=>	q`$config{'owner_id'}`,
 );
 
 sub destroy {
