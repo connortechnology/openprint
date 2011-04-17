@@ -622,17 +622,8 @@ var summaryPage;
 window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
 }
 
-function checkInputData( inputItem ) {
-	 if ( inputItem && inputItem.value ) {
-			// Value exists.
-		return true;
-	 } // end if
-	 // No value!
-	 return false;
-}
-
 function checkLoginData( usernameInput, passwordInput ) {
-	if( ! checkInputData(usernameInput) ) {
+	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
 		$( 'missingLoginMessage' ).show();
 		usernameInput.focus();
@@ -641,7 +632,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		$( 'missingLoginMessage' ).hide();
 	}
 
-	if( passwordInput && !checkInputData(passwordInput) ) {
+	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		$( 'missingPasswordMessage' ).show();
 		passwordInput.focus();
@@ -1255,29 +1246,6 @@ function LoadContent( divID, page, parameters, message ) {
 	
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 }
-
-var contentWin;
-function bug_report_window() {
-	if (contentWin != null) { 
-		Dialog.alert("Close the window 'Test' before opening it again!",{width:200, height:130});
-	} else { 
-		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:400, height:420, recenterAuto:false
-		} );
-		//contentWin.setContent('test_content', true, true)
-		contentWin.setAjaxContent('/bug_report.html', null , true);
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-			onDestroy: function(eventName, win) {
-			   if (win == contentWin) {
-				   contentWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
-		}
-		Windows.addObserver(myObserver);
-	}
-} // end function bug_report
 
 var popupWin;
 function popup_window( url, parameters, options ) {

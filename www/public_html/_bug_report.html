@@ -21,10 +21,10 @@
 
 	) ?>
 		Bug Report sent.<br/>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Close', 'close.gif', 'contentWin.destroy();', '', 'Close' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Close', 'close.gif', 'popupWin.destroy();', '', 'Close' ); ) ?>
 <? else ( $param{'btnFunction'} eq 'Send' ) ?>
 <div id="BugReport">
-	<form name="bug_report">
+	<form name="bug_report" id="bug_report">
 		<fieldset><legend>Bug Report</legend>
 			<p>
 				<label>Server:</label>
@@ -56,8 +56,8 @@
 				</textarea>
 			</p>
 			<p class="buttons">
-				<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', q`LoadContent('BugReport','/bug_report.html', $('bug_report').serialize() );`, '', 'Send' ); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', q`LoadContent('BugReport','/_bug_report.html', $('bug_report').serialize() );`, '', 'Send' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' ); ) ?>
 			</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction" value="Send"/>

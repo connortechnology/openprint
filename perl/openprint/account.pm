@@ -503,6 +503,9 @@ sub login {
 			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
 			return;
 		} # end if
+		if ( $session{'user_id'} ) {
+			openprint::login::logout();
+		} # end if
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 	} # end if
 } # end sub login
