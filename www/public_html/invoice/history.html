@@ -36,7 +36,12 @@
 		<p>
 			<label>Go to ID:</label>
 			<input type="text" name="invoice_id" id="invoice_id" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_invoices( \$('f1') );", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go1', { 'onclick' => "load_invoices( \$('f1') );" }, 'text' => 'Go' } ); ) ?>
+		</p>
+		<p>
+			<label>PO:</label>
+			<input type="text" name="po" id="po" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){load_invoices( this.form );}"/>
+			<? echo ( ssi::button( 'Go2', { 'onclick' => "load_invoices( \$('f1') );" }, 'text' => 'Go' } ); ) ?>
 		</p>
 	</fieldset>
 	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
