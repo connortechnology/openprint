@@ -50,6 +50,7 @@ sub hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
+			'blacklisted','whitelisted',
 			);
 
 } # end sub hosts
@@ -66,6 +67,7 @@ sub _hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
+			'blacklisted','whitelisted',
 			);
 } # end sub _hosts
 
