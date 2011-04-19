@@ -30,6 +30,9 @@ sub hosts {
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_end', '' );
+	if ( ! exists $session{'/employee/it/hosts.html?has_hostname'} ) {
+		$session{'/employee/it/hosts.html?has_hostname'} = 1;
+	} # end if
 	if ( ! exists $session{'/employee/it/hosts.html?assigned'} ) {
 		$session{'/employee/it/hosts.html?assigned'} = 1;
 	} # end if
@@ -41,6 +44,7 @@ sub hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			'has_hostname',
 			);
 
 } # end sub hosts
@@ -57,6 +61,7 @@ sub _hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			'has_hostname',
 			);
 } # end sub _hosts
 

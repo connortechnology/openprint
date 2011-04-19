@@ -37,5 +37,8 @@ sub _stock_usage {
 	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day','ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
 } # end sub _stock_usage
 
+sub prepress_overview {
+} # end sub prepress_overview
+
 1;
 __END__

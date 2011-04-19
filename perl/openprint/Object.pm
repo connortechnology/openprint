@@ -324,6 +324,11 @@ sub find {
 					push @values, $params{$k.'_like'};
 					delete $params{$k.'_like'};
 				}
+				if ( exists $params{$k.'_ilike'} ) {
+					$sql .= " AND $$f{$k} ILIKE ?";
+					push @values, $params{$k.'_ilike'};
+					delete $params{$k.'_ilike'};
+				}
 				if ( exists $params{$k.'_start'} ) {
 					$sql .= " AND $$f{$k} >= ?";
 					push @values, $params{$k.'_start'};
@@ -390,6 +395,15 @@ sub find {
 					} else {
 						$sql .= " AND $$f{$k} IS NOT NULL";
 					} # end if
+					delete $params{$k.'_null'};
+				} # end if
+				if ( exists $params{$k.' is null'} ) {
+					if ( $params{$k.' is null'} ) {
+						$sql .= " AND $$f{$k} IS NULL";
+					} else {
+						$sql .= " AND $$f{$k} IS NOT NULL";
+					} # end if
+					delete $params{$k.' is null'};
 				} # end if
 			} # end foreach key
 		} # end foreach fileds, find_fields
