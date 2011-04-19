@@ -41,9 +41,9 @@ sub hosts {
 	} # end if
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
+			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
-			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname',
 			);
 
@@ -58,9 +58,9 @@ sub _hosts {
 	} # end if
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
+			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
-			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname',
 			);
 } # end sub _hosts
