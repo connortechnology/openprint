@@ -337,7 +337,14 @@ sub summary {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
 				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
-				if ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
+				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
+				if ( $$Price{'units'} eq 'per square foot' ) {
+					$html .= sprintf(' %.0f sq feet', ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 );
+				} elsif ( $$Price{'units'} eq 'per square inch' ) {
+					$html .= sprintf(' %.0f sq inches', $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() );
+				} elsif ( $$Price{'units'} ) {
+					$html .= 'unknown units: ' . $$Price{'units'};
+				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
 					$html .= sprintf(' %.0finches',( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() );
 				} # end if
 			} else {

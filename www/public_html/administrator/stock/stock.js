@@ -159,7 +159,6 @@ function calc_price( element ) {
 		//var costperinch = ( costperfoot/144 ) * 100/wpsi;
 		// 100/wpsi = # of inches in 100lbs.
 		var costcwt = ( 100 * costperfoot ) / ( 144 * wpsi );
-costcwt = ( ( 100/wpsi ) /144 ) * costperfoot;
 		var costperm = costcwt * wpsi * form.elements['width'].value * form.elements['height'].value * 1000;
 		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
 

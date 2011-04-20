@@ -407,7 +407,7 @@ sub signature_calc_load_equipment {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
