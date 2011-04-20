@@ -4,6 +4,7 @@
 	$$variable{'Equipment'} = \@Equipment;
 	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company::find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
 	foreach my $Pricelist ( openprint::Pricelist::find('order'=>'lower(name)') ) {
+		$$variable{'Pricelist'} = $Pricelist;
 		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
 		foreach my $service ( 'Setup', 'Supply', 'Material' ) {
 			$$variable{'service'} = $service;
@@ -43,9 +44,8 @@
 				<th class="buttons">
 				';
 			$html .= ssi::writeButton( $log, $dbh, 'NewPrice'.$service.$Pricelist->id(), 'new.gif', "newPrice( '$service', '$$Pricelist{id}');", '', 'New Price' );
-			$html .= qq`</th></tr></thead><tfoot></tfoot><tbody id="prices-$service-$$Pricelist{id}">
+			$html .= qq`</th></tr></thead><tfoot><tr></tr></tfoot><tbody id="prices-$service-$$Pricelist{id}">
 `;
-			$$variable{'Pricelist'} = $Pricelist;
 			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/stock/_prices_table_body.html', $variable );
 			$html .= '</tbody></table>';
 			$html .= '</fieldset><!--Service-->';
