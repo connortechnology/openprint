@@ -387,6 +387,10 @@ function Stock_onchange( element, id ) {
 	h.set('project_id', form.elements['ProjectIndex'].value );
 	h.set('selected', element.name );
 	h.set('form', form.id );
+	if ( form.elements['txtWidth'] ) 
+		h.set( 'width', form.elements['txtWidth'].value );
+	if ( form.elements['txtHeight'] ) 
+		h.set( 'height', form.elements['txtHeight'].value );
 	if ( form.elements['rdbSuppliedStock'+id] ) {
 		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
 	} // end if
@@ -410,6 +414,7 @@ function cbStockFillResults( results ) {
 		return;
 	} // end if
 	results.unset('form');
+	var suffixes = new Array ( '', '1', '2', '3' );
 
     var keys = results.keys();
 
@@ -424,6 +429,20 @@ function cbStockFillResults( results ) {
 				var size = value[ddm_index].split('x');
 				options[options.length] = create_option( value[ddm_index], size.each(function(item){return item+"&quot;";}).join( ' x ' ) );
 			} // end for
+			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+				var ddm = form.elements['ddmStock'+key+suffix_index];
+				if ( ! ddm ) {
+	//alert('No ddmStock'+key+suffix);
+					continue;
+				} // end if
+				var selectedValue = ddm.getValue();
+				fill_ddm( ddm, options );
+				if ( options.length == 2 ) {
+					ddm_select_by_index( ddm, 1 );
+				} else {
+					ddm_select_by_value( ddm, selectedValue );
+				} // end if
+			} // end for suffix
 		} else {
 			var ddm = form.elements['ddmStock'+key];
 			if ( ! ddm ) {
@@ -445,7 +464,6 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var suffixes = new Array ( '', '1', '2', '3' );
 	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
