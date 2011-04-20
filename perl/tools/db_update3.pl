@@ -163,7 +163,7 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-if ( ! sets::isin( 'cars', \@tables ) ) {
+if ( ! sets::isin( 'car', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
@@ -257,36 +257,36 @@ my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
 );
-	foreach my $config_action ( keys %config_actions ) {
-my $Action = openprint::Log_Action->find_one('name'=>$config_action);
-if ( $Action ) {
-	if ( $Action->id() != $config_actions{$config_action} ) {
-		my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
-		if ( ! $RealAction ) {
-			my $New = $Action->copy();
-			$New->save({'id'=>$config_actions{$config_action}});
-			foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
-				$Log->save({'action_id'=>$config_actions{$config_action}});
-			} # end foreach Log
-		} elsif ( $RealAction->name() eq $config_action ) {
-			foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
-				$Log->save({'action_id'=>$config_actions{$config_action}});
-			} # end foreach Log
-		} else {
-			die "Need to manually update $config_actions{$config_action} $config_action entries";
+foreach my $config_action ( keys %config_actions ) {
+	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
+	if ( $Action ) {
+		if ( $Action->id() != $config_actions{$config_action} ) {
+			my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
+			if ( ! $RealAction ) {
+				my $New = $Action->copy();
+				$New->save({'id'=>$config_actions{$config_action}});
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({'action_id'=>$config_actions{$config_action}});
+				} # end foreach Log
+			} elsif ( $RealAction->name() eq $config_action ) {
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({'action_id'=>$config_actions{$config_action}});
+				} # end foreach Log
+			} else {
+				die "Need to manually update $config_actions{$config_action} $config_action entries";
+			} # end if
+			$Action->destroy();
 		} # end if
-		$Action->destroy();
 	} # end if
-} # end if
+} # end foreach config_action
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } else {
-
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='comments'", 'column_name');
 	if ( ! exists $$data{'approved'} ) {
-	$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
+		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
 }
 $dbh->disconnect();
