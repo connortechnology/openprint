@@ -141,6 +141,7 @@ my %variables = (
 		'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
 		'SpreadRows3' => ['save','output'],'SpreadCols3' => ['save','output'],
 		'ddmStockSheetSize' => ['save'],'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
+		'ddmStockSize'	=>	['save'],
 		'ddmRunStyle'=>['save'],'ddmRunStyle1' => ['save','output'], 'ddmRunStyle2' => ['save','output'], 'ddmRunStyle3' => ['save','output'],
 		'ddmPress1' => ['save','output'], 'ddmPress2' => ['save','output'], 'ddmPress3' => ['save','output'], 
 		'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
@@ -728,8 +729,8 @@ sub get_Stocks {
 		} # end if
 	} else {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
-		my @StockOptions = split (',', $openprint::config{$Project->Type()->name().'StockOptions'} );
-		@StockOptions = split (',', $openprint::config{'StockOptions'} ) if ! @StockOptions;
+		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
+		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 		@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
 
 		foreach my $option ( @StockOptions ) {
@@ -739,7 +740,9 @@ sub get_Stocks {
 			} # end if
 		} # end foreach option
 		if ( $$specs{'ddmStockSheetSize'} ) {
-			@$specs{'ddmStockSheetSizeWidth','ddmStockSheetSizeHeight'} = $$specs{'ddmStockSheetSize'} =~ /^([\d\.]+)x([\d\.]+)$/;
+			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSheetSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+		} elsif ( $$specs{'ddmStockSize'} ) {
+			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper::find( 
 				( exists $$specs{'ddmStockName'} ? ( 'name'=> $$specs{'ddmStockName'} ) : () ),
@@ -747,7 +750,8 @@ sub get_Stocks {
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
 				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
 				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
-				( exists $$specs{'ddmStockSheetSize'} ? ( 'width'=>$$specs{'ddmStockSheetSizeWidth'}, 'height'=>$$specs{'ddmStockSheetSizeHeight'} ) : () ),
+				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
+				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
@@ -776,7 +780,7 @@ sub get_Stocks {
 		my @Ps;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
-				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
+				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = $$specs{'ddmStockSheetSize'.$qty_index} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} # end if
 			my $found = 0;
 
@@ -1433,7 +1437,9 @@ sub set_size {
 	if ( sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
 			if ( $$specs{'ddmStockSheetSize'} ) {
-				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
+				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSheetSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			} elsif ( $$specs{'ddmStockSize'} ) {
+				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
 				my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockName'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
@@ -1459,7 +1465,6 @@ sub set_size {
 		$variables{'txtFinalHeight'} = [ sets::union( 'output', @{$variables{'txtFinalHeight'}} ) ];
 	} # end if
 } # end sub set_size
-
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
@@ -1875,7 +1880,7 @@ if ( 0 ) {
 			$$specs{'minimum_stock_size'.$qty_index} = $Imposition->used_width().'&quot;';
 			$$specs{'StockQuantity'.$qty_index} = $best_price{'Stock Weight'};
 		} elsif ( $Paper->type() eq 'Sheet' ) {
-			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . 'x' . $Paper->height();
+			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" x ' . $Paper->height().'"';
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $best_price{'Net Sheet Count'};
 			$$specs{'StockQuantity'.$qty_index} = $best_price{'Gross Sheet Count'};
@@ -2107,7 +2112,7 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 		} # end if
 
 		if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
-			@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = split('x', $$sig_specs{"ddmStockSheetSize$qty_index"} );
+			@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = $$sig_specs{"ddmStockSheetSize$qty_index"} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;;
 		}
 		my @results;
 		my @dont_do_pages = split(',', $Press->specification('DontDoPages'));

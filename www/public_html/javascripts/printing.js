@@ -389,12 +389,14 @@ function Stock_onchange( element, id ) {
 		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
 	} // end if
 
-	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group' );
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'Size' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		var filter = form.elements['ddmStock'+filters[index]+id];
-		if ( filter) {
+		if ( filter ) {
 			h.set(filters[index], filter.getValue() );
 			filter.disabled = true;
+		//} else {
+			//alert('filter ' + 'ddmStock'+filters[index]+id );
 		} // end if filter exists
 	} // end for 
 	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
@@ -458,7 +460,7 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize' );
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
 			var suffix = suffixes[suffix_index];

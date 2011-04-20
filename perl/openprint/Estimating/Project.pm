@@ -189,8 +189,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
 		} # end if
-	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
-		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
+	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSize'} ) ) {
+		@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} else {
 		$$specs{'txtWidth'} =~ s/[^\.\d]//g;
@@ -204,8 +204,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @StockOptions = split (',', $openprint::config{$Project->Type()->name().'StockOptions'} );
-	@StockOptions = split (',', $openprint::config{'StockOptions'} ) if ! @StockOptions;
+	my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ) );
+	@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
@@ -402,6 +402,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 						( exists $$specs{'ddmStockWeight'} ? ( 'weight'	=>	$$specs{'ddmStockWeight'} ) : () ),
 						( exists $$specs{'ddmStockColour'} ? ( 'colour'	=>	$$specs{'ddmStockColour'} ) : () ),
 						( exists $$specs{'ddmStockSheetSize'} ? ( 'size'		=>	$$specs{'ddmStockSheetSize'} ) : () ),
+						( exists $$specs{'ddmStockSize'} ? ( 'size'		=>	$$specs{'ddmStockSize'} ) : () ),
 						) ) ) {
 			$$specs{'ddmStockName'} = $Papers[0]->name() if ! $$specs{'ddmStockName'};
 			$$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $$specs{'ddmStockFinish'};
@@ -476,7 +477,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 		} # end if
 
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity' ) {
+		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity', 'ddmStockSize' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
