@@ -45,6 +45,13 @@
 			} # end if
 		} # end foreach Press
 
+		if ( $param{'width'} and $min_width < $param{'width'} ) {
+			$min_width = $param{'width'};
+		} # end if
+		if ( $param{'height'} and $min_height < $param{'height'} ) {
+			$min_height = $param{'height'};
+		} # end if
+
 		my %results;
 		foreach my $Stock ( @Stocks ) {
 			if ( $Stock->type() eq 'Roll' ) {

@@ -67,7 +67,7 @@ if ( $CFG::Config{'site_url'} ) {
 } # end if
 
 $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
-$CFG::Config{'SkinPath'} = $CFG::Config{'SkinPath'};
+$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
 
 
