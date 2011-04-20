@@ -91,3 +91,8 @@ table .Skid {
 	width: 70px;
 	text-align: left;
 }
+@media print {
+	body #Header {
+	display: none;
+	}
+}
