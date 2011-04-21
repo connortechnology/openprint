@@ -144,9 +144,35 @@ sub find {
 		$sql .= ' AND ( created_on <= ?)';
 		push @values, $params{'created_on_end'};
 	} # end if
+	if ( $params{'sheetsize'} ) {
+		my ( $width, $height ) = $params{'sheetsize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+		if ( $width ) {
+			$sql .= ' AND width=?';
+			push @values, $width;
+		} else {
+			$openprint::log->error("No width in $params{sheetsize}");
+		} # end if
+		if ( $height ) {
+			$sql .= ' AND height=?';
+			push @values, $height;
+		} else {
+			$openprint::log->error("No height in $params{sheetsize}");
+		} # end if
+	} # end if
 	if ( $params{'size'} ) {
-		$sql .= ' AND width=? AND height=?';
-		push @values, split 'x', $params{'size'};
+		my ( $width, $height ) = $params{'size'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+		if ( $width ) {
+			$sql .= ' AND width=?';
+			push @values, $width;
+		} else {
+			$openprint::log->error("No width in $params{size}");
+		} # end if
+		if ( $height ) {
+			$sql .= ' AND height=?';
+			push @values, $height;
+		} else {
+			$openprint::log->error("No height in $params{size}");
+		} # end if
 	} # end if
 	if ( $params{'width'} ) {
 		$params{'width'} =~ s/[^\d\.]//g;
@@ -717,6 +743,18 @@ sub calliper {
     } # end if
     return $$self{'calliper'};
 } # end sub calliper
+sub sheetsize {
+    my $self = shift;
+
+	if ( $$self{'type'} eq 'Roll' ) {
+		if ( $$self{'width'} ) {
+			return $$self{'width'} . '"';
+		} # end if
+		return '';
+	} else {
+		return sprintf('%s" x %s"', @$self{'width','height'} );
+	} # end if
+} # end sub sheetsize
 sub size {
     my $self = shift;
 

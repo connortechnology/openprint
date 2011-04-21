@@ -19,27 +19,13 @@
 						<h1>Project Specifications</h1>
 						<div class="Envelopes">
 							<fieldset><legend>Envelopes</legend>
-							<div class="content">
-								<ul>
-									<!--#include virtual="/includes/paper_dropdowns.html"-->
-									<li><label>Size:</label>
-										<select id="ddmStockSheetSize" name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
-										<option value="">Please select one</option>
-										<? echo (
-												my @sizes = openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(),@$variable{
-														'ddmStockBrand'.$$variable{'Signature'},
-														'ddmStockFinish'.$$variable{'Signature'},
-														'ddmStockColour'.$$variable{'Signature'},
-														'ddmStockWeight'.$$variable{'Signature'},
-														} );
-												ssi::make_drop_down( \@sizes, $$variable{'ddmStockSheetSize'} );
-												) ?>
-										</select>
 										<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
 										<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
 										<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
 										<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
-									</li>
+							<div class="content">
+								<ul>
+									<!--#include virtual="/includes/paper_dropdowns.html"-->
 									<li><label>Colours:</label>
 										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 											<option value="4/0">4 Colour One Side</option>

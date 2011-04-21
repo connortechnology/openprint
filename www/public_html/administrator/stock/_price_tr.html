@@ -13,10 +13,10 @@
 					<input type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
 					<input type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
 				</td>
-				<td><input type="text" name="units-%1$d" value="%4$s" onkeyup="check_price(this);" /></td>
-				<td><input type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
-				<td><input type="text" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				<td><input type="text" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Units"><input type="text" name="units-%1$d" value="%4$s" onkeyup="check_price(this);" /></td>
+				<td class="Cost"><input type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
+				<td class="Markup"><input type="text" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Price"><input type="text" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
 			`,
 			$Price->id(), 
 			( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
@@ -32,7 +32,7 @@
 					<input class="text" type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
 					<input class="text" type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
 				</td>
-				<td><input type="text" name="units-%1$d" value="%4$s"/></td>
+				<td class="Units"><input type="text" name="units-%1$d" value="%4$s"/></td>
 				<td class="Cost"><input class="text" type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`,
 				$Price->id(), 
 				( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
