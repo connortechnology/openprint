@@ -214,10 +214,9 @@ function calc( formName, force ) {
 	timeout = null;
 	var form = getFormObj( formName );
     gettingNewPrice = true;
-	//jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::print_project::create_calc', Serialize( form ) );
 	var h = form.serialize(true);
-	h.ServiceType = 'Project';
-	h.callback = 'cbFillResults';
-	h.method = 'create_calc';
+	h.set('ServiceType', 'Project' );
+	h.set('callback', 'cbFillResults' );
+	h.set('method', 'create_calc' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end function calc(form)
