@@ -305,7 +305,7 @@ function cbFillPrintResults( results ) {
     } // end if
 
     if ( addServices.length ) {
-         addService( 'f1', addServices);
+		calc( 'f1', 0, { action: 'add_service', services: addServices } );
     } // end if
 
 } // end function cbFillPrintResults( results )

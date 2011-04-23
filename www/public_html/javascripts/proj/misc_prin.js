@@ -62,15 +62,3 @@ function submit_handler( formName ) {
 function cbWindowSaveClose( results ) {
 	window.close();
 } 
-
-function get_page_quantity(form) {
-	var pageQty = 1;
-	if ( form.elements['rdbPageQuantity'] ) {
-		pageQty = get_rdb_value(form,'rdbPageQuantity');
-	} else if ( form.elements['txtNameQuantity'] ) {
-		pageQty = parseInt(1*form.txtNameQuantity.value);
-	} // end if
-	pageQty = pageQty > 0 ? pageQty : 1;
-	return pageQty;
-} // end function
-
