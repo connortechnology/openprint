@@ -151,7 +151,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
-					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
 							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
 							'colour_id'=>$session{'/administrator/stock/list.html?Colour'},
 							'weight_id'=>$session{'/administrator/stock/list.html?Weight'},

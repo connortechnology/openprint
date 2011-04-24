@@ -189,6 +189,7 @@ function calc_print( formName, force ) {
 	h.set('ServiceType','Printing' );
 	h.set('callback', 'cbFillPrintResults' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	return true;
 } // end calc_print
 
 

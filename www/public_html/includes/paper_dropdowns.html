@@ -18,7 +18,7 @@
 		my ( $desc,$name ) = split('=>', $option );
 		$name = $desc if ! $name;
 
-		my @Papers = openprint::Paper::find( %find );
+		my @Papers = openprint::Paper->find( %find );
 		my @options;
 		if ( $option =~ /Size/ ) {
 		@options = map { $_, $_ } ( sort { 

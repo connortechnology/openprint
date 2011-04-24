@@ -214,7 +214,7 @@ function calc( formName, force ) {
 	timeout = null;
 	var form = getFormObj( formName );
     gettingNewPrice = true;
-	var h = form.serialize(true);
+	var h = $H(form.serialize(true));
 	h.set('ServiceType', 'Project' );
 	h.set('callback', 'cbFillResults' );
 	h.set('method', 'create_calc' );

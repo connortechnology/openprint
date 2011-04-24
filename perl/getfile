@@ -16,7 +16,6 @@ use MIME::Base64;
 
 use strict;
 
-require jsrs;
 require sql;
 require ssi;
 require misc;

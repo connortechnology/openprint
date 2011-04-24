@@ -8,7 +8,7 @@
 	@options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
 
 	my %find = (
-		'project_type_id'	=>	$Project->type_id(),
+		'project_type_id in'	=>	$Project->type_id(),
 		( exists $param{'Supplied'} ? ( 'supplied'			=>	[ undef, $param{'Supplied'} ] ) : () ),
 		);
 	$param{'selected'} =~ s/ddmStock//;
@@ -24,7 +24,7 @@ if ( 0 ) {
 	} # end foreach option
 }
 
-	my @Stocks = openprint::Paper::find( %find );
+	my @Stocks = openprint::Paper->find( %find );
 
 	# Find the index of the selected option
 	my $option_index = 0;
@@ -79,7 +79,7 @@ if ( 0 ) {
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
-    my @presses = openprint::Equipment::find( 'category'=>'Printing' );
+    my @presses = openprint::Equipment->find( 'category'=>'Printing' );
 	if ( @presses ) {
 
 		my $min_width = -1;
