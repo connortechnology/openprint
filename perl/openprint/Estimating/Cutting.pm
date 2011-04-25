@@ -74,6 +74,12 @@ sub variables {
     return @v;
 } # end sub variables
 
+sub outputs { 
+} # end sub outputs
+
+sub no_outputs {
+} # end sub no_outputs
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
@@ -174,7 +180,7 @@ sub signature_calc_stock_cutting {
 			push @capabilities, 'Large Format';
 		} # end if
 $openprint::log->warn("No clac_hash? $calc_hash");
-		@my_equipment = openprint::Equipment->find( 'Specifications' => \@capabilities, 'useinestimating'=>1,'order'=>'lower(strName)');
+		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
 		@{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}} = @my_equipment;
 	} # end if
 

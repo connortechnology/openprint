@@ -1,16 +1,15 @@
+use strict;
 package openprint::Paper;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
-use Carp ( cluck );
+use Carp ( 'cluck' );
 
-use strict;
 use openprint ();
-use vars qw( $debug $log %variable %fields %transforms %defaults %config );
+use vars qw( $log %variable %config );
 *variable = \%openprint::variable;
 *config = \%openprint::config;
 *log = \$openprint::log;
-
 
 require sql;
 require ssi;
@@ -32,288 +31,77 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-$debug = 0;
 
-my @fields = (
-		'id', 'created_on',
-		'group_id','owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
-		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
-		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
-		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts','message',
-		'material_id',
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
+
+$debug = 1;
+$table = 'papers';
+$serial	=	'paper_id_seq';
+%fields = (
+		'id'	=>	'id', 
+		'created_on'	=>	'created_on',
+		'group_id'		=>	'group_id',
+		'owner_id'		=>	'owner_id',
+		'manufacturer_id'	=>	'manufacturer_id',
+		'name_id'		=>	'name_id',
+		'colour_id'		=>	'colour_id',
+		'finish_id'		=>	'finish_id',
+		'weight_id'		=>	'weight_id',
+		'calliper'		=>	'calliper',
+		'taxexempt1'	=>	'taxexempt1',
+		'taxexempt2'	=>	'taxexempt2',
+		'cuttable'		=>	'cuttable', 
+		'multipart'		=>	'mulipart', 
+		'doublesided'	=>	'doublesided', 
+		'perfecting'	=>	'perfecting', 
+		'score_required'	=>	'score_required',
+		'width'				=>	'width',
+		'height'			=>	'height',
+		'mweight'			=>	'mweight',
+		'sheets_per_package'	=>	'sheets_per_package',
+		'gsm'					=>	'gsm',
+		'wpsi'					=>	'wpsi',
+		'digital'				=>	'digital',
+		'type'					=>	'type',
+		'basis_width'			=>	'basis_width',
+		'basis_height'			=>	'basis_height',
+		'basis_mweight'			=>	'basis_mweight',
+		'bladecleaning'			=>	'bladecleaning',
+		'grade'					=>	'grade',
+		'grain_direction'		=>	'grain_direction',
+		'fsc_code'				=>	'fsc_code',
+		'supplied'				=>	'supplied',
+		'minimum_order'			=>	'minimum_order',
+		'inventory_number'		=>	'inventory_number',
+		'full_packages'			=>	'full_packages',
+		'message'				=>	'message',
+		'diescoring'			=>	'diescoring',
+		'in_stock'				=>	'in_stock',
+		'parts'					=>	'parts',
+		'material_id'			=>	'material_id',
 		);
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	my $starttime = gettimeofday() if $debug;
-
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	# Can't auto-load in_stock because we have to not count Missing paper
-	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND papers.id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND papers.id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'grain_direction'} ) {
-		$sql .= ' AND grain_direction=?';
-		push @values, $params{'grain_direction'};
-	} # end if
-	if ( $params{'owner_id'} ) {
-		$sql .= ' AND owner_id=?';
-		push @values, $params{'owner_id'};
-	} # end if
-	if ( $params{'owner_id !='} ) {
-		$sql .= ' AND owner_id != ?';
-		push @values, $params{'owner_id !='};
-	} # end if
-	if ( $params{'manufacturer_id'} ) {
-		$sql .= ' AND manufacturer_id=?';
-		push @values, $params{'manufacturer_id'};
-	} # end if
-	if ( $params{'manufacturer'} ) {
-		$sql .= ' AND manufacturer_id=(SELECT id FROM Manufacturers WHERE longname=?)';
-		push @values, $params{'manufacturer'};
-	} # end if
-	
-	if ( $params{'group_id'} ) {
-		$sql .= ' AND group_id=?';
-		push @values, $params{'group_id'};
-	} # end if
-	if ( $params{'group'} ) {
-		$sql .= ' AND group_id=(SELECT id FROM StockGroups WHERE name=?)';
-		push @values, $params{'name'};
-	} # end if
-	if ( $params{'name_id'} ) {
-		$sql .= ' AND name_id=?';
-		push @values, $params{'name_id'};
-	} # end if
-	if ( $params{'name'} ) {
-		$sql .= ' AND name_id=(SELECT id FROM PaperNames WHERE longname=?)';
-		push @values, $params{'name'};
-	} # end if
-	if ( $params{'finish_id'} ) {
-		$sql .= ' AND finish_id=?';
-		push @values, $params{'finish_id'};
-	} # end if
-	if ( $params{'finish'} ) {
-		$sql .= ' AND finish_id=(SELECT id FROM PaperFinishes WHERE longname=?)';
-		push @values, $params{'finish'};
-	} # end if
-	if ( $params{'colour_id'} ) {
-		$sql .= ' AND colour_id=?';
-		push @values, $params{'colour_id'};
-	} # end if
-	if ( $params{'colour'} ) {
-		$sql .= ' AND colour_id=(SELECT id FROM PaperColours WHERE longname=?)';
-		push @values, $params{'colour'};
-	} # end if
-	if ( $params{'weight_id'} ) {
-		$sql .= ' AND weight_id=?';
-		push @values, $params{'weight_id'};
-	} # end if
-	if ( $params{'weight'} ) {
-		$sql .= ' AND weight_id=(SELECT id FROM PaperWeights WHERE longname=?)';
-		push @values, $params{'weight'};
-	} # end if
-	if ( $params{'material_id'} ) {
-		$sql .= ' AND material_id=?';
-		push @values, $params{'material_id'};
-	} # end if
-	if ( $params{'material'} ) {
-		$sql .= ' AND material_id=(SELECT id FROM StockMaterials WHERE name=?)';
-		push @values, $params{'material'};
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'sheetsize'} ) {
-		my ( $width, $height ) = $params{'sheetsize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
-		if ( $width ) {
-			$sql .= ' AND width=?';
-			push @values, $width;
-		} else {
-			$openprint::log->error("No width in $params{sheetsize}");
-		} # end if
-		if ( $height ) {
-			$sql .= ' AND height=?';
-			push @values, $height;
-		} else {
-			$openprint::log->error("No height in $params{sheetsize}");
-		} # end if
-	} # end if
-	if ( $params{'size'} ) {
-		my ( $width, $height ) = $params{'size'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
-		if ( $width ) {
-			$sql .= ' AND width=?';
-			push @values, $width;
-		} else {
-			$openprint::log->error("No width in $params{size}");
-		} # end if
-		if ( $height ) {
-			$sql .= ' AND height=?';
-			push @values, $height;
-		} else {
-			$openprint::log->error("No height in $params{size}");
-		} # end if
-	} # end if
-	if ( $params{'width'} ) {
-		$params{'width'} =~ s/[^\d\.]//g;
-		$sql .= ' AND width=?';
-		push @values, 1*$params{'width'};
-	} # end if
-	if ( $params{'width >='} ) {
-		$params{'width >='} =~ s/[^\d\.]//g;
-		$sql .= ' AND ( width IS NULL or width>=?)';
-		push @values, 1*$params{'width >='};
-	} # end if
-	if ( $params{'width_start'} ) {
-		$params{'width_start'} =~ s/[^\d\.]//g;
-		$sql .= ' AND width>=?';
-		push @values, 1*$params{'width_start'};
-	} # end if
-	if ( $params{'height'} ) {
-		$params{'height'} =~ s/[^\d\.]//g;
-		$sql .= ' AND height=?';
-		push @values, 1*$params{'height'};
-	} # end if
-	if ( $params{'height_start'} ) {
-		$params{'height_start'} =~ s/[^\d\.]//g;
-		$sql .= ' AND height>=?';
-		push @values, 1*$params{'height_start'};
-	} # end if
-	if ( $params{'height >='} ) {
-		$params{'height >='} =~ s/[^\d\.]//g;
-		$sql .= ' AND ( height IS NULL OR height>=? )';
-		push @values, 1*$params{'height >='};
-	} # end if
-	if ( $params{'in_stock_start'} ) {
-		$params{'in_stock_start'} =~ s/[^\d\.]//g;
-		$sql .= ' AND ( in_stock IS NULL OR in_stock >= ?)';
-		push @values, 1*$params{'in_stock_start'};
-	} # end if
-	if ( $params{'allocated_to_docket'} ) {
-		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM Projects WHERE lngDocketNumber=?))';
-		push @values, $params{'allocated_to_docket'};
-	} # end if
-	if ( $params{'project_type_name'} ) {
-		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=(SELECT Id FROM Project_Types WHERE name = ?))';
-		push @values, $params{'project_type_name'};
-	} # end if
-	if ( $params{'project_type_id'} ) {
-		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
-		push @values, $params{'project_type_id'};
-	} # end if
-	if ( exists $params{'stock_settings_equipment_id ='} ) {
-		$sql .= ' AND papers.id IN ( SELECT stock_id FROM Equipment_Stock_Settings WHERE equipment_id=? )';
-		push @values, $params{'stock_settings_equipment_id ='};
-	} # end if
-	if ( exists $params{'fsc_code'} ) {
-		if ( $params{'fsc_code'} ) {
-			$sql .= ' AND fsc_code=?';
-			push @values, $params{'fsc_code'};
-		} else {
-			$sql .= ' AND ( fsc_code IS NULL or fsc_code=? )';
-			push @values, $params{'fsc_code'};
-		} # end if
-	} # end if
-	if ( $params{'parts'} ) {
-		$sql .= ' AND parts=?';
-		push @values, $params{'parts'};
-	} # end if
-	if ( $params{'type'} ) {
-		if ( ref $params{'type'} eq 'ARRAY' ) {
-			if ( @{$params{'type'}} ) {
-			$sql .= ' AND type IN (' . join(',', map { '?' } @{$params{'type'}} ) . ')';
-			push @values, @{$params{'type'}};
-			} else {
-			$sql .= ' AND type IS NULL';
-			} # end if
-		} else {
-			$sql .= ' AND type=?';
-			push @values, $params{'type'};
-		} # end if
-	} # end if
-	if ( $params{'supplied'} ) {
-		if ( ref $params{'supplied'} eq 'ARRAY' ) {
-			my @options;
-			foreach my $option ( @{$params{'supplied'}} ) {
-				if ( (! defined $option ) or ($option eq '' ) ) {
-					push @options, 'supplied IS NULL';
-				} else {
-					push @options, 'supplied=?';
-					push @values, $option;
-				} # end if
-			} # end foreach
-			$sql .= ' AND ( ' . join(' OR ', @options ) . ' )';
-		} else {
-			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
-				$sql .= ' AND supplied IS NULL';
-			} else {
-				$sql .= ' AND (supplied IS NULL OR supplied=?)';
-				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
-			} # end if
-		} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading papers SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No papers loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded papers ($sql) (@values) in : " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data ) if $debug;
-	} # end if
-	return map { new openprint::Paper( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{@fields} = @$data{@fields};
-	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated'} = @$data{'allocated'};
-} # end sub load
-
-
-sub clone {
-	my $self = shift;
-
-	my $New = new openprint::Paper();
-	@$New{keys %$self} = @$self{keys %$self};
-	return $New;
-} # end sub clone
+%find_fields = (
+		'manufacturer'	=>	'(SELECT longname FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
+		'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
+		'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
+		'name'	=>	'(SELECT longname FROM papernames WHERE papernames.id=papers.name_id)',
+		'finish'	=>	'(SELECT longname FROM paperfinishes WHERE paperfinishes.id=papers.finish_id)',
+		'colour'	=>	'(SELECT longname FROM papercolours WHERE papercolours.id=papers.colour_id)',
+		'weight'	=>	'(SELECT longname FROM paperweights WHERE paperweights.id=papers.weight_id)',
+		'size'		=>	q`width || '" x ' || height || '"'`,
+		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
+		'allocated_to_docket'	=>	'(SELECT lngdocketnumber FROM tbl_projects WHERE Projects.id IN ( SELECT project_id FROM paper_allocations WHERE paper_id = papers.id) )',
+		'project_type_name'	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
+		'project_type_id'	=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
+		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
+		);
 
 # Returns a copy of the paper object.
 sub copy {
-	my $self = shift;
-
-	my $New = new openprint::Paper();
-	@$New{keys %$self} = @$self{keys %$self};
+	my $New = $_[0]->clone();
 	$$New{'id'} = '';
-	@{$$New{'Prices'}} = $self->Prices();
-	@{$$New{'recommendations'}} = $self->recommendations();
+	@{$$New{'Prices'}} = $_[0]->Prices();
+	@{$$New{'recommendations'}} = $_[0]->recommendations();
 	return $New;
 } # end sub copy
 
@@ -329,7 +117,7 @@ sub save {
 	my ( $self, $hash ) = @_;
 
 	if ( $hash ) {
-		foreach my $key ( @fields ) {
+		foreach my $key ( keys %fields ) {
 			$$self{$key} = $$hash{$key} if exists $$hash{$key};
 		} # end foreach
 	} # end if
@@ -377,7 +165,7 @@ sub save {
 	$self->in_stock();
 	#$self->wpsi( undef );
 
-	foreach my $key ( @fields ) {
+	foreach my $key ( keys %fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
 	} # end foreach
 	$$self{'height'} = undef if $$self{'type'} eq 'Roll';
@@ -388,7 +176,7 @@ sub save {
 
 	return $error if $error;
 
-	my %sql = map { $_, $$self{$_} } @fields;
+	my %sql = map { $_, $$self{$_} } keys %fields;
 	delete $sql{'created_on'};
 	
 	my $ac = sql::start_transaction( $openprint::dbh );

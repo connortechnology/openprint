@@ -54,9 +54,9 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id");
+$log->debug("loading $parent $id");
 			$self->load( $data );
-			#$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
+			$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {

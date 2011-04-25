@@ -798,7 +798,7 @@ sub get_Stocks {
 				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
 				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
 				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
-				'project_type_id'=>$Project->Type()->id(),
+				'project_type_id in'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
 		foreach my $P ( @Papers ) {
@@ -1732,6 +1732,8 @@ sub calc {
 	if ( ! @Papers ) {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
 		return $$specs{'Status'} = 'uncalculated';
+	} else {
+$openprint::log->debug("got papers" . @Papers );
 	} # end if
 
 	if ( $$services{'NoPrinting'} ) {
@@ -1740,6 +1742,7 @@ sub calc {
 				$$specs{"$k$qty_index"} = $$specs{$k};
 			} # end foreach
 		} # end foreach K
+$openprint::log->debug("No printing");
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 

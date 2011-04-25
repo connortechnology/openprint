@@ -189,6 +189,7 @@ function calc_print( formName, force ) {
 	h.set('ServiceType','Printing' );
 	h.set('callback', 'cbFillPrintResults' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	return true;
 } // end calc_print
 
 
@@ -305,7 +306,7 @@ function cbFillPrintResults( results ) {
     } // end if
 
     if ( addServices.length ) {
-         addService( 'f1', addServices);
+		calc( 'f1', 0, { action: 'add_service', services: addServices } );
     } // end if
 
 } // end function cbFillPrintResults( results )

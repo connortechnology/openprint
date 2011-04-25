@@ -121,7 +121,7 @@
 		push @types, 'Roll';
 	} # end if
 	my %find = (
-			'project_type_id'	=>	$$variable{'ProjectType'}->id(),
+			'project_type_id in'	=>	$$variable{'ProjectType'}->id(),
 			'supplied'			=>	[undef, $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0],
 			'type'				=>	\@types,
 	);
@@ -131,7 +131,7 @@
 	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
-		my @Papers = openprint::Paper::find( %find );
+		my @Papers = openprint::Paper->find( %find );
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $option ); } @Papers ) ) );
 		$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $options[0] if @options == 2;
 
@@ -150,6 +150,7 @@
 			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{'Signature'}} ),
 		);
 	} # end foreach option
+$log->debug('done');
 	return $html;
 ) ?>
 		</ul>

@@ -298,59 +298,6 @@ function filterDDM( filter, ddm ) {
 
 } // end function filterDDM
 
-function jsrs_FillDDM ( formName, selectName, sql, callback ) {
-	var params = new Array();
-	params[params.length] = formName;
-	params[params.length] = selectName;
-	params[params.length] = sql;
-
-	jsrsExecute( '/jsrs.htm', callback, 'openprint::jsrs_handler::fill_ddm', params );
-}
-
-function jsrs_cbFillDDM( results ) {
-	var form;
-	var ddm;
-	var selectedValue;
-	var options = new Array;
-
-	var pairs = results.split('|');
-	for ( var i = 0; i < pairs.length; i += 1 ){
-		if ( pairs[i].indexOf('~') != -1 ) {
-			var data = pairs[i].split('~');
-			if ( data[0] == 'Form' ) {
-				form = document.forms[data[1]];
-			} else if ( data[0] == 'Select' ) {
-				if ( ! form ) {
-					alert('No Form!');
-				} else {
-					ddm = form.elements[data[1]];
-					if ( ! ddm ) {
-						alert("No ddm: " + data[1] );
-					} else {
-						selectedValue = get_ddm_value( ddm );
-						clear_ddm( ddm );
-					} // end if
-				} // end if
-			} else if ( data[0] == 'Option' ) {
-				options[options.length] = pairs[i];
-			} else if ( data[0] == 'Selected' ) {
-				selectedValue = data[1];
-			} // end if
-		} // end if
-	} // end for
-	if ( ddm ) {
-		for ( var i=0; i < options.length; i += 1 ) {
-				var data = options[i].split('~');
-				add_option( ddm, data[1], data[2] );
-		} // end for
-		ddm_select_by_value( ddm, selectedValue );
-
-	} // end if
-	return ddm;
-}
-
-/* Added by Antonio */
-
 /*
  *	Pass it the Month and Year and it'll return the number of days within the
  *	specified month. Year is optional. If no year is passed and the month chosen

@@ -47,12 +47,14 @@
 		<select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';ddmStockSheetSize_onchange();">
 			<option value="">Please select one</option>
 		 <? echo (
+if ( 0 ) {
 					ssi::make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
 							'ddmStockBrand'.$$variable{'Signature'},
 							'ddmStockFinish'.$$variable{'Signature'},
 							'ddmStockColour'.$$variable{'Signature'},
 							'ddmStockWeight'.$$variable{'Signature'},
 } ) ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} );
+}
 					) ?>
 		</select>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

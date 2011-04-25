@@ -15,7 +15,6 @@ use Date::Calc qw(Add_Delta_Days);
 
 use strict;
 
-require jsrs;
 require sql;
 require ssi;
 require misc;
