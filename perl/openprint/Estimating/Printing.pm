@@ -3302,7 +3302,7 @@ sub calc_price {
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
 		$additional_overs = $minimum if $minimum > $additional_overs;
 	} # end if
-	my $overs = $additional_overs;
+	$overs = $additional_overs;
 	if ( $Press->specification('Overs') ne 'All' ) {
 		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
 	} else {
@@ -3526,7 +3526,7 @@ $openprint::log->debug("Using cached folding");
 	$overs += ( $bindery_overs - $overs ) if $bindery_overs > $overs;
 	$overs = $min_overs if $overs < $min_overs;
 
-	my $gross_sheets = $net_sheets + $overs;
+	$gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
