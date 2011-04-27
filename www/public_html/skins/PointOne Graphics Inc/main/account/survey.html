@@ -1,14 +1,21 @@
-<? if ( $r->param('btnFunction') eq 'Submit' ) ?>
+<? if ( $param{'btnFunction'} eq 'Submit' ) ?>
 	<? eval ( 
+		require openprint::SurveyQuestion;
 		$$variable{'Complete'} = 1;
-		sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $openprint::session{'user_id'}, $r->param('survey_id') );
-		@{$$variable{'Questions'}} = sql::execute( $log, $dbh, q{SELECT id FROM Survey_Questions WHERE survey_id=?}, $r->param('survey_id') );
-		foreach my $question_id ( @{$$variable{'Questions'}} ) {
-			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $openprint::session{'company_id'}, 'user_id', $openprint::session{'user_id'}, 'survey_id', $r->param('survey_id'), 'question_id', $question_id, 'answer', $r->param( 'Answer'.$question_id ) );
-			$$variable{'Complete'} = 0 if ! $r->param('Answer'.$question_id);
+		sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $session{'user_id'}, $param{'survey_id'} );
+		
+		@{$$variable{'Questions'}} = openprint::SurveyQuestion->find('survey_id'=>$param{'survey_id'});
+		foreach my $Question ( @{$$variable{'Questions'}} ) {
+			my $question_id = $Question->id();
+			if ( ! $param{"Answer$question_id"} ) {
+				$$variable{'Complete'} = 0;
+$log->debug("No answer to question $$Question{text}");
+				last;
+			} # end if
+			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $session{'company_id'}, 'user_id', $session{'user_id'}, 'survey_id', $param{'survey_id'}, 'question_id', $question_id, 'answer', $param{'Answer'.$question_id} );
 		} # end foreach
 		if ( $$variable{'Complete'} ) {
-			sql::update( undef, undef, 'Users', ['index=?', $openprint::session{'user_id'}], 'strcustomgreeting','' );
+			sql::update( undef, undef, 'Users', ['index=?', $session{'user_id'}], 'strcustomgreeting','' );
 		} # end if
 	) ?>
 
@@ -17,18 +24,18 @@
 	<? else ( $$variable{'Complete'} ) ?>
 		You have submitted the Survey without answering each item.
 		Please answer each item before submitting.  Thank you.
-		<? eval ( sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $openprint::session{'user_id'}, $r->param('survey_id') ); ) ?>
+		<? eval ( sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $session{'user_id'}, $param{'survey_id'} ); ) ?>
 	<? endif ( $$variable{'Complete'} ) ?>
-<? endif ( $r->param('btnFunction') eq 'Submit' ) ?>
+<? endif ( $param{'btnFunction'} eq 'Submit' ) ?>
 
 <? if ( ! $$variable{'Complete'} ) ?>
 <form name="f1" method="post" action="survey.html">
 	<input type="hidden" name="btnFunction" value="Submit"/>
 <? eval ( 
-	if ( $openprint::param{'survey_id'} ) {
-		$$variable{'survey_id'} = $openprint::param{'survey_id'} if ! sets::isin( $openprint::param{'survey_id'}, sql::execute( $log, $dbh, q{SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?}, $$variable{'user_id'} ) );
+	if ( $param{'survey_id'} ) {
+		$$variable{'survey_id'} = $param{'survey_id'} if ! sets::isin( $param{'survey_id'}, sql::execute( $log, $dbh, q{SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?}, $$variable{'user_id'} ) );
 	} else {
-		@$variable{'survey_id'} = sql::execute( $log, $dbh, q{SELECT MIN(id) FROM Surveys WHERE id NOT IN (SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?)}, $openprint::session{'user_id'} );
+		@$variable{'survey_id'} = sql::execute( $log, $dbh, q{SELECT MIN(id) FROM Surveys WHERE id NOT IN (SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?)}, $session{'user_id'} );
 	} # end if
 	) ?>
 <? if ( $$variable{'survey_id'} ) ?>

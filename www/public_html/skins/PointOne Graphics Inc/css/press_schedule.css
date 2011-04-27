@@ -13,11 +13,11 @@ div.row {
 	font-weight: normal;
 	font-size: 10px;
 	margin:0px;
-	padding: 0px;
+	padding:0;
 	margin-bottom: 4px;
 	height: auto;
 	float: left;
-		p\osition: relative;
+	p\osition: relative;
 }
 
 .PressScheduleHeader {
@@ -32,16 +32,16 @@ div.row {
 }
 	div.PressColumn {
 		float: left;
-		margin: 0px;
-		padding: 0px;
+		margin:0;
+		padding:0;
 		border: none;
 		text-align: center;
 		font-size:16px;
 		font-weight:bold;
 	}
 	div.PressColumn ul {
-		padding: 0px;
-		margin: 0px 1px 0px 1px;
+		padding:0;
+		margin:0 1px 0 1px;
 		border-bottom: 1px solid black;
 		list-style: none;
         font-weight: normal;
@@ -49,8 +49,8 @@ div.row {
         font-size: 12px;
 	}
 	div.PressColumn ul li {
-		padding: 0px;
-		margin: 0px;
+		padding:0;
+		margin:0;
 		margin-top: 2px;
 		margin-bottom: 2px;
 		border-top: 1px solid black;
@@ -69,10 +69,6 @@ div.PressColumn ul li:after {
     visibility: hidden;
 
 }
-/* Hides from IE-mac \*/
-* html div.PressColumn ul li {height: 1%;}
-div.PressColumn ul li {display: block;}
-/* End hide from IE-mac */
 
 div.PressColumn li.multibindery,
 div.PressColumn li.multipress, 
@@ -107,10 +103,10 @@ width: 196px;
 		background-color: #ffb4da;
 		font-weight: bold;
 		font-size: 14px;
-	   margin: 0px;
+	   margin:0;
 	   margin-left: 1px;
 	   margin-right: 1px;
-	   padding: 0px;
+	   padding:0;
 	}
 .When:after {
     content: ".";
@@ -120,9 +116,6 @@ width: 196px;
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html .When {height: 1%;}
-.When {display: block;}
 .Printing .When {
 		background-color: #ffb4da;
 }
@@ -165,7 +158,7 @@ width: 196px;
 		min-width: 70px;
         border: 1px outset gray;
         text-align: center;
-		padding: 0px 4px 0px 4px;
+		padding:0 4px 0 4px;
 	}
 	.RunTime {
 		float: left;
@@ -187,11 +180,11 @@ width: 196px;
         border: 1px outset gray;
         width: 80px;
         text-align: center;
-        padding: 0px;
+        padding:0;
 	}
 .StartTime img {
-    margin: 0px;
-    padding: 0px;
+    margin:0;
+    padding:0;
     height: 11px;
     border: none;
 }
@@ -233,6 +226,13 @@ width: 196px;
 	@media print {
 	div.PressColumn, a.docket {
 		color: black;
+		font-size: x-small;
+		}
+		div.PressColumn ul {
+		font-size: xx-small;
+		}
+		.Company, .When {
+		font-size: x-small;
 		}
 		.assign {
 			display: none;
@@ -248,16 +248,16 @@ width: 196px;
 			margin: 2px;
 		}
 		li { 
-			margin: 0px;
+			margin:0;
 			padding: 1px;
 		}
 		td { 
-			padding: 0px;
-			margin: 0px;
+			padding:0;
+			margin:0;
 		}
 		span {
-			margin: 0px;
-			padding: 0px;
+			margin:0;
+			padding:0;
 			width: auto;
 		}
 	#Header {
@@ -276,12 +276,12 @@ span.PrepressOperator {
 
 fieldset.filters p.buttons {
 clear:both;
-	padding: 0px;
-margin: 5px 0px 5px 0px;
+	padding:0;
+margin: 5px 0 5px 0;
 }
 fieldset.filters ul {
 	list-style:none;
-	margin: 0px;
+	margin:0;
 	padding:0px;
 }
 fieldset.filters ul:after {
@@ -298,12 +298,12 @@ fieldset.filters ul {display: block;}
 
 fieldset.filters ul li {
 	list-style:none;
-	padding: 0px 0px 0px 85px;
+	padding:000 85px;
 	float: left;
 }
 fieldset.filters ul li label {
 	vertical-align: top;
-	margin: 0px 0px 0px -85px;
+	margin:000 -85px;
 	width: 80px;
 	float: left;
 }
@@ -357,7 +357,7 @@ div.legend ul li ul li {
 	width: 200px;
 }
 div.legend ul li ul li label {
-	margin: 0px;
+	margin:0;
 	width: auto;
 }
 .message {

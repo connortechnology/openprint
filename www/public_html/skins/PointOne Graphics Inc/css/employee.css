@@ -1,3 +1,12 @@
+@media only screen and (max-device-width: 480px) {
+}
+@media screen and (min-device-width: 481px) {
+       body {
+               min-width: 780px;
+               max-width: none;
+       } 
+}
+
 fieldset p {
 	padding-left: 140px;
 }
@@ -90,4 +99,9 @@ table .RFID {
 table .Skid {
 	width: 70px;
 	text-align: left;
+}
+@media print {
+	body #Header {
+	display: none;
+	}
 }

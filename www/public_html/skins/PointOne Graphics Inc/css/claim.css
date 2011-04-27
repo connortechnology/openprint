@@ -114,10 +114,6 @@ div.Claim .Header:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html .Claim .Header {height: 1%;}
-* .Claim .Header {display: block;}
-/* End hide from IE-mac */
 
 div.Claim div.Header .Logo {
 	margin: 7px;
@@ -135,10 +131,6 @@ div.Claim .Header .Logo:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html .Claim .Header  .Logo{height: 1%;}
-.Claim .Header  .Logo{display: block;}
-/* End hide from IE-mac */
 
 .Claim div.Header .Logo table {
 	text-align: center;
@@ -199,10 +191,6 @@ div.Claim .Information:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html .Claim .Information {height: 1%;}
-* .Claim .Information {display: block;}
-/* End hide from IE-mac */
 div.Claim .Vendor {
 	width: 50%;
 	float: left;
@@ -236,14 +224,11 @@ div.Claim p:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html div.Claim p {height: 1%;}
-div.Claim p {display: block;}
-/* End hide from IE-mac */
 div.Claim p label {
 	margin: 0px 0px 0px -175px;
 	width: 170px;
 	float: left;
+
 }
 div.Claim p label.radio {
 	margin: 0px;

@@ -8,9 +8,12 @@ require openprint::Object;
 require openprint::logs;
 require openprint::MaterialSpecification;
 
-my $debug = 0;
+use vars qw{ $debug $table $serial %fields %transforms %defaults };
+$debug = 1;
 
-my %fields = (
+$table = 'materials';
+$serial = 'materialindex_seq';
+%fields = (
 		'id'				=>	'id',
 		'name'				=>	'name',
 		'description'		=>	'description',
@@ -20,10 +23,10 @@ my %fields = (
 		'taxexempt2'		=>	'taxexempt2',
 		);	
 
-my %transforms = (
+%transforms = (
 		);
 
-my %defaults = (
+%defaults = (
 		'supplier_id'	=>	undef,
 		'category_id'	=>	undef,
 		'taxexempt1'	=>	'N',
@@ -35,68 +38,6 @@ my %cache;
 sub init_cache {
 	%cache = map { $_->name(), $_->id() } find();
 } # end sub init_cache
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Materials WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load_values
-
-# if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
-# If we have not previously loaded the info, we will just save it whether it has actually changed or not.
-# We do this for efficiency's sake.
-sub save {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-
-	foreach my $field ( keys %{$params} ) {
-		if ( defined $fields{$field} ) {
-
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-				$params->{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ! defined $$self{$field} or $$self{$field} ne $$params{$field} ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};   #mark for sql updating
-			} # end if
-		} else {
-			$openprint::log->warn("Material::Save::Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
-
-	if ( @set_fields ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
-		if ( ! $$self{id} ) {
-			@$self{id} = sql::execute( undef, undef, "SELECT nextval('MaterialIndex_seq')" );
-			if ( my $error = sql::insert( undef, undef, 'Materials', [ 'id', $$self{id}, @set_fields ] ) ) {
-				sql::end_transaction( $openprint::dbh, $ac );
-				return $error;
-			} # end if
-			openprint::logs::insertLogRecord('41', "Material Index: " . $$self{id},); # Add record to audit log - action "New Material".
-		} else {
-			if ( my $error = sql::update( undef, undef, 'Materials', ['id=?', $$self{id} ], \@set_fields ) ) {
-				sql::end_transaction( $openprint::dbh, $ac );
-				return $error;
-			} # end if
-			openprint::logs::insertLogRecord('42', "Material Index: " . $$self{id},); # Add record to audit log - action "Update Material".
-		} # end if
-		sql::end_transaction( $openprint::dbh, $ac );
-
-	} # end if
-	$self->load();
-	return;
-
-} # end sub save
 
 sub delete {
 	my $self = shift;

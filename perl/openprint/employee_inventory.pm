@@ -2197,5 +2197,8 @@ sub _add_paper_show {
 sub docket_labels {
 } # end sub docket_labels
 
+sub _check_in_popup {
+} # end sub _check_in_popup
+
 1;
 __END__
