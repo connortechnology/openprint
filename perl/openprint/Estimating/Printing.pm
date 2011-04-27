@@ -2994,7 +2994,7 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 
 			} elsif ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads') {
 #my $starttime = gettimeofday();
-				my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
+				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
 
 				my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @all_impositions );
 				if ( $$results{'Status'} eq 'uncalculated' ) {
@@ -4629,8 +4629,6 @@ sub runtime {
 		return %time;
 	} # end if
 
-	my @Equipment = openprint::Equipment->find( 'strid'=>$$specs{'UsePress'} );
-	my $Equipment = shift @Equipment;
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my @colours;
