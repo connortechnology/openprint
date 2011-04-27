@@ -19,6 +19,7 @@ my $debug = 0;
 my $master_time;
 
 use strict;
+#use warnings;
 use POSIX qw(ceil);
 
 require sql;
@@ -40,6 +41,8 @@ require openprint::Equipment;
 require openprint::Material;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
+
+my @process_colours = ( 'Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour' );
 
 # These are use to tell the code which variables to save
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
@@ -281,6 +284,7 @@ sub get_colours {
 sub get_inkcoverage {
 	my ( $specs, $v, $signature ) = @_;
 	$v = \%variables if ! $v;
+	$signature = '' if ! defined $signature;
 
 	my %inkCoverage;
 	foreach my $side ( 'SideOne','SideTwo' ) {
@@ -376,7 +380,8 @@ my $master_time = gettimeofday();
 	} # end foreach
 
 
-	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
+	# ProjectType is defined in single-page projects, but not in multiple
+	if ( $$specs{'ProjectType'} and ( $$specs{'ProjectType'} eq 'PresentationFolders' ) ) {
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'rdbPocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
@@ -494,7 +499,7 @@ my $master_time = gettimeofday();
 			$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
 
-			if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
+			if ( ( ! defined $$specs{'chkOverrideDimensions'} ) or ( $$specs{'chkOverrideDimensions'} ne 'Y' ) ) {
 				if ( $$specs{'txtSpreadSize'} == 4 ) {
 					$$specs{'txtWidth'} = $$printing_specs{'txtWidth'};
 					$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
@@ -558,13 +563,15 @@ my $master_time = gettimeofday();
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my %inkCoverage = get_inkcoverage( $specs );
-	if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
-		if ( ! $$specs{'PageQuantity'} ) {
-			$$specs{'alert'} .= 'Please enter the # of pages per pad.';
-			return $$specs{'Status'} = 'uncalculated';
+	if ( defined $$specs{'ProjectType'} ) {
+		if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
+			if ( ! $$specs{'PageQuantity'} ) {
+				$$specs{'alert'} .= 'Please enter the # of pages per pad.';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+		} elsif ( $$specs{'ProjectType'} eq 'PressSheetCombination' ) {
+			@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 		} # end if
-	} elsif ( $$specs{'ProjectType'} eq 'PressSheetCombination' ) {
-		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
 	if ( ! ( @side_one_colours or @side_two_colours ) ) {
@@ -696,12 +703,11 @@ my $master_time = gettimeofday();
 	my @Ps;
 
 	if (
-			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
-			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
-			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
+			( defined $$specs{'chkOverrideSheetSize1'} and ( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) ) or
+			( defined $$specs{'chkOverrideSheetSize2'} and ( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) ) or
+			( defined $$specs{'chkOverrideSheetSize3'} and ( $$specs{'chkOverrideSheetSize3'} eq 'Y' ) )
 	   ) {
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
@@ -760,6 +766,8 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 	} # end if
 
 	my %project = (
+			'side_one_colours',	\@side_one_colours,
+			'side_two_colours',	\@side_two_colours,
 			'Add Grip Width',	$$specs{'GripWidth'},
 			'Add Grip Height',	$$specs{'GripHeight'},
 			'Add Colour Bar',	$$specs{'rdbColourBar'},
@@ -809,7 +817,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 # Do this once now, so we don't do it many times in calc_print_price
 	my @filtered_colours = filter_colours( @side_one_colours, @side_two_colours );
 
-	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+	my @possible_presses = sort { $a->strid() cmp $b->strid() } select_presses( $project_index, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -942,7 +950,7 @@ $openprint::log->debug("Grabbing UV Specs");
 					foreach my $index ( $Project->signatures('Interior Spreads') ) {
 						next if $index == $service_index;
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-						next if ( ( $index > $service_index ) and ( $$sig_specs{'chkOverridePrintingType'.$qty_index} ne 'Y' ) );
+						next if ( ( $index > $service_index ) and ( (!defined $$sig_specs{'chkOverridePrintingType'.$qty_index} ) or ( $$sig_specs{'chkOverridePrintingType'.$qty_index} ne 'Y' ) ) );
 						if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
 							if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
 								$$specs{'PrintingTypes'} = ['Digital'];
@@ -1500,9 +1508,9 @@ $I->display();
 				$$specs{'alert'} .= "There are more spreads specified than are required.  Please correct this situation.";
 			} # end if
 		} # end if
-#$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
-
+$openprint::log->debug("Leaving Printing::calc status: $$specs{'Status'}");
 	return $$specs{'Status'};
 } # end sub
 
@@ -1821,7 +1829,7 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 					} # end if
 				} # end if
 			} # end if
-			if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+			if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
 #$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
 				if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
 #$openprint::log->warn('next');
@@ -2244,7 +2252,7 @@ sub calc_price {
 
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
-	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index );
+	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index, $project );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
@@ -3194,15 +3202,16 @@ sub press_setup_cost {
 #
 
 sub plate_setup_cost {
-	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index ) = @_;
+	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index, $project ) = @_;
 
 	my $plate_count = 0;
 	my $non_process_colours = 0;
 
 	foreach my $colour ( @$colours ) {
 		$plate_count += 1;
-		$non_process_colours += 1 if ! sets::isin( $colour, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] );
+		$non_process_colours += 1 if ! sets::isin( $colour, \@process_colours );
 	} # end foreach colour
+$openprint::log->debug("In plate setup $non_process_colours $project ");
 
 	my $plate_count_before_changes = $plate_count;
 
@@ -3217,7 +3226,7 @@ sub plate_setup_cost {
 
 #$log->debug("** GETTTING PLATE SIZE FOR: $press : SIZE ($plate_size) TYPE ($plate_type) COUNT ($plate_count) RUNS($plate_runs)*$impressions*$max_impressions") if $debug or 1;
 	$plate_count *= $plate_runs;
-	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};
+	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index};
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 
 	my %setup_cost = (
@@ -3229,15 +3238,27 @@ sub plate_setup_cost {
 
 	# Some presses like P1's Web press need blank plates for the unused colours.  You can get a gazillion impressions for them though, so you only need 1 set.
 	my $blanks_needed;
-	if ( $Press->specification( 'Require Blank Plates' ) eq 'Y' ) {
-		$blanks_needed = ($Press->specification('Number of Colours') - @$colours) - $$specs{'PreviousBlankPlates'.$qty_index};
-		$setup_cost{'Blank Plates'} = $blanks_needed;
-	} elsif ( $Press->specification( 'Require Blank Plates' ) eq 'When Non-Process' ) {
-		if ( $non_process_colours ) {
-			$blanks_needed = ($Press->specification('Number of Colours') - @$colours) - $$specs{'PreviousBlankPlates'.$qty_index};
-			$setup_cost{'Blank Plates'} = $blanks_needed;
+	my $require_blank_plates = $Press->specification( 'Require Blank Plates' );
+	if ( defined $require_blank_plates ) {
+		my $press_colours = $Press->specification('Number of Colours');
+		if ( $require_blank_plates eq 'Y' ) {
+$openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
+			if ( $$Imposition{'runstyle'} eq 'Web' ) {
+				$blanks_needed = ( $press_colours - @{$$project{'side_one_colours'}} ) + ( $press_colours - @{$$project{'side_two_colours'}} );
+			} else {
+				$blanks_needed = ($press_colours - @$colours);
+			} # end if
+			$setup_cost{'Blank Plates'} = $blanks_needed - $$specs{'PreviousBlankPlates'.$qty_index};
+		} elsif ( $require_blank_plates eq 'When Non-Process' ) {
+			if ( $non_process_colours ) {
+				$blanks_needed = ( $press_colours - @$colours ) - $$specs{'PreviousBlankPlates'.$qty_index};
+				$setup_cost{'Blank Plates'} = $blanks_needed;
+			} # end if
+		} else {
+			$openprint::log->error("Unknown value for Require Blank Plates: $require_blank_plates");
 		} # end if
 	} # end if
+$openprint::log->debug("returning from plate_setup_cost");
 	return %setup_cost;
 } # end sub plate_setup
 
@@ -3448,7 +3469,7 @@ sub get_colour_description {
 	my ( $specs ) = @_;
 	my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
 
-	my $side_one_coatings;
+	my $side_one_coatings = '';
 	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
 	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
 	$side_one_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideOne'} eq 'Satin';
@@ -3477,7 +3498,7 @@ sub get_colour_description {
 	} # end if
 
 	my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
-	my $side_two_coatings;
+	my $side_two_coatings = '';
 	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
 	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
 	$side_two_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideTwo'} eq 'Satin';

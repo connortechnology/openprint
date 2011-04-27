@@ -50,7 +50,7 @@ sub start_vacation {
 	$dbh = db_connect() if ! $dbh; 
 
 	$email =~ /(.*)\@.*/;
-	my $autoreply_address = $1.'@'.$r->dir_config('mail_autoreply_domain');
+	my $autoreply_address = $1.'@'.$config{'mail_autoreply_domain'};
 
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
