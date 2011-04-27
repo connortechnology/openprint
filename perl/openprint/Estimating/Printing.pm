@@ -32,6 +32,7 @@ my $use_filtered_imposition_cache = 0;
 my %stitching_cache;
 
 use strict;
+use warnings;
 use POSIX qw(ceil);
 use openprint ();
 use vars qw( %config $log $dbh );
@@ -61,6 +62,8 @@ require openprint::Equipment;
 require openprint::Material;
 require openprint::ServiceCategory;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
+
+my @process_colours = ( 'Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour' );
 
 # These are use to tell the code which variables to save
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
@@ -489,6 +492,7 @@ sub get_colours {
 sub get_inkcoverage {
 	my ( $specs, $v, $signature ) = @_;
 	$v = \%variables if ! $v;
+	$signature = '' if ! defined $signature;
 
 	my %inkCoverage;
 	foreach my $side ( 'SideOne','SideTwo' ) {
@@ -692,7 +696,6 @@ sub calc_from_imposition {
 		my $mprice = $$price{'Impression MPrice'} / $Imposition->imposition();;
 		my $rate = 1+($$price{'Overs Rate'}/100);
 
-
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 } # end sub calc_from_imposition
@@ -819,9 +822,9 @@ sub get_Stocks {
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
 	} # end if
 	if (
-			( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) or
-			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
-			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
+			( defined $$specs{'chkOverrideSheetSize1'} and ( $$specs{'chkOverrideSheetSize1'} eq 'Y' ) ) or
+			( defined $$specs{'chkOverrideSheetSize2'} and ( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) ) or
+			( defined $$specs{'chkOverrideSheetSize3'} and ( $$specs{'chkOverrideSheetSize3'} eq 'Y' ) )
 	   ) {
 		my @Ps;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -2138,7 +2141,7 @@ if ( 0 ) {
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 $openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
-
+$openprint::log->debug("Leaving Printing::calc status: $$specs{'Status'}");
 	return $$specs{'Status'};
 } # end sub calc
 
@@ -2365,7 +2368,7 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 						next;
 					} # end if
 				} # end if chkOverriDEPageQuantity
-				if (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
+				if (($max_pages >= $imp->pages() ) and ( ( ! defined $$sig_specs{'chkOverridePageQuantity'.$qty_index} ) or ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) ) ) {
 #$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
 					next;
 				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
@@ -3648,7 +3651,7 @@ $openprint::log->debug("Colour: $real_colour");
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
 			$InkMaterial = new openprint::Material( $$project{'special_colours'}{$real_colour}->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
-		} elsif ( ! sets::isin( $real_colour, ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour'] ) ) {
+		} elsif ( ! sets::isin( $real_colour, \@process_colours ) ) {
 			$non_process_colours += 1;
 #$openprint::log->debug("Colour: $real_colour : " .  $washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} );
 			# PMS or Varnish ?
@@ -3731,14 +3734,23 @@ $openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colours
 
 	$plate_count *= $plate_runs;
 	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};
-	my $blanks_needed;
-	if ( $Press->specification( 'Require Blank Plates' ) eq 'Y' ) {
-		$blanks_needed = ($Press->specification('Number of Colours') - @colours) - $$PlateCounts{'Blank'.$plate_id};
-		$plate_setup{'Blank Plates'} = $blanks_needed;
-	} elsif ( $non_process_colours and ( $Press->specification( 'Require Blank Plates' ) eq 'When Non-Process' ) ) {
-		$blanks_needed = ($Press->specification('Number of Colours') - @colours) - $$PlateCounts{'Blank'.$plate_id};
-		$plate_setup{'Blank Plates'} = $blanks_needed;
-	} # end if
+	my $blanks_needed = 0;
+	my $require_blank_plates = $Press->specification('Require Blank Plates');
+	if ( defined $require_blank_plates ) {
+		my $press_colours = $Press->specification('Number of Colours');
+		if ( $require_blank_plates eq 'Y' ) {
+			if ( $$Imposition{'runstyle'} eq 'Web' ) {
+				$blanks_needed = ( $press_colours - @{$$project{'side_two_colours'}} ) + ( $press_colours - @{$$project{'side_two_colours'}} );
+			} else {
+				$blanks_needed = ($press_colours - @colours);
+			} # end if
+		} elsif ( $non_process_colours and ( $require_blank_plates eq 'When Non-Process' ) ) {
+			$blanks_needed = ($press_colours - @colours);
+		} # end if
+		$blanks_needed -= $$PlateCounts{'Blank'.$plate_id};
+		$blanks_needed = 0 if $blanks_needed < 0;
+	} # end if defined require_blank_plates
+	$plate_setup{'Blank Plates'} = $blanks_needed;
 	$plate_setup{'Plate Count'} = $plate_count;
 #$Imposition->display("Plate Count $plate_count");
 
@@ -4822,11 +4834,11 @@ sub save {
 sub get_colour_description {
 	my ( $specs ) = @_;
 	my $front_colours = 0;
-	my $front_coatings;
+	my $front_coatings = '';
 	my $front_pms = 0;
 	my $front_process = 0;
 	my $back_colours = 0;
-	my $back_coatings;
+	my $back_coatings = '';
 	my $coatings = '';
 	my $back_pms = 0;
 	my $back_process = 0;

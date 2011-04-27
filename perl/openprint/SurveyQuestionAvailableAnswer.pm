@@ -1,8 +1,9 @@
-package openprint::SurveyQuestionAvailableAnswer;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::SurveyQuestionAvailableAnswer;
+our @ISA = qw( openprint::Object );
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'Survey_Question_Available_Answers';
 $serial = 'survey_question_available_answers_id_seq';
 %fields = (
