@@ -76,7 +76,6 @@ if ( $CFG::Config{'site_url'} ) {
 
 $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
 $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
-
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
 $CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
 

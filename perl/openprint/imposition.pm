@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -235,10 +235,15 @@ sub calc_setup_object {
 	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
-	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+	if ( $run_style eq 'Perfecting' ) {
+		$setup1->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+	} else {
+		$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
+	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	$setup2->paper( $Paper->clone() );
@@ -248,10 +253,15 @@ sub calc_setup_object {
 	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
-	$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
+	if ( $run_style eq 'Perfecting' ) {
+		$setup2->colour_bar_size( $$specs{'Perfecting_colour_bar_size'} );
+	} else {
+		$setup2->colour_bar_size( $$specs{'colour_bar_size'} );
+	} # end if
 	$setup2->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
 	# Grain is on the second dimension by default (according to Rick)
@@ -826,22 +836,24 @@ sub convert_impositions {
 	my @good_impositions;
 $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if $debug;
 
-
 	foreach my $imp ( @$impositions ) {
-		my $impo = $imp->imposition();
-		#$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
+		my $impo = $$imp{'imposition'};
+		$impo /= 2 if sets::isin( $$imp{'runstyle'}, ['Work & Turn','Work & Tumble' ] );
 		$$imp{'start_imposition'} = $impo;
+		#$impo = int( $impo / ($spread_size/2) );
+		# impo has become max spreads
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
+$imp->display();
+$openprint::log->debug("Convert: Desired: $desired_signature_size impo: $impo From 1 to $start" );
 		foreach my $signature_size ( reverse 1 .. $start ) {
 		#my $a = int($start/3);
 		#$a -= 1 if $a % 3;
-#$openprint::log->debug("Convert: Desired: $desired_signature_size From $a to $start" );
 		#foreach my $signature_size ( reverse $a .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
-#$openprint::log->debug("Considering sig size: $signature_size") if $debug;
+$openprint::log->debug("Considering sig size: $signature_size") if $debug;
 			my ( $rows, $cols );
 			my $imp_rows = $imp->rows();
 			my $imp_cols = $imp->columns();
@@ -853,8 +865,8 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 
 				$cols = int( $imp_cols / $col );
 				$rows = int( $imp_rows / $row );
-				#$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
-				#$log->debug("Trying $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				next if ! ( $rows and $cols );
 				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );
 				next if ( $rows % 2 and $imp->runstyle() eq 'Work & Tumble' );
@@ -875,6 +887,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
+#$newimp->display();
 			} # end foreach block
 			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
 			#last if @imps and ($signature_size < $start/2);

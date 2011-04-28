@@ -2,7 +2,7 @@
 	<form id="LoginForm" name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
 	<div class="Register">
 		<fieldset><legend>Registration</legend>
-			<div class="body">
+			<div class="content">
 			Why register?  We require you to have an account to keep an order history, and allow you to check the status of your project through production and shipping.
 			</div>
 			<p class="buttons">
@@ -12,25 +12,27 @@
 	</div>
 	<div class="Login">
 		<fieldset><legend>Please login:</legend>
-			<div class="body">
-			Please enter your e-mail address and password.<br/><br/>
-			<p>
-				<label for="email">E-mail:</label>
-				<input type="text" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.Password );}" /><br/>
-				<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
-			</p>
-			<p>
-				<label for="password">Password:</label>
-				<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
-			</p>
-			<p>
-				<label>Remember me:</label>
-				<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( ssi::checked( $param{'rdbRememberMe'} eq 'Y' ); ) ?> />
-				<label class="radio" for="rdbRememberMeY">Yes</label>
-				<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( ssi::checked( $param{'rdbRememberMe'} ne 'Y' ); ) ?> />
-				<label class="radio" for="rdbRememberMeN">No</label>
-			</p>
+			<div class="content">
+				Please enter your e-mail address and password.<br/><br/>
+				<ul>
+					<li>
+						<label for="email">E-mail:</label>
+						<input type="text" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
+						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+					</li>
+					<li>
+						<label for="password">Password:</label>
+						<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
+						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+					</li>
+					<li>
+						<label>Remember me:</label>
+						<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( ssi::checked( $param{'rdbRememberMe'} eq 'Y' ); ) ?> />
+						<label class="radio" for="rdbRememberMeY">Yes</label>
+						<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( ssi::checked( $param{'rdbRememberMe'} ne 'Y' ); ) ?> />
+						<label class="radio" for="rdbRememberMeN">No</label>
+					</li>
+				</ul>
 			</div>
 			<p class="buttons">
 				<? echo ( ssi::writeButton( $log, $dbh, 'Login','login.gif',"LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);",'','Login'); ) ?>

@@ -1,0 +1,35 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Message"><div class="View">
+	<fieldset><legend>Viewing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Message'}->deleted() ) ?>
+		<span class="warning">This message has been deleted</span>
+		<? endif ( $$variable{'Message'}->deleted() ) ?>
+		<fieldset><legend></legend>
+			<div class="content">
+				<ul>
+					<li><label>Sent:</label>
+						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Message'}->sent_on() ) ); ) ?>
+					</li>
+					<li><label>From:</label>
+						<? echo ( $$variable{'Message'}->From()->name ) ?>
+					</li>
+					<li><label>Subject:</label>
+						<? echo ( $$variable{'Message'}->subject() ) ?>
+					</li>
+					<li>
+						<label for="info">Body:</label>
+						<? hecho ( $$variable{'Message'}->body() ) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+				$html .= ssi::writeButton( $log, $dbh, 'reply', 'reply.gif', '', 'edit.html?reply_to='.$$variable{'Message'}->id(), 'Reply' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+</div></div>

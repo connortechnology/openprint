@@ -3,13 +3,13 @@ drop table if exists log_actions;
 create table log_actions (
 	id	SERIAL,
 	name	TEXT,
-	DESCRIPTION TEXT,
+	description TEXT,
 	PRIMARY KEY (id)
 );
 drop table if exists log;
 CREATE TABLE Log (
 	id SERIAL,
-	action_type	INTEGER NOT NULL,
+	action_id	INTEGER NOT NULL, FOREIGN KEY (action_id) REFERENCES log_actions (id);
 	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
 	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	date_time	timestamp with time zone NOT NULL,

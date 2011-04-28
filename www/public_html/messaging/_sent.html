@@ -1,0 +1,42 @@
+<? eval (
+	@{$$variable{'Messages'}} = ();
+	foreach my $Message ( openprint::Message->find( 
+			(Date::Calc::check_date( @session{'/messaging/inbox.html?sent_on_start_year','/messaging/inbox.html?sent_on_start_month','/messaging/inbox.html?sent_on_start_day'} ) ? ( 'sent_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/inbox.html?sent_on_start_year','/messaging/inbox.html?sent_on_start_month','/messaging/inbox.html?sent_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/messaging/inbox.html?sent_on_end_year','/messaging/inbox.html?sent_on_end_month','/messaging/inbox.html?sent_on_end_day'} ) ? ( 'sent_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/inbox.html?sent_on_end_year','/messaging/inbox.html?sent_on_end_month','/messaging/inbox.html?sent_on_end_day'} ) ) : () ),
+			( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
+			'from_id'			=>	$session{'user_id'},
+			'sent_on is null'	=>	0,
+			'order'				=> 'sent_on',
+		) ) {
+		push @{$$variable{'Messages'}}, $Message;
+	} # end foreach Messages
+) ?>
+
+<? if ( @{$$variable{'Messages'}} == 0 ) ?>
+	There are no messages which match your search criteria. 
+<? else ( @{$$variable{'Messages'}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Message ( @{$$variable{'Messages'}} ) {
+				$html .= sprintf(q` 
+					<div title="%2$s" class="Message"> 
+						<a href="/messaging/view.html?message_id=%1$s"><img src="%6$s"/></a>
+						<div class="To"><label>To:</label><a href="/messaging/view.html?message_id=%1$d">%2$s</a></div>
+						<div class="Subject"><label>Subject:</label>%3$s</div>
+						<div class="DateTime"><label>Sent On:</label>%4$s</div>
+						<div class="Where">%5$s</div>
+						<div class="actions">%7$s</div>
+					</div>
+					`, $Message->id(), 
+					join( ',', map { $_->User()->name() } $Message->To() ),
+					ssi::html_escape($Message->subject()),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->sent_on() ) ),
+					$Message->where(),
+					join('', 
+						ssi::writeButton( $log, $dbh, 'delete'.$Message->id(), 'delete.gif', 'delete_message( '.$Message->id().');', '', 'X' ),
+						),
+				);
+			} # end foreach Messages
+			return $html;
+		) ?>
+<? endif ( @{$$variable{'Messages'}} == 0 ) ?>

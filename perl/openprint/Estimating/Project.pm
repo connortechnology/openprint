@@ -27,9 +27,9 @@ my @no_outputs = (
 	'txtShippingPostalCode',
 	'txtHoleQty','UPSShipping','HoleDrilling',
 	'Aqueous','txtTotalPageQuantity','Colours',
-	'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
-	'ddmStockBrand1','ddmStockFinish1','ddmStockColour1','ddmStockWeight1',
-	'ddmStockBrand2','ddmStockFinish2','ddmStockColour2','ddmStockWeight2',
+	'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight',
+	'ddmStockName1','ddmStockFinish1','ddmStockColour1','ddmStockWeight1',
+	'ddmStockName2','ddmStockFinish2','ddmStockColour2','ddmStockWeight2',
 	'txtHoleSize', 
 	'rdbAqueousSideOne','rdbAqueousSideTwo',
 	'chkProcessColourSideOne', 'chkProcessColourSideTwo',
@@ -191,8 +191,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
 		} # end if
-	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
-		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
+	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSize'} ) ) {
+		@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} else {
 		$$specs{'txtWidth'} =~ s/[^\.\d]//g;
@@ -206,45 +206,29 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ) );
+	@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
+	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
-			if ( ! $$specs{'ddmStockBrand1'} ) {
-				$$specs{'alert'} .= 'Please select Cover Stock Type<br/>';
+			foreach my $option ( @StockOptions ) {
+				if ( ! $$specs{'ddmStock'.$option.'1'} ) {
+					$$specs{'alert'} .= 'Please select a cover stock ' . lc $option .'.';
+					return $$specs{'Status'} = 'uncalculated';
+				} # end if
+			} # end foreach option
+		} # end if
+		foreach my $option ( @StockOptions ) {
+			if ( ! $$specs{'ddmStock'.$option.'2'} ) {
+				$$specs{'alert'} .= 'Please select an interior stock ' . lc $option .'.';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
-			if ( ! $$specs{'ddmStockFinish1'} ) {
-				$$specs{'alert'} .= 'Please select Cover Stock Finish<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-			if ( ! $$specs{'ddmStockColour1'} ) {
-				$$specs{'alert'} .= 'Please select Cover Stock Colour<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-			if ( ! $$specs{'ddmStockWeight1'} ) {
-				$$specs{'alert'} .= 'Please select Cover Stock Weight<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-		} # end if
-		if ( ! $$specs{'ddmStockBrand2'} ) {
-			$$specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'ddmStockFinish2'} ) {
-			$$specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'ddmStockColour2'} ) {
-			$$specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-		if ( ! $$specs{'ddmStockWeight2'} ) {
-			$$specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
+		} # end foreach option
 
 		if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
 			$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
@@ -415,33 +399,24 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			$$specs{'chkProcessColourSideTwo'} = undef;
 		} # end if
 		if ( 1 == ( my @Papers = openprint::Paper->find(
-						'name'		=>	$$specs{'ddmStockBrand'},
-						'finish'	=>	$$specs{'ddmStockFinish'},
-						'weight'	=>	$$specs{'ddmStockWeight'},
-						'colour'	=>	$$specs{'ddmStockColour'},
-						'size'		=>	$$specs{'ddmStockSheetSize'},
+						( exists $$specs{'ddmStockName'} ? ( 'name'		=>	$$specs{'ddmStockName'} ) : () ),
+						( exists $$specs{'ddmStockFinish'} ? ( 'finish'	=>	$$specs{'ddmStockFinish'} ) : () ),
+						( exists $$specs{'ddmStockWeight'} ? ( 'weight'	=>	$$specs{'ddmStockWeight'} ) : () ),
+						( exists $$specs{'ddmStockColour'} ? ( 'colour'	=>	$$specs{'ddmStockColour'} ) : () ),
+						( exists $$specs{'ddmStockSheetSize'} ? ( 'size'		=>	$$specs{'ddmStockSheetSize'} ) : () ),
+						( exists $$specs{'ddmStockSize'} ? ( 'size'		=>	$$specs{'ddmStockSize'} ) : () ),
 						) ) ) {
-			$$specs{'ddmStockBrand'} = $Papers[0]->name() if ! $$specs{'ddmStockBrand'};
+			$$specs{'ddmStockName'} = $Papers[0]->name() if ! $$specs{'ddmStockName'};
 			$$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $$specs{'ddmStockFinish'};
 			$$specs{'ddmStockWeight'} = $Papers[0]->weight() if ! $$specs{'ddmStockWeight'};
 			$$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $$specs{'ddmStockColour'};
 		} else {
-			if ( ! $$specs{'ddmStockBrand'} ) {
-				$$specs{'alert'} .= 'Please select Stock Brand<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-			if ( ! $$specs{'ddmStockFinish'} ) {
-				$$specs{'alert'} .= 'Please select Stock Finish<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-			if ( ! $$specs{'ddmStockColour'} ) {
-				$$specs{'alert'} .= 'Please select Stock Colour<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-			if ( ! $$specs{'ddmStockWeight'} ) {
-				$$specs{'alert'} .= 'Please select Stock Weight<br/>';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
+			foreach my $option ( @StockOptions ) {
+				if ( ! $$specs{'ddmStock'.$option} ) {
+					$$specs{'alert'} .= 'Please select stock ' . lc $option .'.';
+					return $$specs{'Status'} = 'uncalculated';
+				} # end if
+			} # end foreach option
 		} # end if
 
 		my $colourindex = 1;
@@ -504,7 +479,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 		} # end if
 
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity' ) {
+		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity', 'ddmStockSize' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {

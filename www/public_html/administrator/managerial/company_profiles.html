@@ -165,11 +165,11 @@ ssi::writeButton( $log, $dbh, 'merge'.$C->id(), 'merge.gif', '', '/administrator
 		<p>
 			<label>Last Login:</label>
 			<? echo ( 
-				( $_ ) = sql::execute(undef,undef,'SELECT MAX(date_time) FROM log where action_type=2 AND company_id=?', $$variable{'Company'}->id() );
+				$_ = openprint::Log->find_one('order'=>'date_time DESC', 'action'=>'Login', 'company_id'=>$$variable{'Company'}->id() );
 				if ( ! $_ ) {
 					return 'never';
 				}
-				return Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($_) );
+				return Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $_->date_time() ) );
 			 ) ?>
 		</p>
 		<? endif ( $$variable{'Company'}->id() ) ?>

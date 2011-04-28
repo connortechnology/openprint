@@ -2,7 +2,7 @@
 	<div class="content"><ul>
 	<li>
 		<label>Size:</label>
-		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
+		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this, '' );">
 			<option value=""> select </option>
 			<? echo ( 
 				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR','InkjetOutputs','Banners'] );

@@ -1,7 +1,9 @@
 <? eval (
 	$$variable{'Label'} = new openprint::Label( $param{'id'} ) if ! $$variable{'Label'};
+	my $changed = 0;
 	if ( ! $$variable{'Label'}->get_data('date') ) {
 		$$variable{'Label'}->set_data('date'=>Date::Format::time2str($config{'DateFormat'}, time ) );
+		$changed = 1;
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('from') ) {
 		if ( $$variable{'Project'} ) {
@@ -42,6 +44,7 @@
 				} # end if
 			} # end if
 		} # end if
+		$changed = 1;
 	} # endif
 	if ( ( ! $$variable{'Label'}->get_data('to') ) and $$variable{'Project'} ) {
 		my $services = $$variable{'Project'}->services();
@@ -71,6 +74,7 @@
 						$Company->get('postalcode'),
 						) );
 		} # end if ! To
+		$changed = 1;
 	} # end if ! To and Project
 
 	if ( ! $$variable{'Label'}->get_data('description') ) {
@@ -85,6 +89,7 @@
 			} # end if
 		} # end if
 		$$variable{'Label'}->set_data('description'=>$html);
+		$changed = 1;
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('quantity') ) {
 		my $html;
@@ -112,8 +117,9 @@
 		} else {	
 		} # end if
 		$$variable{'Label'}->set_data('quantity'=>$html);
+		$changed = 1;
 	} # end if
-	$$variable{'Label'}->save();
+	$$variable{'Label'}->save() if $changed;
 ) ?>
 <script type="text/javascript">
 // <![CDATA[
@@ -130,41 +136,21 @@ cleanup : true
 	tinyMCE.init( tinymce_options );
 // ]]>
 </script>
-<div>
-	<form name="PackingSlip">
-	<style type="text/css">
-		table {
-			table-layout: fixed;
-			width: 100%;
-		}
-		#Label {
-			font-size: 22pt;
-		}
-		table tr td {
-			vertical-align: top;
-			font-family: Arial, Helvetica, Sans-Serif;
-			padding: 5px;
-		} 
-		table tr td textarea {
-			width: 98%;
-		}
-		p {
-			margin: 2px;
-		}
-	</style>
+<div class="PackingSlip">
+	<form name="PackingSlip" id="PackingSlip_form" action="label.html" method="post">
 	<table style="height: .5in;">
 		<tr>
 			<td style="font-size: 28PT;">PACKING SLIP</td>
 			<td style="border: 1px solid black;">DATE: 
 				<span id="date"><? echo ( $$variable{'Label'}->get_data('date'); ) ?></span>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=date'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=date'}, tinymce_options );
 </script>
 			</td>
 		</tr>
 	</table>
 	<span style="font-size: 12pt;font-weight: bold;">
-	# <? echo ( $$variable{'Label'}->docket() ) ?>&nbsp;&nbsp;
+	# <a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Label'}->docket() ) ?></a>&nbsp;&nbsp;
 <img src="/barcode.png?code=D<? echo ( $$variable{'Label'}->docket() ) ?>+&amp;NoText=1&amp;Height=20" alt="<? echo ( $$variable{'Label'}->docket() ) ?>" />
 	</span>
 	<br/>
@@ -174,39 +160,37 @@ new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}-
 				TO:<br/>
 				<div id="to" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=to'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=to'}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				FROM:<br/>
 				<div id="from" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('from');) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=from'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=from'}, tinymce_options );
 </script>
 			</td>
 		</tr>
 	</table>
-	<br/>
-	<table style="height: 4in;">
+	<table style="height: 5in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DESCRIPTION:<br/>
 				<div id="description" style="height:3.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=description'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=description'}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
 				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=getnohtml&field=quantity'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=getnohtml&amp;field=quantity'}, tinymce_options );
 </script>
 			</td>
 		</tr>
 	</table>
-	<br/>
-	<table style="height: .75in;">
+	<table style="height: .5in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				SIGNATURE:<br/>
@@ -218,8 +202,7 @@ new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Lab
 			</td>
 		</tr>
 	</table>
-	<br/>
-	<table style="height: .75in;">
+	<table style="height: .5in;">
 		<tr>
 			<td style="border: 1px solid black;">
 				DATE:

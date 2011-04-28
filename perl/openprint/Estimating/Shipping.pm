@@ -14,12 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 
-package openprint::Estimating::Shipping;
 use strict;
+package openprint::Estimating::Shipping;
 use POSIX qw{ ceil };
 
-require openprint::obj_customer;
-
+require openprint::Company;
 require sql;
 require sets;
 
@@ -166,8 +165,8 @@ sub display {
 				);
 
 		
-		my $company = new openprint::obj_customer( $log, $dbh, $openprint::config{'Owner'} );
-		my $address = $company->get_shipping_address();
+		my $Company = new openprint::Company( $openprint::config{'Owner'} );
+		my $address = $Company->get_shipping_address();
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
 		} # end foreach
@@ -189,8 +188,8 @@ sub display {
 				'ToEmail'			=>	'Email',
 				);
 
-		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-		my $address = $company->get_shipping_address();
+		my $Company = new openprint::Company( $openprint::session{'company_id'} );
+		my $address = $Company->get_shipping_address();
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
 		} # end foreach

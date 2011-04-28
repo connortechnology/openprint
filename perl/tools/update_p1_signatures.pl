@@ -25,7 +25,7 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 411579;
+my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
 my $company_id = 0;
@@ -34,8 +34,8 @@ $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
 foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
-sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
-sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+	sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+	sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {

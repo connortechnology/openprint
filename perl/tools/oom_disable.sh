@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for pid in `pidof $*`
+do
+file="/proc/$pid/oom_adj"
+ if [ -f $file ]
+ then
+echo -17 > $file
+ fi
+done
+
+

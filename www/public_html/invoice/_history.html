@@ -6,22 +6,11 @@
 		'period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ) ) : () ),
 		'order'		=>	'period_start,name',
 	);
-	@{$$variable{'Invoices'}} = ();
+	my @Invoices = @{$$variable{'Invoices'}} = ();
 	if ( $param{'invoice_id'} ) {
-		foreach my $Invoice ( openprint::Invoice->find( 'id'=>$param{'invoice_id'} ) ) {
-			push @{$$variable{'Invoices'}}, $Invoice;
-$log->debug("Sub");
-			$$variable{'subtotal'} += $Invoice->subtotal();
-			foreach my $Tax ( @{$$variable{'Taxes'}} ) {
-				$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
-			} # end foreach Tax
-$log->debug("total");
-			$$variable{'total'} += $Invoice->total();
-$log->debug("interest");
-			$$variable{'interest_total'} += $Invoice->interest();
-$log->debug("owing");
-			$$variable{'owing_total'} += $Invoice->owing();
-		} # end foreach
+		@Invoices = openprint::Invoice->find( 'id'=>$param{'invoice_id'} );
+	} elsif ( $param{'po'} ) {
+		@Invoices = openprint::Invoice->find('po in'=>$param{'po'});
 	} else {
 		foreach my $Invoice ( openprint::Invoice->find( 
 			( Date::Calc::check_date(  @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ) ? ( 'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ) ) : () ),
@@ -46,16 +35,20 @@ $log->debug("owing");
 					next if $session{'/invoice/history.html?bad_debt'} == 1;
 				} # end if
 			} # end if
-			push @{$$variable{'Invoices'}}, $Invoice;
-			$$variable{'subtotal'} += $Invoice->subtotal();
-			$$variable{'total'} += $Invoice->total();
-			$$variable{'interest_total'} += $Invoice->interest();
-			$$variable{'owing_total'} += $Invoice->owing();
-			foreach my $Tax ( @{$$variable{'Taxes'}} ) {
-				$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
-			} # end foreach Tax
+			push @Invoices, $Invoice;
 		} # end foreach Invoice
 	} # end if
+
+	foreach my $Invoice ( @Invoices ) {
+		push @{$$variable{'Invoices'}}, $Invoice;
+		$$variable{'subtotal'} += $Invoice->subtotal();
+		$$variable{'total'} += $Invoice->total();
+		$$variable{'interest_total'} += $Invoice->interest();
+		$$variable{'owing_total'} += $Invoice->owing();
+		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
+			$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
+		} # end foreach Tax
+	} # end foreach Invoice
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 ) ?>

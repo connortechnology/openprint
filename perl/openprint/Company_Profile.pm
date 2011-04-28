@@ -1,19 +1,20 @@
 use strict;
 package openprint::Company_Profile;
-require openprint::COmpany_Profile_Entry;
+require openprint::Company_Profile_Field;
+require openprint::Company_Profile_Entry;
 
 use vars qw( $AUTOLOAD );
 
 # Not backed by db, this is an abstract object providing a convenient interface to Company_Profile_Fields and Values
 
 sub new {
-	my ( $parent, $user_id ) = @_;
+	my ( $parent, $company_id ) = @_;
 
 	my $self = {};
 	bless $self, $parent;
-	$$self{'user_id'} = $user_id;
+	$$self{'companyr_id'} = $company_id;
 #$openprint::log->debug("new Company_Profile");
-	%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('user_id'=>$user_id);
+	%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$company_id);
 #$openprint::log->debug("new Company_Profile now listing fields and values");
 #foreach my $f ( keys %{$$self{'fields'}} ) {
 #$openprint::log->debug("$f => " . $$self{'fields'}{$f}-value() );
@@ -46,7 +47,7 @@ sub value {
 			$Entry = new openprint::Company_Profile_Entry();
 			$_[0]{'fields'}{$_[1]} = $Entry;
 			my $Field = openprint::Company_Profile_Field->find_one('name'=>$_[1]);
-			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} } );
+			$Entry->set({ 'field_id' => $Field->id(), '' => $_[0]{'company_id'} } );
 		} # end if
 		$_ = $Entry->save( { 'value' => $_[2] } );
 		#$openprint::log->debug("Saving " . $Entry->field() . ': ' . $_[2] . " error: $_ " );

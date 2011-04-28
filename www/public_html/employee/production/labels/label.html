@@ -9,28 +9,28 @@
 
 	if ( $param{'type_id'} and ! $param{'id'} ) {
 		$$variable{'error'} .= $$variable{'Label'}->save();
-		$$variable{'Project'}->add_to_log( @session{'company_id','user_id'}, 'Added Label/Packing Slip' );
+		$$variable{'Project'}->add_to_log( @session{'company_id','user_id'}, 'Added ' . $$variable{'Label'}->Type()->name() );
 	} # end if
 ) ?>
-<div class="unprintable">
-	<p class="buttons">
+	<div class="buttons">
 		<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Print','print.gif','window.print();', '', 'Print' ),
-			ssi::writeButton( $log, $dbh, 'Close','close.gif','', 
+			ssi::button( 'Print', { 'onclick' => 'window.print();' } ),
+			ssi::button( 'Back', { 'href' => (
 				$param{'project_id'} ? 
 				'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
-				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
-				'Back' ),
-			ssi::writeButton( $log, $dbh, 'PO', 'po.gif', '', "/employee/inventory/purchase_order_edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", 'Generate PO' ),
+				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket() ),
+				} ),
+			ssi::button( 'PO', { 'href' => "/employee/inventory/purchase_order_edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", 'text' => 'Generate PO' } ),
+			ssi::button( 'Send', { 'onclick' => qq`popup_window('_send_email.html?id=$$variable{Label}{id}');` } ),
 		); ) ?>
-	</p>
+	</div>
+<div class="Label">
+	<? echo (
+		if ( ! $$variable{'Label'}->type_id() ) {
+			return 'Unknown label type.';
+		} else {
+			my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
+			return ssi::variable_substitution( \$content, $variable );
+		} # end if
+	) ?>
 </div>
-
-<? echo (
-	if ( ! $$variable{'Label'}->type_id() ) {
-		return 'Unknown label type.';
-	} else {
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
-		return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
-	} # end if
-) ?>

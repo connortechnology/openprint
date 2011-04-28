@@ -16,12 +16,19 @@ function delete_confirm(form) {
 		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
 	<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
-			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', '', {width: 800} );", '', 'View Log' );
 			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy to' );
+					$html .= '<select name="company_id" id="company_id">';
+					$html .= openprint::Company::get_dropdown( $session{'company_id'} );
+					$html .= '</select>';
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy' );
+				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'Resend', 'reSendQuote.gif', "f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", '', 'Resend' );
 				$html .= ssi::writeButton( $log, $dbh, 'Order', 'processOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Order' );
 				$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", '', 'Edit' );

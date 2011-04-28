@@ -106,5 +106,20 @@ $log->debug("Project Service runtime $$specs{'ServiceType'}");
 
 } # end sub get_runtime
 
+
+sub delete {
+	my ( $self ) = @_;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id','service_id'} );
+	sql::execute( undef, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, @$self{'project_id', 'service_id'} );
+	my $Project = $self->Project();
+	delete $$Project{'Services'};
+	delete $$Project{'signatures'};
+	delete $$Project{'service_types'};
+	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id'=>$$self{'service_id'} );
+	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
+	sql::end_transaction( $openprint::dbh, $ac );
+} # end sub delete
+
 1;
 __END__

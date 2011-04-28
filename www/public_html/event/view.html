@@ -1,0 +1,55 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Event"><div class="View">
+	<fieldset><legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Event'}->deleted() ) ?>
+		<span class="warning">This event has been deleted</span>
+		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<fieldset><legend>All about it</legend>
+			<div class="content">
+				<ul>
+					<li><label>When:</label>
+						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Event'}->starting_on() ) ); ) ?>
+						until
+						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Event'}->ending_on() ) ); ) ?>
+					</li>
+					<li><label>Category:</label>
+						<? echo ( $$variable{'Event'}->Category()->name() ) ?>
+					</li>
+					<li><label>Name:</label>
+						<? echo ( $$variable{'Event'}->name() ) ?>
+					</li>
+					<li>
+						<label for="info">More info:</label>
+						<? hecho ( $$variable{'Event'}->info() ) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Where</legend>
+			<div class="content">
+				<ul>
+					<li><label>Location:</label>
+						<? echo ( $$variable{'Event'}->where(); ) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Photos</legend>
+<? if ( $$variable{'Event'}->id() ) ?>
+	<div id="Photos">
+			<!--#include virtual="_photos.html"-->
+	</div>
+<? endif ( $$variable{'Event'}->id() ) ?>
+		</fieldset>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Event'}->id() and ( $session{'user_id'} == $$variable{'Event'}->created_by() or $session{'user_type'} eq 'A' ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+					$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?event_id='.$$variable{'Event'}->id(), 'Edit' );
+				} # end if
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+</div></div>

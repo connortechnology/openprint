@@ -159,7 +159,7 @@ function validate_data(formName) {
 	return true;
 } // end function validate_data
 
-function calc_print( formName, force ) {
+function calc_print( formName, force, options ) {
 	if ( block_calc ) return;
 
 	var form = getFormObj( formName );
@@ -167,7 +167,11 @@ function calc_print( formName, force ) {
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( timeout ) clearTimeout( timeout );
-		timeout = setTimeout("calc('f1');", 1000 );	
+		if ( options ) {
+			timeout = setTimeout("calc('f1', " + Object.toJSON( options ) + ");", 1000 );	
+		} else {
+			timeout = setTimeout("calc('f1' );", 1000 );	
+		} // end if
 		return;
 	} // end if
 	//timeout = null;
@@ -186,9 +190,15 @@ function calc_print( formName, force ) {
 		if ( pair.key == 'btnFunction' ) 
 			h.unset(pair.key);
 	});
+	if ( options ) {
+		$H(options).each(function(pair) {
+			h.set(pair.key, pair.value);
+		} );
+	} // end if options
 	h.set('ServiceType','Printing' );
 	h.set('callback', 'cbFillPrintResults' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	return true;
 } // end calc_print
 
 
@@ -258,7 +268,7 @@ function cbFillPrintResults( results ) {
 		
 			if ( type == 'Sheet' ) {
 				if ( ! ddm_select_by_value( ddm, width + 'x' + height, false ) ) {
-					ddm.options[ddm.options.length] = new Option( width + 'x' + height, width + 'x' + height, true );
+					ddm.options[ddm.options.length] = new Option( width+'" x ' + height+'"', width + 'x' + height, true );
 				} // end if
 			} else if ( type == 'Roll' ) {
 				if ( ! ddm_select_by_value( ddm, width, false ) ) {
@@ -305,7 +315,7 @@ function cbFillPrintResults( results ) {
     } // end if
 
     if ( addServices.length ) {
-         addService( 'f1', addServices);
+		calc_print( 'f1', 0, { action: 'add_service', service_name: addServices } );
     } // end if
 
 } // end function cbFillPrintResults( results )
@@ -374,3 +384,108 @@ function dimensions_onChange( form ) {
 	calc(form.name);
 } // end function dimensions_onChange
 
+function Stock_onchange( element, id ) {
+    var form = element.form;
+    if ( gettingNewPrice ) {
+        if ( timeout ) clearTimeout( timeout );
+        timeout = setTimeout( 'Stock_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
+        return;
+    } // end if
+    timeout = null;
+
+	var h = new Hash();
+	h.set('project_id', form.elements['ProjectIndex'].value );
+	h.set('selected', element.name );
+	h.set('form', form.id );
+	if ( form.elements['txtWidth'] ) 
+		h.set( 'width', form.elements['txtWidth'].value );
+	if ( form.elements['txtHeight'] ) 
+		h.set( 'height', form.elements['txtHeight'].value );
+	if ( form.elements['rdbSuppliedStock'+id] ) {
+		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
+	} // end if
+
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'Size' );
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		var filter = form.elements['ddmStock'+filters[index]+id];
+		if ( filter ) {
+			h.set(filters[index], filter.getValue() );
+			filter.disabled = true;
+		//} else {
+			//alert('filter ' + 'ddmStock'+filters[index]+id );
+		} // end if filter exists
+	} // end for 
+	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
+} // end function Stock_onchange
+
+function cbStockFillResults( results ) {
+	var form = $(results.get('form'));
+	if ( ! form ) {
+		alert('No form for ' + results.get('form') );
+		gettingNewPrice = false;
+		return;
+	} // end if
+	results.unset('form');
+	var suffixes = new Array ( '', '1', '2', '3' );
+
+    var keys = results.keys();
+
+    for ( var index = 0, len = keys.length; index < len; ++index ) {
+        var key = keys[index];
+        var value = results.get(key);
+		var options = new Array();
+		options[0] = create_option( '', 'select one' );
+
+		if ( key == 'SheetSize' ) {
+			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+				var size = value[ddm_index].split('x');
+				options[options.length] = create_option( value[ddm_index], size.each(function(item){return item+"&quot;";}).join( ' x ' ) );
+			} // end for
+			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+				var ddm = form.elements['ddmStock'+key+suffix_index];
+				if ( ! ddm ) {
+	//alert('No ddmStock'+key+suffix);
+					continue;
+				} // end if
+				var selectedValue = ddm.getValue();
+				fill_ddm( ddm, options );
+				if ( options.length == 2 ) {
+					ddm_select_by_index( ddm, 1 );
+				} else {
+					ddm_select_by_value( ddm, selectedValue );
+				} // end if
+			} // end for suffix
+		} else {
+			var ddm = form.elements['ddmStock'+key];
+			if ( ! ddm ) {
+//alert('No ddmStock'+key+suffix);
+				continue;
+			} // end if
+			var selectedValue = ddm.getValue();
+
+			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
+				options[options.length] = create_option( value[ddm_index], value[ddm_index] );
+			} // end for
+			fill_ddm( ddm, options );
+			if ( options.length == 2 ) {
+				ddm_select_by_index( ddm, 1 );
+			} else {
+				ddm_select_by_value( ddm, selectedValue );
+			} // end if
+		} // end if SheetSize or Other
+	} // end for each key
+
+	// turn drop downs back on
+	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	for ( var index = 0, len = filters.length; index < len; ++index ) {
+		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
+			var suffix = suffixes[suffix_index];
+			var filter = form.elements['ddmStock'+filters[index]+suffix];
+			if ( filter ) {
+				filter.disabled = false;
+			} // end if filter exists
+		} // end foreach suffix
+	} // end for 
+	gettingNewPrice = false;
+	calc(form.name);
+} // end function Stock_Fill

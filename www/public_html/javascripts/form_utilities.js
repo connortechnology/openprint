@@ -298,59 +298,6 @@ function filterDDM( filter, ddm ) {
 
 } // end function filterDDM
 
-function jsrs_FillDDM ( formName, selectName, sql, callback ) {
-	var params = new Array();
-	params[params.length] = formName;
-	params[params.length] = selectName;
-	params[params.length] = sql;
-
-	jsrsExecute( '/jsrs.htm', callback, 'openprint::jsrs_handler::fill_ddm', params );
-}
-
-function jsrs_cbFillDDM( results ) {
-	var form;
-	var ddm;
-	var selectedValue;
-	var options = new Array;
-
-	var pairs = results.split('|');
-	for ( var i = 0; i < pairs.length; i += 1 ){
-		if ( pairs[i].indexOf('~') != -1 ) {
-			var data = pairs[i].split('~');
-			if ( data[0] == 'Form' ) {
-				form = document.forms[data[1]];
-			} else if ( data[0] == 'Select' ) {
-				if ( ! form ) {
-					alert('No Form!');
-				} else {
-					ddm = form.elements[data[1]];
-					if ( ! ddm ) {
-						alert("No ddm: " + data[1] );
-					} else {
-						selectedValue = get_ddm_value( ddm );
-						clear_ddm( ddm );
-					} // end if
-				} // end if
-			} else if ( data[0] == 'Option' ) {
-				options[options.length] = pairs[i];
-			} else if ( data[0] == 'Selected' ) {
-				selectedValue = data[1];
-			} // end if
-		} // end if
-	} // end for
-	if ( ddm ) {
-		for ( var i=0; i < options.length; i += 1 ) {
-				var data = options[i].split('~');
-				add_option( ddm, data[1], data[2] );
-		} // end for
-		ddm_select_by_value( ddm, selectedValue );
-
-	} // end if
-	return ddm;
-}
-
-/* Added by Antonio */
-
 /*
  *	Pass it the Month and Year and it'll return the number of days within the
  *	specified month. Year is optional. If no year is passed and the month chosen
@@ -622,17 +569,8 @@ var summaryPage;
 window.open(summaryPage,'pop','newWin,left=140,width=640,top=50,height=400,resizable=yes,scrollbars=yes,menubar=no,toolbar=yes,location=no,directories=yes,status=yes');
 }
 
-function checkInputData( inputItem ) {
-	 if ( inputItem && inputItem.value ) {
-			// Value exists.
-		return true;
-	 } // end if
-	 // No value!
-	 return false;
-}
-
 function checkLoginData( usernameInput, passwordInput ) {
-	if( ! checkInputData(usernameInput) ) {
+	if( usernameInput && ! usernameInput.value ) {
 		// Display login name error.
 		$( 'missingLoginMessage' ).show();
 		usernameInput.focus();
@@ -641,7 +579,7 @@ function checkLoginData( usernameInput, passwordInput ) {
 		$( 'missingLoginMessage' ).hide();
 	}
 
-	if( passwordInput && !checkInputData(passwordInput) ) {
+	if( passwordInput && ! passwordInput.value ) {
 		// Display login password error.
 		$( 'missingPasswordMessage' ).show();
 		passwordInput.focus();
@@ -1128,4 +1066,179 @@ function check_decimal( element, e ) {
 		return false;
 	} 
 	return true;
+}
+
+
+function click(e) {
+	if (document.all) {
+		if (event.button==2||event.button==3) {
+			return false;
+		}
+	} else if (document.layers || document.getElementById ) {
+		if (e.which == 3) {
+			return false;
+		}
+	}
+}
+
+function disable_rightclick() {
+	if (document.layers) {
+		document.captureEvents(Event.MOUSEDOWN);
+	} else {
+		document.onmouseup=click;
+		document.oncontextmenu=click;
+	}
+	
+	document.onmousedown=click;
+} // end function disable_rightclick
+function remove_div( divname ) {
+    var div = document.getElementById(divname);
+    if ( div ) {
+        div.style.display = 'none';
+    } // end if
+}
+function add_div( divname ) {
+    var div = document.getElementById(divname);
+    if ( div ) {
+        div.style.display = '';
+		return div;
+    } // end if
+}
+
+function hide_div( divname ) {
+    var div = $(divname);
+    if ( div ) {
+        div.style.visibility = 'hidden';
+    } // end if
+}
+function show_div( divname, e ) {
+    var div = $(divname);
+    if ( div ) {
+	
+        var posx = 0;
+        var posy = 0;
+        if (!e) e = window.event;
+		if ( e ) {
+			if (e.pageX || e.pageY) {
+				posx = parseInt(e.pageX);
+				posy = parseInt(e.pageY);
+			} else if (e.clientX || e.clientY) {
+				posx = parseInt(e.clientX);
+				posy = parseInt(e.clientY);
+				if( document.documentElement && ( document.documentElement.scrollTop || document.documentElement.scrollLeft ) ) {
+					posx += parseInt( document.documentElement.scrollLeft ); posy += parseInt( document.documentElement.scrollTop );
+				} else if( document.body && ( document.body.scrollTop || document.body.scrollLeft ) ) {
+					posx += parseInt( document.body.scrollLeft ); posy += parseInt( document.body.scrollTop );
+				}
+			} // end if
+			if ( posx + div.offsetWidth > document.body.offsetWidth ) {
+				posx = document.body.offsetWidth - div.offsetWidth;
+			} // end if
+			div.style.left = posx + 'px';
+			posy += 10; // to move it south of the mouse cursor
+			div.style.top = posy + 'px';
+		} // end if
+		div.style.visibility = 'visible';
+		if ( div.style.display == '' ) {
+			div.style.display='block';
+		}
+	} else {
+		alert("Div not found: " + divname );
+	} // end if
+} // end function
+
+function open_window(url,title,options) {
+	var upload_window = window.open(url,title,options);
+	upload_window.focus();
+}
+
+function toggleContent( divID, show_url, inputs, hide_url ) {
+	var div = $( divID );
+
+	var params = new Array();
+	if ( inputs ) {
+	while ( inputs.length ) {
+		params[params.length] = inputs.shift() + '=' + inputs.shift();
+	}
+	} // end if
+
+
+	if ( div.style.display == 'none' ) {
+		div.show();
+		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+	} else {
+		div.hide();
+		if ( hide_url )
+			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+	} // end if
+} // end function AjaxToggleContent
+
+
+function LoadContent( divID, page, parameters, message ) {
+	var div = $( divID );
+	if ( div ) {
+		if ( message ) { 
+			div.innerHTML = message;
+		} else { 
+			div.innerHTML = 'Please wait....';
+		} // end if
+	} // end if
+	var method = 'get';
+	//alert( typeof parameters );
+	if ( typeof parameters == 'object' ) {
+		parameters = parameters.serialize();
+	} 
+	if ( parameters.length > 8190 ) 
+		method = 'post';
+	
+	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
+}
+
+var popupWin;
+function popup_window( url, parameters, options ) {
+	if ( ! popupWin ) {
+		var width = 400;
+		var height = 400;
+		if ( options ) {
+			if ( options.width ) width = options.width;
+			if ( options.height ) height = options.height;
+		} // end if
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == popupWin) {
+				   popupWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	popupWin.setHTMLContent('Loading... please wait');
+	if ( options && options.center != "" ) {
+		if ( options.center == "true" ) {
+			popupWin.showCenter();
+		} else {
+			popupWin.show();
+		} // end if
+	} else {
+		popupWin.showCenter();
+	} // end if
+	if ( options && options.content ) {
+		popupWin.setHTMLContent( options.content );
+	} else {
+		if ( parameters ) {
+			url += '?' + parameters;
+		}
+		popupWin.setAjaxContent(url, null , true);
+	} // end if
+} // end function popup_window
+
+
+function toggleInput( name ) {
+$('txt'+name).value='';
+$(name).selectedIndex=0;
+$(name).toggle();
+$('txt'+name).toggle();
 }

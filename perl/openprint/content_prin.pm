@@ -68,7 +68,7 @@ $log->debug('blah' . $variable{'ProjectType'} );
 	if ( $$services{''} ) {
 $log->debug('blah2');
 		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );
-		foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
+		foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockName','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
 			$variable{$k} = $$printing_specs{$k};
 		} # end foreach
 	} elsif ( $variable{'ProjectType'}->id() ) {

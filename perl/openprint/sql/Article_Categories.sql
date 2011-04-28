@@ -6,6 +6,7 @@ CREATE TABLE Article_Categories (
 	permalink	text,
 	image_filename	TEXT,
 	description		TEXT,
+	deleted			BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 

@@ -115,7 +115,7 @@ sub calc {
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
-	if ( ! (1 * $$specs{'txtFinishedCalliper'} ) ) {
+	if ( ! ( 1*$$specs{'txtFinishedCalliper'} ) ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -185,11 +185,11 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 						if ( $width == $height and $depth >= $item_width ) {
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Rolling %sx%s on %s<br/>', $item_width, $item_length, $depth );
 							# L = pi * N * (D+d)/2 where N=(D-d)/(2*t)
-							my $l = 3.14 * ( .5 ) / ( 2 * $$specs{'txtFinishedCalliper'} ) * ( $width + .5 )/2;
+							my $l = 3.14 * ( ( $width-1 ) / ( 2 * $$specs{'txtFinishedCalliper'} ) ) * ( $width + 1 )/2;
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
 							$items_by_size = int($l/$item_length);
 						} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
+							$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
 						} # end if
 					} # end if
 

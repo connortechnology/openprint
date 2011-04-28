@@ -1,27 +1,24 @@
-package openprint::ProductCategory;
-@ISA = qw( openprint::Object );
-
 use strict;
+require openprint::Log;
+package openprint::ProductCategory;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-use vars qw($serial $table %fields %transforms %defaults );
-
-require openprint::logs;
-
+$debug = 0;
 $serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
 %fields = (
-			'id'				=>	'id',
-			'name'				=>	'name',
-			'description'		=>	'description',
-			'projecttype_id'	=>	'projecttype_id',
+		'id'				=>	'id',
+		'name'				=>	'name',
+		'description'		=>	'description',
+		'projecttype_id'	=>	'projecttype_id',
 );
 
 %defaults = (
 		'projecttype_id'	=>	undef,
 );
 
-my $debug = 0;
 
 sub destroy {
 	my $self = shift;
@@ -35,7 +32,7 @@ sub destroy {
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product Category".
-	openprint::logs::insertLogRecord('16', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
+	new openprint::Log()->save({'action'=>'Delete Product Category', 'note'=> "Product Category ID: $$self{id} Name: $$self{name}"});
 } # end sub delete
 
 sub products {

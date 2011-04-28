@@ -20,19 +20,6 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub projects {
 
-	my %filters = (
-		'order'=>'id',
-			);
-	$filters{'company_id'}	= $param{'ddmCustomers'} if $param{'ddmCustomers'};
-	$filters{'user_id'}	= $param{'ddmEstimator'} if $param{'ddmEstimator'};
-	$filters{'status'}	= $param{'ddmStatus'} if $param{'ddmStatus'};
-	$filters{'csr_id'}	= $param{'ddmEmployees'} if $param{'ddmEmployees'};
-	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
-	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
-	$filters{'type_id'} = $param{'type_id'} if $param{'type_id'};
-
-	@{$variable{'Projects'}} = openprint::Project->find( %filters );
-
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');
 		my @data;
@@ -48,27 +35,15 @@ sub projects {
 		push @data, '','','','','','','Totals:',$total1,$total2,$total3,'';
 		misc::export_csv( $r, $log, \%variable, 'project_report.csv', \@header, \@data );
 	} # end if
-
 } # end sub projects
+
+sub _projects {
+} # end sub _projects
 
 sub quotes {
 
 	ssi::get_start_end_dates( $log, $dbh, \%variable,
 			@param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
-
-	my %filters = (
-			'order'=>'id',
-			);
-	$filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
-	$filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};
-	$filters{'salesrep_id'} = $param{'salesrep_id'} if $param{'salesrep_id'};
-	$filters{'currency_id'} = $param{'currency_id'} if $param{'currency_id'};
-	$filters{'total_start'} = $param{'total_start'} if $param{'total_start'};
-	$filters{'total_end'} = $param{'total_end'} if $param{'total_end'};
-	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
-	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
-
-	@{$variable{'Quotes'}} = openprint::Quote->find( %filters );
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
@@ -87,6 +62,9 @@ sub quotes {
 	} # end if
 
 } # end sub quotes
+
+sub _quotes {
+} # end sub _quotes
 
 sub orders {
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {

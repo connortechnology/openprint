@@ -1,10 +1,10 @@
+use strict;
 package openprint::ScheduledJob;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -43,6 +43,11 @@ $serial = 'schedule_id_seq';
 	'stock_verified'	=>	'stock_verified',
 	'stock'				=>	'stock',
 	'servicetype_id'	=>	'servicetype_id',
+	'tentative'			=>	'tentative',
+);
+
+%find_fields = (
+	'servicetype'	=>	'(SELECT name FROM service_types WHERE id=servicetype_id)',
 );
 
 %transforms = (
@@ -54,143 +59,10 @@ $serial = 'schedule_id_seq';
 
 %defaults = (
 	'speed'			=>	undef,
-	'created_on'	=>	undef,
+	'created_on'	=>	'NOW()',
 	'stock_verified'	=>	0,
+	'tentative'			=>	0,
 );
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	my @values;
-	my $sql = "SELECT * FROM $table WHERE 1>0";
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( exists $params{'equipment_id'} ) {
-		$sql .= ' AND equipment_id=?';
-		push @values, $params{'equipment_id'};
-	} # end if
-	if ( exists $params{'equipment_id !='} ) {
-		$sql .= ' AND equipment_id != ?';
-		push @values, $params{'equipment_id !='};
-	} # end if
-	if ( $params{'servicetype_id'} ) {
-		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
-			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
-			push @values, @{$params{'servicetype_id'}};
-		} else {
-			$sql .= ' AND servicetype_id=?';
-			push @values, $params{'servicetype_id'};
-		} # end if
-	} # end if
-	if ( $params{'servicetype'} ) {
-		$sql .= ' AND servicetype_id=(SELECT id FROM service_types WHERE name=?)';
-		push @values, $params{'servicetype'};
-	} # end if
-	if ( $params{'project_id'} ) {
-		if ( substr($params{'project_id'},0,1) == '!' ) {
-			$sql .= ' AND projectindex != ?';
-			push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
-		} else {
-			$sql .= ' AND projectindex=?';
-			push @values, $params{'project_id'};
-		} # end if
-	} # end if
-	if ( $params{'service_id'} ) {
-		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= ' AND service_id={?}';
-			push @values, $params{'service_id'};
-		} else {
-			$sql .= ' AND ? = ANY(service_id)';
-			push @values, $params{'service_id'};
-		} # end if
-	} # end if
-	if ( $params{'pertains_id'} ) {
-		if ( ref $params{'pertains_id'} eq 'ARRAY' ) {
-			$sql .= ' AND pertains_id={?}';
-			push @values, $params{'pertains_id'};
-		} else {
-			$sql .= ' AND ? = ANY(pertains_id)';
-			push @values, $params{'pertains_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'startdate'} ) {
-		$sql .= ' AND date(starttime) = ?';
-		push @values, $params{'startdate'};
-	} 
-	if ( $params{'starttime'} ) {
-		$sql .= ' AND starttime = ?';
-		push @values, $params{'starttime'};
-	} 
-	if ( exists $params{'starttime_null'} ) {
-		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
-	} # end if
-	if ( $params{'starttime <'} ) {
-		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime <'};
-	} # end if
-	if ( $params{'starttime >='} ) {
-		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime >='};
-	} # end if
-
-	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
-		push @values, @params{'starttime_start','starttime_end'};
-	} elsif ( $params{'starttime_start'} ) {
-		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime_start'};
-	} elsif ( $params{'starttime_end'} ) {
-		$sql .= ' AND starttime <= ?';
-		push @values, $params{'starttime_end'};
-	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
-		$sql .= ' AND starttime IS NULL';
-	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
-		$sql .= ' AND starttime IS NULL';
-	} # end if
-	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
-		$sql .= ' AND ( endtime BETWEEN ? AND ? )';
-		push @values, @params{'endtime_start','endtime_end'};
-	} elsif ( $params{'endtime_start'} ) {
-		$sql .= ' AND endtime >= ?';
-		push @values, $params{'endtime_start'};
-	} elsif ( $params{'endtime_end'} ) {
-		$sql .= ' AND endtime <= ?';
-		push @values, $params{'endtime_end'};
-	} elsif ( $params{'endtime <'} ) {
-		$sql .= ' AND endtime < ?';
-		push @values, $params{'endtime <'};
-	} elsif ( $params{'endtime >'} ) {
-		$sql .= ' AND endtime > ?';
-		push @values, $params{'endtime >'};
-	} elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
-		$sql .= ' AND endtime IS NULL';
-	} elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
-		$sql .= ' AND endtime IS NULL';
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading ScheduledJobs SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No ScheduledJobs loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded ScheduledJobs ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::ScheduledJob( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub runtime_seconds {
 	my $self = shift;
@@ -210,15 +82,14 @@ sub starttime {
 } # end sub starttime
 
 sub starttime_seconds {
-	my $self = shift;
-	if ( @_ ) {
-		if ( $_[0] < ( time -10 ) ) {
-			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] ) );
+	if ( @_ > 1 ) {
+		if ( $_[1] < ( time -10 ) ) {
+			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] ) );
 		} # end if
-		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
-		delete $$self{'Shift'};
+		$_[0]{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+		delete $_[0]{'Shift'};
 	} # end if
-	return Date::Parse::str2time( $$self{'starttime'} );
+	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
 
 sub startdate_seconds {
@@ -400,6 +271,7 @@ sub get_li {
 			$colour .= ' rush';
 		} # end if
 	} # end if
+	$colour .= ' tentative' if $$self{'tentative'};
 
 	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
 			( $colour ? ' class="'.$colour.'"' : '' ), 
@@ -530,18 +402,27 @@ sub get_li {
 	return $html;
 } # end sub get_li
 
+# operator_Id is not stored in the job, this is a convenience function.
 sub operator_id {
 	my ( $self, $operator_id ) = @_;
 
 	my $Project = $self->Project();
 
-	if ( ( defined $operator_id ) and ( $operator_id != $$self{'operator_id'} ) ) {
+	if ( ( defined $operator_id ) and ( 1*$operator_id != 1*$$self{'operator_id'} ) ) {
 		$$self{'operator_id'} = $operator_id;
 		if ( $$self{'project_id'} ) {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				next if ! $sig_id;
 				my $Service = $Project->Service( $sig_id );
-				$Service->save({'operator_id'=>$operator_id}) if $Service->project_id();
+				if ( $Service->service_id() != $sig_id ) {
+					$openprint::log->error("Invalid service $sig_id " . $Service->to_string() );
+					next;
+			} # end if
+				if ( $Service->operator_id() != $operator_id ) {
+					$openprint::log->debug($Service->to_string());
+					$Service->save({'operator_id'=>$operator_id});
+					$openprint::log->debug("Done");
+				} # end if
 			} # end foreach
 		} # end if
 	} # end if
@@ -739,24 +620,34 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ));
+			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime is null'=>0,'order'=>'starttime' ));
 		} # end if
 	} # end if
 
 	my $error;
 	if ( $self->Equipment()->smartscheduling() ) {
 		if ( ! $$self{'starttime'} ) {
-			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
-			my $starttime_seconds = $self->starttime_seconds();
-			$starttime_seconds = time if $starttime_seconds < time;
-
+			my $LastJob = openprint::ScheduledJob->find_one(
+				'order'	=>	'starttime DESC NULLS LAST',
+				'tentative'	=>	0,
+				'equipment_id'	=>	$$self{'equipment_id'},
+				'id !='			=>	$$self{'id'},
+			);
+			my $starttime_seconds;
+			if ( $LastJob ) {
+				$starttime_seconds = $LastJob->endtime_seconds() + 1;
+			} # end if
+			if ( $starttime_seconds < time ) {
+				$starttime_seconds = time;
+			} # end if
+							
 			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 			push @{$variable{'changed'}}, $self->Shift()->ul_id();
 		} else {
 			my @final_order = openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime <'=>$self->starttime(),'order'=>'starttime' );
 			foreach my $Job ( $self->Shift()->Schedule() ) {
 				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
-			} # end foreach job in schift
+			} # end foreach job in shift
 			push @final_order, $self->Shift()->Next()->Schedule();
 			push @final_order, $self;
 			push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
@@ -765,8 +656,15 @@ sub bump {
 		} # end if
 	} else {
 		if ( ! $$self{'starttime'} ) {
-			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime)+'1 second'::interval FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
-			my $starttime_seconds = $self->starttime_seconds();
+			my $LastJob = openprint::ScheduledJob->find_one(
+				'order'	=>	'starttime DESC NULLS LAST',
+				'tentative'	=>	0,
+				'equipment_id'	=>	$$self{'equipment_id'},
+				'id !='			=>	$$self{'id'},
+			);
+			my $starttime_seconds = $LastJob->endtime_seconds() + 1 if $LastJob;
+			# NOW() might not fall on a shift.
+			$starttime_seconds = time if $starttime_seconds < time;
 			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 		} else {
 			my $NextShift = $self->Shift()->Next();
@@ -887,7 +785,7 @@ sub split {
 
 sub to_string {
 	my $self = $_[0];
-	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', @{$self->service_id()}), $self->Equipment()->name(), $self->starttime() );
+	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', ( $self->service_id() ? @{$self->service_id()} : () ) ), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
 
 sub pertains_id {
@@ -913,19 +811,24 @@ sub equipment_id {
 		$_[0]{'equipment_id'} = $_[1];
 		delete $_[0]{'Shift'};
 	} # end if
-	if ( ! $_[0]{'equipment_id'} ) {
+	if ( ( ! $_[0]{'equipment_id'} ) and $_[0]{'project_id'} ) {
 		# Attempt to guess
 		my $Project = $_[0]->Project();
-		my $Service = $Project->Service( $_[0]{'service_id'}[0] ) if $_[0]{'service_id'} and @{$_[0]{'service_id'}};
-		my $specs = $Service->specs();
+		if ( $_[0]{'service_id'} and @{$_[0]{'service_id'}} ) {
+			my $Service = $Project->Service( $_[0]{'service_id'}[0] );
+			my $specs = $Service->specs();
 
-		if ( sets::isin( $Service->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
-			my $Equipment = openprint::Equipment->find_one( 'strid' => ( $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} ) );
-			$_[0]{'equipment_id'} = $Equipment->id() if $Equipment;
-		} elsif ( sets::isin( $Service->ServiceType()->name(), ['SaddleStitching','LoopStitching'] ) ) {
-			$_[0]{'equipment_id'} = $$specs{'ddmEquipment'.$Project->ordered_quantity_index()};
-		} # end if
-	} # end if
+			if ( sets::isin( $Service->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
+				my $press = $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()};
+				if ( $press ) {
+					my $Equipment = openprint::Equipment->find_one( 'strid' => ( $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} ) );
+					$_[0]{'equipment_id'} = $Equipment->id() if $Equipment;
+				} # end if
+			} elsif ( sets::isin( $Service->ServiceType()->name(), ['SaddleStitching','LoopStitching'] ) ) {
+				$_[0]{'equipment_id'} = $$specs{'ddmEquipment'.$Project->ordered_quantity_index()};
+			} # end if
+		} # end if services
+	} # end if need to load and has a project
 	return $_[0]{'equipment_id'};
 } # end sub equipment_id
 

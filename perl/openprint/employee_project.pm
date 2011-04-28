@@ -317,7 +317,7 @@ sub view {
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
-				foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
+				foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockName UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
 					next if $$sig_specs{$param} eq $param{"$param-$$sig_specs{'SignatureIndex'}"};
 					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, $param, $param{"$param-$$sig_specs{'SignatureIndex'}"} );
 				} # end foreach
@@ -342,7 +342,7 @@ sub view {
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
 		} elsif ( $service_type eq 'Signature' ) {
-			foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
+			foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockName UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
 				next if $$service_specs{"$param-$$service_specs{'SignatureIndex'}"} eq $param{"$param-$$service_specs{'SignatureIndex'}"};
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$$service_specs{'SignatureIndex'}"} );
 			} # end foreach

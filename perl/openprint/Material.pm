@@ -1,6 +1,6 @@
-package openprint::Material;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Material;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
@@ -12,12 +12,12 @@ require openprint::MaterialCategory;
 use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field };
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*session = \$openprint::session;
-
-$table = 'Materials';
-$serial = 'MaterialIndex_seq';
+*session = \%openprint::session;
 
 $debug = 1;
+$table = 'materials';
+$serial = 'materialindex_seq';
+
 
 %fields = (
 		'id'				=>	'id',
@@ -99,7 +99,7 @@ sub specification {
 
 sub Specifications {
 	my $self = shift;
-	return openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'name,min' );
+	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
 sub get_price {

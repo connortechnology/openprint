@@ -83,6 +83,9 @@ $serial = 'lngProjectIndex_seq';
 	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	'csr_id'			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
 	'value'				=>	[ 'price1', 'price2', 'price3' ],
+	'used_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
+	'estimated_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
+	'operator_id'		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
 );
 
 sub delete {
@@ -776,7 +779,7 @@ sub summary {
 		$$self{'summary'} = shift;
 	} # end if
 	if ( ! $$self{'summary'} ) {
-		my $summary = $self->Type()->name() . ' ';
+		my $summary = $self->Type()->description() . ' ';
 
 		my $services = $self->services();
 		if ( $$services{''} ) {

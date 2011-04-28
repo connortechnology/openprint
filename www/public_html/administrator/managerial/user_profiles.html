@@ -177,6 +177,13 @@ Please select a company or user to obtain login information.<br/>
 						<label>Notes:</label>
 						<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
 					</li>
+					<li><label>Created:</label>
+						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?>
+					</li>
+					<li><label>Updated:</label>
+						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?>
+					</li>
+		
 				</ul>
 			</div>
 			<br class="spacer"/>

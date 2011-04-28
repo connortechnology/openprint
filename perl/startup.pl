@@ -40,13 +40,13 @@ BEGIN {
 
 	use openprint::www;
 	use openprint::upload_handler;
-	use openprint::jsrs_handler;
 
 	use Date::Calc;
 	use Date::Format;
 	use Date::Parse;
 	use Math::Round;
 	use Number::Format;
+	use DateTime::Format::Pg;
 
 	use openprint::Object;
 	use openprint::Company;
@@ -62,7 +62,6 @@ BEGIN {
 	use openprint::ProjectTypeCategory;
 	use openprint::Order;
 	use openprint::Quote;
-	use openprint::paper;
 	use openprint::JDF;
 	use	openprint::Timetrack;
 	use	openprint::Currency;

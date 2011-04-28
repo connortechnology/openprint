@@ -1,31 +1,23 @@
 #!/bin/bash
 
-apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl
-apt-get -y install make postgresql
-apt-get -y install apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl apache2-mpm-prefork libxml-libxml-perl
+apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl libdigest-md5-file-perl make postgresql apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl apache2-mpm-prefork libxml-libxml-perl libyaml-perl units
 
-apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl
-apt-get -y install libdate-calc-perl libbit-vector-perl libcarp-clan-perl
-
-apt-get -y libtext-csv-perl
+apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-calc-perl libbit-vector-perl libcarp-clan-perl libtext-csv-perl libdatetime-format-pg-perl libdatetime-perl
 apt-get -y install libemail-valid-perl libdigest-hmac-perl libdigest-sha1-perl libmailtools-perl libnet-dns-perl libnet-domain-tld-perl libtimedate-perl libcrypt-ssleay-perl
-apt-get -y install libtext-unaccent-perl libauthen-captcha-perl
-apt-get -y install  libdbi-perl libapache-dbi-perl libdbd-pg-perl libunicode-string-perl
-apt-get -y install  libmath-round-perl
-apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl
-apt-get -f -y --force-yes install perlmagick libgd-barcode-perl 
-apt-get -f -y --force-yes install  libnumber-format-perl
-apt-get -f -y --force-yes install  libbarcode-code128-perl liblinux-inotify2-perl
-apt-get -f -y --force-yes install  libnet-arp-perl
+apt-get -y install libtext-unaccent-perl libauthen-captcha-perl libdbi-perl libapache-dbi-perl libdbd-pg-perl libunicode-string-perl libsoap-lite-perl
+apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl
+apt-get -f -y --force-yes install perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl libmath-round-perl
 # Also need Barcode-Code128-2.00
 
 ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
 ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 
 mkdir /etc/apache2/lib
+rm /etc/apache2/lib/perl
 ln -sf /var/www/testing/perl /etc/apache2/lib/perl
 
-apt-get -y install libsoap-lite-perl
+echo "PerlRequire      startup.pl" >> /etc/apache2/conf.d/perl
+echo "APREQ2_ReadLimit 1024M" >> /etc/apache2/conf.d/perl
 
 perl -MCPAN -e shell << EOF
 force install Date::Handler
@@ -34,7 +26,3 @@ force install Math::Units
 force install Business::PayPal
 EOF
 
-echo > /etc/apache2/conf.d/perl << EOF2
-PerlRequire      startup.pl
-APREQ2_ReadLimit 1024M
-EOF2

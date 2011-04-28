@@ -11,9 +11,9 @@ require email;
 require openprint::Currency;
 require openprint::User;
 require openprint::logs;
-require openprint::customer;
 require openprint::address;
 require openprint::Company;
+require openprint::Company_Profile;
 require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
@@ -35,7 +35,15 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub configuration {
 
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'New' ) {
+		sql::insert( $log, $dbh, 'configuration', {
+			'name'	=>	$param{'name'},
+			'description'	=>	$param{'description'},
+			'type'			=>	$param{'type'},
+			'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+			'value'			=>	$param{'value'},
+		} );
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type FROM Configuration ORDER BY lower(category), name' );
 		while ( my ( $name, $value, $type ) = splice @config,0,3 ) {
 			my $newvalue = $param{$name};
@@ -48,9 +56,12 @@ sub configuration {
 		} # end while
 
 		# Add record to audit log - action "Update Configuration".
-		openprint::logs::insertLogRecord('77',);
+		new openprint::Log()->save({'action'=>'Update Configuration'});
 	} # end if
 } # end sub configuration
+
+sub _configuration_popup {
+} # end sub
 
 sub taxes {
 
@@ -154,7 +165,7 @@ sub user_profiles {
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
-				$error .= sprintf('<a href="/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
+				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
 			} # end foreach U
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if

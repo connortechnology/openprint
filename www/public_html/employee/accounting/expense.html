@@ -131,7 +131,7 @@ function update_total( form ) {
 					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
-					<label for="description">Description</label>
+					<label for="description">Description:</label>
 					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
 				</li>
 			</ul>

@@ -74,6 +74,12 @@ sub variables {
     return @v;
 } # end sub variables
 
+sub outputs { 
+} # end sub outputs
+
+sub no_outputs {
+} # end sub no_outputs
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
@@ -169,8 +175,12 @@ sub signature_calc_stock_cutting {
     } elsif ( $$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'} ) {
         @my_equipment = @{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}};
 	} else {
+		my @capabilities = ('Y');
+		if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+			push @capabilities, 'Large Format';
+		} # end if
 $openprint::log->warn("No clac_hash? $calc_hash");
-		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
 		@{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}} = @my_equipment;
 	} # end if
 
@@ -239,9 +249,8 @@ $openprint::log->warn("No clac_hash? $calc_hash");
 		$results{'Breakdown'} .= $reason . '<br/>';
 		next if $reason;
 
-		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
 		# no lift depth means 1 at a time.
-		next if ! $liftDepth;
 #		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ( ($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}*$$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}) / ($sheet_width*$sheet_height) ) );
 
 		my $width_cuts = int( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} / $$specs{"txtSheetSizeWidth-$signature_index-$qty_index"} );
@@ -261,7 +270,7 @@ $openprint::log->warn("No clac_hash? $calc_hash");
 		foreach my $cuts ( $width_cuts -1, $height_cuts-1 ) {
 			next if ! $cuts;
 $openprint::log->warn("Negative CUTS!") if $cuts < 1;
-			my $runs = ceil( $sheets*$calliper/$liftDepth );
+			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			$price += ( $runs * $cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $price );
 			$sheets *= $cuts+1;
@@ -287,6 +296,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 	$results{'Equipment'}	= $bestEquipment;
 
 	if ( ! $bestEquipment ) {
+		$results{'Breakdown'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'alert'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'Status'} = 'uncalculated';
 	} # end if
@@ -362,7 +372,7 @@ sub signature_calc_folding_cutting {
 		$results{'Breakdown'} .= $reason . '<br/>';
 		next if $reason;
 
-		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
 		next if ! $liftDepth;
 
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $I->imposition() );
@@ -653,7 +663,7 @@ sub signature_calc {
 		if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
 			$liftDepth = $Equipment->specification( 'Maximum Lift Depth with UVCoating' );
 		} # end if
-		$liftDepth = $Equipment->specification( 'Maximum Lift Depth' ) if ! $liftDepth;
+		$liftDepth = $Equipment->specification( 'Maximum Lift Depth', $calliper ) if ! $liftDepth;
 		$results{'Breakdown'} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 		my $mprice = 0;
@@ -983,8 +993,8 @@ sub jdf {
 	$Media->setAttribute( 'ID', 'Paper'.$sig_id );
 	$Media->setAttribute( 'Class', 'Consumable' );
 	$Media->setAttribute( 'Status', 'Available' );
-	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockBrand'} );
-	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
+	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockName'} );
+	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
 	$Media->setAttribute( 'Dimension', join(' ',
                 Math::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()},'in','mm'),
                 Math::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()},'in','mm'),
@@ -1040,7 +1050,6 @@ sub runspeed {
 
 	my $specs = $Service->specs();
 	# Cutting Time is in seconds, so 3600/Cutting Time = # per hour
-	my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
 	my $cuttime = $Equipment->specification( 'Cutting Time' ) + $Equipment->specification( 'Make Ready Time' );
 	return 0 if ! $cuttime;
 	my $runspeed = 0;
@@ -1048,6 +1057,7 @@ sub runspeed {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		next if ! $$sig_specs{'txtSpecificStockCalliper'};
 		next if ! $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"};
+		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $$specs{'txtSpecificationStockCalliper'} );
 
 		$runspeed += int(
 			( $liftDepth / $$sig_specs{'txtSpecificStockCalliper'} ) * 
@@ -1070,10 +1080,10 @@ sub runtime {
 
 	my $makeready = $Equipment->specification( 'Make Ready Time' );
 	my $runspeed = $Equipment->specification( 'Cutting Time' );
-	my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
 $openprint::log->debug("Cutting runtime: $makeready $runspeed");
 	foreach my $sig_id ( @{$signatures} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $$sig_specs{'txtSpecificStockCalliper'} );
 $openprint::log->debug( "Caclulationg runspeed for sig $sig_id $$sig_specs{'SignatureIndex'}) (".$$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		$runtime += ( $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} + $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"} ) * ( $makeready + $runspeed) * ( $impressions/($liftDepth/$$sig_specs{'txtSpecificStockCalliper'} ) );
 	} # end foreach

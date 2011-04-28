@@ -27,11 +27,8 @@ $dst_db = 'point-one' if ! $dst_db;
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
 
-	if ( ! -e "/media/Storage/Backups/www4/$src_db/$year-$month-$day.sql.bz2" ) {
-		print "Getting db backup $year-$month-$day\n";
-	} # end if
-	if ( ! -e "/media/Storage/Backups/www4/$src_db/$year-$month-$day.sql.bz2" ) {
-		die "No db dump /tmp/$src_db-$month-$day-$year.sql.bz2";
+	if ( ! -e "/media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2" ) {
+		die "No db dump /media/Storage/Backups/$src_db/$month-$day-$year.sql.bz2";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -39,8 +36,8 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
-	print "Loading db... from /media/Storage/Backups/www4/$src_db/$year-$month-$day.sql.bz2";
-	`su postgres -c "bunzip2 < /media/Storage/Backups/www4/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
+	print "Loading db... from /media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2";
+	`su postgres -c "bunzip2 < /media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty
@@ -64,7 +61,8 @@ if ( ! $path ) {
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 2...";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update2.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update3.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
 `$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
 print "done\n";

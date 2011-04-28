@@ -2,12 +2,18 @@
 	if ( $param{'mac'} ) {
 		@{$$variable{'Hosts'}} = openprint::Host->find('mac_any'=>$param{'mac'}, 'order'=>'lower(hostname)');
 	} elsif ( $param{'ip'} ) {
-		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=>$param{'ip'}, 'order'=>'lower(hostname)');
+		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=> $param{'ip'}, 'order'=>'lower(hostname)');
+	} elsif ( $param{'hostname'} ) {
+		@{$$variable{'Hosts'}} = openprint::Host->find( 
+			( 'hostname_ilike' => ( $param{'hostname'} =~ /%/ ? $param{'hostname'} : $param{'hostname'}.'%' ) ),
+			'order'=>'lower(hostname)'
+			);
 	} else {
 		@{$$variable{'Hosts'}} = openprint::Host->find(
 			'order' => $param{'order'} ? $param{'order'} : 'lower(hostname)',
 			( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
 			( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
+			( $param{'has_hostname'} ne '' ? ( 'hostname is null' => ! $param{'has_hostname'} ) : () ),
 			( Date::Calc::check_date( @session{
 									  '/employee/it/hosts.html?created_on_start_year',
 									  '/employee/it/hosts.html?created_on_start_month',

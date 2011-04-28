@@ -67,17 +67,31 @@ sub history {
 			$variable{'information'} .= 'Invoice destroy.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
-		my @Header = ('ID','Due On','Company','SubTotal','GST Rate', 'GST','Total','Interest','Owing');
+		my @Taxes = openprint::Tax->find(
+				( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
+				  ( 'period_end_null_or_>=' =>sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ) : () ),
+				( Date::Calc::check_date( @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ?
+				  ( 'period_start_null_or_<='       =>  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
+				'order'     =>  'period_start,name',
+				);
+
+		my @Header = ('ID','Due On','Company','SubTotal',
+				( map { sprintf('%s (%d%)', $_->name(), $_->rate() ) } @Taxes ),
+				'Total','Interest','Owing');
 		my @Data;
 
-		my ($subtotal, $interest_total, $total, $owing_total );
+		my ($subtotal, $interest_total, $total, $owing_total, %tax_totals );
 
 		foreach my $Invoice ( openprint::Invoice->find( 
-					'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ),
-					'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ),
-					'due_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ),
-					'due_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ),
-					'invoicee_id'       => $param{'company_id'},
+					( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
+					  ( 'created_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ) : () ),
+					( Date::Calc::check_date( @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ? 
+					  ( 'created_on <='    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
+					( Date::Calc::check_date( @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ?
+					  ( 'due_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ) : () ),
+					( Date::Calc::check_date( @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ? 
+					  ( 'due_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ) : () ),
+					( $param{'company_id'} ? ( 'invoicee_id'       => $param{'company_id'} ) : () ),
 					'invoicer_id'       => $session{'company_id'},
 					'order'             => 'id',
 					) ) {
@@ -100,9 +114,15 @@ sub history {
 			$total += $Invoice->total();
 			$interest_total += $Invoice->interest();
 			$owing_total += $Invoice->owing();
-			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+			foreach my $Tax ( @Taxes ) {
+				$tax_totals{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
+			} # end foreach Tax
+
+			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), 
+				 ( map { $Invoice->Tax( $_ )->amount() } @Taxes ),
+				 $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 		} # end foreach Invoice
-		push @Data, 'Totals:', '', '', $subtotal, '', $total, $interest_total, $owing_total;
+		push @Data, 'Totals:', '', '', $subtotal, ( map { $tax_totals{$_->id()} } @Taxes ), $total, $interest_total, $owing_total;
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} elsif ( $param{'btnFunction'} eq 'Account Statement' ) {

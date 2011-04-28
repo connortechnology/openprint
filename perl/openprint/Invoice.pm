@@ -1,12 +1,12 @@
+use strict;
 package openprint::Invoice;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 #use Carp qw(cluck);
 
-use vars qw( %config $log $dbh %session );
+use vars qw( %config $log %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 require openprint::Currency;
 require openprint::Company;
@@ -19,11 +19,9 @@ require openprint::Invoice_Payment;
 require openprint::Invoice_Tax;
 require openprint::Timetrack;
 
-use strict;
-use vars qw( $debug $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-require sql;
-$debug = 1;
+$debug = 0;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -47,6 +45,10 @@ $serial = 'invoices_id_seq';
 	'paid'				=>	'paid',
 	'interest'			=>	'interest',
 	'bad_debt'			=>	'bad_debt',
+);
+
+%find_fields = (
+	'po'	=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
 );
 
 %transforms = (

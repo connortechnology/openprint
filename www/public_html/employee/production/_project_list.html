@@ -1,6 +1,10 @@
 <? eval (
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
-		@{$$variable{'Projects'}} = openprint::Project->find( 'docket_start' => $param{'StartDocket'}, 'docket_end'=> $param{'EndDocket'},'order'=>'lngdocketnumber' );
+		@{$$variable{'Projects'}} = openprint::Project->find(
+			'docket_start' => $param{'StartDocket'},
+			'docket_end'=> $param{'EndDocket'},
+			'order'=>'lngdocketnumber',
+			);
 
 	} elsif ( $param{'StartDocket'} ) {
 		@{$$variable{'Projects'}} = openprint::Project->find( 'docket' => $param{'StartDocket'} );
@@ -19,12 +23,13 @@
 			);
 
 		my %filters = (
-				'used_press_name'	=> [ split ',', $session{'/employee/production/projects.html?ddmPress'} ],
+				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
+				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
 				'status'			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'due_date_start'	=> $$variable{'DueDateStart'},
 				'due_date_end'		=> $$variable{'DueDateEnd'},
 				#'due_date'			=> undef,
-				'misc'				=> ' AND order_id IS NOT NULL',
+				'order_id is null'	=> 0,
 				'order'				=> 'due_date, lngDocketNumber',
 			);
 			if ( $session{'/employee/production/projects.html?ddmSalesRep'} ) {
@@ -54,9 +59,9 @@
 			my $rowclass;
 
 			foreach my $Project ( @{$$variable{'Projects'}} ) {
-				next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
-				my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
-				next if $param{'ddmEmployee'} and sets::isin( $param{'ddmEmployee'}, \@operators );
+				#next if $session{'/employee/production/projects.html?ddmPress'} and ! sets::isin( $session{'/employee/production/projects.html?ddmPress'}, [ $Project->used_press_names() ] );
+				#my @operators = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $Project->id() );
+				#next if $param{'ddmEmployee'} and sets::isin( $param{'ddmEmployee'}, \@operators );
 				$html .= "<tr$rowclass>\n";
 				$html .= sprintf(q`
 						<td><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>

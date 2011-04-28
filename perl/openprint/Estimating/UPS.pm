@@ -7,12 +7,12 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA	02110-1301, USA
 
 package openprint::Estimating::UPS;
 use strict;
@@ -28,7 +28,7 @@ use vars qw( $log $dbh %variable %config %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
-*dbh = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 my $debug = 1;
 
@@ -49,19 +49,19 @@ my %variables = (
 );
 
 sub variables {
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k, if sets::isin( 'save', $variables{$k} );
-    } # end foreach;
-    return @v;
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k, if sets::isin( 'save', $variables{$k} );
+	} # end foreach;
+	return @v;
 }
 
 sub no_outputs {
-    my @v;
-    foreach my $k ( keys %variables ) {
-        push @v, $k, if ! sets::isin( 'output', $variables{$k} );
-    } # end foreach;
-    return @v;
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k, if ! sets::isin( 'output', $variables{$k} );
+	} # end foreach;
+	return @v;
 }
 
 sub get_ratings {
@@ -138,10 +138,10 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	my $Supplier = openprint::Company->find_one('supplier'=>'Y','order'=>'id');
 	if ( $Supplier ) {
 		my %shipping_fields = (
-				'ShipperCity'           =>  'City',
-				'ShipperStateProvince'  =>  'StateProvince',
-				'ShipperCountry'        =>  'Country',
-				'ShipperPostalCode'     =>  'PostalCode',
+				'ShipperCity'			=>	'City',
+				'ShipperStateProvince'	=>	'StateProvince',
+				'ShipperCountry'		=>	'Country',
+				'ShipperPostalCode'	 =>	'PostalCode',
 				);
 
 		@ups{ keys %shipping_fields } = $Supplier->load_shipping( @shipping_fields{ keys %shipping_fields } );
@@ -196,10 +196,10 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my %upsResponse = get_ratings( $Project, $service_index, $specs );
 	if ( ! %upsResponse ) {
-		$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
+		$$specs{'alert'} = 'Could not connect to ups.com.	We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( $upsResponse{'UPSErrorDescription'} ) {
-		$$specs{'alert'} = "Unable to retrieve available service types.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
+		$$specs{'alert'} = "Unable to retrieve available service types.	UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	my $ups = $upsResponse{'UPS'};
@@ -228,7 +228,7 @@ sub calc {
 		$rated_services{$service} = $price;
 	} # end while
 	if ( ! $$specs{'ddmServiceType'} ) {
-		$log->debug("Choosing  $bestService{'Service'} as the ServiceType") if $debug;
+		$log->debug("Choosing	$bestService{'Service'} as the ServiceType") if $debug;
 		$$specs{'ddmServiceType'} = $bestService{'Service'};
 	} # end if
 	if ( ! $$specs{'ddmPickupType'} ) {
@@ -274,7 +274,7 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			my $rssRequest = ups::createRatingServiceSelectionRequest(%$ups);
 			my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 			if ( $response eq '' ) {
-				$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
+				$$specs{'alert'} = 'Could not connect to ups.com.	We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			my $parser = XML::LibXML->new();
@@ -283,7 +283,7 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			my %upsResponse;
 			ups::extract_RSS( $log, \%upsResponse, $doc );
 			if ( $upsResponse{'UPSErrorDescription'} ) {
-				$$specs{'alert'} = "Unable to retrieve a price.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
+				$$specs{'alert'} = "Unable to retrieve a price.	UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
@@ -320,7 +320,7 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 } # end sub calc
 
 sub display {
-    my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 $log->debug("UPS::display: $project_index, $service_index");
 
 	my $Project = new openprint::Project( $project_index );
@@ -331,21 +331,23 @@ $log->debug("UPS::display: $project_index, $service_index");
 	$$variable{'Mode'} = $Project->mode();
 	$$variable{'ServiceTypeID'} = 'UPS';
 
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
 	if ( $openprint::session{'company_id'} and ( ! ( 
 		$$variable{'ToCity'} and $$variable{'ToPostalCode'} and $$variable{'ToStateProvince'} and $$variable{'ToCountry'} ) ) ) {
 		my %shipping_fields = (
 				'ToAddress1'		=>	'Address1',
 				'ToAddress2'		=>	'Address2',
-				'ToCity'           =>  'City',
-				'ToStateProvince'  =>  'StateProvince',
-				'ToCountry'        =>  'Country',
-				'ToPostalCode'     =>  'PostalCode',
+				'ToCity'			=>	'City',
+				'ToStateProvince'	=>	'StateProvince',
+				'ToCountry'			=>	'Country',
+				'ToPostalCode'	 	=>	'PostalCode',
 				);
 
-		my $company = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
-		@$variable{ keys %shipping_fields } = $company->load_shipping( @shipping_fields{ keys %shipping_fields } );
+		my $address = $Company->get_shipping_address();
+		foreach my $k ( keys %shipping_fields ) {
+			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};
+		} # end foreach
 	} # end if
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
 	if ( ! $$variable{'ToPostalCode'} ) {
 		$$variable{'ToPostalCode'} = $Company->postalcode();
 	} # end if
@@ -369,6 +371,9 @@ sub summary {
 		return $html;
 	} # end if
 } # end sub summary
+
+sub save {
+} # end sub save
 
 1;
 

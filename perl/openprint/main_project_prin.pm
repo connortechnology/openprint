@@ -40,5 +40,11 @@ sub _signature {
     } # end if
 
 } # end sub _signature
+
+sub Signature {
+	my $Project = $variable{'Project'} = new openprint::Project( $param{'ProjectIndex'} );
+	$variable{'ProjectType'} = $Project->Type();
+} # end sub Signature
+
 1;
 __END__

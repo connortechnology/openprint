@@ -7,6 +7,8 @@ require misc;
 require logger;
 require configuration;
 require openprint::Object;
+require openprint::Log;
+require openprint::Log_Action;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -45,6 +47,9 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 	if ( ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
 }
@@ -55,6 +60,11 @@ if ( ! exists $$data{'asset_id'} ) {
 if ( ! sets::isin( 'assets', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='assets'", 'column_name');
+	if ( ! exists $$data{'md5'} ) {
+		$dbh->do('ALTER TABLE Assets ADD md5 char(32)');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
@@ -96,6 +106,9 @@ if ( ! exists $$data{'created_on'} ) {
 } # end if
 if ( ! exists $$data{'updated_on'} ) {
 	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
+} # end if
+if ( ! exists $$data{'deleted'} ) {
+	$dbh->do('ALTER TABLE hosts add deleted BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
@@ -150,7 +163,7 @@ if ( ! sets::isin( 'par', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
-if ( ! sets::isin( 'cars', \@tables ) ) {
+if ( ! sets::isin( 'car', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
@@ -158,15 +171,124 @@ if ( ! sets::isin( 'event_categories', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'photo_albums', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'locations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='locations'", 'column_name');
+	if ( ! exists $$data{'type_id'} ) {
+if ( ! sets::isin( 'location_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Location_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+	$dbh->do('ALTER TABLE Locations add type_id INTEGER');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(type_id) REFERENCES Location_types (id)');
+	} # end if
+	if ( ! exists $$data{'short'} ) {
+	$dbh->do('ALTER TABLE Locations add short text');
+	} # end if
+	if ( ! exists $$data{'parent_id'} ) {
+	$dbh->do('ALTER TABLE Locations add parent_id integer');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(parent_id) REFERENCES Locations (id)');
+	} # end if
+	if ( ! exists $$data{'created_on'} ) {
+	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( ! exists $$data{'created_by'} ) {
+	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
+	} # end if
+	if ( ! exists $$data{'postalcode'} ) {
+	$dbh->do('ALTER TABLE Locations add postalcode text');
+	} # end if
+	if ( ! exists $$data{'address'} ) {
+	$dbh->do('ALTER TABLE Locations add address text');
+	} # end if
+	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
+	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+		
+} # end if
+if ( ! sets::isin( 'messages', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Messages.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='messages'", 'column_name');
+	if ( ! exists $$data{'conversation_id'} ) {
+		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
+	} # end if
+} # end if
+if ( sets::isin( 'log', \@tables ) ) {
+	$dbh->do('ALTER TABLE log RENAME TO logs');
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+} # en dif
+if ( ! sets::isin( 'logs', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Logs.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='logs'", 'column_name');
+	if ( exists $$data{'action_type'} ) {
+		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
+		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
+	} # end if
+} # end if
+my %config_actions = (
+	'Update Configuration' => 77,
+	'Login Failed'	=> 78,
+);
+foreach my $config_action ( keys %config_actions ) {
+	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
+	if ( $Action ) {
+		if ( $Action->id() != $config_actions{$config_action} ) {
+			my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
+			if ( ! $RealAction ) {
+				my $New = $Action->copy();
+				$New->save({'id'=>$config_actions{$config_action}});
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({'action_id'=>$config_actions{$config_action}});
+				} # end foreach Log
+			} elsif ( $RealAction->name() eq $config_action ) {
+				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
+					$Log->save({'action_id'=>$config_actions{$config_action}});
+				} # end foreach Log
+			} else {
+				die "Need to manually update $config_actions{$config_action} $config_action entries";
+			} # end if
+			$Action->destroy();
+		} # end if
+	} # end if
+} # end foreach config_action
 
+if ( ! sets::isin( 'comments', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='comments'", 'column_name');
+	if ( ! exists $$data{'approved'} ) {
+		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
+	} # endif
+}
 $dbh->disconnect();
 1;
 __END__

@@ -146,6 +146,25 @@
 			</select>
 		</p>
 		<p> 
+			<label>Quality:</label>
+			<select name="Quality" size="1" onchange="calc(this.form.name);">
+				<option value=""> select one </option>
+			<? echo (
+					my %colours;
+					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
+							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
+							'colour_id'=>$session{'/administrator/stock/list.html?Colour'},
+							'weight_id'=>$session{'/administrator/stock/list.html?Weight'},
+							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
+							'group_id'=>$session{'/administrator/stock/list.html?Group'},
+							) ) {
+						$colours{$Stock->quality()} = $Stock->quality_id();
+					} # end foreach
+					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Weight'} );
+				) ?>
+			</select>
+		</p>
+		<p> 
 			<label>Material:</label>
 			<select name="material_id" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>

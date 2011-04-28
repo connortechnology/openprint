@@ -4,10 +4,12 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 use strict;
 use openprint ();
 require sets;
-use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*session = \%openprint::session;
+*config = \%openprint::config;
 
 my $debug = 0;
 my $debug_all = 0;
@@ -52,7 +54,7 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id");
+$log->debug("loading $parent $id") if $debug;
 			$self->load( $data );
 			$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
 		} # end if
@@ -68,7 +70,9 @@ sub new {
 # First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
+$log->debug("New by hash @keys : " . $self->to_string() );
 		$self->load( $data );
+$log->debug("New by hash @keys : " . $self->to_string() );
 		return $self;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 		my $self = {};
@@ -86,6 +90,8 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $fields = eval '\%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
+	$debug = $debug_all if ! $debug;
 	if ( ! $data ) {
 		my $table = eval '$'.$type.'::table';
 		if ( ! $table ) {
@@ -97,21 +103,19 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
+		} elsif ( $debug ) {
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
-	# do cacihning in find
-	#if ( my $cache_field = $self->cache_field() ) {
-		#if ( $$fields{$cache_field} and $$self{$cache_field} ) {
-			#$name_cache{$type}{$$self{$cache_field}} = $self;
-		#} # end if
-	#} # end if
 } # end sub load
 
 sub save {
@@ -129,6 +133,8 @@ sub save {
 
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
+	$debug = $debug_all if ! $debug;
 
 	my %sql;
 	foreach my $k ( keys %$fields ) {
@@ -175,21 +181,21 @@ sub save {
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
+				$log->debug('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
 				return $dbh->errstr;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} else {
@@ -202,14 +208,14 @@ sub save {
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
 				return $dbh->errstr;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
 			delete $sql{'created_on'};
@@ -217,14 +223,14 @@ sub save {
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
 				return $dbh->errstr;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
@@ -258,11 +264,15 @@ $log->warn('Object::set called on an object with no fields');
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
+$openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$field}) if $debug;
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
+				if ( defined $$fields{$field} ) {
 				$$self{$field} = $$params{$field} if defined $$fields{$field};
-				eval "\$self->$field( \$\$params{\$field} );";
 				push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
+				} # end if
+				eval "\$self->$field( \$\$params{\$field} );";
+				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 
@@ -295,7 +305,6 @@ sub copy {
 	my %fields = eval ('%'.$type.'::fields');
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
-	#$$new{'name'} = 'Copy of ' . $$new{'name'} if $fields{'name'};
 
 	return $new;
 } # end sub copy
@@ -315,8 +324,8 @@ sub delete {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	@identified_by = ( 'id' ) if ! @identified_by;
 	if ( ! $$self{$identified_by[0]} ) {
-		$log->error("Called delete on object with no id of type $type");
-		return;
+		$log->error("Called delete on object with no id of type $type : " . $self->to_string());
+		return "Object::delete: No id in object: " . $self->to_string();
 	} # end if
 
 	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
@@ -371,8 +380,8 @@ sub find_operators {
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
 	} 
-	if ( exists $$params{$k.'_ilike'} ) {
-		push @{$results{'_ilike'}}, $f.'::text ILIKE ?', $$params{$k.'_ilike'};
+	if ( exists $$params{$k.' ilike'} ) {
+		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $$params{$k.' ilike'};
 	} 
 	if ( exists $$params{$k.'_start'} ) {
 		push @{$results{'_start'}}, $f.' >= ?', $$params{$k.'_start'};
@@ -404,17 +413,33 @@ sub find_operators {
 	if ( exists $$params{$k.'_in'} ) {
 		push @{$results{'_in'}}, "? IN $f", $$params{$k.'_in'};
 	} # end if
+	if ( exists $$params{$k.' in'} ) {
+		push @{$results{' in'}}, "? IN $f", $$params{$k.' in'};
+	} # end if
+	if ( exists $$params{$k.' not in'} ) {
+		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
+			if ( @{$$params{$k.' not in'}} ) {
+				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+			} else {
+				delete $$params{$k.' not in'};
+			} # end if
+		} elsif ( $$params{$k.' not in'} ) {
+			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
+		} else {
+			delete $$params{$k.' not in'};
+		} # end if
+	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
 		push @{$results{'_lc'}}, "lower($f) = ?", $$params{$k.'_lc'};
 	} # end if
 	if ( exists $$params{$k.'_any'} ) {
 		push @{$results{'_any'}}, "? = ANY($f)", $$params{$k.'_any'};
 	} # end if
-	if ( defined $$params{$k.'_null'} ) {
-		if ( $$params{$k.'_null'} ) {
-			push @{$results{'_null'}}, "$f IS NULL";
+	if ( exists $$params{$k.' is null'} ) {
+		if ( $$params{$k.' is null'} ) {
+			push @{$results{' is null'}}, "$f IS NULL";
 		} else {
-			push @{$results{'_null'}}, "$f IS NOT NULL";
+			push @{$results{' is null'}}, "$f IS NOT NULL";
 		} # end if
 	} # end if
 	return \%results;
@@ -528,6 +553,8 @@ sub find {
 		last if ! %$params;
 	} # end foreach set of fields
 
+#$log->debug("Where: (@where)");
+
 	my $fields = eval '\%'.$type.'::fields';
 	# Check for Object references
 	if ( %$params ) {
@@ -549,6 +576,11 @@ sub find {
 	if ( $$fields{'deleted'} and ! exists $$params{'deleted'} ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
+	} # end if
+	if ( $$params{'custom'} ) {
+		push @where, shift @{$$params{'custom'}};
+		push @values, @{$$params{'custom'}};
+		delete $$params{'custom'};
 	} # end if
 
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
@@ -603,9 +635,15 @@ sub find {
 
 sub find_one {
 	my $type = shift;
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = eval($type.'->find(\%params);');
+	 
+	my $params;
+	if ( @_ == 1 ) {
+		$params = $_[0];
+	} else {
+		%{$params} = @_;
+	} # end if
+	$$params{'limit'}=1;
+	my @Results = eval($type.'->find($params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -635,8 +673,13 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %$fields );
+    return $type . ': '. join(' ' , map { "$_ => $_[0]{$_}" } keys %$fields );
 }
 
+sub dropdown {
+	my $type = shift;
+$log->debug("dropdown");
+	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+} # end sub dropdown
 1;
 __END__

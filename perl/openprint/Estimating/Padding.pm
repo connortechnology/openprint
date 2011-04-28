@@ -20,6 +20,7 @@ use strict;
 require openprint::service;
 require openprint::Material;
 require openprint::Paper;
+require openprint::Project;
 
 require sql;
 
@@ -136,6 +137,7 @@ sub calc {
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge<br/>";
 		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty<br/>";
+
 		my $price = 0;
 
 		my %MR = openprint::service::get_price_object( 'Padding'.$Project->Type()->name().'MakeReady', $qty, undef );
@@ -144,11 +146,9 @@ sub calc {
 		} # end if
 		if ( %MR ) {
 			$MR{'Total'} = $MR{'Price'};
-			$price += $MR{'Price'};
+			$price += $MR{'Total'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f%s=$%.2f<br/>', @MR{'Price','units','Total'});
 		} # end if
-
-		my $price = 0;
 
 		my %ServicePrice;
 		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'Padding'.$Project->Type()->name(), $qty, undef ) ) ) {

@@ -5,7 +5,7 @@
 Choose report criteria and click show results. 
 You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
 <br>
-<form name="f1" method="post" action="quotes.html">
+<form id="f1" name="f1" method="post" action="quotes.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Quote ID:</label>
@@ -69,54 +69,13 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 		<p class="buttons">
 			<? echo (
 				my $html;	
-				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.action='quotes.html';f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_quotes.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' );
 				$html .= ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='quotes.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' );
 				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' );
 				return $html;
 			) ?>
 		</p>
 	</fieldset>
-	<? if ( @{$$variable{'Quotes'}} ) ?>
-	<table class="List sortable">
-		<tr> 
-			<th align="left" width="65">Quote ID</th>
-			<th class="Date">Date</th>
-			<th align="left">Prepared By</th>
-			<th align="left">Company</th>
-			<th align="left">Prepared For</th>
-			<th align="left" width="80">Status</th>
-			<th class="Price">Total1</th>
-			<th class="Price">Total2</th>
-			<th class="Price">Total3</th>
-		</tr>
-		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
-		<tr<?rowclass?>> 
-			<td><a href="../quote/view.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></td>
-			<td align="center"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Quote'}->created_on() ) ); ) ?></td>
-			<td align="left"><? echo ( $$variable{'Quote'}->by_name() ) ?></td>
-			<td align="left"><? echo ( $$variable{'Quote'}->Company()->name() ) ?></td>
-			<td align="left"><? echo ( $$variable{'Quote'}->for_name() ) ?></td>
-			<td align="left"><? echo ( $$variable{'Quote'}->status() ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1() ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2() ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3() ); ) ?></td>
-		</tr>
-		<? eval ( 
-			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; 
-			$$variable{'Total1'} += $$variable{'Quote'}->total1();
-			$$variable{'Total2'} += $$variable{'Quote'}->total2();
-			$$variable{'Total3'} += $$variable{'Quote'}->total3();
-		) ?>
-		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
-		<tr class="totals"> 
-			<td colspan="6" align="right"><b>Report Totals:</b></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
-		</tr>
-	</table>
-	<? else ( @{$$variable{'Quotes'}} ) ?>
-	There were no results matching your criteria.
-	<? endif ( @{$$variable{'Quotes'}} ) ?>
+	<div id="Results"></div>
 	<input type="hidden" name="btnFunction"/>
 </form>

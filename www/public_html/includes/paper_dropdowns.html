@@ -1,68 +1,56 @@
-<li>
-	<label>Type:</label>
-	<select id="ddmStockBrand<?Signature?>" name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
-		<option value=""> Please select one </option>
-		<? echo ( 
-			my @options = openprint::paper::get_names( $$variable{'ProjectType'}->name(),
-					@$variable{
-					'ddmStockBrand'.$$variable{'Signature'},
-					'ddmStockFinish'.$$variable{'Signature'},
-					'ddmStockColour'.$$variable{'Signature'},
-					'ddmStockWeight'.$$variable{'Signature'},
-					} );
-			if ( @options == 2 ) {
-				$$variable{'ddmStockBrand'.$$variable{'Signature'}} = $options[0];
-			} # end if
-			return ssi::make_drop_down( \@options, $$variable{'ddmStockBrand'.$$variable{'Signature'}} );
-		) ?>
-	</select>
-</li>
-<li><label>Finish:</label>
-	<select id="ddmStockFinish<?Signature?>" name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
-		<option value=""> Please select one </option>
-		<? echo ( 
-			my @options = openprint::paper::get_finishes( $$variable{'ProjectType'}->name(),
-					@$variable{
-					'ddmStockBrand'.$$variable{'Signature'},
-					'ddmStockFinish'.$$variable{'Signature'},
-					'ddmStockColour'.$$variable{'Signature'},
-					'ddmStockWeight'.$$variable{'Signature'},
-					} );
-			$$variable{'ddmStockFinish'.$$variable{'Signature'}} = $options[0] if @options == 2;
-			return ssi::make_drop_down(  \@options, $$variable{'ddmStockFinish'.$$variable{'Signature'}} );
-		) ?>
-	</select>
-</li>
-<li><label>Colour:</label>
-	<select id="ddmStockColour<?Signature?>" name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
-		<option value=""> Please select one </option>
-		<? echo ( 
-			my @options = openprint::paper::get_colours( $$variable{'ProjectType'}->name(),
-					@$variable{
-					'ddmStockBrand'.$$variable{'Signature'},
-					'ddmStockFinish'.$$variable{'Signature'},
-					'ddmStockColour'.$$variable{'Signature'},
-					'ddmStockWeight'.$$variable{'Signature'},
-					} );
-			$$variable{'ddmStockColour'.$$variable{'Signature'}} = $options[0] if @options == 2;
-			return ssi::make_drop_down( \@options, $$variable{'ddmStockColour'.$$variable{'Signature'}} );
-		) ?>
-	</select>
-</li>
-<li id="StockWeightSelect<?Signature?>" class="StockWeightSelect">
-	<label>Weight:</label>
-	<select id="ddmStockWeight<?Signature?>" name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
-		<option value=""> Please select one </option>
-		<? echo (
-				my @options = openprint::paper::get_weights( $$variable{'ProjectType'}->name(), 
-					@$variable{
-					'ddmStockBrand'.$$variable{'Signature'},
-					'ddmStockFinish'.$$variable{'Signature'},
-					'ddmStockColour'.$$variable{'Signature'},
-					'ddmStockWeight'.$$variable{'Signature'},
-					} );
-			$$variable{'ddmStockWeight'.$$variable{'Signature'}} = $options[0] if @options == 2;
-			return ssi::make_drop_down( \@options, $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
-		) ?>
-	</select>
-</li>
+<? echo (
+	my $html;
+	my @types = ('Sheet');
+	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
+		push @types, 'Roll';
+	} # end if
+	my %find = (
+			'project_type_id'	=>	$$variable{'ProjectType'}->id(),
+			'supplied'			=>	[undef, $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0],
+			'type'				=>	\@types,
+	);
+
+	my @StockOptions = misc::trim(split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} ));
+	@StockOptions = misc::trim(split( ',', $config{'StockOptions'} )) if ! @StockOptions;
+	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+
+	foreach my $option ( @StockOptions ) {
+		my ( $desc,$name ) = split('=>', $option );
+		$name = $desc if ! $name;
+
+		my @Papers = openprint::Paper->find( %find );
+		my @options;
+		if ( $option =~ /Size/ ) {
+		@options = map { $_, $_ } ( sort { 
+				my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+				my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+				if ( $a_w != $b_w ) {
+					return $a_w <=> $b_w;
+				}
+				if ( $a_h != $b_h ) {
+					return $a_w <=> $b_w;
+				}
+				return $a <=> $b;
+			} ( sets::union( map { $_->get( lc $name ); } @Papers ) ) );
+		} else {
+		@options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $name ); } @Papers ) ) );
+		} # end if
+		$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $options[0] if @options == 2;
+
+		# Special case for Name which used to be called Brand
+		if ( ( $name eq 'Name' ) and ( ! $$variable{'ddmStock'.$name.$$variable{'Signature'}} ) and ( $$variable{'ddmStockBrand'.$$variable{'Signature'}} ) ) {
+			$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $$variable{'ddmStockBrand'.$$variable{'Signature'}};
+		} # end if
+		$find{lc $name} = $$variable{'ddmStock'.$name.$$variable{'Signature'}} if $$variable{'ddmStock'.$name.$$variable{'Signature'}};
+		$html .= sprintf(q`<li><label>Stock %2$s</label>
+				<select name="ddmStock%1$s%3$s" size="1" onchange="Stock_onchange( this, '%3$s' );">
+				<option value=""> Please select </option>
+				%4$s
+				</select>
+			</li>
+			`, $name, $desc, $$variable{'Signature'}, 
+			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$name.$$variable{'Signature'}} ),
+		);
+	} # end foreach option
+	return $html;
+) ?>

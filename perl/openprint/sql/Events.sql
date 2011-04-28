@@ -13,5 +13,7 @@ CREATE TABLE Events (
 	time_associated	BOOLEAN NOT NULL default false,
 	starting_on	TIMESTAMP WITH TIME ZONE,
 	ending_on	TIMESTAMP WITH TIME ZONE,
+	asset_id	INTEGER, FOREIGN KEY (asset_id) REFERENCES Assets (id),
+	album_id	INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	PRIMARY KEY (id)
 );
