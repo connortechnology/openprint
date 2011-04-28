@@ -159,7 +159,7 @@ function validate_data(formName) {
 	return true;
 } // end function validate_data
 
-function calc_print( formName, force ) {
+function calc_print( formName, force, options ) {
 	if ( block_calc ) return;
 
 	var form = getFormObj( formName );
@@ -167,7 +167,11 @@ function calc_print( formName, force ) {
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
 		if ( timeout ) clearTimeout( timeout );
-		timeout = setTimeout("calc('f1');", 1000 );	
+		if ( options ) {
+			timeout = setTimeout("calc('f1', " + Object.toJSON( options ) + ");", 1000 );	
+		} else {
+			timeout = setTimeout("calc('f1' );", 1000 );	
+		} // end if
 		return;
 	} // end if
 	//timeout = null;
@@ -186,6 +190,11 @@ function calc_print( formName, force ) {
 		if ( pair.key == 'btnFunction' ) 
 			h.unset(pair.key);
 	});
+	if ( options ) {
+		$H(options).each(function(pair) {
+			h.set(pair.key, pair.value);
+		} );
+	} // end if options
 	h.set('ServiceType','Printing' );
 	h.set('callback', 'cbFillPrintResults' );
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
@@ -306,7 +315,7 @@ function cbFillPrintResults( results ) {
     } // end if
 
     if ( addServices.length ) {
-		calc( 'f1', 0, { action: 'add_service', services: addServices } );
+		calc_print( 'f1', 0, { action: 'add_service', service_name: addServices } );
     } // end if
 
 } // end function cbFillPrintResults( results )
