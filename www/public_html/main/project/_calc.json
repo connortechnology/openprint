@@ -2,7 +2,7 @@
 	my $debug = 0;
 	my $Project = new openprint::Project( $param{'ProjectIndex'} );
 
-	if ( $param{'action'} eq 'add service' ) {
+	if ( $param{'action'} eq 'add_service' ) {
 		foreach my $service_name ( ref $param{'service_name'} eq 'ARRAY' ? @{$param{'service_name'}} : $param{'service_name'} ) {
 			$Project->add_service( $param{'service_name'} );
 		} # end foreach service_name

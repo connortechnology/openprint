@@ -31,8 +31,7 @@ $serial = 'tbl_equipment_specifications_id_seq';
 );
 
 sub Equipment {
-	my $self = shift;
-	return new openprint::Equipment( $$self{equipment_id} );
+	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
 
 1;

@@ -50,6 +50,8 @@ sub AUTOLOAD {
     if ( @_ ) {
 		$self->{$name} = shift;
 		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
+			$$self{'dutch_rows'} = 1*$$self{'dutch_rows'};
+			$$self{'dutch_columns'} = 1*$$self{'dutch_columns'};
 			$$self{'imposition'} = $$self{'rows'} * $$self{'columns'} + $$self{'dutch_rows'} * $$self{'dutch_columns'};
 			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
 			$$self{'pages'} = $$self{'spreads'} * $$self{'spread_size'};

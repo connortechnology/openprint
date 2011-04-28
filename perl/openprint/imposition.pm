@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -834,25 +834,26 @@ sub do_versions {
 sub convert_impositions {
 	my ( $desired_signature_size, $spread_size, $impositions ) = @_;
 	my @good_impositions;
-#$openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if $debug;
+$openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, Spread size: $spread_size,") if $debug;
 
 	foreach my $imp ( @$impositions ) {
-		my $impo = $imp->imposition();
-		#$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
+		my $impo = $$imp{'imposition'};
+		$impo /= 2 if sets::isin( $$imp{'runstyle'}, ['Work & Turn','Work & Tumble' ] );
 		$$imp{'start_imposition'} = $impo;
-		$impo /= ($spread_size/2);
+		#$impo = int( $impo / ($spread_size/2) );
+		# impo has become max spreads
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
-#$imp->display();
-#$openprint::log->debug("Convert: Desired: $desired_signature_size impo: $impo From 1 to $start" );
+$imp->display();
+$openprint::log->debug("Convert: Desired: $desired_signature_size impo: $impo From 1 to $start" );
 		foreach my $signature_size ( reverse 1 .. $start ) {
 		#my $a = int($start/3);
 		#$a -= 1 if $a % 3;
 		#foreach my $signature_size ( reverse $a .. $start ) {
 			next if ! $blocks{$signature_size};
 #Now figure out how to cut up the imposition
-#$openprint::log->debug("Considering sig size: $signature_size") if $debug;
+$openprint::log->debug("Considering sig size: $signature_size") if $debug;
 			my ( $rows, $cols );
 			my $imp_rows = $imp->rows();
 			my $imp_cols = $imp->columns();
@@ -864,8 +865,8 @@ sub convert_impositions {
 
 				$cols = int( $imp_cols / $col );
 				$rows = int( $imp_rows / $row );
-				#$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
-				#$log->debug("Trying $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $signature_size: IMP: $imp_cols x $imp_rows BLOCK: $col x $row Got $cols x $rows") if $debug;
+				$openprint::log->debug("Trying $col x $row Got $cols x $rows") if $debug;
 				next if ! ( $rows and $cols );
 				next if ( $cols % 2 and $imp->runstyle() eq 'Work & Turn' );
 				next if ( $rows % 2 and $imp->runstyle() eq 'Work & Tumble' );
