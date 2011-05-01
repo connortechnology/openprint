@@ -6,7 +6,7 @@ use openprint ();
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 $debug = 1;
-$table = 'photos_in_albums';
+$table = 'videos_in_albums';
 %fields = (
 	'album_id'	=>	'album_id',
 	'asset_id'	=>	'asset_id',

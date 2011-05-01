@@ -1,8 +1,8 @@
 <script type="text/javascript" src="/javascripts/fileuploader.js"></script>
 <link type="text/css" rel="/css/fileuploader.css"/>
-<div class="PhotoAlbum">
+<div class="VideoAlbum">
 	<div class="Edit">
-		<form id="f1" name="f1" action="/photo_albums/list.html" enctype="multipart/form-data" method="post">
+		<form id="f1" name="f1" action="/video_albums/list.html" enctype="multipart/form-data" method="post">
 			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Album'}->id() ) ?>" />
 			<input type="hidden" name="btnFunction" />
 			<p class="buttons">
@@ -21,8 +21,8 @@
 				</div>
 			</fieldset>
 			<? if ( $$variable{'Album'}->id() ) ?>
-			<fieldset><legend>Photos</legend>
-				<div id="Photos"><!--#include virtual="_photos.html"-->
+			<fieldset><legend>Videos</legend>
+				<div id="Videos"><!--#include virtual="_videos.html"-->
 				</div>
 			</fieldset>
 			<fieldset><legend>Upload Option 1</legend>
@@ -55,10 +55,10 @@ var uploader = new qq.FileUploader({
 	sizeLimit: 2147483647,
 	params: {
 		album_id: <? echo ( $$variable{'Album'}->id() ) ?>,
-		UploadType: 'Photo_in_Album'
+		UploadType: 'Video_in_Album'
 	},
 	onComplete: function(id, fileName){
-		Ajax.Updater( 'Photos', '_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
+		Ajax.Updater( 'Videos', '_videos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
 	}
 
 });

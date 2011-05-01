@@ -19,11 +19,11 @@ sub list {
 		$variable{'error'} .= $Album->save(\%param);
 		new openprint::Log()->save({'action'=>'Create Video Album'}) if ! $param{'id'};
 
-        if ( $param{'filename'} ) {
-            my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                #$Asset->save({'file'=>''});
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+		if ( $param{'filename'} ) {
+			my $upload = $r->upload('filename');
+			if ( ! $upload ) {
+				#$Asset->save({'file'=>''});
+				$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
 			} else {
 				my $Asset = new openprint::Asset();
 				$variable{'error'} .= $Asset->save({'filename'=>$param{'filename'}});
@@ -36,8 +36,11 @@ sub list {
 					$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
 					new openprint::Log()->save({'action'=>'Upload Video', 'Object'=>$Video});
 				} # end if
-            } # end if
-        } # end if
+			} # end if
+		} # end if
+		if ( $variable{'error'} ) {
+			$variable{'Redirect'} = '/video_albums/edit.html';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Album->delete();
 	} # end if
@@ -51,13 +54,10 @@ sub edit {
 	my $Album = $variable{'Album'} = new openprint::Video_Album( $param{'album_id'} );
 } # end sub edit
 
-sub _photos {
+sub _videos {
 	my $Album = $variable{'Album'} = new openprint::Video_Album( $param{'album_id'} );
 	if ( $param{'action'} eq 'set as thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
-	} elsif ( $param{'action'} eq 'set as profile pic' ) {
-		my $User = new openprint::User( $session{'user_id'} );
-		$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $Asset = new openprint::Asset( $param{'asset_id'} );
 		foreach my $Video ( openprint::Video_in_Album->find( 'asset_id' => $Asset->id() ) ) {
@@ -65,9 +65,9 @@ sub _photos {
 		} # end foreach Video
 		$variable{'error'} .= $Asset->delete();
 	} # end if
-} # end sub photos
+} # end sub video
 
-sub view_photo {
+sub view_video {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
 	my $Video = new openprint::Video_in_Album( { 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} } );
@@ -75,7 +75,7 @@ sub view_photo {
 		if ( $param{'btnFunction'} eq 'Delete' ) {
 			$variable{'error'} .= $Video->delete();
 			if ( ! $variable{'error'} ) {
-				$variable{'Redirect'} = '/photo_album/view.html';
+				$variable{'Redirect'} = '/video_album/view.html';
 				%param = ( 'album_id' => $param{'album_id'} );
 			} # end if
 		} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
@@ -88,11 +88,11 @@ sub view_photo {
 		} elsif ( $param{'btnFunction'} eq 'Send' ) {
 			$variable{'information'} .= $Video->send();
 		} # end if btnfunction
-	} # end if owner of the photo
+	} # end if owner of the video
 	$variable{'Video'} = $Video;
-} # end sub view_photo
+} # end sub view_video
 
-sub _photo_comments {
+sub _video_comments {
 	my $Video = $variable{'Video'} = new openprint::Video_in_Album( { 'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
 	if ( $param{'text'} =~ /\S/ ) {
 		if ( ! openprint::Comment->find_one(
@@ -126,6 +126,6 @@ sub _photo_comments {
 			$variable{'error'} .= 'You are not authorized to approve this comment.';
 		} # end if
 	} # end if
-} # end sub _photo_comments
+} # end sub _video_comments
 1;
 __END__

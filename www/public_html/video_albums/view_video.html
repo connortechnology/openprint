@@ -1,34 +1,34 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<div class="Photo">
+<div class="Video">
 	<div class="View">
 		<form id="f1" name="f1" action="view.html" method="post">
 			<input type="hidden" name="btnFunction" />
-			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->id() ) ?>" />
+			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Video'}->id() ) ?>" />
 			<? echo ( 
 				my $html = '';
-				if ( ($session{'user_id'} == $$variable{'Photo'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Photo'}->editor_id() ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Photo'}->id(), 'Edit' );
-					if ( $$variable{'Photo'}->deleted() ) {
+				if ( ($session{'user_id'} == $$variable{'Video'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Video'}->editor_id() ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Video'}->id(), 'Edit' );
+					if ( $$variable{'Video'}->deleted() ) {
 						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.btnFunction.value='Undelete';f1.submit();` } );
 					} else {
 						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}` } );
 					} # end if
 				} # end if
-				my @Photos = $$variable{'Photo'}->Album()->Photos();
+				my @Videos = $$variable{'Video'}->Album()->Videos();
 				my $index = 0;
-				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $$variable{'Photo'}->id(); $index += 1 ) {};
-				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]&amp;album_id=$$variable{'Photo'}{'album_id'}" } ) if $index;
-				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]&amp;album_id=$$variable{'Photo'}{'album_id'}" } ) if ( $index + 1 ) < @Photos;
+				for ( $index = 0; $index < @Videos and $Videos[$index]->id() != $$variable{'Video'}->id(); $index += 1 ) {};
+				$html .= ssi::button( 'Previous', { 'href' => "/video_albums/view_video.html?asset_id=$Videos[$index-1]&amp;album_id=$$variable{'Video'}{'album_id'}" } ) if $index;
+				$html .= ssi::button( 'Next', { 'href' => "/video_albums/view_video.html?asset_id=$Videos[$index+1]&amp;album_id=$$variable{'Video'}{'album_id'}" } ) if ( $index + 1 ) < @Videos;
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $$variable{'Photo'}->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
-					$html .= '<img src="'.$$variable{'Photo'}->url().'" />';
+				if ( $$variable{'Video'}->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
+					$html .= '<img src="'.$$variable{'Video'}->url().'" />';
 				} else {
-					$log->error("Not a photo at view_photo : " . $$variable{'Photo'}->url() );
+					$log->error("Not a video at view_video : " . $$variable{'Video'}->url() );
 				} # end if
 				return $html;
 			) ?>
 		</form>
-		<div class="Caption"><? echo ( $$variable{'Photo'}->Asset()->description() ) ?></div>
+		<div class="Caption"><? echo ( $$variable{'Video'}->Asset()->description() ) ?></div>
 		<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
 	</div><!--View-->
-</div><!--Photo-->
+</div><!--Video-->
