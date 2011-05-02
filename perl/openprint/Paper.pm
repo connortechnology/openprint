@@ -1320,14 +1320,14 @@ sub load_from_signature {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 			$Paper = $Paper->id() ? $Paper : undef;
-		} elsif ( ! ( $$specs{'ddmStockName'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
+		} elsif ( ! ( ( $$specs{'ddmStockBrand'} or $$specs{'ddmStockName'} ) and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
 
 		if ( ! $Paper ) {
 			my %params = (
 					'supplied'	=> $$specs{'rdbSuppliedStock'},
-					'name'      => $$specs{'ddmStockName'},
+					'name'      => $$specs{'ddmStockName'} ? $$specs{'ddmStockName'} : $$specs{'ddmStockBrand'},
 					'finish'    => $$specs{'ddmStockFinish'},
 					'colour'    => $$specs{'ddmStockColour'},
 					'weight'    => $$specs{'ddmStockWeight'},

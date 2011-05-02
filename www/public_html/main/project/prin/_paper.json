@@ -111,7 +111,7 @@ if ( 0 ) {
 		my %results;
 		foreach my $Stock ( @Stocks ) {
 			if ( $Stock->type() eq 'Roll' ) {
-				$results{$Stock->width()} = 1;
+				$results{$Stock->width().'"'} = 1;
 			} else {
 				my ( $width, $height ) = ( $Stock->width(), $Stock->height() );
 				# cuts paper until it fits
@@ -140,8 +140,8 @@ if ( 0 ) {
 							or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
 						  ) {
 
-						last if $results{$width.'x'.$height};
-						$results{$width.'x'.$height} = 1;
+						last if $results{$width.'" x '.$height.'"'};
+						$results{$width.'" x '.$height.'"'} = 1;
 						last if ! $Stock->cuttable();
 
 						$openprint::log->debug("Cut: $width x $height") if $debug;
@@ -156,8 +156,8 @@ if ( 0 ) {
 		} # end foreach Stock
 
 		@{$specs{'SheetSize'}} = map { $_ } sort {
-			my ( $w1, $h1 ) = split('x', $a );
-			my ( $w2, $h2 ) = split('x', $b );
+			my ( $w1, $h1 ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			my ( $w2, $h2 ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			return -1 if $w1 < $w2;
 			return 1 if $w1 > $w2;
 			return -1 if $h1 < $h2;
