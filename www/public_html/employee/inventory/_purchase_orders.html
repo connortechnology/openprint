@@ -100,13 +100,13 @@
 			} # end if
 
 			$html .= sprintf( q`
-				<td><a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
-				<td class="DateTime"><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%6$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td>
+				<td class="DateTime"><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%3$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%4$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%6$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%7$s</a></td>
+				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
