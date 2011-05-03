@@ -3645,6 +3645,11 @@ $log->debug("Overs min " . $Paper->material() . " $min_overs");
 	$impressions = $gross_sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $weight = sprintf('%.2f', $gross_sheets * $Paper->sheet_weight() );
+    if ( $Paper->Roll() and my $Waste = $Press->Specification('Waste Stock') ) {
+        if ( $$Waste{'units'} eq 'Inches' ) {
+            $weight += $$Waste{'value'} * $Paper->width() * $Paper->wpsi();
+        } # end if
+    } # end if
 
 	my %sheet_qty = (
 			'Impressions'				=>	$impressions, 

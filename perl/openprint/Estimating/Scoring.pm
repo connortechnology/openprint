@@ -223,6 +223,10 @@ sub signature_calc {
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$qty *= $$specs{'txtPressSheetComboItems'};
 	} # end if
+    if ( $$sig_specs{'Versions'} ) {
+        $qty *= $$sig_specs{'Versions'};
+    } # end if
+
 
 	# Can only use the stitcher for scoring if we are stitching.	There are also thickness constraints
 	my $stitching_service_index = $$services{'SaddleStitching'} ? $$services{'SaddleStitching'}[0] : undef;
