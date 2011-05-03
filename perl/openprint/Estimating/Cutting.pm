@@ -406,7 +406,7 @@ sub signature_calc {
 	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $calc_hash ) = @_;
 
 	if ( ! $Paper->cuttable() ) {
-		$$specs{'alert'} = 'Stock is not cuttable.';
+		$$specs{'alert'} = $Paper->to_string() . ': Stock is not cuttable.';
 		$$specs{'Status'} = 'calculated';
 		return;
 	} # end if
@@ -862,6 +862,7 @@ sub calc {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $signature_index<br/>";
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+$openprint::log->debug("Got paper: " . $Paper->to_string() );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->paper( $Paper );
 			$Imposition->load( $sig_specs, $qty_index );
@@ -951,7 +952,7 @@ sub display {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
 

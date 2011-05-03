@@ -885,7 +885,7 @@ $openprint::log->debug("Considering sig size: $signature_size") if $debug;
 				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
-				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
+				$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 #$newimp->display();
 			} # end foreach block
