@@ -49,15 +49,9 @@ if ($opts->{help}) {
 }
 
 $log = new logger('level'=>'debug');
-$log->debug("Help");
 # Get our configuration information
-if (my $err = ReadCfg('/etc/ftp_monitor.conf')) {
+if (my $err = misc::ReadCfg('/etc/ftp_monitor.conf')) {
     die $err;
-} else {
-	#$log->debug("Successfully read cfg");
-	#foreach my $k ( keys %CFG::Config ) {
-		#$log->debug("$k => $CFG::Config{$k}");
-	#} # end foreach
 }
 
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
@@ -594,33 +588,6 @@ sub get_scoreboard {
 	return \@scoreboard;
 } # end sub get_scoreboard
 
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 1;
 __END__
