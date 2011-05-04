@@ -7,6 +7,7 @@
 		( Date::Calc::check_date( @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ) ? ( 'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ) ) : () ),
 		( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ),
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
+		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
 		'order'				=> 'starting',
 		) ) {
 		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
