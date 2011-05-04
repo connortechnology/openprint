@@ -1,0 +1,80 @@
+<? eval (
+	@{$$variable{'Bugs'}} = ();
+	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
+	foreach my $Bug ( openprint::Bug->find( 
+( Date::Calc::check_date( @session{'/bug/history.html?starting_start_year','/bug/history.html?starting_start_month','/bug/history.html?starting_start_day'} ) ? (
+		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/bug/history.html?starting_start_year','/bug/history.html?starting_start_month','/bug/history.html?starting_start_day'} ) ) : () ),
+		( Date::Calc::check_date( @session{'/bug/history.html?starting_end_year','/bug/history.html?starting_end_month','/bug/history.html?starting_end_day'} ) ? ( 'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/bug/history.html?starting_end_year','/bug/history.html?starting_end_month','/bug/history.html?starting_end_day'} ) ) : () ),
+		( $session{'/bug/history.html?company_id'} ? ( 'company_id'	=> $session{'/bug/history.html?company_id'} ) : () ),
+		( $session{'/bug/history.html?user_id'} ? ( 'user_id'	=> $session{'/bug/history.html?user_id'} ) : () ),
+		'order'				=> 'starting',
+		) ) {
+		next if $Bug->paid() and ! sets::isin( 1, split(',', $session{'/bug/history.html?paid'} ) );
+		next if ( ! $Bug->paid() ) and ! sets::isin( 0, split(',', $session{'/bug/history.html?paid'} ) );
+		next if $Bug->invoiced() and ! sets::isin( 1, split(',', $session{'/bug/history.html?invoiced'} ) );
+		next if ( ! $Bug->invoiced() ) and ! sets::isin( 0, split(',', $session{'/bug/history.html?invoiced'} ) );
+		push @{$$variable{'Bugs'}}, $Bug;
+		$$variable{'elapsed_total'} += $Bug->elapsed();
+		$$variable{'value_total'} += $Bug->value();
+		$$variable{'wage_total'} += $Bug->wage();
+		$$variable{'distance_total'} += $Bug->distance();
+	} # end foreach Bug
+
+	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+) ?>
+
+<? if ( @{$$variable{'Bugs'}} == 0 ) ?>
+	There are no bugs which match your search criteria. 
+<? else ( @{$$variable{'Bugs'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Bug ID #</b> to view bug details.<br/>
+		To delete bugs from history check the appropriate bug(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="EmployeeName">Employee</th>
+			<th align="left">Company</th>
+			<th width="110" align="left">Start</th>
+			<th width="110" align="left">End</th>
+			<th width="50" align="right" style="text-align: right;">Time</th>
+			<th width="50" align="right">Inv?</th>
+			<th width="50" align="right">Paid?</th>
+			<th align="left">Service</th>
+			<th class="Distance">Distance</th>
+			<th class="Rate">Rate</th>
+			<th class="Price">Wage</th>
+			<th class="Price">Billable</th>
+		</tr>
+		<? while ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
+		<? eval ( 
+			$$variable{'conversion_rate'} = $$variable{'Bug'}->Currency()->conversions( $session{'Currency_id'} );
+		) ?>
+		<tr title="<? echo ( ssi::html_escape( $$variable{'Bug'}->description() ); ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+			<td class="EmployeeName"><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->User()->name(); ) ?></a></td>
+			<td><a href="/bug/edit.html?bug_id=<? echo ( $$variable{'Bug'}->id(); ) ?>"><? hecho ( $$variable{'Bug'}->Company()->name(); ) ?></a></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->starting() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Bug'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Bug'}->ending() ) ); ) ?></td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Bug'}->elapsed() ); ) ?></td>
+			<td align="center"><? echo ( $$variable{'Bug'}->invoiced() ? 'Y' : 'N'; ) ?></td>
+			<td align="center"><? echo ( $$variable{'Bug'}->paid() ? 'Y' : 'N'; ) ?></td>
+			<td align="left"><? hecho ( $$variable{'Bug'}->Service()->name(); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Bug'}->distance(); ) ?>km</td>
+			<td align="right"><? echo ( join('',$$variable{'Bug'}->get('rate','units' ) ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Bug'}->wage() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Bug'}->value() ); ) ?></td>
+		</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
+		<? endwhile ( $$variable{'Bug'} = shift @{$$variable{'Bugs'}}; ) ?>
+		<tr class="totals">
+			<td colspan="4" align="right">Totals:</td>
+			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
+			<td colspan="3">&nbsp;</td>
+			<td align="right"><? echo ( $$variable{'distance_total'} ) ?>km</td>
+			<td colspan="1">&nbsp;</td>
+			<td align="right"><? echo ( openprint::Currency::format($$variable{'wage_total'}); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format($$variable{'value_total'}); ) ?></td>
+		</tr>
+	</table>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
+	<br class="spacer"/>
+<? endif ( @{$$variable{'Bugs'}} == 0 ) ?>
