@@ -80,6 +80,7 @@ function filter_onChange( element, id, selected ) {
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<div class="leftColumn">
+			<p><label>Index:</label><? hecho ( $$variable{Equipment}->id(); ) ?></p>
 			<p> 
 				<label>ID:</label>
 				<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>

@@ -61,41 +61,41 @@ sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;
 
 	$service = ' '.$service if $service;
+	my $max_width = $self->specification("Maximum$service Sheet Width");
+	my $max_length = $self->specification("Maximum$service Sheet Length");
+	my $max_height = $self->specification("Maximum$service Sheet Height");
 
-	if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
-		my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+	if ( $max_width and $max_length ) {
+		my $imp = openprint::imposition::fit( $width, $height, $max_width, $max_length );
 #$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
 		if ( ! $imp->imposition() ) {
-			return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
+			return sprintf('Too big %s x %s on %s x %s', $width, $height, $max_width, $max_length );
 		} # end if
-	} elsif ( $self->specification("Maximum$service Sheet Width") ) {
-		if (
-			( $width > $self->specification("Maximum$service Sheet Width") ) and
-			( $height > $self->specification("Maximum$service Sheet Width") ) 
-			) {
-			return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+	} elsif ( $max_width ) {
+		if ( ( $width > $max_width ) and ( $height > $max_width ) ) {
+			return sprintf('Too big %s x %s on %s', $width, $height, $max_width );
 		} # end if
-	} elsif ( $self->specification("Maximum$service Sheet Height") ) {
-		if (
-			( $width > $self->specification("Maximum$service Sheet Height") ) and
-			( $height > $self->specification("Maximum$service Sheet Height") ) 
-			) {
-			return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Height"));
+	} elsif ( $max_height ) {
+		if ( ( $width > $max_height ) and ( $height > $max_height ) ) {
+			return sprintf('Too big %s x %s on %s', $width, $height, $max_height );
 		} # end if
 	} # end if
 
+	my $min_width = $self->specification("Minimum$service Sheet Width");
+	my $min_length = $self->specification("Minimum$service Sheet Length");
+
 	if ( $width and $height ) {
-		if ( $self->specification("Minimum$service Sheet Width") and $self->specification("Minimum$service Sheet Length") ) {
-			my $imp = openprint::imposition::fit( $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length"), $width, $height );
+		if ( $min_width and $min_length ) {
+			my $imp = openprint::imposition::fit( $min_width, $min_length, $width, $height );
 			if ( ! $imp->imposition() ) {
-				return sprintf('Too small %s x %s on %s x %s', $width, $height, $self->specification("Minimum$service Sheet Width"),$self->specification("Minimum$service Sheet Length") );
+				return sprintf('Too small %s x %s on %s x %s', $width, $height, $min_width, $min_length);
 			} # end if
-		} elsif ( $self->specification("Minimum$service Sheet Width") ) {
+		} elsif ( $min_width ) {
 			if (
-					( $width < $self->specification("Minimum$service Sheet Width") ) and
-					( $height < $self->specification("Minimum$service Sheet Width") ) 
+					( $width < $min_width ) and
+					( $height < $min_width ) 
 				) {
-				return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+				return sprintf('Too big %s x %s on %s', $width, $height, $min_width);
 			} # end if
 		} elsif ( $self->specification("Minimum$service Sheet Length") ) {
 			if (

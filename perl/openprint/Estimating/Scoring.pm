@@ -134,6 +134,7 @@ sub calc {
 			next;
 		} # end if
 		my $qty = $$specs{"txtQuantity$qty_index"};
+
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty:";
 
 		my $qtyTotal = 0;
@@ -141,6 +142,10 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			$qty = $$specs{"txtQuantity$qty_index"};
+			if ( $$sig_specs{'Versions'} ) {
+				$qty *= $$sig_specs{'Versions'};
+			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'}, " if $$sig_specs{'txtServiceDescription'} ne '';
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
@@ -223,6 +228,9 @@ sub signature_calc {
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$qty *= $$specs{'txtPressSheetComboItems'};
+	} # end if
+	if ( $$sig_specs{'Versions'} ) {
+		$qty *= $$sig_specs{'Versions'};
 	} # end if
 
 	# Can only use the stitcher for scoring if we are stitching.	There are also thickness constraints

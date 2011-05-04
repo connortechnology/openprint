@@ -99,7 +99,7 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup->find('order'=>'lower(name)') ], $$variable{'Stock'}->group_id() );
 							) ?>
 					</select>
-					<input style="display: none;" type="text" id="txtGroup" name="txtGroup" />
+					<input style="display: none;" type="text" id="txtGroup" name="txtGroup" onfocus="if(!this.value){this.value=get_ddm_text(f1.Group);}ddm_select_by_index( f1.Group, 0 );" />
 				</p>
 				<p>
 					<label for="txtManufacturer" onclick="$('ddmManufacturer').toggle();$('txtManufacturer').toggle();">Manufacturer:</label>
@@ -109,7 +109,7 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->manufacturer_id() );
 							) ?>
 					</select>
-					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
+					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmManufacturer);}ddm_select_by_index( f1.ddmManufacturer, 0 );" />
 				</p>
 				<p>
 					<label for="txtName" onclick="$('txtName').toggle();$('ddmName').toggle();">Name:</label>

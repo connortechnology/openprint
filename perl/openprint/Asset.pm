@@ -70,7 +70,7 @@ sub on_disk_thumbnail_path {
 		return '';
 	} # end if
 $openprint::log->debug("Asset::on_disk_thumbnail_path: $src");
-	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
+	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails' ) {
 $openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::config{'AssetPath'}/thumbnails");
 		mkdir $openprint::config{'AssetPath'}.'/thumbnails';
 		if ( $! ) {
@@ -79,12 +79,27 @@ $openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::confi
 		} # end if
 	} # end if
 	my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$_[0]->on_disk_filename();
-	if ( ! -e $dest ) {
-		$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-		`convert  -adaptive-resize 75x $src $dest`;
+	my ( $blah, $extension ) = $dest =~ /(.+)\.([^\.]+)$/;
+	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
+		if ( ! -e $dest ) {
+			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+			`convert  -adaptive-resize 75x $src $dest`;
+		} # end if
+	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
+		$dest = $blah.'.jpg';
+		if ( ! -e $dest ) {
+
+			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+			`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
+			`mv /tmp/00000001.jpg $dest`;
+			if ( $! ) {
+				$openprint::log->error("Unable to create thumbnail at $dest: $!" );
+				return $src;
+			} # end if
+		} # end if
 	} # end if
 	if ( -e $dest ) {
-		#$openprint::log->debug("Created thumbnail at 75x $src $dest");
+		$openprint::log->debug("Created thumbnail at 75x $dest");
 		return $dest;
 	} else {
 		return $src;
@@ -94,9 +109,13 @@ $openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::confi
 sub thumbnail_filename {
 	return '' if ! $_[0]{'id'};
 	my $path = $_[0]->on_disk_thumbnail_path();
-	if ( $path =~ /thumbnails/ ) {
-		return '/thumbnails/'.$_[0]->on_disk_filename();
+	my $thumbnail_url;
+
+	if ( my ( $thumbnail_url ) = $path =~ /(\/thumbnails\/.*)$/ ) {
+$openprint::log->debug("thumbanil_filename: returning thumb $thumbnail_url");
+		return $thumbnail_url;
 	} # end if
+$openprint::log->debug("thumbanil_filename: returning url $path");
 	return $_[0]->url();
 } # end sub thumbnail_filename
 

@@ -85,7 +85,8 @@ sub Host {
 			$Host = new openprint::Host();
 			$Host->save({'ip'=>$_[0]{'ip_address'}});
 		} # endif	
-		$_[0]->save({'host_id'=>$Host->id()});
+		$_ = $_[0]->save({'host_id'=>$Host->id()});
+		$openprint::log->error( $_ ) if $_;
 	} # end if
 		
 	return new openprint::Host( $_[0]{'host_id'} );

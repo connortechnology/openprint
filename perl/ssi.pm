@@ -661,7 +661,8 @@ sub write_override {
 
 sub count_lines {
 	if ( $_[0] ) {
-		return scalar split( "\n", $_[0] );
+		my @lines = split( "\n", $_[0] );
+		return scalar @lines;
 	} else {
 		return 2;
 	} # end if
