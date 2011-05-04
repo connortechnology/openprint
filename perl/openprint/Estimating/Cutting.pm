@@ -415,7 +415,7 @@ sub signature_calc_load_equipment {
 } # end sub signature_calc_load_equipment
 
 sub signature_calc {
-	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I ) = @_;
+	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 
 	if ( ! $Paper->cuttable() ) {
 		$$specs{'alert'} = $Paper->to_string() . ': Stock is not cuttable.';
@@ -494,152 +494,22 @@ sub signature_calc {
 		$folding_imposition->rows( 1 );
 	} # end if
 
-	if ( $I->image_orientation() eq 'Horizontal' ) {
-		$stitching_imposition = $$I{'columns'} if $stitching_imposition > $$I{'columns'};
+	if ( $$Imposition{'image_orientation'} eq 'Horizontal' ) {
+		$stitching_imposition = $$Imposition{'columns'} if $stitching_imposition > $$Imposition{'columns'};
 	} else {
-		$stitching_imposition = $$I{'rows'} if $stitching_imposition > $$I{'rows'};
+		$stitching_imposition = $$Imposition{'rows'} if $stitching_imposition > $$Imposition{'rows'};
 	} # end if
+
+	my $Press = $Imposition->Press();
+	my $output_format = $Press->specification('OutputFormat');
+$openprint::log->debug("Output " . $Press->specification('OutputFormat') );
 	
-	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
-
-# calculate cuts
-	my $vertical_cuts = 0;
-	$results{'Breakdown'} .= '<b>Regular Cuts: calliper:' . $calliper.'</b><br/>';
-
-# interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
-	if ( exists $$sig_specs{'txtSignatureType'} ) {
-		# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
-		# but if we are cutting into smaller signatures, then we need more cutting
-#$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
-		if ( $I->pages() and ! $$services{'Folding'} ) {
-			# Have to cut the pages out
-			$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
-		} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
-			$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
-		} else {
-			$vertical_cuts += $$I{'columns'}-1;
-		} # end if
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-#$openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
-			if ( $$I{'image_orientation'} eq 'Horizontal' ) {
-				# Assume head to head at all times - head trim
-				if ( $$sig_specs{'BleedTop'} ) {
-					$vertical_cuts += int ( $$I{'columns'}/2 );
-				} # end if
-			} # end if
-		} # end if
-	} else {
-# The 2 is for outside edge cuts
-		my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
-		$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
-		if ( 
-				( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
-				( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
-		   ) {
-			$vertical_cuts += $columns-1;
-		} # end if
-# Splitting the folded products is done on the folder for free
-		#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
-			#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
-		#} # end if
-	} # end if
-
-# interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
-	my $horizontal_cuts = 0;
-	if ( exists $$sig_specs{'txtSignatureType'} ) {
-		if ( $I->pages() and ! $$services{'Folding'} ) {
-			# Have to cut the pages out
-			$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
-		} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
-			$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
-		} else {
-			$horizontal_cuts += $$I{'rows'}-1;
-		} # end if
-		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
-#$openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
-			if ( $$I{'image_orientation'} eq 'Vertical' ) {
-				if ( $$sig_specs{'BleedTop'} ) {
-					$horizontal_cuts += int( $$I{'rows'}/2);
-				} # end if
-			} # end if
-		} # end if
-	} else {
-		my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
-		$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
-		if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
-		   ) {
-			$horizontal_cuts += $rows-1;
-		} # end if
-# Splitting the folded products is done on the folder for free
-		#if ( ($$folding_imposition{'rows'} > 1 ) and ( $$folding_imposition{'rows'} < $$I{'rows'} ) ) {
-			#$horizontal_cuts += ($$I{'rows'} / $$folding_imposition{'rows'})-1;
-		#} # end if
-	} # end if
-
-	my $dutch_vertical_cuts = 0;
-	my $dutch_horizontal_cuts = 0;
-	# Dutch cuts don't happen on books
-	if ( ! exists $$sig_specs{'txtSignatureType'} ) {
-
-		# Now consider Dutch cuts
-		if ( $$I{'dutch_columns'} and $$I{'dutch_rows'} ) {
-			$dutch_vertical_cuts += 1 + $$I{'dutch_columns'};
-			$dutch_horizontal_cuts += $$I{'dutch_rows'}; # +1 - 1
-			if ( ( $$sig_specs{'BleedTop'} and $$sig_specs{'BleedBottom'} ) or ($$sig_specs{'BleedLeft'} and $$sig_specs{'BleedRight'} ) ) {
-				$dutch_horizontal_cuts += 1;
-			} # end if
-			if ( 
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
-			   ) {
-				$dutch_vertical_cuts += $$I{'dutch_columns'}-1;
-			} # end if
-			if ( 
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
-			   ) {
-				$dutch_horizontal_cuts += $$I{'dutch_rows'}-1;
-			} # end if
-		} # end if dutch imposition
-	} # end if exists signaturetype
-
-#following lines add on 16-july-2008
-	if ( $$specs{'OverrideVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$vertical_cuts = $$specs{"txtVerticalCuts-$signature_index-$qty_index"};
-	} else {
-		$$specs{"txtVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
-	}
-
-#following lines add on 16-july-2008
-	if ( $$specs{'OverrideHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$horizontal_cuts = $$specs{"txtHorizontalCuts-$signature_index-$qty_index"};
-	} else {
-		$$specs{"txtHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
-	}
-
-	if ( $$specs{'OverrideDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$signature_index-$qty_index"};
-	} else {
-		$$specs{"txtDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
-	}
-
-	if ( $$specs{'OverrideDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$signature_index-$qty_index"};
-	} else {
-		$$specs{"txtDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
-	}
-
-	if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} ne 'Y' ) {
-		$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
-	}
-	my $cuts = $$specs{"txtCalculatedCuts-$signature_index-$qty_index"};
-
+	#The Paper might be a roll, and the output of printing might still be a roll.
 	my $bestPrice = undef;
 	my $bestM = 0;
 	my $bestEquipment;
 	foreach my $Equipment ( @my_equipment ) {
+$openprint::log->debug("Equipment: $$Equipment{'name'}");
 		next if ! $Equipment->id();
 		$results{'Breakdown'} .= 'Equipment ' . $Equipment->name() .':';
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
@@ -663,6 +533,170 @@ sub signature_calc {
 			next;
 		} # end if
 
+		my $I = $Imposition->copy();
+		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+		$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
+		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
+			if ( $$Spec{'units'} eq 'Sheets' ) {
+				$sheets += $$Spec{'value'};
+			} # end if
+		} # end if
+
+		my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
+		if ( $output_format eq 'Roll' ) {
+			if ( ( $_ = $Equipment->specification('Maximum Sheet Width') ) and ( $sheet_width > $_ ) ) {
+				$results{'Breakdown'} .= 'Doesnt fit.<br/>';
+				next;
+			} # end if
+			# Adjust imposition to account for cutting to maximum size
+			$sheet_height = $Equipment->specification('Maximum Sheet Length');
+			if ( ! $sheet_height ) {
+				$I->rows( $sheets );
+				$I->dutch_rows( $sheets ) if $I->dutch_rows();
+				$sheet_height = $I->layout_height();
+				$sheets = 1;
+			} else {
+				$I->rows( $I->rows() * int($sheet_height / $I->layout_height()) );
+				$I->dutch_rows( $I->dutch_rows() * int($sheet_height / $I->layout_height()) ) if $I->dutch_rows();
+				$sheets = ceil( $sheets / $I->rows() );
+			} # end if
+			$results{'Breakdown'} .= $I->to_string() . '<br/>';
+		} elsif ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
+			$results{'Breakdown'} .= $reason . '<br/>';
+			next;
+		} # end if
+				
+# calculate cuts
+		my $vertical_cuts = 0;
+		$results{'Breakdown'} .= '<b>Regular Cuts: calliper:' . $calliper.'</b><br/>';
+
+# interior vertical cuts = $sig_specs{'hdnImpositionColumns'}-1
+		if ( exists $$sig_specs{'txtSignatureType'} ) {
+# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
+# but if we are cutting into smaller signatures, then we need more cutting
+#$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
+			if ( $I->pages() and ! $$services{'Folding'} ) {
+# Have to cut the pages out
+				$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
+			} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
+				$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
+			} else {
+				$vertical_cuts += $$I{'columns'}-1;
+			} # end if
+			if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
+#$openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
+				if ( $$I{'image_orientation'} eq 'Horizontal' ) {
+# Assume head to head at all times - head trim
+					if ( $$sig_specs{'BleedTop'} ) {
+						$vertical_cuts += int ( $$I{'columns'}/2 );
+					} # end if
+				} # end if
+			} # end if
+		} else {
+# The 2 is for outside edge cuts
+			my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
+			$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
+				if ( 
+						( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+						( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
+				   ) {
+					$vertical_cuts += $columns-1;
+				} # end if
+# Splitting the folded products is done on the folder for free
+#if ( ( $$folding_imposition{'columns'} > 1 ) and ( $$folding_imposition{'columns'} < $$I{'columns'} ) ) {
+#$vertical_cuts += ($$I{'columns'} / $$folding_imposition{'columns'})-1;
+#} # end if
+		} # end if
+
+# interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
+		my $horizontal_cuts = 0;
+		if ( exists $$sig_specs{'txtSignatureType'} ) {
+			if ( $I->pages() and ! $$services{'Folding'} ) {
+# Have to cut the pages out
+				$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
+			} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
+				$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
+			} else {
+				$horizontal_cuts += $$I{'rows'}-1;
+			} # end if
+			if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
+#$openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
+				if ( $$I{'image_orientation'} eq 'Vertical' ) {
+					if ( $$sig_specs{'BleedTop'} ) {
+						$horizontal_cuts += int( $$I{'rows'}/2);
+					} # end if
+				} # end if
+			} # end if
+		} else {
+			my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
+			$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
+				if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
+							( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+							( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
+				   ) {
+					$horizontal_cuts += $rows-1;
+				} # end if
+# Splitting the folded products is done on the folder for free
+#if ( ($$folding_imposition{'rows'} > 1 ) and ( $$folding_imposition{'rows'} < $$I{'rows'} ) ) {
+#$horizontal_cuts += ($$I{'rows'} / $$folding_imposition{'rows'})-1;
+#} # end if
+		} # end if
+
+		my $dutch_vertical_cuts = 0;
+		my $dutch_horizontal_cuts = 0;
+# Dutch cuts don't happen on books
+		if ( ! exists $$sig_specs{'txtSignatureType'} ) {
+# Now consider Dutch cuts
+			if ( $$I{'dutch_columns'} and $$I{'dutch_rows'} ) {
+				$dutch_vertical_cuts += 1 + $$I{'dutch_columns'};
+				$dutch_horizontal_cuts += $$I{'dutch_rows'}; # +1 - 1
+					if ( ( $$sig_specs{'BleedTop'} and $$sig_specs{'BleedBottom'} ) or ($$sig_specs{'BleedLeft'} and $$sig_specs{'BleedRight'} ) ) {
+						$dutch_horizontal_cuts += 1;
+					} # end if
+				if ( 
+						( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
+						( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
+				   ) {
+					$dutch_vertical_cuts += $$I{'dutch_columns'}-1;
+				} # end if
+				if ( 
+						( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
+						( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
+				   ) {
+					$dutch_horizontal_cuts += $$I{'dutch_rows'}-1;
+				} # end if
+			} # end if dutch imposition
+		} # end if exists signaturetype
+
+		if ( $$specs{'OverrideVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+			$vertical_cuts = $$specs{"txtVerticalCuts-$signature_index-$qty_index"};
+		} else {
+			$$specs{"txtVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
+		}
+
+		if ( $$specs{'OverrideHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+			$horizontal_cuts = $$specs{"txtHorizontalCuts-$signature_index-$qty_index"};
+		} else {
+			$$specs{"txtHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
+		}
+
+		if ( $$specs{'OverrideDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+			$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$signature_index-$qty_index"};
+		} else {
+			$$specs{"txtDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
+		}
+
+		if ( $$specs{'OverrideDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+			$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$signature_index-$qty_index"};
+		} else {
+			$$specs{"txtDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
+		}
+
+		if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} ne 'Y' ) {
+			$$specs{"txtCalculatedCuts-$signature_index-$qty_index"} = $vertical_cuts + $horizontal_cuts + $dutch_vertical_cuts + $dutch_horizontal_cuts;
+		}
+		my $cuts = $$specs{"txtCalculatedCuts-$signature_index-$qty_index"};
+
 		my $liftDepth;
 		if ( $$services{'UVCoating'} and openprint::Estimating::UVCoating::signature_needs( $Project, $sig_specs ) ) {
 			$liftDepth = $Equipment->specification( 'Maximum Lift Depth with UVCoating' );
@@ -671,28 +705,15 @@ sub signature_calc {
 		$results{'Breakdown'} .= "(Lift: $liftDepth)<br/>";
 		my $totalPrice = 0;
 		my $mprice = 0;
-
-		if ( my $reason = $Equipment->fits( $sheet_width, $sheet_height ) ) {
-			$results{'Breakdown'} .= $reason . '<br/>';
-			next;
-		} # end if
+		my $price;
 
 		my %ServicePrice = openprint::service::get_price_object( 'Cutting', undef, $Equipment );
 		if ( $ServicePrice{'units'} eq 'Per Cut' ) {
-			%ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"} * $cuts, $Equipment );
+			%ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets * $cuts, $Equipment );
 		} else {
-			%ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
+			%ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		} # end if
-        #if ( $ServicePrice{'units'} eq 'Per Inch' ) {
 
-		my $price;
-		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-		$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
-		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
-			if ( $$Spec{'units'} eq 'Sheets' ) {
-				$sheets += $$Spec{'value'};
-			} # end if
-		} # end if
 
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';

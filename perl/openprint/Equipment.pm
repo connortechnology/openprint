@@ -189,12 +189,12 @@ sub fits {
 				) {
 				return sprintf('Too big %s x %s on %s', $width, $height, $min_width);
 			} # end if
-		} elsif ( $self->specification("Minimum$service Sheet Length") ) {
+		} elsif ( $min_length ) {
 			if (
-					( $width < $self->specification("Minimum$service Sheet Length") ) and
-					( $height < $self->specification("Minimum$service Sheet Length") ) 
+					( $width < $min_length ) and
+					( $height < $min_length ) 
 				) {
-				return sprintf('Too big %s x %s on %s', $width, $height, $self->specification("Maximum$service Sheet Width"));
+				return sprintf('Too big %s x %s on %s', $width, $height, $min_length);
 			} # end if
 		} # end if
 	} # end if
@@ -351,17 +351,17 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
+		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
 
 	if ( ! $$self{'Specifications'} ) {
-		#$openprint::log->warn("No specfications for " . $self->name() );
+		$openprint::log->warn("No specfications for " . $self->name() );
 		return;
 	} # end if
 	if ( ! $$self{'Specifications'}{$name} ) {
-		#$openprint::log->warn("No specfications for ($name) " . $self->name() );
+		$openprint::log->warn("No specfications for ($name) " . $self->name() ) if $debug;
 		return;
 	} # end if
 
