@@ -23,6 +23,7 @@
 	} # end if
 	foreach my $Expense ( @{$$variable{'Expenses'}} ) {
 		$$variable{'subtotal'} += $Expense->amount();
+		$$variable{'bus_subtotal'} += $Expense->amount() * ( $Expense->business_use() / 100 );
 		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
 			$$variable{'tax_totals'}{$Tax->id()} += $Expense->Tax( $Tax )->amount();
 		} # end foreach Tax
@@ -47,12 +48,13 @@
 				<th class="Date">Paid</th>
 				<th class="Date">Due</th>
 				<th>Description</th>
+				<th class="Percent">Bus %</th>
 				<th class="Price">Amount</th>
+				<th class="Price">Bus Amount</th>
 			<? echo (
                 return join('', map { sprintf('<th class="Price">%s (%s%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
             ) ?>
 				<th class="Price">Total</th>
-				<th class="Percent">Bus %</th>
 				<th class="Price">Bus Total</th>
 			</tr>
 		</thead>
@@ -62,25 +64,30 @@
 				$html .= sprintf(q`
 					<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 					<td class="Company"><a href="/employee/accounting/expense.html?expense_id=%1$d">%2$s</a></td>
-					<td class="Account"><a href="/employee/accounting/expense.html?expense_id=%1$d">%12$s</a></td>
+					<td class="Account"><a href="/employee/accounting/expense.html?expense_id=%1$d">%13$s</a></td>
 					<td class="Category"><a href="/employee/accounting/expense.html?expense_id=%1$d">%3$s</a></td>
 					<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%4$s</a></td>
 					<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%5$s</a></td>
 					<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%6$s</a></td>
-					<td class="Price">%7$s</td>
-					%8$s
+					<td class="Percent">%7$s</td>
+					<td class="Price">%8$s</td>
 					<td class="Price">%9$s</td>
-					<td class="Percent">%10$s</td>
+					%10$s
 					<td class="Price">%11$s</td>
+					<td class="Price">%12$s</td>
 					</tr>
 					`, $Expense->id(), $Expense->Recipient()->name(), $Expense->category(), 
 					( $Expense->paid_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->due_on() ) ),
 					$Expense->description(),
-					openprint::Currency::format( $Expense->amount() ),
-					join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Expense->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} ),
-					openprint::Currency::format( $Expense->total() ),
 					$Expense->business_use(),
+					openprint::Currency::format( $Expense->amount() ),
+					openprint::Currency::format( $Expense->amount() * ( $Expense->business_use()/100 ) ),
+					join('', map { sprintf('<td class="Price">%s / %s</td>', 
+							openprint::Currency::format( $Expense->Tax( $_ )->amount() ),
+							openprint::Currency::format( $Expense->Tax( $_ )->amount() * ( $Expense->business_use()/100 ) ),
+							) } @{$$variable{'Taxes'}} ),
+					openprint::Currency::format( $Expense->total() ),
 					openprint::Currency::format( $Expense->total() * ( $Expense->business_use()/100 ) ),
 					$Expense->account(),
 					);
@@ -88,13 +95,15 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td colspan="6">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows):</td>
+			<td colspan="7">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows):</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'business_subtotal'} ); ) ?></td>	
 <? echo (
                 return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );
             ) ?>
 
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td><td></td><td class="Price"><? echo (openprint::Currency::format( $$variable{'bus_total'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>
+			<td class="Price"><? echo (openprint::Currency::format( $$variable{'bus_total'} ); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>

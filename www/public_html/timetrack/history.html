@@ -51,6 +51,13 @@
 <? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_end', {onchange=>q`load_timetracks($('f1'));`, 'with_clear'=>1,'with_today'=>1} ); ) ?>
 				</span>
 			</p>
+			<p>
+				<label>Service:</label>
+				<select name="service_id" id="service_id" onchange="load_timetracks(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::Service->dropdown(), $session{'/timetrack/history.html?service_id'} ); ) ?>
+				</select>
+			</p>
 			</div>
 			<div class="rightColumn">
 			<p><label>Invoiced?:</label>

@@ -56,12 +56,13 @@
 						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
-						$html .= '<td>&nbsp;</td><td>'.$Timetrack->description().'</td><td colspan="3">&nbsp;</td>';
+						$html .= '<td>&nbsp;</td><td colspan="3">'.$Timetrack->description().'</td><td>&nbsp;</td>';
 						$html .= '</tr>';
 						$$variable{'service_total'} += $$Price{'Total'};
 						$rowclass = $rowclass ? '' : 'class="colRow"';
-						$count += 1;
-						last if $count == 11;
+						my @desc = split('<p>', $Timetrack->description() );
+						$count += scalar @desc;
+						last if $count >= 11;
 					} # end foreach Timetrack
 					$html  .= '</table></fieldset><fieldset><legend>Services Continued</legend>';
 				} # end if
