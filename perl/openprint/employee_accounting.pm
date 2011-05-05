@@ -261,7 +261,7 @@ sub expenses {
 			'due_on_end_year','due_on_end_month','due_on_end_day',
 			'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 			'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-			'category_id', 'recipient_id',
+			'category_id', 'recipient_id', 'account_id',
 ) );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
@@ -275,7 +275,7 @@ sub _expenses {
 				'due_on_end_year','due_on_end_month','due_on_end_day',
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-				'category_id', 'recipient_id',
+				'category_id', 'recipient_id', 'account_id',
 				) );
 } # end sub _expenses
 

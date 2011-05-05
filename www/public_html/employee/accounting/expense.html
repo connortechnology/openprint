@@ -1,6 +1,13 @@
 <script type="text/javascript">
 <!--
-var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
+var tax_ids = [ <? echo ( 
+	my @Taxes = openprint::Tax->find(
+			'period_start_null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
+			'period_end_null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
+			'country'   =>  $$variable{'Expense'}->Company()->country(),
+			'state'     =>  $$variable{'Expense'}->Company()->state()
+);
+return join(',', map { $_->id() } @Taxes ); ) ?> ];
 
 function update_taxes( ) {
 	new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { 
