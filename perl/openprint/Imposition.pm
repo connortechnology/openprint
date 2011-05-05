@@ -150,6 +150,9 @@ sub copy {
 } # end copy
 
 sub Paper {
+	if ( @_ > 1 ) {
+		$_[0]{'paper'} = $_[1];
+	} 
 	return $_[0]{'paper'};
 } # end sub Paper
 
