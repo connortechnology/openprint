@@ -16,7 +16,7 @@
 		if ( ! claim_ids.length ) {
 			alert('Please select a claim to decline.');
 		} else {
-			ajax_window('_po_decline_popup.html?po_id='+claim_ids.join(','), 400 );
+			popup_window('_po_decline_popup.html?po_id='+claim_ids.join(','), '', { width: 400 } );
 		} // end if
 	} // end function open_decline_window()
 -->
