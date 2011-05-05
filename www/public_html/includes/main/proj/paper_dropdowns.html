@@ -140,7 +140,7 @@
 			$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $$variable{'ddmStockBrand'.$$variable{'Signature'}};
 		} # end if
 		$find{lc $option} = $$variable{'ddmStock'.$option.$$variable{'Signature'}} if $$variable{'ddmStock'.$option.$$variable{'Signature'}};
-		$html .= sprintf(q`<li><label>Stock %1$s</label>
+		$html .= sprintf(q`<li><label>Stock %1$s:</label>
 				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
 				<option value=""> Please select </option>
 				%3$s
