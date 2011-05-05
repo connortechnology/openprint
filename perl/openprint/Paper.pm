@@ -1166,6 +1166,7 @@ sub wpsi {
 		$$self{'wpsi'} = shift;
 	} # end if
 	if ( ! $$self{'wpsi'} ) {
+#$openprint::log->debug("Calcing wpsi");
 		if ( $$self{'gsm'} ) {
 			$$self{'wpsi'} = $$self{'gsm'} / 703064.5;
 		} elsif ( ( $$self{'type'} eq 'Sheet' ) and $$self{'width'} and $$self{'height'} ) {
@@ -1174,6 +1175,7 @@ sub wpsi {
 			$$self{'wpsi'} = ($$self{'basis_mweight'}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
+#$openprint::log->debug("Calcing wpsi $$self{wpsi}");
 	return $$self{'wpsi'};
 } # end if wpsi
 

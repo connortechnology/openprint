@@ -451,9 +451,6 @@ sub signature_calc {
 		return %results;
 	} # end if
 
-	my $sheets = $$specs{"txtQuantity$qty_index"};
-	$sheets *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
-	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 # Grab the Calliper
 	if ( $$specs{"chkOverrideCalliper-$signature_index"} ne 'Y' ) {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
@@ -502,14 +499,12 @@ sub signature_calc {
 
 	my $Press = $Imposition->Press();
 	my $output_format = $Press->specification('OutputFormat');
-$openprint::log->debug("Output " . $Press->specification('OutputFormat') );
 	
 	#The Paper might be a roll, and the output of printing might still be a roll.
 	my $bestPrice = undef;
 	my $bestM = 0;
 	my $bestEquipment;
 	foreach my $Equipment ( @my_equipment ) {
-$openprint::log->debug("Equipment: $$Equipment{'name'}");
 		next if ! $Equipment->id();
 		$results{'Breakdown'} .= 'Equipment ' . $Equipment->name() .':';
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
