@@ -5,7 +5,7 @@
 			( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'}) ? ('period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ) ) : () ),
 		'order'		=>	'period_start,name',
 	);
-	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = $$variable{'bus_total'} = 0;
+	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = $$variable{'bus_total'} = $$variable{'business_subtotal'} = 0;
 	@{$$variable{'Expenses'}} = ();
 	if ( $param{'expense_id'} ) {
 		@{$$variable{'Expenses'}} = openprint::Expense->find( 'id'=>$param{'expense_id'} );
@@ -23,7 +23,7 @@
 	} # end if
 	foreach my $Expense ( @{$$variable{'Expenses'}} ) {
 		$$variable{'subtotal'} += $Expense->amount();
-		$$variable{'bus_subtotal'} += $Expense->amount() * ( $Expense->business_use() / 100 );
+		$$variable{'business_subtotal'} += $Expense->amount() * ( $Expense->business_use() / 100 );
 		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
 			$$variable{'tax_totals'}{$Tax->id()} += $Expense->Tax( $Tax )->amount();
 		} # end foreach Tax

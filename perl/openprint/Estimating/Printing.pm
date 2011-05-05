@@ -1910,6 +1910,13 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			$$specs{"PageQuantity$qty_index"} = 0;
 			$$specs{'information'} .= "No more pages need to be specified for quantity $qty_index.";
 			$prices{$qty_index} = {};
+			$prices{$qty_index}{'complete'} = 1;
+			$prices{$qty_index}{'Imposition'} = new openprint::Imposition();
+			$prices{$qty_index}{'Press'} = new openprint::Equipment();
+			$prices{$qty_index}{'Paper'} = new openprint::Paper();
+			$prices{$qty_index}{'Imposition'}->Paper( $prices{$qty_index}{'Paper'} );
+			$prices{$qty_index}{'Imposition'}->Press( $prices{$qty_index}{'Press'} );
+			@{$prices{$qty_index}{'Impositions'}} = ();
 			next;
 		} # end if
 
@@ -1999,8 +2006,6 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 
 		#$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 		$$specs{'hdnBreakdown'.$qty_index} = $$best_price{'Breakdown'};
-#$Imposition->display();
-#$openprint::log->debug( breakdown( $b_price, $specs ) );
 
 		$Imposition->save( $specs, $qty_index );
 		@{$$specs{'Additional Impositions'.$qty_index}} = @{$$best_price{'Impositions'}};
@@ -2044,7 +2049,7 @@ if ( 0 ) {
 			$$specs{'txtPressSheetQty'.$qty_index} = 0;
 			$$specs{'hdnNetSheetCount'.$qty_index} = 0;
 			$$specs{'StockQuantity'.$qty_index} = 0;
-			$$specs{'alert'} = 'Error: Unknown stock type.';
+			#$$specs{'alert'} = 'Error: Unknown stock type.';
 		} # end if
 #$$specs{'hdnPaperPrice'.$qty_index} = $best_price{'Paper Price'};
 		$$specs{'hdnSuppliedStockWidth'.$qty_index} = $Paper->start_width();
@@ -2057,20 +2062,18 @@ if ( 0 ) {
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
 
-		my $plate_setup = $$best_price{'Plate Costs'};
-		$$specs{'txtPlateQuantity'.$qty_index} = $$plate_setup{'Plate Count'};
-		$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
+		if ( my $plate_setup = $$best_price{'Plate Costs'} ) {
+			$$specs{'txtPlateQuantity'.$qty_index} = $$plate_setup{'Plate Count'};
+			$$specs{'BlankPlateQuantity'.$qty_index} = $$plate_setup{'Blank Plates'};
+		} # end if
 		$$specs{'rdbPlateType'.$qty_index} = $Press->specification('Plate Type');
-		$$specs{'PlateID'.$qty_index} = $$plate_setup{'Plate ID'};
 #
 		$$specs{'PerPlateCost'.$qty_index} = $$best_price{'Plate Cost'};
 		$$specs{'PlateTotalCost'.$qty_index} = $$best_price{'Plate Price'};
 		$$specs{'PlateMakeReady'.$qty_index} = $$best_price{'Plate Total'};
 
 if ( 0 ) {
- 		my $TPress = $Imposition->Press();
- 		my %TPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $TPress );
-		
+ 		my %TPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 		$$specs{'PerPlateMkRd'.$qty_index} = $TPrice{'Price'};
 }
 
@@ -2079,17 +2082,19 @@ if ( 0 ) {
 		$$specs{'PressWashCharge'.$qty_index} = $$best_price{'Press Wash Total'};
 		$$specs{'PressWashes'.$qty_index} = $$best_price{'Press Washes'};
 	
-		my $stock_qt = $$best_price{'Stock Quantity'};
-
- 		$$specs{'OverBase'.$qty_index} = $$stock_qt{'Net Sheet Count'};
- 		$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Setup Overs'};
- 		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
-	 	$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
+		if ( my $stock_qt = $$best_price{'Stock Quantity'} ) {
+			$$specs{'OverBase'.$qty_index} = $$stock_qt{'Net Sheet Count'};
+			$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Setup Overs'};
+			$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
+			$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
+		} # end if
 		$$specs{'ImpositionCharge'.$qty_index} = $$best_price{'Imposition Total'};
-		my $PageCharge = $$best_price{'Page Charge'};
-		$$specs{'PageCharge'.$qty_index} = $$PageCharge{'Total'};
-		my $SteppingCharge = $$best_price{'Stepping Charge'};
-		$$specs{'SteppingCharge'.$qty_index} = $$SteppingCharge{'Total'};
+		if ( my $PageCharge = $$best_price{'Page Charge'} ) {
+			$$specs{'PageCharge'.$qty_index} = $$PageCharge{'Total'};
+		} # end if
+		if ( my $SteppingCharge = $$best_price{'Stepping Charge'} ) {
+			$$specs{'SteppingCharge'.$qty_index} = $$SteppingCharge{'Total'};
+		} # end if
 		$$specs{'InkTotalCharge'.$qty_index} = $$best_price{'Ink Price'};
 		$$specs{'InkMixCharge'.$qty_index} = $$best_price{'Ink Mix Charge'};
 
@@ -2098,7 +2103,7 @@ if ( 0 ) {
 		$$specs{'StockSetupCharge'.$qty_index} = $$best_price{'StockSetup'};
 #
 	
-#	$openprint::log->debug("Testingtext here : Run Charge = $best_price{'Run Total'}");
+	$openprint::log->debug("Testingtext here : Run Charge = $best_price{'Run Total'}");
 #	$openprint::log->debug("Testingtext here : Minimum Run Charge = $best_price{'Minimum Run Charge'}");
 
 
@@ -2115,7 +2120,7 @@ if ( 0 ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ( $$best_price{'Total Cost'} / $qty ) * (1+$Project->markup()/100) );
-		my $mprice = $$best_price{'Impression MPrice'} / $Imposition->imposition();
+		my $mprice = $$best_price{'Impression MPrice'} / $Imposition->imposition() if $$Imposition{'imposition'};
 		my $rate = 1+($$best_price{'Overs Rate'}/100);
 		my $ink = (($$best_price{'Ink Price'}/$qty)*1000 );
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($$best_price{'Paper 1000 Price'}*$rate) ) * (1+$Project->markup()/100) );
@@ -2163,14 +2168,16 @@ sub breakdown {
 		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$specs{'Versions'} );
 	} # end if
 	my $ImpositionCharge = $$price{'Imposition Price'};
-	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
-		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
-	} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Object' ) {
-		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->object_width(), $Imposition->object_height() );
-	} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Layout' ) {
-		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->layout_width(), $Imposition->layout_height() );
-	} elsif ( $$ImpositionCharge{Price} ) {
-		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->imposition() );
+	if ( $ImpositionCharge ) {
+		if ( $$ImpositionCharge{units} eq 'Per Page' ) {
+			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
+		} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Object' ) {
+			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->object_width(), $Imposition->object_height() );
+		} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Layout' ) {
+			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->layout_width(), $Imposition->layout_height() );
+		} elsif ( $$ImpositionCharge{Price} ) {
+			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->imposition() );
+		} # end if
 	} # end if
 
 	if ( my $PageCharge = $$price{'Page Charge'} ) {
@@ -2187,26 +2194,30 @@ sub breakdown {
 	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
-	my $run_price = $$price{'Run Price'};
-	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
-		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','Units','Price'} );
-	} else {
-		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','Units','Price'} );
+	if ( my $run_price = $$price{'Run Price'} ) {
+		if ( $Press->specification('Charge for setup overs') eq 'N' ) {
+			$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','Units','Price'} );
+		} else {
+			$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','Units','Price'} );
+		} # end if
 	} # end if
 
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} == $$price{'Run Total'};
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
-	my $plate_costs = $$price{'Plate Costs'};
-	$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Plate Count','Plate ID'}, @$price{'Plate Cost','Plate Price'});
-	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
+	if ( my $plate_costs = $$price{'Plate Costs'} ) {
+		$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Plate Count','Plate ID'}, @$price{'Plate Cost','Plate Price'});
+		$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
+	} # end if
 
-	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
-	$breakdown .= ' Cutting: ' . $$stock_qty{'CuttingOvers'} if $$stock_qty{'CuttingOvers'};
-	$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
-	$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
-	$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
-	$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
+	if ( $stock_qty ) {
+		$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+		$breakdown .= ' Cutting: ' . $$stock_qty{'CuttingOvers'} if $$stock_qty{'CuttingOvers'};
+		$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
+		$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
+		$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
+		$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
+	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
