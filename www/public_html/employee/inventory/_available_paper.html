@@ -1,14 +1,18 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? eval (
 		my %sql = (
-			'order_by'=>'lower(manufacturers.shortname),name,finish,colour,weight,width,height', 
+			'order'=>'lower(manufacturers.shortname),name,finish,colour,weight,width,height', 
 			'in_stock_start'=>1,
 			'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+			'table'	=>	'Papers,Manufacturers,papernames,paperfinishes,papercolours,paperweights',
+			'columns'	=>	'*,papernames.shortname as name,paperfinishes.shortname as finish,papercolours.shortname as colour,paperweights.shortname as weight',
 		);
-		if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-			$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-		} else {
-			$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+		if ( $session{'/employee/inventory/available_paper.html?Owner'} ) {
+			if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+				$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+			} else {
+				$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+			} # end if
 		} # end if
 		if ( $session{'/employee/inventory/available_paper.html?unmatched'} ne 'Y' ) {
 			$sql{'manufacturer_id'} = $session{'/employee/inventory/available_paper.html?Manufacturer'} if $session{'/employee/inventory/available_paper.html?Manufacturer'};
@@ -34,7 +38,6 @@
 			my $rowclass;
 			my $selected;
 			my @location_ids;
-$log->debug("Session: $session{'/employee/inventory/available_paper.html?location_id'} ");
 			foreach my $location_id ( split(',', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
 				if ( $location_id eq 'All' ) {
 					@location_ids = ();
@@ -43,7 +46,6 @@ $log->debug("Session: $session{'/employee/inventory/available_paper.html?locatio
 				next if (! $location_id) or ( $location_id eq '' );
 				push @location_ids, $location_id;
 			} # end foreach
-$log->debug("Locations: @location_ids");
 
 			my $total_weight;
 			my $total_rolls;

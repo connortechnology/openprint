@@ -2103,7 +2103,7 @@ if ( 0 ) {
 		$$specs{'StockSetupCharge'.$qty_index} = $$best_price{'StockSetup'};
 #
 	
-	$openprint::log->debug("Testingtext here : Run Charge = $best_price{'Run Total'}");
+	$openprint::log->debug("Testingtext here : Run Charge = $$best_price{'Run Total'}");
 #	$openprint::log->debug("Testingtext here : Minimum Run Charge = $best_price{'Minimum Run Charge'}");
 
 

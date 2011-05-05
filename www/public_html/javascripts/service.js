@@ -52,7 +52,7 @@ function submit_handler( formName ) {
 			jsrsExecute( '/jsrs.htm', cbWindowSaveClose, 'openprint::jsrs_handler::exec', vars );
 
 		} else {
-		form.submit();
+			form.submit();
 		} // end if
 	} // end if
 	return status;

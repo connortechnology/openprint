@@ -459,12 +459,22 @@ sub find {
 	} else {
 		$params = { @_ };
 	} # end if
+	if ( $$params{'table'} ) {
+		$table = $$params{'table'};
+		delete $$params{'table'};
+	} # end if
 
 	my @where;
 	my $sql = 'SELECT';
 	$sql .= ' DISTINCT' if $$params{'distinct'};
 	delete $$params{'distinct'};
-	$sql .= ' * FROM '.$table;
+	if ( $$params{'columns'} ) {
+		$sql .= ' ' . $$params{'columns'};
+		delete $$params{'columns'};
+	} else {
+		$sql .= ' *';
+	} # end if
+	$sql .= ' FROM '.$table;
 	my @values;
 	my $local_dbh = $$params{'dbh'} ? $$params{'dbh'} : $openprint::dbh;
 	return () if ! $local_dbh;
@@ -502,8 +512,10 @@ sub find {
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
 				if ( ref $$params{$k} eq 'ARRAY' ) {
-					push @where, "$field IN (".join(',', map {'?'} @{$$params{$k}} ) . ')';
-					push @values, @{$$params{$k}};
+					if ( @{$$params{$k}} ) {
+						push @where, "$field IN (".join(',', map {'?'} @{$$params{$k}} ) . ')';
+						push @values, @{$$params{$k}};
+					} # end if
 				} elsif ( ref $$params{$k} eq 'HASH' ) {
 					foreach my $p_k ( keys %{$$params{$k}} ) {
 						my $v = $$params{$k}{$p_k};
