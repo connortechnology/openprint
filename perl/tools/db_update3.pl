@@ -293,6 +293,10 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
 }
+if ( ! sets::isin( 'privacy_groups', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy_Groups.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 1;
 __END__
