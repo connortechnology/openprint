@@ -36,18 +36,35 @@
 			No profile picture set.
 			<? endif ( $$variable{'User'}->asset_id() ) ?>
 			<div id="Albums">
-			<? echo (
-				my $html = '';
-				foreach my $Album ( openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } ) ) {
+			<fieldset><legend>Photo Albums</legend>
+				<? echo (
+					my $html = '';
+					foreach my $Album ( openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } ) ) {
+						
+						my $Photo = $Album->Thumbnail();
+						if ( $Photo->asset_id() ) {
+							$html .= sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
 					
-					my $Photo = $Album->Thumbnail();
-					if ( $Photo->asset_id() ) {
-						$html .= sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
-				
-					} # end if Thumbnail
-				} # end foreach Album
-				return $html;
-			) ?>
+						} # end if Thumbnail
+					} # end foreach Album
+					return $html;
+				) ?>
+			</fieldset>
+			<fieldset><legend>Video Albums</legend>
+				<? echo (
+					my $html = '';
+					foreach my $Album ( openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } ) ) {
+						
+						my $Video = $Album->Thumbnail();
+						if ( $Video->asset_id() ) {
+							$html .= sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
+					
+						} # end if Thumbnail
+					} # end foreach Album
+					return $html;
+				) ?>
+			</fieldset>
+			</div><!--Albums-->
 			</div><!--Albums-->
 		</div><!--ProfilePicture-->
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>

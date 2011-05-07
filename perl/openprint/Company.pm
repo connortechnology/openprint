@@ -13,7 +13,7 @@ require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 

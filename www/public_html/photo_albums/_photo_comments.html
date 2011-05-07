@@ -5,18 +5,24 @@
 	if ( @Unapproved ) {
 		$html .= '<div class="Unapproved">The following comments require approval:<br/>';
 		foreach my $Comment ( @Unapproved ) {
-		$html .= sprintf( q`
-			<div class="comment">At %s %s said:<br/>%s
-			`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
-			$html .= ssi::button( 'ApproveComment'.$Comment->id(), { 'text' => 'Approve', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '_photo_comments.html', { parameters: { article_id: $$variable{Article}{id}, comment_id: $$Comment{id}, action: 'approve' } } );` } );
-		$html .= '</div>';
+			$html .= sprintf( q`
+				<div class="comment">At %s %s said:<br/>%s`,
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+
+				$html .= ssi::button( 'ApproveComment'.$Comment->id(), { 'text' => 'Approve', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: { asset_id: $$variable{Photo}{asset_id}, album_id: $$variable{Photo}{album_id}, comment_id: $$Comment{id}, action: 'approve' } } );` } );
+
+			$html .= '</div>';
 		} # end foreach Comment
 		$html .= '</div>';
-	} # end if
+	} # end if Comments needing approval
+
 	foreach my $Comment ( $$variable{'Photo'}->Comments( { 'approved' => 1 } ) ) {
-		$html .= sprintf( q`
-			<div class="comment">At %s %s said:<br/>%s</div>
-		`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+		$html .= sprintf( q`<div class="comment">At %s %s said:<br/>%s`, 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+		if ( $Comment->can_delete() ) {
+			$html .= ssi::button( 'RemoveComment'.$Comment->id(), { 'text' => 'Remove', 'onclick' => qq`new Ajax.Updater('Comments', '_photo_comments.html', { parameters: { asset_id: $$variable{Photo}{asset_id}, album_id: $$variable{Photo}{album_id}, comment_id: $$Comment{id}, action: 'remove' } } );` } );
+		} # end if
+		$html .= '</div>';
 	} # end foreach Comment
 	return $html;
 ) ?>

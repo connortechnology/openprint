@@ -24,6 +24,21 @@ $serial = 'comments_id_seq';
 	'user_id'		=> q`$openprint::session{user_id}`,
 	'approved'		=>	0,
 );
+sub Object {
+	$_ =  $_[0]{'object_type'}->new( $_[0]{'object_id'} );
+$openprint::log->debug( "Returning object of type " . ref $_ );
+	return $_;
+} # end sub Object
 
+sub can_delete {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return $_[0]->Object()->can_delete();
+} # end sub can_delete
+
+sub can_approve {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return $_[0]->Object()->can_approve();
+} # end sub can_approve
 1;
 __END__

@@ -54,9 +54,9 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-$log->debug("loading $parent $id") if $debug;
+#$log->debug("loading $parent $id") if $debug;
 			$self->load( $data );
-			$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
+			#$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {
@@ -70,9 +70,9 @@ $log->debug("loading $parent $id") if $debug;
 # First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
-$log->debug("New by hash @keys : " . $self->to_string() );
+#$log->debug("New by hash @keys : " . $self->to_string() );
 		$self->load( $data );
-$log->debug("New by hash @keys : " . $self->to_string() );
+#$log->debug("New by hash @keys : " . $self->to_string() );
 		return $self;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 		my $self = {};
@@ -83,7 +83,7 @@ $log->debug("New by hash @keys : " . $self->to_string() );
 #$log->debug( $parent . ': ' .$self->to_string() );
 		return $self;
 	} # end if ref id
-$log->error("test");
+#$log->error("test");
 } # end sub new
 
 sub load {
@@ -105,7 +105,7 @@ sub load {
 		if ( @identified_by ) {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
-			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
+			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
@@ -268,8 +268,8 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				if ( defined $$fields{$field} ) {
-				$$self{$field} = $$params{$field} if defined $$fields{$field};
-				push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
+					$$self{$field} = $$params{$field} if defined $$fields{$field};
+					push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
 				eval "\$self->$field( \$\$params{\$field} );";
 				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
