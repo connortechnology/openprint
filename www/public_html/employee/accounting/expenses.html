@@ -36,6 +36,16 @@
 			<div class="content">
 				<ul>
 					<li>
+						<label>Invoiced On:</label>
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_start', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+							to 
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_end', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+					</li>
+					<li>
 						<label>Due On:</label>
 						<span class="DateSelectorCT">
 		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_start', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>

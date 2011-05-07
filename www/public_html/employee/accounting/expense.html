@@ -10,12 +10,19 @@ var tax_ids = [ <? echo (
 return join(',', map { $_->id() } @Taxes ); ) ?> ];
 
 function update_taxes( ) {
-	new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { 
+	var parameters = {
 		expense_id: '<? echo ( $$variable{'Expense'}->id() ) ?>', 
 		invoiced_on_year: $('invoiced_on_year').value, 
 		invoiced_on_month: $('invoiced_on_month').value,
 		invoiced_on_day: $('invoiced_on_day').value
-		}, evalScripts: true } );
+	};
+	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+		var charge = $('tax_charge-'+tax_ids[i]);
+		if ( charge && charge.checked ) {
+			parameters['tax_charge-'+tax_ids[i]] = 1;
+		} // end if
+	} // end for
+	new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: parameters, evalScripts: true } );
 }
 
 function calc_amount_from_total( form ) {
