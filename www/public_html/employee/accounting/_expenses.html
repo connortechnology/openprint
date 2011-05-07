@@ -1,9 +1,9 @@
 <? eval (
+	my @invoiced_on_start = ssi::date( '/employee/accounting/expenses.html?invoiced_on_start' );
+	my @invoiced_on_end = ssi::date( '/employee/accounting/expenses.html?invoiced_on_end' );
 		@{$$variable{'Taxes'}} = openprint::Tax->find(
-			( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?invoiced_on_start_year','/employee/accounting/expenses.html?invoiced_on_start_month','/employee/accounting/expenses.html?invoiced_on_start_day'} ) ? (
-																																									  'period_end_null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?invoiced_on_start_year','/employee/accounting/expenses.html?invoiced_on_start_month','/employee/accounting/expenses.html?invoiced_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?invoiced_on_end_year','/employee/accounting/expenses.html?invoiced_on_end_month','/employee/accounting/expenses.html?invoiced_on_end_day'}) ? (
-				'period_start_null_or_<='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?invoiced_on_end_year','/employee/accounting/expenses.html?invoiced_on_end_month','/employee/accounting/expenses.html?invoiced_on_end_day'} ) ) : () ),
+			( Date::Calc::check_date( @invoiced_on_start ) ?  ( 'period_end_null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @invoiced_on_start ) ) : () ),
+			( Date::Calc::check_date( @invoiced_on_end ) ? ( 'period_start_null_or_<='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @invoiced_on_end ) ) : () ),
 		'order'		=>	'period_start,name',
 	);
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = $$variable{'bus_total'} = $$variable{'business_subtotal'} = 0;
@@ -17,19 +17,17 @@
 			( $session{'/employee/accounting/expenses.html?account_id'} ? ( 'account_id' => $session{'/employee/accounting/expenses.html?account_id'} ) : () ),
 			ssi::date_filter( 'invoiced_on_start', 'invoiced_on' ),
 			ssi::date_filter( 'invoiced_on_end', 'invoiced_on' ),
-			ssi::date_filter( 'due_on_start', 'invoiced_on' ),
-			ssi::date_filter( 'due_on_end', 'invoiced_on' ),
-			#( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ? ( 'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ) : () ),
-			#( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'}) ? ('due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?paid_on_start_year','/employee/accounting/expenses.html?paid_on_start_month','/employee/accounting/expenses.html?paid_on_start_day'} ) ? ( 'paid_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?paid_on_start_year','/employee/accounting/expenses.html?paid_on_start_month','/employee/accounting/expenses.html?paid_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?paid_on_end_year','/employee/accounting/expenses.html?paid_on_end_month','/employee/accounting/expenses.html?paid_on_end_day'}) ? ('paid_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?paid_on_end_year','/employee/accounting/expenses.html?paid_on_end_month','/employee/accounting/expenses.html?paid_on_end_day'} ) ) : () ),
+			ssi::date_filter( 'due_on_start', 'due_on' ),
+			ssi::date_filter( 'due_on_end', 'due_on' ),
+			ssi::date_filter( 'paid_on_start', 'paid_on' ),
+			ssi::date_filter( 'paid_on_end', 'paid_on' ),
 			'owner_id'		=> $session{'company_id'},
 			'order'				=> 'paid_on,due_on',
 			);
 	} # end if
 	foreach my $Expense ( @{$$variable{'Expenses'}} ) {
 		$$variable{'subtotal'} += $Expense->amount();
-		$$variable{'business_subtotal'} += $Expense->amount() * ( $Expense->business_use() / 100 );
+		$$variable{'business_subtotal'} += $Expense->business_use_amount();
 		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
 			$$variable{'tax_totals'}{$Tax->id()} += $Expense->Tax( $Tax )->amount();
 		} # end foreach Tax
@@ -88,7 +86,7 @@
 					$Expense->description(),
 					$Expense->business_use(),
 					openprint::Currency::format( $Expense->amount() ),
-					openprint::Currency::format( $Expense->amount() * ( $Expense->business_use()/100 ) ),
+					openprint::Currency::format( $Expense->business_use_amount() ),
 					join('', map { sprintf('<td class="Price">%s / %s</td>', 
 							openprint::Currency::format( $Expense->Tax( $_ )->amount() ),
 							openprint::Currency::format( $Expense->Tax( $_ )->amount() * ( $Expense->business_use()/100 ) ),

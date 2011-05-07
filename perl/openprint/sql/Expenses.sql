@@ -24,5 +24,6 @@ CREATE TABLE Expenses (
 	invoiced_on	TIMESTAMP WITH TIME ZONE,
 	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	business_use	float,
+	business_use_amount	float,
 	PRIMARY KEY (id)
 );

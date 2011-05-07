@@ -683,6 +683,12 @@ sub radio {
     return $html;
 } # end sub radio
 
+sub date {
+	my ( $field, $hash ) = @_;
+	$hash = \%openprint::session if ! $hash;
+	return @$hash{$field.'_year',$field.'_month',$field.'_day'};
+}
+
 sub date_filter {
 	my ( $field, $sql_field, $hash ) = @_;
 	$sql_field = $field if ! $sql_field;
