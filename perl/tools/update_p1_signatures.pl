@@ -323,6 +323,7 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 	$Default->destroy();
 } # end foreach
 
+sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=?', 'ddmStockBrand' ], 'strname', 'ddmStockName' );
 $dbh->disconnect();
 	
 1;

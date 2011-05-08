@@ -67,6 +67,14 @@ sub Comments {
 	my $self = shift;
 	return $self->Asset()->Comments( @_ );
 } # end sub Comments
+
+sub can_edit {
+	return 1 if $openprint::session{'user_id'} == $_[0]{'created_by'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $openprint::session{'user_id'} );
+	return 1 if sets::isin( $openprint::session{'user_id'}, $_[0]->editor_id() );
+	return 0;
+} # end sub can_edit
 1;
 __END__
 

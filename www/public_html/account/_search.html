@@ -1,17 +1,30 @@
 <? echo (
 	my @Users;
 
-	if ( $param{'name'} ) {
+	if ( $param{'company_name'} ) {
+		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
+			$param{'company_name'} .= '%';
+		} # end if
+		my @Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
+		if ( @Companies ) {
+		@Users = openprint::User->find('company_id in'=> [ map { $_{'id'} } @Companies ],
+			'order'	=>	'lower(firstname),lower(lastname)',
+			);
+		} # end if
+	} elsif ( $param{'name'} ) {
 		if ( ! ( $param{'name'} =~ /%/ ) ) {
 			$param{'name'} .= '%';
 		} # end if
-		@Users = openprint::User->find('name ilike'=>$param{'name'});
+		@Users = openprint::User->find('name ilike'=>$param{'name'},
+			'order'	=>	'lower(firstname),lower(lastname)',
+			);
 	} else {
 		@Users = openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_null_or_>=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_null_or_<=' ),
+			'order'	=>	'lower(firstname),lower(lastname)',
 			);
 	} # end if
 	if ( ! @Users ) {
@@ -31,11 +44,11 @@ if ( 1 ) {
 		my $age = 0;
 		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
 			my @Birthday = split('-', $Profile->Birthday() );
-			$log->debug("Birthday (@Birthday) " . $Profile->Birthday() );
+			#$log->debug("Birthday (@Birthday) " . $Profile->Birthday() );
 			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-			$log->debug("Birthday $age years @Birthday");
+			#$log->debug("Birthday $age years @Birthday");
 		} 
-			$log->debug($User->to_string() );
+			#$log->debug($User->to_string() );
 		$html .= sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%2$s" alt="%3$s" /></a>
@@ -45,11 +58,11 @@ if ( 1 ) {
 				</div>`,
 				$User->id(),
 				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
-				$age,
-				$Profile->Gender(),
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
 			);
-$log->debug($html);
+#$log->debug($html);
 }
 		$html .= '</div>';
 	} # end foreach User

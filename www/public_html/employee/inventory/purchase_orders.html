@@ -20,7 +20,7 @@
 		if ( ! po_ids.length ) {
 			alert('Please select a purchase order to decline.');
 		} else {
-			ajax_window('_po_decline_popup.html?po_id='+po_ids.join(','), 400 );
+			popup_window('_po_decline_popup.html?po_id='+po_ids.join(','), '', { width: 400 } );
 		} // end if
 	} // end function open_decline_window()
 </script>
