@@ -52,7 +52,7 @@
 			my $html = '';
 			my @Entries = openprint::logRecord::find('user_id'=>$session{'user_id'}, 'action_type'=>79, 'order'=>'date_time DESC','limit'=>10, 'distinct'=>1 );
 			foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
-			     $html .= sprintf('<a href="/main/account/select_company.html?ddmCompany=%d">%s</a><br/>',
+			     $html .= sprintf('<a href="/main/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
 					$Log->company_id(), $Log->Company()->name(),
 				);
 			} # end foreach
