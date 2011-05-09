@@ -21,10 +21,9 @@
 			require openprint::logRecord;
 			my $html = '';
 			foreach my $Log ( openprint::logRecord::find('company_id'=>$session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
-			     $html .= sprintf('<tr><td>%s</td><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
-					 Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),$Log->User()->name(),
-					 $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
-
+				$html .= sprintf('<tr><td>%s</td><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
+					Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),$Log->User()->name(),
+					$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
 			} # end foreach
 			return $html;
 		) ?>
@@ -50,9 +49,12 @@
 		<? echo ( 
 			require openprint::logRecord;
 			my $html = '';
-			my @Entries = openprint::logRecord::find('user_id'=>$session{'user_id'}, 'action_type'=>79, 'order'=>'date_time DESC','limit'=>10, 'distinct'=>1 );
+			my @Entries = openprint::logRecord::find('user_id'=>$session{'user_id'}, 'action_type'=>79, 'order'=>'date_time DESC','date_time >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 ) ) );
+			my @companies;
 			foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
-			     $html .= sprintf('<a href="/main/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
+				next if sets::isin( $Log->company_id(), \@companies );
+				push @companies, $Log->company_id();
+				$html .= sprintf('<a href="/main/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
 					$Log->company_id(), $Log->Company()->name(),
 				);
 			} # end foreach
