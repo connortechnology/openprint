@@ -216,10 +216,11 @@ sub save {
 	} # end foreach Tax
 	$self->total(undef);
 	my $error = $self->SUPER::save( @_ );
-	foreach my $Tax ( $self->Taxes() ) {
-		$error .= $Tax->save({'expense_id'=>$self->id()});
-	} # end foreach Tax
-		
+	if ( ! $error ) {
+		foreach my $Tax ( $self->Taxes() ) {
+			$error .= $Tax->save({'expense_id'=>$self->id()});
+		} # end foreach Tax
+	} # end if
 	return $error;
 } # end sub save
 sub total {

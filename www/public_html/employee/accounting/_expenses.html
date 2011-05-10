@@ -15,12 +15,12 @@
 			( $session{'/employee/accounting/expenses.html?category_id'} ? ( 'category_id' => $session{'/employee/accounting/expenses.html?category_id'} ) : () ),
 			( $session{'/employee/accounting/expenses.html?recipient_id'} ? ( 'recipient_id' => $session{'/employee/accounting/expenses.html?recipient_id'} ) : () ),
 			( $session{'/employee/accounting/expenses.html?account_id'} ? ( 'account_id' => $session{'/employee/accounting/expenses.html?account_id'} ) : () ),
-			ssi::date_filter( 'invoiced_on_start', 'invoiced_on' ),
-			ssi::date_filter( 'invoiced_on_end', 'invoiced_on' ),
-			ssi::date_filter( 'due_on_start', 'due_on' ),
-			ssi::date_filter( 'due_on_end', 'due_on' ),
-			ssi::date_filter( 'paid_on_start', 'paid_on' ),
-			ssi::date_filter( 'paid_on_end', 'paid_on' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?invoiced_on_start', 'invoiced_on >=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?invoiced_on_end', 'invoiced_on <=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?due_on_start', 'due_on >=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?due_on_end', 'due_on <=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_start', 'paid_on >=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_end', 'paid_on <=' ),
 			'owner_id'		=> $session{'company_id'},
 			'order'				=> 'paid_on,due_on',
 			);
@@ -49,8 +49,9 @@
 				<th class="Company">Recipient</th>
 				<th class="Account">Account</th>
 				<th class="Category">Category</th>
-				<th class="Date">Paid</th>
+				<th class="Date">Invoiced</th>
 				<th class="Date">Due</th>
+				<th class="Date">Paid</th>
 				<th>Description</th>
 				<th class="Percent">Bus %</th>
 				<th class="Price">Amount</th>
@@ -68,21 +69,23 @@
 				$html .= sprintf(q`
 					<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 					<td class="Company"><a href="/employee/accounting/expense.html?expense_id=%1$d">%2$s</a></td>
-					<td class="Account"><a href="/employee/accounting/expense.html?expense_id=%1$d">%13$s</a></td>
+					<td class="Account"><a href="/employee/accounting/expense.html?expense_id=%1$d">%14$s</a></td>
 					<td class="Category"><a href="/employee/accounting/expense.html?expense_id=%1$d">%3$s</a></td>
 					<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%4$s</a></td>
 					<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%5$s</a></td>
-					<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%6$s</a></td>
-					<td class="Percent">%7$s</td>
-					<td class="Price">%8$s</td>
+					<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%6$s</a></td>
+					<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%7$s</a></td>
+					<td class="Percent">%8$s</td>
 					<td class="Price">%9$s</td>
-					%10$s
-					<td class="Price">%11$s</td>
+					<td class="Price">%10$s</td>
+					%11$s
 					<td class="Price">%12$s</td>
+					<td class="Price">%13$s</td>
 					</tr>
 					`, $Expense->id(), $Expense->Recipient()->name(), $Expense->category(), 
-					( $Expense->paid_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),
+					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->invoiced_on() ) ),
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->due_on() ) ),
+					( $Expense->paid_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),
 					$Expense->description(),
 					$Expense->business_use(),
 					openprint::Currency::format( $Expense->amount() ),
@@ -99,7 +102,7 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td colspan="7">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows):</td>
+			<td colspan="8">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows):</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'business_subtotal'} ); ) ?></td>	
 <? echo (

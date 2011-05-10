@@ -54,17 +54,17 @@ sub history {
 			$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
 		} else {
 			$variable{'error'} .= $Invoice->send();
-			$variable{'information'} .= 'Invoice sent.<br/>';
+			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' sent.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {
-			$variable{'information'} .= 'Invoice deleted.<br/>';
+			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' deleted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->destroy() ) ) {
-			$variable{'information'} .= 'Invoice destroy.<br/>';
+			$variable{'information'} .= 'Invoice ' . $Invoice->id() . ' destroyed.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
 		my @Taxes = openprint::Tax->find(
@@ -144,7 +144,7 @@ sub history {
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$variable{'information'} .= sprintf('Sent to &quot;%s %s&quot; &lt;%s&gt;<br/>',$Recipient->get('firstname','lastname','email') );
+			$variable{'information'} .= sprintf('Account statement sent to &quot;%s %s&quot; &lt;%s&gt;<br/>',$Recipient->get('firstname','lastname','email') );
 		} # end foreach Recipient
 	} # end if
 	ssi::save_params( '/invoice/history.html', ( 

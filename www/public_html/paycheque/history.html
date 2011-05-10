@@ -48,12 +48,12 @@
 			</p>
 			<p>
 				<label>Received On:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_start', { 'onchange'=>'load_paycheques(this.form);' } ); ) ?>
-					to 
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_start', { 'onchange'=>'load_paycheques(this.form);', 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_end', { 'onchange'=>'load_paycheques(this.form);' } ); ) ?>
+					to 
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_end', { 'onchange'=>'load_paycheques(this.form);', 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 				</span>
 			</p>
 			<br class="spacer"/>

@@ -5,7 +5,10 @@
 ( Date::Calc::check_date( @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ) ? (
 		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ) ) : () ),
 		( Date::Calc::check_date( @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ) ? ( 'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ) ) : () ),
-		( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ),
+
+		( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
+			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :
+			( 'company_id'	=> $session{'company_id'} ) ),
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
 		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
 		'order'				=> 'starting',
