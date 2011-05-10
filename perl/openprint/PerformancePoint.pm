@@ -30,11 +30,11 @@ use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'performancepoint_records';
 $serial = 'performancepoint_records_id_seq';
 %fields = (
-	'id'	=>	'id',
 	'type_id'	=>	'type_id',
 	'shift_id'		=>	'shift_id',
 	'operator_id'	=>	'operator_id',
-	'value'		=>	'value',
+	'total'		=>	'total',
+	'quantity'	=>	'quantity',
 );
 
 sub Shift {
