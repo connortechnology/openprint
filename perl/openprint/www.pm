@@ -179,7 +179,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -579,7 +579,7 @@ $openprint::log->debug("$1");
 			$module .= '_'.$second if $second;
 			eval( "require $module;" );
 			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-			my ( $proc ) = $filename =~ /(.*).html/;
+			my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
 			if ( $proc ) {
 				eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 				$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;

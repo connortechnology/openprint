@@ -2706,7 +2706,9 @@ my @Is = calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, 
 							} # end foreach
 							$upq = $upq % $imp->pages();
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
-							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
+							# Blanks get re-used
+							#$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
+							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$$price{'sig_count'} += $sigs;
 						} else {
 							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
@@ -4885,7 +4887,7 @@ sub get_colour_description {
 			} # end if
 		} # end if
 	} # end foreach
-	if ( $$specs{'sides_the_same'} eq 'Y' ) {
+	if ( (defined $$specs{'sides_the_same'}) and ( $$specs{'sides_the_same'} eq 'Y' ) ) {
 		$back_colours = $front_colours;
 		$back_coatings = $front_coatings;
 		$back_pms = $front_pms;

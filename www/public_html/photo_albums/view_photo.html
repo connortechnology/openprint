@@ -21,11 +21,11 @@
 				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]&amp;album_id=$$variable{'Photo'}{'album_id'}" } ) if ( $index + 1 ) < @Photos;
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
 				if ( $$variable{'Photo'}->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
-					$html .= '<img src="'.$$variable{'Photo'}->url().'" id="photo" />';
+					$html .= sprintf('<img src="%s" id="asset-%d" />', $$variable{'Photo'}->url(), $$variable{'Photo'}->asset_id() );
 					if ( $$variable{'Photo'}->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
-						$html .= ssi::button( 'CCW', { 'text'=>'Rotate CCW', 'onclick'=>qq`rotate( 'photo', { direction: ccw, asset_id: $$variable{Photo}{asset_id} } );` } );
-						$html .= ssi::button( 'CW', { 'text'=>'Rotate CW', 'onclick'=>qq`rotate( 'photo', { direction: cw, asset_id: $$variable{Photo}{asset_id} } );` } );
+						$html .= ssi::button( 'CCW', { 'text'=>'Rotate CCW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$variable{Photo}{asset_id} } } );` } );
+						$html .= ssi::button( 'CW', { 'text'=>'Rotate CW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$variable{Photo}{asset_id} } } );` } );
 						$html .= '</fieldset>';	
 					} # end if
 				} else {

@@ -1,0 +1,42 @@
+<? eval (
+	@{$$variable{'Shifts'}} = ();
+	foreach my $Shift ( openprint::Shift::find( 
+		( $session{'/employee/performance/history.html?operator_id'} ? ( 'operator_id'=>$session{'/employee/performance/history.html?operator_id'} ) : () ),
+		( $session{'/employee/performance/history.html?equipment_id'} ? ( 'equipment_id'=>$session{'/employee/performance/history.html?equipment_id'} ) : () ),
+		ssi::date_filter( '/employee/performance/history.html?starttime_start', 'starttime >=' ),
+		ssi::date_filter( '/employee/performance/history.html?starttime_end', 'starttime <=' ),
+		'starttime <=' => sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
+		'order',			'starttime',
+			) ) {
+		push @{$$variable{'Shifts'}}, $Shift;
+	} # end foreach Shift
+) ?>
+<? if ( @{$$variable{'Shifts'}} == 0 ) ?>
+	There are no shifts matching your search criteria.
+<? else ( @{$$variable{'Shifts'}} == 0 ) ?>
+	<p>Please click on a <b>Shift #</b> to view details.</p>
+<table class="List">
+	<tr>
+		<th class="Shift">Shift</th>
+		<th class="Date">Records</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		my $rowclass;
+		foreach my $Shift ( @{$$variable{'Shifts'}} ) {
+			$html .= sprintf(q`<tr%1$s id="tr-%2$d-1" onmouseover="$('tr-%2$d').addClassName('highlightOn');" onmouseout="$('tr-%2$d').removeClassName('highlightOn');">
+				<td class="ID"><a href="view.html?shift_id=%2$d">%3$s</a></td>
+				<td class="Records">
+			`, $rowclass, $Shift->id(), $Shift->to_string(),
+				);
+			foreach my $Record ( openprint::PerformancePoint_Record->find('shift_id'=>$$Shift{'id'}) ) {
+				$html .= sprintf('<a href="/edit.html?record_id=%d">%s</a><br/>', $Record->id(), 'blah' );
+			} # end foreach Record
+			$html .= '</td></tr>';
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+	) ?>
+		
+	</table>
+<? endif ( @{$$variable{'Shifts'}} == 0 ) ?>
