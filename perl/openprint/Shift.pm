@@ -108,9 +108,17 @@ sub find {
 		$sql .= ' AND starttime >= ?';
 		push @values, $params{'starttime_>='};
 	} 
+	if ( $params{'starttime >='} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime >='};
+	} 
 	if ( $params{'starttime_<='} ) {
 		$sql .= ' AND starttime <= ?';
 		push @values, $params{'starttime_<='};
+	} # endif
+	if ( $params{'starttime <='} ) {
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime <='};
 	} # endif
 
 	if ( $params{'starttime_<'} ) {

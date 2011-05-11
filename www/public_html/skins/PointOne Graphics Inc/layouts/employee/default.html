@@ -130,6 +130,10 @@
 								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
 								<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
+								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/performance/setup.html;NOSSL">&raquo; Performance Setup</a></li>
+								<li><a href="/employee/performance/reporting.html;NOSSL">&raquo; Performance Reporting</a></li>
+								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 							</ul>
 						</li>
 						<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>

@@ -1,0 +1,6 @@
+.Performance span.DateSelectorCT {
+	float: none;
+	display: inline-block;	
+	width: auto;
+	min-width: 260px;
+}

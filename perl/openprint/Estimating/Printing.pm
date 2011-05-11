@@ -1009,6 +1009,9 @@ $openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
+foreach my $k ( keys %PlateCounts ) {
+$openprint::log->debug(" $k => $PlateCounts{$k}");
+} 
 
 		$project{print_sides} = 1;
 		if ( ( @side_two_colours > 0 ) and ( @side_one_colours > 0 ) ) {
@@ -1842,7 +1845,7 @@ my %PlateCounts = %$PlateCounts;
 #my $time = gettimeofday();
 			$imp = $imp->copy();
 			my %washed_colours = %{$washed_colours};
-			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $inkCoverage, $special_colours );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $inkCoverage, $special_colours, \%PlateCounts );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 						#$openprint::log->debug( breakdown( $price, $specs ) );
 			$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
@@ -1891,7 +1894,7 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 
 #my $time = gettimeofday();
 #n$new_specs{'no_stitching'} = 1; # unneccessary calculation
-						$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $inkCoverage, $special_colours );
+						$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $inkCoverage, $special_colours, \%PlateCounts );
 #$openprint::log->debug("2 Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$new_specs{'no_stitching'} = 0; # unneccessary calculation
 						$additional_price = $$sig_price{'Comparison Cost'};
@@ -1907,7 +1910,9 @@ $$specs{'StitchingImposition'.$qty_index} = $$price{'StitchingImposition'};
 							#last if $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads() >= $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							$$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} % $imp->spreads();
 $PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
-$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
+# Blank Plates can be re-used
+#$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
+$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						} else {
 							$last_sig_price = int($$sig_price{'Comparison Cost'});
 							push @{$$price{'Impositions'}},$imp;
@@ -2136,7 +2141,7 @@ $openprint::log->warn("Check Price: $$price{'Comparison Cost'} $p > $price_to_be
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $price_to_beat, $inkCoverage, $special_colours ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, $washed_colours, $mixed_colours, $price_to_beat, $inkCoverage, $special_colours, $PlateCounts ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
@@ -2252,7 +2257,7 @@ sub calc_price {
 
 	# Whya re we doing this here?
 	#$$specs{'ddmRunStyle'.$qty_index} = $Imposition->runstyle();
-	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index, $project );
+	my %plate_setup = plate_setup_cost( $Imposition, $Press, $$Paper{width} * $$Paper{height}, $plate_impressions, \@colours, $specs, $qty_index, $project, $PlateCounts );
 	# THis is here more to take care of multi-version documents as opposed to business cards
 	#if ( ( $$specs{'Versions'} > 1 ) and sets::isin( $Imposition->runstyle(), ['Work & Turn','Work & Tumble' ] ) ) {
 		#$plate_setup{'Plate Count'} *= ( $imposition / $$specs{'Versions'} );
@@ -3202,7 +3207,7 @@ sub press_setup_cost {
 #
 
 sub plate_setup_cost {
-	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index, $project ) = @_;
+	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index, $project, $PlateCounts ) = @_;
 
 	my $plate_count = 0;
 	my $non_process_colours = 0;
@@ -3248,10 +3253,13 @@ $openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
 			} else {
 				$blanks_needed = ($press_colours - @$colours);
 			} # end if
-			$setup_cost{'Blank Plates'} = $blanks_needed - $$specs{'PreviousBlankPlates'.$qty_index};
+			$blanks_needed -= $$PlateCounts{'Blank'.$plate_id};
+			$blanks_needed = 0 if $blanks_needed < 0;
+			$setup_cost{'Blank Plates'} = $blanks_needed;
 		} elsif ( $require_blank_plates eq 'When Non-Process' ) {
 			if ( $non_process_colours ) {
-				$blanks_needed = ( $press_colours - @$colours ) - $$specs{'PreviousBlankPlates'.$qty_index};
+				$blanks_needed = ( $press_colours - @$colours ) - $$PlateCounts{'Blank'.$plate_id};
+				$blanks_needed = 0 if $blanks_needed < 0;
 				$setup_cost{'Blank Plates'} = $blanks_needed;
 			} # end if
 		} else {

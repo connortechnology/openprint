@@ -349,6 +349,11 @@ sub find {
 					push @values, $params{$k.'_<='};
 					delete $params{$k.'_<='};
 				} # end if
+				if ( exists $params{$k.' <='} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.' <='};
+					delete $params{$k.' <='};
+				} # end if
 				if ( exists $params{$k.'_null_or_<='} ) {
 					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
 					push @values, $params{$k.'_null_or_<='};
