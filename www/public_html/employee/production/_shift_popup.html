@@ -4,11 +4,11 @@
 		<ul>
 			<li>
 				<label>Start Time:</label>
-				<? echo ( return ssi::datetime_select( 'starttime', $$variable{'Shift'}{'starttime'}, {'onchange'=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} ); ) ?>
+				<span class="DateTimeSelector"><? echo ( return ssi::datetime_select( 'starttime', $$variable{'Shift'}{'starttime'}, {'onchange'=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} ); ) ?></span>
 			</li>
 			<li>
 				<label>End Time:</label>
-				<? echo ( return ssi::datetime_select( 'endtime', $$variable{'Shift'}{'endtime'}, {'onchange'=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} );) ?>
+				<span class="DateTimeSelector"><? echo ( return ssi::datetime_select( 'endtime', $$variable{'Shift'}{'endtime'}, {'onchange'=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} );) ?></span>
 			</li>
 			<li><label>Duration:</label>
 				<span id="duration"> </span>
@@ -24,7 +24,7 @@
 				<label>Operator:</label>
 				<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
 				<? echo ( 
-				   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup'=>$$variable{'Shift'}->Equipment()->category(),'order'=>'lower(strfirstname)' ) ], $$variable{'Shift'}->operator_id() );
+				   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup in'=>$$variable{'Shift'}->Equipment()->category(),'order'=>'lower(firstname)' ) ], $$variable{'Shift'}->operator_id() );
 				   ) ?>
 				</select>
 			</li>

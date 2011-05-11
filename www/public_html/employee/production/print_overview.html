@@ -275,7 +275,7 @@
 				) + 1;
 
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift->find({'equipment_id'=>$E->id(),'order'=>'starttime'});
 
 			my $PreviousShift;
 
@@ -286,12 +286,12 @@
 				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
 				# Get the shifts on this day.
-				my @Shifts = openprint::Shift->find( 
+				my @Shifts = openprint::Shift->find( {
 					'equipment_id' 		=>	$E->id(),
 					'starttime >='		=>	$today,
 					'starttime <'		=>	$tomorrow,
 					'order'				=>	'starttime',
-					);
+					} );
 				if ( @Equipment_Shifts ) {
 					if ( @Shifts != @Equipment_Shifts ) {
 						if ( $PreviousShift ) {
