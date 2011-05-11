@@ -40,7 +40,11 @@ sub load {
 sub find {
 	my %params = @_;
 	my @values;
-	my $sql = q{SELECT * FROM log WHERE 1>0};
+	my $sql = 'SELECT ';
+	$sql .= 'DISTINCT ' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= '* FROM log WHERE 1>0';
+
 	if ( $params{'id'} ) {
         if ( ref $params{'id'} eq 'ARRAY' ) {
             $sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
@@ -67,6 +71,12 @@ sub find {
             push @values, $params{'action_type'};
         } # end if
 	} # end if
+
+				if ( exists $params{'date_time >='} ) {
+					$sql .= " AND $fields{date_time} >= ?";
+					push @values, $params{'date_time >='};
+					delete $params{'date_time >='};
+				} # end if
 	
 	if ( $params{'ip_address'} ) {
 		$sql .= ' AND ip_address=?';
