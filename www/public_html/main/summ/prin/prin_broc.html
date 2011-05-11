@@ -14,3 +14,13 @@
     <!--#include virtual="/includes/main/summ/imposition.html"-->
     <!--#include virtual="/includes/main/summ/press_approval.html"-->
     
+<div class="row">
+    <span class="label">Breakdown:</span>
+<? echo (
+my $html;
+foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+    $html .= '<span class="value">'.$$variable{'hdnBreakdown'.$qty_index}.'</span>';
+} # end foreach
+return $html;
+) ?>
+</div>
