@@ -145,5 +145,19 @@ $log->error("Attempt to delete a comment without rights");
 		} # end if
 	} # end if
 } # end sub _photo_comments
+
+sub _photo_actions {
+	#my $Photo = $variable{'Photo'} = new openprint::
+	my $Asset = $variable{'Asset'} = new openprint::Asset( $param{'asset_id'} );
+	if ( ! $Asset->id() ) {
+		$variable{'error'} .= "Asset $param{'asset_id'} not found.";
+		return;
+	} # end if
+	if ( $param{'function'} eq 'rotate' ) {
+		my $filepath = $Asset->on_disk_path();
+		$variable{'error'} .= `convert rotate $param{degrees} $filepath $filepath`;
+		$log->error( 'error rotating ' . $! ) if $!;
+	} # end if function
+} # end sub _photo_actions
 1;
 __END__
