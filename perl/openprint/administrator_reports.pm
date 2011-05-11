@@ -203,12 +203,12 @@ sub customer_login {
 	} # end if
 	if ( $param{'lastlogin_start_year'} and $param{'lastlogin_start_month'} and $param{'lastlogin_start_day'} ) {
 		if ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) BETWEEN '%.4d-%.2d-%.2d 00:00:00' AND '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action__id=2 AND company_id=Companies.id) BETWEEN '%.4d-%.2d-%.2d 00:00:00' AND '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 		} else {
-			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) > '%.4d-%.2d-%.2d 00:00:00'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) > '%.4d-%.2d-%.2d 00:00:00'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
 		} # end if
 	} elsif ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Companies.id) < '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM logs WHERE action_id=2 AND company_id=Companies.id) < '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 	} # end if
 	if ( $param{'rdbActive'} ) {
 		$query .= " AND Companies.ysnAccountActivation = '$param{'rdbActive'}' AND (companies.deleted = false OR companies.deleted IS NULL)\n";

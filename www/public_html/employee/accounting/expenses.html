@@ -36,6 +36,16 @@
 			<div class="content">
 				<ul>
 					<li>
+						<label>Invoiced On:</label>
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_start', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+							to 
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'invoiced_on_end', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+					</li>
+					<li>
 						<label>Due On:</label>
 						<span class="DateSelectorCT">
 		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_start', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
@@ -55,6 +65,12 @@
 		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'paid_on_end', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 						</span>
 					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="rightColumn">
+			<div class="content">
+				<ul>
 					<li>
 						<label>Category:</label>
 						<select name="category_id" id="category_id" onchange="load_expenses(this.form);">
@@ -67,6 +83,13 @@
 						<select name="recipient_id" id="recipient_id" onchange="load_expenses(this.form);">
 							<option value="">all</option>
 							<? echo ( ssi::make_drop_down( openprint::Company->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?recipient_id'} ); ) ?>
+						</select>
+					</li>
+					<li>
+						<label>Account:</label>
+						<select name="account_id" id="account_id" onchange="load_expenses(this.form);">
+							<option value="">all</option>
+							<? echo ( ssi::make_drop_down( openprint::Expense_Account->dropdown('order'=>'lower(name)'), $session{'/employee/accounting/expenses.html?account_id'} ); ) ?>
 						</select>
 					</li>
 				</ul>

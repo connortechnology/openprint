@@ -359,8 +359,11 @@ function isLeapYear(year) {
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
 	selectedDay = parseInt(selectedDay);
+
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
+		selectedDay = numberOfDays;
+	} else if ( selectedDay >= 28 && selectedDay <= 30 && numberOfDays >= 30 ) {
 		selectedDay = numberOfDays;
 	} // end if
 

@@ -83,6 +83,9 @@ if ( ! exists $$data{'amount_locked'} ) {
 if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
+if ( ! exists $$data{'business_use_amount'} ) {
+	$dbh->do('ALTER TABLE expenses add business_use_amount float');
+}
 if ( ! exists $$data{'account_id'} ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Expense_Accounts.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();

@@ -93,7 +93,11 @@ sub view_photo {
 } # end sub view_photo
 
 sub _photo_comments {
-	my $Photo = $variable{'Photo'} = new openprint::Photo_in_Album( { 'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+	my $Photo = $variable{'Photo'} = openprint::Photo_in_Album->find_one( 'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'} );
+	if ( ! $Photo ) {
+		$variable{'error'} .= 'Photo not found.';
+		return;
+	} # end if
 	if ( $param{'text'} =~ /\S/ ) {
 		if ( ! openprint::Comment->find_one(
 			'user_id'	=>	$session{'user_id'},
@@ -115,17 +119,45 @@ sub _photo_comments {
 					});
 		} # end if comment already exists
 	} elsif ( $param{'action'} eq 'approve' ) {
-		if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $$Photo->Asset()->user_id() ) {
-			my $Comment = openprint::Comment->find_one('object_id'=>$$Photo{'asset_id'}, 'object_type'=>'openprint::Asset', 'id'=>$param{'comment_id'} );
-			if ( $Comment ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Photo{'asset_id'}, 'object_type'=>'openprint::Asset', 'id'=>$param{'comment_id'} );
+		if ( $Comment ) {
+			if ( $Comment->can_approve() ) {
 				$Comment->save({'approved'=>1});
 			} else {
-				$variable{'error'} .= 'Comment not found.';
+				$variable{'error'} .= 'You do not have rights to approve that comment.';
+$log->error("Attempt to approve a comment without rights");
 			} # end if
 		} else {
-			$variable{'error'} .= 'You are not authorized to approve this comment.';
+			$variable{'error'} .= 'Comment not found.';
+		} # end if
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Photo{'asset_id'}, 'object_type'=>'openprint::Asset', 'id'=>$param{'comment_id'} );
+		
+		if ( $Comment ) {
+			if ( $Comment->can_delete() ) {
+				$variable{'error'} .= $Comment->delete();
+			} else {
+				$variable{'error'} .= 'You do not have rights to delete that comment.';
+$log->error("Attempt to delete a comment without rights");
+			} # end if
+		} else {
+			$variable{'error'} .= 'Comment not found or you do not have rights to delete.';
 		} # end if
 	} # end if
 } # end sub _photo_comments
+
+sub _photo_actions {
+	#my $Photo = $variable{'Photo'} = new openprint::
+	my $Asset = $variable{'Asset'} = new openprint::Asset( $param{'asset_id'} );
+	if ( ! $Asset->id() ) {
+		$variable{'error'} .= "Asset $param{'asset_id'} not found.";
+		return;
+	} # end if
+	if ( $param{'function'} eq 'rotate' ) {
+		my $filepath = $Asset->on_disk_path();
+		$variable{'error'} .= `convert rotate $param{degrees} $filepath $filepath`;
+		$log->error( 'error rotating ' . $! ) if $!;
+	} # end if function
+} # end sub _photo_actions
 1;
 __END__

@@ -37,6 +37,10 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->destroy();
+	} elsif ( $param{'action'} eq 'reset' ) {
+		foreach ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'lastupdated' ) {
+			delete $session{'/timetrack/history.html?'.$_}
+		} # end foreach
 	} elsif ( ! $param{'btnFunction'} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id') );
 	} # end if
@@ -48,7 +52,9 @@ sub history {
 
 	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
 	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
-	$session{'/timetrack/history.html?user_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?user_id'};
+	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+		$session{'/timetrack/history.html?user_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?user_id'};
+	} # end if
 } # end sub history
 
 sub _history {

@@ -105,52 +105,51 @@ ssi::writeButton( $log, $dbh, 'merge'.$C->id(), 'merge.gif', '', '/administrator
 		<? endif ( $$variable{'Company'}->deleted() ) ?>
 		<b><?notes?></b>
 	<div class="leftColumn">
-		<p><label>ID #</label><?CustomerIndex?></p>
-		<p> 
+		<ul>
+		<li><label>ID #</label><?CustomerIndex?></li>
+		<li> 
 			<label><b>Account Activated:</b></label>
 			<input type="radio" name="activation" value="Y" id="activationY" <? echo ( ssi::checked( $$variable{'Company'}->activation() eq 'Y' ); ) ?> />
 			<label class="radio" for="activationY">Yes</label>
 			<input type="radio" name="activation" value="N" id="activationN" <? echo ( ssi::checked( $$variable{'Company'}->activation() ne 'Y' ); ) ?> />
 			<label class="radio" for="activationN">No</label>
-		</p>
-		<p>
+		</li><li>
 			<label>Is this a Supplier?:</label>
 			<input type="radio" name="supplier" value="Y" id="supplierY" <? echo ( ssi::checked( $$variable{'Company'}->supplier() eq 'Y' ); ) ?> />
 			<label class="radio" for="supplierY">Yes</label>
 			<input type="radio" name="supplier" value="N" id="supplierN" <? echo ( ssi::checked( $$variable{'Company'}->supplier() ne 'Y' ); ) ?> />
 			<label class="radio" for="supplierN">No</label>
-		</p> <p>
+		</li><li>
 			<label>Is this a Reseller?:</label>
 			<input type="radio" name="reseller" value="Y" id="resellerY" <? echo ( ssi::checked( $$variable{'Company'}->reseller() eq 'Y' ); ) ?> />
 			<label class="radio" for="resellerY">Yes</label>
 			<input type="radio" name="reseller" value="N" id="resellerN" <? echo ( ssi::checked( $$variable{'Company'}->reseller() ne 'Y' ); ) ?> />
 			<label class="radio" for="resellerN">No</label>
-		</p>
-		<p> 
+		</li><li> 
 			<label>Price List:</label>
 			<select name="pricelist_id">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find('order'=>'lower(name)') ], $$variable{'Company'}->pricelist_id() ); ) ?>
 			</select>
-		</p>
-		<p> 
+		</li><li> 
 			<label>Preferred Currency:</label>
 			<select name="currency_id">
 				<option value=""> select </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
 			</select>
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Pricing Discount:</label>
 			<input type="text" name="discount" value="<? echo ( $$variable{'Company'}->discount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/, '' );"/>%
-		</p>
-		<p> 
+		</li>
+		<li> 
 			<label>Sales Person:</label>
 			<select name="salesrep_id">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)', 'web_active'=>'Y') ], $$variable{'Company'}->salesrep_id() ); ) ?>
 			</select>
-		</p>
+		</li>
+		</ul>
 	</div>
 	<div class="rightColumn">
 		<? if ( $$variable{'Company'}->id() ) ?>

@@ -133,5 +133,15 @@ sub Comments {
 	} # end if
 	return @{$_[0]{'Comments'}};
 } # end sub Comments
+
+sub can_delete {
+	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_delete
+sub can_approve {
+	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_approve {
+
 1;
 __END__

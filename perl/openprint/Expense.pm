@@ -61,6 +61,7 @@ $serial = 'expenses_id_seq';
 	'invoiced_on'		=>	'invoiced_on',
 	'currency_id'		=>	'currency_id',
 	'business_use'		=>	'business_use',
+	'business_use_amount'		=>	'business_use_amount',
 );
 
 %transforms = (
@@ -215,10 +216,11 @@ sub save {
 	} # end foreach Tax
 	$self->total(undef);
 	my $error = $self->SUPER::save( @_ );
-	foreach my $Tax ( $self->Taxes() ) {
-		$error .= $Tax->save({'expense_id'=>$self->id()});
-	} # end foreach Tax
-		
+	if ( ! $error ) {
+		foreach my $Tax ( $self->Taxes() ) {
+			$error .= $Tax->save({'expense_id'=>$self->id()});
+		} # end foreach Tax
+	} # end if
 	return $error;
 } # end sub save
 sub total {
@@ -246,6 +248,14 @@ sub Tax {
     } # end if
     return $result;
 } # end sub Tax
-
+sub business_use_amount {
+	if ( @_ > 1 ) {
+		$_[0]{'business_use_amount'} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{'business_use_amount'} ) {
+		$_[0]{'business_use_amount'} = Math::Round::nearest( .01, $_[0]{'amount'} * ( $_[0]{'business_use'} / 100 ) );
+	} # end if
+	return $_[0]{'business_use_amount'};
+} # end sub business_use_amount
 1;
 __END__
