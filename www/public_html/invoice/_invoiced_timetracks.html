@@ -26,7 +26,7 @@
 				my $Price = $Timetrack->Price();
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
-				$html .= sprintf('<td class="unprintable">%s</td>', ssi::writeButton( $log, $dbh, 'del'.$Timetrack->id(), '', 'del_timetrack('.$Timetrack->id().');', '', '-' ) );
+				$html .= sprintf('<td class="unprintable">%s</td>', ssi::button( 'del'.$Timetrack->id(), { 'onclick'=>qq`del_timetrack($$Timetrack{id});`, 'text'=>'-' } ) );
 				$html .= "</tr>\n";
 				$$variable{'service_total'} += $$Price{'Total'};
 			} # end foreach Timetrack
