@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS SRED_Project;
+CREATE TABLE SRED_Project (
+	id SERIAL,
+	name TEXT NOT NULL,
+	created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY (id)
+);
+CREATE INDEX sred_project_name_idx on SRED_Project (name);
+

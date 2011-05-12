@@ -17,7 +17,6 @@
 		font-size: small;
 		font-weight: bold;
 		color: white;
-		display: -moz-inline-box;
 		display: inline-block;
 		outline:0;
 	}
@@ -37,7 +36,6 @@
 		font-size: small;
 		font-weight: bold;
 		color: white;
-		display: -moz-inline-box;
 		display: inline-block;
 		outline:0;
 	}
@@ -81,7 +79,6 @@ a.buttonImageOff .c {
 	font-weight: normal;
 	font-size: x-small;
 	background: none;
-	display: -moz-inline-box;
 	display: inline-block;
 	float: none;
 	margin: 0px;
@@ -102,7 +99,6 @@ a.buttonImageOn .c {
 	font-size: x-small;
 	background: none;
 	cursor: default;
-	display: -moz-inline-box;
 	display: inline-block;
 	float: none;
 	margin: 0px;
