@@ -155,8 +155,11 @@ sub _photo_actions {
 	} # end if
 	if ( $param{'function'} eq 'rotate' ) {
 		my $filepath = $Asset->on_disk_path();
-		$variable{'error'} .= `convert rotate $param{degrees} $filepath $filepath`;
-		$log->error( 'error rotating ' . $! ) if $!;
+		$_ = system('convert', '-rotate', $param{degrees}, $filepath, $filepath );
+		if ( $_ ) {
+			$variable{'error'} .= $?;
+			$log->error( 'error rotating ' . $? );
+		} # end if
 	} # end if function
 } # end sub _photo_actions
 1;

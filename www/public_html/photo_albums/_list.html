@@ -9,7 +9,7 @@
 	);
 	$html .= scalar @Albums . ' albums<br/>';
 	foreach my $Album ( @Albums ) {
-		$html .= '<div class="PhotoAlbum"><a href="/photo_albums/edit.html?album_id='.$Album->id().'">';
+		$html .= '<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/edit.html?album_id='.$Album->id().'">';
 		$html .= sprintf('<img src="%s" alt="%s" /><br/>%s', $Album->thumbnail_url(), $Album->name(), $Album->description() );
 		my @Photos = $Album->Photos();
 		$html .= scalar @Photos . ' photo' . (@Photos != 1 ? 's' : '');
