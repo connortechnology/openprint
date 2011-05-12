@@ -591,9 +591,9 @@ sub send_proofs_complete_email {
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
-			FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-			TO      => sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}),
-			SUBJECT => "Proofs Complete",
+			FROM    => sprintf( '%s %s <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+			TO      => sprintf( '%s %s <%s>', @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}),
+			SUBJECT => 'Proofs Complete',
 			);
 
 #misc::send_email_with_attachment( $log, \%mail, @body );
@@ -924,8 +924,7 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $ac = sql::start_transaction( $dbh );
 	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
-
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
+	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob->find( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
 		$Job->delete();
