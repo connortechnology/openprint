@@ -4,7 +4,8 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::SRED_Asset;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'sred_contents';
 $serial = 'sred_contents_id_seq';
 

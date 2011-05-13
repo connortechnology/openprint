@@ -19,6 +19,10 @@ sub projects {
 		$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
 		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
 		%param = ();
+	} elsif ( $param{'function'} eq 'Delete' ) {
+		my $Project = new openprint::SRED_Project( $param{'project_id'} );
+		$variable{'error'} .= $Project->delete();
+		%param = ();
 	} else {
 		ssi::save_params( '/employee/sred/projects.html', ( 
 			'created_on_start_year','created_on_start_month','created_on_start_day',
