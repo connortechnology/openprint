@@ -15,7 +15,7 @@
 	$html .= sprintf('<li><label>Description:</label>%s</li>', $C->description() );
 	$html .= '<li><label>Attachments:</label>';
 	if ( my @Assets = $C->Assets() ) {
-		$html .= join('', map { sprintf('<a href="/assets/%s"><img class="thumbnail" src="%s" alt=""/> %s</a><br/>', $_->url(), $_->Asset()->thumbnail_filename(), $_->Asset()->on_disk_filename() ) } @Assets );
+		$html .= join('', map { sprintf('<a href="%s" target="_blank"><img class="thumbnail" src="/assets/%s" alt=""/> %s</a><br/>', $_->url(), $_->Asset()->thumbnail_filename(), $_->Asset()->on_disk_filename() ) } @Assets );
 	} else {
 		$html .= 'No attachments.<br/>';
 	} # end if

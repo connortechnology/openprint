@@ -12,22 +12,23 @@
 	) ?>
 	</ul>
 	<div id="new">
-<ul>
-<li>
-<div class="leftColumn">
 	<ul>
-		<li><label>Start:</label><? echo ( ssi::datetime_select( 'starting' ) ) ?></li>
-		<li><label>End:</label><? echo ( ssi::datetime_select( 'ending' ) ) ?></li>
-		<li><label>Person:</label><select id="user_id" name="user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $session{'user_id'} ); ) ?></select></li>
-		<li><label>Docket:</label><input type="text" id="docket" name="docket" value="" /></li>
+		<li>
+			<div class="leftColumn">
+				<ul>
+					<li><label>Start:</label><? echo ( ssi::datetime_select( 'starting' ) ) ?></li>
+					<li><label>End:</label><? echo ( ssi::datetime_select( 'ending' ) ) ?></li>
+					<li><label>Person:</label><select id="user_id" name="user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $session{'user_id'} ); ) ?></select></li>
+					<li><label>Docket:</label><input type="text" id="docket" name="docket" value="" /></li>
+				</ul>
+			</div>
+			<div class="rightColumn">
+				<ul>
+					<li class="Description"><label>Description:</label><textarea id="description" name="description-new" onkeyup="textarea_resize(this);"></textarea></li>
+					<li><label>Attachment:</label><input type="file" name="filename-$$C{id}" /></li>
+				</ul>
+			</div>
+		</li>
 	</ul>
-</div>
-<div class="rightColumn">
-	<ul>
-		<li class="Description"><label>Description:<textarea id="description" name="description-new" onkeyup="textarea_resize(this);"></textarea></li>
-	</ul>
-</div>
-</li>
-</ul>
 </div>
 <? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' ); ) ?>
