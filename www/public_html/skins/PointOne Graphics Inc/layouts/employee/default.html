@@ -205,7 +205,11 @@
 								<li><a href="/employee/it/locations.html;NOSSL">&raquo; Locations</a></li>
 							</ul>
 						</li>
-						<li id="SREDMenu"><a href="/employee/sred/history.html;NOSSL">&raquo; SRED</a></li>
+						<li id="SREDMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/sred/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SREDMenu'), 'off', 'on');return false;">SRED</a>
+							<ul>
+								<li><a href="/employee/sred/projects.html;NOSSL">&raquo; Projects</a></li>
+							</ul>
+						</li>
 						<li id="SupportMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
 							<ul>
 								<li><a href="/employee/support/helpdesk_search.html;NOSSL">&raquo; Help Desk</a></li>

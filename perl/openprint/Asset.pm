@@ -74,6 +74,9 @@ sub thumbnail_filename {
 	} # end if
 	return $_[0]->on_disk_filename();
 } # end sub thumbnail_filename
+sub url {
+	return '/assets/'.$_[0]->on_disk_filename();
+} # end sub url
 
 1;
 __END__
