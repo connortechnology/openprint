@@ -22,7 +22,7 @@ textarea_init();
 function add_content(form) {
 	tinyMCE.triggerSave();
 	form.function.value='Add';
-	new Ajax.Updater( 'Contents','_contents.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', {
+	new Ajax.Updater( 'Contents','_contents.html', {
 			method: 'get', 
 			parameters: form.serialize(),
 			onComplete: textarea_init,
@@ -32,7 +32,7 @@ function add_content(form) {
 } // end function add_Content(form)
 function del_content(form, content_id ) {
 	tinyMCE.triggerSave();
-	new Ajax.Updater( 'Contents','_contents.html?project_id=<? echo ( $$variable{Project}->id() ) ?>&amp;content_id='+content_id, {
+	new Ajax.Updater( 'Contents','_contents.html?content_id='+content_id, {
 			method: 'get', 
 			parameters: form.serialize(),
 			onComplete: textarea_init,

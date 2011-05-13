@@ -3,11 +3,11 @@
 <? echo (
 	my $html;
 	my $C = $$variable{'C'};
-	if ( $C->starttime() ) {
-		$html .= sprintf('<li><label>Start:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starttime() ) ) );
+	if ( $C->starting() ) {
+		$html .= sprintf('<li><label>Start:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
 	} # end if
-	if ( $C->endtime() ) {
-		$html .= sprintf('<li><label>End:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->endtime() ) ) );
+	if ( $C->ending() ) {
+		$html .= sprintf('<li><label>End:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ) );
 	} # end if
 	$html .= sprintf('<li><label>User:</label>%s</li>', $C->User()->name() ) if $C->user_id();
 	$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();

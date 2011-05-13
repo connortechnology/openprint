@@ -25,10 +25,10 @@
 			<div class="rightColumn">
 				<ul>
 					<li class="Description"><label>Description:</label><textarea id="description" name="description-new" onkeyup="textarea_resize(this);"></textarea></li>
-					<li><label>Attachment:</label><input type="file" name="filename-$$C{id}" /></li>
+					<li><label>Attachment:</label><input type="file" name="filename" /></li>
 				</ul>
 			</div>
+<? echo ( ssi::button( 'Add', { 'onclick' => q`var form = $('f1'); form.action='project.html';form.function.value='Add';f1.submit();`, } ); ) ?>
 		</li>
 	</ul>
 </div>
-<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' ); ) ?>
