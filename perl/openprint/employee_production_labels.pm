@@ -49,8 +49,8 @@ sub label {
 
 		my $Email = new openprint::Email();
         $variable{'information'} .= $Email->send(
-                TO  =>  'iconnor@point-one.com',
-                #TO  =>  [ split(',', $param{'to'}) ],
+                #TO  =>  'iconnor@point-one.com',
+                TO  =>  [ split(',', $param{'to'}) ],
                 FROM    =>  $param{'from'},
                 SUBJECT =>  $param{'subject'},
                 ATTACHMENTS =>  \@attachments,
