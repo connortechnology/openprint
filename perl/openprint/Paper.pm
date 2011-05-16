@@ -1,10 +1,10 @@
+use strict;
 package openprint::Paper;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
-use Carp ( cluck );
+use Carp qw( cluck );
 
-use strict;
 use openprint ();
 use vars qw( $log %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
@@ -32,7 +32,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -1282,6 +1282,7 @@ sub load_from_signature {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 			$Paper = $Paper->id() ? $Paper : undef;
+$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
 		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
@@ -1303,12 +1304,12 @@ sub load_from_signature {
 					$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				} # end if
 			} # end if
-			my @Papers = find( %params );
+			my @Papers = openprint::Paper::find( %params );
 			if ( ! @Papers ) {
-#$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
+$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
-				@Papers = find( %params );
+				@Papers = openprint::Paper::find( %params );
 			} elsif ( @Papers > 1 ) {
 				Carp::cluck("More than 1 paper found in load_from_signature");
 			} # end if
@@ -1342,12 +1343,15 @@ sub load_from_signature {
 			} # end if
 
 			foreach my $P ( @Papers ) {
-				next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
+				if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					$openprint::log->debug("Paper no good due to minimum order");
+					next;
+				} # end if
 				$Paper = $P;
 				last;
 			} # end foreach
 			if ( ( ! $Paper ) and @Papers ) {
-#$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
+$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
 				$Paper = shift @Papers;
 			} # end if
 		} # end if Paper
@@ -1369,10 +1373,30 @@ sub load_from_signature {
 	if ( $qty_index ) {
 		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
-			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
-			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+			if ( ! $Paper->start_width() ) {
+				$Paper->start_width( $Paper->width() );
+				$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			} elsif ( $Paper->width() > $$specs{'StockWidth'.$qty_index} ) {
+				$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			} else {
+				$log->warn("Unsuitable Stock");
+				return new openprint::Paper();
+			} # end if
+
+			if ( $Paper->type() ne 'Roll' ) {
+				if ( ! $Paper->start_height() ) {
+					$Paper->start_height( $$specs{'StockHeight'.$qty_index} );
+					$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				} elsif ( $Paper->height() > $$specs{'StockHeight'.$qty_index} ) {
+					$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				} else {
+					$log->warn("Unsuitable Stock");
+					return new openprint::Paper();
+				} # end if
+			
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height(); # force recalc
+			} # end if
 		} # end if
 	} # end if
 	return $Paper;

@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 my %folding_cache;
@@ -778,7 +778,6 @@ sub get_Stocks {
 			( $$specs{'chkOverrideSheetSize2'} eq 'Y' ) or
 			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
 	   ) {
-		my @Ps;
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
@@ -786,36 +785,51 @@ sub get_Stocks {
 			my $found = 0;
 
 			foreach my $P ( @Papers ) {
-#$openprint::log->debug("Paper " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
+#$openprint::log->debug("Paper $qty_index " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
 				if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
 #$openprint::log->debug('gound it'); 
 					$found = 1;
 					# Don't need to add it, because it's already in @Papers
 					#push @Ps, $P;
+					last;
 				} # end if
 			} # end foreach
+			my @Ps;
 
 			if ( ! $found ) {
 				# Find ones that are an even cut
 				foreach my $P ( @Papers ) {
 					next if ! $P->cuttable();
+						my $width_factor1 = $$P{'start_width'} / $$specs{'OverrideStockWidth'.$qty_index};
+						my $height_factor1 = $$P{'start_height'} / $$specs{'OverrideStockHeight'.$qty_index} if $$specs{'OverrideStockHeight'.$qty_index};
 					if ( $P->type() eq 'Roll' ) {
 						next if $$specs{'OverrideStockHeight'.$qty_index};
 						next if $P->start_width();
 					} elsif ( $P->type() eq 'Sheet' ) {
 # Don't cut sheets into rolls
 						next if ! $$specs{'OverrideStockHeight'.$qty_index};
+						my $width_factor2 = $$P{'start_height'} / $$specs{'OverrideStockWidth'.$qty_index};
+						my $height_factor2 = $$P{'start_width'} / $$specs{'OverrideStockHeight'.$qty_index};
+						if ( ! (
+									( $width_factor1 == int($width_factor1) and $height_factor1 == int($height_factor1) ) or
+									( $width_factor2 == int($width_factor2) and $height_factor2 == int($height_factor2) )
+							   ) ) {
+							#$openprint::log->debug("No good: $qty_index " . $P->to_string() . ' '. ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) . 'x' . ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) );
 
-						if ( 
-								( ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) ) and
-								( ($P->start_width() % $$specs{'OverrideStockHeight'.$qty_index}) and ($P->start_height() % $$specs{'OverrideStockWidth'.$qty_index} ) ) )  {
 							next;
-						} # en dif
+						} # end if
 					} # end if
 					$found = 1;
+#$openprint::log->debug( 'Found stock to cut: ' . $P->to_string() . ' for ' . $$specs{'OverrideStockWidth'.$qty_index} . 'x' . $$specs{'OverrideStockHeight'.$qty_index} );
 					my $P2 = $P->clone();
 # Make sure gsm has calculated
 					$P2->gsm();
+					if ( ( $width_factor1 == int($width_factor1) and $height_factor1 == int($height_factor1) ) ) {
+						# Fits normally
+					} else {
+						# Is a rotation
+						$P2->grain_direction( $P2->grain_direction() eq 'width' ? 'height' : 'width' );
+					} # end if
 					$P2->width( $$specs{'OverrideStockWidth'.$qty_index} );
 					$P2->height( $$specs{'OverrideStockHeight'.$qty_index} );
 					if ( $P2->type() ne 'Roll' ) {
@@ -828,6 +842,7 @@ sub get_Stocks {
 			} # end if found
 
 			if ( ! $found ) {
+$openprint::log->debug("No well cut Stock found");
 				foreach my $P ( @Papers ) {
 # Don't cut rolls into sheets
 					next if ! $P->cuttable();
@@ -853,8 +868,8 @@ sub get_Stocks {
 					push @Ps, $P2;
 				} # end foreach paper
 			} # end if found
+			push @Papers, @Ps;
 		} # end foreach qty_index
-		push @Papers, @Ps;
 	} # end if override
 
 	foreach my $P ( @Papers ) {
