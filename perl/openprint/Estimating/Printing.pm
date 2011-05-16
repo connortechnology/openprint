@@ -3241,18 +3241,21 @@ $openprint::log->debug("Using cached folding");
 		} # end if
 	} # end if
 
-	my %numbering_results;
+	my $numbering_results;
 	if ( $$project{'HasNumbering'} ) {
-		%numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, @$project{'HasNumbering','NumberingSpecs'}, $specs, $qty_index, $Imposition );
+		$numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, @$project{'HasNumbering','NumberingSpecs'}, $specs, $qty_index, $Imposition );
 #foreach my $k ( keys %scoring_results ) {
 #$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #}
-		if ( $numbering_results{'Status'} eq 'uncalculated' ) {
-			$price{'Numbering Breakdown'} .= "Numbering error: $numbering_results{'alert'} $numbering_results{Breakdown}".'<br/>';
+		if ( ! $numbering_results ) {
+			$price{'Numbering Breakdown'} .= 'Numbering error: no calculation<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $$numbering_results{'Status'} eq 'uncalculated' ) {
+			$price{'Numbering Breakdown'} .= "Numbering error: $$numbering_results{'alert'} $$numbering_results{Breakdown}".'<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'Numbering Breakdown'} .= sprintf('Numbering Price: %dout $%.2f on %s<br/>', $numbering_results{'Imposition'}->imposition(), $numbering_results{'Total'}, $numbering_results{'Equipment'} ? $numbering_results{'Equipment'}->name() : '' );
-			$price{'Comparison Cost'} += $numbering_results{'Total'};
+			$price{'Numbering Breakdown'} .= sprintf('Numbering Price: %dout $%.2f on %s<br/>', $$numbering_results{'Imposition'}->imposition(), $$numbering_results{'Total'}, $$numbering_results{'Equipment'} ? $$numbering_results{'Equipment'}->name() : '' );
+			$price{'Comparison Cost'} += $$numbering_results{'Total'};
 		} # end if
 	} # end if
 
