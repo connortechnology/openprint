@@ -34,7 +34,7 @@ sub _label {
 
 sub label {
 	my $Label = $variable{'Label'} = new openprint::Label( $param{'id'} );
-	if ( $param{'action'} eq 'Send' ) {
+	if ( $param{'function'} eq 'Send' ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my @attachments;
 		my %info;
