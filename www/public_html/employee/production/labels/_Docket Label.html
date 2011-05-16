@@ -31,17 +31,14 @@
 		vertical-align: top;
 		border-bottom: 1px solid #353c91;
 	}
-	input {
-		display: none;
-	}
 </style>
 <div style="float: left; text-align: center;">
 Project #<br/>
-<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+"/>
+<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+" alt="" />
 </div>
 <div style="float: right; text-align: center;">
 Submit<br/>
-<img src="/barcode.png?Code=S10000+"/>
+<img src="/barcode.png?Code=S10000+" alt="" />
 </div>
 <br class="spacer"/>
 <table class="Docket">

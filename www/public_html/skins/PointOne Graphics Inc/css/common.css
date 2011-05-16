@@ -478,7 +478,6 @@ tr.highlightOn {
 }
 
 .mediumLengthLabel {
-	display: -moz-inline-box;
 	display: inline-block;
 	width: 100px;
 	text-align: right;
@@ -487,7 +486,6 @@ tr.highlightOn {
 	padding: .1em;	
 }
 .longLengthLabel {
-	display: -moz-inline-box;
 	display: inline-block;
 	width: 150px;
 	text-align: right;
@@ -496,7 +494,6 @@ tr.highlightOn {
 	padding: .1em;	
 }
 .extraLongLengthLabel {
-	display: -moz-inline-box;
 	display: inline-block;
 	width: 200px;
 	text-align: right;
@@ -511,7 +508,6 @@ tr.highlightOn {
    font-size: 13pt;
    font-weight: bold;
    color: #790000;
-	display: -moz-inline-box;
 	display: inline-block;
 }
 
