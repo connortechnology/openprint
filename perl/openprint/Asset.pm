@@ -118,6 +118,9 @@ $openprint::log->debug("thumbanil_filename: returning thumb $thumbnail_url");
 $openprint::log->debug("thumbanil_filename: returning url $path");
 	return $_[0]->url();
 } # end sub thumbnail_filename
+sub url {
+	return '/assets/'.$_[0]->on_disk_filename();
+} # end sub url
 
 sub Comments {
 	if ( $_[1] ) {
