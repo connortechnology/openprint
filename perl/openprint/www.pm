@@ -250,7 +250,8 @@ $log->debug('2');
 
 		if ( $filename eq 'login_confirmation.html' ) {
 			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+$openprint::log->debug("REDIRECT: $variable{'Redirect'}");
+			#$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 			return $status if $variable{'Redirect'};	
 		} # end if
 
@@ -264,12 +265,9 @@ $log->debug('2');
 
 		if ( $second eq 'proj' ) {
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @openprint::param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
-			$variable{'ProjectIndex'} = $r->param('ProjectIndex');
-			$variable{'ServiceIndex'} = $r->param('ServiceIndex');
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
+			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
-			$variable{'OrderID'} = $r->param('OrderID');
-
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
 			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};
