@@ -878,6 +878,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 		#my $impo = int( $imp->imposition() / ($spread_size/2) );
 		$impo /= 2 if sets::isin( $imp->runstyle(), ['Work & Turn','Work & Tumble' ] );
 		$$imp{'start_imposition'} = $impo;
+		#$impo /= ($spread_size/2);
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;

@@ -86,24 +86,31 @@ sub calc {
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			my $Imposition = new openprint::Imposition()->load( $sig_specs, $qty_index );
-			my %Results = signature_calc( $Project, $sid, $specs, $sig_specs, $qty_index, $Imposition );
-			$$specs{'hdnBreakdown'.$qty_index} .= $Results{'Breakdown'};
-			if ( $Results{'Equipment'} ) {
-				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Results{'Equipment'}->id();
-			} # end if Equipment
-			if ( $Results{'Imposition'} ) {
-				$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $Results{'Imposition'}->imposition();
-				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Results{'Imposition'}->layout_width();
-				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Results{'Imposition'}->layout_height();
-			} # end if
-			if ( $Results{'Status'} eq 'uncalculated' ) {
+			my $Results = signature_calc( $Project, $sid, $specs, $sig_specs, $qty_index, $Imposition );
+			if ( ! $Results ) {
+				$$specs{'alert'} .= 'No result from signature_calc.';
 				$$specs{'Status'} = 'uncalculated';
 				last;
 			} # end if
+		
+			$$specs{'hdnBreakdown'.$qty_index} .= $$Results{'Breakdown'};
+			if ( $$Results{'Equipment'} ) {
+				$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $$Results{'Equipment'}->id();
+			} # end if Equipment
+			if ( $$Results{'Imposition'} ) {
+				$$specs{"txtImposition-$$sig_specs{SignatureIndex}-$qty_index"} = $$Results{'Imposition'}->imposition();
+				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$Results{'Imposition'}->layout_width();
+				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $$Results{'Imposition'}->layout_height();
+			} # end if
+			if ( $$Results{'Status'} eq 'uncalculated' ) {
+				$$specs{'Status'} = 'uncalculated';
+				$$specs{'alert'} .= $$Results{'alert'};
+				last;
+			} # end if
 
-			$$specs{'txtPrice'.$qty_index} += $Results{'Total'};
-			$$specs{'txtUnitPrice'.$qty_index} += $Results{'UnitPrice'};
-			$$specs{'MPrice'.$qty_index} += $Results{'MPrice'};
+			$$specs{'txtPrice'.$qty_index} += $$Results{'Total'};
+			$$specs{'txtUnitPrice'.$qty_index} += $$Results{'UnitPrice'};
+			$$specs{'MPrice'.$qty_index} += $$Results{'MPrice'};
 		} # end foreach signature
 
 		my $markup = $$specs{"Markup$qty_index"} ? $$specs{"Markup$qty_index"} : 0;
@@ -132,7 +139,7 @@ sub signature_calc {
         if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
             $Results{'alert'} = 'The specified imposition is not possible.';
             $Results{'Status'} = 'uncalculated';
-            return %Results;
+            return \%Results;
         } # end if
     } # end if
     my @Impositions = ();
@@ -159,12 +166,12 @@ sub signature_calc {
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		@Equipment = ( new openprint::Equipment($$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}) );
 	} else {
-		@Equipment = openprint::Equipment::find( 'Specifications'=>{'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1 );
+		@Equipment = openprint::Equipment::find( 'Specifications'=>{'Numbering Capable'=>['Y','When Printing']}, 'use_in_estimating'=>1 );
 	} # end if
 	if ( ! @Equipment ) {
 		$Results{'alert'} .= 'We have no numbering equipment.';
 		$Results{'Status'} = 'uncalculated';
-		return %Results;
+		return \%Results;
 	} # end if
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -173,8 +180,21 @@ sub signature_calc {
 
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $printing_specs, 'SideOne' );
 	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
+	my $Press = $Imposition->Press();
+$openprint::log->debug("Got press $Press for " . $$printing_specs{"ddmPress$qty_index"});
+	if ( ! $Press ) {
+		$Results{'alert'} .= 'No press.';
+		$Results{'Status'} = 'uncalculated';
+		return \%Results;
+	} # end if
 
 	foreach my $Equipment ( @Equipment ) {
+$openprint::log->debug("Equipment: $$Equipment{strid}");
+		if ( $Equipment->specification('Numbering Capable') eq 'When Printing' ) {
+$openprint::log->debug("Equipment: When printing");
+			next if $$Press{'id'} != $Equipment->id();
+		} # end if
+$openprint::log->debug("Equipment: good" );
 		my $heads = $Equipment->specification('Numbering Heads');
 		my @colours = split(',', $Equipment->specification('Numbering Colours') );
 		$Results{'Breakdown'} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
@@ -306,8 +326,8 @@ sub signature_calc {
 
 	$Results{'UnitPrice'} = ($Results{'ServicePrice'}{'Total'} + $Results{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index};
 
-	return %Results;
-} # end sub calc
+	return \%Results;
+} # end sub signature_calc
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;

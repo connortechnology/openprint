@@ -149,7 +149,7 @@ my @signature_calc_stock_cutting_equipment;
 sub signature_calc_stock_cutting_equipment {
 	my ( $Project ) = @_;
 	my @capabilities = ('Y');
-    if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+    if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
         push @capabilities, 'Large Format';
     } # end if
 
@@ -974,7 +974,7 @@ sub display {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals'] ) ) {
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
 
