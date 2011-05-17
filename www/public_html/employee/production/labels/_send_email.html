@@ -1,5 +1,5 @@
 <form id="send_email_form" name="send_email_form" action="label.html?id=<? echo ( $param{'id'} ) ?>" method="post">
-	<input type="hidden" name="action" value="Send" />
+	<input type="hidden" name="function" value="Send" />
 	<fieldset><legend>Send Packing Slip</legend>
 		<ul>
 			<li><label>From:</label><input type="text" name="from" id="from" value="<? echo ( new openprint::User( $session{'user_id'} )->email() ) ?>" /></li>

@@ -5,12 +5,6 @@
 	$$variable{'Operator'} = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngserviceindex=?}, $openprint::param{'ProjectIndex'}, $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) );
 ) ?>
 <style type="text/css">
-	body {
-	font-family: Arial, Helvetica, Sans-Serif;
-}
-	br.spacer {
-		clear: both;
-	}
 	table.Docket .label {
 		text-align: right;
 		font-weight: bold;
@@ -36,26 +30,14 @@
 		vertical-align: top;
 		border-bottom: 1px solid #353c91;
 	}
-	input {
-		display: none;
-	}
-	.box {
-		display: -moz-inline-block;
-		display: inline-block;
-		width: 12px;
-		height: 12px;
-		border: 1px solid black;
-		margin: 2px;
-		vertical-align:middle;
-	}
 </style>
 <div style="float: left; text-align: center;">
 Project #<br/>
-<img src="/barcode.png?code=P<? echo ( $openprint::param{'ProjectIndex'} ) ?>+"/>
+<img src="/barcode.png?code=P<? echo ( $$variable{'Project'}->id() ) ?>+" alt="" />
 </div>
 <div style="float: right; text-align: center;">
 Submit<br/>
-<img src="/barcode.png?Code=S10000+"/>
+<img src="/barcode.png?Code=S10000+" alt="" />
 </div>
 <br class="spacer"/>
 <table class="Docket">
