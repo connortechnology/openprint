@@ -8,7 +8,7 @@
 	);
 	my @Invoices = @{$$variable{'Invoices'}} = ();
 	if ( $param{'invoice_id'} ) {
-		@Invoices = openprint::Invoice->find( 'id'=>$param{'invoice_id'}
+		@Invoices = openprint::Invoice->find( 'id' => $param{'invoice_id'},
 			( sets::isin( $session{'user_type'}, ['E','A'] ) ?  () : ( 'invoicee_id'=>$session{'company_id'} ) ),
 			);
 	} elsif ( $param{'po'} ) {
