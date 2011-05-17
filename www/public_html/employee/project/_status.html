@@ -9,10 +9,10 @@
 	} 
 	my $Service = $$variable{'Project'}->Service( $service_ids[0] );
 	if ( ! $Service ) {
-		$log->error( 'No Service in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
+		$log->error( 'No Project Service in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
 		return;
 	} 
-	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'AdditionalSignature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
+	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'Signature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
 		if ( my $Job = openprint::ScheduledJob->find_one('service_id <@'=>\@service_ids) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';
@@ -39,8 +39,8 @@
 				'order'         =>  'id',
 				);
 		$html .= join('', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
-	} else {
-		$html .= $Service->ServiceType()->name();
+	#} else {
+		#$html .= $Service->ServiceType()->name();
 	} # end if
 	return $html;
 ) ?>

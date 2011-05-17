@@ -260,9 +260,9 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multibindery';
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';
@@ -529,26 +529,26 @@ sub Shift {
 			} # end if
 		} else {
 			my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-			my @Shifts = openprint::Shift->find(
+			my @Shifts = openprint::Shift->find({
 					'equipment_id'	=>	$$self{'equipment_id'}, 
 					'endtime >'		=>	$$self{'starttime'}, 
 					'starttime <='	=>	$$self{'starttime'},
 					#'limit'			=>	1,
-					);
+					});
 			if ( ! @Shifts ) {
 				# Things like Bump can push a job to the very end, where a shift might need to be created.
-				@Shifts = openprint::Equipment_Shift->find(
+				@Shifts = openprint::Equipment_Shift->find({
 						'equipment_id'  =>  $$self{'equipment_id'},
 						'starttime <='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 						'endtime >'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 						'limit'		 =>  1,
-						);
-				@Shifts = openprint::Equipment_Shift->find(
+						});
+				@Shifts = openprint::Equipment_Shift->find({
 						'equipment_id'  =>  $$self{'equipment_id'},
 						'starttime >'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 						'order'		 =>  'starttime',
 						'limit'		 =>  1,
-						) if ! @Shifts;
+						} ) if ! @Shifts;
 				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
 			} else {
 				$Shift = shift @Shifts;

@@ -43,7 +43,7 @@
 						
 						my $Photo = $Album->Thumbnail();
 						if ( $Photo->asset_id() ) {
-							$html .= sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
 					
 						} # end if Thumbnail
 					} # end foreach Album
@@ -57,7 +57,7 @@
 						
 						my $Video = $Album->Thumbnail();
 						if ( $Video->asset_id() ) {
-							$html .= sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
 					
 						} # end if Thumbnail
 					} # end foreach Album

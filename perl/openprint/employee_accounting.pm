@@ -249,7 +249,7 @@ sub expenses {
 				);
 
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
-		delete $param{'expense_id'};
+		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
 		if ( $variable{'error'} .= $Expenditure->delete() ) {

@@ -33,7 +33,7 @@ sub _label {
 
 sub label {
 	my $Label = $variable{'Label'} = new openprint::Label( $param{'id'} );
-	if ( $param{'action'} eq 'Send' ) {
+	if ( $param{'function'} eq 'Send' ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my @attachments;
 		my %info;
@@ -48,8 +48,8 @@ sub label {
 
 		my $Email = new openprint::Email();
         $variable{'information'} .= $Email->send(
-                TO  =>  'iconnor@point-one.com',
-                #TO  =>  [ split(',', $param{'to'}) ],
+                #TO  =>  'iconnor@point-one.com',
+                TO  =>  [ split(',', $param{'to'}) ],
                 FROM    =>  $param{'from'},
                 SUBJECT =>  $param{'subject'},
                 ATTACHMENTS =>  \@attachments,

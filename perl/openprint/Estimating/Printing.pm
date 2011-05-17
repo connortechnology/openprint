@@ -4887,7 +4887,7 @@ sub get_colour_description {
 			} # end if
 		} # end if
 	} # end foreach
-	if ( $$specs{'sides_the_same'} eq 'Y' ) {
+	if ( (defined $$specs{'sides_the_same'}) and ( $$specs{'sides_the_same'} eq 'Y' ) ) {
 		$back_colours = $front_colours;
 		$back_coatings = $front_coatings;
 		$back_pms = $front_pms;
