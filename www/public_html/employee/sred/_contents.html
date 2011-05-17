@@ -6,7 +6,7 @@
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_view.html' );
 		foreach my $C ( @Contents ) {
 			$$variable{'C'} = $C;
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+			$html .= ssi::variable_substitution( \$content, $variable );
 		} # end foreach tag_id
 		return $html;
 	) ?>
@@ -18,7 +18,7 @@
 				<ul>
 					<li><label>Start:</label><? echo ( ssi::datetime_select( 'starting' ) ) ?></li>
 					<li><label>End:</label><? echo ( ssi::datetime_select( 'ending' ) ) ?></li>
-					<li><label>Person:</label><select id="user_id" name="user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $session{'user_id'} ); ) ?></select></li>
+					<li><label>Person:</label><select id="user_id" name="user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)' ) ], $session{'user_id'} ); ) ?></select></li>
 					<li><label>Docket:</label><input type="text" id="docket" name="docket" value="" /></li>
 				</ul>
 			</div>

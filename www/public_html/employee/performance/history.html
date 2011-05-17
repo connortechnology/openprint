@@ -18,14 +18,14 @@
                 <select name="category" id="category" onchange="f1.submit();">
                     <option value="">All</option>
                 <? echo (
-						return ssi::make_drop_down( [ map { $_, $_ } sort( sets::union( map { $_->category() } openprint::Equipment::find( 'use_in_scheduling'=>1 ) ) ) ], $session{'/employee/performance/history.html?category'} );
+						return ssi::make_drop_down( [ map { $_, $_ } sort( sets::union( map { $_->category() } openprint::Equipment->find( 'use_in_scheduling'=>1 ) ) ) ], $session{'/employee/performance/history.html?category'} );
 						) ?>
                 </select>
             </li>
 <li><label>Equipment:</label>
 <? echo ( 
     @{$$variable{'Equipment'}} = ();
-    my @presses = openprint::Equipment::find('category'=>$session{'/employee/performance/history.html?category'},'use_in_scheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+    my @presses = openprint::Equipment->find('category'=>$session{'/employee/performance/history.html?category'},'use_in_scheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 
     my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/performance/history.html?equipment_id'} ) );
     if ( ! @selected_equipment ) {
@@ -46,7 +46,7 @@
 		<li><label>Operator:</label>
 			<select name="operator_id" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 'usergroup'=>'Press',
 'type'=>'E',
 'order'=>'lower(strfirstname),lower(strlastname)',
