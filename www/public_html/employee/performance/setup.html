@@ -26,7 +26,7 @@
 	<? echo (
 		my $html;
 		my $rowclass;
-		foreach my $Type ( openprint::PerformancePoint_Type->find('order'=>'lower(name)') ) {
+		foreach my $Type ( openprint::Performance_Point_Type->find('order'=>'lower(name)') ) {
 			
 			my @Equipment = openprint::Equipment->find(
 					'use_in_scheduling'=>1,
@@ -42,7 +42,7 @@
 			</tr>
 ';
 			foreach my $Equipment ( @Equipment ) {
-				my $Point = new openprint::PerformancePoint({'equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'}});
+				my $Point = new openprint::Performance_Point({'equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'}});
 				$html .= sprintf(q`<tr%1$s>
 										<td class="Equipment">%4$s</td>
 										<td class="value"><input type="text" id="value-%2$d-%3$d" name="value-%2$d-%3$d" value="%5$s" /></td>

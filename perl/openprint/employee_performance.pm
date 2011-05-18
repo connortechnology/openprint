@@ -2,7 +2,8 @@ package openprint::employee_performance;
 use strict;
 
 require sql;
-require openprint::PerformancePoint;
+require openprint::Performance_Point;
+require openprint::Performance_Report;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -15,15 +16,15 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub setup {
 	if ( $param{'function'} eq 'Save' ) {
-		foreach my $Type ( openprint::PerformancePoint_Type->find() ) {
+		foreach my $Type ( openprint::Performance_Point_Type->find() ) {
 			foreach my $Equipment ( openprint::Equipment->find(
 						'use_in_scheduling'=>1,
 						( $Type->category() ? ( 'category'=>$Type->category() ) : () ),
 						) ) {
-				my $Point = openprint::PerformancePoint->find_one('equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'} );
+				my $Point = openprint::Performance_Point->find_one('equipment_id'=>$$Equipment{'id'},'type_id'=> $$Type{'id'} );
 				if ( ! $Point ) {
 					next if ! $param{"value-$$Type{id}-$$Equipment{id}"};
-					$Point = new openprint::PerformancePoint();
+					$Point = new openprint::Performance_Point();
 					$Point->set({
 						'type_id'	=>	$$Type{'id'},
 						'equipment_id'	=>	$$Equipment{'id'},
@@ -49,7 +50,7 @@ sub setup {
 
 sub _type {
 	if ( $param{'function'} eq 'remove' ) {
-		my $Type = new openprint::PerformancePoint_Type( $param{'type_id'} );
+		my $Type = new openprint::Performance_Point_Type( $param{'type_id'} );
 		$variable{'error'} .= $Type->delete();
 	} # end if
 } # end sub _type
@@ -71,6 +72,9 @@ sub _history {
                 'category', 'equipment_id', 'operator_id' ) );
 } # end sub _history
 
+sub edit {
+	my $Report = $variable{'Report'} = new openprint::Performance_Report( $param{'report_id'} );
+} # end sub edit;
 
 1;
 __END__

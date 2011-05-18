@@ -111,7 +111,7 @@
 							</ul>
 						</li>
 <? if ( $session{'user_id'} ) ?>
-						<li id="ProductionMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/pro/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
+						<li id="ProductionMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/p/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
@@ -132,7 +132,7 @@
 								<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
 								<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/performance/setup.html;NOSSL">&raquo; Performance Setup</a></li>
-								<li><a href="/employee/performance/reporting.html;NOSSL">&raquo; Performance Reporting</a></li>
+								<li><a href="/employee/performance/history.html;NOSSL">&raquo; Performance History</a></li>
 								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 							</ul>
 						</li>
