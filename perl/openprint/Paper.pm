@@ -1371,7 +1371,7 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 
 	$Paper = $Paper->clone();
 	if ( $qty_index ) {
-		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 $openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
