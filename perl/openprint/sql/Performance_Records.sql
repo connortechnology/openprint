@@ -9,5 +9,5 @@ CREATE TABLE Performance_Records (
 	type_id	INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES PerformancePoint_Types (id),
 	quantity	float,
 	total		INTEGER,
-	PRIMARY KEY (record_id,docket,type_id)
+	PRIMARY KEY (report_id,docket,type_id)
 );

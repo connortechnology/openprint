@@ -60,7 +60,7 @@ sub history {
                 'starttime_start_year','starttime_start_month','starttime_start_day',
                 'starttime_end_year','starttime_end_month','starttime_end_day',
                 'category', 'equipment_id', 'operator_id' ) );
-    ssi::setup_date_select( '/employee/performance/history.html', 'starttime_start', -31 );
+    ssi::setup_date_select( '/employee/performance/history.html', 'starttime_start', -7 );
     ssi::setup_date_select( '/employee/performance/history.html', 'starttime_end', '' );
 
 } # end sub history
@@ -74,7 +74,7 @@ sub _history {
 
 sub edit {
 	my $Report = $variable{'Report'} = new openprint::Performance_Report( $param{'report_id'} );
-} # end sub edit;
+} # end sub edit
 
 1;
 __END__

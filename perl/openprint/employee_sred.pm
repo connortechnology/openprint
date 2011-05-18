@@ -15,7 +15,7 @@ require openprint::SRED_Project;
 
 sub projects {
 	if ( $param{'function'} eq 'Save' ) {
-		my $Project = new openprint::SRED_Project();
+		my $Project = new openprint::SRED_Project($param{'project_id'});
 		$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
 		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
 		%param = ();

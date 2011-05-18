@@ -16,6 +16,7 @@ $serial = 'sred_projects_id_seq';
 	'description'	=>	'description',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'deleted'		=>	'deleted',
 );
 
 %transforms = (

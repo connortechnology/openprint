@@ -28,7 +28,7 @@
 					<li><label>Attachment:</label><input type="file" name="filename" /></li>
 				</ul>
 			</div>
-<? echo ( ssi::button( 'Add', { 'onclick' => q`var form = $('f1'); form.action='project.html';form.function.value='Add';f1.submit();`, } ); ) ?>
+<? echo ( ssi::button( 'Add', { 'onclick' => q`var form = $('f1'); form.action='project.html';form.elements['function'].value='Add';f1.submit();`, } ); ) ?>
 		</li>
 	</ul>
 </div>

@@ -1,5 +1,5 @@
-DROP TABLE IF EXISTS Performance_Records;
-CREATE TABLE Performance_Records (
+DROP TABLE IF EXISTS Performance_Reports;
+CREATE TABLE Performance_Reports (
 
     id	SERIAL,
     shift_id	INTEGER NOT NULL, FOREIGN KEY (shift_id) REFERENCES Shifts (id),
@@ -10,5 +10,5 @@ CREATE TABLE Performance_Records (
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX performance_records_idx on Performance_records (shift_id,operator_id);
+CREATE INDEX performance_reports_idx on Performance_reports (shift_id,operator_id);
 
