@@ -25,6 +25,10 @@ $serial = 'sred_projects_id_seq';
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
+%defaults = (
+	'deleted'	=>	0,
+);
+
 sub Created_By {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Created_By
