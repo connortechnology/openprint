@@ -282,12 +282,9 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 
 		if ( $second eq 'proj' ) {
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @openprint::param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
-			$variable{'ProjectIndex'} = $r->param('ProjectIndex');
-			$variable{'ServiceIndex'} = $r->param('ServiceIndex');
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
+			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
-			$variable{'OrderID'} = $r->param('OrderID');
-
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
 			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};

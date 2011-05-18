@@ -263,6 +263,7 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
+	'Select Company'	=>	79,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);

@@ -127,7 +127,6 @@ sub total {
 	my ( $self ) = @_;
 
 	if ( ! $$self{'id'} ) {
-		$log->error('Invoice:total no id! ref:' . (ref $self) . ' self:' . $self);
 		return;
 	} # end if
 
