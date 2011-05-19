@@ -1411,13 +1411,13 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 
 	$Paper = $Paper->clone();
 	if ( $qty_index ) {
-		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 $openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
 				$Paper->start_width( $Paper->width() );
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			} elsif ( $Paper->width() > $$specs{'StockWidth'.$qty_index} ) {
+			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} else {
 				$log->warn("Unsuitable Stock");
@@ -1428,10 +1428,10 @@ $openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'S
 				if ( ! $Paper->start_height() ) {
 					$Paper->start_height( $$specs{'StockHeight'.$qty_index} );
 					$Paper->height( $$specs{'StockHeight'.$qty_index} );
-				} elsif ( $Paper->height() > $$specs{'StockHeight'.$qty_index} ) {
+				} elsif ( $Paper->height() >= $$specs{'StockHeight'.$qty_index} ) {
 					$Paper->height( $$specs{'StockHeight'.$qty_index} );
 				} else {
-					$log->warn("Unsuitable Stock");
+					$log->warn("Unsuitable Stock due to height");
 					return new openprint::Paper();
 				} # end if
 			

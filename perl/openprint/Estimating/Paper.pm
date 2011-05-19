@@ -109,7 +109,9 @@ sub calc {
         foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
 			my $Supplied = $Paper->Supplied();
+$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
             $papers{$Supplied->to_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
