@@ -5,6 +5,7 @@
 
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
+			'columns'	=>	'*,(select shortname from papernames where id=name_id) AS name, (select shortname from paperfinishes where id=finish_id) AS finish, (select shortname from papercolours where id=colour_id) AS colour, (select shortname from paperweights where id=weight_id) AS weight',
 			'group_id'		=> $session{'/administrator/stock/list.html?Group'},
 			'owner_id'		=> $session{'/administrator/stock/list.html?Owner'},
 			'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'},

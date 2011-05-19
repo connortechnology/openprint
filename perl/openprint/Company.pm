@@ -12,6 +12,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
+require openprint::address;
 
 $debug = 0;
 $table = 'companies';

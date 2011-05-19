@@ -329,7 +329,7 @@ sub summary {
     } # end foreach
 
 	my @keys = sort keys %Papers;
-$openprint::log->debug("Keys: " . @keys );
+#$openprint::log->debug("Keys: " . @keys );
 
 	if ( $qty_index ) {
 		my @summaries;
@@ -348,6 +348,7 @@ $openprint::log->debug("Keys: " . @keys );
 					$html .= sprintf(' %.0f sq feet', ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 );
 				} elsif ( $$Price{'units'} eq 'per square inch' ) {
 					$html .= sprintf(' %.0f sq inches', $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() );
+				} elsif ( $$Price{'units'} eq 'Per 100lbs' ) {
 				} elsif ( $$Price{'units'} ) {
 					$html .= 'unknown units: ' . $$Price{'units'};
 				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {

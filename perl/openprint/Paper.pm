@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	=	'paper_id_seq';
 %fields = (
@@ -48,6 +48,7 @@ $serial	=	'paper_id_seq';
 		'colour_id'		=>	'colour_id',
 		'finish_id'		=>	'finish_id',
 		'weight_id'		=>	'weight_id',
+		'quality_id'	=>	'quality_id',
 		'calliper'		=>	'calliper',
 		'taxexempt1'	=>	'taxexempt1',
 		'taxexempt2'	=>	'taxexempt2',
@@ -153,10 +154,10 @@ sub save {
 		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
-	#if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		#sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
-		#@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
-	#} # end if quality_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+		sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
+		@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
+	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
@@ -1076,9 +1077,8 @@ sub load_from_signature {
 	} else {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-$openprint::log->debug("Loading paper using paper_id") if $debug;
 			$Paper = $Paper->id() ? $Paper : undef;
-$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
+$openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 		} elsif ( ! ( ( $$specs{'ddmStockBrand'} or $$specs{'ddmStockName'} ) and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if

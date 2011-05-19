@@ -717,7 +717,7 @@ sub delete_service {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index );
+	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id any'=>$service_index );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ] } ) if $Job;
 	sql::end_transaction( $openprint::dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
