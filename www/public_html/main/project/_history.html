@@ -11,7 +11,12 @@
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?created_on_end_year','/main/project/history.html?created_on_end_month','/main/project/history.html?created_on_end_day'} ),
 			'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?updated_on_start_year','/main/project/history.html?updated_on_start_month','/main/project/history.html?updated_on_start_day'} ),
 			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?updated_on_end_year','/main/project/history.html?updated_on_end_month','/main/project/history.html?updated_on_end_day'} ),
-			'company_id'		=> $session{'company_id'},
+
+( $session{'user_type'} eq 'A' ? ( 
+	$session{'/main/project/history.html?company_id'} ? ( 'company_id' => $session{'/main/project/history.html?company_id'} ) : ()
+	) : ( 
+			'company_id'		=>  $session{'company_id'}
+) ),
 			'status'			=> [ split( ';', $session{'/main/project/history.html?ddmStatus'} ) ],
 			'type_id'			=> $session{'/main/project/history.html?type_id'},
 			'predefined'		=> $session{'/main/project/history.html?predefined'},
@@ -99,7 +104,19 @@
 		</tr>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
-			<td colspan="7"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
+			<td colspan="7"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?>
+<? echo ( 
+	if ( $$variable{'Project'}->predefined() ) {
+		my @Products = openprint::Product->find('project_id'=>$$variable{'Project'}->id());
+		if ( @Products ) {
+			return '<br/>Predefined for ' . join('<br/>', map { $_->category()->name() . ' ' . $_->name() } @Products);
+		} else {
+			return '<br/>Not assigned to a product.';
+		} 
+	} # end if
+	return;
+) ?>
+</a></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>

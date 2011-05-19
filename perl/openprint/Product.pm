@@ -41,6 +41,9 @@ $serial = 'product_id_seq';
 );
 
 sub find {
+	if ( $_[0] eq 'openprint::Product' ) {
+		shift;
+	} # end if
 	my %params = @_;
 
 	my @values;

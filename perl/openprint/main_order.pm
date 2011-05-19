@@ -21,6 +21,7 @@ require openprint::service;
 require openprint::Order;
 require openprint::order;
 require openprint::OrderedProduct;
+require openprint::OrderedProject;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::Tax;
@@ -31,18 +32,31 @@ sub information {
 	my $order_id = $param{'OrderID'};
 	# Order creation can happen here as well, because we are doing away with quantity_select
 
-	if ( $order_id and $param{'remove'} ) {
-		my $project_index = $param{'remove'};
-		$project_index =~ s/\D//g;
-		my $ac = sql::start_transaction( $dbh );
-		my $Project = new openprint::Project( $project_index );
-		$Project->add_to_log( @session{'company_id','user_id'}, "Remove from order $order_id" );
-		$Project->docket( '' );
-		$Project->order_id( '' );
-		$Project->save();
-		$Project->update_status();
-		sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, $order_id, $param{'remove'});
-		sql::end_transaction( $dbh, $ac );
+	if ( $order_id and $param{'action'} eq 'remove' ) {
+		if ( $param{'project_id'} ) {
+			$param{'project_id'} =~ s/\D//g;
+			my $OrderedProject = openprint::OrderedProject->find_one('project_id'=>$param{'project_id'}, 'order_id'=>$order_id);
+			if ( ! $OrderedProject ) {
+				$variable{'error'} .= "Project $param{project_id} is not in order $order_id<br/>";
+			} elsif ( $OrderedProject->order_id() != $order_id or $OrderedProject->project_id() != $param{'project_id'} ) {
+				$openprint::log->error("Wrong OrderedProject returned!");
+			} else {
+				$variable{'error'} .= $OrderedProject->delete();
+			} # end if
+		} elsif ( $param{'product_id'} ) {
+			$param{'product_id'} =~ s/\D//g;
+			my $OrderedProduct = openprint::OrderedProduct->find_one('id'=>$param{'product_id'}, 'order_id'=>$order_id);
+			if ( ! $OrderedProduct ) {
+				$variable{'error'} .= "Product $param{product_id} is not in order $order_id<br/>";
+			} elsif ( $OrderedProduct->order_id() != $order_id or $OrderedProduct->id() != $param{'product_id'} ) {
+				$openprint::log->error("Wrong OrderedProduct returned!");
+			} else {
+				$variable{'error'} .= $OrderedProduct->delete();
+			} # end if
+		} else {
+			$openprint::log->error('Nothing specified to delete');
+			$variable{'error'} .= 'Nothing specified to delete.';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'New Order' ) {
 		# Re order situation
 		$order_id = openprint::order::make_order_from_order( $order_id );
@@ -114,6 +128,7 @@ $openprint::log->debug("Making order from quote");
 		# Only check for errors if we don't have any yet
 		my @errors;
 		foreach my $Product ( $Order->Products() ) {
+$openprint::log->debug("Got product.");
 			if ( ! $Product->shippingtype() ) {
 				push @errors, "Please select a shipping type.<br/>";
 			} # end if

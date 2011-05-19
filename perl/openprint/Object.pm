@@ -62,12 +62,14 @@ sub new {
 		} # end if
 	return $self;
 	} elsif ( ref $id eq 'HASH' ) {
+$log->debug("Multi-key Obejct HASH " );
 	my $self = {};
 	bless $self, $parent;
 		# First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
+$log->debug("Object::new got " . $self->to_string() );
 	return $self;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 	my $self = {};

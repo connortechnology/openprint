@@ -102,51 +102,47 @@ function same_as_billing( on, id ) {
 			<!--#include virtual="_payment_options.html"-->
 			</div>
 <? endif ( $config{'PaymentOnOrderInformation'} ) ?>
-<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
+<? eval ( 
+	@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
+	@{$$variable{'Products'}} = $$variable{'Order'}->Products();
+	@{$$variable{'Contents'}} = ( @{$$variable{'Projects'}}, @{$$variable{'Products'}} );
+) ?>
+<? if ( @{$$variable{'Contents'}} == 1 ) ?>
 			<div id="ShippingInformation">
 				<? echo (
 					my $html = '';
 					my @Projects = $$variable{'Order'}->Projects();
 					my @Products = $$variable{'Order'}->Products();
-					if ( @Projects != 1 ) {
-						$log->error('Wrong # of projects in order ' . @Projects);
+					# If there is only 1 thing in the order, then we can condense
+					if ( @Products ) {
+						$$variable{'Project'} = $Products[0]->Project();
+					} else {
+						$$variable{'Project'} = $Projects[0];
 					} # end if
-					if ( ( @Projects == 1 or @Products == 1 ) and ! ( @Projects and @Products ) ) {
-						# If there is only 1 thing in the order, then we can condense
-						if ( @Products ) {
-							$$variable{'Project'} = $Products[0]->Project();
-						} else {
-							$$variable{'Project'} = $Projects[0];
+					my $services = $$variable{'Project'}->services();
+					my @ShippingServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+					
+					my @ShippingServices;
+					foreach my $ST ( openprint::ServiceType::find('category'=>'Shipping') ) {
+						if ( $$services{$ST->name()} ) {
+							push @ShippingServices, @{$$services{$ST->name()}};
 						} # end if
-						my $services = $$variable{'Project'}->services();
-						my @ShippingServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
-						
-						my @ShippingServices;
-						foreach my $ST ( openprint::ServiceType::find('category'=>'Shipping') ) {
-							if ( $$services{$ST->name()} ) {
-								push @ShippingServices, @{$$services{$ST->name()}};
-							} # end if
-						} # end foreach
-						if ( ! @ShippingServices ) {
-							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
-						} elsif ( $$services{'UPS'} ) {
-							$$variable{'ServiceIndex'} = $$services{'UPS'}[0];
-							$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'UPS' );
-							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
-						} else {
-							$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'CustomerPickUp' );
-						}
+					} # end foreach
+					if ( ! @ShippingServices ) {
+						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
+					} elsif ( $$services{'UPS'} ) {
+						$$variable{'ServiceIndex'} = $$services{'UPS'}[0];
+						$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'UPS' );
+						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
+					} else {
+						$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'CustomerPickUp' );
 					} # end if
 					return $html;
 				) ?>
 			</div>
-<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
+<? endif ( @{$$variable{'Contents'}} == 1 ) ?>
 		</div><!--Header-->
 		<div id="Contents">
-			<? eval ( 
-				@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
-				@{$$variable{'Products'}} = $$variable{'Order'}->Products();
-			) ?>
 			<? if ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
 				<div id="Projects">
 					<? echo (
@@ -154,9 +150,7 @@ function same_as_billing( on, id ) {
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
 							$html .= '<div class="Project"><h3 class="project_id">Project '.$Project->id().'</h3><p class="buttons">';
-							if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
-								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-							} # endif
+							$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;project_id=$$Project{id}", 'Remove' );
 							if ( $config{'OrderMode'} ne 'Simple' ) {
 								$html .= ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' );
 							} # endif
@@ -172,12 +166,10 @@ function same_as_billing( on, id ) {
 						my $html;
 						foreach my $Product ( @{$$variable{'Products'}} ) {
 							$$variable{'Product'} = $Product;
-							$$variable{'Project'} = $$variable{'Product'}->Project();
+							$$variable{'Project'} = $Product->Project();
 							$html .= '<div class="Project"><p class="buttons">';
-							if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
-								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-							} # endif
-							$html .= '</p>';
+							$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;product_id=$$Product{id}", 'Remove' );
+							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
 							$html .= '</div>';
 						} # end foreach
