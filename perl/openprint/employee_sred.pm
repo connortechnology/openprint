@@ -15,7 +15,7 @@ require openprint::SRED_Project;
 
 sub projects {
 	if ( $param{'function'} eq 'Save' ) {
-		my $Project = new openprint::SRED_Project();
+		my $Project = new openprint::SRED_Project($param{'project_id'});
 		$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
 		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
 		%param = ();
@@ -92,8 +92,9 @@ sub _history {
 sub project {
 	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
 	if ( $param{'function'} eq 'Save' ) {
-		$variable{'error'} .= $Project->save(\%param);
-		$variable{'Redirect'} = '/employee/sred/projects.html';
+		$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
+		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
+		%param = ();
 	} elsif ( $param{'function'} eq 'Copy' ) {
 		$variable{'Project'} = $Project = $Project->copy();
 		$variable{'error'} .= $Project->save();

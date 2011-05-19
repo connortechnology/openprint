@@ -2195,6 +2195,8 @@ sub _check_out_popup {
 
 sub _add_paper_show {
 } # end sub _add_paper_show
+sub _add_paper_hide {
+} # end sub _add_paper_hide
 
 sub docket_labels {
 } # end sub docket_labels

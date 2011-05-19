@@ -25,7 +25,7 @@
 
 	 function load_cars( form ) {
 		 $('Results').innerHTML = 'Please wait...';
-		 new Ajax.Updater('Results','_car_results.html', {method:'get',parameters:Form.serialize(form)});
+		 new Ajax.Updater('Results','/employee/iso/_car_results.html', {method:'get',parameters:Form.serialize(form)});
 	 } // end function
 -->
 </script>
