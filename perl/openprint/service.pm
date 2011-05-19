@@ -231,12 +231,16 @@ sub auto_calculate {
 	my $Project = new openprint::Project( $project_index );
 
 	my @signature_indices = $Project->signatures();
-	return if ! scalar @signature_indices;
+	if ( ! scalar @signature_indices ) {
+		$openprint::log->warn("service::auto_calculate with no signatures");
+		return;
+	} # end if
 
 	# If the printing services aren't complete, then there is no sense continuing
-	if ( @signature_indices ) {
-		my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
-		return if sets::isin( 'uncalculated', \@statuses );
+	my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
+	if ( sets::isin( 'uncalculated', \@statuses ) ) {
+		$openprint::log->warn("service::auto_calculate with uncalcaulted signatures");
+		return;
 	} # end if
 	my $services = $Project->services();
 

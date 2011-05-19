@@ -300,7 +300,10 @@ sub Projects {
 
 sub Products {
 	my $self = shift;
-	return () if ! $$self{'id'};
+	if ( ! $$self{'id'} ) {
+		$openprint::log->error("openrpint::Order->Products called with no id");
+		return ();
+	} # end if
 	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
 	return @{$$self{'Products'}};
 } # end sub Products

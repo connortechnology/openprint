@@ -4,6 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
 use Carp qw( cluck );
+use Math::Round;
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -505,17 +506,17 @@ sub mweight {
 		if ( $$self{'gsm'} ) {
 			my $wpsi = $$self{'gsm'}/703064.5;
 			if ( $$self{'type'} eq 'Roll' and $$self{'basis_width'} and $$self{'basis_height'} ) {
-				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
+				$$self{'mweight'} = Math::Round::round( $wpsi * $$self{'basis_width'} * $$self{'basis_height'} * 1000 );
 				# MWeight is in relaion to the basis size
 			} elsif ( $$self{'width'} and $$self{'height'} ) {
-				$$self{'mweight'} = sprintf('%.2f', $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
+				$$self{'mweight'} = Math::Round::round( $wpsi * $$self{'width'} * $$self{'height'} * 1000 );
 			} # end if
 		} elsif ( ($self->weight() =~ /(\d+)lb/) or ($self->weight() =~ /(\d+)lbs/) ) {
-			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
+			$$self{'mweight'} = Math::Round::round(($1*$$self{'width'}*$$self{'height'})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
 #$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
-			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
+			$$self{'mweight'} = Math::Round(($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
 		$self->wpsi(undef);
     } # end if

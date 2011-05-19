@@ -54,6 +54,7 @@ sub get_unfinished_order {
 		} elsif ( $Order->company_id() != $session{'company_id'} ) {
 			$Order->save('session_id'=>undef);
 		} else {
+			$session{'OrderID'} = $Order->id();
 			return $Order->id();
 		} # end if
 	} # foreach
@@ -70,6 +71,7 @@ sub get_unfinished_order {
 			$Order->save('session_id'=>undef);
 			next;
 		} else {
+			$session{'OrderID'} = $Order->id();
 			return $Order->id();
 		} # end if
 	} # foreach
@@ -111,7 +113,7 @@ sub add_product {
 	$error .= $Product->save();
 
 	# Make the object reload its stored cache of Products
-	delete $$Order{'Products'};
+	$Order->Products(undef);
 
 	my $Project = $Product->Project();
 	$Project->order_id( $order_id );
@@ -119,13 +121,11 @@ sub add_product {
 	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
 		openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
 	} # end foreach
-	foreach my $signature_service_index ( sort $Project->signatures() ) {
-		openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $signature_service_index, 'Printing' );
-	} # end foreach
-	openprint::service::auto_calculate( $openprint::r, $log, $dbh, \%variable, $Project->id(), undef );
-	#$Project->price1( $Product->price() );
-	$error .= $Project->save();
+	$error .= $Project->recalculate();
 $log->debug("E: $error") if $error;
+	if ( $Project->status() ne 'Unordered' ) {
+		return ( $order_id, 'There is a problem with this product.  Please contact customer support.' );
+	} # end if
 
 	return ( $order_id, $error );
 } # end sub add_product
