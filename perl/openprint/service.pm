@@ -224,26 +224,29 @@ sub insert_service_specs {
 } # end sub
 
 sub auto_calculate {
-	my ( $r, $log, $dbh, $variable, $project_index, $exclude ) = @_;
+	my ( $Project, $exclude ) = @_;
 
 	my $alert;
 	my $specs;
-	my $Project = new openprint::Project( $project_index );
 
 	my @signature_indices = $Project->signatures();
-	return if ! scalar @signature_indices;
+	if ( ! scalar @signature_indices ) {
+		$openprint::log->warn("service::auto_calculate with no signatures");
+		return;
+	} # end if
 
 	# If the printing services aren't complete, then there is no sense continuing
-	if ( @signature_indices ) {
-		my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
-		return if sets::isin( 'uncalculated', \@statuses );
+	my @statuses = sql::execute( $openprint::log, $openprint::dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $$Project{'id'} );
+	if ( sets::isin( 'uncalculated', \@statuses ) ) {
+		$openprint::log->warn("service::auto_calculate with uncalcaulted signatures");
+		return;
 	} # end if
 	my $services = $Project->services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
-	if ( ! openprint::Estimating::Folding::neccessary( $project_index ) ) {
+	if ( ! openprint::Estimating::Folding::neccessary( $$Project{'id'} ) ) {
 		while ( my $si = shift @{$$services{'Folding'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
+			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
 	} else {
 		if ( ! $$services{'Folding'} ) {
@@ -253,7 +256,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Paper::neccessary( $Project ) ) {
 		if ( ! $$services{'Paper'} ) {
 			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
 		} # end if
@@ -273,17 +276,17 @@ sub auto_calculate {
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
+			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
 	} # end if
 
-	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {
 		if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
 			push @{$$services{'SaddleStitching'}}, $Project->add_service( 'SaddleStitching' );
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $Project ) ) {
 		if ( ! $$services{'ThreeKnifeTrim'} ) {
 			push @{$$services{'ThreeKnifeTrim'}}, $Project->add_service( 'ThreeKnifeTrim' );
 		} # end if
@@ -301,14 +304,14 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Collating::neccessary( $Project ) ) {
 		if ( ! $$services{'Collating'} ) {
 			push @{$$services{'Collating'}}, $Project->add_service( 'Collating' );
 		} # end if
 	} else {
 		if ( ! $$services{'Collating'} ) {
 			foreach my $si ( @{$$services{'Collating'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
+				openprint::print_project::delete_service( $$Project{'id'}, $si );
 			} # end foreach
 		} # end if
 	} # end if
@@ -320,7 +323,7 @@ sub auto_calculate {
 
 	foreach my $si ( @{$$services{'Proofs'}} ) {
 		if ( $openprint::config{'Insert Default Proofs'} eq 'Y' ) {
-			openprint::Estimating::Proofs::insert_proof_defaults( $log, $dbh, $project_index, $si );
+			openprint::Estimating::Proofs::insert_proof_defaults( $openprint::log, $openprint::dbh, $$Project{'id'}, $si );
 		} # end if
 	} # end foreach
 
@@ -348,9 +351,9 @@ sub auto_calculate {
 
 	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing' ) {
 		eval 'require openprint::Estimating::'.$service_name.';';
-		$log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
+		$openprint::log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
 		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
-		$log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
+		$openprint::log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
 
 		if ( $neccessary ) {
 			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
@@ -363,7 +366,7 @@ sub auto_calculate {
 		foreach my $service_index ( @{$$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
-			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
@@ -377,14 +380,14 @@ sub auto_calculate {
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','Signature'] );
-			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
+			$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
 	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 		if ( $$services{$ServiceType->name()} ) {
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
-				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $ServiceType->type() );
+				$specs = internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $service_index, $ServiceType->type() );
 				$alert .= $$specs{'alert'};
 			} # end foreach service_index
 		} # end if

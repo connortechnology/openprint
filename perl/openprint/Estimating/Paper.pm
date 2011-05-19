@@ -77,9 +77,8 @@ sub signature_needs {
 } # end sub
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
 
@@ -322,20 +321,20 @@ sub summary {
     my %Papers;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			# Convert back to original size
-			@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
-			$Paper->mweight(0); # force recalc
+		foreach my $q_index ( $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{'txtImposition'.$q_index};
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
 			$Papers{$Paper->to_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
 
+	my @keys = sort keys %Papers;
+$openprint::log->debug("Keys: " . @keys );
+
 	if ( $qty_index ) {
 		my @summaries;
 		my $stock_id = 1;
-		foreach my $key ( sort keys %Papers ) {
+		foreach my $key ( @keys ) {
 			my $html = '';
 			my $Paper = $Papers{$key};
 #$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
@@ -362,7 +361,7 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return [ sort keys %Papers ];
+	return \@keys;
 } # end sub summary
 
 sub save {

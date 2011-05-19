@@ -404,6 +404,9 @@ sub find_operators {
 	if ( exists $$params{$k.'_null_or_>='} ) {
 		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
 	} # end if
+	if ( exists $$params{$k.' is null or ='} ) {
+		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
+	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
 	} # end if

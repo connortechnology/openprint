@@ -32,19 +32,17 @@ sub no_outputs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $Project ) = @_;
-
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	my ( $Project ) = @_;
 
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-		$log->debug(" ** Project is marked as No bindery, ThreeKnifeTrim not needed ! ** ");
+		$openprint::log->debug(" ** Project is marked as No bindery, ThreeKnifeTrim not needed ! ** ");
 		return 0;
 	} # end if
 
 	my $printing_service_index = $$services{''}[0] if $$services{''};
-	my $specs = openprint::service::get_specs_ref( $Project->id(), $printing_service_index );
+	my $specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
 	if ( sets::isin( $$specs{'rdbTemplateType'},[ 'SpinePasting','Unbound','NoBindery'] ) ) {
 		return 1;
 	} # end if

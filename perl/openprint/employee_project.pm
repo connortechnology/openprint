@@ -442,7 +442,6 @@ sub view {
 			sql::end_transaction( $dbh, $ac );
 			} # end if
 		} # end if NewServiceType or txtServiceName
-#openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $project_index );
 ## needs approval
 #        # email CSR
 	} elsif ( $param{'btnFunction'} eq 'AdditionalChargeNotify' ) {
@@ -454,7 +453,7 @@ sub view {
 			if ( $key =~ /^chkDelete-([,\d]+)$/ ) {
 				foreach my $sid ( split(',', $1 ) ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $sid );
-					openprint::print_project::delete_service( $log, $dbh, $project_index, $sid );
+					openprint::print_project::delete_service( $project_index, $sid );
 					openprint::press_schedule::remove( $project_index, $sid );
 					openprint::bindery_schedule::remove( $project_index, $sid );
 					$Project->add_to_log( @session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );

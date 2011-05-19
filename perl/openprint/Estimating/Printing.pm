@@ -296,12 +296,14 @@ sub variables {
 		} # end foreach k
 	} # end foreach side
 	my $Project = new openprint::Project( $project_index );
-	foreach my $version ( 1 .. $$new_specs{'versions'} ) {
-		push @v, "version-$version-description";
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "version-$version-quantity$qty_index";
-		} # end foreach qty_index
-	} # end foreach version
+	if ( $$new_specs{'versions'} ) {
+		foreach my $version ( 1 .. $$new_specs{'versions'} ) {
+			push @v, "version-$version-description";
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				push @v, "version-$version-quantity$qty_index";
+			} # end foreach qty_index
+		} # end foreach version
+	} # end if
 	return @v;
 } # end sub variables
 
@@ -2259,7 +2261,7 @@ sub calculate_impositions {
 	my ( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions ) = @_;
 
 	my @impositions;
-	my $SpreadLayout = '';
+	my $SpreadLayout = 0;
 	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		$SpreadLayout = 0;
 #$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -2540,7 +2542,7 @@ $log->debug("Press $$Press{strid} Impositions before paper filtering: " . @resul
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
-	if ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+	if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
 		my $found = 0;
 		foreach my $I ( @impositions ) {
 			if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -3889,7 +3891,7 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 
-	my $gross_sheets = $net_sheets + $total_overs;
+	$gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	my $weight = sprintf('%.2f', $gross_sheets * $Paper->sheet_weight() );

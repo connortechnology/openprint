@@ -90,6 +90,7 @@ function same_as_billing( on, id ) {
 			<div id="ShippingInformation">
 				<? echo (
 					my $html = '';
+<<<<<<< HEAD
 					my @Projects = @{$$variable{'Projects'}};
 					my @Products = @{$$variable{'Products'}};
 					if ( ( @Projects == 1 or @Products == 1 ) and ! ( @Projects and @Products ) ) {
@@ -130,9 +131,7 @@ function same_as_billing( on, id ) {
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
 							$html .= '<div class="Project"><h3 class="project_id"><a href="/main/project/view.html?ProjectIndex='.$Project->id().'">Project '.$Project->id().'</a></h3><p class="buttons">';
-							if ( @{$$variable{'Contents'}} > 1 ) {
-								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-							} # endif
+							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;project_id=$$Project{id}", 'text'=>'Remove' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
 							$html .= '</div>';
@@ -145,12 +144,10 @@ function same_as_billing( on, id ) {
 						my $html;
 						foreach my $Product ( @{$$variable{'Products'}} ) {
 							$$variable{'Product'} = $Product;
-							$$variable{'Project'} = $$variable{'Product'}->Project();
+							$$variable{'Project'} = $Product->Project();
 							$html .= '<div class="Project"><p class="buttons">';
-							if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
-								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-							} # endif
-							$html .= '</p>';
+							$html .= ssi::button( 'Remove'.$Project{'id'}, { 'href'=>"information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
+							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
 							$html .= '</div>';
 						} # end foreach

@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS Privacy_Groups;
 
-CREATE TABLE Privacy_Groupss (
+CREATE TABLE Privacy_Groups (
 	id	SERIAL,
 	name	TEXT,
 

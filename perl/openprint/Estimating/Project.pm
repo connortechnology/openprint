@@ -92,7 +92,7 @@ sub calc {
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	if ( $$printing_specs{'ProjectType'} ne $ProjectType->name() ) {
-		openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
+		openprint::print_project::delete_service( $$Project{'id'}, $$services{''}[0] );
 		$$services{''}[0] = openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $ProjectType->name() );
 		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	} # end if
@@ -117,7 +117,7 @@ sub calc {
 		} # end foreach
 	} else {
 		foreach ( @{$$services{'Numbering'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Numbering'};
 	} # end if
@@ -134,7 +134,7 @@ sub calc {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeBottom', $$specs{'EdgeBottom'} );
 		} # end foreach
 	} else {
-		map { openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ ); } @{$$services{'Sewing'}};
+		map { openprint::print_project::delete_service( $$Project{'id'}, $_ ); } @{$$services{'Sewing'}};
 		delete $$services{'Sewing'};
 	} # end if
 
@@ -443,7 +443,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
 			foreach ( @{$$services{'UVCoating'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+				openprint::print_project::delete_service( $$Project{'id'}, $_ );
 			} # end foreach
 			delete $$services{'UVCoating'};
 		} # end if
@@ -473,7 +473,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
 			foreach ( @{$$services{'Aqueous'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+				openprint::print_project::delete_service( $$Project{'id'}, $_ );
 			} # end foreach
 			delete $$services{'Aqueous'};
 		} # end if
@@ -624,7 +624,7 @@ $openprint::log->debug('Adding Folding');
 	} elsif ( $$services{'Folding'} ) {
 $openprint::log->debug('Deleting Folding');
 		foreach ( @{$$services{'Folding'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Folding'};
 	} # end if
@@ -644,7 +644,7 @@ $openprint::log->debug('Deleting Folding');
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $$services{'Drilling'} ) {
 		foreach ( @{$$services{'Drilling'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end if
 		delete $$services{'Drilling'};
 	} # end if
@@ -677,7 +677,7 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} else {
 		foreach ( @{$$services{'Scoring'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Scoring'};
 	} # end if
@@ -690,7 +690,7 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} else {
 		foreach ( @{$$services{'Perforating'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Perforating'};
 	} # end if
@@ -715,7 +715,7 @@ $openprint::log->debug('Deleting Folding');
 		sql::end_transaction( $dbh, $ac );
 	} else {
 		foreach my $sid ( @{$$services{'UPS'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $sid );
+			openprint::print_project::delete_service( $$Project{'id'}, $sid );
 		} # end foreach
 		delete $$services{'UPS'};
 	} # end if
@@ -729,7 +729,7 @@ $openprint::log->debug('Deleting Folding');
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'ShrinkWrap'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerShrinkWrap'} );
 	} else {
 		foreach ( @{$$services{'ShrinkWrap'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 	} # end if
 
@@ -740,7 +740,7 @@ $openprint::log->debug('Deleting Folding');
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Bundling'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerBundle'} );
 	} else {
 		foreach ( @{$$services{'Bundling'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 	} # end if
 
@@ -751,7 +751,7 @@ $openprint::log->debug('Deleting Folding');
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'LaminationType', $$specs{'LaminationType'} );
 	} else {
 		foreach ( @{$$services{'Lamination'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			openprint::print_project::delete_service( $$Project{'id'}, $_ );
 		} # end foreach
 	} # end if LaminationType
 
@@ -763,8 +763,8 @@ $openprint::log->debug('Deleting Folding');
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
-	openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $$Project{'id'} );
-	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
+	openprint::Estimating::MultiPage::calculate_signatures( $Project );
+	$$specs{'alert'} .= openprint::service::auto_calculate( $Project );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
 	my $services = $Project->services();
@@ -797,7 +797,7 @@ $openprint::log->debug('Deleting Folding');
 			foreach my $service_index ( @{$$services{$service_name}} ) {
 				my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
 				$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
-				$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
+				#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 			} # end foreach service_index
 		} # end foreach service_name
 	} else {
@@ -886,7 +886,7 @@ sub create_calc {
 		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
 			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
 				foreach my $s_id ( @{$services{$ServiceType->name()}} ) {
-					openprint::print_project::delete_service( $log, $dbh, $Project->id(), $s_id );
+					openprint::print_project::delete_service( $Project->id(), $s_id );
 				} # end foreach
 				delete $services{$ServiceType->name()};
 			} # end if
@@ -904,7 +904,7 @@ sub create_calc {
 		} # end foreach
 		if ( $services{''} ) {
 			foreach ( @{$services{''}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $Project->id(), $_ );
+				openprint::print_project::delete_service( $Project->id(), $_ );
 			} # end foreach
 		} # end if
 		$Project->Type( $ProjectType );
