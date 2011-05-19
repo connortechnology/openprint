@@ -35,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	=	'paper_id_seq';
 %fields = (
@@ -1077,9 +1077,8 @@ sub load_from_signature {
 	} else {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-$openprint::log->debug("Loading paper using paper_id") if $debug;
 			$Paper = $Paper->id() ? $Paper : undef;
-$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
+$openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 		} elsif ( ! ( ( $$specs{'ddmStockBrand'} or $$specs{'ddmStockName'} ) and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
