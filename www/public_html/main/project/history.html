@@ -86,6 +86,14 @@
 				</span>
 			</p>
 <? if ( $session{'user_type'} eq 'A' ) ?>
+			<p><label>Owner:</label>
+				<select name="company_id" onchange="load_projects(this.form);">
+					<option value="">All</option>
+					<? echo (
+						openprint::Company::get_dropdown( $session{'/main/project/history.html?company_id'} );
+					) ?>
+				</select>
+			</p>
 			<p><label>Predefined:</label>
 				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects(this.form);" />
 				<label class="radio" for="predefined1">Yes</label>

@@ -43,7 +43,7 @@ sub Operator {
 
 sub specs {
 	if ( ! $_[0]{'specs'} ) {
-		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'id'} );
+		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
 	} # end if
 	return $_[0]{'specs'};
 } # end sub specs

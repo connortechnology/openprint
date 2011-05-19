@@ -6,10 +6,9 @@ require openprint::Product;
 require openprint::Project;
 require openprint::Order;
 
-use vars qw( $serial $table $log $dbh %fields %transforms %defaults );
+use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults );
 
-my $debug = 1;
-
+$debug = 1;
 $serial = 'ordered_product_id_seq';
 $table = 'ordered_products';
 
@@ -26,44 +25,6 @@ $table = 'ordered_products';
 	'hst'			=> 'hst',
 	'pst'			=> 'pst',
 );
-
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM Ordered_Products WHERE 1>0';
-	my @values;
-
-	if ( $params{'id'} ) {
-		$sql .= ' AND id=?';
-		push @values, $params{id};
-	} # end if
-
-	if ( exists $params{'order_id'} ) {
-		if ( $params{'order_id'} ) {
-			$sql .= ' AND order_id=?';
-			push @values, $params{'order_id'};
-		} elsif ( ! defined $params{'order_id'} ) {
-			$sql .= ' AND order_id IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'product_id'} ) {
-		$sql .= ' AND product_id=?';
-		push @values, $params{'product_id'};
-	} # end if
-	if ( $params{'project_id'} ) {
-		$sql .= ' AND project_id=?';
-		push @values, $params{'project_id'};
-	} # end if
-	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Ordered Products: $sql @values");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Ordered Products: $sql @values #results:" . @$data);
-	} # end if
-	return map { new openprint::OrderedProduct( $_->{id}, $_ ) } @$data;
-	
-} # end sub find
 
 sub delete {
 	my $self = shift;
@@ -103,6 +64,7 @@ $openprint::log->debug("Creating proejct from template: " . $self->Product()->pr
 	$Project->user_id( $openprint::session{'user_id'} );
 	$Project->company_id( $openprint::session{'company_id'} );
 	$Project->currency_id( $self->Order()->currency_id() );
+	$Project->status('Unordered'); # To prevent deleted status
 	$Project->save();
 	$$self{'project_id'} = $Project->id();
 	my $e = $self->save();
@@ -149,6 +111,31 @@ sub shippingtype {
     return $$self{'shippingtype'};
 } # end sub shippingtype
 
+sub requested_for {
+	if ( @_ > 1 ) {
+		$_[0]{'requested_for'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'requested_for'} ) {
+$openprint::log->debug("Calcing requested_fro");
+		my $days = 7; # Default to 7, I don't know why, just chose it.
+		my $Project = $_[0]->Project();
+		my $services = $Project->services('Turnaround');
+		if ( $$services{'Turnaround'} ) {
+$openprint::log->debug("Have turnaround_id ");
+			my $Turnaround = $Project->Service( @{$$services{'Turnaround'}} );
+$openprint::log->debug("Turnaround: " . $Turnaround);
+			if ( $Turnaround ) {
+				my $specs = $Turnaround->specs();
+				$openprint::log->debug("Turnaround specs; $specs $$specs{'TurnaroundDays'}days");
+				$days = $$specs{'TurnaroundDays'} if $$specs{'TurnaroundDays'};
+			} else {
+				$openprint::log->debug("No Turnaround");
+			} # end if
+		} # end if
+		$_[0]{'requested_for'} = sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $days ) );
+	} # end if
+	return $_[0]{'requested_for'};
+} # end sub erquested_for
 
 1;
 __END__

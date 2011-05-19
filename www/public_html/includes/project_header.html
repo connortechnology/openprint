@@ -68,7 +68,7 @@
 					<? endif ( $$variable{'Project'}->Operator()->id() ) ?>
 
 					<? endif ( $$variable{'Project'}->docket() ) ?>
-					<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+					<? if ( $$variable{'Project'}->predefined() and $session{'user_type'} eq 'A' ) ?>
 					<li>
 						<label>Predefined For:</label>
 						<? echo (
@@ -79,7 +79,7 @@
 							return $html;
 						) ?>
 					</li>
-					<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+					<? endif ( $$variable{'Project'}->predefined() and $session{'user_type'} eq 'A' ) ?>
 				</ul>
 			</div>
 		</fieldset>

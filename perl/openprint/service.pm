@@ -255,11 +255,17 @@ sub auto_calculate {
 
 # Need these.  If it's a book, then we get printing service + signatures, else just printing service
 	my @signature_indices = $Project->signatures();
-	return if ! scalar @signature_indices;
+	if ( ! scalar @signature_indices ) {
+		$openprint::log->warn("service::auto_calculate with no signatures");
+		return;
+	} # end if
 
 	# If the printing services aren't complete, then there is no sense continuing
 	my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
-	return if sets::isin( 'uncalculated', \@statuses );
+	if ( sets::isin( 'uncalculated', \@statuses ) ) {
+		$openprint::log->warn("service::auto_calculate with uncalcaulted signatures");
+		return;
+	} # end if
 	my $services = $Project->services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary

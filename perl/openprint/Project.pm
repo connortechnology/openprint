@@ -24,6 +24,8 @@ require openprint::JDF;
 require openprint::OrderedProduct;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
+require openprint::Estimating::Multipage;
+require openprint::service;
 
 my $debug = 1;
 
@@ -929,6 +931,7 @@ sub copy {
 		} # end foreach
 	} # end while contents
 	sql::end_transaction( $openprint::dbh, $ac );
+	delete $$new{'Services'};
 
 	return $new;
 } # end sub copy
@@ -1003,7 +1006,9 @@ sub services {
 		$$self{'Services'} = \%results;
 	} # end if
 	if ( $name ) {
+$openprint::log->debug("looking for $name in Project::services");
 		if ( $$self{'Services'}{$name} ) {
+$openprint::log->debug("looking for $name in Project::services: foudn it");
 			return @{$$self{'Services'}{$name}};
 		} # end if
 		return;
@@ -1082,6 +1087,7 @@ sub summary {
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
 					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+					$openprint::log->warn("Error eval $$ServiceType{type} ::project_summary() : $@") if $@;
 					if ( $project_summary ) {
 						$summary .= $project_summary;
 					} else {
@@ -1214,7 +1220,7 @@ sub signatures {
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
 		if ( ! sets::isin( $self->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] ) ) {
-$openprint::log->debug("Project Type: " . $self->Type()->name() );
+$openprint::log->debug("Project::signatures Project Type: " . $self->Type()->name() );
 			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if
 		if ( $$services{'AdditionalSignature'} ) {
@@ -1369,7 +1375,7 @@ sub get_due_date {
 sub Ordered_Product {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'Ordered_Product'} ) {
-		my @Products = openprint::OrderedProduct::find( 'project_id'=>$$self{'id'} );
+		my @Products = openprint::OrderedProduct->find( 'project_id'=>$$self{'id'} );
 		if ( @Products == 1 ) {
 			$$self{'Ordered_Product'} = $Products[0];
 		} elsif ( @Products ) {
@@ -1596,8 +1602,35 @@ sub production_cost {
 } # end sub production_cost
 sub Service {
 	my ( $self, $service_id ) = @_;
-	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'service_id'=>$service_id} );
 } # end sub Service
+
+sub recalculate {
+	my $self = shift;
+$openprint::log->debug("Project::recalculate");
+	$self->currency_id( $openprint::session{Currency_id} );
+	my $services = $self->services();
+	if ( $$services{''} ) {
+$openprint::log->debug("Project::recalculate got type");
+		if ( $self->Type()->url() eq 'prin/prin_multi.html' ) {
+			my $service_index = $$services{''}[0];
+			my $specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'}, $service_index, 'Multipage' );
+			if ( $$specs{'Status'} eq 'calculated' ) {
+
+				openprint::Estimating::Multipage::calculate_signatures( $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'} );
+				openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'}, undef );
+			} # end if
+		} else {
+$openprint::log->debug("Project::recalculate calc sigs");
+			openprint::Estimating::Multipage::calculate_signatures( $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'} );
+$openprint::log->debug("Project::recalculate calc auto");
+			openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'}, undef );
+		} # end if
+	} # end if
+	$self->update_status();
+	$self->summary(undef);
+	return $self->save();
+} # end sub recalculate
 
 1;
 __END__
