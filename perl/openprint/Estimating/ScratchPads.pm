@@ -260,7 +260,7 @@ $openprint::log->debug("Scratch Pads : save");
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $log, $dbh, $p_id, $_ );
+			openprint::print_project::delete_service( $p_id, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 
@@ -358,8 +358,8 @@ $openprint::log->debug("Scratch Pads : save");
 		} # end foreach
 	} # end if
 
-	openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, \%variable, $p_id );
-	openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $p_id, $s_id );
+	openprint::Estimating::MultiPage::calculate_signatures( $Project );
+	openprint::service::auto_calculate( $Project, $s_id );
 } # end sub save
 
 1;

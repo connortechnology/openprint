@@ -77,9 +77,8 @@ sub signature_needs {
 } # end sub
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
 

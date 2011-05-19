@@ -24,7 +24,7 @@ require openprint::ScheduledJob;
 require openprint::Project_Service;
 require openprint::Todo;
 require openprint::Bug;
-require openprint::Estimating::Multipage;
+require openprint::Estimating::MultiPage;
 require openprint::service;
 
 $debug = 1;
@@ -1400,14 +1400,14 @@ $openprint::log->debug("Project::recalculate");
 	$self->currency_id( $openprint::session{Currency_id} );
 	my $services = $self->services();
 	if ( $$services{''} ) {
-		my $status = openprint::service::internal_calc( $log, $dbh, $variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
+		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
 		if ( $status ne 'calculated' ) {
 			# Recal signatures
-			my $function = 'openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures';
-			eval ($function.'( $openprint::log, $openprint::dbh, $openprint::variable, $$self{id}, $$services{''}[0] );');
+			my $function = 'openprint::Estimating::'.$self->Type()->type().'::calculate_signatures';
+			eval ($function.'( $self );');
 			$openprint::log->error("Project->recalculate $function $@") if $@;
 
-			openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $$self{'id'}, $$services{''}[0] );
+			openprint::service::auto_calculate( $self, $$services{''}[0] );
 		} # end if
 	} # end if
 	$self->update_status();

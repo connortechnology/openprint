@@ -108,15 +108,15 @@ sub view_services {
 				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
 					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	
@@ -126,7 +126,7 @@ sub view_services {
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'SaddleStitching'}[0], 'Stitching' );
 					} # end if
 				} # end if
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index ) if $recalc;
+				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 		
 				$Project->summary(undef);
 				$Project->save();
@@ -187,7 +187,7 @@ sub view_services {
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				openprint::print_project::delete_service( $project_index, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -215,7 +215,7 @@ sub view_services {
 				my $ServiceType = $PS->ServiceType();
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
+				openprint::print_project::delete_service( $project_index, $s_id );
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
@@ -378,10 +378,10 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 		foreach ( $Project->signatures({'Group'=>1}) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 
@@ -538,7 +538,7 @@ $log->debug('add interiorpages');
 	my $old_bindery_type = get_book_type( $project_index );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 		delete $$services{$old_bindery_type};
 	} # end if
@@ -548,7 +548,7 @@ $log->debug('add interiorpages');
 		foreach my $service_id ( keys %bindery_services ) { 
 			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
 			if ( $ServiceType->name() ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				openprint::print_project::delete_service( $project_index, $service_id );
 				@{$$services{$_}} = sets::exclude( [ $service_id ], $$services{$service_id} );
 			} # end if
 		} # end foreach
@@ -558,7 +558,7 @@ $log->debug('add interiorpages');
 		# Delete No Bindery Service
 		if ( $$services{'NoBindery'} ) {
 			foreach ( @{$$services{'NoBindery'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+				openprint::print_project::delete_service( $project_index, $_ );
 			} # end foreach
 			delete $$services{'NoBindery'};
 		} # end if

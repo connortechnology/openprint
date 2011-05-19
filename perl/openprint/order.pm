@@ -376,7 +376,7 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 			} elsif ( $$services{$ShippingType->name()} ) {
 				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
-					openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+					openprint::print_project::delete_service( $project_index, $_ );
 				} # end foreach
 				delete $$services{$ShippingType->name()};
 			} # end if
