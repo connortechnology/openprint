@@ -25,7 +25,7 @@
 
 	 function load_cars( form ) {
 		 $('Results').innerHTML = 'Please wait...';
-		 new Ajax.Updater('Results','_car_results.html', {method:'get',parameters:Form.serialize(form)});
+		 new Ajax.Updater('Results','/employee/iso/_car_results.html', {method:'get',parameters:Form.serialize(form)});
 	 } // end function
 -->
 </script>
@@ -47,17 +47,17 @@ Please select a CAR to view/edit.<br>
 	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<? eval (
-			if ( ! $openprint::session{'/employee/iso/cars.html?StartYear'} ) {
-				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
+			if ( ! $session{'/employee/iso/cars.html?StartYear'} ) {
+				@session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
 			} # end if
-			if ( ! $openprint::session{'/employee/iso/cars.html?EndYear'} ) {
-				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
+			if ( ! $session{'/employee/iso/cars.html?EndYear'} ) {
+				@session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
 			} # end if
 			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
-				@openprint::session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'}
+				@session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'}
 				);
 			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
-				@openprint::session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'}
+				@session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'}
 				);
 		) ?>
 		<p>
@@ -76,14 +76,14 @@ Please select a CAR to view/edit.<br>
 		</p>
 		<p>
 			<label>Status:</label>
-			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(',',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
 			<label class="radio" for="statusOpen">Open</label>
-			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(',',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
 			<label class="radio" for="statusClosed">Closed</label>
 		</p>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $openprint::session{'/employee/iso/cars.html?Docket'} ) ?>"  />
+			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/iso/cars.html?Docket'} ) ?>"  />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
