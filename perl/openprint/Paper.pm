@@ -47,6 +47,7 @@ $serial	=	'paper_id_seq';
 		'colour_id'		=>	'colour_id',
 		'finish_id'		=>	'finish_id',
 		'weight_id'		=>	'weight_id',
+		'quality_id'	=>	'quality_id',
 		'calliper'		=>	'calliper',
 		'taxexempt1'	=>	'taxexempt1',
 		'taxexempt2'	=>	'taxexempt2',
@@ -152,10 +153,10 @@ sub save {
 		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
-	#if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		#sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
-		#@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
-	#} # end if quality_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+		sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
+		@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
+	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
