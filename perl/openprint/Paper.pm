@@ -3,7 +3,7 @@ package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
-use Carp ( 'cluck' );
+use Carp qw( cluck );
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -1077,6 +1077,7 @@ sub load_from_signature {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 $openprint::log->debug("Loading paper using paper_id") if $debug;
 			$Paper = $Paper->id() ? $Paper : undef;
+$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
 		} elsif ( ! ( ( $$specs{'ddmStockBrand'} or $$specs{'ddmStockName'} ) and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
@@ -1098,12 +1099,12 @@ $openprint::log->debug("Loading paper using paper_id") if $debug;
 					$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				} # end if
 			} # end if
-			my @Papers = openprint::Paper->find( %params );
+			my @Papers = openprint::Paper->find( \%params );
 			if ( ! @Papers ) {
-#$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
+$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
-				@Papers = openprint::Paper->find( %params );
+				@Papers = openprint::Paper->find( \%params );
 			} elsif ( $qty_index and ( @Papers > 1 ) ) {
 				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if
@@ -1137,12 +1138,15 @@ $openprint::log->debug("Loading paper using paper_id") if $debug;
 			} # end if
 
 			foreach my $P ( @Papers ) {
-				next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
+				if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+					$openprint::log->debug("Paper no good due to minimum order");
+					next;
+				} # end if
 				$Paper = $P;
 				last;
 			} # end foreach
 			if ( ( ! $Paper ) and @Papers ) {
-#$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
+$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
 				$Paper = shift @Papers;
 			} # end if
 		} # end if Paper
@@ -1162,12 +1166,32 @@ $openprint::log->debug("Loading paper using paper_id") if $debug;
 
 	$Paper = $Paper->clone();
 	if ( $qty_index ) {
-		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
+		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
-			$Paper->height( $Paper->type() eq 'Roll' ? $$specs{'CutOff'.$qty_index} : $$specs{'StockHeight'.$qty_index} );
-			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
+$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+			if ( ! $Paper->start_width() ) {
+				$Paper->start_width( $Paper->width() );
+				$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
+				$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			} else {
+				$log->warn("Unsuitable Stock");
+				return new openprint::Paper();
+			} # end if
+
+			if ( $Paper->type() ne 'Roll' ) {
+				if ( ! $Paper->start_height() ) {
+					$Paper->start_height( $$specs{'StockHeight'.$qty_index} );
+					$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				} elsif ( $Paper->height() >= $$specs{'StockHeight'.$qty_index} ) {
+					$Paper->height( $$specs{'StockHeight'.$qty_index} );
+				} else {
+					$log->warn("Unsuitable Stock due to height");
+					return new openprint::Paper();
+				} # end if
+			
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height(); # force recalc
+			} # end if
 		} # end if
 	} # end if
 	return $Paper;
