@@ -1087,7 +1087,7 @@ sub summary {
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
 					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
-					$openprint::log->warn("Error eval $$ServiceType{type} ::project_summary() : $@") if $@;
+					#$openprint::log->warn("Error eval $$ServiceType{type} ::project_summary() : $@") if $@;
 					if ( $project_summary ) {
 						$summary .= $project_summary;
 					} else {

@@ -21,6 +21,7 @@ require openprint::service;
 require openprint::Order;
 require openprint::order;
 require openprint::OrderedProduct;
+require openprint::OrderedProject;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::Tax;

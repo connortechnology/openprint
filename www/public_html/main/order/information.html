@@ -143,10 +143,6 @@ function same_as_billing( on, id ) {
 <? endif ( @{$$variable{'Contents'}} == 1 ) ?>
 		</div><!--Header-->
 		<div id="Contents">
-			<? eval ( 
-				@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
-				@{$$variable{'Products'}} = $$variable{'Order'}->Products();
-			) ?>
 			<? if ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
 				<div id="Projects">
 					<? echo (
