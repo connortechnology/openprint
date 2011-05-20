@@ -87,25 +87,15 @@ function same_as_billing( on, id ) {
 				@{$$variable{'Contents'}} = ( @{$$variable{'Projects'}}, @{$$variable{'Products'}} );
 			) ?>
 <? if ( @{$$variable{'Contents'}} == 1 ) ?>
-			<div id="ShippingInformation">
+			<div class="ShippingInformation">
 				<? echo (
-					my $html = '';
-					my @Projects = @{$$variable{'Projects'}};
-					my @Products = @{$$variable{'Products'}};
 					# If there is only 1 thing in the order, then we can condense
-					if ( @Products ) {
-						$$variable{'Project'} = $Products[0]->Project();
-					} else {
-						$$variable{'Project'} = $Projects[0];
-					} # end if
+					my $html = '';
+					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();;
 					my $services = $$variable{'Project'}->services();
-					my @ShippingServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 					
-					my @ShippingServices;
-					foreach my $ST ( @ShippingServiceTypes ) {
-						next if ! $$services{$ST->name()};
-						push @ShippingServices, openprint::Project_Service->find('project_id'=>$$variable{'Project'}->id(), 'service_id'=> $$services{$ST->name()} );
-					} # end foreach
+					my @ShippingServices = openprint::Project_Service->find('project_id'=>$$variable{'Project'}->id(), 'category'=>'Shipping' );
+
 					if ( ! @ShippingServices ) {
 						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
 					} else {

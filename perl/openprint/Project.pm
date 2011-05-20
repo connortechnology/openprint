@@ -1414,6 +1414,9 @@ $openprint::log->debug("Project::recalculate");
 	$self->summary(undef);
 	return $self->save();
 } # end sub recalculate
+sub Project {
+	return $_[0];
+} # end sub Proejct;
 
 1;
 __END__
