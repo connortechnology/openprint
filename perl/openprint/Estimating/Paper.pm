@@ -121,7 +121,7 @@ $openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty
 	} # end foreach signature
 
 	my @stocks = sort keys %papers;
-	foreach my $stock_index ( 1 .. @stocks ) {
+	foreach my $stock_index ( 1 .. scalar @stocks ) {
 		my $paper_string = $stocks[$stock_index-1];
 		$indexes{$paper_string} = $stock_index;
 $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
@@ -139,6 +139,9 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
 			my $paper_string = $SuppliedStock->to_string();
 
 			my $stock_index = $indexes{$paper_string};
+			if ( ! $stock_index ) {
+$openprint::log->error("No stock index for $paper_string");
+			} # end if
 
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
@@ -197,12 +200,14 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 		} # end if
 	} # end foreach
 
+if ( 0 ) {
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 #$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
+}
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -213,6 +218,9 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 			my $Paper = $RunPaper->Supplied();
 			my $paper_id = $Paper->to_string();
 			my $stock_index = $indexes{$paper_id};
+			if ( ! $stock_index ) {
+$openprint::log->error("2No stock index for $paper_id");
+			} # end if
 			next if $Paper->supplied();
 
 			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
