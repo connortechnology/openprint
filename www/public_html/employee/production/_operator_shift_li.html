@@ -1,22 +1,14 @@
 <? echo ( 
 	my $Shift = $$variable{'Shift'};
 
-	my $html .= sprintf( q`<li id="shift_%1$d"><div onclick="popup_window( '_operator_shift_popup.html', 'shift_id=%1$d', {width:475} );">`, $$Shift{'id'} );
-	$html .= $Shift->name();
-	$html .= ' ';
-	$html .= Date::Format::time2str( $config{'DateTimeFormat'}, $Shift->starttime_seconds() );
-	$html .= ' - ';
-	$html .= Date::Format::time2str( $config{'DateTimeFormat'}, $Shift->endtime_seconds() );
-	$html .= ' ';
-	$html .= sprintf('<span id="operator_id-%d">', $Shift->id() );
-	if ( $Shift->operator_id() ) {
-		$html .= $Shift->Operator()->name();
-	} else {
-		$html .= 'assign';
-	} # end if
-	$html .= '</span></div>';
-	$html .= '<span class="Buttons">';
-	$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$Shift{'id'}, '', '', 'operator_schedule.html?action=delete&amp;shift_id='.$Shift->id(), 'D' );
-	$html .= '</span>';
+	my $html .= sprintf( q`<li id="shift_%1$d"><div onclick="popup_window( '_operator_shift_popup.html', 'shift_id=%1$d', {width:475} );">%2$s %3$s - %4$s<span id="operator_id-%1$d">%5$s</span></div>`, @$Shift{'id','name'}, 
+		
+		$Shift->starttime_string(),
+		$Shift->endtime_string(),
+		( $Shift->operator_id() ? $Shift->Operator()->name() : 'assign' ),
+	);
+	$html .= '<p class="buttons">';
+	$html .= ssi::button( 'Remove'.$$Shift{'id'}, { 'href'=>'operator_schedule.html?func=delete&amp;shift_id='.$Shift->id(), 'text'=>'D' } );
+	$html .= '</p>';
 ) ?>
-<br/></li>
+</li>

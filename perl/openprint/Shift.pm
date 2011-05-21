@@ -125,9 +125,17 @@ sub find {
 		$sql .= ' AND starttime < ?';
 		push @values, $params{'starttime_<'};
 	} 
+	if ( $params{'starttime <'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime <'};
+	} 
 	if ( $params{'starttime_>'} ) {
 		$sql .= ' AND starttime > ?';
 		push @values, $params{'starttime_>'};
+	} # end if
+	if ( $params{'starttime >'} ) {
+		$sql .= ' AND starttime > ?';
+		push @values, $params{'starttime >'};
 	} # end if
 
 	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
@@ -149,17 +157,33 @@ sub find {
 		$sql .= ' AND endtime < ?';
 		push @values, $params{'endtime_<'};
 	} 
+	if ( $params{'endtime <'} ) {
+		$sql .= ' AND endtime < ?';
+		push @values, $params{'endtime <'};
+	} 
 	if ( $params{'endtime_<='} ) {
 		$sql .= ' AND endtime <= ?';
 		push @values, $params{'endtime_<='};
+	} 
+	if ( $params{'endtime <='} ) {
+		$sql .= ' AND endtime <= ?';
+		push @values, $params{'endtime <='};
 	} 
 	if ( $params{'endtime_>'} ) {
 		$sql .= ' AND endtime > ?';
 		push @values, $params{'endtime_>'};
 	} # end if
+	if ( $params{'endtime >'} ) {
+		$sql .= ' AND endtime > ?';
+		push @values, $params{'endtime >'};
+	} # end if
 	if ( $params{'endtime_>='} ) {
 		$sql .= ' AND endtime >= ?';
 		push @values, $params{'endtime_>='};
+	} # end if
+	if ( $params{'endtime >='} ) {
+		$sql .= ' AND endtime >= ?';
+		push @values, $params{'endtime >='};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -253,32 +277,13 @@ sub operator_id {
 	return $$self{'operator_id'};
 } # end sub operator_id
 
-sub assign_operator_id {
-	my ( $self ) = @_;
-	my ( $s, $m, $h, $D, $M, $Y, $Z ) = Date::Parse::strptime( $$self{'starttime'} );
-$log->debug( "assign_operator_id $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
-	if ( Date::Calc::check_date( 1970, 1, $D ) and Date::Calc::check_time( $h, $m, $s ) ) {
-		my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
-		my $Shift = openprint::Equipment_Shift::find_one(
-				'equipment_id'	=>	$$self{'equipment_id'}, 
-				'starttime'		=>	Date::Format::time2str( '%H:%M:%S', $time ),
-				);
-		if ( $Shift and $Shift->operator_id() ) {
-			return $$self{'operator_id'} = $Shift->operator_id();
-		} # end if
-	} else {
-		$log->error("Invalid Date or Time $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
-	} # end if
-	return;
-} # end sub assign_operator_id
-
 sub Equipment {
 	return new openprint::Equipment( $_[0]{'equipment_id'} );
 } # end sub Equipment
 
 sub to_string {
 	my ( $self ) = @_;
-	return sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
+	return sprintf('%s %d %s %s to %s %s', $self->Equipment()->name(), $self->shift_id(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
 } # end sub to_string
 
 sub get_lis {
@@ -350,13 +355,6 @@ sub get_from_ul_id {
 	my $Shift;
 	if ( $shift_name and $date ) {
 		$Shift = openprint::Shift::find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
-if ( 0 ) {
-		if ( ! $Shift ) {
-			if ( my $ES = openprint::Equipment_Shift::find_one('equipment_id'=>$equipment_id, 'name'=>$shift_name ) ) {
-				$Shift = $ES->emanantise( Date::Parse::str2time($date) );
-			} # end if
-		} # end if
-} # end if
 		return if ! $Shift;
 	} else {
 		$Shift = new openprint::Shift();
@@ -392,10 +390,10 @@ sub Next {
 		my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
 		$log->debug( 'Next: ' . $Next->to_string() );
 		if ( ! $Next ) {
-			my $ES = openprint::Equipment_Shift::find_one(
+			my $ES = openprint::Equipment_Shift->find_one(
 					'equipment_id'	  =>  $$self{'equipment_id'},
-					'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
-					'order'			 =>  'starttime',
+					'starttime_seconds >='   =>  $self->Shift()->Equipment_Shift()->endtime_seconds(),
+					'order'			 =>  'starttime_seconds',
 					);
 			$Next = $ES->emanantise( $self->endtime_seconds() );
 		} # end if

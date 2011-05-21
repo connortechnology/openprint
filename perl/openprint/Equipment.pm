@@ -129,6 +129,10 @@ if ( exists $params{'servicetype_id'} ) {
 		$sql .= ' AND UseInScheduling=?';
 		push @values, 1;
 	} # end if
+	if ( $params{'useinscheduling'} ) {
+		$sql .= ' AND useinscheduling=?';
+		push @values, 1;
+	} # end if
 	if ( $params{'jmf_enabled'} ) {
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;

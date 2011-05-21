@@ -7,6 +7,7 @@ use Time::Local;
 use DateTime;
 #use DateTime::Format::Strptime;
 use DateTime::Format::Pg;
+use constant DAY => 60*60*24;
 
 use openprint ();
 
@@ -79,7 +80,7 @@ sub print_overview {
 '/employee/production/print_overview.html?schedule_end_month',
 '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
-	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
+	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
 		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
@@ -1349,16 +1350,16 @@ last;
 		 );
 		if ( $PreviousShift ) {
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
-			$NextES = openprint::Equipment_Shift::find_one( 
+			$NextES = openprint::Equipment_Shift->find_one( 
 					'equipment_id'	=>	$$row{'equipment_id'}, 
-					'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
-					'order'			=>	'starttime',
+					'starttime_seconds_>='	=>	$PreviousShift->Equipment_Shift()->endtime_seconds(),
+					'order'			=>	'starttime_seconds',
 					);
 		} # end if
 		if ( ! $NextES ) {
-			$NextES = openprint::Equipment_Shift::find_one( 
+			$NextES = openprint::Equipment_Shift->find_one( 
 					'equipment_id'		=>	$$row{'equipment_id'}, 
-					'order'				=>	'starttime',
+					'order'				=>	'starttime_seconds',
 					);
 		} # end if ! NextES
 $log->debug("ES: " . $NextES->name() );
@@ -1406,17 +1407,17 @@ $log->debug("ES: " . $NextES->name() );
 #$log->debug("Moving on to next shift: " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 #$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
-				my $NextES = openprint::Equipment_Shift::find_one( 
+				my $NextES = openprint::Equipment_Shift->find_one( 
 						'equipment_id'	=>	$$row{'equipment_id'}, 
-						'starttime_>='	=>	$Shift->Equipment_Shift()->endtime(),
-						'order'			=>	'starttime',
+						'starttime_seconds_>='	=>	$Shift->Equipment_Shift()->endtime_seconds(),
+						'order'			=>	'starttime_seconds',
 						);
 #$log->debug("ES: " . $Shift->Equipment_Shift()->name() );
 #$log->debug("ES: " . $NextES->name() );
 				if ( ! $NextES ) {
-					$NextES = openprint::Equipment_Shift::find_one( 
+					$NextES = openprint::Equipment_Shift->find_one( 
 							'equipment_id'		=>	$$row{'equipment_id'}, 
-							'order'				=>	'starttime',
+							'order'				=>	'starttime_seconds',
 							);
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
@@ -1764,57 +1765,38 @@ sub _shift_change {
 } # end sub _shift_change
 
 sub operator_schedule {
-    if ( %param ) {
-        if ( $param{'btnFunction'} eq 'Reset' ) {
-            foreach my $param ( 'category', 'Equipment' ) {
-                delete $session{$r->uri().'?'.$param};
-            } # end if
-		} elsif ( $param{'action'} eq 'save' ) {
-			my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
-			$variable{'error'} .= $Shift->save(\%param);
-		} elsif ( $param{'action'} eq 'delete' ) {
-			my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
-			$variable{'error'} .= $Shift->delete();
-        } else {
-            ssi::save_params( $r->uri(), ( 'category', 'Equipment' ) );
-        } # end if
-    } elsif ( ( time - $session{$r->uri().'lastupdated'} ) > 24*60*60 ) {
-        foreach my $param ( 'category', 'Equipment') {
-            delete $session{$r->uri().'?'.$param};
-        } # end if
-    } # end if
-    $session{$r->uri().'?lastupdated'} = time;
-	if ( $param{'btnFunction'} eq 'Add Shift' ) {
-		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{'Equipment'} eq 'ARRAY' ? @{$param{'Equipment'}} : ( $param{'Equipment'} ) );
+	if ( $param{'func'} eq 'Reset' ) {
+		foreach my $param ( 'category', 'equipment_id' ) {
+			delete $session{$r->uri().'?'.$param};
+		} # end if
+	} elsif ( $param{'func'} eq 'save' ) {
+		my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
+		$variable{'error'} .= $Shift->save( {
+			'name'				=>	$param{'name'},
+			'operator_id'		=>	$param{'operator_id'},
+			'starttime_seconds'	=>	[@param{'start_day','start_hour','start_minute'}],
+			'endtime_seconds'	=>	[@param{'end_day','end_hour','end_minute'}],
+			});
+	} elsif ( $param{'func'} eq 'delete' ) {
+		my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
+		$variable{'error'} .= $Shift->delete();
+	} elsif ( $param{'func'} eq 'Add Shift' ) {
+		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{'equipment_id'} eq 'ARRAY' ? @{$param{'equipment_id'}} : $param{'equipment_id'} );
 		foreach my $Equipment ( @Equipment ) {
 			next if ! $Equipment->id();
-
-			my $time = 0;
-			my @days_worth;
-			my @Shifts = openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'order'=>'starttime DESC');
-			if ( @Shifts ) {
-				foreach my $Shift ( @Shifts ) {
-					$time += $Shift->duration_seconds();
-					unshift @days_worth, $Shift;
-					last if $time >= ( 60*60*24 );
-				} # end foreach Shift
-				my $LastShift = $Shifts[0];
-				foreach my $Shift ( @days_worth ) {
-					my $NewShift = $Shift->copy();
-					$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
-					$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
-					$NewShift->starttime_seconds( $LastShift->endtime_seconds() );
-					$variable{'error'} .= $NewShift->save();
-					$LastShift = $NewShift;
-				} # end foreach Shift
-			} else {
-				my $NewShift = new openprint::Equipment_Shift();
-				$NewShift->equipment_id( $Equipment->id() );
-				$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
-				$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
-				$variable{'error'} .= $NewShift->save();
+			my $LastShift = openprint::Equipment_Shift->find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime_seconds DESC');
+			my $NewShift = new openprint::Equipment_Shift();
+			$NewShift->equipment_id( $Equipment->id() );
+			$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
+			$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
+			if ( $LastShift ) {
+				$NewShift->starttime_seconds( $LastShift->endtime_seconds() );
+				$NewShift->duration_seconds( $LastShift->duration_seconds() );
 			} # end if
+			$variable{'error'} .= $NewShift->save();
 		} # end foreach Equipment
+	} else {
+		ssi::save_params( $r->uri(), ( 'category', 'equipment_id' ) );
 	} # end if
 
 } # end sub operator_schedule
@@ -1831,14 +1813,12 @@ sub _operators {
 } # end 
 
 sub _operator_shift_li {
-	my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
+	my $Shift = $variable{'Shift'} = new openprint::Equipment_Shift( $param{'shift_id'} );
 	$Shift->save(\%param);
-	$variable{'Shift'} = $Shift;
 } # end sub operator_shift_li
 
 sub _operator_shift_popup {
-	my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
-	$variable{'Shift'} = $Shift;
+	my $Shift = $variable{'Shift'} = new openprint::Equipment_Shift( $param{'shift_id'} );
 } # end sub operator_shift_li
 
 sub _check_for_skid {

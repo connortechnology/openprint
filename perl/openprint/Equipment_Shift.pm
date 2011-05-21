@@ -1,18 +1,19 @@
+use strict;
 package openprint::Equipment_Shift;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::Shift;
+require sql;
+require misc;
 
-use strict;
+use constant DAY => 60*60*24;
+use constant HOUR => 60*60;
+
 use openprint ();
-use vars qw( $log $dbh %session $debug $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*session = \%openprint::session;
 
-require sql;
-require ssi;
-require misc;
 
 $debug = 1;
 
@@ -21,11 +22,17 @@ $serial = 'equipment_shifts_id_seq';
 
 %fields = (
 	'id'			=>	'id',
-	'starttime'		=>	'starttime',
-	'duration'		=>	'duration',
+	'starttime_seconds'		=>	'starttime_seconds',
+	'duration_seconds'		=>	'duration_seconds',
+	'duration'				=>	undef,
+	'endtime_seconds'		=>	undef,
 	'name'			=>	'name',
 	'equipment_id'	=>	'equipment_id',
     'operator_id'   =>  'operator_id',
+);
+
+%find_fields = (
+	'endtime'	=>	'starttime_seconds + duration_seconds - 1',
 );
 
 %transforms = (
@@ -36,144 +43,76 @@ $serial = 'equipment_shifts_id_seq';
 %defaults = (
 	'operator_id'	=>	undef,
 	'starttime'		=>	'00:00:00',
+	'starttime_seconds'	=>	0,
+	'duration_seconds'	=>	1,
 	'name'			=>	'Shift',
 );
 
-sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
-} # end sub find_one
-
-
-sub find {
-	my %params = @_;
-
-	my @values;
-	my $sql = "SELECT *,starttime+duration-'1 second'::interval as endtime FROM $table WHERE 1>0";
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
+sub starttime_seconds {
+	if ( @_ > 1 ) {
+		if ( ref $_[1] eq 'ARRAY' ) {
+			my ( $d, $h, $m, $s ) = @{$_[1]};
+			$_[0]{'starttime_seconds'} = ($d * DAY) + ($h * HOUR) + $m * 60 + $s;
 		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
+			$_[0]{'starttime_seconds'} = $_[1];
 		} # end if
 	} # end if
-    if ( exists $params{'operator_id'} ) {
-        if ( ref $params{'operator_id'} eq 'ARRAY' ) {
-            $sql .= ' AND operator_id IN ('. join(',', map {'?'} @{$params{'operator_id'}} ) . ')';
-            push @values, @{$params{'operator_id'}};
-        } else {
-            $sql .= ' AND operator_id=?';
-            push @values, $params{'operator_id'};
-        } # end if
-    } # end if
-	if ( exists $params{'equipment_id'} ) {
-		$sql .= ' AND equipment_id=?';
-		push @values, $params{'equipment_id'};
-	} # end if
-	if ( exists $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-    if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-        $sql .= ' AND ( starttime BETWEEN ? AND ? )';
-        push @values, @params{'starttime_start','starttime_end'};
-    } elsif ( $params{'starttime_start'} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_start'};
-    } elsif ( $params{'starttime_end'} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_end'};
-    } # end if
-	if ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } 
-	if ( $params{'starttime_>'} ) {
-        $sql .= ' AND starttime > ?';
-        push @values, $params{'starttime_>'};
-    } 
-	if ( $params{'starttime_<='} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_<='};
-    } 
-	if ( $params{'starttime_>='} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_>='};
-    } # end if
-
-	if ( $params{'endtime_end'} ) {
-        $sql .= ' AND starttime+duration <= ?';
-        push @values, $params{'endtime_end'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Equipment_Shifts SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No Equipment_Shifts loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded Equipment_Shifts ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::Equipment_Shift( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub starttime_seconds {
-	my ( $self, $new ) = @_;
-	if ( $new ) {
-		$$self{'starttime'} = Date::Format::time2str( '%H:%M:%S', $new );
-	} # end if $new
-	return Date::Parse::str2time( $_[0]{'starttime'} );
-} # end sub starttime_seconds
-
-sub starttime_time_seconds {
-	return misc::hms2time( Date::Format::time2str('%H:%M:%S', Date::Parse::str2time( $_[0]{'starttime'} ) ) );
-} # end sub starttime_seconds
-
-sub duration_seconds {
-	return misc::hms2time( $_[0]{'duration'} );
-} # end sub duration_seconds
+	return $_[0]{'starttime_seconds'};
+} # end sub endtime_seconds
 
 sub endtime {
 	if ( ! $_[0]{'endtime'} ) {
-		$_[0]{'endtime'} = Date::Format::time2str( '%H:%M:%S', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
+		$_[0]{'endtime'} = Date::Format::time2str( '%H:%M:%S', $_[0]->endtime_seconds());
 	} # end if
 	return $_[0]{'endtime'};
 } # end sub endtime_seconds
 
 sub endtime_seconds {
-	return $_[0]->starttime_seconds() + $_[0]->duration_seconds();
+	if ( @_ > 1 ) {
+		if ( ref $_[1] eq 'ARRAY' ) {
+			my ( $d, $h, $m, $s ) = @{$_[1]};
+			$_[0]{'endtime_seconds'} = ($d * DAY) + ($h * HOUR) + $m * 60 + $s;
+		} else {
+			$_[0]{'endtime_seconds'} = $_[1];
+		} # end if
+		$_[0]{'duration_seconds'} = ( $_[0]{'endtime_seconds'} + 1 ) - $_[0]{'starttime_seconds'};
+	} # end if
+	if ( ! $_[0]{'endtime_seconds'} ) {
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+	} # end if
+	return $_[0]{'endtime_seconds'};
 } # end sub endtime_seconds
 
+#Pass back a shift for the next time slot >= the passed in $date_seconds
+# We presume that normally date_seconds is teh starttie + 1 of the previous shift
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
 
 $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ) );
 	#$date_seconds -= ($date_seconds % (24*3600));
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
-	my $date_part = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
-	my $time_part = $date_seconds - $date_part;
-	if ( $self->starttime_time_seconds() < $time_part ) {
+	my $time_part = $date_seconds % DAY;
+	my $date_part = $date_seconds - $time_part;
+#Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
+	my $starttime_time_seconds = $self->starttime_seconds() % DAY;
+	if ( $starttime_time_seconds < $time_part ) {
 		# Need to add a day
-		$date_seconds = $date_part + ( 60*60*24 );
+		$date_part += DAY;
 	} # end if
-	my $starttime_seconds = $date_seconds + $self->starttime_time_seconds();
+	my $starttime_seconds = $date_part + $starttime_time_seconds;
 	my $endtime_seconds = $starttime_seconds + $self->duration_seconds();
 
 
 	my $Shift;
+	# FIXME: This does not handle cases where the times have been overriden.
+	# It should be looking for a shift that starts great than date_seconds, which we assume is the previous shift starttime+1
+	# With an endtime before the end of the ES AFTER this one!
+	# THe current iteration handles all that, except that the end is shorted than normal.
 	if ( $Shift = openprint::Shift::find_one(
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'shift_id'		=>	$$self{'id'},
-				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
-				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
+				'starttime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ),
+				'endtime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
 				) ) {
 	} else {
 		$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ) . " ending: " . 
@@ -196,49 +135,131 @@ sub Equipment {
     return new openprint::Equipment( $_[0]{'equipment_id'} );
 } # end sub Equipment
 
-sub get_li {
-    my ( $self, $ul_id ) = @_;
-
-# a 12hour shift ~= 600px, so each hour gets 50px;
-
-    my $html;
-    $html .= sprintf( '<li id="item_%d">', $$self{'id'} );
-    $html .= '<span class="Buttons">';
-    $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-    $html .= '</span>';
-
-    $html .= "<br/></li>\n";
-    return $html;
-} # end sub get_li
-
 sub Operator {
 	return new openprint::User( $_[0]{'operator_id'} );
 } # end sub Operator
 
 sub First {
 	my ( $self ) = @_;
-	return find_one( 
+	return openprint::Equipment_Shift->find_one( 
 			'equipment_id'	=>	$$self{'equipment_id'},
 			'order'			=>	'starttime',
 			);
 } # end sub First
 
-sub Next {
-	my ( $self ) = @_;
-	return find_one( 
-			'equipment_id'	=>	$$self{'equipment_id'},
-			'starttime_>'	=>	$$self{'starttime'},
-			'order'			=>	'starttime',
+sub Previous {
+	if ( @_ > 1 ) {
+		$_[0]{'Previous'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'Previous'} ) {
+	$_[0]{'Previous'} = openprint::Equipment_Shift->find_one( 
+			'equipment_id'	=>	$_[0]{'equipment_id'},
+			'starttime_seconds <'	=>	$_[0]{'starttime_seconds'},
+			'order'			=>	'starttime_seconds DESC',
 			);
+	} # end if
+	if ( ! $_[0]{'Previous'} ) {
+	$_[0]{'Previous'} = openprint::Equipment_Shift->find_one( 
+			'equipment_id'	=>	$_[0]{'equipment_id'},
+			'order'			=>	'starttime_seconds DESC',
+			);
+	} # end if
+	return $_[0]{'Previous'};
+} # end sub Previous
+
+sub Next {
+	if ( @_ > 1 ) {
+		$_[0]{'Next'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'Next'} ) {
+	$_[0]{'Next'} = openprint::Equipment_Shift->find_one( 
+			'equipment_id'	=>	$_[0]{'equipment_id'},
+			'starttime_seconds >'	=>	$_[0]{'starttime_seconds'},
+			'order'			=>	'starttime_seconds',
+			);
+	} # end if
+	if ( ! $_[0]{'Next'} ) {
+	$_[0]{'Next'} = openprint::Equipment_Shift->find_one( 
+			'equipment_id'	=>	$_[0]{'equipment_id'},
+			'order'			=>	'starttime_seconds',
+			);
+	} # end if
+	return $_[0]{'Next'};
 } # end sub Next
 
 sub delete {
 	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}) ) {
 #$log->debug("Delete shift " . $Shift->to_string() );
-		$Shift->delete();
+		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
+			$Shift->delete() 
+		} else {
+			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
+		} # end if
 	} # end foreach
 	my $error = $_[0]->SUPER::delete();
 } # end sub delete
+
+sub starttime_string {
+	return 'Day ' . int( $_[0]{'starttime_seconds'} / DAY ) . ' ' .  misc::seconds2hms( $_[0]->starttime_seconds() % DAY );
+} # end sub starttime_string
+sub endtime_string {
+	return 'Day ' . int( $_[0]->endtime_seconds() / DAY ) . ' ' .  misc::seconds2hms( $_[0]->endtime_seconds() % DAY );
+} # end sub starttime_string
+
+sub start_day {
+	return int($_[0]{'starttime_seconds'} / DAY);
+}
+sub end_day {
+	return int( $_[0]->endtime_seconds() / DAY );
+} # end sub end_day
+
+sub start_hour {
+	my $time = $_[0]{'starttime_seconds'} % DAY;
+	return int($time/HOUR);
+} # end sub start_hour
+sub end_hour {
+	my $time = $_[0]->endtime_seconds() % DAY;
+	return int($time/HOUR);
+} # end sub end_hour
+
+sub start_minute {
+	return int( ( $_[0]{'starttime_seconds'} % HOUR ) /60);
+} # end sub start_minute
+sub end_minute {
+	return int( ( $_[0]->endtime_seconds() % HOUR )/60);
+} # end sub end_hour
+
+sub duration {
+	if ( @_ > 1 ) {
+		my ( $h, $m, $s ) = split ( ':', $_[1] );
+		$_[0]{'duration_seconds'} = ( $h * HOUR ) + ( $m * 60 ) + $s;
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+	} # end if
+	return misc::seconds2hms( $_[0]{'duration_seconds'} );
+} # end sub duration
+sub duration_seconds {
+	if ( @_ > 1 ) {
+		$_[0]{'duration_seconds'} = $_[1];
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+	} # end if
+	return $_[0]{'duration_seconds'};
+} # end sub duration_seconds
+
+# Calculates the distance between an ES and it's next, or the given in seconds, taking into account wrap around
+sub distance {
+	my ( $self, $Next ) = @_;
+	$Next = $self->Next() if ! $Next;
+	if ( $$Next{'starttime_seconds'} >= $$self{'starttime_seconds'} ) {
+		return $$Next{'starttime_seconds'} - $$self{'starttime_seconds'};
+	} else {
+		# Wrap around
+		my $endtime = $self->endtime_seconds() % DAY;
+		#if ( $endtime <= $$Next{'starttime_seconds'} ) {
+			# No overlap
+			return $$self{'duration_seconds'} + $$Next{'starttime_seconds'} - $endtime;
+		#} else {
+	} # end if
+} # end sub
 
 1;
 __END__
