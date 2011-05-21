@@ -187,10 +187,8 @@ sub send_notifications {
 			'PAR'	=>	$self,
 		);
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$text, \%info );
-$openprint::log->debug( $info{'ReplacementText'} );
 
 		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
-$openprint::log->debug( $body );
 		foreach my $User ( @Users ) {
 			my %mail = (
 					SMTP    => $config{'Mail Server'},
@@ -209,7 +207,6 @@ sub Area {
 sub Reason {
 	return new openprint::PAR_Reason( $_[0]{reason_id} );
 } # end sub Reason
-1;
 
+1;
 __END__
-~       
