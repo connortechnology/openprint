@@ -1163,7 +1163,7 @@ sub get_impositions {
 			foreach my $imp ( @imps ) {
 				if ( $imp->imposition() > $qty ) {
 					$openprint::log->debug("Next because $$imp{imposition} > $qty");
-					next;
+					#next;
 				} # end if
 				my $add = 1;
 				my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
@@ -1855,6 +1855,9 @@ $openprint::log->debug("Other impositions: " . @other_impositions );
 			$$specs{'Status'} = 'uncalculated';
 			next;
 		} # end if
+		if ( $Imposition->imposition() > $qty ) {
+			$$specs{'alert'} .= "It is cheaper to print " . $Imposition->imposition().'.  You may wish to increase your quantity.<br/>';
+		} # end nif
 		my $Paper = $Imposition->Paper();
 		my $Press = $Imposition->Press();
 
