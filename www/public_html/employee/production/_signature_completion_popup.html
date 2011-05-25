@@ -7,6 +7,7 @@
 			<select name="operator_id" id="operator_id">
 				<option value="">select</option>
 				<? echo ( 
+$log->debug($$variable{'Job'}->to_string() . ' opearotr: ' . $$variable{'Job'}->operator_id() );
 					my $operator_id = $$variable{'Job'}->operator_id();
 					$operator_id = $session{'user_id'} if ! $operator_id;
 

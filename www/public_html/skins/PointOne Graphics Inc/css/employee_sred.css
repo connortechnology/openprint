@@ -19,20 +19,25 @@
 }
 
 #Contents ul li ul li {
-	padding: 0 0 0 100px;
+	padding: 0 0 0 80px;
 	border: none;
 }
 #Contents ul li ul li label {
-	width: 95px;
-	margin: 0 0 0 -100px;
+	vertical-align: top;
+	width: 75px;
+	margin: 0 0 0 -80px;
 	display: inline-block;
 }
 .SRED th.Name, .SRED th.Description {
 	text-align: left;
 }
 .leftColumn, .rightColumn {
-	min-width: 500px;
+	min-width: 400px;
 }
 .rightColumn {
 	float: left;
+}
+.
+#Contents ul li ul li textarea {
+	width: 90%;
 }

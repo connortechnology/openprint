@@ -124,6 +124,8 @@ sub login_confirmation {
 sub change_password {
 } # end sub change_password
 
-1;
+sub password_confirmation {
+} # end sub password_confirmation
 
+1;
 __END__
