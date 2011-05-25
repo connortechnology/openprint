@@ -177,8 +177,14 @@ sub load {
 	$$self{'specs'} = $specs;
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
-		my @Presses = openprint::Equipment->find('strid'=>$$specs{'ddmPress'.$qty_index});
-		$$self{'Press'} =  $Presses[0];
+		if ( ! $$specs{'ddmPress'.$qty_index} ) {
+			$openprint::log->error("No ddmPress for $qty_index");
+		} else {
+			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			if ( ! $$self{'Press'} ) {
+				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+			} # end if
+		} # end if
 	} # end if
 
 	$$self{'object_width'} = $$specs{'txtWidth'};

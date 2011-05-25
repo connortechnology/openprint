@@ -1,13 +1,13 @@
-package openprint::OrderedProject;
-@ISA=qw(openprint::Object);
-
 use strict;
+package openprint::OrderedProject;
+our @ISA=qw(openprint::Object);
+
 require openprint::Project;
 
-use vars qw( $debug $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table @identified_by %fields %transforms %defaults );
 $debug = 1;
 $table = 'order_contents';
-$serial = 'ordered_project_id_seq';
+@identified_by = ( 'project_id', 'order_id' );
 
 %fields = (
 	'id'			=>	'id',
@@ -47,6 +47,22 @@ sub quantity {
 	} # end if
 	return $_[0]{'quantity'};
 } # end sub quantity
+sub delete {
+	my $self = shift;
+
+	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	my $Project = $self->Project();
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Removed from order $$self{order_id}" );
+	$Project->docket( '' );
+	$Project->order_id( '' );
+	$error .= $Project->save();
+	$Project->update_status();
+	sql::execute( undef, undef, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','project_id'});
+	$error .= $openprint::dbh->errstr();
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub delete
 
 1;
 __END__

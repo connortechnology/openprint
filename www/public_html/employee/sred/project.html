@@ -43,18 +43,8 @@ function del_content(form, content_id ) {
 
 -->
 </script>
-<form id="f1" name="f1" action="projects.html" method="post" enctype="multipart/form-data">
+<form id="f1" name="f1" action="<? echo ( $$variable{'Project'}->Contents() ? 'projects.html' : 'project.html' ) ?>" method="post" enctype="multipart/form-data">
 	<!--#include virtual="/includes/error_reporting.html"-->
-	<p class="buttons" id="buttons">
-<? echo ( 
-	my $html = '';
-	$html .= ssi::button( 'Save', { 'onclick' => "\$('buttons').innerHTML='Please wait. Saving...';var form = $('f1'); form.function.value='Save';form.submit();", 'text' => $$variable{'Project'}->id() ? 'Save' : 'Create SRED Project' } );
-	if ( $$variable{'Project'}->id() ) {
-		$html .= ssi::button( 'Delete', { 'onclick' => "\$('buttons').innerHTML='Please wait. Deleting...';var form = $('f1'); form.function.value='Delete';form.submit();" } );
-	}  # end if
-	return $html;
-) ?>
-	</p>
 	<div class="SRED"><div class="Project">
 		<div class="PageTitle">
 		<h1>SRED Project (<? echo ( $$variable{'Project'}->id() ) ?>)</h1>
@@ -65,13 +55,13 @@ function del_content(form, content_id ) {
 					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Project'}->name() ) ?>" />
 				</li>
 				<li><label>Description:</label>
-					<textarea name="description" id="description" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->description() ); ) ?>" cols=""></textarea>
+					<textarea name="description" id="description" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->description() ); ) ?>" cols=""><? echo ( $$variable{'Project'}->description() ) ?></textarea>
 				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.function.value='Save';form.submit();` } ),
-					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.function.value='Delete';form.submit();` } ),
+					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();` } ),
+					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();` } ),
 					); ) ?>
 			</p>
 		</fieldset>

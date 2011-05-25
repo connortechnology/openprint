@@ -1,0 +1,41 @@
+<div class="Performance"><div class="Edit">
+	<fieldset><legend>Shift &amp; Operator</legend>
+		<ul>
+			<li><label>Shift:</label><? echo ( $$variable{'Shift'}->to_string() ) ?></li>
+			<li><label>Operator:</label>
+				<select name="operator_id" id="operator_id">
+					<option value="">select one</option>
+					<? echo ( 
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
+									'usergroup'	=>	[ 'Bindery', 'Printing' ],
+									'type'		=>	'E',
+									'order'		=>	'lower(strfirstname),lower(strlastname)',
+									) ], $session{'/employee/performance/history.html?operator_id'} );
+							) ?>
+				</select>
+			</li>
+		</ul>
+	</fieldset>
+	<fieldset><legend>Dockets</legend>
+			<? echo ( 
+				my $html;
+				my @dockets = sort( sets::union( map { $_{'docket'} } $$variable{'Report'}->Records() ) );
+				foreach my $docket ( @dockets ) {	
+					$html .= '<fieldset><legend>Points for docket '.$docket.'</legend>';
+					$html .= '<ul>';
+					foreach my $Type ( openprint::Performance_Point_Type->find() ) {
+						my $Point = openprint::Performance_Point->find_one( 'type_id'=>$$Type{'id'}, 'equipment_id'=>$$variable{'Report'}->Shift()->equipment_id() );
+						my $Record = openprint::Performance_Record->find_one( 'report_id'=>$$variable{'Report'}->id(), 'point_id'=>$$Point{'id'} );
+						$Record = new openprint::Performance_Record() if ! $Record;
+						$html .= sprintf('<li><label>%s</label>%d points %s * <input type="text" name="quantity" value="" /> = <input type="text" name="total" value=""/> total points</li>',
+							$Type->name(), $Point->value(), $Point->units(), $Record->quantity(), $Record->total()
+							);
+
+					} # end foreach Type
+					$html .= '</fieldset>';
+				} # end foreach docket
+				return $html;
+			) ?>
+			<p><label>New Docket:</label><input type="text" name="docket-new" id="docket-new" /><? echo ( ssi::button( 'Add Docket' ); ) ?></p>
+	</fieldset>
+</div></div>

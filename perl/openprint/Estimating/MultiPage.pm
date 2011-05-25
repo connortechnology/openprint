@@ -251,11 +251,10 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
+	my ( $Project ) = @_;
 
 	my $status;
 $openprint::log->debug("****************************************************************Starting MultiPage::calculate_signatures");
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -282,7 +281,7 @@ $openprint::log->debug( "Signature: @signatures");
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
 #$openprint::log->warn('Deleting due to incorrect printing type');
-						openprint::print_project::delete_service( $log, $dbh, $project_index, $signatures[$j] );
+						openprint::print_project::delete_service( $$Project{'id'}, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
 					} # end if
@@ -291,10 +290,10 @@ $openprint::log->debug( "Signature: @signatures");
 		} # end if
 	} # end for
 
-	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' ) );
+	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{'id'}, 'Group' ) );
 	if ( ! @groups ) {
 		foreach my $ss_id ( @signatures ) {
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
 			if ( $$sig_specs{'Status'} ne 'calculated' ) {
 				return 'uncalculated';
 			} # end if
@@ -307,7 +306,7 @@ $openprint::log->debug( "Signature: @signatures");
 			next if ! @sigs;
 			my $ss_id = shift @sigs;
 			$openprint::log->debug("Calcing $ss_id");
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
 			$openprint::log->debug("Done Calcing $ss_id $$sig_specs{'Status'}");
 			
 			if ( $$sig_specs{'Status'} eq 'calculated' ) {
@@ -348,10 +347,10 @@ $openprint::log->debug("Saving additional impositions3 " . @{$$sig_specs{'Additi
 					openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
 $openprint::log->debug("After calc_from_imposition" );
 					my $ac = sql::start_transaction( $openprint::dbh );
-					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
+					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{'id'}, $a_ss_id], 'strStatus', $status );
 
-					foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
-						openprint::service::insert_service_spec( $log, undef, $project_index, $a_ss_id, $key, $specs{$key} );
+					foreach my $key ( openprint::Estimating::Printing::variables( $$Project{'id'}, $a_ss_id, $new_sig_specs, \%specs ) ) {
+						openprint::service::insert_service_spec( $openprint::log, undef, $$Project{'id'}, $a_ss_id, $key, $specs{$key} );
 					} # end foreach
 					sql::end_transaction( $openprint::dbh, $ac );
 
@@ -360,7 +359,7 @@ $openprint::log->debug("After calc_from_imposition" );
 # Clean up any leftovers
 				$openprint::log->debug("Remaining sigs " . @sigs);
 				while ( @sigs and ( my $ss_id = shift @sigs ) ) {
-					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
+					openprint::print_project::delete_service( $$Project{'id'}, $ss_id );
 					@signatures = sets::exclude( [ $ss_id ], \@signatures );
 				} # end while sigs
 			} else {

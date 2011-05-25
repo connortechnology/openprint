@@ -42,7 +42,7 @@
 	</div>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
 	<? echo ( 
-		if ( openprint::Currency::id() != $$variable{'Order'}->Currency()->id() ) {
+		if ( openprint::Currency::get_current()->id() != $$variable{'Order'}->Currency()->id() ) {
 			return 'Order originally in ' . $$variable{'Order'}->Currency()->name();
 		} # end if
 		return;
