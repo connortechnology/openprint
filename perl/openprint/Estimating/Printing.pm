@@ -1236,7 +1236,7 @@ sub get_impositions {
 		foreach my $imp ( @impositions ) {
 			if ( $imp->imposition() > $qty ) {
 				$openprint::log->debug("Next because $$imp{imposition} > $qty");
-				next;
+				#next;
 			} # end if
 			if ( $$imp{'imposition'} < $max_imposition ) {
 				next;
@@ -2018,6 +2018,9 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 			$$specs{'Status'} = 'uncalculated';
 			next;
 		} # end if
+		if ( $Imposition->imposition() > $qty ) {
+			$$specs{'alert'} .= "It is cheaper to print " . $Imposition->imposition().'.  You may wish to increase your quantity.<br/>';
+		} # end nif
 		my $Paper = $Imposition->Paper();
 		my $Press = $Imposition->Press();
 

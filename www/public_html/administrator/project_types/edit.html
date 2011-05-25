@@ -76,6 +76,13 @@
 			<label>Sort:</label>
 			<input type="text" id="sorting" name="sorting" value="<? echo ( $$variable{'ProjectType'}->sorting(); ) ?>" />
 		</p>
+		<p> 
+			<label>Show please call:</label>
+			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( ssi::checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<label for="please_call1" class="radio">Yes</label>
+			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( ssi::checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
+			<label for="please_call0" class="radio">No</label>
+		</p>
 	</fieldset><!-- Column -->
 	<fieldset class="rightColumn"> 
 		<legend>Required Services:</legend>
