@@ -297,6 +297,26 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
 }
+if ( ! sets::isin( 'equipment_schedule', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Schedule.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_schedule'", 'column_name');
+	if ( ! exists $$data{'starttime_seconds'} ) {
+		if ( exists $$data{'starttime'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD starttime_seconds INTEGER');
+			$dbh->do('update equipment_shifts set starttime_seconds = extract(epoch from starttime)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop starttime');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'duration_seconds'} ) {
+		if ( exists $$data{'duration'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD duration_seconds INTEGER');
+			$dbh->do('update equipment_shifts set duration_seconds = extract(epoch from duration)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop duration');
+		} # end if
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__
