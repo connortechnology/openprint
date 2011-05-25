@@ -180,6 +180,7 @@ sub load {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
 			$openprint::log->error("No ddmPress for $qty_index");
 		} else {
+$openprint::log->warn("Loading press in Imposition::load");
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 			if ( ! $$self{'Press'} ) {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );

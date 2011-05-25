@@ -446,7 +446,7 @@ sub setup_project {
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
 	my @colours;
-	if ( $$specs{'sides_the_same'} eq 'Y' and $side eq 'SideTwo' ) {
+	if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
 		$side = 'SideOne';
 	} # end if
 
