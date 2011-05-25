@@ -901,6 +901,7 @@ sub shippingtype {
 	} # end if
 	return $$self{'shippingtype'};
 } # end sub shippingtype
+
 sub ordered_quantity {
 	my $self = shift;
 	return $$self{'quantity'.$self->ordered_quantity_index()};
