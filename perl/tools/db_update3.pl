@@ -260,6 +260,9 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
 } # end if
+if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
+	$Action->save({'name'=>'Select Company'});
+} # end if
 my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
