@@ -186,22 +186,26 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
-		if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-			if ( $param{'VacationState'} ) {
-				email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
-			} else {
-				email::stop_vacation( $User->email() );
+		if ( $config{mail_db_name} ) {
+			my @domains = email::domains();
+			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+			if ( sets::isin( $domain, \@domains ) ) {
+				if ( $param{'VacationState'} ) {
+					email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+				} else {
+					email::stop_vacation( $User->email() );
+				} # end if
+				if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+					email::set_password( @param{'email','EmailPassword'} );
+				} # end if
+				my @aliases = ();
+				foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+					next if ! $alias;
+					push @aliases, $alias;
+				} # end foreach
+				push @aliases, $User->email() if ! @aliases;
+				email::aliases( $User->email(), @aliases );
 			} # end if
-			if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-				email::set_password( @param{'email','EmailPassword'} );
-			} # end if
-			my @aliases = ();
-			foreach my $alias ( split "\r\n", $param{'aliases'} ) {
-				next if ! $alias;
-				push @aliases, $alias;
-			} # end foreach
-			push @aliases, $User->email() if ! @aliases;
-			email::aliases( $User->email(), @aliases );
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -289,9 +293,13 @@ sub user_profiles {
 		} # end foreach
 	} # end if 
 
-	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-		@{$variable{'Aliases'}} = email::aliases( $User->email() );
+	if ( $config{mail_db_name} ) {
+		my @domains = email::domains();
+		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+		if ( sets::isin( $domain, \@domains ) ) {
+			@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+			@{$$variable{'Aliases'}} = email::aliases( $User->email() );
+		} # end if
 	} # end if
 				
 	# fill in User Name Drop Down Menu

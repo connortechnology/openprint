@@ -434,5 +434,20 @@ sub ServiceTypes {
 	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
 } # end sub ServiceTypes
 
+sub Operator_Shifts {
+
+	my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$_[0]{'id'},'order'=>'starttime_seconds');
+# Setup Next and Previous links
+	my $Last_ES;
+	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
+		if ( $Last_ES ) {
+			$Equipment_Shifts[$ES_index]->Prevous( $Last_ES );
+			$Last_ES->Next( $Equipment_Shifts[$ES_index] );
+		} # end if
+		$Last_ES = $Equipment_Shifts[$ES_index];
+	} # end foreach Equipment Shift
+	$Last_ES->Next( $Equipment_Shifts[0] );
+	return @Equipment_Shifts;
+} # end sub Operator_Shifts
 1;
 __END__
