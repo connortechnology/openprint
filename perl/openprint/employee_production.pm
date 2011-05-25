@@ -1279,12 +1279,15 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 	} # end if services
 	sql::end_transaction( $dbh, $ac );
 
+if ( 0 ) {
+# Don't do the redraw anymore
 	# If there is a changed ul that is newer than our filter, it won't be shown, but a redraw will happen.... so we should adjust the filter to show it.
-	my $filter_seconds = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day',
-				} ) );
+	my $filter_seconds = DateTime->new(
+			'year'		=>	$session{'/employee/production/print_overview.html?schedule_end_year'},
+			'month'		=>	$session{'/employee/production/print_overview.html?schedule_end_month'},
+			'day'		=>	$session{'/employee/production/print_overview.html?schedule_end_day'},
+			'time_zone'	=>	$openprint::config{'Timezone'},
+		)->epoch();
 	foreach ( @{$variable{'changed'}} ) {
 		my $Shift = openprint::Shift::get_from_ul_id( $_ );
 		my $time = $Shift->starttime_seconds();
@@ -1297,6 +1300,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			$filter_seconds = $time;
 		} # end if
 	} # end foreach
+} # en dif
 } # end sub _drop.json
 
 sub reorder_jobs {
@@ -1320,6 +1324,7 @@ sub reorder_jobs {
 	} # end foreach Job
 
 	my $start_time = time;
+$log->debug("Reordering from $start_time");
 	my $row = $order[0];
 	push @{$variable{'changed'}}, $row->Shift()->ul_id();
 
@@ -1328,7 +1333,7 @@ sub reorder_jobs {
 $log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
-
+$log->debug("Grab all");
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
 			'equipment_id'	=>	$$row{'equipment_id'},
@@ -1340,6 +1345,7 @@ $log->debug("Shifts: " . $S->to_string() );
 last;
 } # end foreach S
 	if ( ! @Shifts ) {
+$log->debug("No shifts");
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
 
@@ -1350,11 +1356,7 @@ last;
 		 );
 		if ( $PreviousShift ) {
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
-			$NextES = openprint::Equipment_Shift->find_one( 
-					'equipment_id'	=>	$$row{'equipment_id'}, 
-					'starttime_seconds_>='	=>	$PreviousShift->Equipment_Shift()->endtime_seconds(),
-					'order'			=>	'starttime_seconds',
-					);
+			$NextES = $PreviousShift->Equipment_Shift()->Next();
 		} # end if
 		if ( ! $NextES ) {
 			$NextES = openprint::Equipment_Shift->find_one( 
@@ -1404,17 +1406,14 @@ $log->debug("ES: " . $NextES->name() );
 
 # Time to move on to next shift
 		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
-#$log->debug("Moving on to next shift: " . $Shift->to_string() );
+$log->debug("Moving on to next shift: " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 #$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
-				my $NextES = openprint::Equipment_Shift->find_one( 
-						'equipment_id'	=>	$$row{'equipment_id'}, 
-						'starttime_seconds_>='	=>	$Shift->Equipment_Shift()->endtime_seconds(),
-						'order'			=>	'starttime_seconds',
-						);
+				my $NextES = $Shift->Equipment_Shift()->Next();
 #$log->debug("ES: " . $Shift->Equipment_Shift()->name() );
 #$log->debug("ES: " . $NextES->name() );
 				if ( ! $NextES ) {
+$log->debug(" NO NEXT ES: "  );
 					$NextES = openprint::Equipment_Shift->find_one( 
 							'equipment_id'		=>	$$row{'equipment_id'}, 
 							'order'				=>	'starttime_seconds',
@@ -1424,7 +1423,7 @@ $log->debug("ES: " . $NextES->name() );
 				$start_time = $Shift->starttime_seconds();
 				push @{$variable{'changed'}}, $Shift->ul_id();
 			} else {
-				my @old_jobs = map { $$_{'id'} } ( $Shift->schedule() );
+				my @old_jobs = map { $$_{'id'} } ( $Shift->Schedule() );
 				if ( ! sets::equal( \@old_jobs, \@jobs_in_shift ) ) {
 #$openprint::log->debug("Shift " . $Shift->ul_id() . " has changed @old_jobs != @jobs_in_shift ");
 # only update if the job list is different
@@ -1455,7 +1454,8 @@ $log->debug("ES: " . $NextES->name() );
         $start_time += $run_time;
     } # end while @order
 
-	my @old_jobs = $Shift->schedule();
+	# THis might be here to deal with the last round of jobs...
+	my @old_jobs = $Shift->Schedule();
 	if ( ! sets::equal( \@old_jobs, \@jobs_in_shift ) ) {
 		#$openprint::log->debug("Shift " . $Shift->ul_id() . " has changed");
 	# only update if the job list is different
@@ -1692,16 +1692,17 @@ sub _shift_change {
 	if ( $param{'action'} eq 'delete' ) {
 		$variable{'error'} .= $Shift->delete();
 	} else {
+		my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 		my $new_start_datetime = DateTime->new(
 				year      => $param{'starttime_year'}, month  => $param{'starttime_month'}, day => $param{'starttime_day'},
 				hour      => $param{'starttime_hour'}, minute => $param{'starttime_minute'},
-				time_zone => 'America/Toronto'
+				time_zone => $TZ,
 				);
 
 		my $new_end_datetime = DateTime->new(
 				year      => $param{'endtime_year'}, month  => $param{'endtime_month'}, day => $param{'endtime_day'},
 				hour      => $param{'endtime_hour'}, minute => $param{'endtime_minute'},
-				time_zone => 'America/Toronto'
+				time_zone => $TZ,
 				);
 
 		if ( $new_start_datetime > $new_end_datetime ) {
@@ -1771,11 +1772,11 @@ sub operator_schedule {
 		} # end if
 	} elsif ( $param{'func'} eq 'save' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
+		$Shift->starttime_seconds( [@param{'start_day','start_hour','start_minute'}] );
+		$Shift->endtime_seconds( [@param{'end_day','end_hour','end_minute'}] );
 		$variable{'error'} .= $Shift->save( {
 			'name'				=>	$param{'name'},
 			'operator_id'		=>	$param{'operator_id'},
-			'starttime_seconds'	=>	[@param{'start_day','start_hour','start_minute'}],
-			'endtime_seconds'	=>	[@param{'end_day','end_hour','end_minute'}],
 			});
 	} elsif ( $param{'func'} eq 'delete' ) {
 		my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
@@ -1787,11 +1788,12 @@ sub operator_schedule {
 			my $LastShift = openprint::Equipment_Shift->find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime_seconds DESC');
 			my $NewShift = new openprint::Equipment_Shift();
 			$NewShift->equipment_id( $Equipment->id() );
-			$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
-			$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
 			if ( $LastShift ) {
 				$NewShift->starttime_seconds( $LastShift->endtime_seconds() );
 				$NewShift->duration_seconds( $LastShift->duration_seconds() );
+			} else {
+				$NewShift->duration( $Equipment->specification('Default Shift Duration') ) if ! $NewShift->duration();
+				$NewShift->duration( '07:00:00' ) if ! $NewShift->duration();
 			} # end if
 			$variable{'error'} .= $NewShift->save();
 		} # end foreach Equipment

@@ -6,8 +6,8 @@
 		ssi::date_filter( '/employee/performance/history.html?starttime_start', 'starttime >=' ),
 		ssi::date_filter( '/employee/performance/history.html?starttime_end', 'starttime <=' ),
 		'starttime <=' => sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
-		'order',			'starttime',
-			) ) {
+		'order'	=>	'starttime',
+		) ) {
 		push @{$$variable{'Shifts'}}, $Shift;
 	} # end foreach Shift
 ) ?>
@@ -16,10 +16,13 @@
 <? else ( @{$$variable{'Shifts'}} == 0 ) ?>
 	<p>Please click on a <b>Shift #</b> to view details.</p>
 <table class="List">
-	<tr>
-		<th class="Shift">Shift</th>
-		<th class="Date">Records</th>
-	</tr>
+	<thead>
+		<tr>
+			<th class="Shift">Shift</th>
+			<th class="Date">Records</th>
+		</tr>
+	</thead>
+	<tbody>
 	<? echo ( 
 		my $html = '';
 		my $rowclass;
@@ -37,6 +40,6 @@
 		} # end foreach
 		return $html;
 	) ?>
-		
+		</tbody>	
 	</table>
 <? endif ( @{$$variable{'Shifts'}} == 0 ) ?>

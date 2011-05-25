@@ -271,79 +271,31 @@
 				) + 1;
 
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime_seconds');
+			my @Equipment_Shifts = $E->Operator_Shifts();
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
+			my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
+			my $et = $st + DateTime::Duration->new( 'days'=>$end );
+			my $parser = 'DateTime::Format::Pg';
+
 			my @Shifts = openprint::Shift::find( 
 				'equipment_id' 		=>	$E->id(),
-				'starttime_>='		=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
-				'starttime_<'		=>	sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, $end ) ),
+				'starttime_>='		=>	$parser->format_datetime( $st ),
+				'starttime_<'		=>	$parser->format_datetime( $et ),
 				'order'				=>	'starttime',
 				);
 
 			if ( ! @Shifts ) {
-				# Three cases, no shifts, shifts before, shifts after.
-					my $starttime = Date::Calc::Mktime($year,$month,$day,0,0,0);
-					my $endtime = Date::Calc::Mktime( Date::Calc::Add_Delta_Days( $year, $month, $day, $end ) ,0,0,0 );
-				# Case #1 Shift before
-				if ( my $LastShift = openprint::Shift::find(
-						'equipment_id'      =>  $E->id(),
-						'starttime_<'       => sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
-						'order'             =>  'starttime DESC',
-						) ) {
-					my $last_time = $LastShift->starttime_seconds()+1;
-					while ( $last_time < $endtime ) {
-						my $Shift = $Equipment_Shifts[0]->emanantise( $last_time );
-						$last_time = $Shift->starttime_seconds() + 1;
-					} # end while
-				} elsif ( my $NextShift = openprint::Shift::find(
-                        'equipment_id'      =>  $E->id(),
-                        'starttime >'       => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, $end ) ),
-                        'order'             =>  'starttime',
-                        ) ) {
-					my $next_time = $NextShift->starttime_seconds();
-					while ( $NextShift->starttime_seconds() > $starttime ) {
-						$NextShift = $NextShift->Equipment_Shift()->Previous()->emanantise( $NextShift->starttime() - $NextShift->Equipment_Shift()->Previous()->duration_seconds() );
-						unshift @Shifts, $NextShift if $NextShift->starttime_seconds() < $endtime;
-					} # end while
-				} else {
-# Just add them all in the specified range
-					while ( $starttime < $endtime ) {
-						my $Shift = $Equipment_Shifts[0]->emanantise( $starttime );
-						if ( ! $Shift ) {
-						} elsif ( ref $Shift ne 'openprint::Shift' ) {
-							$log->error("emanantise returned crap $Shift");
-						} # end if
-				
-						push @Shifts, $Shift;
-						$starttime = $Shift->starttime_seconds() + 1;
-					} # end while
-				} # end if
+				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
-			# Whiel we are at it, turn the array of Equipment Shifts into a circular array
-			my $ES;
-			my $Last_ES;
-			for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
-				if ( ( ! $ES ) and ( $Equipment_Shifts[$ES_index]->id() == $Shifts[0]{'shift_id'} ) ) {
-					$ES = $Equipment_Shifts[$ES_index];
-				} # end if
-				if ( $Last_ES ) {
-					$Equipment_Shifts[$ES_index]->Prevous( $Last_ES );
-					$Last_ES->Next( $Equipment_Shifts[$ES_index] );
-				} # end if
-				$Last_ES = $Equipment_Shifts[$ES_index];
-			} # end foreach Equipment Shift
-			$Last_ES->Next( $Equipment_Shifts[0] );
+			my $ES = $Shifts[0]->Equipment_Shift();
 
-			if ( ( ! $ES ) or ( $ES->id != $Shifts[0]{'shift_id'} ) ) {
-				# DIdn't find it.  Should be impossible
-				$openprint::log->error("Couldn't find ES for first shift");
-				return;
-			} # end if
-
+$log->debug("Setp 2" . $ES->to_string());
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {
@@ -364,7 +316,14 @@
 				} # end if need shiftsadded
 				$ES = $ES->Next();
 			} # end for
-
+			
+			my $LastShift = $Shifts[@Shifts-1];
+			while ( $LastShift->starttime_seconds() < $et->epoch() ) {
+				my $NewShift = $LastShift->Equipment_Shift()->Next()->emanantise( $LastShift->starttime_seconds() + 1 );
+				
+				push @Shifts, $NewShift;
+				$LastShift = $NewShift;
+			} # end while
 			foreach my $Shift ( @Shifts ) {	
 				push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );

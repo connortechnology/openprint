@@ -15,6 +15,8 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 *dbh = \$openprint::dbh;
 
 
+# Note: duration_seconds is 1 seconds less than duration
+
 $debug = 1;
 
 $table = 'equipment_shifts';
@@ -56,6 +58,7 @@ sub starttime_seconds {
 		} else {
 			$_[0]{'starttime_seconds'} = $_[1];
 		} # end if
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'};
 	} # end if
 	return $_[0]{'starttime_seconds'};
 } # end sub endtime_seconds
@@ -75,10 +78,10 @@ sub endtime_seconds {
 		} else {
 			$_[0]{'endtime_seconds'} = $_[1];
 		} # end if
-		$_[0]{'duration_seconds'} = ( $_[0]{'endtime_seconds'} + 1 ) - $_[0]{'starttime_seconds'};
+		$_[0]{'duration_seconds'} = $_[0]{'endtime_seconds'} - $_[0]{'starttime_seconds'};
 	} # end if
 	if ( ! $_[0]{'endtime_seconds'} ) {
-		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'};
 	} # end if
 	return $_[0]{'endtime_seconds'};
 } # end sub endtime_seconds
@@ -87,21 +90,26 @@ sub endtime_seconds {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
+	$log->debug("Emanantise: " . $self->to_string() );
+	my $parser = 'DateTime::Format::Pg';
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 
-$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ) );
-	#$date_seconds -= ($date_seconds % (24*3600));
+	my $requested_dt = DateTime->from_epoch( 'epoch'=>$date_seconds, 'time_zone'=>$TZ );
+	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
-	my $time_part = $date_seconds % DAY;
-	my $date_part = $date_seconds - $time_part;
-#Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
-	my $starttime_time_seconds = $self->starttime_seconds() % DAY;
-	if ( $starttime_time_seconds < $time_part ) {
-		# Need to add a day
-		$date_part += DAY;
-	} # end if
-	my $starttime_seconds = $date_part + $starttime_time_seconds;
-	my $endtime_seconds = $starttime_seconds + $self->duration_seconds();
 
+	my $shift_start_time_dt = DateTime::Duration->new( 'seconds' => $self->starttime_seconds() % DAY );
+
+	my $date_part_dt = $requested_dt->clone()->truncate('to'=>'day');
+
+	my $st = $date_part_dt + $shift_start_time_dt;
+	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	if ( $st < $requested_dt ) {
+		# Need to add a day
+		$st += DateTime::Duration->new( 'days'=>1 );
+	} # end if
+	$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	my $et = $st + DateTime::Duration->new( 'seconds' => $self->duration_seconds() );
 
 	my $Shift;
 	# FIXME: This does not handle cases where the times have been overriden.
@@ -111,20 +119,17 @@ $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $
 	if ( $Shift = openprint::Shift::find_one(
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'shift_id'		=>	$$self{'id'},
-				'starttime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ),
-				'endtime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
+				'starttime >='	=>	$parser->format_datetime( $st ),
+				'endtime <='	=>	$parser->format_datetime( $et ),
 				) ) {
 	} else {
-		$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ) . " ending: " . 
-				Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds)
-				);
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : $openprint::session{'user_id'} ),
 				'shift_id'		=>	$$self{'id'},
-				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
-				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
+				'starttime'		=>	$parser->format_datetime( $st ),
+				'endtime'		=>	$parser->format_datetime( $et ),
 				});
 	} # end if
 	return $Shift;
@@ -232,15 +237,15 @@ sub end_minute {
 sub duration {
 	if ( @_ > 1 ) {
 		my ( $h, $m, $s ) = split ( ':', $_[1] );
-		$_[0]{'duration_seconds'} = ( $h * HOUR ) + ( $m * 60 ) + $s;
-		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+		$_[0]{'duration_seconds'} = ( $h * HOUR ) + ( $m * 60 ) + $s - 1;
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'};
 	} # end if
 	return misc::seconds2hms( $_[0]{'duration_seconds'} );
 } # end sub duration
 sub duration_seconds {
 	if ( @_ > 1 ) {
 		$_[0]{'duration_seconds'} = $_[1];
-		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'} - 1;
+		$_[0]{'endtime_seconds'} = $_[0]{'starttime_seconds'} + $_[0]{'duration_seconds'};
 	} # end if
 	return $_[0]{'duration_seconds'};
 } # end sub duration_seconds
@@ -260,6 +265,7 @@ sub distance {
 		#} else {
 	} # end if
 } # end sub
+
 
 1;
 __END__

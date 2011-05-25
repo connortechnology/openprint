@@ -580,10 +580,12 @@ sub operator_id {
 	} # end if
 	if ( ! $$self{'operator_id'} ) {
 		if ( $$self{'project_id'} ) {
+$openprint::log->debug("Servic_ids: @{$$self{'service_id'}}");
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				my $Service = $Project->Service( $sig_id );
+$openprint::log->debug($Service->to_string() );
 				$$self{'operator_id'} = $Service->operator_id();
-				last;
+				last if $$self{'operator_id'};
 			} # end foreach
 		} # end if
 	} # end if
@@ -665,6 +667,7 @@ sub shift_id {
 	return;
 } # end sub shift_id
 
+
 sub Shift {
 	my ( $self ) = @_;
 
@@ -688,29 +691,21 @@ sub Shift {
 					#'limit'			=>	1,
 					);
 			if ( ! @Shifts ) {
-				# Things like Bump can push a job to the very end, where a shift might need to be created.
-				@Shifts = openprint::Equipment_Shift::find(
-						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'limit'		 =>  1,
-						);
-				@Shifts = openprint::Equipment_Shift::find(
-						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'order'		 =>  'starttime',
-						'limit'		 =>  1,
-						) if ! @Shifts;
-				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-			} else {
-				$Shift = shift @Shifts;
-				if ( @Shifts ) {
-					$log->error("Deleting duplicate shifts! " . @Shifts );
-					foreach ( @Shifts ) {
-						$log->error( $_->to_string() );
-						#$_->delete();
-					} # end foreach
-				} # end if
+					my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+
+				@Shifts = openprint::Shift::get_Shifts( $self->Equipment(), 
+					DateTime->from_epoch('epoch'=>$self->starttime_seconds(), 'time_zone'=>$TZ ),
+					DateTime->from_epoch('epoch'=>$self->endtime_seconds(), 'time_zone'=>$TZ ),
+				);
+			} # end if
+
+			$Shift = shift @Shifts;
+			if ( @Shifts ) {
+				$log->error("Deleting duplicate shifts! " . @Shifts );
+				foreach ( @Shifts ) {
+					$log->error( $_->to_string() );
+					#$_->delete();
+				} # end foreach
 			} # end if
 		} # end if
 		return if ! $Shift;

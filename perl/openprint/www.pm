@@ -228,7 +228,7 @@ $openprint::log->debug("Getfile");
 			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
 			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
 		} elsif ( $first ) {
-$log->debug("1 $first _ $second $filename");
+#$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -237,7 +237,6 @@ $log->debug("1 $first _ $second $filename");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
-$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
