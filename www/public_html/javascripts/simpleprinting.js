@@ -34,7 +34,7 @@ function calc( formName, force ) {
 
 	var div = $('AlertDiv');
 	if ( ! div ) {
-		alert('No alert div.');
+		//alert('No alert div.');
 	} else {
 		div.hide();
 	} // end if
