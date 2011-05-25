@@ -301,6 +301,15 @@ if ( ! sets::isin( 'privacy_groups', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy_Groups.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'project_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Project_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
+	if ( ! exists $$data{'please_call'} ) {
+		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
+	} # endif
+}
 $dbh->disconnect();
 1;
 __END__
