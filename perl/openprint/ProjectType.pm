@@ -19,6 +19,7 @@ $serial = 'project_types_id_seq';
 	'category_id'	=>	'category_id',
 	'url'			=>	'url',
 	'sorting'		=>	'sorting',
+	'please_call'	=>	'please_call',
 );
 %transforms = (
 	'name'	=>	[ 's/\s//g' ],
@@ -27,6 +28,7 @@ $serial = 'project_types_id_seq';
 	'id'			=>	undef,
 	'category_id'	=>	undef,
 	'sorting'		=>	undef,
+	'please_call'	=>	0,
 );
 
 sub find_one {
@@ -75,14 +77,14 @@ sub save {
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
-		$$self{'required_services'} = $$params{'required_services'} if exists $$params{'required_services'};
-		if ( $$self{'required_services'} ) {
-			sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
-			# The union gets rid of duplicates
-			foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
-				sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
-			} # end foreach
-		} # end if
+		$self->required_services( $$params{'required_services'} );
+		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
+
+		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+		# The union gets rid of duplicates
+		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
+			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
+		} # end foreach
 	} # end if
 	return;	
 } # end sub save
@@ -110,16 +112,21 @@ sub required_services {
 	if ( @_ > 1 ) {
 		@{$$self{'required_services'}} = @_;
 	} elsif ( @_ ) {
-		$_ = shift;
-		if ( ref $_  eq 'ARRAY' ) {
-			@{$$self{'required_services'}} = @{$_};
+		if ( $_[0] ) {
+		} elsif ( ref $_[0] eq 'ARRAY' ) {
+			@{$$self{'required_services'}} = @{$_[0]};
 		} elsif ( $_ ) {
-			@{$$self{'required_services'}} = ($_);
+			@{$$self{'required_services'}} = ($_[0]);
 		} # end if
-	} elsif ( ! $$self{'required_services'} ) {
-		@{$$self{'required_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 	} # end if
-	return @{$$self{'required_services'}} if $$self{'required_services'};
+	if ( ! $$self{'required_services'} ) {
+		if ( $$self{'id'} ) {
+			@{$$self{'required_services'}} = sql::execute( undef, undef, q{SELECT ServiceType_id FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
+		} else {
+			@{$$self{'required_services'}} = ();
+		} # end if
+	} # end if
+	return @{$$self{'required_services'}};
 } # end sub required_services
 
 sub required_ServiceTypes {

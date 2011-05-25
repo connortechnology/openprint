@@ -18,6 +18,10 @@
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
 			<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
+<? if ( ( ! $dbh ) or $$variable{'ProjectType'}->please_call() ) ?>
+	<div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
+<? endif ( ( ! $dbh ) or $$variable{'ProjectType'}->please_call() ) ?>
+<? if ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
 			<!--#include virtual="_project_name.html"-->
 			<div class="ProjectSpecifications">
 				<h1>Project Specifications</h1>
@@ -117,6 +121,7 @@
 				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
 				<!--#include virtual="/includes/prices.html"-->
+<? endif ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
 				</div></div><!--Questions-->
 		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 	   </div><!--instant_price_section-->
