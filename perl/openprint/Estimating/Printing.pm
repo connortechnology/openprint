@@ -3585,10 +3585,10 @@ $openprint::log->debug("Using cached folding");
 	my %washed_colours = %{$$project{'washed_colours'}};
 	my @left_over_colours;
 my $colourstarttime = gettimeofday();
-$openprint::log->debug("Colours: @colours");
+#$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( @colours ) {
 		my $real_colour = $$Colour{'name'};
-$openprint::log->debug("Colour: $real_colour");
+#$openprint::log->debug("Colour: $real_colour");
 		my $colour;
 		if ( ( $real_colour =~ /UV/ ) or ( $real_colour =~ /Aqueous/ ) ) {
 			push @left_over_colours, $real_colour;
