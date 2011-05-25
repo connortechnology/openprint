@@ -261,7 +261,7 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 	} # end if
 } # end if
 if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
-	$Action->save({'name'=>'Select Company'});
+	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
 } # end if
 my %config_actions = (
 	'Update Configuration' => 77,
@@ -300,11 +300,11 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
 }
-if ( ! sets::isin( 'equipment_schedule', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Schedule.sql' ) );
+if ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Shifts.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_schedule'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
 	if ( ! exists $$data{'starttime_seconds'} ) {
 		if ( exists $$data{'starttime'} ) {
 			$dbh->do('ALTER TABLE Equipment_Shifts ADD starttime_seconds INTEGER');
