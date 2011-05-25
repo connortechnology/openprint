@@ -10,27 +10,30 @@
 			<tbody>
 	<? echo (
 		my $html;
+		my $Project = $$variable{'Project'};
 		my $Currency = openprint::Currency::get_current();
-		my $services = $$variable{'Project'}->services();
+		my $services = $Project->services();
 		my $rowclass;
-		my $total;
+		my $totals;
 		foreach my $category ( 'Prepress','Printing','Bindery','Specialty','Packaging','Shipping','Custom Services','Materials' ) {
 			if ( $category eq 'Printing' ) {
 				if ( $$services{'AdditionalSignature'} ) {
-					my $printing_total = 0;
+					my %printing_totals;;
 					foreach my $service_id ( @{$$services{'AdditionalSignature'}} ) {
 						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
-						$printing_total += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
-					} # end foreach
+						foreach my $qty_index ( $Project->ordered_quantity_index() ? $Project->ordered_quantity_index() : ( $Project->quantity_indexes() ) ) {
+							$printing_totals[$qty_index] += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
+						} # end foreach qty_idnex
+					} # end foreach service_id
 
-					$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td></tr>', 
-							$rowclass, 'Printing', '',
-							$Currency->symbol(),
-							Number::Format::format_number($$variable{'Project'}->Currency()->convert_from($printing_total),2,2),
-						);
-						$total += $printing_total;
-						$html .= "\n";
-						$rowclass = $rowclass ? '' : ' class="colRow"';
+					$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td>', $rowclass, 'Printing', '' );
+					foreach my $qty_index ( $Project->ordered_quantity_index() ? $Project->ordered_quantity_index() : ( $Project->quantity_indexes() ) ) {
+						$html .= sprintf('<td class="price">%5$s</td>', openprint::Current::format($$variable{'Project'}->Currency()->convert_from($printing_total)));
+						$totals[$qty_index] += $printing_total;
+					} # end foreach qty_index
+		
+					$html .= "</tr>\n";
+					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} elsif ( $$services{''} ) {
 					my $service_id = $$services{''}[0];
 					my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
@@ -47,7 +50,7 @@
 					$total += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
 				} # end if
 			} else {
-				foreach my $ServiceType ( openprint::ServiceType::find( 'category' => $category,'order'=>'sorting', 'view_visible'=>1 ) ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( 'category' => $category,'order'=>'sorting', 'view_visible'=>1 ) ) {
 					next if ! $$services{$ServiceType->name()};
 					foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
@@ -55,9 +58,6 @@
 						my $summary = openprint::service::summary( $$variable{'Project'},$service_id );
 						if ( ref $summary eq 'ARRAY' ) {
 							my $qty_summary = openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() );
-$openprint::log->warn("Size of summaries " . @{$summary} . ' ' . @{$qty_summary} );
-$openprint::log->warn("Size of summaries  @{$summary} " );
-$openprint::log->warn("Size of summaries  @{$qty_summary} " );
 							$summary = join('<br/>', map { join(' ', $_, shift @{$qty_summary} ) } @{$summary} );
 						} else {
 							$summary .= '<br/>' if $summary;
