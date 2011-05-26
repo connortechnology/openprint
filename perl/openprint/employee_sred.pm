@@ -170,5 +170,14 @@ sub _description {
 		$variable{'error'} .= $Content->save({'description'=>$param{'value'}});
 	} # end if
 } # end sub _description
+
+sub _date_edit {
+	my $Object = $variable{'Object'} = ('openprint::'.$param{'object_type'})->new( $param{'object_id'} );
+	if ( $param{'action'} eq 'save' ) {
+		$Object->save({
+			$param{field} => sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{map { $param{'field'}.'_'.$_ } ( 'year','month','day','hour','minute' ) } ),
+			} );
+	} # end if
+} # end sub _date_edit
 1;
 __END__

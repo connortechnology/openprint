@@ -3,10 +3,14 @@
 <? echo (
 	my $html;
 	my $C = $$variable{'C'};
-	if ( $C->starting() ) {
-		$html .= sprintf('<li><label>Start:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
+	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
+		$html .= sprintf(q`<li><label>Start:</label><span id="starting-%1$d"><span class="editable" onclick="new Ajax.Updater('starting-%1$d','_date_edit.html?object_type=SRED_Content&amp;object_id=%1$d&amp;field=starting&amp;action=edit');">%2$s</span></span></li>`, $C->id(), Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
+	} elsif ( $C->starting() ) {
+		$html .= sprintf(q`<li><label>Start:</label>%s</li>`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
 	} # end if
-	if ( $C->ending() ) {
+	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
+		$html .= sprintf(q`<li><label>End:</label><span id="ending-%1$d"><span class="editable" onclick="new Ajax.Updater('ending-%1$d','_date_edit.html?object_type=SRED_Content&amp;object_id=%1$d&amp;field=ending&amp;action=edit');">%2$s</span></span></li>`, $C->id(), Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ) );
+	} elsif ( $C->ending() ) {
 		$html .= sprintf('<li><label>End:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ) );
 	} # end if
 	$html .= sprintf('<li><label>User:</label>%s</li>', $C->User()->name() ) if $C->user_id();
@@ -24,7 +28,7 @@
 	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
 	$html .= sprintf(q`
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'description-%1$d', '_description.html?id=%1$d&amp;action=update',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_description.html?id=%1$d'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'description-%1$d', '_description.html?id=%1$d&amp;action=update',{okButton:true,cancelLink:true,submitOnBlur:true,tinymceSave: true, tinymceToElementSize: true}, tinymce_options );
 </script>`, $C->id() );
 	} # end if
 

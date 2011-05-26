@@ -674,6 +674,9 @@ form.inplaceeditor-form a { /* The cancel link */
 .changed {
     background-color: yellow;
 }
+.editable:hover {
+    background-color: yellow;
+}
 
 input.filter, fieldset p input.filter {
 	width: 40px;
