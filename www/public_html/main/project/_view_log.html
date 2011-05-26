@@ -14,6 +14,8 @@
 		<? eval ( 
 			if ( $$variable{'Description'} =~ /^Reused from project (\d+)$/ ) {
 				$$variable{'Description'} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
+			} elsif ( $$variable{'Description'} =~ /^Reused to project (\d+)$/ ) {
+				$$variable{'Description'} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
 			} # end if
 		) ?>
 	<tr<?rowclass?>>

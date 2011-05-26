@@ -163,5 +163,12 @@ sub project {
 sub _contents {
 	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
 } # end sub _contents
+
+sub _description {
+	my $Content = $variable{'Content'} = new openprint::SRED_Content( $param{'id'} );
+	if ( $param{'action'} eq 'update' ) {
+		$variable{'error'} .= $Content->save({'description'=>$param{'value'}});
+	} # end if
+} # end sub _description
 1;
 __END__

@@ -12,7 +12,7 @@
 	$html .= sprintf('<li><label>User:</label>%s</li>', $C->User()->name() ) if $C->user_id();
 	$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
 	$html .= '</ul></div><div class="rightColumn"><ul>';
-	$html .= sprintf('<li><label>Description:</label>%s</li>', $C->description() );
+	$html .= sprintf('<li><label>Description:</label><span id="description-%d">%s</span></li>', $C->id(), $C->description() );
 	$html .= '<li><label>Attachments:</label>';
 	if ( my @Assets = $C->Assets() ) {
 		$html .= join('', map { sprintf('<a href="%s" target="_blank"><img class="thumbnail" src="/assets/%s" alt=""/> %s</a><br/>', $_->url(), $_->Asset()->thumbnail_filename(), $_->Asset()->on_disk_filename() ) } @Assets );
@@ -21,6 +21,13 @@
 	} # end if
 	$html .= qq`<input type="file" name="filename-$$C{id}" />`;
 	$html .= ssi::button( 'Upload', { 'onclick'=>q`var form = $('f1');form.action='project.html';form.function.value='Upload';form.submit();` } );
+	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
+	$html .= sprintf(q`
+<script type="text/javascript">
+new Ajax.InPlaceRichEditor( 'description-%1$d', '_description.html?id=%1$d&amp;action=update',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_description.html?id=%1$d'}, tinymce_options );
+</script>`, $C->id() );
+	} # end if
+
 	return $html;
 ) ?>
 </li>
