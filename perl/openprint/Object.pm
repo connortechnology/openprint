@@ -243,12 +243,7 @@ sub save {
 
 sub get {
 	my $self = shift;
-	my @results;
-	foreach ( @_ ) {
-		push @results, $self->$_();
-	} # end foreach
-
-	return @results;
+	return map { $self->$_() } @_;
 } # end sub get
 
 sub set {
@@ -696,5 +691,14 @@ sub dropdown {
 $log->debug("dropdown");
 	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
 } # end sub dropdown
+
+sub sort_value {
+	return $_[0]->name();
+}
+
+sub sort {
+	my $type = shift;
+	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+} # end sub sort
 1;
 __END__

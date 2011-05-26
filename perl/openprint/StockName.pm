@@ -18,5 +18,9 @@ $serial= 'papername_id_seq';
 %defaults = (
 );
 
+sub sort {
+	shift if $_[0] eq 'openprint::StockName';
+	return sort { $$a{'shortname'} cmp $$b{'shortname'} } @_;
+}# end sub sort
 1;
 __END__

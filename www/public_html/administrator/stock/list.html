@@ -86,103 +86,46 @@
 		</p>
 		<p>
 			<label>Name:</label>
-			<select name="Name" onchange="Name_onChange(this,'');">
+			<select name="Name" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
 					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Name'} );
 					) ?>
 			</select>
 		</p>
+<? echo (
+	my $html;
+	my @options = ('Finish','Colour','Weight','Quality','Material');
+	my %find = (
+		($session{'/administrator/stock/list.html?Name'}?('name_id'=>$session{'/administrator/stock/list.html?Name'}) : ()),
+		($session{'/administrator/stock/list.html?Manufacturer'}?('manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'}):()),
+		($session{'/administrator/stock/list.html?Group'}?('group_id'=>$session{'/administrator/stock/list.html?Group'}):())
+	);
+	my %results;
+	my @Stocks = openprint::Paper->find(\%find);
+
+	foreach my $Stock ( @Stocks ) {
+		foreach my $option ( @options ) {
+			my $lc_option = lc $option;
+			#if ( $$Stock->$lc_option() == 
+			$results{$option}{$$Stock{$lc_option.'_id'}} = $Stock->$option();
+		} # end foreach Stock
+	}# end foreach option
+
+	foreach my $option ( @options ) {
+		my $lc_option = lc $option;
+$log->debug("Doin $option");
+	my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+
+		$html .= sprintf(q`	
 		<p> 
-			<label>Finish:</label>
-			<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
-				<option value=""> select one </option>
-			<? echo (
-					my %finishes;
-					foreach my $Stock ( openprint::Paper->find( 
-							'name_id'=>$session{'/administrator/stock/list.html?Name'},
-							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
-							'group_id'=>$session{'/administrator/stock/list.html?Group'}
-							) ) {
-						$finishes{$Stock->finish()} = $Stock->finish_id();
-					} # end foreach
-					return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/administrator/stock/list.html?Finish'} );
-				) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Colour:</label>
-			<select id="Colour" name="Colour" size="1" onchange="calc(this.form.name);">
-				<option value=""> select one </option>
-			<? echo (
-					my %colours;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
-							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
-							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
-							'group_id'=>$session{'/administrator/stock/list.html?Group'},
-							) ) {
-						$colours{$Stock->colour()} = $Stock->colour_id();
-					} # end foreach
-					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
-				) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Weight:</label>
-			<select name="Weight" size="1" onchange="calc(this.form.name);">
-				<option value=""> select one </option>
-			<? echo (
-					my %colours;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
-							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
-							'colour_id'=>$session{'/administrator/stock/list.html?Colour'},
-							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
-							'group_id'=>$session{'/administrator/stock/list.html?Group'},
-							) ) {
-						$colours{$Stock->weight()} = $Stock->weight_id();
-					} # end foreach
-					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
-				) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Quality:</label>
-			<select name="Quality" size="1" onchange="calc(this.form.name);">
-				<option value=""> select one </option>
-			<? echo (
-					my %colours;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
-							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
-							'colour_id'=>$session{'/administrator/stock/list.html?Colour'},
-							'weight_id'=>$session{'/administrator/stock/list.html?Weight'},
-							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
-							'group_id'=>$session{'/administrator/stock/list.html?Group'},
-							) ) {
-						$colours{$Stock->quality()} = $Stock->quality_id();
-					} # end foreach
-					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Weight'} );
-				) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Material:</label>
-			<select name="material_id" size="1" onchange="calc(this.form.name);">
-				<option value=""> select one </option>
-			<? echo (
-					my %materials;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/stock/list.html?Name'},
-							'finish_id'=>$session{'/administrator/stock/list.html?Finish'},
-							'colour_id'=>$session{'/administrator/stock/list.html?Colour'},
-							'manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'},
-							'group_id'=>$session{'/administrator/stock/list.html?Group'},
-							'weight_id'=>$session{'/administrator/stock/list.html?Weight'},
-							) ) {
-						$materials{$Stock->material()} = $Stock->material_id();
-					} # end foreach
-					return ssi::make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $session{'/administrator/stock/list.html?material_id'} );
-				) ?>
-			</select>
-		</p>
+			<label>%1$s:</label>
+			<select id="%1$s" name="%1$s" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
+		</p>`, $option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$option} ) );
+		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$option} if $session{'/administrator/stock/list.html?'.$option};
+	}# end foreach option
+	return $html;
+) ?>
 		</div>
 		<div class="rightColumn">
 		<p> 
@@ -222,6 +165,6 @@ ssi::writeButton( $log, $dbh, 'applychanges1', 'applychanges.gif', "popup_window
 		</p>
 	</fieldset>
 	<br/>
-	<div id="Stocks"><!--#include virtual="_stocks.html"--></div>
+	<div id="Stocks"></div>
 	<input type="hidden" name="btnFunction"/>
 </form>

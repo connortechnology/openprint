@@ -464,5 +464,8 @@ sub _price_tr {
 
 } # end sub _price_tr
 
+sub _stock { 
+} # end sub _stock
+
 1;
 __END__

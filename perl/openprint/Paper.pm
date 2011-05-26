@@ -98,6 +98,9 @@ $serial	=	'paper_id_seq';
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
+%defaults = (
+);
+
 # Returns a copy of the paper object.
 sub copy {
 	my $New = $_[0]->clone();
@@ -323,7 +326,9 @@ sub material {
     my ( $self, $material ) = @_;
 
 	if ( defined $material ) {
-		$material =~ s/^\s*(.*)\s*$/$1/;
+		$material =~ s/^\s+//;
+		$material =~ s/\s+$//;
+		$material =~ s/\s\s+$/ /;
 
         @$self{'material_id','material'} = sql::execute( undef, undef, q{SELECT id, name FROM StockMaterials WHERE lower(name)=?}, lc $material );
         if ( ! $$self{'material_id'} ) {
@@ -339,7 +344,9 @@ sub group {
     my ( $self, $group ) = @_;
 
 	if ( defined $group ) {
-		$group =~ s/^\s*(.*)\s*$/$1/;
+		$group =~ s/^\s+//;
+		$group =~ s/\s+$//;
+		$group =~ s/\s\s+$/ /;
 
 		if ( ! $$self{'custom'} ) {
 			@$self{'group_id','group'} = sql::execute( undef, undef, q{SELECT id, name FROM StockGroups WHERE lower(name)=?}, lc $group );
@@ -405,7 +412,7 @@ sub manufacturer {
 } # end sub manufacturer
 
 sub Finish {
-	return openprint::StockFinish( $_[0]{'finish_id'} );
+	return new openprint::StockFinish( $_[0]{'finish_id'} );
 }
 sub finish {
     my ( $self, $finish ) = @_;
@@ -429,7 +436,7 @@ sub finish {
 } # end sub finish
 
 sub Colour {
-	return openprint::StockColour( $_[0]{'colour_id'} );
+	return new openprint::StockColour( $_[0]{'colour_id'} );
 }
 sub colour {
     my ( $self, $colour ) = @_;
@@ -447,13 +454,38 @@ sub colour {
 			$$self{'colour'} = $colour;
         } # end if
     } elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
-        @$self{'colour'} = new openprint::StockColour( $$self{'colour_id'} )->shortname();
+        $$self{'colour'} = new openprint::StockColour( $$self{'colour_id'} )->shortname();
     } # end if
     return $$self{'colour'};
 } # end sub colour
 
+sub Quality {
+	return new openprint::StockQuality( $_[0]{'quality_id'} );
+} # end sub Quality
+
+sub quality {
+    if ( @_ > 1 ) {
+		$_[1] =~ s/^\s+//;
+		$_[1] =~ s/\s+$//;
+		$_[1] =~ s/\s\s+$/ /;
+		if ( ! $_[0]{'custom'} ) {
+			my $Quality = openprint::StockQuality->find_one('name lc'=>lc $_[1]);
+			if ( $Quality ) {
+				$_[0]{'quality_id','quality'} = @$Quality{'id','name'};
+			} else {
+				$_[0]{'quality'} = $_[1];
+			} # end if
+		} else {
+			$_[0]{'quality'} = $_[1];
+        } # end if
+    } elsif ( $_[0]{'quality_id'} and ! $_[0]{'quality'} ) {
+        $_[0]{'quality'} = new openprint::StockColour( $_[0]{'quality_id'} )->shortname();
+    } # end if
+    return $_[0]{'quality'};
+} # end sub quality
+
 sub Weight {
-	return openprint::StockWeight( $_[0]{'weight_id'} );
+	return new openprint::StockWeight( $_[0]{'weight_id'} );
 }
 sub weight {
     my ( $self, $weight ) = @_;
