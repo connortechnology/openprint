@@ -1,11 +1,11 @@
-// InPlaceRichEditor, version 1.3.3
+// InPlaceRichEditor, version 1.3
 // 
 // Author: Sebastien Grosjean (http://www.zencocoon.com, http://seb.box.re)
 //
 // Contributor:
 //   Neil Rickards, Robert Muzslai, Andrew Petersen, Brian Hansen, Brian French,
 //   Dan Dalf, Anton Mostovoy, Hans-Peter, Filipe Pina, Min Kim, Rudi Boutinaud,
-//   Joaquin Miguez, E. Vrolijk - RedAnt Solutions, Tony Cuny, yasmary, Bernd Binder
+//   Joaquin Miguez, E. Vrolijk - RedAnt Solutions
 //
 // InPlaceRichEditor is freely distributable under the terms of an MIT-style license.
 // For details, see the inPlaceRichEditor web site: http://inplacericheditor.box.re/
@@ -18,6 +18,8 @@ if(typeof tinyMCE == 'undefined')
 tinymce.EditorManager.oldAdd = tinymce.EditorManager.add;
 tinymce.EditorManager.add = function(ed) {
   ed.onInit.add(function(ed) {
+		//alert('No '+ed+ ed.id + ' found');
+	if ( $(ed.id) ) 
     $(ed.id).fire('tinymce:onInit', ed);
   });
   return tinymce.EditorManager.oldAdd(ed);
@@ -58,7 +60,7 @@ Ajax.InPlaceRichEditor = Class.create(Ajax.InPlaceEditor, {
       this.enterEditMode();
   },
   createControl: function($super, mode, handler, extraClasses) {
-    if (!this.options.tinymceSave)
+    // if (!this.options.tinymceSave)
       $super(mode, handler, extraClasses);
   },
   createEditField: function() {
@@ -95,9 +97,6 @@ Ajax.InPlaceRichEditor = Class.create(Ajax.InPlaceEditor, {
       this.tinymce.settings.width = elementDimensions.width;
     }
     this.tinymce.render();
-  },
-  getText: function() {
-    return this.element.innerHTML;
   },
   handleAJAXFailure: function($super, transport) {
     $super(transport);

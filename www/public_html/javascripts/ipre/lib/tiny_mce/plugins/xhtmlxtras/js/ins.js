@@ -1,11 +1,8 @@
-/**
- * ins.js
+ /**
+ * $Id: editor_plugin_src.js 42 2006-08-08 14:32:24Z spocke $
  *
- * Copyright 2009, Moxiecode Systems AB
- * Released under LGPL License.
- *
- * License: http://tinymce.moxiecode.com/license
- * Contributing: http://tinymce.moxiecode.com/contributing
+ * @author Moxiecode - based on work by Andrew Tetlaw
+ * @copyright Copyright © 2004-2008, Moxiecode Systems AB, All rights reserved.
  */
 
 function init() {
@@ -21,17 +18,16 @@ function setElementAttribs(elm) {
 	setAllCommonAttribs(elm);
 	setAttrib(elm, 'datetime');
 	setAttrib(elm, 'cite');
-	elm.removeAttribute('data-mce-new');
 }
 
 function insertIns() {
 	var elm = tinyMCEPopup.editor.dom.getParent(SXE.focusElement, 'INS');
-
+	tinyMCEPopup.execCommand('mceBeginUndoLevel');
 	if (elm == null) {
 		var s = SXE.inst.selection.getContent();
 		if(s.length > 0) {
-			insertInlineElement('ins');
-			var elementArray = SXE.inst.dom.select('ins[data-mce-new]');
+			tinyMCEPopup.execCommand('mceInsertContent', false, '<ins id="#sxe_temp_ins#">' + s + '</ins>');
+			var elementArray = tinymce.grep(SXE.inst.dom.select('ins'), function(n) {return n.id == '#sxe_temp_ins#';});
 			for (var i=0; i<elementArray.length; i++) {
 				var elm = elementArray[i];
 				setElementAttribs(elm);
