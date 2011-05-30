@@ -94,8 +94,9 @@
 			<p class="buttons">
 				<? echo ( join('',
 					ssi::button( 'ShowResults', { 'onclick'=> "load_timetracks(f1);", 'text'=>'Show Results' } ),
-					ssi::button( 'Reset', { 'href' => '/timetrack/history.html?action=reset' } ),
+					ssi::button( 'Reset', { 'href' => '/timetrack/history.html?func=reset' } ),
 					ssi::button( 'New', { 'href' => '/timetrack/edit.html', 'text' => 'New Timetrack' } ),
+					ssi::button( 'Download', { 'onclick'=>q`var form=$('f1');form.action='/timetrack/history.html?func=Download';form.submit();` } ),
 					); ) ?>
 			</p>
 		</fieldset>
