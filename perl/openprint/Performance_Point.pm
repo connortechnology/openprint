@@ -2,7 +2,7 @@ use strict;
 require openprint::Equipment;
 use openprint ();
 
-package openprint::PerformancePoint_Type;
+package openprint::Performance_Point_Type;
 our @ISA = qw( openprint::Object );
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'performancepoint_types';
@@ -16,7 +16,7 @@ $serial = 'performancepoint_types_id_seq';
 sub delete {
 	my $error;
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Point ( openprint::PerformancePoint->find('type_id'=>$_[0]{'id'}) ) {
+	foreach my $Point ( openprint::Performance_Point->find('type_id'=>$_[0]{'id'}) ) {
 		last if $error .= $Point->delete();
 	} # end foreach Point
 	$error .=  $_[0]->SUPER::delete() if ! $error;
@@ -24,27 +24,7 @@ sub delete {
 	return $error;
 } # end sub delete
 
-package openprint::PerformancePoint_Record;
-our @ISA = qw( openprint::Object );
-use vars qw( $table $serial %fields %transforms %defaults );
-$table = 'performancepoint_records';
-$serial = 'performancepoint_records_id_seq';
-%fields = (
-	'type_id'	=>	'type_id',
-	'shift_id'		=>	'shift_id',
-	'operator_id'	=>	'operator_id',
-	'total'		=>	'total',
-	'quantity'	=>	'quantity',
-);
-
-sub Shift {
-	return new openprint::Shift( $_[0]{'shift_id'} );
-} # end sub Shift;
-sub Type {
-	return new openprint::PerformancePoint_Type( $_[0]{'type_id'} );
-} # end sub Type
-
-package openprint::PerformancePoint;
+package openprint::Performance_Point;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $table $serial %fields %transforms %defaults @identified_by );
@@ -73,11 +53,11 @@ $serial = 'performancepoints_id_seq';
 );
 
 sub Type {
-	return new openprint::PerformancePoint_Type( $_[0]{'type_id'} );
+	return new openprint::Performance_Point_Type( $_[0]{'type_id'} );
 } # end sub Type
 
 sub Equipment {
-	return new openprint::Equipmetn( $_[0]{'equipment_id'} );
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
 } # end sub Equipment
 
 1;

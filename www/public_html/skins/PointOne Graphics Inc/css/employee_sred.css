@@ -1,0 +1,43 @@
+#Contents ul {
+	list-style:none;
+	margin:0px;
+	padding: 0px;
+}
+#Contents ul li {
+	list-style:none;
+	margin:5px 0 5px 0;
+	padding: 2px;
+	border: 1px solid black;
+}
+#Contents ul li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+
+#Contents ul li ul li {
+	padding: 0 0 0 80px;
+	border: none;
+}
+#Contents ul li ul li label {
+	vertical-align: top;
+	width: 75px;
+	margin: 0 0 0 -80px;
+	display: inline-block;
+}
+.SRED th.Name, .SRED th.Description {
+	text-align: left;
+}
+.leftColumn, .rightColumn {
+	min-width: 400px;
+}
+.rightColumn {
+	float: left;
+}
+.
+#Contents ul li ul li textarea {
+	width: 90%;
+}

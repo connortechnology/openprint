@@ -30,7 +30,7 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $ProjectType->save( \%param );
 
-		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
+		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() ) if $param{'ddmProjectType'};
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^Paper\d*$/ ) {
 				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );

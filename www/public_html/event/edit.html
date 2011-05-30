@@ -26,11 +26,11 @@
 				<div class="content">
 					<ul>
 						<li>
-							<label>Time Associated:</label>
-							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
-							<label class="radio" for="time_associated1">Yes</label>
+							<label>All day:</label>
 							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
-							<label class="radio" for="time_associated0">No</label>
+							<label class="radio" for="time_associated0">Yes</label>
+							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
+							<label class="radio" for="time_associated1">No</label>
 						</li>
 						<li><label>Start:</label>
 							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{'Event'}->starting_on(),
@@ -118,15 +118,19 @@
 					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 					
 					if ( $$variable{'Event'}->id() ) {
-					$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
-					#$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
+						if ( $$variable{'Event'}->deleted() ) {
+							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+						} else {
+							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+						} # end if
+						#$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
 					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+					$html .= ssi::button( 'Save', { 'onclick'=>"f1.function.value='Save';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
 		</fieldset>
-		<input type="hidden" name="btnFunction" />
+		<input type="hidden" name="function" />
 	</form>
 </div></div>

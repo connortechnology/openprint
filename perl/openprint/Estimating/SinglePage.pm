@@ -69,11 +69,10 @@ $log->debug("adding a sig");
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
+	my ( $Project ) = @_;
 
 	my $status;
 $openprint::log->debug("****************************************************************Starting SinglePage::calculate_signatures");
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -97,7 +96,7 @@ $openprint::log->debug( "Signature: @signatures");
 					my $specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $specs2 ) ) {
 #$openprint::log->warn('Deleting due to incorrect printing type');
-						openprint::print_project::delete_service( $log, $dbh, $project_index, $signatures[$j] );
+						openprint::print_project::delete_service( $$Project{'id'}, $signatures[$j] );
 						splice @signatures, $j, 1;
 						$j-=1;
 					} # end if
@@ -109,76 +108,76 @@ $openprint::log->debug( "Signature: @signatures");
 	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
 			if ( $$sig_specs{'Status'} ne 'calculated' ) {
 				return 'uncalculated';
 			} # end if
 		} # end if
 	} else {
-	foreach my $group ( @groups ) {
-		my @sigs = sort $Project->signatures( {'Group'=>$group} );
-$openprint::log->debug("Sigs in group $group : @sigs " );
-		next if ! @sigs;
-		my $ss_id = shift @sigs;
+		foreach my $group ( @groups ) {
+			my @sigs = sort $Project->signatures( {'Group'=>$group} );
+	$openprint::log->debug("Sigs in group $group : @sigs " );
+			next if ! @sigs;
+			my $ss_id = shift @sigs;
 
-		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-# If we couldn't calculate, then delete all the other printing types and retry.
-		if ( $$sig_specs{'Status'} eq 'uncalculated' ) {
-			if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {
-				$openprint::log->debug("Retrying after changing Printing Type");
-				foreach my $ss_id2 ( @signatures ) {
-					foreach my $qty_index ( $Project->quantity_indexes() ) {
-					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType'.$qty_index, '' ) if $$sig_specs{'txtQuantity1'};
-					} # end foreach
-				} # end foreach Signature
-				my $sig_specs2 = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-				if ( $$sig_specs2{'Status'} eq 'uncalculated' ) {
-# Despite removing printing type restrictions, we were still unable to calculate, so give up.
-					return 'uncalculated';
+			my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
+	# If we couldn't calculate, then delete all the other printing types and retry.
+			if ( $$sig_specs{'Status'} eq 'uncalculated' ) {
+				if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {
+					$openprint::log->debug("Retrying after changing Printing Type");
+					foreach my $ss_id2 ( @signatures ) {
+						foreach my $qty_index ( $Project->quantity_indexes() ) {
+						openprint::service::insert_service_specs( $openprint::log, $openprint::dbh, $$Project{'id'}, $ss_id2, 'PrintingType'.$qty_index, '' ) if $$sig_specs{'txtQuantity1'};
+						} # end foreach
+					} # end foreach Signature
+					my $sig_specs2 = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
+					if ( $$sig_specs2{'Status'} eq 'uncalculated' ) {
+	# Despite removing printing type restrictions, we were still unable to calculate, so give up.
+						return 'uncalculated';
+					} else {
+						$status = $$sig_specs2{'Status'};
+					} # end if
 				} else {
-					$status = $$sig_specs2{'Status'};
+					return 'uncalculated';
 				} # end if
+			} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
+				$status = $$sig_specs{'Status'};
+				# Successfully calculated the first sig
+				# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
+
+				while ( 
+					( $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}} ) or
+					( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
+					( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
+					if ( ! @sigs ) {
+						push @sigs, copy_signature( $$Project{'id'}, $sig_specs );
+					} # endif
+					my $a_ss_id = shift @sigs;
+					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
+					my %specs = %{$new_sig_specs};
+					openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
+
+					my $ac = sql::start_transaction( $openprint::dbh );
+					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $$Project{'id'}, $a_ss_id], 'strStatus', $status );
+
+					foreach my $key ( openprint::Estimating::Printing::variables( $$Project{'id'}, $a_ss_id, $new_sig_specs, \%specs ) ) {
+						openprint::service::insert_service_spec( undef, undef, $$Project{'id'}, $a_ss_id, $key, $specs{$key} );
+					} # end foreach
+					sql::end_transaction( $openprint::dbh, $ac );
+
+				} # end while Additional Imposition
+
+				# Clean up any leftovers
+				while ( my $ss_id = shift @sigs ) {
+					openprint::print_project::delete_service( $$Project{'id'}, $ss_id );
+					@signatures = sets::exclude( [ $ss_id ], \@signatures );
+				} # end while sigs
+
 			} else {
-				return 'uncalculated';
+				$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
+				$status = $$sig_specs{'Status'};
 			} # end if
-		} elsif ( $$sig_specs{'Status'} eq 'calculated' ) {
-			$status = $$sig_specs{'Status'};
-			# Successfully calculated the first sig
-			# In sig_specs should be an array of Impositions to apply to other signatures, so let's add/delete/apply
-
-			while ( 
-				( $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}} ) or
-				( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
-				( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
-				if ( ! @sigs ) {
-					push @sigs, copy_signature( $project_index, $sig_specs );
-				} # endif
-				my $a_ss_id = shift @sigs;
-				my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
-				my %specs = %{$new_sig_specs};
-				openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
-
-				my $ac = sql::start_transaction( $openprint::dbh );
-				sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
-
-				foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
-					openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
-				} # end foreach
-				sql::end_transaction( $openprint::dbh, $ac );
-
-			} # end while Additional Imposition
-
-			# Clean up any leftovers
-			while ( my $ss_id = shift @sigs ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
-				@signatures = sets::exclude( [ $ss_id ], \@signatures );
-			} # end while sigs
-
-		} else {
-			$openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
-			$status = $$sig_specs{'Status'};
-		} # end if
-	} # end foreach grooooup
+		} # end foreach grooooup
 	} # end if no gorups
 
 	return 'calculated';

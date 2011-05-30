@@ -27,8 +27,7 @@
 			);
 
 # Load from customer
-		my $customer = new openprint::obj_customer( $log, $dbh, $session{'company_id'} );
-		my $shipping_address = $customer->get_shipping_address();
+		my $shipping_address = $Company->get_shipping_address();
 		my %shipping_specs;
 		@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields} ) );
 		foreach my $spec ( keys %shipping_fields ) {
@@ -72,7 +71,6 @@
 			'ToExtension'   =>  'extension',
 			);
 	if ( ! ( $$specs{'ToEmail'} and $$specs{'ToPhone'} ) ) {
-		require openprint::User;
 		my $User = new openprint::User( $session{'user_id'} );
 		foreach my $spec ( keys %UserSpecs ) {
 			$$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $$specs{$spec};
@@ -169,7 +167,7 @@ if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} e
 			</li>
 			<li class="required"> 
 				<label>Phone:</label>
-				<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} . ($$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ? $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} : '' ) ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} . ($$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ? $$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} : '' ) ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 			</li>
 			<li> 
 				<label>Fax:</label>

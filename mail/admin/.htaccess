@@ -1,4 +1,4 @@
-AuthUserFile /var/www/point-one/mail/admin/.htpasswd
+AuthUserFile /var/www/testing/mail/admin/.htpasswd
 AuthGroupFile /dev/null
 AuthName "Postfix Admin"
 AuthType Basic

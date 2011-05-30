@@ -1,4 +1,12 @@
 <? if ( @{$$variable{'Contents'}} > 1 ) ?>
 <!--#include virtual="/main/order/_shipping_type_select.html"-->
 <? endif ( @{$$variable{'Contents'}} > 1 ) ?>
-<!--#include virtual="/main/order/_project_details.html"-->
+<div class="Project">
+<? echo (
+    if ( $$variable{'Project'}->template_id() ) {
+        ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'Project'}->Template()->name() . '.html' );
+    } else {
+        ssi::include( $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_details.html' );
+    } # end if
+) ?>
+</div>

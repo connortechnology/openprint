@@ -6,17 +6,11 @@ $openprint::log->debug("_drop shifts: @drops");
 	my $html = '';
 	$html .= "alert('$variable{error}');" if $variable{'error'};
 	$html .= "alert('$variable{alert}');" if $variable{'alert'};
-	 my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
-$log->debug("endtime: $referer" . $session{$referer.'?schedule_end_year'} );
-	my $end_time = Date::Calc::Mktime( @session{$referer.'?schedule_end_year',$referer.'?schedule_end_month', $referer.'?schedule_end_day'}, 0, 0, 0 );
 	foreach my $id ( sort @drops ) {
-my $Shift = openprint::Shift::get_from_ul_id( $id );
-		next if $end_time and ($Shift->starttime_seconds() >= $end_time);
 		$html .= sprintf(q`if ( $('%1$s') ){new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { ul_id: '%1$s' }, evalScripts: true } );} else {new_shifts=1;}`, $id );
 	} # end foreach id
 	return $html;
 ) ?>
 if ( new_shifts ) {
-	alert('New shifts have been added.  I will now refresh the screen.');
-	window.location = window.location;
+	alert('Shifts have been changed that are not currently visible.');
 }

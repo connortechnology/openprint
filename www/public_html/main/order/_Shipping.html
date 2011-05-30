@@ -1,5 +1,4 @@
 <? eval (
-    $$variable{'Project'} = new openprint::Project( $param{'project_id'} ) if ! $$variable{'Project'};
     $$variable{'ProjectIndex'} = $$variable{'Project'}->id() if !  $$variable{'ProjectIndex'};
     my $services = $$variable{'Project'}->services();
 
@@ -15,10 +14,11 @@
 ) ?>
 <fieldset><legend>Shipping</legend>
 	<div class="ShippingQuantity">
-	<div class="content">
-		<ul> 
-<!--#include virtual="_project_shipping_quantity.html"--></div>
-		</ul>
+		<div class="content">
+			<ul> 
+			<!--#include virtual="_project_shipping_quantity.html"-->
+			</ul>
+		</div>
 	</div>
 	<div class="ShippingAddress"><!--#include virtual="_project_shipping_address.html"--></div>
 </fieldset>

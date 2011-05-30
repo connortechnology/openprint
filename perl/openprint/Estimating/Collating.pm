@@ -34,9 +34,8 @@ sub variables {
 
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	if ( $$services{'PerfectBound'} ) {
 		return 0;

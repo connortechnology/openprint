@@ -243,12 +243,7 @@ sub save {
 
 sub get {
 	my $self = shift;
-	my @results;
-	foreach ( @_ ) {
-		push @results, $self->$_();
-	} # end foreach
-
-	return @results;
+	return map { $self->$_() } @_;
 } # end sub get
 
 sub set {
@@ -403,6 +398,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.'_null_or_>='} ) {
 		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
+	} # end if
+	if ( exists $$params{$k.' is null or ='} ) {
+		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
 	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
@@ -693,5 +691,14 @@ sub dropdown {
 $log->debug("dropdown");
 	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
 } # end sub dropdown
+
+sub sort_value {
+	return $_[0]->name();
+}
+
+sub sort {
+	my $type = shift;
+	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+} # end sub sort
 1;
 __END__

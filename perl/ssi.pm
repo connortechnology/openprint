@@ -435,6 +435,7 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= 'target="$$options{target}" ' if $$options{'target'};
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
 		$html .= $$options{'onclick'}."return false;\" ";
@@ -632,7 +633,7 @@ sub datetime_text {
 	 my $html = '';
 	 $html .= sprintf('<span id="%1$s_year">%2$.4d</span>-<span id="%1$s_month">%3$.2d</span>-<span id="%1$s_day">%4$.2d</span> <span id="%1$s_hour">%5$.2d</span>:<span id="%1$s_minute">%6$.2d</span>', $prefix, $year, $month, $day, $hour, $month );
 	 return $html;
-} # end sub datetime_select
+} # end sub datetime_text
 
 sub save_params {
 	my ( $url, @keys ) = @_;

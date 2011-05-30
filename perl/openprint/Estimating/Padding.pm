@@ -249,8 +249,8 @@ sub save {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'PageQuantity', $$param{'PageQuantity'} );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], 'Backing', $$param{'Backing'} );
 		# FOrce recalc of printing
-		openprint::Estimating::MultiPage::calculate_signatures( $openprint::log, $openprint::dbh, $openprint::variable, $p_id );
-		openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $p_id );
+		openprint::Estimating::MultiPage::calculate_signatures( $Project );
+		openprint::service::auto_calculate( $Project );
 	} # end if
 } # end sub save
 

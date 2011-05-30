@@ -3,7 +3,6 @@ use Text::CSV_XS;
 use strict;
 require sql;
 require misc;
-require openprint::paper;
 require openprint::Paper;
 
 require openprint::pricelist;
@@ -464,6 +463,9 @@ sub _price_tr {
 	} # end if
 
 } # end sub _price_tr
+
+sub _stock { 
+} # end sub _stock
 
 1;
 __END__

@@ -260,6 +260,9 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
 } # end if
+if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
+	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
+} # end if
 my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
@@ -295,6 +298,39 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='comments'", 'column_name');
 	if ( ! exists $$data{'approved'} ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
+	} # endif
+}
+if ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Shifts.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
+	if ( ! exists $$data{'starttime_seconds'} ) {
+		if ( exists $$data{'starttime'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD starttime_seconds INTEGER');
+			$dbh->do('update equipment_shifts set starttime_seconds = extract(epoch from starttime)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop starttime');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'duration_seconds'} ) {
+		if ( exists $$data{'duration'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD duration_seconds INTEGER');
+			$dbh->do('update equipment_shifts set duration_seconds = extract(epoch from duration)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop duration');
+		} # end if
+	} # end if
+} # end if
+if ( ! sets::isin( 'privacy_groups', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy_Groups.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'project_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Project_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
+	if ( ! exists $$data{'please_call'} ) {
+		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
 	} # endif
 }
 $dbh->disconnect();

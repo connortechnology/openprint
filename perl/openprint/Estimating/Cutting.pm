@@ -968,7 +968,7 @@ sub display {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals'] ) ) {
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
 
