@@ -16,7 +16,7 @@ require openprint::Article;
 require openprint::Article_Category;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
 		my $Article = new openprint::Article( $param{'article_id'} );
@@ -40,6 +40,9 @@ sub history {
 					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
 					$content =~ s/\n\r//g;
 					$content =~ s/\n//g;
+					# Turn relative links into absolute
+					$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
+					$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
 					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
 					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
 					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
@@ -52,10 +55,10 @@ sub history {
 			} # end if
 		} # end if
 		$variable{'error'} .= $Article->save(\%param);
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		$variable{'error'} .= $Article->destroy();
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( ! $param{'func'} ) {
 	} # end if
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -75,7 +78,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	if ( ! $param{'btnFunction'} ) {
+	if ( ! $param{'func'} ) {
 		ssi::save_params( '/article/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
@@ -87,10 +90,10 @@ sub _history {
 
 sub edit {
 	$variable{'Article'} = new openprint::Article( $param{'article_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$variable{'error'} .= $variable{'Article'}->save(\%param);
 		$variable{'Redirect'} = '/article/history.html';
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
 	} # end if
@@ -132,10 +135,10 @@ sub category {
 	} # end if
 } # end sub category
 
-sub _view {
+sub view {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	$Article->set( \%param );
-} # end sub _view
+} # end sub view
 
 sub _comments {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );

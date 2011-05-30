@@ -435,6 +435,7 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= 'target="$$options{target}" ' if $$options{'target'};
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
 		$html .= $$options{'onclick'}."return false;\" ";
