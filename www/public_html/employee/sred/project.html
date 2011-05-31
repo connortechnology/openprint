@@ -33,36 +33,61 @@ function textarea_init () {
     //tinyMCE.init( tinymce_options );
 
 
-function add_content(form) {
+function save_content(form, content_id ) {
 	tinyMCE.triggerSave();
-	form.function.value='Add';
+	if ( 1 ) {
+		form.function.value='SaveContent';
+		form.action='/employee/sred/project.html';
+		form.submit();
+	} else {
+	var parameters = getValues( form, new Array(
+				'starting_year', 'starting_month', 'starting_day', 'starting_hour', 'starting_minute',
+				'ending_year', 'ending_month', 'ending_day', 'ending_hour', 'ending_minute',
+				'user_id', 'docket', 'description-new', 'notes', 'project_id'
+			) );
+	parameters.set('function','SaveContent');
 	new Ajax.Updater( 'Contents','_contents.html', {
-			method: 'get', 
-			parameters: form.serialize(),
+			method: 'post', 
+			parameters: parameters,
 			onComplete: textarea_init,
 			evalScripts: true
 		}
 	);
-} // end function add_Content(form)
-function del_content(form, content_id ) {
+	} // end if
+} // end function save_content(form, content_id)
+function delete_content(form, content_id ) {
 	tinyMCE.triggerSave();
-	new Ajax.Updater( 'Contents','_contents.html?content_id='+content_id, {
-			method: 'get', 
-			parameters: form.serialize(),
+	new Ajax.Updater( 'Contents','_contents.html', {
+			parameters: {
+				project_id: form.project_id.value,
+				content_id: content_id,
+				func: 'delete'
+			},
 			onComplete: textarea_init,
 			evalScripts: true
 		}
 	);
 } // end function add_Content(form)
+function edit_content( form, content_id ) {
+	new Ajax.Updater( 'content-'+content_id, '_content_edit.html', {
+			parameters: {
+				project_id: form.project_id.value,
+				content_id: content_id,
+			},
+			onComplete: textarea_init,
+			evalScripts: true
+		}
+	);
+} // end function edit_content
 
 -->
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="SRED"><div class="Project">
+	<div class="PageTitle">
+	<h1>SRED Project (<? echo ( $$variable{'Project'}->id() ) ?>)</h1>
+	</div>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Project'}->Contents() ? 'projects.html' : 'project.html' ) ?>" method="post" enctype="multipart/form-data">
-	<!--#include virtual="/includes/error_reporting.html"-->
-	<div class="SRED"><div class="Project">
-		<div class="PageTitle">
-		<h1>SRED Project (<? echo ( $$variable{'Project'}->id() ) ?>)</h1>
-		</div>
 		<fieldset><legend></legend>
 			<ul>
 				<li><label>Name:</label>
@@ -74,19 +99,19 @@ function del_content(form, content_id ) {
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();` } ),
-					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();` } ),
+					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();`, 'class'=>'Save' } ),
+					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-		<br class="spacer"/>
-		<? if ( $$variable{'Project'}->id() ) ?>
-		<div id="Contents">
-		<!--#include virtual="_contents.html"-->
-		</div>
-		<br class="spacer"/><br/>
-		<? endif ( $$variable{'Project'}->id() ) ?>
-	</div></div><!--SRED-->
 	<input type="hidden" name="function" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
 </form>
+	<br class="spacer"/>
+	<? if ( $$variable{'Project'}->id() ) ?>
+	<div id="Contents">
+	<!--#include virtual="_contents.html"-->
+	</div>
+	<br class="spacer"/><br/>
+	<? endif ( $$variable{'Project'}->id() ) ?>
+</div></div><!--SRED-->

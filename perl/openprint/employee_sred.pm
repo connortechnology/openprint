@@ -124,7 +124,58 @@ sub project {
 			} # end if
 		} # end foreach
         %param = ();
-	} elsif ( $param{'function'} eq 'Add' ) {
+	} elsif ( $param{'function'} eq 'SaveContent' ) {
+		if ( openprint::SRED_Content->find(
+					'project_id'	=>	$param{'project_id'},
+					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
+					'description'	=>	$param{'description-'.$param{'content_id'}},
+					'notes'         =>  $param{'notes-'.$param{'content_id'}},
+					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					'docket'        =>  $param{'docket-'.$param{'content_id'}},
+					) ) {
+			$variable{'error'} .= 'Duplicate found.  Not saving.';
+		} else {
+			my $Content = new openprint::SRED_Content();
+			$variable{'error'} .= $Content->save({
+					'project_id'	=>	$param{'project_id'},
+					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
+					'description'	=>	$param{'description-'.$param{'content_id'}},
+					'notes'         =>  $param{'notes-'.$param{'content_id'}},
+					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					'docket'        =>  $param{'docket-'.$param{'content_id'}},
+					});
+			if ( $param{'filename'} ) {
+				my $Asset = new openprint::Asset();
+				$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'} } );
+				if ( ! $variable{'error'} ) {
+					$variable{'information'} .= 'Information successfully stored.<br/>';
+				} # end if
+				my $upload = $r->upload('filename');
+				if ( ! $upload ) {
+					$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+					$Asset->save({'filename'=>''});
+					next;
+				} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+					$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+					$Asset->save({'filename'=>''});
+					next;
+				} # end if
+				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+				if ( $Asset->id() ) {
+					my $SRED_Asset = new openprint::SRED_Asset();
+					$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
+				} # end if
+			} # end if filename
+		} # end if duplicate found
+	} # end if
+} # end sub project
+
+sub _contents {
+	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
+	if ( $param{'function'} eq 'Add' ) {
+# AJAX Doesn't do file uploads, so this code is not in effect right now.
 		my $Content = new openprint::SRED_Content();
 		$variable{'error'} .= $Content->save({
 			'user_id'		=>	$param{'user_id'},
@@ -157,11 +208,10 @@ sub project {
 				$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
 			} # end if
 		} # end if filename
+	} elsif ( $param{'func'} eq 'delete' ) {
+		my $Content = new openprint::SRED_Content( $param{'content_id'} );
+		$variable{'error'} .= $Content->delete();
 	} # end if
-} # end sub project
-
-sub _contents {
-	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
 } # end sub _contents
 
 sub _description {
@@ -179,5 +229,47 @@ sub _date_edit {
 			} );
 	} # end if
 } # end sub _date_edit
+
+sub _content_edit {
+	my $C = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+} # end sub _content_edit
+sub _content_view {
+	my $Content = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+	if ( $param{'function'} eq 'Save' ) {
+# AJAX Doesn't do file uploads, so this code is not in effect right now.
+		$variable{'error'} .= $Content->save({
+			'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
+			'project_id'	=>	$param{'project_id'},
+			'description'	=>	$param{'description-'.$param{'content_id'}},
+			'notes'			=>	$param{'notes'.$param{'content_id'}},
+			'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+			'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+			'docket'		=>	$param{'docket'},
+				});
+		if ( $param{'filename'} ) {
+			my $Asset = new openprint::Asset();
+			$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'} } );
+			if ( ! $variable{'error'} ) {
+				$variable{'information'} .= 'Information successfully stored.<br/>';
+			} # end if
+			my $upload = $r->upload('filename');
+            if ( ! $upload ) {
+                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+                $Asset->save({'filename'=>''});
+				next;
+            } elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+                $variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+                $Asset->save({'filename'=>''});
+				next;
+			} # end if
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			if ( $Asset->id() ) {
+				my $SRED_Asset = new openprint::SRED_Asset();
+				$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
+			} # end if
+		} # end if filename
+	} # end if
+} # end sub _content_edit
+
 1;
 __END__

@@ -1,40 +1,34 @@
-<li><div class="leftColumn">
-<ul>
-<? echo (
-	my $html;
-	my $C = $$variable{'C'};
-	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
-		$html .= sprintf(q`<li><label>Start:</label><span id="starting-%1$d"><span class="editable" onclick="new Ajax.Updater('starting-%1$d','_date_edit.html?object_type=SRED_Content&amp;object_id=%1$d&amp;field=starting&amp;action=edit');">%2$s</span></span></li>`, $C->id(), Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
-	} elsif ( $C->starting() ) {
-		$html .= sprintf(q`<li><label>Start:</label>%s</li>`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) );
-	} # end if
-	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
-		$html .= sprintf(q`<li><label>End:</label><span id="ending-%1$d"><span class="editable" onclick="new Ajax.Updater('ending-%1$d','_date_edit.html?object_type=SRED_Content&amp;object_id=%1$d&amp;field=ending&amp;action=edit');">%2$s</span></span></li>`, $C->id(), Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ) );
-	} elsif ( $C->ending() ) {
-		$html .= sprintf('<li><label>End:</label>%s</li>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ) );
-	} # end if
-	$html .= sprintf('<li><label>User:</label>%s</li>', $C->User()->name() ) if $C->user_id();
-	$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
-	$html .= '</ul></div><div class="rightColumn"><ul>';
-	$html .= sprintf('<li><label>Description:</label><span id="description-%d">%s</span></li>', $C->id(), $C->description() );
-	$html .= '<li><label>Attachments:</label>';
-	if ( my @Assets = $C->Assets() ) {
-		$html .= join('', map { sprintf('<a href="%s" target="_blank"><img class="thumbnail" src="/assets/%s" alt=""/> %s</a><br/>', $_->url(), $_->Asset()->thumbnail_filename(), $_->Asset()->on_disk_filename() ) } @Assets );
-	} else {
-		$html .= 'No attachments.<br/>';
-	} # end if
-	$html .= qq`<input type="file" name="filename-$$C{id}" />`;
-	$html .= ssi::button( 'Upload', { 'onclick'=>q`var form = $('f1');form.action='project.html';form.function.value='Upload';form.submit();` } );
-	if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
-	$html .= sprintf(q`
-<script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'description-%1$d', '_description.html?id=%1$d&amp;action=update',{okButton:true,cancelLink:true,submitOnBlur:true,tinymceSave: true, tinymceToElementSize: true}, tinymce_options );
-</script>`, $C->id() );
-	} # end if
+<div class="leftColumn">
+	<ul>
+	<? echo (
+		my $html;
+		my $C = $$variable{'C'};
+		$html .= sprintf(q`<li><label>When:</label>%s to %s -> %d days %.2d:%.2d</li>`, 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ),
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ),
+			$C->Duration()->in_units( 'days', 'hours','minutes' ),
+		 );
+		$html .= sprintf('<li><label>Who:</label>%s</li>', $C->User()->name() ) if $C->user_id();
+		$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
+		$html .= '</ul></div><div class="rightColumn"><ul>';
+		$html .= sprintf('<li><label>Description:</label><span id="description-%d">%s</span></li>', $C->id(), $C->description() );
+		$html .= '<li><label>Attachments:</label>';
+		if ( my @Assets = $C->Assets() ) {
+			$html .= join('', map { sprintf('<a href="%s" target="_blank"><img class="thumbnail" src="/assets/%s" alt=""/> %s</a><br/>', $_->url(), $_->Asset()->thumbnail_filename(), $_->Asset()->on_disk_filename() ) } @Assets );
+		} else {
+			$html .= 'No attachments.';
+		} # end if
+		$html .= '</li>';
+		$html .= '<p class="buttons">';
+		$html .= qq`<input type="file" name="filename-$$C{id}" />`;
+		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>q`var form = $('f1');form.action='project.html';form.function.value='Upload';form.submit();` ,'text'=>'Upload'} );
+		if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
+			$html .= ssi::button( 'Edit'.$C->id(), { 'text'=>'Edit', 'onclick'=>qq`edit_content( \$('f1'), $$C{id} );`, 'class'=>'Edit' } );
+			$html .= ssi::button( 'Delete'.$C->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_content( \$('f1'), $$C{id} );`, 'class'=>'Delete' } );
+		} # end if
+		$html .= '</p>';
 
-	return $html;
-) ?>
-</li>
-</ul>
-</div></li>
-
+		return $html;
+	) ?>
+	</ul>
+</div>

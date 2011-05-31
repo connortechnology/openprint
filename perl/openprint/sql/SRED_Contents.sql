@@ -11,7 +11,8 @@ CREATE TABLE SRED_Contents (
 	created_on		TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on		TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	deleted			BOOLEAN NOT NULL default false,
-	time_associated	BOOLEAN,
+	all_day_event	BOOLEAN,
+	unknown_time	BOOLEAN,
 	PRIMARY KEY (id)
 );
 
