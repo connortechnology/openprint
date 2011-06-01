@@ -170,7 +170,7 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
+	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Last Seen');
 
 if ( 0 ) {
 	my @papers = openprint::Paper::find(
@@ -281,11 +281,12 @@ my $weight = 0;
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
+					$Skid->updated_on(),
 					);
 	}
 }
-	my $date = '2010-06-01 00:00';
-#Date::Format::time2str('%Y-%m-%d %H:%M', time );
+	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+	#my $date = '2011-06-01 00:01';
 	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
 } # end sub paper_inventory

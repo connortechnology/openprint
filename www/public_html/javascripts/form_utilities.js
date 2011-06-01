@@ -874,11 +874,15 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-		$('starting'+suffix+'_time').hide();
-		$('ending'+suffix+'_time').hide();
+			$('starting'+suffix+'_time').hide();
+			$('ending'+suffix+'_time').hide();
+			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
+			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
+			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
+			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-		$('starting'+suffix+'_time').show();
-		$('ending'+suffix+'_time').show();
+			$('starting'+suffix+'_time').show();
+			$('ending'+suffix+'_time').show();
 		} // end if
 		$('duration'+suffix+'_time').show();
         var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
@@ -891,8 +895,10 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
         var minutes = parseInt( difference/60 );
 		if ( form.elements['duration'+suffix+'_days'] ) {
 			form.elements['duration'+suffix+'_days'].value=days;
-			ddm_select_by_value( form.elements['duration'+suffix+'_hours'], hours );
-			ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], minutes );
+			if ( ! unknown_time ) {
+				ddm_select_by_value( form.elements['duration'+suffix+'_hours'], hours );
+				ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], minutes );
+			}
 		} else {
 			var duration = $('duration'+suffix);
 			if ( duration )

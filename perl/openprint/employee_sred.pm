@@ -125,6 +125,10 @@ sub project {
 		} # end foreach
         %param = ();
 	} elsif ( $param{'function'} eq 'SaveContent' ) {
+		my $Duration = DateTime::Duration->new(
+				'days'=>$param{'duration-'.$param{'content_id'}.'_days'}, 
+				'hours'=>$param{'duration-'.$param{'content_id'}.'_hours'}, 
+				'minutes' =>$param{'duration-'.$param{'content_id'}.'_minutes'} );
 		if ( openprint::SRED_Content->find(
 					'project_id'	=>	$param{'project_id'},
 					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
@@ -132,7 +136,8 @@ sub project {
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},
 					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
 					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
-					'docket'        =>  $param{'docket-'.$param{'content_id'}},
+					'duration'		=>	DateTime::Format::Pg->format_interval( $Duration ),
+					'docket'        =>  ( $param{'docket-'.$param{'content_id'}} ? $param{'docket-'.$param{'content_id'}} : undef ),
 					) ) {
 			$variable{'error'} .= 'Duplicate found.  Not saving.';
 		} else {
@@ -144,6 +149,7 @@ sub project {
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},
 					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
 					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					'duration'		=>	DateTime::Format::Pg->format_interval( $Duration ),
 					'docket'        =>  $param{'docket-'.$param{'content_id'}},
 					});
 			if ( $param{'filename'} ) {

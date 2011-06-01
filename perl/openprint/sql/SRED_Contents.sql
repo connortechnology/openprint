@@ -13,6 +13,11 @@ CREATE TABLE SRED_Contents (
 	deleted			BOOLEAN NOT NULL default false,
 	all_day_event	BOOLEAN,
 	unknown_time	BOOLEAN,
+	cost			float,
+	value			float,
+	quantity		float,	
+	quantity_units	text,
+	type_id			INTEGER, FOREIGN KEY (type_id) REFERENCES SRED_COntent_Types (id),
 	PRIMARY KEY (id)
 );
 

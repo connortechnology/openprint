@@ -3,6 +3,7 @@ package openprint::SRED_Content;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::SRED_Asset;
+require openprint::SRED_Content_Type;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -20,14 +21,25 @@ $serial = 'sred_contents_id_seq';
 	'unknown_time'		=>	'unknown_time',
 	'all_day_event'		=>	'all_day_event',
 	'user_id'			=>	'user_id',
-	'deleted'			=> 'deleted',
-
+	'deleted'			=>	'deleted',
+	'duration'			=>	'duration',
+	'cost'				=>	'cost',
+	'value'				=>	'value',
+	'quantity'			=>	'quantity',
+	'quantity_units'	=>	'quantity_units',
+	'type_id'			=>	'type_id',
+	'docket'			=>	'docket',
+	'notes'				=>	'notes',
 );
 
 %transforms = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'name' => [ 's/^\s+//', 's/\s+$//' ],
+	'cost'	=>	 [ 's/[^\-\.\d]//g' ],
+	'value'	=>	 [ 's/[^\-\.\d]//g' ],
+	'quantity'	=>	 [ 's/[^\-\.\d]//g' ],
+	'docket'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
@@ -38,6 +50,12 @@ $serial = 'sred_contents_id_seq';
 	'user_id'		=>	undef,
 	'unknown_time'	=>	1,
 	'all_day_event'	=>	0,
+	'duration'		=>	undef,
+	'cost'			=>	undef,
+	'value'			=>	undef,
+	'quantity'		=>	undef,
+	'quantity_units'	=>	undef,
+	'docket'		=>	undef,
 );
 
 sub duration {
@@ -90,6 +108,9 @@ sub Assets {
 	$params{'content_id'} = $$self{'id'};
 	return openprint::SRED_Asset->find(%params);
 } # end sub Assets
+sub Type {
+	return new openprint::SRED_Content_Type( $_[0]{'type_id'} );
+} # end sub Type
 
 1;
 __END__
