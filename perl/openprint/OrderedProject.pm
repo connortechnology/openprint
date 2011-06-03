@@ -56,5 +56,27 @@ sub delete {
 	return $error;
 } # end sub delete
 
+sub shippingtype {
+    my ( $self, $new ) = @_;
+    if ( $new ) {
+        $$self{'shippingtype'} = $new;
+    } # end if
+    if ( ! $$self{'shippingtype'} ) {
+        my $services = $self->Project()->services();
+        $$self{'shippingtype'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{'project_id'},'category'=>'Shipping') );
+    } # end if
+    return $$self{'shippingtype'};
+} # end sub shippingtype
+
+sub description { 
+	if ( @_ > 1 ) {
+		$_[0]{'description'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'description'} ) {
+		$_[0]{'description'} = $_[0]->Project()->reference();
+	} # end if
+	return $_[0]{'description'};
+} # end sub description
+
 1;
 __END__

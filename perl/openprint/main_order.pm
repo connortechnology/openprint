@@ -108,15 +108,15 @@ $openprint::log->debug("Making order from quote");
 		# Only check for errors if we don't have any yet
 		my @errors;
 		# If there are any unspecified quantities, keep looping on the selection page.
-		foreach my $Project ( $Order->Projects() ) {
-			if ( ! $Project->ordered_quantity_index() ) {
-				push @errors, "Please select the quantity to order for project $$Project{id}<br/>";
+		foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
+			if ( ! $Project->quantity_index() ) {
+				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
 			} # end if
-			if ( ! $Project->reference() ) {
-				push @errors, "Please give project $$Project{id} a reference<br/>";
+			if ( ! $Project->description() ) {
+				push @errors, "Please give project $$Project{projcet_id} a reference<br/>";
 			} # end if
 			if ( ! $Project->shippingtype() ) {
-				push @errors, "Please select a shipping type for project $$Project{id}<br/>";
+				push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
 			} # end if
 		} # end foreach Project
 		if ( @errors ) {
