@@ -79,8 +79,13 @@ sub find {
 				} # end if
 	
 	if ( $params{'ip_address'} ) {
-		$sql .= ' AND ip_address=?';
-		push @values, $params{'ip_address'};
+        if ( ref $params{'ip_address'} eq 'ARRAY' ) {
+            $sql .= q{ AND ip_address IN (}.join(',', map {'?'} @{$params{'ip_address'}} ).')';
+            push @values, @{$params{'ip_address'}};
+        } else {
+			$sql .= ' AND ip_address=?';
+			push @values, $params{'ip_address'};
+        } # end if
 	} # end if
 	if ( $params{'when_start'} and $params{'when_end'} ) {
 		$sql .= q{ AND (date_time BETWEEN ? AND ?)};
