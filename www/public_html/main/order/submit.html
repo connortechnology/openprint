@@ -9,6 +9,7 @@
 	my $html;
 	@{$$variable{'Products'}} = $$variable{'Order'}->Products();
 	@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
+	@{$$variable{'Contents'}} = ( @{$$variable{'Products'}}, @{$$variable{'Projects'}} );
 	foreach my $Product ( @{$$variable{'Products'}} ) {
 		$$variable{'Product'} = $Product;
 		$$variable{'Project'} = $$variable{'Product'}->Project();
