@@ -3,6 +3,7 @@ package openprint::SRED_Content;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::SRED_Asset;
+require openprint::SRED_Content_Type;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -10,45 +11,96 @@ $table = 'sred_contents';
 $serial = 'sred_contents_id_seq';
 
 %fields = (
-	'id'	=>	'id',
+	'id'			=>	'id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
-    'starting'          =>  'starting',
-    'ending'            =>  'ending',
-    'project_id'        =>  'project_id',
-    'description'       =>  'description',
-    'time_associated'   =>  'time_associated',
-    'user_id'           =>  'user_id',
-    'deleted'           => 'deleted',
-
+	'starting'			=>	'starting',
+	'ending'			=>	'ending',
+	'project_id'		=>	'project_id',
+	'description'		=>	'description',
+	'unknown_time'		=>	'unknown_time',
+	'all_day_event'		=>	'all_day_event',
+	'user_id'			=>	'user_id',
+	'deleted'			=>	'deleted',
+	'duration'			=>	'duration',
+	'cost'				=>	'cost',
+	'value'				=>	'value',
+	'quantity'			=>	'quantity',
+	'quantity_units'	=>	'quantity_units',
+	'type_id'			=>	'type_id',
+	'docket'			=>	'docket',
+	'notes'				=>	'notes',
 );
 
 %transforms = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'name' => [ 's/^\s+//', 's/\s+$//' ],
+	'cost'	=>	 [ 's/[^\-\.\d]//g' ],
+	'value'	=>	 [ 's/[^\-\.\d]//g' ],
+	'quantity'	=>	 [ 's/[^\-\.\d]//g' ],
+	'docket'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
-    'created_on'    => 'NOW()',
-    'updated_on'    => 'NOW()',
-    'deleted'       => 0,
-    'project_id'    =>  undef,
-    'user_id'       =>  undef,
-	'time_associated'	=>	undef,
+	'created_on'	=> 'NOW()',
+	'updated_on'	=> 'NOW()',
+	'deleted'		=> 0,
+	'project_id'	=>	undef,
+	'user_id'		=>	undef,
+	'unknown_time'	=>	1,
+	'all_day_event'	=>	0,
+	'duration'		=>	undef,
+	'cost'			=>	undef,
+	'value'			=>	undef,
+	'quantity'		=>	undef,
+	'quantity_units'	=>	undef,
+	'docket'		=>	undef,
 );
 
-sub elapsed {
-	my ( $self ) = @_;
-
-	if ( $$self{'time_associated'} ) {
-		return Date::Parse::str2time( $$self{'ending'} ) - Date::Parse::str2time( $$self{'starting'} );
-	} else {
-		my ($start) = $$self{'starting'} =~ /(\d\d\d\d-\d\d-\d\d)/;
-		my ($end) = $$self{'ending'} =~ /(\d\d\d\d-\d\d-\d\d)/;
-		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
+sub duration {
+	if ( @_ > 1 ) {
+		$_[0]{'duration'} = $_[1];
+		$_[0]->Duration( undef );
 	} # end if
-} # end sub elapsed
+	if ( ( ! $_[0]{'duration'} ) and ( $_[0]{'unknown_time'} ) ) {
+		if ( $_[0]{'all_day_event'} ) {
+			return Date::Parse::str2time( $_[0]{'ending'} ) - Date::Parse::str2time( $_[0]{'starting'} );
+		} else {
+			my ($start) = $_[0]{'starting'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+			my ($end) = $_[0]{'ending'} =~ /(\d\d\d\d-\d\d-\d\d)/;
+			return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
+		} # end if
+	} # end if
+} # end sub duration
+
+sub duration_days {
+	my $parser = 'DateTime::Format::Pg';
+	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	return $duration->days();
+} # end sub duration_days
+
+sub duration_hours {
+	my $parser = 'DateTime::Format::Pg';
+	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	return $duration->hours();
+} # end sub duration_hours
+sub duration_minutes {
+	my $parser = 'DateTime::Format::Pg';
+	my $duration = $parser->parse_interval( $_[0]{'duration'} );
+	return $duration->minutes();
+} # end sub duration_minutes
+
+sub Duration {
+	if ( @_ > 1 ) {
+		$_[0]{'Duration'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'Duration'} ) {
+		my $parser = 'DateTime::Format::Pg';
+		$_[0]{'Duration'} = $parser->parse_interval( $_[0]{'duration'} );
+	} # end if
+	return $_[0]{'Duration'};
+} # end sub Duration
 
 sub Assets {
 	my $self = shift;
@@ -56,6 +108,9 @@ sub Assets {
 	$params{'content_id'} = $$self{'id'};
 	return openprint::SRED_Asset->find(%params);
 } # end sub Assets
+sub Type {
+	return new openprint::SRED_Content_Type( $_[0]{'type_id'} );
+} # end sub Type
 
 1;
 __END__
