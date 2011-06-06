@@ -779,6 +779,8 @@ sub get_Stocks {
 			( $$specs{'chkOverrideSheetSize3'} eq 'Y' )
 	   ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			next if $$specs{'chkOverrideSheetSize'.$qty_index} ne 'Y';
+
 			if ( ! ( $$specs{'OverrideStockWidth'.$qty_index} or $$specs{'OverrideStockHeight'.$qty_index} ) ) {
 				@$specs{'OverrideStockWidth'.$qty_index, 'OverrideStockHeight'.$qty_index} = split 'x', $$specs{'ddmStockSheetSize'.$qty_index};
 			} # end if
@@ -800,6 +802,7 @@ sub get_Stocks {
 				# Find ones that are an even cut
 				foreach my $P ( @Papers ) {
 					next if ! $P->cuttable();
+					
 						my $width_factor1 = $$P{'start_width'} / $$specs{'OverrideStockWidth'.$qty_index};
 						my $height_factor1 = $$P{'start_height'} / $$specs{'OverrideStockHeight'.$qty_index} if $$specs{'OverrideStockHeight'.$qty_index};
 					if ( $P->type() eq 'Roll' ) {
