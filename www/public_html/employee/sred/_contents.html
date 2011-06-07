@@ -11,7 +11,6 @@ $html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
 $html .= '</li>';
 	} # end foreach tag_id
 	$$variable{'C'} = new openprint::SRED_Content();
-	$$variable{'C'}->id('new');
 $html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
 	$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_edit.html' );
 	$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );

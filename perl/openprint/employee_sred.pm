@@ -125,6 +125,7 @@ sub project {
 		} # end foreach
         %param = ();
 	} elsif ( $param{'function'} eq 'SaveContent' ) {
+		if 
 		my $Duration = DateTime::Duration->new(
 				'days'=>$param{'duration-'.$param{'content_id'}.'_days'}, 
 				'hours'=>$param{'duration-'.$param{'content_id'}.'_hours'}, 
@@ -136,8 +137,9 @@ sub project {
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},
 					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
 					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
-					'duration'		=>	DateTime::Format::Pg->format_interval( $Duration ),
+					'duration'		=>	( $Duration ? DateTime::Format::Pg->format_interval( $Duration ) : undef ),
 					'docket'        =>  ( $param{'docket-'.$param{'content_id'}} ? $param{'docket-'.$param{'content_id'}} : undef ),
+					'type_id'		=>	$param{'type_id-'.$param{'content_id'}},
 					) ) {
 			$variable{'error'} .= 'Duplicate found.  Not saving.';
 		} else {
@@ -151,6 +153,11 @@ sub project {
 					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
 					'duration'		=>	DateTime::Format::Pg->format_interval( $Duration ),
 					'docket'        =>  $param{'docket-'.$param{'content_id'}},
+					'type_id'		=>	$param{'type_id-'.$param{'content_id'}},
+					'weight'		=>	$param{'weight-'.$param{'content_id'}},
+					'weight_units'	=>	$param{'weight_units-'.$param{'content_id'}},
+					'cost'			=>	$param{'cost-'.$param{'content_id'}},
+					'cost_units'	=>	$param{'cost_units-'.$param{'content_id'}},
 					});
 			if ( $param{'filename'} ) {
 				my $Asset = new openprint::Asset();
@@ -180,41 +187,7 @@ sub project {
 
 sub _contents {
 	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
-	if ( $param{'function'} eq 'Add' ) {
-# AJAX Doesn't do file uploads, so this code is not in effect right now.
-		my $Content = new openprint::SRED_Content();
-		$variable{'error'} .= $Content->save({
-			'user_id'		=>	$param{'user_id'},
-			'project_id'	=>	$param{'project_id'},
-			'description'	=>	$param{'description-new'},			
-			'notes'			=>	$param{'notes'},
-			'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_year','starting_month','starting_day','starting_hour','starting_day'} ),
-			'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_day'} ),
-			'docket'		=>	$param{'docket'},
-				});
-		if ( $param{'filename'} ) {
-			my $Asset = new openprint::Asset();
-			$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'} } );
-			if ( ! $variable{'error'} ) {
-				$variable{'information'} .= 'Information successfully stored.<br/>';
-			} # end if
-			my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-                $Asset->save({'filename'=>''});
-				next;
-            } elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
-                $variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-                $Asset->save({'filename'=>''});
-				next;
-			} # end if
-			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-			if ( $Asset->id() ) {
-				my $SRED_Asset = new openprint::SRED_Asset();
-				$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
-			} # end if
-		} # end if filename
-	} elsif ( $param{'func'} eq 'delete' ) {
+	if ( $param{'func'} eq 'delete' ) {
 		my $Content = new openprint::SRED_Content( $param{'content_id'} );
 		$variable{'error'} .= $Content->delete();
 	} # end if
@@ -277,5 +250,17 @@ sub _content_view {
 	} # end if
 } # end sub _content_edit
 
+sub _content_edit_Other {
+	$variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+	$variable{'C'}->id( $param{'content_id'} );
+} # end sub _content_Other
+sub _content_edit_Stock {
+	$variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+	$variable{'C'}->id( $param{'content_id'} );
+} # end sub _Content_Stock
+sub _content_edit_Time {
+	$variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+	$variable{'C'}->id( $param{'content_id'} );
+} # end sub _content_Time
 1;
 __END__
