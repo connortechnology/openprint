@@ -378,6 +378,14 @@ if ( ! sets::isin( 'emailcampaign_log', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaign_Log.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'currencies_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'currencyindex_seq', \@sequences ) ) {
+		$dbh->do('DROP SEQUENCE currencyindex_seq');
+	} # end if
+	$dbh->do('CREATE SEQUENCE currencies_id_seq');
+	$dbh->do("SELECT setval('currencies_id_seq', (select max(id) FROM currencies) )");
+	$dbh->do("ALTER TABLE CURRENCIES ALTER COLUMN ID SET DEFAULT nextval('currencies_id_seq')");
+} # end if
 $dbh->disconnect();
 1;
 __END__

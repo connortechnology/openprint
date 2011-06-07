@@ -876,14 +876,8 @@ function set_date( form, from, to ) {
 	//ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
 } // end function set_date
 
-<<<<<<< HEAD
-function check_time_starting( form, starting_prefix, ending_prefix ) {
-=======
-	return result;
-};
 function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	if ( ! suffix ) suffix = '';
->>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
     var start;
     var end;
 	var do_time = 0;
@@ -905,16 +899,10 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
     } // end if
 
     if ( start > end ) {
-<<<<<<< HEAD
-        ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
-        ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
-		form.elements[ending_prefix+'_month'].onchange();
-        ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
-=======
         ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
         ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
+		form.elements[ending_prefix+suffix+'_month'].onchange();
         ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
->>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
@@ -1135,7 +1123,6 @@ function check_decimal( element, e ) {
 	return true;
 }
 
-<<<<<<< HEAD
 
 function click(e) {
 	if (document.all) {
@@ -1310,7 +1297,6 @@ $(name).selectedIndex=0;
 $(name).toggle();
 $('txt'+name).toggle();
 }
-=======
 function getValues( form, element_names ) {
 	var results = new Hash();
 	for ( var index = element_names.length; index; index -- ) {
@@ -1320,4 +1306,3 @@ function getValues( form, element_names ) {
 	} // end for
 	return results;
 } // end function getValues
->>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
