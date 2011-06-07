@@ -157,10 +157,6 @@ p:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html p {height: 1%;}
-p {display: block;}
-/* End hide from IE-mac */
 
 label {
 outline: 0;
@@ -228,10 +224,6 @@ div.autocomplete ul li {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html .PO .Totals ul li {height: 1%;}
-.PO .Totals ul li {display: block;}
-/* End hide from IE-mac */
 .PO .Totals ul li label {
 	width: 110px;
 	float: left;
@@ -240,3 +232,7 @@ div.autocomplete ul li {
 .PO ul.notifications li {
 	padding: 0px;
 }
+.PurchaseOrder table .id {
+	width: 45px;
+	text-align: left;
+} 

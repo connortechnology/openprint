@@ -394,11 +394,6 @@ fieldset.filters:after {
     visibility: hidden;
 
 }
-/* Hides from IE-mac \*/
-* html fieldset.filters {height: 1%;}
-fieldset.filters {display: block;}
-/* End hide from IE-mac */
-}
 
 fieldset.filters p {
 	padding-left: 135px;
@@ -678,7 +673,7 @@ form.inplaceeditor-form a { /* The cancel link */
     background-color: yellow;
 }
 
-input.filter, fieldset p input.filter {
+input.filter, fieldset p input.filter, fieldset ul li input.filter {
 	width: 40px;
 }
 

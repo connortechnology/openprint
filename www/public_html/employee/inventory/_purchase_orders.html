@@ -73,7 +73,7 @@
 <? if ( $session{'user_type'} eq 'A' ) ?>
 		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-		<th width="35"style="text-align: left;">ID</th>
+		<th class="id">ID</th>
 		<th class="DateTime">Date</th>
 		<th style="text-align: left;">Supplier</th>
 		<th style="text-align: left;">Created By</th>
@@ -100,7 +100,7 @@
 			} # end if
 
 			$html .= sprintf( q`
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td>
+				<td class="id"><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td>
 				<td class="DateTime"><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%3$s</a></td>
 				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%4$s</a></td>
@@ -127,9 +127,9 @@
 		<? echo (
 			my $html;
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= ssi::writeButton($log, $dbh, 'Decline', 'decline.gif', "open_decline_window(f1);", '', 'Decline Selected' );
-				$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
-				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
+				$html .= ssi::button( 'Decline', { 'onlick'=>'open_decline_window(f1);', 'text'=>'Decline Selected' } );
+				$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();", 'text'=>'Authorize Selected' } );
+				$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();", 'text'=>'Delete Selected' } );
 			} # end if
 			return $html;
 		) ?>
