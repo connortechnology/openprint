@@ -142,11 +142,11 @@ sub project {
 					'duration'		=>	( $Duration ? DateTime::Format::Pg->format_interval( $Duration ) : undef ),
 					'docket'        =>  ( $param{'docket-'.$param{'content_id'}} ? $param{'docket-'.$param{'content_id'}} : undef ),
 					'type_id'		=>	$param{'type_id-'.$param{'content_id'}},
-					'mweight'		=>	$param{'mweight-'.$param{'content_id'}},
-					'quantity'		=>	$param{'quantity-'.$param{'content_id'}},
+					'mweight'		=>	( $param{'mweight-'.$param{'content_id'}} ? $param{'mweight-'.$param{'content_id'}} : undef ),
+					'quantity'		=>	( $param{'quantity-'.$param{'content_id'}} ? $param{'quantity-'.$param{'content_id'}} : undef ),
 					'quantity_units'		=>	$param{'quantity_units-'.$param{'content_id'}},
-					'weight'		=>	$param{'weight-'.$param{'content_id'}},
-					'total'			=>	$param{'total-'.$param{'content_id'}},
+					'weight'		=>	( $param{'weight-'.$param{'content_id'}} ? $param{'weight-'.$param{'content_id'}} : undef ),
+					'total'			=>	( $param{'total-'.$param{'content_id'}} ? $param{'total-'.$param{'content_id'}} : undef ),
 					) ) {
 			$variable{'error'} .= 'Duplicate found.  Not saving.';
 		} else {

@@ -24,6 +24,7 @@ sub projects {
 
 	my %filters = (
 		'order'=>'index',
+		'limit'	=>	( exists $param{'limit'} ? $param{'limit'} : 100 ),
 			);
 	$filters{'company_id'}	= $param{'ddmCustomers'} if $param{'ddmCustomers'};
 	$filters{'user_id'}	= $param{'ddmEstimator'} if $param{'ddmEstimator'};
@@ -46,9 +47,9 @@ sub projects {
 			push @data, $Project->id(), $Project->docket(), $Project->Company()->name(), $Project->reference(), $Project->summary(), 
 				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Project->created_on() ) ), $Project->status(),
 				$Project->price1(), $Project->price2(), $Project->price3(), $Project->Currency()->name();
-			$total1 += $Project->total1();
-			$total2 += $Project->total2();
-			$total3 += $Project->total3();
+			$total1 += $Project->price1();
+			$total2 += $Project->price2();
+			$total3 += $Project->price3();
 		} # end foreach Project
 		push @data, '','','','','','','Totals:',$total1,$total2,$total3,'';
 		misc::export_csv( $r, $log, \%variable, 'project_report.csv', \@header, \@data );

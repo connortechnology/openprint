@@ -3216,7 +3216,7 @@ sub plate_setup_cost {
 		$plate_count += 1;
 		$non_process_colours += 1 if ! sets::isin( $colour, \@process_colours );
 	} # end foreach colour
-$openprint::log->debug("In plate setup $non_process_colours $project ");
+#$openprint::log->debug("In plate setup $non_process_colours $project ");
 
 	my $plate_count_before_changes = $plate_count;
 
