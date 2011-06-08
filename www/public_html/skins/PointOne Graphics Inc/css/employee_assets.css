@@ -2,4 +2,14 @@ table .ID {
 	width: 50px;
 	text-align: left;
 }
+table .Filename {
+	text-align: left;
+}
 
+table .thumbnail {
+	width: 48px;
+	text-align: right;
+}
+table .thumbnail img {
+	width: 48px;
+}

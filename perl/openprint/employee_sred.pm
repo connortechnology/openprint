@@ -125,63 +125,88 @@ sub project {
 		} # end foreach
         %param = ();
 	} elsif ( $param{'function'} eq 'SaveContent' ) {
-		if 
+		my $Content;
 		my $Duration = DateTime::Duration->new(
 				'days'=>$param{'duration-'.$param{'content_id'}.'_days'}, 
 				'hours'=>$param{'duration-'.$param{'content_id'}.'_hours'}, 
-				'minutes' =>$param{'duration-'.$param{'content_id'}.'_minutes'} );
-		if ( openprint::SRED_Content->find(
+				'minutes' =>$param{'duration-'.$param{'content_id'}.'_minutes'} ) if $param{'duration-'.$param{'content_id'}.'_days'} or $param{'duration-'.$param{'content_id'}.'_hours'} or $param{'duration-'.$param{'content_id'}.'_minutes'};
+		if ( ( ! $param{'content_id'} ) and $Content = openprint::SRED_Content->find_one(
 					'project_id'	=>	$param{'project_id'},
 					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
 					'description'	=>	$param{'description-'.$param{'content_id'}},
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},
-					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
-					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
+					( Date::Calc::check_date( @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day' )} ) ?
+					  ( 'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ) ) : () ),
+					( Date::Calc::check_date( @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day' )} ) ?
+					  ( 'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ) ) : () ),
 					'duration'		=>	( $Duration ? DateTime::Format::Pg->format_interval( $Duration ) : undef ),
 					'docket'        =>  ( $param{'docket-'.$param{'content_id'}} ? $param{'docket-'.$param{'content_id'}} : undef ),
 					'type_id'		=>	$param{'type_id-'.$param{'content_id'}},
+					'mweight'		=>	$param{'mweight-'.$param{'content_id'}},
+					'quantity'		=>	$param{'quantity-'.$param{'content_id'}},
+					'quantity_units'		=>	$param{'quantity_units-'.$param{'content_id'}},
+					'weight'		=>	$param{'weight-'.$param{'content_id'}},
+					'total'			=>	$param{'total-'.$param{'content_id'}},
 					) ) {
 			$variable{'error'} .= 'Duplicate found.  Not saving.';
 		} else {
-			my $Content = new openprint::SRED_Content();
+			$Content = new openprint::SRED_Content( $param{'content_id'} );
 			$variable{'error'} .= $Content->save({
 					'project_id'	=>	$param{'project_id'},
 					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
 					'description'	=>	$param{'description-'.$param{'content_id'}},
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},
-					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
-					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ),
-					'duration'		=>	DateTime::Format::Pg->format_interval( $Duration ),
+					( Date::Calc::check_date( @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day' )} ) ? (
+					'starting'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'starting-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ) ) : () ),
+					( Date::Calc::check_date( @param{map {'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day' )} ) ? (
+					'ending'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{map { 'ending-'.$param{'content_id'}.'_'.$_ } ( 'year','month','day','hour','minute') } ) ) : () ),
+					'duration'		=>	( $Duration ? DateTime::Format::Pg->format_interval( $Duration ) : undef ),
 					'docket'        =>  $param{'docket-'.$param{'content_id'}},
 					'type_id'		=>	$param{'type_id-'.$param{'content_id'}},
+					'mweight'		=>	$param{'mweight-'.$param{'content_id'}},
 					'weight'		=>	$param{'weight-'.$param{'content_id'}},
 					'weight_units'	=>	$param{'weight_units-'.$param{'content_id'}},
+					'quantity'		=>	$param{'quantity-'.$param{'content_id'}},
+					'quantity_units'		=>	$param{'quantity_units-'.$param{'content_id'}},
 					'cost'			=>	$param{'cost-'.$param{'content_id'}},
 					'cost_units'	=>	$param{'cost_units-'.$param{'content_id'}},
+					'total'			=>	$param{'total-'.$param{'content_id'}},
 					});
 			if ( $param{'filename'} ) {
-				my $Asset = new openprint::Asset();
-				$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'} } );
-				if ( ! $variable{'error'} ) {
-					$variable{'information'} .= 'Information successfully stored.<br/>';
-				} # end if
+		
 				my $upload = $r->upload('filename');
-				if ( ! $upload ) {
+				if ( $upload ) {
+					my $data;
+					$upload->slurp( $data );
+					my $md5 = Digest::MD5::md5_base64( $data );
+					my $Asset = openprint::Asset->find_one('md5'=>$md5) if $md5;
+					if ( ! $Asset ) {
+						$Asset = new openprint::Asset();
+						$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'}, 'md5'=>$md5 } );
+						if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+							$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+							$Asset->save({'filename'=>''});
+						} # end if
+						if ( ! $variable{'error'} ) {
+							$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+						} # end if
+					} else {
+						$variable{'information'} .= 'Duplicate image found.<br/>';
+					} # end if
+
+					if ( $Asset->id() ) {
+						my $SRED_Asset = openprint::SRED_Asset->find_one('content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'});
+						if ( ! $SRED_Asset ) {
+							$SRED_Asset = new openprint::SRED_Asset();
+							$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
+						} # end if
+					} # end if
+				} else { 
 					$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-					$Asset->save({'filename'=>''});
-					next;
-				} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
-					$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-					$Asset->save({'filename'=>''});
-					next;
-				} # end if
-				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-				if ( $Asset->id() ) {
-					my $SRED_Asset = new openprint::SRED_Asset();
-					$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
 				} # end if
 			} # end if filename
 		} # end if duplicate found
+		$variable{'Project'} = $Content->Project();
 	} # end if
 } # end sub project
 
@@ -262,5 +287,14 @@ sub _content_edit_Time {
 	$variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
 	$variable{'C'}->id( $param{'content_id'} );
 } # end sub _content_Time
+
+sub _assets {
+	my $Content = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
+	if ( $param{'function'} eq 'delete' ) {
+		my $Asset= new openprint::SRED_Asset( {'content_id'=>$param{'content_id'},'asset_id'=>$param{'asset_id'} } );
+		$variable{'error'} .= $Asset->delete();
+	} # end if
+} # end sub _assets
+
 1;
 __END__

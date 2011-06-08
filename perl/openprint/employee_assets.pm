@@ -23,14 +23,23 @@ sub history {
 		} # end foreach asset_id
 		%param = ();
 	} # end if
-	ssi::save_params( '/employee/assets/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by', 'company_id' ) );
+	ssi::save_params( '/employee/assets/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day'
+				,'type_id', 'created_by', 'company_id', 'deleted'
+				) );
 	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_end', '' );
+	$session{'/employee/assets/history.html?deleted'} = 1 if ! exists $session{'/employee/assets/history.html?deleted'};
 
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/assets/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by', 'company_id' ) );
+	ssi::save_params( '/employee/assets/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'type_id', 'created_by', 'company_id', 'deleted'
+				) );
 } # end sub _assets
 
 sub view {
@@ -39,7 +48,7 @@ sub view {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Asset->delete();
 		if ( ! $variable{'error'} ) {
-			$variable{'Redirect'} = '/employee/asset/history.html';
+			$variable{'ExternalRedirect'} = '/employee/assets/history.html';
 			%param = ();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {

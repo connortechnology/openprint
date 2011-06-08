@@ -3,6 +3,7 @@ package openprint::SRED_Content;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::SRED_Asset;
+require openprint::SRED_Project;
 require openprint::SRED_Content_Type;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
@@ -29,6 +30,7 @@ $serial = 'sred_contents_id_seq';
 	'quantity'			=>	'quantity',
 	'quantity_units'	=>	'quantity_units',
 	'weight'			=>	'weight',
+	'mweight'			=>	'mweight',
 	'weight_units'		=>	'weight_units',
 	'type_id'			=>	'type_id',
 	'docket'			=>	'docket',
@@ -43,6 +45,7 @@ $serial = 'sred_contents_id_seq';
 	'total'			=>	[ 's/[^\-\.\d]//g' ],
 	'quantity'		=>	[ 's/[^\-\.\d]//g' ],
 	'weight'		=>	[ 's/[^\-\.\d]//g' ],
+	'mweight'		=>	[ 's/[^\-\.\d]//g' ],
 	'docket'		=>	[ 's/\D//g' ],
 );
 
@@ -59,6 +62,7 @@ $serial = 'sred_contents_id_seq';
 	'total'				=>	undef,
 	'quantity'			=>	undef,
 	'weight'			=>	undef,
+	'mweight'			=>	undef,
 	'quantity_units'	=>	undef,
 	'docket'			=>	undef,
 );
@@ -116,6 +120,10 @@ sub Assets {
 sub Type {
 	return new openprint::SRED_Content_Type( $_[0]{'type_id'} );
 } # end sub Type
+
+sub Project {
+	return new openprint::SRED_Project( $_[0]{'project_id'} );
+} # end sub Project
 
 1;
 __END__

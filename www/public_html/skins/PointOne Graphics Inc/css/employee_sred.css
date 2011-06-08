@@ -64,3 +64,13 @@ a.Delete .c, a.Save .c, a.Cancel .c {
 	display: none;
 }
 */
+.attachments .thumbnail_link {
+}
+.attachments .thumbnail {
+	float: left;
+	margin: 5px;
+}
+.attachments .thumbnail img {
+	float: none;
+	width: 100%;
+}
