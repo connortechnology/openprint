@@ -22,6 +22,23 @@
 		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+<? echo (
+    my $html;
+    my $css = $$variable{'uri'};
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    while ( @parts ) {
+    $css = join('_', @parts ) . '.css';
+        $log->debug("URI: $$variable{uri} $css");
+        if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+        }
+        pop @parts;
+    } # end while
+    return $html;
+) ?>
+
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header">	

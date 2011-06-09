@@ -21,8 +21,8 @@
 	<fieldset><legend>Pricing</legend>
 	<div id="Prices"><!--#include virtual="_prices.html"--></div>
 	<div class="row">
-		<span style="float: right;">
-			<form name="paper_prices">
+		<div style="float: right;">
+			<form name="paper_prices" action="">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SavePrices', 'savePrices.gif', 'savePrices(document.Prices);', '', 'Save All Prices' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddNewPrice', 'addPrice.gif', "addPrice(get_ddm_value(document.paper_prices.Pricelist) );", '', 'Add Price to:' ); ) ?>
 			<select name="Pricelist" size="1">
@@ -38,6 +38,6 @@
 			</select>
 			<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id(); ) ?>" />
 			</form>
-		</span>
+		</div>
 	</div>
 	</fieldset>
