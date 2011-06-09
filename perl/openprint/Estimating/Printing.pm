@@ -1066,6 +1066,7 @@ $openprint::log->debug("No spread layout for you!");
 		} # end if
 
 # add all the impositions for each press
+		# Don't have to check that ddmPress is populated because we do that earlier. Only need to do so later due to recursing.
 		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
 # These should be cached by the underlying layer anyways
 

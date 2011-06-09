@@ -1,7 +1,7 @@
 <script type="text/javascript">
 <!--
 	function job_popup( job_id ) {
-		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:475, height:500} );
+		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:475, height:525} );
 	} // end function job_popup
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
