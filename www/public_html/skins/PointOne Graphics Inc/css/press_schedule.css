@@ -214,6 +214,10 @@ width: 196px;
 		padding-right: 6px;
 		text-align: left;
 	}
+	.Comment p, .Stock p {
+	margin: 0px;
+	padding: 0px;
+	} 
 	.TotalImpressions {
 		margin-left: auto;
 		margin-right: auto;
