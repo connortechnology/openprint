@@ -754,7 +754,7 @@ $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.
 	} # end if override
 
 	push @Papers, @Ps;
-if ( $debug or 0 ) {
+if ( $debug or 1 ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() . ' Minumum: ' . $P->minimum_order() );
 } 
@@ -2031,6 +2031,11 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 				$$specs{'StitchingImposition'.$qty_index} = $si;
 			} # end if UnspecifiedSpreadQuantity
 			#$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
+			if ( ! $$price{complete} ) {
+$openprint::log->debug("No price complete ");
+$imp->display();
+				next;
+			} # end if
 
 			# Now do plates
 			# Need a hash, of all plate types and counts
@@ -2079,12 +2084,6 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 					$$price{'Stitching Cost'} = $$results{'Price'};
 					$$price{'Comparison Cost'} += $$results{'Price'};
 				} # end if
-			} # end if
-
-			if ( ! $$price{complete} ) {
-$openprint::log->debug("No price complete ");
-$imp->display();
-				next;
 			} # end if
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
@@ -3209,14 +3208,7 @@ sub press_setup_cost {
 sub plate_setup_cost {
 	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index, $project, $PlateCounts ) = @_;
 
-	my $plate_count = 0;
-	my $non_process_colours = 0;
-
-	foreach my $colour ( @$colours ) {
-		$plate_count += 1;
-		$non_process_colours += 1 if ! sets::isin( $colour, \@process_colours );
-	} # end foreach colour
-#$openprint::log->debug("In plate setup $non_process_colours $project ");
+	my $plate_count = @$colours;
 
 	my $plate_count_before_changes = $plate_count;
 
@@ -3257,7 +3249,9 @@ $openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
 			$blanks_needed = 0 if $blanks_needed < 0;
 			$setup_cost{'Blank Plates'} = $blanks_needed;
 		} elsif ( $require_blank_plates eq 'When Non-Process' ) {
-			if ( $non_process_colours ) {
+			my $non_process_colours = sets::exclude( \@process_colours, $colours );
+#$openprint::log->debug("In plate setup $non_process_colours $project ");
+			if ( @$non_process_colours ) {
 				$blanks_needed = ( $press_colours - @$colours ) - $$PlateCounts{'Blank'.$plate_id};
 				$blanks_needed = 0 if $blanks_needed < 0;
 				$setup_cost{'Blank Plates'} = $blanks_needed;
@@ -3266,18 +3260,16 @@ $openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
 			$openprint::log->error("Unknown value for Require Blank Plates: $require_blank_plates");
 		} # end if
 	} # end if
-$openprint::log->debug("returning from plate_setup_cost");
 	return %setup_cost;
 } # end sub plate_setup
 
 # This is only called for work and turn
 sub filter_colours {
-	my ( @colours ) = @_;
 	my @filtered_colours = ();
 
 #$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
 
-	foreach my $colour ( @colours ) {
+	foreach my $colour ( @_ ) {
 		if ( ! sets::isin( $colour, \@filtered_colours ) ) {
 # We only need one black
 			if ( $colour eq 'Black' ) {
@@ -3290,12 +3282,12 @@ sub filter_colours {
 				} # end if
 			} elsif ( $colour eq 'Overall Varnish Gloss' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Gloss', \@colours ) ) {
+				if ( ! sets::isin('Spot Varnish Gloss', \@_ ) ) {
 					push @filtered_colours, $colour;
 				} # end if
 			} elsif ( $colour eq 'Overall Varnish Matte' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Matte', \@colours ) ) {
+				if ( ! sets::isin('Spot Varnish Matte', \@_ ) ) {
 					push @filtered_colours, $colour;
 				} # end if
 			} else {
