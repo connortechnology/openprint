@@ -160,7 +160,7 @@ sub calc {
 
 		if ( $qtyTotal ) {
 			$price = $totalSetupPrice + $totalServicePrice + $totalMaterialPrice;
-			$unitPrice = $price / $qty;
+			$unitPrice = $price / $qty if $qty;
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
 
