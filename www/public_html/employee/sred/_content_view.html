@@ -3,17 +3,31 @@
 	<? echo (
 		my $html;
 		my $C = $$variable{'C'};
+		if ( $C->starting() or $C->ending() ) {
+			$html .= '<li class="when"><label>When:</label>';
+			if ( $C->starting() eq $C->ending() ) {
+				$html .= Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) );
+			} else {
+				$html .= 
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ) . ' to ' .
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) );
+			} # end if
+			$html .= '</li>';
+		} # end if
+$html .= $C->duration();
+		if ( $C->duration() ) {
+			$html .= '<li class="duration"><label>Duration:</label>';
+			$html .= sprintf(q`%d days %.2d:%.2d</li>`, 
+				$C->Duration()->in_units( 'days', 'hours','minutes' ),
+			 );
+		} # end if
 		if ( $C->Type()->name() eq 'Stock' ) {
 			$html .= sprintf(q`<li><label>Quantity:</label>%s%s</li>`, $C->quantity(), $C->quantity_units() );
 			$html .= sprintf(q`<li><label>Weight:</label>%s%s</li>`, $C->weight(), $C->weight_units() );
 			$html .= sprintf(q`<li><label>Value:</label>%s%s = %s</li>`, openprint::Currency::format($C->cost()), $C->cost_units(), openprint::Currency::format( $C->total() ) );
 		} elsif ( $C->Type()->name() eq 'Time' ) {
-			$html .= sprintf(q`<li><label>When:</label>%s to %s -> %d days %.2d:%.2d</li>`, 
-				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->starting() ) ),
-				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $C->ending() ) ),
-				$C->Duration()->in_units( 'days', 'hours','minutes' ),
-			 );
 			$html .= sprintf('<li><label>Who:</label>%s</li>', $C->User()->name() ) if $C->user_id();
+		} else {
 		} # end if
 		$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
 		return $html;

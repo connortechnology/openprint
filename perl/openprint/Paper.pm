@@ -27,7 +27,7 @@ require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -231,7 +231,7 @@ sub load {
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated'} = @$data{'allocated'};
+	@$self{'allocated'} = @$data{'allocated'} if exists $$data{'allocated'};
 } # end sub load
 
 

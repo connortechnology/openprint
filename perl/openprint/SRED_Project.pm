@@ -40,5 +40,8 @@ sub Contents {
 	$params{'project_id'} = $$self{'id'};
 	return openprint::SRED_Content->find(%params);
 } # end sub Contents
+sub Taxes {
+	return ();
+}
 1;
 __END__

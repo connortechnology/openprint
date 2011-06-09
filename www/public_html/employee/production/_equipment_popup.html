@@ -2,7 +2,7 @@
 	<input type="hidden" name="equipment_id" value="<? echo ( $param{'equipment_id'} ) ?>" />
 	<fieldset><legend>Edit <? echo ( $$variable{'Equipment'}->strid() .' ' . $$variable{'Equipment'}->name() ) ?></legend>
 		<p><label>Message:</label>
-		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols="" onkeyup="textarea_resize(this);"><? echo ( 
+		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols=""><? echo ( 
 	$_ = $$variable{'Equipment'}->message();
 	$_ =~ s/ \.\.\.\w+$//;
 	return $_;
@@ -11,7 +11,7 @@
 	</fieldset>
 		<p class="buttons">
 			<? echo ( my $html;
-				$html .= ssi::writeButton( $log, $dbh, 'SaveEquipment', 'save.gif', q`new Ajax.Updater('message`.$param{'equipment_id'}.q`','_equipment_message.html', {parameters:$('equipment_popup_form').serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'SaveEquipment', 'save.gif', q`tinyMCE.triggerSave();new Ajax.Updater('message`.$param{'equipment_id'}.q`','_equipment_message.html', {parameters:$('equipment_popup_form').serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' );
 				$html .= ssi::writeButton( $log, $dbh, 'CancelEquipment', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' );
 				return $html;
 			) ?>
