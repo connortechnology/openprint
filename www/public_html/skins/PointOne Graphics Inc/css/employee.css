@@ -48,6 +48,9 @@ div.PopupWindow fieldset p label {
 	margin-left: 0px;
 	vertical-align: middle;
 }
+#JobForm textarea {
+	width: 90%;
+}
 
 .Manifest #PurchaseOrders ul {
 	list-style: none;

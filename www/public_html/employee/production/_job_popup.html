@@ -4,11 +4,11 @@
 		<ul>
 		<li>
 			<label>Comment:</label>
-			<textarea id="comment" name="comment" rows="" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
+			<textarea id="comment" name="comment" rows="2" cols=""><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</li>
 		<li>
 			<label>Stock:</label>
-			<textarea id="stock" name="stock" rows="" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
+			<textarea id="stock" name="stock" rows="2" cols=""><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
 		</li>
 <? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<li>
@@ -73,3 +73,13 @@
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />
 </form>
+<script type="text/javascript">
+    tinyMCE.init( 
+ {
+        mode: "textareas",
+        plugins: "paste",
+        theme : "simple",
+		height: '40',
+    });
+
+</script>
