@@ -60,9 +60,8 @@
 				} ( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
 			} # end foreach Stock
 		} else {
-			foreach my $Stock ( @Stocks ) {
-				@{$specs{$options[$i]}} = sort( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
-			} # end foreach Stock
+			my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } sort keys %data;
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
