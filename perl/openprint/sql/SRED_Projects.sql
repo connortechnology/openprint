@@ -3,6 +3,7 @@ CREATE TABLE SRED_Projects (
 	id SERIAL,
 	name TEXT NOT NULL,
 	description	TEXT,
+	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (Index),
 	created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	updated_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	PRIMARY KEY (id)

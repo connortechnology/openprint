@@ -1,0 +1,15 @@
+<div class="RSSFeeds">
+	<div class="Edit">
+		<form name="f1" id="f1" action="rss_feeds.html" method="post">
+			The following list of URLs will be checked for new articles.
+			<ul>
+				<? echo ( my $html;
+					foreach my $RSS ( openprint::RSS->find() ) {
+						$html .= sprintf('<li>%s</li>', $RSS->title() );
+					}  # end foreach RSS
+					return $html;
+				) ?>
+			</ul>
+		</form>
+	</div>
+</div>

@@ -42,9 +42,10 @@
 </div>
 		<p class="buttons">
 		<? echo ( 
-			my $html;
-			$html .= ssi::writeButton( $log, $dbh, 'Back', 'back.gif', '', '/main/order/information.html', 'Back', { 'class'=>'Back' } );
-			$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order', { 'class'=>'Complete' } ); 
+			return join('',
+			ssi::button( 'Back', { 'href'=>'/main/order/information.html', 'class'=>'Back' } ),
+			ssi::button( 'Complete', { 'onclick'=>'f1.submit();', 'text'=>'Complete Order', 'class'=>'Complete' } ),
+			);	
 		) ?>
 		</p>
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>

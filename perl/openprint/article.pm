@@ -16,7 +16,7 @@ require openprint::Article;
 require openprint::Article_Category;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
 		my $Article = new openprint::Article( $param{'article_id'} );
@@ -40,6 +40,9 @@ sub history {
 					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
 					$content =~ s/\n\r//g;
 					$content =~ s/\n//g;
+					# Turn relative links into absolute
+					$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
+					$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
 					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
 					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
 					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
@@ -49,13 +52,52 @@ sub history {
 					$log->error("Bad status" . $res->status_line );
 					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
 				} # end if
+			 } elsif ( $param{'source'} =~ /glittermuff.tumblr.com/ ) {
+                                my $ua = LWP::UserAgent->new;
+                                $ua->agent("MyApp/0.1 ");
+# Create a request
+                                my $req = HTTP::Request->new(GET => $param{'source'} );
+# Pass request to the user agent and get a response back
+                                my $res = $ua->request($req);
+# Check the outcome of the response
+                                if ($res->is_success) {
+                                        $log->debug("Content: " . $res->content );
+                                        my $content = $res->content;
+                                        #my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
+                                        $content =~ s/\n\r//g;
+                                        $content =~ s/\n//g;
+                                        # Turn relative links into absolute
+                                        $content =~ s/src="\//src="http:\/\/glittermuff.tumblr.com\//g;
+                                        $content =~ s/href="\//href="http:\/\/glittermuff.tumblr.com\//g;
+					
+					my ( $source_content ) = $content =~ /(<div class="photo">.+)<!\-\- end single post \-\->/m;
+					$source_content =~ s/<script.*?<\/script>//g;
+					$source_content =~ s/<noscript.*?<\/noscript>//g;
+					$source_content =~ s/<a href="http:\/\/disqus.com" class="dsq-brlink".*<\/a>//g;
+					$source_content =~ s/<div id="disqus_thread"><\/div>//;
+					$source_content =~ s/<div class="notecontainer">.*?<\/ol><\/div>//g;	
+					$source_content =~ s/(\s)\s+/$1/g;
+					$source_content =~ s/<div id="post-id">.*?<\/div>//g;
+					$source_content =~ s/<span class="arrow">.*?<\/span>//g;
+					$source_content =~ s/<span class="reblog">.*?<\/span>//g;
+					$source_content =~ s/<span class="tags">.*?<\/span>//g;
+					$source_content =~ s/<span class="notes">.*?<\/span>//g;
+					$source_content =~ s/<img src="http:\/\/static.tumblr.com\/xequfu2\/eXXkpzidm\/post_bottom.png" style="margin-bottom:-68px; margin-left:-10px;">//g;
+					$source_content =~ s/<div style="text-align:right;">\s+<span class="when">Date:<\/span> (\d\d)\.(\d\d)\.(\d\d)\s+<span class="when">Time:<\/span>\s+(\d\d):(\d\d) (\w\w)\s+<\/div>//mg;
+					$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', 2000+$3, $1, $2, $4 + ( $6 eq 'PM' ? 12 : 0 ), $5 );
+                                        $param{'source_content'} = qq`<div class="Muffy">$source_content</div>`;
+                                } else {
+                                        $log->error("Bad status" . $res->status_line );
+                                        $variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+                                } # end if
+
 			} # end if
 		} # end if
 		$variable{'error'} .= $Article->save(\%param);
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		$variable{'error'} .= $Article->destroy();
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( ! $param{'func'} ) {
 	} # end if
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -75,7 +117,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	if ( ! $param{'btnFunction'} ) {
+	if ( ! $param{'func'} ) {
 		ssi::save_params( '/article/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
@@ -87,10 +129,10 @@ sub _history {
 
 sub edit {
 	$variable{'Article'} = new openprint::Article( $param{'article_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$variable{'error'} .= $variable{'Article'}->save(\%param);
 		$variable{'Redirect'} = '/article/history.html';
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
 	} # end if
@@ -132,10 +174,10 @@ sub category {
 	} # end if
 } # end sub category
 
-sub _view {
+sub view {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	$Article->set( \%param );
-} # end sub _view
+} # end sub view
 
 sub _comments {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );

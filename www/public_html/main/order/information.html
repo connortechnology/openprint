@@ -92,10 +92,7 @@ function same_as_billing( on, id ) {
 					# If there is only 1 thing in the order, then we can condense
 					my $html = '';
 					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();;
-					my $services = $$variable{'Project'}->services();
-					
 					my @ShippingServices = openprint::Project_Service->find('project_id'=>$$variable{'Project'}->id(), 'category'=>'Shipping' );
-
 					if ( ! @ShippingServices ) {
 						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
 					} else {

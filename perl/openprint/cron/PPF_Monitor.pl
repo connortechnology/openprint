@@ -32,11 +32,14 @@ $log->{level} = 'warn';
 
 my $program = 'PPF_Monitor.pl';
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s','skin_path=s');
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','equipment_name=s','skin_path=s','debug=s');
 
 if ($opts->{help}) {
 	usage();
 	exit 0;
+}
+if ( $opts->{debug}) {
+	$$log{level} = $opts->{debug};
 }
 
 unless ($opts->{db_host}) {

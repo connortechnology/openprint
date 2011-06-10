@@ -6,11 +6,24 @@
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_view.html' );
 		foreach my $C ( @Contents ) {
 			$$variable{'C'} = $C;
+<<<<<<< HEAD
 			$html .= ssi::variable_substitution( \$content, $variable );
+=======
+$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
+			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+$html .= '</li>';
+>>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
 		} # end foreach tag_id
+		$$variable{'C'} = new openprint::SRED_Content();
+		$$variable{'C'}->id('new');
+$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
+		$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_edit.html' );
+		$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+$html .= '</li>';
 		return $html;
 	) ?>
 	</ul>
+<<<<<<< HEAD
 	<div id="new">
 	<ul>
 		<li>
@@ -32,3 +45,5 @@
 		</li>
 	</ul>
 </div>
+=======
+>>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec

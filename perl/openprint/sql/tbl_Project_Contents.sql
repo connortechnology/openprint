@@ -13,3 +13,5 @@ FOREIGN KEY (lngProjectIndex) REFERENCES Projects (Id),
 );
 
  
+ALTER TABLE ONLY tbl_project_contents
+    ADD CONSTRAINT tbl_project_contents_servicetype_id_fkey FOREIGN KEY (servicetype_id) REFERENCES service_types(id);

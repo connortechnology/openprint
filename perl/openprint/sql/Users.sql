@@ -20,7 +20,7 @@ CREATE TABLE Users (
 	ysnChangePassword char(1) DEFAULT 'Y',
 	ysnMailingList	char(1) DEFAULT 'N',
 	web_active	CHAR(1) DEFAULT 'N',
-	ftp_action	boolean not null default false,
+	ftp_active	boolean not null default false,
 	dblCommission			NUMERIC(6,4),
 	greeting		TEXT,
 	ysnAdministrator		CHAR(1) DEFAULT 'N',

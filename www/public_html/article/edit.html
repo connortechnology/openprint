@@ -9,7 +9,6 @@
 -->
 </script>
 <div class="Article"><div class="Edit">
-	<div class="leftColumn">
 		<form name="f1" id="f1" action="/article/history.html" method="post">
 			<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
 				<? if ( $$variable{'Article'}->deleted() ) ?>
@@ -65,20 +64,22 @@
 					<p class="buttons">
 						<? echo (
 							my $html = '';
-							#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+							#$html = ssi::button( 'Back', { 'href'=>'history.html'} );
 							
 							if ( $$variable{'Article'}->id() ) {
-							$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
-							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
-							$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+								$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
+								$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}" } );
+								$html .= ssi::button( 'Copy', { 'onclick'=> "f1.action='edit.html';f1.func.value='Copy';f1.submit();" } );
+								if ( $$variable{'Article'}->source() ) {
+									$html .= ssi::button( 'Reload', { 'onclick'=> "f1.action='edit.html';f1.func.value='Reload';f1.submit();" } );
+								} # end if
+								$html .= ssi::button( 'View', { 'href'=>'/article/view.html?article_id='.$$variable{'Article'}->id(), 'target'=>'_blank' } );
 							} # end if
-							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+							$html .= ssi::button( 'Save', { 'onclick'=>"f1.func.value='Save';f1.submit();" } );
 							return $html;
 						) ?>
 					</p>
 			</fieldset>
-			<input type="hidden" name="btnFunction" />
+			<input type="hidden" name="func" />
 		</form>
-	</div><!--left-->
-	<div class="rightColumn" id="View"><!--#include virtual="_view.html"--></div>
 </div></div>

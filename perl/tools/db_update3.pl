@@ -182,6 +182,10 @@ if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'locations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -333,6 +337,59 @@ if ( ! sets::isin( 'project_types', \@tables ) ) {
 		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
 	} # endif
 }
+if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaigns.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
+	if ( ! exists $$data{'nextrun'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add nextrun TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'email_subject'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add email_subject TEXT');
+	} # end if
+	if ( ! exists $$data{'email_from'} ) {
+		if ( exists $$data{'fromemail'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns rename column fromemail to email_from');
+		} else {
+		$dbh->do('ALTER TABLE emailcampaigns add email_from TEXT');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'email_text'} ) {
+		if ( exists $$data{'emailtext'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns rename column emailtext to email_text');
+		} else {
+		$dbh->do('ALTER TABLE emailcampaigns add email_text TEXT');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'attachments'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add attachments TEXT');
+	} # end if
+	if ( ! exists $$data{'timeofday'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns ADD timeofday TIME WITHOUT TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'template_id'} ) {
+		if ( ! sets::isin( 'emailtemplates', \@tables ) ) {
+			$dbh->do( misc::load_file( $log, '../openprint/sql/EmailTemplates.sql' ) );
+			die $dbh->errstr() if $dbh->errstr();
+		}
+		$dbh->do('ALTER TABLE emailcampaigns add template_id INTEGER');
+		$dbh->do('ALTER TABLE emailcampaigns add FOREIGN KEY (template_id) REFERENCES emailtemplates(id)');
+		
+	} # end if
+} # end if
+if ( ! sets::isin( 'emailcampaign_log', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaign_Log.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'currencies_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'currencyindex_seq', \@sequences ) ) {
+		$dbh->do('DROP SEQUENCE currencyindex_seq');
+	} # end if
+	$dbh->do('CREATE SEQUENCE currencies_id_seq');
+	$dbh->do("SELECT setval('currencies_id_seq', (select max(id) FROM currencies) )");
+	$dbh->do("ALTER TABLE CURRENCIES ALTER COLUMN ID SET DEFAULT nextval('currencies_id_seq')");
+} # end if
 $dbh->disconnect();
 1;
 __END__

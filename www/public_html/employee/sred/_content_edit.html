@@ -1,0 +1,74 @@
+	<form id="form-<? echo ( $$variable{'C'}{id} ) ?>" name="form-<? echo ( $$variable{'C'}{id} ) ?>" method="post" enctype="multipart/form-data" action="/employee/sred/project_id=<? echo ( $$variable{'Project'}->id() ) ?>&amp;content_id=<? echo ( $$variable{C}{id} ) ?>">
+		<input type="hidden" name="function" />
+		<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
+		<input type="hidden" name="content_id" value="<? echo ( $$variable{C}->id() ) ?>" />
+		<div class="leftColumn">
+			<ul>
+<? echo (
+	my $html;
+	my $C = $$variable{'C'};
+
+	if ( $C->Type()->name() eq 'Stock' ) {
+		$html .= sprintf(q`
+				<li><label>Quantity:</label><input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" />
+					<select name="quantity_units" id="quantity_units">%3$s</select>
+				</li>
+				<li><label>Cost:</label><input type="text" id="cost-%1$d" name="cost-%1$d" value="%4$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" /></li>
+				<li><label>Value:</label><input type="text" id="value-%1$d" name="value-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" /></li>
+				`, $C->id(), $C->quantity(), 
+				ssi::make_drop_down( [ map { $_, $_ } ( 'lbs','Kg','sheets' ) ], $C->quantity_units() ),
+				$C->cost(), $C->value(),
+			);
+	} elsif ( $C->Type()->name() eq 'Time' ) {
+		$html .= sprintf(q`
+				<li><label>All Day:</label>%2$s</li>
+				<li><label>Unknown Time:</label>%3$s</li>
+				<li><label>Start:</label>%4$s</li>
+				<li><label>End:</label>%5$s</li>
+				<li><label>Duration:</label>
+					<input type="text" name="duration-%1$d_days" id="duration-%1$d_days" size="3" value="%6$d" /> days
+					<span id="duration-%1$d_time">
+					<select name="duration-%1$d_hours" id="duration-%1$d_hours">%7$s</select> :
+					<select name="duration-%1$d_minutes" id="duration-%1$d_minutes">%8$s</select>
+					</span>
+				</li>
+				<li><label>Who:</label><select id="user_id-%1$d" name="user_id-%1$d">%9$s</select></li>
+				`, $C->id(),
+				ssi::radio( 'all_day_event-'.$$C{id}, [1,'Yes',0,'No'], 1*$$C->all_day_event(), { 'onclick'=>qq`update_duration(this.form,'starting','ending', '-$${C}{id}' );`}),
+				ssi::radio( 'unknown_time-'.$$C{id}, [1,'Yes',0,'No'], 1*$C->unknown_time(), { 'onclick'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}' );`}),
+				ssi::datetime_select( 'starting-'.$$C{id}, $C->starting(), { 
+							'onchange'=>qq`check_time_starting(this.form,'starting','ending', '-$$C{id}'); update_duration(this.form,'starting','ending', '-$$C{id}');`,
+							'showtime'  =>  sets::isin( $C->all_day_event(), [ '', 0 ] ) } ),
+				ssi::datetime_select( 'ending-'.$$C{id}, $C->ending(), { 
+					'onchange'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}');`,
+					'showtime'  =>  sets::isin( $C->all_day_event(), [ '', 0 ] )
+					} ),
+				$C->duration_days(),
+				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 24 ) ], $C->duration_hours() ),
+				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $C->duration_minutes() ),
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $C->user_id() ? $C->user_id() : $session{'user_id'} ),
+);
+	} else {
+		$html .= sprintf(q`
+				<li><label>Quantity:</label><input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" /></li>
+				<li><label>Cost:</label><input type="text" id="cost-%1$d" name="cost-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" /></li>
+				<li><label>Value:</label><input type="text" id="value-%1$d" name="value-%1$d" value="%4$s" onkeyup="this.value=this.value.replace(/[^\-\d\.]/g,'');" /></li>
+				`, $C->id(), $C->quantity(), $C->cost(), $C->value(),
+	);
+	} # end if
+	return $html;
+) ?>
+				<li><label>Docket:</label><input type="text" id="docket-<? echo ( $$variable{'C'}{id} ) ?>" name="docket-<? echo ( $$variable{'C'}{id} ) ?>" value="" /></li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+				<li class="Description"><label>Description:</label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" cols=""><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
+				<li><label>Attachment:</label><input type="file" name="filename" /></li>
+			</ul>
+		</div>
+		<p class="buttons">
+<? echo ( ssi::button( 'Save'.$$variable{'C'}{'id'}, { 'onclick' => qq`save_content(\$('form-$$variable{C}{id}'), '$$variable{C}{id}' );`, 'text'=>'Save', 'class'=>'Save' } ); ) ?>
+		</p>
+	</form>
+

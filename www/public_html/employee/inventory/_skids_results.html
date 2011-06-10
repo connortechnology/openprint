@@ -74,7 +74,7 @@
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
-			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
+			<th class="checkbox unprintable"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
 			<th class="DateTime">Date Added</th>
 			<th class="DateTime">Updated On</th>
@@ -128,7 +128,7 @@
 				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
 
 				$html .= sprintf('<tr%1$s>
-					<td class="checkbox"><input type="checkbox" name="skids" value="%2$d"/></td>
+					<td class="checkbox unprintable"><input type="checkbox" name="skids" value="%2$d"/></td>
 				<td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
@@ -156,7 +156,7 @@ $Skid->Location()->name(),
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
-				$html .= '<td class="checkbox">&nbsp;</td><td colspan="6">';
+				$html .= '<td class="checkbox unprintable">&nbsp;</td><td colspan="6">';
 			
 				foreach my $C ( $Skid->Contents() ) {
 					my $Paper = $C->Paper();
@@ -180,7 +180,7 @@ $Skid->Location()->name(),
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
-			$html .= '<tr class="totals"><td colspan="4">Totals:</td><td>';
+			$html .= '<tr class="totals"><td class="unprintable"></td><td colspan="3">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
 			$html .= '</td><td colspan="2">&nbsp;</td></tr>';
