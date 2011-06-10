@@ -197,6 +197,7 @@ sub set {
 
 	my $type = ref $self;
 	my %fields = eval ('%'.$type.'::fields');
+	my %defaults = eval('%'.$type.'::defaults');
 
 	foreach my $field ( keys %fields ) {
 		if ( exists $$params{$field} ) {
@@ -221,11 +222,10 @@ $openprint::log->debug("Running $field") if $debug;
 				eval '$$self{$field} =~ ' . $transform;
 			} # end foreach
 
-			my %defaults = eval('%'.$type.'::defaults');
-
 			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$self->$field( $defaults{$field} );
+				$$self{$field} = $defaults{$field};
+				$self->$field( $defaults{$field} ) if $$self{$field} != $defaults{$field};;
 			} # end if
 		} # end if
 	} # end foreach
@@ -487,7 +487,8 @@ sub AUTOLOAD {
 #}
 	$name =~ s/.*://;
 	if ( @_ ) {
-		return $self->{$name} = shift;
+$openprint::log->debug("Autoload $type $name $_[0]");
+		return $self->{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields and exists $$fields{lc $name . '_id'} ) {
