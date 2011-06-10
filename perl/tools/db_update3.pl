@@ -182,6 +182,10 @@ if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'locations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();

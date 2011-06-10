@@ -1,4 +1,5 @@
 
+drop table if exists logs;
 drop table if exists log_actions;
 create table log_actions (
 	id	SERIAL,
@@ -6,17 +7,16 @@ create table log_actions (
 	description TEXT,
 	PRIMARY KEY (id)
 );
-drop table if exists log;
-CREATE TABLE Log (
+CREATE TABLE Logs (
 	id SERIAL,
-	action_id	INTEGER NOT NULL, FOREIGN KEY (action_id) REFERENCES log_actions (id);
+	action_id	INTEGER NOT NULL, FOREIGN KEY (action_id) REFERENCES log_actions (id),
 	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
 	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	date_time	timestamp with time zone NOT NULL,
 	ip_address	TEXT,
 	url			TEXT,
 	note		TEXT,
-	host_id		INTEGER NOT NULL, FOREIN KEY (host_id) REFERENCES Hosts (id),
+	host_id		INTEGER NOT NULL, FOREIGN KEY (host_id) REFERENCES Hosts (id),
 	PRIMARY KEY (id)
 );
 

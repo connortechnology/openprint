@@ -10,7 +10,7 @@ require openprint::Host;
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 1;
 $table = 'logs';
-$serial = 'log_id_seq';
+$serial = 'logs_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'user_id'		=>	'user_id',
