@@ -16,7 +16,7 @@
 			<li><label>Category:</label>
 				<select name="category_id" id="category_id" onchange="f1.btnFunction='';f1.submit();">
 					<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $param{'category_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{'Category'}->id() ); ) ?>
 				</select>
 			</li>
 		</ul>
