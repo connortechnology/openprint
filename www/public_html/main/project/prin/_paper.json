@@ -8,6 +8,7 @@
 	@options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
 
 	my %find = (
+		'width is null' => 0,
 		'project_type_id in'	=>	$Project->type_id(),
 		( exists $param{'Supplied'} ? ( 'supplied'			=>	[ undef, $param{'Supplied'} ] ) : () ),
 		);
@@ -58,9 +59,9 @@ if ( 0 ) {
 		} # end if
 
 		@{$specs{$options[$i]}} = ();
+		my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
 		if ( $options[$i] =~ /Size/ ) {
-			foreach my $Stock ( @Stocks ) {
-				@{$specs{$options[$i]}} = sort {
+			@{$specs{$options[$i]}} = sort {
 					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 					if ( $a_w != $b_w ) {
@@ -70,12 +71,15 @@ if ( 0 ) {
 						return $a_w <=> $b_w;
 					}
 					return $a <=> $b;
-				} ( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
-			} # end foreach Stock
+				} keys %data;
+		} elsif ( $options[$i] =~ /Weight/ ) {
+			@{$specs{$options[$i]}} = sort {
+				my ( $w1 ) = $a =~ /([\d\.]+)/;
+				my ( $w2 ) = $b =~ /([\d\.]+)/;
+				return $w1 <=> $w2;
+			} keys %data;
 		} else {
-			foreach my $Stock ( @Stocks ) {
-				@{$specs{$options[$i]}} = sort( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
-			} # end foreach Stock
+			@{$specs{$options[$i]}} = sort keys %data;
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
@@ -156,8 +160,8 @@ if ( 0 ) {
 		} # end foreach Stock
 
 		@{$specs{'SheetSize'}} = map { $_ } sort {
-			my ( $w1, $h1 ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
-			my ( $w2, $h2 ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			my ( $w1, $h1 ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			my ( $w2, $h2 ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			return -1 if $w1 < $w2;
 			return 1 if $w1 > $w2;
 			return -1 if $h1 < $h2;

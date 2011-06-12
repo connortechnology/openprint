@@ -101,6 +101,15 @@ $serial	=	'paper_id_seq';
 %defaults = (
 );
 
+sub load {
+	my ( $self, $data ) = @_;
+	if ( ! $data ) {
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
+	} # end if
+	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	@$self{'start_width','start_height'} = @$self{'width','height'};
+} # end sub load
+
 # Returns a copy of the paper object.
 sub copy {
 	my $New = $_[0]->clone();
