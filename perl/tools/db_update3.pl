@@ -414,9 +414,13 @@ if ( sets::isin( 'papercolour_id_seq' ) ) {
 if ( sets::isin( 'paperweight_id_seq' ) ) {
 	$dbh->do('ALTER SEQUENCE paperweight_id_seq RENAME TO stockweights_id_seq');
 } # end if
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
-	$dbh->do("ALTER TABLE manufacturers rename column shortname to name") if exists $$data{'shortname'};
-	$dbh->do("ALTER TABLE manufacturers drop column longname") if exists $$data{'longname'};
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+$dbh->do("ALTER TABLE manufacturers rename column shortname to name") if exists $$data{'shortname'};
+$dbh->do("ALTER TABLE manufacturers drop column longname") if exists $$data{'longname'};
+if ( ! sets::isin( 'bookmarks', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Bookmarks.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
 $dbh->disconnect();
 1;
