@@ -143,7 +143,7 @@ sub project {
 		} else {
 			my $Content = new openprint::SRED_Content();
 			$variable{'error'} .= $Content->save({
-					'project_id'	=>	$param{'project_id'},
+					( $param{'content_id'} ? () : ( 'project_id'	=>	$param{'project_id'} ) ),
 					'user_id'		=>	$param{'user_id-'.$param{'content_id'}},
 					'description'	=>	$param{'description-'.$param{'content_id'}},
 					'notes'         =>  $param{'notes-'.$param{'content_id'}},

@@ -252,6 +252,7 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 } # end if
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
+	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # en dif
 if ( ! sets::isin( 'logs', \@tables ) ) {
@@ -390,6 +391,33 @@ if ( ! sets::isin( 'currencies_id_seq', \@sequences ) ) {
 	$dbh->do("SELECT setval('currencies_id_seq', (select max(id) FROM currencies) )");
 	$dbh->do("ALTER TABLE CURRENCIES ALTER COLUMN ID SET DEFAULT nextval('currencies_id_seq')");
 } # end if
+foreach my $thingy ( 'names','finishes','colours', 'weights','qualities' ) {
+if ( sets::isin( 'paper'.$thingy, \@tables ) ) {
+$log->warn("Renaming paper$thingy");
+	$dbh->do("ALTER TABLE Paper$thingy rename to Stock$thingy");
+	$dbh->do("ALTER TABLE stock$thingy rename column shortname to name");
+	$dbh->do("ALTER TABLE stock$thingy drop column longname");
+	if ( sets::isin( $thingy.'_id_seq' ) ) {
+		$dbh->do('ALTER SEQUENCE paper'.$thingy.'_id_seq RENAME TO stock'.$thingy.'_id_seq');
+	} # end if
+} # end if
+} # end foreach thingy
+if ( sets::isin( 'papername_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE papername_id_seq RENAME TO stocknames_id_seq');
+} # end if
+if ( sets::isin( 'paperfinish_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE paperfinish_id_seq RENAME TO stockfinishes_id_seq');
+} # end if
+if ( sets::isin( 'papercolour_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE papercolour_id_seq RENAME TO stockcolours_id_seq');
+} # end if
+if ( sets::isin( 'paperweight_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE paperweight_id_seq RENAME TO stockweights_id_seq');
+} # end if
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+	$dbh->do("ALTER TABLE manufacturers rename column shortname to name") if exists $$data{'shortname'};
+	$dbh->do("ALTER TABLE manufacturers drop column longname") if exists $$data{'longname'};
+
 $dbh->disconnect();
 1;
 __END__

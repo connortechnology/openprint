@@ -1872,6 +1872,12 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
+		if ( ! $$project{'stocksetupcharged'} ) {
+			# Check to see if there even are any stock setup prices.  If not, don't both estimating them later
+			if ( ! openprint::PaperPrice->find('service'=>'Setup') ) {
+				$$project{'stocksetupcharged'} = 1;
+			} # end if
+		} # end if
 #$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
@@ -2904,16 +2910,10 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 #$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
-					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll
+					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) {
 						$PaperCounts{$paper_string} = $Paper->minimum_order();
 					} # end if
 				} # end if
-if ( 0 ) {
-$openprint::log->debug("Paper debug: $paper_string");
-$openprint::log->debug("Paper debug: " . $Paper->to_string() );
-$openprint::log->debug("Paper debug: " . $Paper->wpsi() );
-$openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
-}
 				my $weight = $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string} * $Paper->sheet_weight()) : $PaperCounts{$paper_string};
 				my $paper_price = $Paper->get_price( 'weight'=>$weight,'service'=>'Material' );
 				$$paper_price{'Total'} = sprintf('%.2f', $$paper_price{'100lb Price'} * $weight / 100 );
@@ -2949,8 +2949,7 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
-			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
-
+			if ( $$Paper{'type'} eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
 # Add Roll2SheetSetup
 				if ( ! $$project{'roll2sheetcharged'} ) {
 					if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
@@ -3667,7 +3666,7 @@ my $colourstarttime = gettimeofday();
 			if ( ! $washed_colours{$washed_index} ) {
 				# Perfecting uses another set of units, but the second side won't add because of the colour already being washed
 				if (
-						sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and 
+						sets::isin( $$Imposition{'runstyle'}, ['Web','Perfecting'] ) and 
 						sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and 
 						sets::isin( $real_colour, $$project{'side_two_colour_names'} ) 
 				   ) {
@@ -3759,7 +3758,7 @@ my $colourstarttime = gettimeofday();
 		} # end if
 		$price{'Ink breakdown'} .= '<br/>';
 	} # end foreach colour/coating
-$openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colourstarttime])*1000) );
+#$openprint::log->debug( 'Colour Calc: ' . sprintf('%.4f', tv_interval( [$colourstarttime])*1000) );
 
 	$plate_count *= $plate_runs;
 	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};

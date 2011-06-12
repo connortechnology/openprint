@@ -51,7 +51,8 @@
 <form id="f1" name="f1" method="post" action="list.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="leftColumn">
-		<p>
+			<ul>
+		<li>
 			<label>Owner:</label>
 			<select id="owner_id" name="owner_id" size="1" onchange="calc(this.form.name);">
 				<option value=""> All </option>
@@ -65,17 +66,19 @@
 					make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $session{'/administrator/stock/list.html?owner_id'} );
 				) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+<? if ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+		<li>
 			<label>Group:</label>
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?Group'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?Group'} );
 					) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+<? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
+		<li>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
@@ -83,8 +86,8 @@
 					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Manufacturer'} );
 					) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Name:</label>
 			<select name="Name" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
@@ -92,7 +95,7 @@
 					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Name'} );
 					) ?>
 			</select>
-		</p>
+		</li>
 <? echo (
 	my $html;
 	my @options = ('Finish','Colour','Weight','Quality','Material');
@@ -118,41 +121,44 @@ $log->debug("Doin $option");
 	my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
 
 		$html .= sprintf(q`	
-		<p> 
+		<li> 
 			<label>%1$s:</label>
 			<select id="%1$s" name="%1$s" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
-		</p>`, $option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$option} ) );
+		</li>`, $option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$option} ) );
 		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$option} if $session{'/administrator/stock/list.html?'.$option};
 	}# end foreach option
 	return $html;
 ) ?>
+			</ul>
 		</div>
 		<div class="rightColumn">
-		<p> 
+			<ul>
+		<li> 
 			<label>Type:</label>
 			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( ssi::checked(  sets::isin( 'Sheet', split(',', $session{'/administrator/stock/list.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesSheet">Sheet</label>
 			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split(',', $session{'/administrator/stock/list.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Recommendations:</label>
 			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Grain Direction:</label>
 			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>FSC Code:</label>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Inventory Code:</label>
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
-		</p>
+		</li>
+		</ul>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
