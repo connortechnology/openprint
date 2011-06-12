@@ -26,6 +26,9 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 sub _stocks {
+	if ( %param and ! $param{'btnFunction'} ) {
+		ssi::save_params('/administrator/stock/list.html', 'Group','owner_id','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
+	} # end if
 } # end sub _stocks
 
 sub list {

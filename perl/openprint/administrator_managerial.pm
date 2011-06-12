@@ -36,13 +36,22 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub configuration {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
-		sql::insert( $log, $dbh, 'configuration', {
-			'name'	=>	$param{'name'},
-			'description'	=>	$param{'description'},
-			'type'			=>	$param{'type'},
-			'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
-			'value'			=>	$param{'value'},
-		} );
+		if ( sql::execute( $log, $dbh, 'SELECT * FROM Configuration WHERE name=? LIMIT 1', $param{'name'} ) ) {
+			sql::update( $log, $dbh, 'configuration', [ 'name', $param{'name'} ], {
+				'description'	=>	$param{'description'},
+				'type'			=>	$param{'type'},
+				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+				'value'			=>	$param{'value'},
+			} );
+		} else {
+			sql::insert( $log, $dbh, 'configuration', {
+				'name'	=>	$param{'name'},
+				'description'	=>	$param{'description'},
+				'type'			=>	$param{'type'},
+				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+				'value'			=>	$param{'value'},
+			} );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type FROM Configuration ORDER BY lower(category), name' );
 		while ( my ( $name, $value, $type ) = splice @config,0,3 ) {
@@ -61,6 +70,11 @@ sub configuration {
 } # end sub configuration
 
 sub _configuration_popup {
+	my $Entry = {};
+	if ( $param{'name'} ) {
+		@$Entry{'name','value','type','description','category'} = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration WHERE name=?', $param{'name'} );
+	} # end if
+	$variable{'Entry'} = $Entry;
 } # end sub
 
 sub taxes {

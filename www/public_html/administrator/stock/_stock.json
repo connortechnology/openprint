@@ -45,9 +45,10 @@
 		} # end if
 
 		@{$specs{$options[$i]}} = ();
+		my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
 		if ( $options[$i] =~ /Size/ ) {
-			foreach my $Stock ( @Stocks ) {
-				@{$specs{$options[$i]}} = sort {
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } 
+				 sort {
 					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 					if ( $a_w != $b_w ) {
@@ -57,12 +58,10 @@
 						return $a_w <=> $b_w;
 					}
 					return $a <=> $b;
-				} ( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
-			} # end foreach Stock
+				}
+			keys %data;
 		} else {
-			foreach my $Stock ( @Stocks ) {
-				@{$specs{$options[$i]}} = sort( sets::union( @{$specs{$options[$i]}}, $Stock->get(lc $options[$i]) ) );
-			} # end foreach Stock
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } sort keys %data;
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 

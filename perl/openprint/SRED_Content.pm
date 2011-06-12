@@ -72,6 +72,7 @@ sub duration {
 			return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
 		} # end if
 	} # end if
+	return $_[0]{'duration'};
 } # end sub duration
 
 sub duration_days {
