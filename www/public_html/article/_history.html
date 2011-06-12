@@ -1,14 +1,10 @@
 <? eval (
 	@{$$variable{'Articles'}} = ();
 	foreach my $Article ( openprint::Article->find( 
-( Date::Calc::check_date( @session{'/article/history.html?created_on_start_year','/article/history.html?created_on_start_month','/article/history.html?created_on_start_day'} ) ? (
-		'created_on >='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/article/history.html?created_on_start_year','/article/history.html?created_on_start_month','/article/history.html?created_on_start_day'} ) ) : () ),
-	( Date::Calc::check_date( @session{'/article/history.html?created_on_end_year','/article/history.html?created_on_end_month','/article/history.html?created_on_end_day'} ) ? (	
-		'created_on <='	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/article/history.html?created_on_end_year','/article/history.html?created_on_end_month','/article/history.html?created_on_end_day'} ) ) : () ),
-( Date::Calc::check_date( @session{'/article/history.html?published_on_start_year','/article/history.html?published_on_start_month','/article/history.html?published_on_start_day'} ) ? (
-		'published_on >='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/article/history.html?published_on_start_year','/article/history.html?published_on_start_month','/article/history.html?published_on_start_day'} ) ) : () ),
-( Date::Calc::check_date( @session{'/article/history.html?published_on_end_year','/article/history.html?published_on_end_month','/article/history.html?published_on_end_day'} ) ? (
-		'published_on <='	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/article/history.html?published_on_end_year','/article/history.html?published_on_end_month','/article/history.html?published_on_end_day'} ) ) : () ),
+		ssi::date_filter( 'created_on_start','created_on >=' ),
+		ssi::date_filter( 'created_on_end','created_on <=' ),
+		ssi::date_filter( 'published_on_start','published_on >=' ),
+		ssi::date_filter( 'published_on_end','published_on <=' ),
 		( $session{'/article/history.html?published'} ? ( 'published' => $session{'/article/history.html?published'} ) : () ),
 		( $session{'/article/history.html?company_id'} ? ( 'company_id'	=> $session{'/article/history.html?company_id'} ) : () ),
 		( $session{'/article/history.html?employee_id'} ? ( 'employee_id' => $session{'/article/history.html?employee_id'} ) : () ), 

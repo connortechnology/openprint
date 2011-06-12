@@ -417,6 +417,9 @@ if ( sets::isin( 'paperweight_id_seq' ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
 	$dbh->do("ALTER TABLE manufacturers rename column shortname to name") if exists $$data{'shortname'};
 	$dbh->do("ALTER TABLE manufacturers drop column longname") if exists $$data{'longname'};
+if ( ! $config{'public_URIs'} ) {
+$dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
+} # end if
 
 $dbh->disconnect();
 1;
