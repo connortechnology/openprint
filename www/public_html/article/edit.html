@@ -15,7 +15,7 @@
 				<span class="warning">This article has been deleted</span>
 				<? endif ( $$variable{'Article'}->deleted() ) ?>
 				
-				<input type="hidden" name="article_id" value="<? echo ( $param{'article_id'} ) ?>" />
+				<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>" />
 					<div class="content">
 					<ul>
 						<li><label for="company_id">Company:</label>

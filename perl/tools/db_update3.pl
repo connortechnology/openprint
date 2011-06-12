@@ -421,6 +421,9 @@ if ( ! sets::isin( 'bookmarks', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Bookmarks.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! $config{'public_URIs'} ) {
+$dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
+} # end if
 
 $dbh->disconnect();
 1;

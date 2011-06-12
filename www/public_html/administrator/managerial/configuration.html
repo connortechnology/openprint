@@ -3,8 +3,8 @@
 <p class="buttons">
 		<? echo ( join('',
 					ssi::button( 'SaveTop', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
-					ssi::button( 'ResetTop', { 'onclick'=>"f1.reset();",'text' => 'Reset' } ),
-					ssi::button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' )
+					ssi::button( 'ResetTop', { 'onclick'=>'f1.reset();','text' => 'Reset' } ),
+					ssi::button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' } )
 		); ) ?>
 </p>
 <? echo (
