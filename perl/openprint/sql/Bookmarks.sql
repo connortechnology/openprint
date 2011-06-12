@@ -1,6 +1,6 @@
 
-DROP TABLE IF EXISTS Comments;
-CREATE TABLE Comments (
+DROP TABLE IF EXISTS Bookmarks;
+CREATE TABLE Bookmarks (
 	id SERIAL,
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -8,8 +8,7 @@ CREATE TABLE Comments (
 	object_id	INTEGER,
 	text		TEXT,
 	deleted	BOOLEAN NOT NULL Default false,
-	approved BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX comments_idx ON comments ( object_type, object_id );
+CREATE INDEX bookmarks_idx ON comments ( object_type, object_id );
