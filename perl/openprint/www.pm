@@ -120,17 +120,10 @@ sub handler {
 		} # end while
 	} # end if
 
-<<<<<<< HEAD
 	if ( $variable{'ExternalRedirect'} ) {
 		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
 		$r->status(Apache2::Const::REDIRECT);
 		#$r->send_http_header;
-=======
-    if ( $variable{'ExternalRedirect'} ) {
-        $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
-        $r->status(Apache2::Const::REDIRECT);
-        #$r->send_http_header;
->>>>>>> f36a14de42a19ae346820bcf0cfae15eb6eb10c9
 $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
