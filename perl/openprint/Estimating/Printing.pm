@@ -754,7 +754,7 @@ $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.
 	} # end if override
 
 	push @Papers, @Ps;
-if ( $debug or 0 ) {
+if ( $debug or 1 ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() . ' Minumum: ' . $P->minimum_order() );
 } 
@@ -1066,6 +1066,7 @@ $openprint::log->debug("No spread layout for you!");
 		} # end if
 
 # add all the impositions for each press
+		# Don't have to check that ddmPress is populated because we do that earlier. Only need to do so later due to recursing.
 		foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : @possible_presses ) {
 # These should be cached by the underlying layer anyways
 
@@ -1281,7 +1282,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( 0 ) {
+if ( 1 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1343,7 +1344,7 @@ $i->display();
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 0 ) {
+if ( 1 ) {
 $openprint::log->warn('Impositions after filter for '. $Press->strid() );
 foreach my $I ( @impositions ) {
 $I->display();
@@ -1596,11 +1597,12 @@ sub get_project_price {
 
 	my %best_price;
 	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 	# indexed by # of spreads
 	my %additional_signature_cache;
 
-	foreach my $Press ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
+	foreach my $Press ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' and $$specs{'ddmPress'.$qty_index} ) ? openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 
 		my @impositions;
 		my $P;
@@ -1656,19 +1658,22 @@ if ( 1 ) {
             foreach my $imp ( @impositions ) {
                 $max_pages = $imp->pages() if $imp->pages() > $max_pages;
             } # end foreach
-            $max_pages /= 3;
+$openprint::log->debug("Max pages: $max_pages imps " . @impositions);
+            $max_pages = ceil( $max_pages / 3 );
+$openprint::log->debug("Max pages: $max_pages press".$Press->strid());
             foreach my $imp ( @impositions ) {
+				my $Paper = $imp->Paper();
 				if ( $$specs{'PreviousImposition'} and ( $$specs{'PreviousImposition'} > $imp->imposition() ) ) {
 					next;
 				}
 				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
-					if ( ( $imp->Paper()->width() != $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$specs{"OverrideStockHeight$qty_index"} )) {
+					if ( ( $$Paper{'width'} != $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $$Paper{'height'} != $$specs{"OverrideStockHeight$qty_index"} )) {
 						next;
 					} # end if
 				} 
 				if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
-					$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
-					if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
+					$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $$Paper{'height'} );
+					if ( $$Paper{'height'} != $$specs{'CutOff'.$qty_index} ) {
 						$openprint::log->warn('next');
 						next;
 					} # end if
@@ -1676,7 +1681,7 @@ if ( 1 ) {
 					next;
 				} # end if
 
-				if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
+				if ( $$specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$specs{'PreviousStockType'} ) ) {
 					next;
 				} # end if
 				if ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
@@ -1692,37 +1697,37 @@ if ( 1 ) {
                         my $I = $imps{$str}[$j];
 
 						# We want the overide to only have an effect for sheets.  Due to roll2sheet, there can be to many options if we are only overriding the width
-                        if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} ) ) {
+                        if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$Paper{'width'} == $$specs{"OverrideStockWidth$qty_index"}) and ( $$Paper{'height'} == $$specs{"OverrideStockHeight$qty_index"} ) ) {
                             next;
                         } elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
                             next;
                         } # end if
                         my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-                        my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+                        my %SmallerPrice = $Paper->get_price($qty/$imp->imposition());
 #$openprint::log->debug("Comparing: ");
 #$openprint::log->debug(sprintf('%sx%s->%sx%s $s %d $%s', $I->Paper()->get('start_width','start_height','width','height','minimum_order','is_cut'), $BiggerPrice{'100lb'} ) );
 #$openprint::log->debug(sprintf('%sx%s->%sx%s $s %d $%s', $imp->Paper()->get('start_width','start_height','width','height','minimum_order','is_cut'), $SmallerPrice{'100lb'} ) );
 
                         if (
-                                ( $I->Paper()->area() >= $imp->Paper()->area() )
+                                ( $I->Paper()->area() >= $Paper->area() )
                                 and
-                                ( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
+                                ( $I->Paper()->minimum_order() >= $Paper->minimum_order() )
                                 and
                                 ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
                                 and
-                                ( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
+                                ( ! ( ! $I->Paper()->is_cut() and $Paper->is_cut() ) )
                            ) {
 #$openprint::log->debug('splice');
                             splice @{$imps{$str}}, $j, 1;
                             $j -= 1;
                         } elsif (
-                                ( $I->Paper()->area() < $imp->Paper()->area() )
+                                ( $I->Paper()->area() < $Paper->area() )
                                 and
-                                ( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
+                                ( $I->Paper()->minimum_order() <= $Paper->minimum_order() )
                                 and
                                 ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
                                 and
-                                ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
+                                ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
                                 ) {
 # Already have a much better sheet
 							$add = 0;
@@ -1788,10 +1793,11 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 		} # end if
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
+			my $Paper = $imp->Paper();
 	#$imp->display();
 
-			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
+			if ( $$specs{'PreviousStockType'} and ( $$Paper{'type'} ne $$specs{'PreviousStockType'} ) ) {
+				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $Paper->type() ) if $debug;
 				next;
 			} # end if
 			if ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
@@ -1821,8 +1827,8 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 			} # end if
 			if ( $$specs{'chkOverrideSheetSize'.$qty_index} ) {
 				if ( $$specs{'OverrideStockHeight'.$qty_index} ) {
-					if ( $imp->paper()->width() != $$specs{'OverrideStockWidth'.$qty_index} or $imp->paper()->height() != $$specs{'OverrideStockHeight'.$qty_index} ) {
-						$openprint::log->debug("Wrong stock want : ".$$specs{'OverrideStockWidth'.$qty_index}.'x'.$$specs{'OverrideStockHeight'.$qty_index}." but have " . $imp->paper()->width() . 'x'.$imp->paper()->height() );
+					if ( $$Paper{'width'} != $$specs{'OverrideStockWidth'.$qty_index} or $$Paper{'height'} != $$specs{'OverrideStockHeight'.$qty_index} ) {
+						$openprint::log->debug("Wrong stock want : ".$$specs{'OverrideStockWidth'.$qty_index}.'x'.$$specs{'OverrideStockHeight'.$qty_index}." but have " . $$Paper{'width'} . 'x'.$$Paper{'height'} );
 						next;
 					} # end if
 				} else {
@@ -1834,7 +1840,7 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 			} # end if
 			if ( (defined $$specs{'OverrideCutOff'.$qty_index} ) and ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) ) {
 #$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
-				if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
+				if ( $$Paper{'height'} != $$specs{'CutOff'.$qty_index} ) {
 #$openprint::log->warn('next');
 					next;
 				} # end if
@@ -1845,7 +1851,14 @@ my %PlateCounts = %$PlateCounts;
 #my $time = gettimeofday();
 			$imp = $imp->copy();
 			my %washed_colours = %{$washed_colours};
-			my $price = calc_price( $Project, $service_index, $imp, $project, $Project->services(), $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $inkCoverage, $special_colours, \%PlateCounts );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}, $inkCoverage, $special_colours, \%PlateCounts );
+			if ( ! $$price{'complete'} ) {
+				if ( $debug or 1 ) {
+					$imp->display( 'Couldnt calculate initial price: ' . $$price{'alert'} );
+				} # end if
+				next;
+			} # end if
+
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 						#$openprint::log->debug( breakdown( $price, $specs ) );
 			$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
@@ -1934,7 +1947,6 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 							$sig_price = calc_price( $Project, $s_id, $additional_signature_cache{$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index}}, $project, $services, \%new_specs, $qty, $qty_index, $side_one_colours, $side_two_colours, $filtered_colours, \%washed_colours, $mixed_colours, $best_price{'Comparison Cost'}-$$sig_price{'Comparison Cost'}, $inkCoverage, $special_colours );
 							push @{$$price{'Impositions'}}, $$sig_price{'Imposition'};
 						} else {
-							my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 							$new_specs{'txtUnspecifiedSpreadQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index};
 							#$new_specs{'chkOverridePageQuantity'.$qty_index} = 'Y';
 							$new_specs{'PageQuantity'.$qty_index} = $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index}*$$specs{'txtSpreadSize'};
@@ -2031,6 +2043,11 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 				$$specs{'StitchingImposition'.$qty_index} = $si;
 			} # end if UnspecifiedSpreadQuantity
 			#$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
+			if ( ! $$price{complete} ) {
+$openprint::log->debug("No price complete ");
+$imp->display();
+				next;
+			} # end if
 
 			# Now do plates
 			# Need a hash, of all plate types and counts
@@ -2079,12 +2096,6 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 					$$price{'Stitching Cost'} = $$results{'Price'};
 					$$price{'Comparison Cost'} += $$results{'Price'};
 				} # end if
-			} # end if
-
-			if ( ! $$price{complete} ) {
-$openprint::log->debug("No price complete ");
-$imp->display();
-				next;
 			} # end if
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
@@ -3209,14 +3220,7 @@ sub press_setup_cost {
 sub plate_setup_cost {
 	my ( $Imposition, $Press, $sheet_area, $impressions, $colours, $specs, $qty_index, $project, $PlateCounts ) = @_;
 
-	my $plate_count = 0;
-	my $non_process_colours = 0;
-
-	foreach my $colour ( @$colours ) {
-		$plate_count += 1;
-		$non_process_colours += 1 if ! sets::isin( $colour, \@process_colours );
-	} # end foreach colour
-$openprint::log->debug("In plate setup $non_process_colours $project ");
+	my $plate_count = @$colours;
 
 	my $plate_count_before_changes = $plate_count;
 
@@ -3257,7 +3261,9 @@ $openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
 			$blanks_needed = 0 if $blanks_needed < 0;
 			$setup_cost{'Blank Plates'} = $blanks_needed;
 		} elsif ( $require_blank_plates eq 'When Non-Process' ) {
-			if ( $non_process_colours ) {
+			my $non_process_colours = sets::exclude( \@process_colours, $colours );
+#$openprint::log->debug("In plate setup $non_process_colours $project ");
+			if ( @$non_process_colours ) {
 				$blanks_needed = ( $press_colours - @$colours ) - $$PlateCounts{'Blank'.$plate_id};
 				$blanks_needed = 0 if $blanks_needed < 0;
 				$setup_cost{'Blank Plates'} = $blanks_needed;
@@ -3266,18 +3272,16 @@ $openprint::log->debug("Imposition $Imposition : " . $Imposition->to_string() );
 			$openprint::log->error("Unknown value for Require Blank Plates: $require_blank_plates");
 		} # end if
 	} # end if
-$openprint::log->debug("returning from plate_setup_cost");
 	return %setup_cost;
 } # end sub plate_setup
 
 # This is only called for work and turn
 sub filter_colours {
-	my ( @colours ) = @_;
 	my @filtered_colours = ();
 
 #$log->debug("*************** START OF FILTER COLOURS colours: @colours **************************");
 
-	foreach my $colour ( @colours ) {
+	foreach my $colour ( @_ ) {
 		if ( ! sets::isin( $colour, \@filtered_colours ) ) {
 # We only need one black
 			if ( $colour eq 'Black' ) {
@@ -3290,12 +3294,12 @@ sub filter_colours {
 				} # end if
 			} elsif ( $colour eq 'Overall Varnish Gloss' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Gloss', \@colours ) ) {
+				if ( ! sets::isin('Spot Varnish Gloss', \@_ ) ) {
 					push @filtered_colours, $colour;
 				} # end if
 			} elsif ( $colour eq 'Overall Varnish Matte' ) {
 # Overall Varnishes become Spots when Work & Turn and not Overall on Both Sides
-				if ( ! sets::isin('Spot Varnish Matte', \@colours ) ) {
+				if ( ! sets::isin('Spot Varnish Matte', \@_ ) ) {
 					push @filtered_colours, $colour;
 				} # end if
 			} else {

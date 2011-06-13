@@ -28,6 +28,11 @@
 	margin: 0 0 0 -80px;
 	display: inline-block;
 }
+#Contents ul li ul li label.radio {
+	width: auto;
+	margin: 0;
+	vertical-align: middle;
+}
 .SRED th.Name, .SRED th.Description {
 	text-align: left;
 }
@@ -37,7 +42,36 @@
 .rightColumn {
 	float: left;
 }
-.
+
 #Contents ul li ul li textarea {
-	width: 90%;
+	width: 99%;
+}
+#Contents p.buttons {
+}
+/*
+a.Delete, a.Save, a.Cancel {
+	width: 20px;
+	height: 20px;
+	margin: 2px;
+} 
+a.Delete, a.Cancel {
+	background: url(/images/icons.gif) no-repeat -460px -20px;
+}
+a.Save {
+	background: url(/images/icons.gif) no-repeat -480px -20px;
+}
+a.Delete .c, a.Save .c, a.Cancel .c {
+	display: none;
+}
+*/
+.attachments .thumbnail {
+	float: left;
+	margin: 5px;
+	width: 48px;
+}
+.attachments .thumbnail_link {
+}
+.attachments .thumbnail img {
+	float: none;
+	width: 100%;
 }

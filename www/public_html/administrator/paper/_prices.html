@@ -1,11 +1,11 @@
-<form name="Prices">
+<form name="Prices" action="">
 	<input type="hidden" name="paper_id" value="<? echo ( $openprint::param{'paper_id'} ) ?>"/>
 	<? eval ( 
 		$$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
 		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(Name)'); ) ?>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
-    <div class="Pricelist">
-        Prices for Pricelist: <? echo ( ssi::htmlize( $$variable{'Pricelist'}->name() ); ) ?><br/>
+	<div class="Pricelist">
+		Prices for Pricelist: <? echo ( ssi::htmlize( $$variable{'Pricelist'}->name() ); ) ?><br/>
 		<table class="List">
 			<tr>
 				<th class="Range">Minimum - Maximum</th>
@@ -14,33 +14,35 @@
 				<th class="Markup">Markup</th>
 				<th class="Price">Price</th>
 				<th class="Discount">Apply Discounts?</th>
+				<th width="80">&nbsp;</th>
 			</tr>
 		<? eval ( @{$$variable{'Prices'}} = $$variable{'Paper'}->Prices('Pricelist'=>$$variable{'Pricelist'} ) ) ?>
 		<? while ( $$variable{'Price'} = shift @{$$variable{'Prices'}} ) ?>
 			
-            <tr class="Price" id="Price-<? echo ( $$variable{'Price'}->id() ) ?>">
+			<tr class="Price" id="Price-<? echo ( $$variable{'Price'}->id() ) ?>">
 
-    <td class="Range"><input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /> -
-    <input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>
-    <td class="Units">
+	<td class="Range"><input class="text" type="text" name="min-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Min() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /> -
+	<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>
+	<td class="Units">
 		<select name="units-<? echo ( $$variable{'Price'}->id() ) ?>">
 			<? echo ( ssi::make_drop_down( [ 'Per 100lbs','Per 100lbs','Per M', 'Per M','PerSqInch','Per Sq Inch','PerSqFoot','Per Sq Foot' ], $$variable{'Price'}->Units() ); ) ?>
 		</select>
 	</td>
-    <td class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></td>
-    <td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_markup(this);"/></td>
-    <td class="Price"><input class="text" type="text" name="price-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></td>
-    <td class="Discount">
-    <input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
-    <? echo ( ssi::checked( $$variable{'Price'}->Discountable() eq 'Y' ); ) ?>
-     /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y">Yes</label>
-    <input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>N" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='N'
-    <? echo ( ssi::checked( $$variable{'Price'}->Discountable() eq 'N' ); ) ?>
-     /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>N">No</label></td>
-    <? echo ( ssi::writeButton( $log, $dbh, 'DelPrice'.$$variable{'Price'}->id(), 'delete.gif', 'delPrice('.$$variable{'Price'}->id().');', '', 'Delete' ); ) ?>
+	<td class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"	onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></td>
+	<td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>"	onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_markup(this);"/></td>
+	<td class="Price"><input class="text" type="text" name="price-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>"	onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_price(this);"/></td>
+	<td class="Discount">
+	<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
+	<? echo ( ssi::checked( $$variable{'Price'}->Discountable() eq 'Y' ); ) ?>
+	 /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y">Yes</label>
+	<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>N" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='N'
+	<? echo ( ssi::checked( $$variable{'Price'}->Discountable() eq 'N' ); ) ?>
+	 /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>N">No</label></td>
+	<td><? echo ( ssi::writeButton( $log, $dbh, 'DelPrice'.$$variable{'Price'}->id(), 'delete.gif', 'delPrice('.$$variable{'Price'}->id().');', '', 'Delete' ); ) ?></td>
 
-            </tr>
+			</tr>
 		<? endwhile ( $$variable{'Price'} = shift @{$$variable{'Prices'}} ) ?>
-        <br class="spacer"/></div>
+		</table>
+		</div>
 	<? endwhile ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 </form>

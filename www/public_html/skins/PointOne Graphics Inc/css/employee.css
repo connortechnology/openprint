@@ -7,10 +7,10 @@
        } 
 }
 
-fieldset p {
+fieldset p, fieldset ul li {
 	padding-left: 140px;
 }
-fieldset p label {
+fieldset p label, fieldset ul li label {
 	width: 140px;
 	margin-left: -140px;
 }
@@ -47,6 +47,9 @@ div.PopupWindow fieldset p label {
 	width: auto;
 	margin-left: 0px;
 	vertical-align: middle;
+}
+#JobForm textarea {
+	width: 90%;
 }
 
 .Manifest #PurchaseOrders ul {

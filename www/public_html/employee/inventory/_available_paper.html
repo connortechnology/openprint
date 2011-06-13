@@ -34,7 +34,6 @@
 			my $rowclass;
 			my $selected;
 			my @location_ids;
-$log->debug("Session: $session{'/employee/inventory/available_paper.html?location_id'} ");
 			foreach my $location_id ( split(',', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
 				if ( $location_id eq 'All' ) {
 					@location_ids = ();
@@ -43,7 +42,6 @@ $log->debug("Session: $session{'/employee/inventory/available_paper.html?locatio
 				next if (! $location_id) or ( $location_id eq '' );
 				push @location_ids, $location_id;
 			} # end foreach
-$log->debug("Locations: @location_ids");
 
 			my $total_weight;
 			my $total_rolls;

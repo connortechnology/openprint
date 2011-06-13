@@ -40,5 +40,8 @@ sub _stock_usage {
 sub prepress_overview {
 } # end sub prepress_overview
 
+sub delivery {
+} # end sub delivery
+
 1;
 __END__

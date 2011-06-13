@@ -16,6 +16,7 @@ $serial = 'sred_projects_id_seq';
 	'description'	=>	'description',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'created_by'	=>	'created_by',
 	'deleted'		=>	'deleted',
 );
 
@@ -39,5 +40,8 @@ sub Contents {
 	$params{'project_id'} = $$self{'id'};
 	return openprint::SRED_Content->find(%params);
 } # end sub Contents
+sub Taxes {
+	return ();
+}
 1;
 __END__

@@ -11,7 +11,14 @@ CREATE TABLE SRED_Contents (
 	created_on		TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on		TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	deleted			BOOLEAN NOT NULL default false,
-	time_associated	BOOLEAN,
+	all_day_event	BOOLEAN,
+	unknown_time	BOOLEAN,
+	cost			float,
+	value			float,
+	quantity		float,	
+	quantity_units	text,
+	type_id			INTEGER, FOREIGN KEY (type_id) REFERENCES SRED_COntent_Types (id),
+	created_by		INTEGER,FOREIGN KEY (created_by)  REFERENCES Users (index),
 	PRIMARY KEY (id)
 );
 

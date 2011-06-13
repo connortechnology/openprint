@@ -18,5 +18,6 @@ CREATE TABLE Assets (
 	type_id	INTEGER, FOREIGN KEY (type_id) REFERENCES Asset_Types (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	deleted	BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );

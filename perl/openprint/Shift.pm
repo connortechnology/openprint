@@ -39,6 +39,7 @@ $serial = 'shifts_id_seq';
 
 %transforms = (
 	'id'			=>	[ 's/\D//g' ],
+	'operator_id'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
@@ -269,7 +270,9 @@ sub operator_id {
 			foreach my $Job ( $self->Schedule() ) {
 				$Job->save({'operator_id'=>$_[0]});	
 			} # end foreach
+$openprint::log->debug("Setting operator from $$self{'operator_id'} to $_[0]");
 			if ( $$self{'operator_id'} != $_[0] ) {
+$openprint::log->debug("Setting operator to $_[0]");
 				$$self{'operator_id'} = $_[0];
 				$self->save();
 			} # end if

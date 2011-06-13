@@ -306,7 +306,7 @@ fieldset p input[type="text"], fieldset p input[type="password"]  {
 	width: 60%;
 	vertical-align: top;
 }
-fieldset p input[type="radio"] {
+fieldset input[type="radio"] {
 	vertical-align: middle;
 }
 fieldset ul {
@@ -322,10 +322,6 @@ fieldset ul:after {
     clear: both; 
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html fieldset ul {height: 1%;}
-fieldset ul {display: block;}
-/* End hide from IE-mac */
 fieldset ul li {
 	list-style: none;
 	margin: 0px;
@@ -339,10 +335,6 @@ fieldset ul li:after {
     clear: both; 
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html fieldset ul li {height: 1%;}
-fieldset ul li {display: block;}
-/* End hide from IE-mac */
 
 fieldset ul li label {
 	width: 180px;
@@ -351,6 +343,7 @@ fieldset ul li label {
 	text-align: right;
 }
 fieldset ul li label.radio {
+	vertical-align: middle;
 	width: auto;
 	margin: 0px;
 	float: none;
@@ -394,11 +387,6 @@ fieldset.filters:after {
     visibility: hidden;
 
 }
-/* Hides from IE-mac \*/
-* html fieldset.filters {height: 1%;}
-fieldset.filters {display: block;}
-/* End hide from IE-mac */
-}
 
 fieldset.filters p {
 	padding-left: 135px;
@@ -411,7 +399,7 @@ fieldset.filters p label.radio {
 	margin: 0px;
 	width: auto;
 }
-fieldset.filters p input {
+fieldset.filters p input, fieldset.filters ul li input {
 	width: auto;
 }
 fieldset.filters p select {
@@ -674,8 +662,11 @@ form.inplaceeditor-form a { /* The cancel link */
 .changed {
     background-color: yellow;
 }
+.editable:hover {
+    background-color: yellow;
+}
 
-input.filter, fieldset p input.filter {
+input.filter, fieldset p input.filter, fieldset ul li input.filter {
 	width: 40px;
 }
 
