@@ -2,6 +2,7 @@
 use lib '/etc/apache2/lib/perl';
 use strict;
 use warnings;
+use Digest::MD5;
 
 require sql;
 require ssi;
@@ -16,6 +17,7 @@ require openprint::PaperInventory;
 require openprint::CIP3_PPF;
 require openprint::Host;
 require openprint::Log;
+require openprint::Asset;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -306,6 +308,13 @@ foreach my $Log ( openprint::Log->find('date_time <'=>sprintf('%.4d-%.2d-%.2d', 
 } # end foreach Log
 $log->warn("Deleted $log_count log entries");
 
+foreach my $Asset ( openprint::Asset->find('md5 null'=>1) ) {
+	my $data = misc::load_file( $log, $Asset->on_disk_path() );
+	if ( $data ) {
+		$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
+		last if $_;
+	} # end if
+} # end foreach Asset
 $dbh->disconnect();
 1;
 __END__

@@ -32,7 +32,6 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
 $debug = 1;
@@ -108,6 +107,7 @@ sub load {
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
+	@$self{'allocated'} = @$data{'allocated'} if exists $$data{'allocated'};
 } # end sub load
 
 # Returns a copy of the paper object.

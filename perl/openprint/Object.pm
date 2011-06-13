@@ -256,6 +256,7 @@ sub set {
 	if ( ! $fields ) {
 $log->warn('Object::set called on an object with no fields');
 	} # end if
+	my %defaults = eval('%'.$type.'::defaults');
 
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
@@ -267,7 +268,7 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 					$$self{$field} = $$params{$field} if defined $$fields{$field};
 					push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
-				eval "\$self->$field( \$\$params{\$field} );";
+				$self->$field( $$params{$field} );
 				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
@@ -279,8 +280,6 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 			foreach my $transform ( @transforms ) {
 				eval '$$self{$field} =~ ' . $transform;
 			} # end foreach
-
-			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
@@ -667,7 +666,8 @@ sub AUTOLOAD {
 #}
 	$name =~ s/.*://;
 	if ( @_ ) {
-		return $self->{$name} = shift;
+$openprint::log->debug("Autoload $type $name $_[0]");
+		return $self->{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {

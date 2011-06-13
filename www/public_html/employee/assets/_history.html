@@ -12,6 +12,7 @@
 ( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ? (
 			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ) : () ),
 			( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ) : () ),
+			( $session{'/employee/assets/history.html?deleted'} ne '' ? ( 'deleted' => $session{'/employee/assets/history.html?deleted'} ) : () ),
 			'order',			'id desc',
 		);
 		$search{'type_id'} = $session{'/employee/assets/history.html?type_id'} if $session{'/employee/assets/history.html?type_id'};
@@ -32,10 +33,11 @@
 		<tr>
 			<th width="20"><input type="checkbox" onclick="select_all( $('f2'), 'asset_id', this.checked );"/></th>
 			<th class="ID">ID</th>
-			<th class="Date">Created On</th>
+			<th class="DateTime">Created On</th>
 			<th class="CreatedBy">Created By</th>
 			<th class="Name">Name</th>
 			<th class="Filename">Filename</th>
+			<th class="thumbnail">Image</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -47,12 +49,14 @@
 			$html .= sprintf( q`
 				<td><input type="checkbox" id="asset_id" name="asset_id" value="%1$d"/></td>
 				<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
-				<td class="Date"><a href="view.html?asset_id=%1$d">%2$s</a></td>
+				<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
 				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
 				<td class="Name"><a href="view.html?asset_id=%1$d">%4$s</a></td>
 				<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
+				<td class="thumbnail"><a href="view.html?asset_id=%1$d">%6$s</a></td>
 			</tr>`, $Asset->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Asset->created_on())), 
 			$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
+			sprintf('<img src="%s" alt=""/>', $Asset->thumbnail_url() ),
 				);
 		} # end while
 		return $html;
@@ -61,9 +65,7 @@
 	</table>
 	<p class="buttons">
 		<? echo (
-			my $html;
-			$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';f2.submit();", '', 'Delete Selected' );
-			return $html;
+			ssi::button( 'Delete', { 'onclick'=>"f2.btnFunction.value='Delete';f2.submit();", 'text'=>'Delete Selected' } );
 		) ?>
 	</p>
 <? endif ( @{$$variable{'Assets'}} == 0 ) ?>

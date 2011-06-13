@@ -1236,24 +1236,6 @@ sub _rfidscanner_log {
 			'limit'     =>  $param{'limit'},
 			'order'     =>  'updated_on DESC',
 			);
-	if ( ! @{$variable{'Entries'}} ) {
-		my @Entries = openprint::RFIDScannerHistory->find(
-				'scanner_id'=>	$param{'rfidscanner_id'},
-				'limit'		=>	1,
-				'order'     =>  'updated_on DESC',
-				);
-		if ( @Entries ) {
-			@param{'StartYear','StartMonth','StartDay'} = $Entries[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-			@{$variable{'Entries'}} = openprint::RFIDScannerHistory->find( 
-					'scanner_id'=>$param{'rfidscanner_id'},
-					'updated_on_start'  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
-					'updated_on_end'    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
-					'limit'     =>  $param{'limit'},
-					'order'     =>  'updated_on DESC',
-					);
-		} # end if
-	} # end if
-
 } # end sub rfid_scanner_log
 
 sub manifest {

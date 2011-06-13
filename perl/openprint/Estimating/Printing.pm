@@ -3092,8 +3092,6 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 			} # end if Group == 1
 } # end if ! recursion_depth
 
-
-
 			if ( $$price{'Comparison Cost'} < 0 ) {
 				$openprint::log->error("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
