@@ -17,11 +17,10 @@ This claim has photos attached to it.  Click on the name or thumbnail to view a 
 		my $Asset = $Claim_Asset->Asset();
 		$html .= sprintf('
 			<tr%1$s>
-				<td class="Name"><a href="/assets/%2$s" target="_blank">%3$s</a></td>
-				<td class="Thumbnail">%4$s</td>
+				<td class="Name"><a href="%2$s" target="_blank">%3$s</a></td>
+				<td class="Thumbnail"><a href="%2$s" target="_blank"><img src="%4$s" alt=""/></a></td>
 			</tr>
-			', $rowclass, $Asset->on_disk_filename(), $Asset->name(),
-	( $Asset->filename() =~ /\.(png|PNG|jpg|JPG|gif|GIF|jpeg|JPEG)$/i ? '<a href="/assets/'.$Asset->on_disk_filename().'" target="_blank"><img src="/assets/'.$Asset->thumbnail_filename().'" /></a>' : '' ),
+			', $rowclass, $Asset->url(), $Asset->name(), $Asset->thumbnail_url(),
 			);
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Asset

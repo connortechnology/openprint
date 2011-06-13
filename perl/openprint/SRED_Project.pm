@@ -47,5 +47,8 @@ sub Contents {
 		return @{$$self{'Contents'}};
 	} # end if
 } # end sub Contents
+sub Taxes {
+	return ();
+}
 1;
 __END__
