@@ -29,6 +29,8 @@
 	} # end if
 	if ( ! @Users ) {
 		return 'No results found.';
+	} elsif ( @Users == 1 and $Users[0]{'id'} == $session{'user_id'} ) {
+		return 'No results found, other than your account.';
 	} # end if
 
 	my $html;
@@ -62,7 +64,7 @@ if ( 1 ) {
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
 			);
-#$log->debug($html);
+$log->debug($html);
 }
 		$html .= '</div>';
 	} # end foreach User

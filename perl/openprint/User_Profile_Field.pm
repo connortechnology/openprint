@@ -2,7 +2,8 @@ use strict;
 package openprint::User_Profile_Field;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'user_profile_fields';
 $serial = 'user_profile_fields_id_seq';
 %fields = (

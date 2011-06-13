@@ -60,3 +60,4 @@
 \i user_purchaseorder_limits.sql
 \i users_in_marketing_categories.sql
 \i users_in_user_groups.sql
+\i Wall.sql
