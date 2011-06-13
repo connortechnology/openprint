@@ -55,52 +55,56 @@ sub on_disk_path {
 sub on_disk_filename {
 	return $_[0]{'id'}.'_'.$_[0]{'filename'};
 } # end sub on_disk_filename
-sub on_disk_thumbnail_path {
+
+# Will look for, generate thumbnails, returning the on disk path
+sub thumbnail_url {
 	my $src = $_[0]->on_disk_path();
 	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
 		mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
 		$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
-		return $src;
+		return '/images/icons/file.png';
 	} # end if
-	my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$_[0]->on_disk_filename();
-    my ( $blah, $extension ) = $dest =~ /(.+)\.([^\.]+)$/;
+
+	my $filename = $_[0]->on_disk_filename();
+
+    my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
+		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			`convert  -adaptive-resize 75x $src $dest`;
 		} # end if
+		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
-		$dest = $blah.'.jpg';
+		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
 			`mv /tmp/00000001.jpg $dest`;
 			if ( $! ) {
 				$openprint::log->error("Unable to create thumbnail at $dest: $!" );
-				return $src;
+				return '/images/icons/image.png';
 			} # end if
 		} # end if
+		return  '/thumbnails/'.$blah.'.jpg';
+	} elsif ( sets::isin( lc $extension, [ 'mp3' ] ) ) {
+$openprint::log->debug("returning mp3 icon");
+		return '/images/icons/mp3.png';
 	} # end if
-
-	if ( -e $dest ) {
-		return $dest;
+	return '/images/icons/file.png';
+} # end sub thumbnail_url
+sub thumbnail_path {
+	my $url = $_[0]->thumbnail_url();
+	if ( $url =~ /$\/thumbnails/ ) {
+		return $openprint::config{'AssetPath'}.$url;
 	} else {
-		return $src;
+		return $ENV{'SkinPath'}.$url;
 	} # end if
-} # end sub on_disk_thumbnail_path
-sub thumbnail_filename {
-	my $path = $_[0]->on_disk_thumbnail_path();
-	if ( $path =~ /thumbnails/ ) {
-		return 'thumbnails/'.$_[0]->on_disk_filename();
-	} # end if
-	return $_[0]->on_disk_filename();
-} # end sub thumbnail_filename
+} # end sub thumbnail_path
+
 sub url {
 	return '/assets/'.$_[0]->on_disk_filename();
 } # end sub url
-sub thumbnail_url {
-	return '/'.$_[0]->thumbnail_filename();
-} # end sub thumbnail_url
 sub md5 {
 	if ( @_ > 1 ) {
 		$_[0]{'md5'} = $_[1];

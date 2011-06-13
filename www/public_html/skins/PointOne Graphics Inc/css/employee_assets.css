@@ -13,3 +13,6 @@ table .thumbnail {
 table .thumbnail img {
 	width: 48px;
 }
+.View img {
+	width: 100%;
+}

@@ -13,6 +13,7 @@ $serial = 'sred_contents_id_seq';
 
 %fields = (
 	'id'			=>	'id',
+	'created_by'	=>	'created_by',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'starting'			=>	'starting',
@@ -70,7 +71,7 @@ $serial = 'sred_contents_id_seq';
 sub duration {
 	if ( @_ > 1 ) {
 		$_[0]{'duration'} = $_[1];
-		$_[0]->Duration( undef );
+		delete $_[0]{'Duration'};
 	} # end if
 	if ( ( ! $_[0]{'duration'} ) and ( $_[0]{'unknown_time'} ) ) {
 		if ( $_[0]{'all_day_event'} ) {
@@ -81,6 +82,7 @@ sub duration {
 			return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
 		} # end if
 	} # end if
+	return $_[0]{'duration'};
 } # end sub duration
 
 sub duration_days {
@@ -105,8 +107,7 @@ sub Duration {
 		$_[0]{'Duration'} = $_[1];
 	} # end if
 	if ( ! $_[0]{'Duration'} ) {
-		my $parser = 'DateTime::Format::Pg';
-		$_[0]{'Duration'} = $parser->parse_interval( $_[0]{'duration'} );
+		$_[0]{'Duration'} = DateTime::Format::Pg->parse_interval( $_[0]{'duration'} );
 	} # end if
 	return $_[0]{'Duration'};
 } # end sub Duration
@@ -124,6 +125,26 @@ sub Type {
 sub Project {
 	return new openprint::SRED_Project( $_[0]{'project_id'} );
 } # end sub Project
+
+sub Starting {
+	if ( @_ > 1 ) {
+		$_[0]{'Starting'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'Starting'} ) {
+		$_[0]{'Starting'} = DateTime::Format::Pg->parse_datetime( $_[0]{'starting'} );
+	} # end if
+	return $_[0]{'Starting'};
+} # end sub Starting
+
+sub created_by {
+	if ( @_ > 1 ) {
+		$_[0]{'created_by'} = $_[1];
+	}
+	if ( ! $_[0]{'created_by'} ) {
+		$_[0]{'created_by'} = $openprint::session{'user_id'};
+	} # end if
+	return $_[0]{'created_by'};
+} # end sub created_by
 
 1;
 __END__

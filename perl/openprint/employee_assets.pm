@@ -4,6 +4,8 @@ require sql;
 require misc;
 
 require openprint::Asset;
+require openprint::Claim_Asset;
+require openprint::SRED_Asset;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;

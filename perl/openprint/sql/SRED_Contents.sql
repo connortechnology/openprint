@@ -18,6 +18,7 @@ CREATE TABLE SRED_Contents (
 	quantity		float,	
 	quantity_units	text,
 	type_id			INTEGER, FOREIGN KEY (type_id) REFERENCES SRED_COntent_Types (id),
+	created_by		INTEGER,FOREIGN KEY (created_by)  REFERENCES Users (index),
 	PRIMARY KEY (id)
 );
 

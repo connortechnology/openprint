@@ -2,8 +2,8 @@
     my $html;
     if ( my @Assets = $$variable{C}->Assets() ) {
         foreach my $Asset ( @Assets ) {
-            $html .= sprintf('<span class="thumbnail"><a href="%s" target="_blank" class="thumbnail_link"><img src="/assets/%s" alt=""/>%s</a>%s</span>', 
-				$Asset->url(), $Asset->Asset()->thumbnail_filename(), $Asset->Asset()->name(),
+            $html .= sprintf('<span class="thumbnail"><a href="%s" target="_blank" class="thumbnail_link"><img src="%s" alt=""/>%s</a>%s</span>', 
+				$Asset->url(), $Asset->Asset()->thumbnail_url(), $Asset->Asset()->name(),
 				ssi::button( 'DeleteAsset'.$Asset->asset_id(), { 'onclick'=>qq`new Ajax.Updater('assets-$$variable{C}{id}', '_assets.html', { parameters: {content_id:'$$variable{C}{id}', asset_id: $$Asset{'asset_id'}, function: 'delete' } } );`, 'text'=>'Delete' } ),
 );
         } # end foreach Asset

@@ -21,6 +21,7 @@
 				<? echo ( join('',
 					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();`, 'class'=>'Save' } ),
 					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
+					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Export';form.submit();`, 'class'=>'Export' } ),
 					); ) ?>
 			</p>
 		</fieldset>

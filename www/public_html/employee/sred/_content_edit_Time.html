@@ -18,13 +18,13 @@
 				ssi::radio( 'unknown_time-'.$$C{id}, [1,'Yes',0,'No'], 1*($C->unknown_time()), { 'onclick'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}' );`}),
 				ssi::datetime_select( 'starting-'.$$C{id}, $C->starting(), {
 							'onchange'=>qq`check_time_starting(this.form,'starting','ending', '-$$C{id}'); update_duration(this.form,'starting','ending', '-$$C{id}');`,
-							'showtime'  =>  sets::isin( $C->all_day_event(), [ '', 0 ] ) 
+							'with_time'  =>  ! ( 1*$C->all_day_event() or 1*$C->unknown_time() ),
 							'with_today'	=> 1,
 							'with_clear'	=> 1,
 							} ),
 				ssi::datetime_select( 'ending-'.$$C{id}, $C->ending(), {
 					'onchange'=>qq`update_duration(this.form,'starting','ending', '-$$C{id}');`,
-					'showtime'  =>  sets::isin( $C->all_day_event(), [ '', 0 ] ),
+							'with_time'  =>  ! ( 1*$C->all_day_event() or 1*$C->unknown_time() ),
 							'with_today'	=> 1,
 							'with_clear'	=> 1,
 					} ),
