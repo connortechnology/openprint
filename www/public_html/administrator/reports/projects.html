@@ -65,6 +65,8 @@ ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStart
 				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
 			</span>
 		</p>
+		<p><label>Limit</label><select name="limit"><? echo ( ssi::make_drop_down( [ ( 100, 100, '', 'All' ) ], $param{'limit'} ); ) ?></select>
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "new Ajax.Updater( 'Results', '_projects.html', { parameters: \$('f1').serialize() } );", '', 'Show Results' ),

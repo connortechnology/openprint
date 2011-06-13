@@ -48,12 +48,14 @@
 <? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             </span>
 		</li>
+		<li><label>Deleted:</label>
+			<? echo ( ssi::radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/asset/history.html?deleted'}, { 'onclick'=> "load_page(\$('f1'));" } ); ) ?>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/employee/assets/edit.html', 'Add New' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::button( 'ShowResults', { 'onclick'=>'f1.submit();', 'text'=>'Show Results' } ),
+				ssi::button( 'Add', {'href'=>'/employee/assets/edit.html', 'text'=>'Add New' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f1.reset();', 'text'=>'Reset' } ),
 				); ) ?>
 		</p>
 	</fieldset>

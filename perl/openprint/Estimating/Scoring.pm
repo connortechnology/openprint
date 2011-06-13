@@ -189,7 +189,7 @@ sub calc {
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
-			$unitPrice = $price / $qty;
+			$unitPrice = $price / $qty if $qty;
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1+$Project->markup()/100) );
 

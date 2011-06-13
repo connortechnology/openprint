@@ -957,17 +957,17 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 
 	if ( do_time ) {
 		if ( unknown_time ) {
-			$('starting'+suffix+'_time').hide();
-			$('ending'+suffix+'_time').hide();
+			$(starting_prefix+suffix+'_time').hide();
+			$(ending_prefix+suffix+'_time').hide();
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			$('starting'+suffix+'_time').show();
-			$('ending'+suffix+'_time').show();
+			$(starting_prefix+suffix+'_time').show();
+			$(ending_prefix+suffix+'_time').show();
 		} // end if
-		$('duration'+suffix+'_time').show();
+		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
         var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
         var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
         var difference = parseInt( ( end - start ) / 1000 );
@@ -988,9 +988,9 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 				duration.innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
 		} // end if
     } else {
-		$('starting'+suffix+'_time').hide();
-		$('ending'+suffix+'_time').hide(); 
-		$('duration'+suffix+'_time').hide(); 
+		$(starting_prefix+suffix+'_time').hide();
+		$(ending_prefix+suffix+'_time').hide(); 
+		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
         var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
         var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
         var difference = parseInt( ( end - start ) / 1000 );
