@@ -399,7 +399,7 @@ fieldset.filters p label.radio {
 	margin: 0px;
 	width: auto;
 }
-fieldset.filters p input {
+fieldset.filters p input, fieldset.filters ul li input {
 	width: auto;
 }
 fieldset.filters p select {
