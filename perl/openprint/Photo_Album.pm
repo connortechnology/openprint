@@ -31,9 +31,11 @@ $table = 'photo_albums';
 
 sub Thumbnail {
 	if ( ! $_[0]{'thumbnail_id'} ) {
+$openprint::log->debug("No thumbnail assigned, showing first.");
 		my @Photos = $_[0]->Photos();
 		return $Photos[0] if @Photos;
 	} # end if
+$openprint::log->debug("thumbnail assigned.");
 	return new openprint::Photo_in_Album( { 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} } );
 } # end sub Thumbnail
 
