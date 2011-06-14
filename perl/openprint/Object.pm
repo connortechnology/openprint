@@ -65,15 +65,15 @@ sub new {
 		} # end if
 		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
-		my $self = {};
-		bless $self, $parent;
-# First off, for now, don't cache figure that out later
+		#my $self = {};
 		my @keys = keys %{$id};
-		@$self{@keys} = @$id{@keys};
+		bless $id, $parent;
+# First off, for now, don't cache figure that out later
+		#@$self{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
-		$self->load( $data );
-#$log->debug("New by hash @keys : " . $self->to_string() );
-		return $self;
+		$id->load( $data );
+#$log->debug("New by hash @keys : " . $id->to_string() );
+		return $id;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 		my $self = {};
 		bless $self, $parent;
@@ -103,7 +103,7 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
-			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ) ) if $debug;
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $_ } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
@@ -269,7 +269,7 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 					push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
 				$self->$field( $$params{$field} );
-				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
+				#$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 
