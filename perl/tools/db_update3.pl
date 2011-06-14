@@ -65,6 +65,9 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	if ( ! exists $$data{'md5'} ) {
 		$dbh->do('ALTER TABLE Assets ADD md5 char(32)');
 	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {

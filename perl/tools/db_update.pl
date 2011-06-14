@@ -1542,6 +1542,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		} # end if
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{'strcurrencyname'} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{'strcurrencysymbol'} );
+		$dbh->do('ALTER TABLE quotes ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') if ! exists $$data{'deleted'};
 	} # end if
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {

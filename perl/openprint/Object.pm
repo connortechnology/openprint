@@ -667,7 +667,7 @@ sub AUTOLOAD {
 	$name =~ s/.*://;
 	if ( @_ ) {
 $openprint::log->debug("Autoload $type $name $_[0]");
-		return $self->{$name} = $_[0];
+		return $$self{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
