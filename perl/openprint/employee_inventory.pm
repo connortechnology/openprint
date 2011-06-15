@@ -10,7 +10,7 @@ require openprint::paper_price;
 require openprint::paper_priceset;
 require openprint::StockPurpose;
 require openprint::PaperInventory;
-require openprint::StockName;
+require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::RFIDTag;

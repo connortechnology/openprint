@@ -290,8 +290,8 @@ $openprint::log->debug("Scratch Pads : save");
 # We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec (
 				'txtSignatureType',
-				'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight',
-				'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',

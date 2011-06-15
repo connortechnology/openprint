@@ -662,7 +662,7 @@ sub load_press_completion {
 		@variable{
 				"txtEmployeeComments-$$specs{'SignatureIndex'}",
 				"UsedStockType-$$specs{'SignatureIndex'}",
-				"UsedStockName-$$specs{'SignatureIndex'}",
+				"UsedStockBrand-$$specs{'SignatureIndex'}",
 				"UsedStockFinish-$$specs{'SignatureIndex'}",
 				"UsedStockColour-$$specs{'SignatureIndex'}",
 				"UsedStockWeight-$$specs{'SignatureIndex'}",
@@ -682,7 +682,7 @@ sub load_press_completion {
 		} = @$specs{
 				"txtEmployeeComments",
 				"UsedStockType",
-				"UsedStockName",
+				"UsedStockBrand",
 				"UsedStockFinish",
 				"UsedStockColour",
 				"UsedStockWeight",

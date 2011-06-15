@@ -23,16 +23,16 @@
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Manufacturer'} );
+					return ssi::make_drop_down( openprint::Manufacturer->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
 		<p>
-			<label>Name:</label>
-			<select name="Name" onchange="Name_onChange(this,'');">
+			<label>Brand:</label>
+			<select name="Brand" onchange="Brand_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Name'} );
+					return ssi::make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/equipment/edit.html?Name'} );
 					) ?>
 			</select>
 		</p>
@@ -43,7 +43,7 @@
 			<? echo (
 					my %finishes;
 					foreach my $Stock ( openprint::Paper->find( 
-							'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+							'brand_id'=>$session{'/administrator/equipment/edit.html?Brand'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
 							'group_id'=>$session{'/administrator/equipment/edit.html?Group'}
 							) ) {
@@ -59,7 +59,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'brand_id'=>$session{'/administrator/equipment/edit.html?Brand'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
 							'group_id'=>$session{'/administrator/equipment/edit.html?Group'},
@@ -76,7 +76,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'brand_id'=>$session{'/administrator/equipment/edit.html?Brand'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'colour_id'=>$session{'/administrator/equipment/edit.html?Colour'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
@@ -94,7 +94,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %materials;
-					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'brand_id'=>$session{'/administrator/equipment/edit.html?Brand'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'colour_id'=>$session{'/administrator/equipment/edit.html?Colour'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
@@ -122,5 +122,5 @@
 	<input type="hidden" name="btnFunction"/>
 </form>
 <p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'Close', 'close.gif', "popupWin.destroy();", '', 'Close' );) ?>
+<? echo ( ssi::button( 'Close', { 'onclick'=>'popupWin.destroy();' } );) ?>
 </p>

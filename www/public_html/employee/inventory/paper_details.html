@@ -18,12 +18,12 @@
 var allocateWin;
 function allocate_window(paper_id) {
 	if (allocateWin == null) {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width: 300} );
+		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, classBrand:"alphacube", width: 300} );
 		allocateWin.setHTMLContent('Loading... please wait');
 		allocateWin.showCenter();
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
-onDestroy: function(eventName, win) {
+onDestroy: function(eventBrand, win) {
 				if (win == allocateWin) {
 					allocateWin = null;
 					Windows.removeObserver(this);
@@ -38,12 +38,12 @@ onDestroy: function(eventName, win) {
 var checkoutWin;
 function checkout_window(paper_id) {
 	if (checkoutWin == null) {
-		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width: 300} );
+		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, classBrand:"alphacube", width: 300} );
 		checkoutWin.setHTMLContent('Loading... please wait');
 		checkoutWin.showCenter();
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
-onDestroy: function(eventName, win) {
+onDestroy: function(eventBrand, win) {
 				if (win == checkoutWin) {
 					checkoutWin = null;
 					Windows.removeObserver(this);
@@ -98,27 +98,27 @@ function calc_from_gsm( form ) {
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>
 				<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
 			</p>
 			<p>
-				<label for="txtName" onclick="f1.txtName.toggle();f1.Name.toggle();">Name:</label>
-				<select id="Name" name="Name" size="1" onchange="f1.txtName.value='';">
+				<label for="txtBrand" onclick="f1.txtBrand.toggle();f1.Brand.toggle();">Brand:</label>
+				<select id="Brand" name="Brand" size="1" onchange="f1.txtBrand.value='';">
 					<option value="">select</option>
 					<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->name_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $$variable{'Paper'}->brand_id() );
 					) ?>
 				</select>
-				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.Name, 0 );" />
+				<input style="display: none;" type="text" id="txtBrand" name="txtBrand" onfocus="ddm_select_by_index( f1.Brand, 0 );" />
 			</p>
 			<p>
 				<label for="txtFinish" onclick="f1.txtFinish.toggle();f1.Finish.toggle();">Finish:</label>
 				<select id="Finish" name="Finish" size="1" onchange="f1.txtFinish.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->finish_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find('order'=>'lower(name)') ], $$variable{'Paper'}->finish_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.Finish, 0 );" />
@@ -128,7 +128,7 @@ function calc_from_gsm( form ) {
 				<select id="Colour" name="Colour" size="1" onchange="f1.txtColour.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->colour_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockColour->find('order'=>'lower(name)') ], $$variable{'Paper'}->colour_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.Colour, 0 );" />
@@ -138,7 +138,7 @@ function calc_from_gsm( form ) {
 				<select id="Weight" name="Weight" size="1" onchange="f1.txtWeight.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->weight_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockWeight->find('order'=>'lower(name)') ], $$variable{'Paper'}->weight_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
@@ -148,7 +148,7 @@ function calc_from_gsm( form ) {
 				<select id="Quality" name="Quality" size="1">
 				<? echo (
 						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
+							sql::execute( $log, $dbh, q{SELECT id, name FROM PaperQualities ORDER BY lower(name)} )
 							);
 						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
 						) ?>
@@ -276,7 +276,7 @@ function calc_from_gsm( form ) {
  <? eval ( @{$$variable{Duplicates}} = openprint::Paper->find(
 		'owner_id'				=>$$variable{Paper}->owner_id(),
 		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
-		'name_id'				=>$$variable{Paper}->name_id(),
+		'brand_id'				=>$$variable{Paper}->brand_id(),
 		'finish_id'				=>$$variable{Paper}->finish_id(),
 		'colour_id'				=>$$variable{Paper}->colour_id(),
 		'weight_id'				=>$$variable{Paper}->weight_id(),

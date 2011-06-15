@@ -163,7 +163,7 @@ my %variables = (
 
 		'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
 		'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
-		'ddmStockName' => ['save'], 'txtSpecificStockName' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
+		'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 
 		'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
 		'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
@@ -763,7 +763,7 @@ sub get_Stocks {
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->to_string() );
 		push @Papers, $Paper;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight', 'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight', 'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
@@ -796,7 +796,7 @@ sub get_Stocks {
 			@$specs{'ddmStockWidth','ddmStockHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		}
 		@Papers = openprint::Paper->find( 
-				( exists $$specs{'ddmStockName'} ? ( 'name'=> $$specs{'ddmStockName'} ) : () ),
+				( exists $$specs{'ddmStockBrand'} ? ( 'brand'=> $$specs{'ddmStockBrand'} ) : () ),
 				( exists $$specs{'ddmStockFinish'} ? ( 'finish'=>$$specs{'ddmStockFinish'} ) : () ),
 				( exists $$specs{'ddmStockColour'} ? ( 'colour'=>$$specs{'ddmStockColour'} ) : () ),
 				( exists $$specs{'ddmStockWeight'} ? ( 'weight'=>$$specs{'ddmStockWeight'} ) : () ),
@@ -814,9 +814,9 @@ sub get_Stocks {
 			$$specs{'alert'} .= 'Unable to find any stocks matching your specifications.<br/>';
 			return @Papers;
 		} # end if
-		@$specs{'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
+		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
 			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
 		} # end foreach
 	} # end if
@@ -994,7 +994,7 @@ sub get_impositions {
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
 			if ( ! $$Papers[0]->doublesided() ) {
-				$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->name() );
+				$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->brand() );
 				$do_work_turn = 0;
 			} elsif ( sets::exclude( \@Coatings, $$project{'filtered_colours'} ) > $number_of_colours and $Press->specification('Multipass', $$Papers[0]->gsm() ) ne 'Y' ) {
 				$openprint::log->debug("No W&T due to multipass" . $$Papers[0]->gsm() );
@@ -1594,7 +1594,7 @@ sub set_size {
 			} elsif ( $$specs{'ddmStockSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
-				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockName'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
@@ -4197,11 +4197,11 @@ sub select_presses {
 				} # end if
 			} # end foreach
 	
-			if ( @allowed and ! sets::isin( $Paper->name(), \@allowed ) ) {
+			if ( @allowed and ! sets::isin( $Paper->brand(), \@allowed ) ) {
 				$results{$press_id} = 'Not suitable for this stock.';
 				next;
 			} # end if
-			if ( @disallowed and sets::isin( $Paper->name(), \@disallowed ) ) {
+			if ( @disallowed and sets::isin( $Paper->brand(), \@disallowed ) ) {
                 $results{$press_id} = 'Not suitable for this stock.';
                 next;
             } # end if
@@ -4617,9 +4617,9 @@ sub compare_signatures {
 	foreach my $key (
 			'Group',
 			'CustomStockPrice','txtCustomMWeight',
-			'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour',
+			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
-			'ddmStockName', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
+			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
 			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		next if $exclude and sets::isin( $key, $exclude );
@@ -4824,8 +4824,8 @@ sub summary {
 					get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ?
-					join(', ', @$specs{'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
-					join(', ', @$specs{'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
+					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
+					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
 					,
 					);
 foreach ( keys %$specs ) {
