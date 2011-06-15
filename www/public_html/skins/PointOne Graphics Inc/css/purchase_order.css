@@ -73,23 +73,24 @@ text-align: right;
 }
 
 @media print {
-body div#Header {
+body #Header {
 	display: none;
 }
 }
 
-div.PO div.Header {
+.PO .Header {
 	display: block;
 	position: relative;
+	top: 0;
+	left: 0;
 	width: 100%;
-	height: 100px;
 	background-image: url(/images/bluegradient.png);
 	background-repeat: repeat-x;
 	vertical-align: top;
 	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
 }
-div.PO div.Header .Logo {
+.PO .Header .Logo {
 	margin: 7px;
 	padding: 0px;
 	color: black;
@@ -113,26 +114,28 @@ div.PO div.Header .Logo {
 	font-size: 12px;
 }
 
-div.PO .Header .Logo a {
+.PO .Header .Logo a {
 	color: black;
 	border: none;
 }
-div.PO .Header .Logo a img {
+.PO .Header .Logo a img {
 	width: 100%;
 }
-div.PO .Header .Logo .PointOne {
+.PO .Header .Logo .PointOne {
 	border-bottom: none;
 	font-family: Georgia, Times, serif;
 	padding: 0px;
 	margin: 0px; 
 	font-size: 42px;
 }
-div.PO .Header .Logo .GraphicsInc {
+.PO .Header .Logo .GraphicsInc {
 	padding: 0px;
 	margin: 0px; 
 	font-size:24px;
 }
-div.PO .Header .PageTitle {
+.PO .Header .PageTitle {
+	margin: 0;
+	text-align: left;
 	float: right;
 	width: 230px;
 }
