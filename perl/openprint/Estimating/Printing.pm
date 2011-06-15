@@ -4828,6 +4828,9 @@ sub summary {
 					join(', ', @$specs{'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
 					,
 					);
+foreach ( keys %$specs ) {
+$openprint::log->debug(" Stock: $_ => $$specs{$_}");
+}
 		} # end if
 		if ( $$specs{'pages_supplied'} eq 'Y' ) {
 			$string .= ' pages supplied by customer as ';
