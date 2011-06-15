@@ -23,7 +23,7 @@
 </script>
 <? echo ( 
 	my $html = '';
-	foreach my $type ( 'Manufacturer','StockName','StockFinish','StockColour','StockWeight' ) {
+	foreach my $type ( 'Manufacturer','StockBrand','StockFinish','StockColour','StockWeight' ) {
 		$html .= sprintf(q`
 			<p>
 				<label>%1$s:</label>
@@ -31,8 +31,7 @@
 					<option value=""> select </option>
 					%2$s
 				</select><br/>
-				<label>Shortname:</label><input type="text" name="%1$s_shortname" id="%1$s_shortname" style="width:75%;"/><br/>
-				<label>Longname:</label><input type="text" name="%1$s_longname" id="%1$s_longname" style="width:75%;"/><br/>
+				<label>Name:</label><input type="text" name="%1$s_name" id="%1$s_name" style="width:75%;"/><br/>
 				%3$s
 				%4$s
 			</p>`, $type,

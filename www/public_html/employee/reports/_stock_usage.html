@@ -86,31 +86,31 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 						next;
 					} # end if
 				} # end if
-				if ( $session{'/employee/reports/stock_usage.html?Name'} ) {
-					my $StockName = new openprint::StockName( $session{'/employee/reports/stock_usage.html?Name'} );
-					if ( lc $Stock->name() ne lc $StockName->shortname() ) {
-						$log->debug("Different Name: $$Stock{'name'} != $$StockName{'shortname'}");
+				if ( $session{'/employee/reports/stock_usage.html?Brand'} ) {
+					my $StockBrand = new openprint::StockBrand( $session{'/employee/reports/stock_usage.html?Brand'} );
+					if ( lc $Stock->brand() ne lc $StockBrand->name() ) {
+						$log->debug("Different Brand: $$Stock{'brand'} != $$StockBrand{'name'}");
 						next;
 					} # end if
 				} # end if
 				if ( $session{'/employee/reports/stock_usage.html?Finish'} ) {
 					my $StockFinish = new openprint::StockFinish( $session{'/employee/reports/stock_usage.html?Finish'} );
-					if ( lc $Stock->finish() ne lc $StockFinish->shortname() ) {
-$log->debug("Different Finish: $$Stock{'finish'} != $$StockFinish{'shortname'}");
+					if ( lc $Stock->finish() ne lc $StockFinish->name() ) {
+$log->debug("Different Finish: $$Stock{'finish'} != $$StockFinish{'name'}");
 						next;
 					} # end if
 				} # end if
 				if ( $session{'/employee/reports/stock_usage.html?Weight'} ) {
 					my $StockWeight = new openprint::StockWeight( $session{'/employee/reports/stock_usage.html?Weight'} );
-					if ( lc $Stock->weight() ne lc $StockWeight->shortname() ) {
-$log->debug("Different Weight: $$Stock{'weight'} != $$StockWeight{'shortname'}");
+					if ( lc $Stock->weight() ne lc $StockWeight->name() ) {
+$log->debug("Different Weight: $$Stock{'weight'} != $$StockWeight{'name'}");
 						next;
 					} # end if
 				} # end if
 				if ( $session{'/employee/reports/stock_usage.html?Colour'} ) {
 					my $StockColour = new openprint::StockColour( $session{'/employee/reports/stock_usage.html?Colour'} );
-					if ( lc $Stock->colour() ne lc $StockColour->shortname() ) {
-$log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'shortname'}");
+					if ( lc $Stock->colour() ne lc $StockColour->name() ) {
+$log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'name'}");
 						next;
 					} # end if
 				} # end if
