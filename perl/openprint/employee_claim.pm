@@ -74,11 +74,11 @@ sub view {
 				my $RFIDTag = new openprint::RFIDTag( $param{"rfidtag_id-$$C{id}"} );
 				$param{"skid_id-$$C{id}"} = $RFIDTag->skid_id();
 			} # end if
-			if ( ! $param{"weight-$$C{id}"} ) {
+			if ( $param{"skid_id-$$C{id}"} and ! $param{"weight-$$C{id}"} ) {
 				my $Skid = new openprint::Skid( $param{"skid_id-$$C{id}"} );
 				my @SkidContents  = $Skid->Contents();
 				if ( @SkidContents == 1 ) {
-					$param{'weight-new'} = $SkidContents[0]->quantity();
+					$param{"weight-$$C{id}"} = $SkidContents[0]->quantity();
 				} # end if
 			} # end if
 			$variable{'error'} .= $C->save( {
