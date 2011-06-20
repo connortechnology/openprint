@@ -405,6 +405,12 @@ $log->warn("Renaming paper$thingy");
 	} # end if
 } # end if
 } # end foreach thingy
+@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+if ( sets::isin( 'stocknames', \@tables ) ) {
+	$dbh->do('ALTER TABLE stocknames rename to stockbrands');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
+	$dbh->do('ALTER TABLE Papers rename column name_id to brand_id') if exists $$data{'name_id'};
 if ( sets::isin( 'papername_id_seq' ) ) {
 	$dbh->do('ALTER SEQUENCE papername_id_seq RENAME TO stocknames_id_seq');
 } # end if
