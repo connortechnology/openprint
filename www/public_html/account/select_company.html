@@ -1,9 +1,9 @@
-<p class="error"><?error?></p>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
   <? eval ( $$variable{'Company'} = new openprint::Company( $session{'company_id'} ); ) ?>
 	<? if ( $param{'ddmCompany'} ) ?>
 		Any actions you perform during the course of this login will be stored in <? echo ( $$variable{'Company'}->name() ) ?>'s history.<br/>
-		<br>
+		<br/>
 		<? if ( $$variable{'Company'}->salesrep_id() ) ?>
 		The CSR for <? echo ( $$variable{'Company'}->name() ) ?> is <? echo ( $$variable{'Company'}->CSR()->name() ) ?>.<br/>
 		<? else ( $$variable{'Company'}->salesrep_id() ) ?>
@@ -39,7 +39,7 @@
 	You are currently representing <? echo ( $$variable{'Company'}->name(); ) ?>.<br/>
 	To represent another company, please select it from the dropdown and click submit. <br/>
 	Any orders or quotes you make will be recorded in the selected company's history.<br/>
-	<form name="f1" action="select_company.html" method="post">
+	<form id="f1" name="f1" action="select_company.html" method="post">
 		<fieldset class="SelectCompany">
 			<p>
 				<label>Company:</label>
