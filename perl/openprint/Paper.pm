@@ -43,7 +43,7 @@ $serial	=	'paper_id_seq';
 		'group_id'		=>	'group_id',
 		'owner_id'		=>	'owner_id',
 		'manufacturer_id'	=>	'manufacturer_id',
-		'name_id'		=>	'name_id',
+		'brand_id'		=>	'brand_id',
 		'colour_id'		=>	'colour_id',
 		'finish_id'		=>	'finish_id',
 		'weight_id'		=>	'weight_id',
@@ -85,7 +85,7 @@ $serial	=	'paper_id_seq';
 		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
 		'group'	=>	'(SELECT name FROM stockgroups WHERE stockgroups.id=papers.group_id)',
 		'material'	=>	'(SELECT name FROM stockmaterials WHERE stockmaterials.id=papers.material_id)',
-		'name'	=>	'(SELECT name FROM stocknames WHERE stocknames.id=papers.name_id)',
+		'brand'	=>	'(SELECT name FROM stockbrands WHERE stockbrands.id=papers.brand_id)',
 		'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
 		'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
 		'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
@@ -142,7 +142,7 @@ sub save {
 			return $_;
 		} # end if
 		$$self{'group_id'} = $new_group->id();
-	} # end if name_id
+	} # end if group_id
 	if ( $$self{'material'} and ! $$self{'material_id'} ) {
 		my $new_material = new openprint::StockMaterial();
 		if ( $_ = $new_material->save( {'name'=>$$self{'material'}} ) ) {
@@ -152,9 +152,9 @@ sub save {
 	} # end if material
 	if ( $$self{'brand'} and ! $$self{'brand_id'} ) {
 		$_ = new openprint::StockBrand();
-		$_->save({'brand'=>$$self{'brand'}});
-		@$self{'brand_id','brand'} = @$_{'id','brand'};
-	} # end if name_id
+		$_->save({'name'=>$$self{'brand'}});
+		@$self{'brand_id','brand'} = @$_{'id','name'};
+	} # end if brand_id
 	if ( $$self{'finish'} and ! $$self{'finish_id'} ) {
 		$_ = new openprint::StockFinish();
 		$_->save({'name'=>$$self{'finish'}});

@@ -297,8 +297,10 @@ foreach my $Host ( openprint::Host->find('hostname'=>undef) ) {
 
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find() ) {
-	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+	if ( $Paper->wpsi() != $Paper->wpsi(undef) ) {
+$openprint::log->debug("Updating wpsi for " . $Paper->to_string() );
 		$Paper->save();
+		last if $dbh->errstr();
 	} # end if
 } # end foreach my Paper
 my $log_count = 0;
