@@ -34,25 +34,25 @@
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
 				<ul>
-<? if ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
-			<li><label>Category:</label>
-				<select name="category_id" id="category_id" onchange="load_events(this.form);">
-					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/search.html?category_id'} ); ) ?>
-				</select>
-			</li>
-<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
-			<li>
-				<label>When:</label>
-				<span class="DateSelector">
-				<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
-				</span>
-					to 
-				<span class="DateSelector">
-				<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
-				</span>
-			</li>
-			</ul>
+		<? if ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
+					<li><label>Category:</label>
+						<select name="category_id" id="category_id" onchange="load_events(this.form);">
+							<option value="">All</option>
+							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/search.html?category_id'} ); ) ?>
+						</select>
+					</li>
+		<? endif ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
+					<li>
+						<label>When:</label>
+						<span class="DateSelector">
+						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_start', {onchange=>'load_events(this.form);'} ); ) ?>
+						</span>
+							to 
+						<span class="DateSelector">
+						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
+						</span>
+					</li>
+				</ul>
 			</div>
 			<br class="spacer"/>
 			<p class="buttons">
