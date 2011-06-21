@@ -41,7 +41,8 @@
 	Any orders or quotes you make will be recorded in the selected company's history.<br/>
 	<form name="f1" action="select_company.html" method="post">
 		<fieldset class="SelectCompany">
-			<p>
+			<ul>
+			<li>
 				<label>Company:</label>
 				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
 				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
@@ -49,8 +50,8 @@
 					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
 				</select>
 				<? echo ( ssi::button( 'Submit', { 'onclick'=>'f1.submit();' } ); ) ?>
-			</p>
-			<p><label>Last 10:</label>
+			</li>
+			<li><label>Last 10:</label>
 		<? echo ( 
 			my $html = '';
 			my @Entries = openprint::Log->find('user_id'=>$session{'user_id'}, 'action'=>'Select Company', 'order'=>'date_time DESC','date_time >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 ) ) );
@@ -64,7 +65,8 @@
 			} # end foreach
 			return $html;
 			) ?>
-			</p>
+			</li>
+			</ul>
 		</fieldset>
 		<input type="hidden" name="btnFunction" value="SelectCompany"/>
 	</form>
