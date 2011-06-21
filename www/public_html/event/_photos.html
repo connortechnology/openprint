@@ -4,9 +4,9 @@
 <? echo (
 	my $html;
 	foreach my $Photo ( $$variable{'Event'}->Photos() ) {
-		$html .= sprintf('<li><img src="%1$s" alt="%2$s"/><br/>', 
-			$Photo->thumbnail_url(), $Photo->name() );
-		$html .= ssi::writeButton( $log, $dbh, 'del'.$Photo->asset_id(), 'delete.gif', qq`new Ajax.Updater('Photos', '_photos.html', { parameters: { action: 'delete', asset_id: $$Photo{asset_id}, event_id: $$variable{Event}{id} } } );`, '', 'X' );
+		$html .= sprintf('<li><a href="/photo_albums/view_photo.html?album_id=%3$d&amp;asset_id=%4$d"><img src="%1$s" alt="%2$s"/></a><br/>', 
+			$Photo->thumbnail_url(), $Photo->name(), @$Photo{'album_id','asset_id'} );
+		$html .= ssi::button( 'del'.$Photo->asset_id(), { 'onclick'=>qq`new Ajax.Updater('Photos', '_photos.html', { parameters: { action: 'delete', asset_id: $$Photo{asset_id}, event_id: $$variable{Event}{id} } } );`, 'text'=>'X' } );
 		$html .= '</li>';
 	} # end foreach Photo
 	return $html;
@@ -14,6 +14,6 @@
 	</ul>
 	<p class="buttons">
 			Select file: <input type="file" name="filename" id="filename" />
-			<? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', q`$('f1').submit();`, '', 'Upload' ); ) ?>
+			<? echo ( ssi::button( 'Upload', { 'onclick'=>q`$('f1').submit();` } ); ) ?>
 	</p>
 </form>
