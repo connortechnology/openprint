@@ -435,6 +435,7 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= qq`title="$$options{title}" ` if $$options{'title'};
 	$html .= 'target="$$options{target}" ' if $$options{'target'};
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
@@ -551,10 +552,10 @@ sub date_select {
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C', 'title'=>'Clear', 'class'=>'Clear'} );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T', 'title'=>'Today', 'class'=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';

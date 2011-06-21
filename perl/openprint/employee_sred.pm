@@ -212,36 +212,19 @@ sub save_content {
 	} # end foreach
 	$variable{'error'} .= $Content->save({ 'project_id'	=>	$param{'project_id'} });
 	if ( $param{'filename'} ) {
+		my $Asset = openprint::Asset::upload( $param{'filename'} );
+		if ( ! $Asset ) {
+			$variable{'error'} .= $!;
+		} else {
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+		} # end if
 
-		my $upload = $r->upload('filename');
-		if ( $upload ) {
-			my $data;
-			$upload->slurp( $data );
-			my $md5 = Digest::MD5::md5_base64( $data );
-			my $Asset = openprint::Asset->find_one('md5'=>$md5) if $md5;
-			if ( ! $Asset ) {
-				$Asset = new openprint::Asset();
-				$variable{'error'} .= $Asset->save( { 'filename' => $param{'filename'}, 'md5'=>$md5 } );
-				if ( ! $upload->link( $Asset->on_disk_path() ) ) {
-					$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-					$Asset->save({'filename'=>''});
-				} # end if
-				if ( ! $variable{'error'} ) {
-					$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-				} # end if
-			} else {
-				$variable{'information'} .= 'Duplicate image found.<br/>';
+		if ( $Asset and $Asset->id() ) {
+			my $SRED_Asset = openprint::SRED_Asset->find_one('content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'});
+			if ( ! $SRED_Asset ) {
+				$SRED_Asset = new openprint::SRED_Asset();
+				$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
 			} # end if
-
-			if ( $Asset->id() ) {
-				my $SRED_Asset = openprint::SRED_Asset->find_one('content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'});
-				if ( ! $SRED_Asset ) {
-					$SRED_Asset = new openprint::SRED_Asset();
-					$variable{'error'} .= $SRED_Asset->save({'content_id'=>$$Content{'id'},'asset_id'=>$$Asset{'id'}});
-				} # end if
-			} # end if
-		} else { 
-			$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
 		} # end if
 	} # end if filename
 } # end sub save_content

@@ -40,7 +40,7 @@
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="Project"><div class="History">
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<fieldset class="filters"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
 			<p>
 				<label>Project #:</label>
@@ -73,8 +73,8 @@
 				<label>Creation Date:</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-					to 
 				</span>
+					to 
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>
@@ -83,8 +83,8 @@
 				<label>Last Updated:</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
-					to 
 				</span>
+					to 
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>

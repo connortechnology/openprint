@@ -1,7 +1,7 @@
 <script type="text/javascript">
 	function load_results() {
 		$('Results').innerHTML = 'Please wait. Loading...';
-		new Ajax.Updater( 'Results', '_search.html', { parameters: $('f1').serialize() } );
+		new Ajax.Updater( 'Results', '/account/_search.html', { parameters: $('f1').serialize() } );
 	} // end function load_results
 </script>
 <div class="Account">
@@ -24,22 +24,22 @@
 						</li>
 						<li>
 							<label>Registered:</label>
-							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`} ); ) ?>
+							<span class="DateSelectorCT">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
 								to 
-							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`} ); ) ?>
+							<span class="DateSelectorCT">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
 						</li>
 						<li>
 							<label>Last Online:</label>
-							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`} ); ) ?>
+							<span class="DateSelectorCT">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
 								to 
-							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`} ); ) ?>
+							<span class="DateSelectorCT">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
 						</li>
 					</ul>

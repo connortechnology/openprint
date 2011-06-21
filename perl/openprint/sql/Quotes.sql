@@ -20,6 +20,7 @@ CREATE TABLE Quotes (
 	strCurrencyName		TEXT,
 	strCurrencySymbol	TEXT,
 	currency_id			INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+	deleted				BOOLEAN NOT NULL DEFAULT False,
 	PRIMARY KEY (id)
 );
 

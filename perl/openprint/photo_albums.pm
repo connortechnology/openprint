@@ -20,23 +20,8 @@ sub list {
 		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
 
         if ( $param{'filename'} ) {
-            my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                #$Asset->save({'file'=>''});
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-			} else {
-				my $Asset = new openprint::Asset();
-				$variable{'error'} .= $Asset->save({'filename'=>$param{'filename'}});
-				if ( ! $upload->link( $Asset->on_disk_path() ) ) {
-					$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-#$Asset->save({'filename'=>''});
-				} else {
-					my $Photo = new openprint::Photo_in_Album();
-					$variable{'error'} .= $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$Album->id()});	
-					$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-					new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
-				} # end if
-            } # end if
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
         } # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Album->delete();
@@ -49,6 +34,23 @@ sub view {
 } # end sub view
 sub edit {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $Album->save(\%param);
+		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+
+        if ( $param{'filename'} ) {
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
+        } # end if
+	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
+        if ( $param{'filename'} ) {
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
+        } # end if
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Album->delete();
+		$variable{'ExternalRedirect'} = '/photo_albums/list.html';
+	} # end if
 } # end sub edit
 
 sub _photos {

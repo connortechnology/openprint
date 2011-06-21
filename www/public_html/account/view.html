@@ -109,7 +109,7 @@
 						) ?>
 					</ul>
 					<p class="buttons">
-						<? echo ( ssi::writeButton( $log, $dbh, 'NewEvent', 'new.gif', '', '/events/edit.html', 'New' ); ) ?>
+						<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'New' } ); ) ?>
 					</p>
 				</div>
 			</fieldset>
@@ -119,7 +119,7 @@
 				<? echo ( 
 					my $html;
 					foreach my $Type ( openprint::User_Relationship_Type->find('order'=>'sort,lower(name)') ) {
-						my @Relations = openprint::User_Relationship->find('type_id'=>$Type->id(), 'user_id ='=>$$variable{'User'}->id() );
+						my @Relations = openprint::User_Relationship->find('type_id'=>$Type->id(), 'user_id2 ='=>$$variable{'User'}->id() );
 						next if ! @Relations;
 						$html .= '<h3>'.$Type->name() .'</h3>';
 						foreach my $Relation ( @Relations ) {

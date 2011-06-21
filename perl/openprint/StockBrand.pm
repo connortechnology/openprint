@@ -1,4 +1,4 @@
-package openprint::StockName;
+package openprint::StockBrand;
 @ISA = qw(openprint::Object);
 
 use strict;
@@ -11,13 +11,13 @@ $serial= 'stockname_id_seq';
     'name' =>  'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
 
 sub sort {
-	shift if $_[0] eq 'openprint::StockName';
+	shift if $_[0] eq 'openprint::StockBrand';
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 }# end sub sort
 1;

@@ -126,7 +126,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 						openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 						);
 				$html .= sprintf('<td class="price"><b>%s</b><br/>%s</td>', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
-				$totals[$qty_index] += $ProjectCurrency->convert_form( $sig_specs{'txtPrice'.$qty_index} );
+				$totals[$qty_index] += $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} );
 				$html .= '<td class="status" id="status'.$ss_id.'">';
 				$$variable{'index'} = $ss_id;
 				$$variable{'status'} = $statuses{$ss_id};

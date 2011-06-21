@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::MarketingCategory;
 require openprint::User_Profile_Field;
 require openprint::Photo_Album;
+require openprint::Video_Album;
 require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;

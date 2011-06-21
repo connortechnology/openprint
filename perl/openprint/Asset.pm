@@ -159,5 +159,25 @@ sub Comments {
 	return @{$_[0]{'Comments'}};
 } # end sub Comments
 
+# What gets passed in the form element name
+sub upload {
+	my $upload = $openprint::r->upload($_[0]);
+	if ( ! $upload ) {
+		return "There was no upload for $_[0]<br/>";
+	} # end if
+	my $data;
+	$upload->slurp( $data );
+	my $md5 = Digest::MD5::md5_base64( $data );
+	my $Asset = openprint::Asset->find_one('md5'=>$md5) if $md5;
+	if ( ! $Asset ) {
+		$Asset = new openprint::Asset();
+		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
+		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
+		} # end if
+	} # end if
+	return $Asset;
+} # end sub upload
+
 1;
 __END__

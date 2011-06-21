@@ -7,7 +7,8 @@
 			( 'user_id' => $session{'user_id'} )
 		),
 	);
-	$html .= scalar @Albums . ' albums<br/>';
+	my $num_albums = scalar @Albums;
+	$html .= $num_albums.' album'.($num_albums == 1 ? '' : 's').'<br/>';
 	foreach my $Album ( @Albums ) {
 		$html .= '<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/edit.html?album_id='.$Album->id().'">';
 		$html .= sprintf('<img src="%s" alt="%s" /><br/>%s', $Album->thumbnail_url(), $Album->name(), $Album->description() );

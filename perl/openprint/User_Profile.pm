@@ -47,6 +47,8 @@ sub value {
 			$_[0]{'fields'}{$_[1]} = $Entry;
 			my $Field = openprint::User_Profile_Field->find_one('name'=>$_[1]);
 			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} } );
+		} else {
+			$openprint::log->debug("No entry for $_[1]" );
 		} # end if
 		$_ = $Entry->save( { 'value' => $_[2] } );
 		#$openprint::log->debug("Saving " . $Entry->field() . ': ' . $_[2] . " error: $_ " );
