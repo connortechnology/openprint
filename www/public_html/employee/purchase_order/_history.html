@@ -18,21 +18,21 @@
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-( Date::Calc::check_date( @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ) ? (
-			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ) ) : () ),
+( Date::Calc::check_date( @session{'/employee/purchase_order/history.html?starting_start_year','/employee/purchase_order/history.html?starting_start_month','/employee/purchase_order/history.html?starting_start_day'} ) ? (
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/purchase_order/history.html?starting_start_year','/employee/purchase_order/history.html?starting_start_month','/employee/purchase_order/history.html?starting_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/employee/purchase_order/history.html?starting_end_year','/employee/purchase_order/history.html?starting_end_month','/employee/purchase_order/history.html?starting_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/purchase_order/history.html?starting_end_year','/employee/purchase_order/history.html?starting_end_month','/employee/purchase_order/history.html?starting_end_day'} ) ) : () ),
 			'order',			'id desc',
 		);
-		$search{'deleted'} = $session{'/employee/inventory/purchase_orders.html?deleted'} if exists $session{'/employee/inventory/purchase_orders.html?deleted'};
-		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'};
-		$search{'created_by'} = $session{'/employee/inventory/purchase_orders.html?created_by'} if $session{'/employee/inventory/purchase_orders.html?created_by'};
-		$search{'cancelled'} = $session{'/employee/inventory/purchase_orders.html?cancelled'} if $session{'/employee/inventory/purchase_orders.html?cancelled'} ne '';
+		$search{'deleted'} = $session{'/employee/purchase_order/history.html?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
+		$search{'supplier_id'} = $session{'/employee/purchase_order/history.html?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
+		$search{'created_by'} = $session{'/employee/purchase_order/history.html?created_by'} if $session{'/employee/purchase_order/history.html?created_by'};
+		$search{'cancelled'} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
-			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
-			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized() ne '0';
-			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' and $PO->authorized() ne '';
+			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
+			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
+			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
 			if ( $param{'contains'} ) {
 				my $next = 1;
 				foreach my $C ($PO->Contents()) {
@@ -55,9 +55,9 @@
 			} # end if
 			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 			if ( ! @types ) {
-				next if ! sets::isin( ' ', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] );
+				next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
 			} else {
-				next if ! sets::intersection( @types, split(',', $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
 			} # end if
 
 			push @{$$variable{'PurchaseOrders'}}, $PO;
@@ -100,13 +100,13 @@
 			} # end if
 
 			$html .= sprintf( q`
-				<td class="id"><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td>
-				<td class="DateTime"><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s</a></td>
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%3$s</a></td>
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%4$s</a></td>
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%6$s</a></td>
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%7$s</a></td>
-				<td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%8$s</a></td>
+				<td class="id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
+				<td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
+				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
+				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
+				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
+				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
+				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 

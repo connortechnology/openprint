@@ -1,4 +1,4 @@
-<form id="f1" name="f1" action="purchase_orders.html" method="post">
+<form id="f1" name="f1" action="history.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
@@ -6,20 +6,18 @@
 <? echo ( 
 	my $html = '';
 	my $User = new openprint::User( $session{'user_id'} );
-	if ( 
-		( $$variable{'PurchaseOrder'}->total() < $User->purchasing_limit() ) 
-	   ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize' );
+	if ( ( ! $$variable{'PurchaseOrder'}->authorized() ) and ( $$variable{'PurchaseOrder'}->total() < $User->purchasing_limit() ) ) {
+		$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();" } );
 	} # end if
-	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+	$html .= ssi::button( 'Print', { 'onclick'=>'window.print();' } );
 	if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Email Vendor';f1.submit();", '', 'Send Email' );
-		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'purchase_order_edit.html?po_id='.$$variable{'PurchaseOrder'}->id(), 'Edit' );
-		$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='purchase_order_view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+		$html .= ssi::button( 'Email', { 'onclick'=>"f1.btnFunction.value='Email Vendor';f1.submit();", 'text'=>'Send Email' } );
+		$html .= ssi::button( 'Edit', { 'href'=>'edit.html?po_id='.$$variable{'PurchaseOrder'}->id() } );
+		$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 		if ( $$variable{'PurchaseOrder'}->deleted() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'UnDelete', 'undelete.gif', "f1.btnFunction.value='Undelete';f1.submit();", '', 'Undelete' );
+			$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.btnFunction.value='Undelete';f1.submit();" } );
 		} else {
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
 	} # end if
 	return $html;
@@ -137,56 +135,56 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 <? echo ( my $html = '';
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dlbs</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td class="price">%5$s/100lb</td>
-				<td class="total">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+			if ( $C->Type()->name() eq 'Roll Stock' ) {
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$dlbs</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+					<td class="price">%5$s/100lb</td>
+					<td class="total">%6$s</td>
+				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dsheets</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td class="price">%5$s/100lb</td>
-				<td class="total">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$dsheets</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+					<td class="price">%5$s/100lb</td>
+					<td class="total">%6$s</td>
+				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} else {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$d</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td class="price">%5$s</td>
-				<td class="total">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$d</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+					<td class="price">%5$s</td>
+					<td class="total">%6$s</td>
+				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} # end if
 		} else {
 			if ( $C->Type()->name() eq 'Roll Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dlbs</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$dlbs</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
 			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dsheets</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$dsheets</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
 			} else {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$d</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(),$C->description(), $C->docket() );
+				$html .= sprintf('<tr>
+					<td style="text-align: center;">%1$d</td>
+					<td>%2$s</td>
+					<td>%3$s</td>
+					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+				</tr>', $C->qty(), $C->item(),$C->description(), $C->docket() );
 			} # end if
 		} # end if
 	} # end foreach C

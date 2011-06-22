@@ -7,7 +7,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 require openprint::Company;
 
 $table = 'purchaseorder_items';
-$serial = 'purchase_order_items_id_seq';
+$serial = 'purchaseorder_items_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'company_id'	=>	'company_id',

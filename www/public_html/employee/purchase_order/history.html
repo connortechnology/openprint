@@ -5,7 +5,7 @@
 		var div = $(div_id);
 		if ( div )
 			div.innerHTML = 'Please wait. Loading...';
-		new Ajax.Updater( div_id, '/employee/inventory/_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
+		new Ajax.Updater( div_id, '/employee/purchase_order/_history.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
 	function open_decline_window( form ) {
 		var po_ids;
@@ -27,7 +27,7 @@
 </script>
 <div class="PurchaseOrder">
 	<!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" action="purchase_orders.html" method="post">
+<form id="f1" name="f1" action="history.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 		<li><label>PO #:</label>
@@ -55,44 +55,44 @@
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 			<select name="supplier_id" onchange="page_load('Results',$('f1'));">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/purchase_order/history.html?supplier_id'} ); ) ?>
 			</select>
 		</li>
 		<li>
 			<label>Date:</label>
 			<span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/purchase_order/history.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             to
             </span>
             <span class="DateSelectorT">
-<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/purchase_order/history.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             </span>
 		</li>
 		<li>
 			<label>Authorization:</label>
-			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="authorized" id="authorizedY" value="Y" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="authorizedY">Authorized</label>
-			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="authorized" id="authorizedN" value="N" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'N' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="authorizedN">Declined</label>
-			<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="authorized" id="authorizedU" value="U" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?authorized'} eq 'U' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="authorizedU">Unauthorized</label>
-			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?authorized'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="authorized" id="authorizedAll" value="" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?authorized'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="authorizedAll">All</label>
 		</li>
 		<li>
 			<label>Deleted:</label>
-			<input type="radio" name="deleted" id="deleted1" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?deleted'} ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="deleted" id="deleted1" value="1" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?deleted'} ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="deleted1">Yes</label>
-			<input type="radio" name="deleted" id="deleted0" value="0" <? echo ( ssi::checked( ! $session{'/employee/inventory/purchase_orders.html?deleted'} ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="deleted" id="deleted0" value="0" <? echo ( ssi::checked( ! $session{'/employee/purchase_order/history.html?deleted'} ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="deleted0">No</label>
 		</li>
 		<li>
 			<label>Cancelled:</label>
-			<input type="radio" name="cancelled" id="cancelled1" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '1' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="cancelled" id="cancelled1" value="1" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '1' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="cancelled1">Yes</label>
-			<input type="radio" name="cancelled" id="cancelled0" value="0" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '0' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="cancelled" id="cancelled0" value="0" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '0' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="cancelled0">No</label>
-			<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
+			<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
 			<label class="radio" for="cancelled">Both</label>
 		</li>
 		<li>
@@ -100,9 +100,9 @@
 			<? echo (
 				my $html;
 				foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
-					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
+					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
 				} # end foreach Type
-				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
 				return $html;
 			) ?>
 		</li>
@@ -118,12 +118,12 @@
 		<p class="buttons">
 				<? echo ( join( '',
 				ssi::button( 'ShowResults', { 'onclick'=>'f1.submit();', 'text'=>'Show Results' } ),
-				ssi::button( 'Add', { 'href'=>'/employee/inventory/purchase_order_edit.html', 'text'=>'Add New' } ),
+				ssi::button( 'Add', { 'href'=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
 				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
-	<div id="Results"><!--#include virtual="/employee/inventory/_purchase_orders.html"--></div>
+	<div id="Results"><!--#include virtual="/employee/purchase_order/_history.html"--></div>
 </form>
 </div>
