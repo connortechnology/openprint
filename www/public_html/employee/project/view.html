@@ -352,7 +352,7 @@ $log->debug("Have no job: $Job");
 <? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() );
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
 <fieldset><legend>Purchase Orders:</legend>
