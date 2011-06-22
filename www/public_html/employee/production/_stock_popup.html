@@ -1,6 +1,6 @@
 <h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() ) : ();
+	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
 ) ?>
 <fieldset><legend>Ordered Stock:</legend>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
