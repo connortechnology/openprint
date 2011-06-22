@@ -4,6 +4,9 @@
 		<? if ( $$variable{'Event'}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
 		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
+		<img class="Asset" src="<? echo ( $$variable{'Asset'}->thumbnail_url() ) ?>" alt="" />
+		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>
