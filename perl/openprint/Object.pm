@@ -505,5 +505,12 @@ sub to_string {
     return $type . ': '. join(' ' , map { "$_ => $_[0]{$_}" } keys %$fields );
 }
 
+sub dropdown {
+    my $type = shift;
+$log->debug("dropdown");
+    return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+} # end sub dropdown
+
+
 1;
 __END__

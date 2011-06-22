@@ -23,6 +23,7 @@ require openprint::ManifestContent;
 require openprint::Manifest_Content_Type;
 require openprint::PaperAllocation;
 require openprint::PurchaseOrder;
+require openprint::PurchaseOrder_Item;
 require openprint::Label;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
