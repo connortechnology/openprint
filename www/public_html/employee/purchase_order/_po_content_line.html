@@ -4,10 +4,9 @@
 	my $C = $$variable{'C'};
 
 	my $html .= sprintf('<tr id="line-%1$d">', $C->id() );
-	$html .= '<td>'.ssi::button( 'del-'.$C->id(), { 'onclick'=>qq`new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'text'=>'Delete' } ).'</td>';
+	$html .= '<td>'.ssi::button( 'del-'.$C->id(), { 'onclick'=>qq`new Ajax.Request('/employee/purchase_order/_po_content_line.html?action=delete&amp;id=$$C{'id'}', { method: 'get', onSuccess: function(){var tr = \$('line-$$C{id}'); tr.parentNode.removeChild(tr);update_totals(\$('f1'));} } );`,'text'=>'Delete' } );
+	$html .= sprintf(q`<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/><input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/></td>`, $C->id(), $C->type(), $C->type_id() );
 	if ( $C->type_id() ) {
-		#$html .= sprintf(q`<td><span id="type-%1$d">%2$s</span><input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/></td>`, $C->id(), $C->Type()->name(), $C->type_id() );
-		$html .= sprintf(q`<input type="hidden" name="type_id-%1$d" id="type_id-%1$d" value="%3$d"/><input type="hidden" id="type-%1$d" name="type-%1$d" value="%2$s"/>`, $C->id(), $C->type(), $C->type_id() );
 		if ( $C->type() eq 'Roll Stock' ) {
 			my ( $type, $name );
 			if ( $$C{'description'} =~ /^(FSC|PEFC\/SFI)? ?(.+)$/ ) {
@@ -62,12 +61,12 @@
 			$rows = 1 if ! $rows;
 			$html .= sprintf(q`
 				<td><input type="text" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" /></td>
-				<td><select id="item_id-%1$d" name="item_id-%1$d"><option value="">select</option>%10$s</select><br/><input type="text" name="item-%1$d" id="item-%1$d" value="%3$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}"/></td>
+				<td><select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: this.getValue() } } );"><option value="">select</option>%10$s</select><br/><input type="text" name="item-%1$d" id="item-%1$d" value="%3$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};ddm_select_by_text( $('item_id-%1$d'), this.value, 0 );"/></td>
 				<td><textarea name="description-%1$d" id="description-%1$d" cols="" rows="%5$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%4$s</textarea></td>
 				<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%6$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %7$d} });" onblur="$('similar_pos').innerHTML='';" /></td>
 				<td class="price"><input type="text" name="price-%1$d" id="price-%1$d" value="%8$.4f" onkeyup="calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" onkeydown="this.lastValue = this.value;return check_decimal(this,event);" /><br/><span id="price-%1$d-alert" class="error"></span></td>
 				<td class="total"><input type="text" name="total-%1$d" id="total-%1$d" value="%9$.2f" onkeyup="calc_price(this);" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
-				`, $C->id(), $C->qty(), $$C{'item'}, $C->description(), $rows,
+				`, $C->id(), $C->qty(), $$C{'item'}, CGI::escapeHTML($C->description()), $rows,
 				$C->docket(), $C->po_id(), $C->price(), $C->total(),
 				ssi::make_drop_down( openprint::PurchaseOrder_Item->dropdown( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'vendor_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'type_id'=>$C->type_id(), 'order'=>'lower(name)' ), $C->item_id() ),
 			);

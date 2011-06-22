@@ -129,17 +129,28 @@ sub view {
 			my ( $content_id ) = $k =~ /qty-(.*)/;
 			if ( defined $content_id ) {
 				next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
+
+				my $Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
+				if ( ! $Item->id() ) {
+					$Item->save({'company_id'=>$PO->company_id(), 'vendor_id'=>$PO->supplier_id(), 'type_id'=>$param{'type_id-'.$content_id}, 'name'=>$param{'item-'.$content_id}, 'description'=>$param{'description-'.$content_id}, 'price'=>$param{'price-'.$content_id} });
+				} elsif ( $Item->price() != $param{'price-'.$content_id} ) {
+				# Update the latest price
+					$Item->save({'price'=>$param{'price-'.$content_id}});
+				} # end if
+
 				my $C = new openprint::PurchaseOrder_Content( $content_id );
+				
 				$variable{'error'} .= $C->save( {
 						'po_id'         =>  $PO->id(),
 						'qty'           =>  $param{'qty-'.$content_id},
-						'item'          =>  $param{'item-'.$content_id},
+						'item_id'       =>  $$Item{'id'},
 						'description'   =>  $param{'description-'.$content_id},
 						'docket'        =>  $param{'docket-'.$content_id},
 						'price'         =>  $param{'price-'.$content_id},
 						'total'         =>  $param{'total-'.$content_id},
 						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
+
 				$types{$C->Type()->name()} = 1;
 				if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
 					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
@@ -507,6 +518,9 @@ sub _update_taxes {
 
 sub _similar_pos {
 } # end sub _similar_pos
+
+sub _item_select {
+} # end sub _item_select
 
 1;
 __END__

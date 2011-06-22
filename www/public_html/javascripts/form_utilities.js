@@ -229,15 +229,13 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 } // end function ddm_select_by_value( ddm, value );
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0; index < ddm.options.length; index += 1 ) {
-			if ( ddm.options[index] && ddm.options[index].text == value ) {
+		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+			if ( ddm.options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
 		} // end for
-		if ( defaultValue ) {
-			ddm_select_by_index( ddm, defaultValue );
-		} // end nif
+		ddm_select_by_index( ddm, defaultValue );
 	} else {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if

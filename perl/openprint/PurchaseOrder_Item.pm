@@ -14,11 +14,13 @@ $serial = 'purchaseorder_items_id_seq';
 	'vendor_id'		=>	'vendor_id',
 	'type_id'		=>	'type_id',
 	'name'			=>	'name',
+	'description'	=>	'description',
 	'price'			=>	'price',
 );
 
 %transforms = (
 	'name'	=>	[ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'description'	=>	[ 's/\.//g', 's/^\s+//' ],
 	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
 

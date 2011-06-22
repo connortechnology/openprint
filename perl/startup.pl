@@ -26,6 +26,7 @@ BEGIN {
 
 	#use Carp ();
 
+	use CGI;
 	use sql;
 	use misc;
 	use ssi;

@@ -81,21 +81,3 @@ function getSelectionId(input, li) {
 		} // end if
 	} // end if
 } // end function getSelectionId
-
-/*
-function update_taxes( form ) {
-	new Ajax.Request( '_update_taxes.json?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>', { parameters: form.serialize() } );
-} // end function update_taxes
-*/
-
-  tinyMCE.init({
-	theme : "advanced",
-	mode: "specific_textareas",
-	editor_selector : "mce",
-	theme_advanced_toolbar_location : "top",
-	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
-	theme_advanced_buttons2 : "bullist,numlist,outdent,indent,sub,sup,charmap",
-	theme_advanced_buttons3 : "",
-	auto_resize : true,
-
-  });
