@@ -37,16 +37,16 @@
 		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Event'}->id() ) ?>
 	<div id="Photos">
-			<!--#include virtual="_photos.html"-->
+		<!--#include virtual="_photos.html"-->
 	</div>
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Event'}->id() and ( $session{'user_id'} == $$variable{'Event'}->created_by() or $session{'user_type'} eq 'A' ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
-					$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?event_id='.$$variable{'Event'}->id(), 'Edit' );
+				if ( $$variable{'Event'}->can_edit() ) {
+					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 				} # end if
 				return $html;
 			) ?>

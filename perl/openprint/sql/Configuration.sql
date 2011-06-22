@@ -17,3 +17,8 @@ insert into Configuration values ('mail_db_hostname', '', 'text', 'Hostname or i
 insert into Configuration values ('mail_db_driver', 'Pg', 'text', 'Database driver to use:', 'Mail Server Settings');
 insert into Configuration values ('mail_autoreply_domain', '', 'text', 'Domain for vacation autoreplies:', 'Mail Server Settings');
 insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );
+insert into Configuration values ('NewFirstUserAccountActivation', 'N', 'yes/no', 'Whether to automatically activate the first user in a company when they register.','Miscellaneous Settings' );
+insert into Configuration values ('NewNonFirstUserAccountActivation', 'N', 'yes/no', 'Whether to automatically activate any subsequent users in a company when they register.','Miscellaneous Settings' );
+insert into Configuration values ('NewCustomerAccountActivation', 'N', 'yes/no', 'Whether to automatically activate new companies when they register.','Miscellaneous Settings' );
+insert into Configuration values ('Mail Server', 'localhost', 'text', '','Miscellaneous Settings' );
+insert into Configuration values ('startYear', '2011', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );

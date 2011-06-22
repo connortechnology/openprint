@@ -10,11 +10,12 @@
 	my $num_albums = scalar @Albums;
 	$html .= $num_albums.' album'.($num_albums == 1 ? '' : 's').'<br/>';
 	foreach my $Album ( @Albums ) {
-		$html .= '<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/edit.html?album_id='.$Album->id().'">';
-		$html .= sprintf('<img src="%s" alt="%s" /><br/>%s', $Album->thumbnail_url(), $Album->name(), $Album->description() );
 		my @Photos = $Album->Photos();
-		$html .= scalar @Photos . ' photo' . (@Photos != 1 ? 's' : '');
-		$html .= '</a></div>';
+		my $num_photos = scalar @Photos;
+		$html .= sprintf( q`<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/edit.html?album_id=%1$d"><img src="%2$s" alt="%3$s" /><br/>%5$s</a></div>`, 
+			$$Album{'id'}, $Album->thumbnail_url(), $Album->name(), $Album->description(),
+			( $num_photos . ' photo' . ($num_photos != 1 ? 's' : '') ),
+			);
 	} # end foreach Album
 	return $html;
 ) ?>
