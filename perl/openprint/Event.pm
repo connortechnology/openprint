@@ -59,8 +59,13 @@ sub where {
 } # end sub where
 
 sub Asset {
-	if ( ( ! $_[0]{'asset_id'} ) and my @Photos = $_[0]->Photos() ) {
-		return $Photos[0];
+	if ( ! $_[0]{'asset_id'} ) {
+		my $Album = $_[0]->Album();
+		if ( $$Album{'asset_id'} ) {
+			return new openprint::Asset( $$Album{'asset_id'} );
+		} elsif ( my @Photos = $_[0]->Photos() ) {
+			return $Photos[0];
+		} # end if
 	} # end if
 	return new openprint::Asset( $_[0]{'asset_id'} );
 } # end sub Asset
