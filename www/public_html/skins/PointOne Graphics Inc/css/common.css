@@ -577,8 +577,8 @@ span.DateSelectorC {
 	width: 275px;
 }
 span.DateSelectorCT {
-	float: left;
-	width: 300px;
+	min-width: 300px;
+	display: inline-block;
 }
 .DateTimeSelector {
 	display: inline-block;
