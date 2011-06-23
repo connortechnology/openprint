@@ -15,7 +15,7 @@
 	<div class="buttons">
 		<? echo ( join('',
 			ssi::button( 'Print', { 'onclick' => 'window.print();' } ),
-			ssi::button( 'Back', { 'href' => (
+			ssi::button( 'Project', { 'href' => (
 				$param{'project_id'} ? 
 				'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
 				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket() ),
