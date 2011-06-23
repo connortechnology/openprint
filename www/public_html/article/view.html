@@ -4,3 +4,6 @@
 <? endif ( $$variable{'Article'}->source() ) ?>
 
 <? echo ( $$variable{'Article'}->body() ) ?>
+<div class="Comments"><fieldset><legend>Comments</legend>
+<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>"><!--#include virtual="_comments.html"--></div>
+</div>

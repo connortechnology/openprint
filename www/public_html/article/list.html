@@ -39,17 +39,17 @@
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
 				my @Comments = $Article->Comments();
 				$html .= sprintf(q` 
-				<div class="Article" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-					<h1>%2$s</h1>
+				<div class="Article"> 
+					<h1><a href="view.html?article_id=%1$d">%2$s</a></h1>
 					Posted on %6$s by %5$s<br/>
 					<div class="source_content">%3$s</div>
-					<div class="body">%4$s</div>
+					<div class="summary">%4$s</div>
 					<div id="comments-%1$d" class="comments"><div onclick="new Ajax.Updater('comments-%1$d', '_comments.html', { parameters: { article_id: %1$d } } );">This article has %7$s. Click to view/Add.</div></div>
 				</div>
 				`, $Article->id(), 
 				ssi::htmlize($Article->title()),
 				$Article->source_content(), 
-				ssi::html_escape($Article->body()), 
+				$Article->summary(), 
 				ssi::htmlize( $Article->Author()->name() ),
 				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 				( @Comments == 1 ? '1 comment' : @Comments . ' comments' )

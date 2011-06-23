@@ -4,7 +4,9 @@
 <!--
 	tinyMCE.init({
 		mode : "textareas",
-		theme : "advanced"
+		theme : "advanced",
+		plugins: "paste",
+		theme_advanced_buttons3 : "pastetext,pasteword,selectall,pastetext"
 	});
 -->
 </script>
@@ -54,6 +56,10 @@
 						</li>
 						<li><label>Title:</label>
 							<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
+						</li>
+						<li>
+							<label for="summary">Summary:</label>
+							<textarea cols="" id="summary" name="summary" rows="<? echo ( $$variable{'Article'}->summary() ? scalar split("\n", $$variable{'Article'}->summary()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Article'}->summary() ) ?></textarea>
 						</li>
 						<li>
 							<label for="body">Body:</label>

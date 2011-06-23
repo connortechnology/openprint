@@ -154,7 +154,6 @@ $log->error("Attempt to approve a comment without rights");
 		} # end if
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $Comment = openprint::Comment->find_one('object_id'=>$$Photo{'asset_id'}, 'object_type'=>'openprint::Asset', 'id'=>$param{'comment_id'} );
-		
 		if ( $Comment ) {
 			if ( $Comment->can_delete() ) {
 				$variable{'error'} .= $Comment->delete();

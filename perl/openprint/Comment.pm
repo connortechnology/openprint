@@ -15,7 +15,6 @@ $serial = 'comments_id_seq';
 	'deleted'		=>	'deleted',
 	'approved'		=>	'approved',
 	'text'			=>	'text',
-	'approved'		=>	'approved',
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
