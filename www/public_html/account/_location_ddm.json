@@ -1,0 +1,8 @@
+<? echo (
+	my @options = openprint::Location->dropdown( 'type' => $param{'type'}, 'order'=>'lower(name)', 'parent_id'=>$param{'parent_id'} );
+	my $json = JSON->new;
+	return 'var options = new Array(' . $json->encode( @options ) . ");\n
+	fill_ddm( \$($param{'child_element'}), options );	
+ ";
+) ?>
+

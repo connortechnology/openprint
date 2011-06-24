@@ -76,12 +76,15 @@ $log->debug( "Value: $v, text: $t");
 			} else {
 				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
 			} # end if
-			$html .= ssi::make_drop_down( \@countries::countries, $value ? $value : $Field->default() );
+			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>'country'), $value ? $value : $Field->default() );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'state' ) {
 			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
-			$html .= ssi::make_drop_down( \@states::states, $value ? $value : $Field->default() );
-			$html .= ssi::make_drop_down( \@provinces::provinces, $value ? $value : $Field->default() );
+			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>['state','province']), $value ? $value : $Field->default() );
+			$html .= '</select>';
+		} elsif ( $Field->type() eq 'city' ) {
+			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
+			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>'city'), $value ? $value : $Field->default() );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
@@ -96,6 +99,12 @@ $log->debug( "Value: $v, text: $t");
 ) ?>
 					</ul>
 				</div>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { 'onclick'=>q`LoadContent('Results','_search.html', f1 );`, 'text'=>'Show Results' } ),
+					ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+					); ) ?>
+			</p>
 			</fieldset>
 		</form>
 		<div id="Results"><!--#include virtual="/account/_search.html"--></div>

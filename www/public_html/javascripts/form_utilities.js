@@ -73,7 +73,7 @@ function fill_ddm ( ddm, options, onchange ) {
 		ddm.disabled = true;
 		//ddm.onchange = null;
 		clear_ddm( ddm );
-		for( var index = 0; index < options.length; index += 1 ) {
+		for( var index = 0, len = options.length; index < len; index += 1 ) {
 			ddm.options[ddm.options.length] = create_option( options[index].value, options[index].text );
 		} // end for
 		//ddm.onchange = onchange;
@@ -711,6 +711,21 @@ function Country_onchange( country_ddm, state ) {
 		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
 } // end function
+
+function Location_onchange( parent_element, child_element, type ) {
+	if ( parent_element.getValue() ) {
+		// only do anything if we have selected something	
+		new Ajax.Request( '_location_ddm.json', { 
+			parameters: { 
+					type: type,
+					parent_element: parent_element.id,
+					parent_id: parent_element.getValue(), 
+					child_element: child_element.id,
+				}, evalScripts: true
+			}
+			);
+	} // end if
+}
 
 function countLines(strtocount, cols) {
 	var hard_lines = 1;

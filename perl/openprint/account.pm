@@ -368,11 +368,17 @@ sub user_profile {
 			delete $param{'password'};
 		} # end if
 		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
-		$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-		$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-		$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-		$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
 		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
+		if ( $config{'UserProfileRequiredFields'} ) {
+			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
+				$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
+			} # end foreach required field
+		} else {
+			$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
+			$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
+			$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
+			$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
+		} # end if
 		if ( $error ne '' ) {
 			$variable{'error'} = 'Bad Field';
 			$variable{'information'} = $error;
@@ -714,6 +720,9 @@ sub _wall {
 
 sub forgotten_password {
 } # end sub forgotten_password
+
+sub _location_ddm {
+} # end sub _location_ddm
 
 1;
 __END__

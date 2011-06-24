@@ -3,7 +3,7 @@
 	<form id="f1" name="f1" action="user_profile_fields.html" method="post">
 		<input type="hidden" name="action" id="action" />
 		<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', q`$('action').value='Save';$('f1').submit();`, '', 'Save' ); ) ?>
+		<? echo ( ssi::button( 'Save', { 'onclick'=>q`$('action').value='Save';$('f1').submit();` } ); ) ?>
 		</p>
 		<table class="List">
 			<thead>
@@ -13,9 +13,7 @@
 					<th>Values</th>
 					<th>Default Value</th>
 					<th>Required</th>
-					<th class="buttons">
-				<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', "newField( );", '', 'New' ); ) ?>
-					</th>
+					<th class="buttons"><? echo ( ssi::button( 'New', { 'onclick'=>"newField( );" } ); ) ?></th>
 				</tr>
 			</thead>
 			<tbody id="fields"><!--#include virtual="_user_fields_tbody.html"--></tbody>

@@ -15,7 +15,7 @@
 			</td>
 			<td class="buttons">%8$s</td>
 		</tr>`, $Field->id(), $Field->name(), 
-			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'radio', 'select-one','country','state' ) ], $Field->type() ),
+			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
 			$Field->default(),
 			ssi::checked( $Field->required() ), ssi::checked( ! $Field->required() ),
