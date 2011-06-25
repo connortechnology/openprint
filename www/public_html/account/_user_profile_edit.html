@@ -5,6 +5,7 @@
 <? echo ( 
 	my $html;
 	my $Profile = $$variable{'User'}->Profile();
+$openprint::log->debug("Profile: $Profile");
 	
 	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,description') ) {
 		$html .= '<li><label>'.$Field->description().':</label><span id="field-'.$Field->id().'_container">';
@@ -19,7 +20,9 @@
 			} # end foreach value
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
+$log->debug("Adding date start $start end $end value $value ");
 			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), ( $value ? $value : $Field->default() ), { 'start'=>$start, 'end'=>$end } ) . '</span>';
+$log->debug("Done");
 		} elsif ( $Field->type() eq 'country' ) {
 			my $StateField = openprint::User_Profile_Field->find_one('type'=>'state');
 			if ( $StateField ) {
@@ -57,8 +60,6 @@
 			ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $value ? $value : $Field->default() ),
  );
 
-			#$html .= ssi::make_drop_down( \@states::states, $value ? $value : $Field->default() );
-			#$html .= ssi::make_drop_down( \@provinces::provinces, $value ? $value : $Field->default() );
 		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
 			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );

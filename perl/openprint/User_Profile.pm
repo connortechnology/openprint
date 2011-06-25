@@ -75,8 +75,7 @@ sub save {
 						'field-'.$Field->id().'_day'} ) );
 		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
 			if ( $$param{'field-'.$$Field{'id'}.'_name'} ) {
-				my $parent_id = $self->value( $openprint::Location::hierarchy{$Field->type()} );
-				$openprint::log->debug("Hier for : " .$Field->type() . ' : '. $openprint::Location::hierarchy{$Field->type()} . ' : ' . $parent_id);
+				my $parent_id = $self->value( openprint::Location->parent_type( $Field->type() ) );
 				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id );
 				if ( ! $Location ) {
 					$Location = new openprint::Location();
