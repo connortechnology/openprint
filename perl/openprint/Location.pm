@@ -4,7 +4,7 @@ require openprint::Location_Type;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %hierarchy );
 $debug = 1;
 $table = 'locations';
 $serial = 'locations_id_seq';
@@ -36,6 +36,11 @@ $serial = 'locations_id_seq';
 	'updated_on'	=>	q`'NOW()'`,
 	'parent_id'		=>	undef,
 	'type_id'		=>	undef,
+);
+%hierarchy = (
+	'country'	=>	undef,	
+	'state' =>	'country',
+	'city'	=>	'state',
 );
 
 sub children {

@@ -684,6 +684,7 @@ sub user_profile_fields {
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
 				'name'	=>	$param{'name-'.$Field->id()},
+				'description'	=>	$param{'description-'.$Field->id()},
 				'type'	=>	$param{'type-'.$Field->id()},
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},

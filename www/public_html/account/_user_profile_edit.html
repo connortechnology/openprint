@@ -6,8 +6,8 @@
 	my $html;
 	my $Profile = $$variable{'User'}->Profile();
 	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
-		$html .= '<li><label>'.$Field->name().':</label><span id="field-'.$Field->id().'_container">';
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,description') ) {
+		$html .= '<li><label>'.$Field->description().':</label><span id="field-'.$Field->id().'_container">';
 		my $value = $Profile->value( $Field->name() );
 
 		if ( $Field->type() eq 'checkbox' ) {
