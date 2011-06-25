@@ -282,7 +282,7 @@ sub get_Shifts {
 	# Three cases, no shifts, shifts before, shifts after.
 
 	# Case #1 Shift before
-	if ( my $LastShift = openprint::Shift::find(
+	if ( my $LastShift = openprint::Shift->find(
 			'equipment_id'      =>  $Equipment->id(),
 			'starttime_<'       =>  $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime DESC',
@@ -293,7 +293,7 @@ sub get_Shifts {
 			$last_time = $Shift->starttime_seconds() + 1;
 			push @Shifts, $Shift if $Shift->starttime_seconds() > $start_dt->epoch();
 		} # end while
-	} elsif ( my $NextShift = openprint::Shift::find_one(
+	} elsif ( my $NextShift = openprint::Shift->find_one(
 		   'equipment_id'      =>  $Equipment->id(),
 			'starttime >'       => $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime',

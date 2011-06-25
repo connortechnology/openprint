@@ -153,7 +153,7 @@ sub view {
 
 				$types{$C->Type()->name()} = 1;
 				if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+					foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
 						$P->add_to_log( @session{'company_id','user_id'}, 
 								sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
 									$PO->id(), $C->qty(), $C->units(), $C->description() ) );
@@ -162,7 +162,7 @@ sub view {
 			} # end if
 		} # end foreach
 		if ( ! $param{'supplier_id'} ) {
-			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
+			my @Companies = openprint::Company->find( 'name'=>$param{'vendor_name'} );
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();
 				$C->save({
@@ -195,7 +195,7 @@ sub view {
 			} # end if
 		} # end if
 		if ( ! $param{'contact_id'} ) {
-			my @Users = openprint::User::find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
+			my @Users = openprint::User->find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
 			if ( ! @Users ) {
 				my $User = new openprint::User();
 				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
@@ -310,7 +310,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
 		if ( ! $param{'supplier_id'} ) {
-			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
+			my @Companies = openprint::Company->find( 'name'=>$param{'vendor_name'} );
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();
 				$C->save({
@@ -343,7 +343,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		if ( ! $param{'contact_id'} ) {
-			my @Users = openprint::User::find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
+			my @Users = openprint::User->find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
 			if ( ! @Users ) {
 				my $User = new openprint::User();
 				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
