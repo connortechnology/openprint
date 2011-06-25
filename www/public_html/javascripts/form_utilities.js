@@ -240,19 +240,32 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 } // end function ddm_select_by_value( ddm, value );
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0; index < ddm.options.length; index += 1 ) {
-			if ( ddm.options[index] && ddm.options[index].text == value ) {
+		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+			if ( ddm.options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
 		} // end for
-		if ( defaultValue ) {
-			ddm_select_by_index( ddm, defaultValue );
-		} // end nif
+		ddm_select_by_index( ddm, defaultValue );
 	} else {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if
 } // end function ddm_select_by_text( ddm, value );
+function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
+	var lowervalue = value.toLowerCase();
+    if ( ddm ) {
+        for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+            if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
+                ddm_select_by_index( ddm, index );
+                return;
+            } // end if
+        } // end for
+        ddm_select_by_index( ddm, defaultValue );
+    } else {
+        alert( "null ddm passed to ddm_select_by_text" );
+    } // end if
+} // end function ddm_select_by_text( ddm, value );
+
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
@@ -1321,3 +1334,13 @@ function getValues( form, element_names ) {
 	} // end for
 	return results;
 } // end function getValues
+function trim (str) {
+	str = str.replace(/^\s+/, '');
+	for (var i = str.length - 1; i >= 0; i--) {
+		if (/\S/.test(str.charAt(i))) {
+			str = str.substring(0, i + 1);
+			break;
+		}
+	}
+	return str;
+}

@@ -689,7 +689,6 @@ sub to_string {
 
 sub dropdown {
 	my $type = shift;
-$log->debug("dropdown");
 	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
 } # end sub dropdown
 
@@ -701,5 +700,6 @@ sub sort {
 	my $type = shift;
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
+
 1;
 __END__
