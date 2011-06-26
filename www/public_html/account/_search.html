@@ -71,7 +71,7 @@ $log->debug( "Filtered becase $value not in " . $session{'/account/search.html?f
 		$html .= sprintf(q`<div class="Info">
 								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
 								<div class="Address">%3$s</div>
-							</div>`, $User->id(), $User->name(), $Profile->City() . ', ' . $Profile->State() );
+							</div>`, $User->id(), $User->name(), new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
 if ( 1 ) {
 		my $age = 0;
 		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
