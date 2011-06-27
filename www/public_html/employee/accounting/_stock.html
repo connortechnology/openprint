@@ -58,7 +58,7 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 			$html .= sprintf('<td>%1$s</td>', $Type->Manifest()->Vendor()->name() );
 			$html .= sprintf('<td><a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a></td>', $Type->manifest_id(), $Type->Manifest()->name() );
 			$html .= '<td>';
-			$html .= sprintf('<a href="/employee/inventory/purchase_order.html?po_id=%1$d">%1$d</a>', $Type->po_id() ) if $Type->po_id();
+			$html .= sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>', $Type->po_id() ) if $Type->po_id();
 			$html .= '</td>';
 			$html .= '<td class="Date">';
 			$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>', $Type->manifest_id(), Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Type->Manifest()->received_on() ) ) ) if $Type->Manifest()->received_on();
