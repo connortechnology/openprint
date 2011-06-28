@@ -1,8 +1,13 @@
 <? echo (
-	my @options = openprint::Location->dropdown( 'type' => $param{'type'}, 'order'=>'lower(name)', 'parent_id'=>$param{'parent_id'} );
+	$r->content_type('text/javascript');
+	my $options = openprint::Location->dropdown( 'type' => $param{'type'}, 'order'=>'lower(name)', 'parent_id'=>$param{'parent_id'} );
+	unshift @{$options}, '';
+	unshift @{$options}, '';
 	my $json = JSON->new;
-	return 'var options = new Array(' . $json->encode( @options ) . ");\n
-	fill_ddm( \$($param{'child_element'}), options );	
- ";
+	return "
+var ddm = \$('$param{child_element}');
+var selected = ddm.getValue();
+fill_ddm_from_array( ddm, " . $json->encode( $options ) . " );	
+ddm_select_by_value( ddm, selected, 0 );
+";
 ) ?>
-

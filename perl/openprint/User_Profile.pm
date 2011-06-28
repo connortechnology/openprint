@@ -40,17 +40,20 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub value {
-	my $Entry = $_[0]{'fields'}{$_[1]} if $_[0]{'fields'};
+	if ( ! $_[0]{'fields'} ) {
+		%{$_[0]{'fields'}} = map { $_->field(), $_ } openprint::User_Profile_Entry->find('user_id'=>$_[0]{'user_id'}) if $_[0]{'user_id'};
+	} # end if
+	my $Entry = $_[0]{'fields'}{$_[1]};
 	if ( @_ > 2 ) {
+		# Saving
 		if ( ! $Entry ) {
+#$openprint::log->debug("No entry for $_[1], creating one");
 			$Entry = new openprint::User_Profile_Entry();
 			$_[0]{'fields'}{$_[1]} = $Entry;
 			my $Field = openprint::User_Profile_Field->find_one('name'=>$_[1]);
 			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} } );
-		} else {
-			$openprint::log->debug("No entry for $_[1]" );
 		} # end if
-		$_ = $Entry->save( { 'value' => $_[2] } );
+		$_ = $Entry->save( { 'value' => $_[2] } ) if $Entry->value() ne $_[2];
 		#$openprint::log->debug("Saving " . $Entry->field() . ': ' . $_[2] . " error: $_ " );
 	} # end if 
 		
@@ -64,12 +67,24 @@ sub value {
 
 sub save {
 	my ( $self, $param ) = @_;
-	foreach my $Field ( openprint::User_Profile_Field->find() ) {
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort') ) {
 		if ( $Field->type() eq 'date' ) {
 			$self->value( $Field->name(), join('-', @$param{
 						'field-'.$Field->id().'_year',
 						'field-'.$Field->id().'_month',
 						'field-'.$Field->id().'_day'} ) );
+		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
+			if ( $$param{'field-'.$$Field{'id'}.'_name'} ) {
+				my $parent_id = $self->value( openprint::Location->parent_type( $Field->type() ) );
+				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id );
+				if ( ! $Location ) {
+					$Location = new openprint::Location();
+					$Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id});
+				} # end if
+				$self->value( $Field->name(), $Location->id() );
+			} else {
+				$self->value( $Field->name(), $$param{'field-'.$Field->id()} );
+			} # end if
 		} else {
 			$self->value( $Field->name(), $$param{'field-'.$Field->id()} );
 		} # end if

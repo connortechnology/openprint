@@ -30,25 +30,28 @@
 			my $Profile = $User->Profile();
 			foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
 				my $value = $Profile->value( $Field->name() );
-$log->debug("Field $$Field{name} $value");
+#$log->debug("Field $$Field{name} $value");
 				if ( $session{'/account/search.html?field-'.$Field->id()} ) {
 					if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
 						if ( ! sets::intersection( split(',',$session{'/account/search.html?field-'.$Field->id()} ), $value ) ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1; 
 						} # endif 
 					} elsif ( $Field->type() eq 'date' ) {
 					} elsif ( sets::isin( $Field->type(), [ 'country', 'state', ] ) ) {
 						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1; 
 						} # endif 
 					} else {
 						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1;
 							last;
 						} # end if
 					} # end if
 } else {
-$log->debug("Not in session");
+#$log->debug("Not in session");
 				} # end if
 			} # end foreach Field
 			push @Users, $User if ! $filtered;

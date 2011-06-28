@@ -84,12 +84,12 @@ function fill_ddm_from_array ( ddm, options, onchange ) {
 	if ( ddm ) {
 		ddm.disabled = true;
 		clear_ddm( ddm );
-		for( var index = 0; index < options.length; index += 2 ) {
+		for( var index = 0, len=options.length; index < len; index += 2 ) {
 			ddm.options[ddm.options.length] = create_option( options[index], options[index+1] );
 		} // end for
 		ddm.disabled = false;
 	} // end if
-} // end function fill_ddm
+} // end function fill_ddm_from_array
 
 function clear_ddm ( ddm ) {
 
@@ -733,7 +733,7 @@ function Location_onchange( parent_element, child_element, type ) {
 					type: type,
 					parent_element: parent_element.id,
 					parent_id: parent_element.getValue(), 
-					child_element: child_element.id,
+					child_element: child_element.id
 				}, evalScripts: true
 			}
 			);
