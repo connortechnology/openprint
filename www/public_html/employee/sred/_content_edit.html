@@ -22,7 +22,7 @@
 	</div>
 	<div class="rightColumn">
 		<ul>
-			<li class="Description"><label>Description:</label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" cols="" class="content_description"><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
+			<li class="Description"><label>Description:</label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" class="content_description"><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
 			<li class="attachments"><label>Attachment:</label><br class="spacer"/><div id="assets-<? echo ( $$variable{'C'}{id} ) ?>">
 			<!--#include virtual="_assets.html"-->
 			</div>
@@ -31,8 +31,8 @@
 	</div>
 	<p class="buttons">
 	<? echo ( join('',
-			ssi::button( 'Save'.$$variable{'C'}{'id'}, { 'onclick' => qq`save_content(\$('form-$$variable{C}{id}'), '$$variable{C}{id}' );`, 'text'=>'Save', 'class'=>'Save' } ),
-			ssi::button( 'Cancel'.$$variable{'C'}{'id'}, { 'onclick' => qq`view_content( '$$variable{C}{id}' );`, 'text'=>'Cancel', 'class'=>'Cancel' } ),
+			ssi::button( 'SaveC'.$$variable{'C'}{'id'}, { 'onclick' => qq`save_content(\$('form-$$variable{C}{id}'), '$$variable{C}{id}' );`, 'text'=>'Save', 'class'=>'Save' } ),
+			ssi::button( 'CancelC'.$$variable{'C'}{'id'}, { 'onclick' => qq`view_content( '$$variable{C}{id}' );`, 'text'=>'Cancel', 'class'=>'Cancel' } ),
 			); ) ?>
 	</p>
 </form>
