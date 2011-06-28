@@ -168,9 +168,8 @@ textarea_init();
 
 function save_content(form, content_id ) {
 	tinyMCE.triggerSave();
-	if ( 1 ) {
-		form.function.value='SaveContent';
-		//form.action='/employee/sred/project.html';
+	if ( true ) {
+		form.elements['function'].value = 'SaveContent';
 		form.submit();
 	} else {
 		var parameters = getValues( form, new Array(
