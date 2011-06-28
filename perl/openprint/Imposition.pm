@@ -189,8 +189,8 @@ sub load_used {
 			$$self{'Press'} = new openprint::Equipment();
 		} # end 
 	} # end if
-
-} # edn sub load_used
+	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
+} # end sub load_used
 
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
