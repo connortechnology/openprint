@@ -14,12 +14,12 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::SRED_Project;
 
 sub projects {
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Save' ) {
 		my $Project = new openprint::SRED_Project($param{'project_id'});
 		#$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
 		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
 		%param = ();
-	} elsif ( $param{'function'} eq 'Export' ) {
+	} elsif ( $param{'action'} eq 'Export' ) {
 		my $Project = new openprint::SRED_Project($param{'project_id'});
 		
 		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
@@ -43,7 +43,7 @@ sub projects {
 				);
 		} # end foreach C
 		misc::export_csv( $r, $log, \%variable, ($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', \@header, \@data );
-	} elsif ( $param{'function'} eq 'Delete' ) {
+	} elsif ( $param{'action'} eq 'Delete' ) {
 		my $Project = new openprint::SRED_Project( $param{'project_id'} );
 		$variable{'error'} .= $Project->delete();
 		%param = ();
@@ -115,14 +115,14 @@ sub _history {
 
 sub project {
 	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Save' ) {
 		$Project->set({'created_by'=>$session{'user_id'}}) if ! $Project->id();
 		$variable{'error'} .= $Project->save( {'name' => $param{'name'}, 'description' => $param{'description'} } );
 		%param = ();
-	} elsif ( $param{'function'} eq 'Copy' ) {
+	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Project'} = $Project = $Project->copy();
 		$variable{'error'} .= $Project->save();
-	} elsif ( $param{'function'} eq 'Export' ) {
+	} elsif ( $param{'action'} eq 'Export' ) {
 		
 		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence' );
 		my @data;
@@ -133,7 +133,7 @@ sub project {
 				);
 		} # end foreach C
 		misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
-	} elsif ( $param{'function'} eq 'Upload' ) {
+	} elsif ( $param{'action'} eq 'Upload' ) {
 		foreach my $C ( $Project->Contents() ) {
 			next if ! $param{'filename-'.$$C{id}};
 
@@ -159,7 +159,7 @@ sub project {
 			} # end if
 		} # end foreach
         %param = ();
-	} elsif ( $param{'function'} eq 'SaveContent' ) {
+	} elsif ( $param{'action'} eq 'SaveContent' ) {
 		my $Content;
 		my $Duration = DateTime::Duration->new(
 				'days'=>$param{'duration-'.$param{'content_id'}.'_days'}, 
@@ -276,7 +276,7 @@ sub _content_edit {
 } # end sub _content_edit
 sub _content_view {
 	my $Content = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Save' ) {
 		save_content( $Content );
 	} # end if
 } # end sub _content_edit
@@ -296,7 +296,7 @@ sub _content_edit_Time {
 
 sub _assets {
 	my $Content = $variable{'C'} = new openprint::SRED_Content( $param{'content_id'} );
-	if ( $param{'function'} eq 'delete' ) {
+	if ( $param{'action'} eq 'delete' ) {
 		my $Asset= new openprint::SRED_Asset( {'content_id'=>$param{'content_id'},'asset_id'=>$param{'asset_id'} } );
 		$variable{'error'} .= $Asset->delete();
 	} # end if

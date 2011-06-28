@@ -19,13 +19,13 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();`, 'class'=>'Save' } ),
-					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
-					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Export';form.submit();`, 'class'=>'Export' } ),
+					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Save';form.submit();`, 'class'=>'Save' } ),
+					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
+					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, 'class'=>'Export' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-	<input type="hidden" name="function" />
+	<input type="hidden" name="action" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
 </form>
 	<br class="spacer"/>

@@ -38,30 +38,31 @@
 		} else {
 		} # end if
 		$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
-		return $html;
-	) ?>
-	</ul>
-</div><div class="rightColumn">
-	<ul>
-<? echo (
-		my $html;
-		my $C = $$variable{'C'};
-		$html .= sprintf('<li><label>Description:</label><span id="description-%d">%s</span></li>', $C->id(), $C->description() );
-		$html .= '<li class="attachments"><label>Attachments:</label><br class="spacer"/><div id="assets-'.$$C{id}.'">';
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_assets.html' );
-		$html .= '</div></li>';
+		$html .= '</ul>';
 		$html .= '<p class="buttons">';
-		$html .= qq`<input type="file" name="filename-$$C{id}" />`;
-		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>qq`var form = \$('form-$$C{id}');form.elements['function'].value='Upload';form.submit();` ,'text'=>'Upload'} );
 		if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
 			$html .= ssi::button( 'Edit'.$C->id(), { 'text'=>'Edit', 'onclick'=>qq`edit_content( \$('f1'), $$C{id} );`, 'class'=>'Edit' } );
 			$html .= ssi::button( 'Delete'.$C->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_content( \$('f1'), $$C{id} );`, 'class'=>'Delete' } );
 			$html .= ssi::button( 'Copy'.$C->id(), { 'text'=>'Copy', 'onclick'=>qq`copy_content( \$('f1'), $$C{id} );`, 'class'=>'Copy' } );
 		} # end if
 		$html .= '</p>';
+		return $html;
+	) ?>
+</div><div class="rightColumn">
+	<ul>
+<? echo (
+		my $html;
+		my $C = $$variable{'C'};
+		$html .= sprintf('<li><label>Description:</label>%2$s</li>', $C->id(), $C->description() );
+		$html .= '<li class="attachments"><label>Attachments:</label><div class="assets" id="assets-'.$$C{id}.'">';
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_assets.html' );
+		$html .= '</div></li></ul>';
+		$html .= '<p class="buttons">';
+		$html .= qq`<input type="file" name="filename-$$C{id}" />`;
+		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>qq`var form = \$('form-$$C{id}');form.elements['function'].value='Upload';form.submit();` ,'text'=>'Upload'} );
+		$html .= '</p>';
 
 		return $html;
 	) ?>
-	</ul>
 </div>
 </form>
