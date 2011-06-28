@@ -29,13 +29,17 @@
 			} # end if
 			$html .= '</li>';
 		} # end if
-		if ( $C->Type()->name() eq 'Stock' ) {
+		if ( $C->quantity() ) {
 			$html .= sprintf(q`<li><label>Quantity:</label>%s%s</li>`, $C->quantity(), $C->quantity_units() );
+		} # end if
+		if ( $C->weight() ) {
 			$html .= sprintf(q`<li><label>Weight:</label>%s%s</li>`, $C->weight(), $C->weight_units() );
+		} # end if
+		if ( $C->cost() or $C->total() ) {
 			$html .= sprintf(q`<li><label>Value:</label>%s%s = %s</li>`, openprint::Currency::format($C->cost()), $C->cost_units(), openprint::Currency::format( $C->total() ) );
-		} elsif ( $C->Type()->name() eq 'Time' ) {
+		} 
+		if ( $C->user_id() ) {
 			$html .= sprintf('<li><label>Who:</label>%s</li>', $C->User()->name() ) if $C->user_id();
-		} else {
 		} # end if
 		$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
 		$html .= '</ul>';
