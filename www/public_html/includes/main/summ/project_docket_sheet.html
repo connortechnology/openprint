@@ -597,8 +597,8 @@ $inkCoverage{$colour} = 100;
 			my $html;
 			if ( $$variable{Services}{'Bundling'} ) {
 				foreach ( @{$$variable{Services}{'Bundling'}} ) {
-					openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $_ ); ) ?>
-					$html .= ", Bundles in <?txtWrapQuantity?>'s";
+					my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $_ );
+					$html .= ', Bundles in '.$$specs{'txtWrapQuantity'} . "'s";
 				} # endforeach
 			} # endif
 			return $html;
