@@ -4,11 +4,11 @@
 		<ul>
 		<li>
 			<label>Comment:</label>
-			<textarea id="comment" name="comment" rows="2" cols=""><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
+			<textarea id="comment" name="comment" rows="2"><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</li>
 		<li>
 			<label>Stock:</label>
-			<textarea id="stock" name="stock" rows="2" cols=""><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
+			<textarea id="stock" name="stock" rows="2"><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
 		</li>
 <? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<li>
@@ -39,11 +39,11 @@
 <? if ( $$variable{'Job'}->project_id() ) ?>
 		<li>
 			<label>Impressions:</label>
-			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
+			<input type="number" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
 		</li>
 		<li>
 			<label>Speed:</label>
-			<input type="text" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
+			<input type="number" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
 		</li>
 <? endif ( $$variable{'Job'}->project_id() ) ?>
 		<li>
@@ -53,7 +53,7 @@
 <? if ( $$variable{'Job'}->project_id() ) ?>
 		<li>
 			<label>Forms:</label>
-			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
+			<input type="number" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 		</li>
 <? endif ( $$variable{'Job'}->project_id() ) ?>
 <? if ( $$variable{'Job'}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
