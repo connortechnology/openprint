@@ -307,7 +307,11 @@ sub get_lis {
 	my $previous_row;
 	my $total_impressions;
 
-	foreach my $Job ( $self->Schedule() ) {
+	my @Jobs = $self->Schedule();
+	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
+		$html .= 'empty';
+	} # end if
+	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{'Status'} ) {
 				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
