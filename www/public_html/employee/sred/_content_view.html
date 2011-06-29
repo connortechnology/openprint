@@ -1,5 +1,5 @@
 <form id="form-<? echo ( $$variable{'C'}{id} ) ?>" name="form-<? echo ( $$variable{'C'}{id} ) ?>" method="post" enctype="multipart/form-data" action="/employee/sred/project.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>">
-	<input type="hidden" name="function" />
+	<input type="hidden" name="action" />
 	<input type="hidden" name="content_id" value="<? echo ( $$variable{C}{id} ) ?>" />
 <div class="leftColumn">
 	<ul>
@@ -63,7 +63,7 @@
 		$html .= '</div></li></ul>';
 		$html .= '<p class="buttons">';
 		$html .= qq`<input type="file" name="filename-$$C{id}" />`;
-		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>qq`var form = \$('form-$$C{id}');form.elements['function'].value='Upload';form.submit();` ,'text'=>'Upload'} );
+		$html .= ssi::button( 'Upload'.$C->id(), { 'onclick'=>qq`var form = \$('form-$$C{id}');form.elements['action'].value='Upload';form.submit();` ,'text'=>'Upload'} );
 		$html .= '</p>';
 
 		return $html;

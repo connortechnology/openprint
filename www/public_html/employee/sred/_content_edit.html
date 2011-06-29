@@ -1,5 +1,5 @@
 <form id="form-<? echo ( $$variable{'C'}{id} ) ?>" name="form-<? echo ( $$variable{'C'}{id} ) ?>" method="post" enctype="multipart/form-data" action="/employee/sred/project.html?project_id=<? echo ( $$variable{'Project'}->id() ) ?>">
-	<input type="hidden" name="function" />
+	<input type="hidden" name="action" />
 	<input type="hidden" name="content_id" value="<? echo ( $$variable{C}{id} ) ?>" />
 	<div class="leftColumn">
 		<ul>
@@ -22,7 +22,7 @@
 	</div>
 	<div class="rightColumn">
 		<ul>
-			<li class="Description"><label>Description:</label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" class="content_description"><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
+			<li class="Description"><label onclick="toggletinymce('description-<? echo ( $$variable{'C'}{id} ) ?>');">Description:</label><textarea id="description-<? echo ( $$variable{'C'}{id} ) ?>" name="description-<? echo ( $$variable{'C'}{id} ) ?>" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines( $$variable{'C'}->description() ); ) ?>" class="content_description"><? echo ( $$variable{'C'}->description() ) ?></textarea></li>
 			<li class="attachments"><label>Attachment:</label><br class="spacer"/><div id="assets-<? echo ( $$variable{'C'}{id} ) ?>">
 			<!--#include virtual="_assets.html"-->
 			</div>

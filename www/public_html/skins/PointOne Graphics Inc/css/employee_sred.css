@@ -50,6 +50,7 @@
 
 #Contents ul li ul li textarea {
 	width: 99%;
+	resize: vertical;
 }
 #Contents p.buttons {
 	margin: 0;

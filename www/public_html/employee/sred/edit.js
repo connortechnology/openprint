@@ -152,7 +152,7 @@ var project_description_options = {
         theme : "advanced",
 		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect",
 		theme_advanced_buttons2 : "formatselect,bullist,numlist,outdent,indent",
-	theme_advanced_buttons3 : '',
+		theme_advanced_buttons3 : '',
 		auto_resize : true,
 		cleanup : true
     };
@@ -197,7 +197,7 @@ function delete_content(form, content_id ) {
 			evalScripts: true
 		}
 	);
-} // end function add_Content(form)
+} // end function delete_content(form, content_id)
 function edit_content( form, content_id ) {
 	new Ajax.Updater( 'content-'+content_id, '_content_edit.html', {
 			parameters: {
@@ -210,6 +210,20 @@ function edit_content( form, content_id ) {
 	);
 } // end function edit_content
 
+function copy_content(form, content_id ) {
+	tinyMCE.triggerSave();
+	new Ajax.Updater( 'Contents','_contents.html', {
+			parameters: {
+				project_id: form.project_id.value,
+				content_id: content_id,
+				action: 'copy'
+			},
+			onComplete: textarea_init,
+			evalScripts: true
+		}
+	);
+} // end function delete_content(form, content_id)
+
 function view_content( content_id ) {
 	new Ajax.Updater( 'content-'+content_id, '_content_view.html', {
 			parameters: {
@@ -219,5 +233,5 @@ function view_content( content_id ) {
 			evalScripts: true
 		}
 	);
-} // end function edit_content
+} // end function view_content
 

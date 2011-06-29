@@ -1036,3 +1036,13 @@ function trim (str) {
 	}
 	return str;
 }
+function toggletinymce(textarea_id, toggle ) {
+	//var textarea = $(textarea_id);
+	if (tinyMCE.getInstanceById(textarea_id) == null) {
+		if ( toggle ) toggle.innerHTML = ' [ Hide Editor ] ';
+		tinyMCE.execCommand('mceAddControl', false, textarea_id);
+	} else {
+		if ( toggle ) toggle.innerHTML = ' [ Show Editor ] ';
+		tinyMCE.execCommand('mceRemoveControl', false, textarea_id);
+	} // end if
+} // end function toggletinymce

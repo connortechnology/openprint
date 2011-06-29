@@ -248,9 +248,13 @@ sub save_content {
 
 sub _contents {
 	my $Project = $variable{'Project'} = new openprint::SRED_Project( $param{'project_id'} );
-	if ( $param{'func'} eq 'delete' ) {
+	if ( $param{'action'} eq 'delete' ) {
 		my $Content = new openprint::SRED_Content( $param{'content_id'} );
 		$variable{'error'} .= $Content->delete();
+	} elsif ( $param{'action'} eq 'copy' ) {
+		my $Content = new openprint::SRED_Content( $param{'content_id'} );
+		$Content = $Content->copy();
+		$variable{'error'} .= $Content->save();
 	} # end if
 } # end sub _contents
 
