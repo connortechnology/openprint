@@ -1,5 +1,6 @@
 use strict;
 require openprint::Event_Category;
+require openprint::Comment;
 package openprint::Event;
 our @ISA = qw( openprint::Object );
 
@@ -12,7 +13,7 @@ $serial = 'events_id_seq';
 	'name'	=>	'name',
 	'created_by'	=>	'created_by',
 	'starting_on'	=>	'starting_on',
-	'ending_on'	=>	'ending_on',
+	'ending_on'		=>	'ending_on',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'deleted'		=>	'deleted',
@@ -100,6 +101,10 @@ sub can_edit {
 	} # end if
 	return 0;
 } # end sub can_edit
+
+sub Comments {
+	return openprint::Comment->find({'object_type'=>'openprint::Event','object_id'=>$_[0]{'id'}});
+} # end sub Comments
 
 1;
 __END__

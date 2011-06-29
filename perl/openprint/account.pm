@@ -724,5 +724,25 @@ sub forgotten_password {
 sub _location_ddm {
 } # end sub _location_ddm
 
+sub _relationships {
+	if ( $param{'action'} eq 'delete' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		if ( sets::isin( $session{'user_id'}, [ $R->user_id1(), $R->user_id2() ] ) ) {
+			$variable{'error'} .= $R->delete();
+		} else {
+			$log->error("Can't delete a relationship taht we are not in.");
+			$variable{'error'} .= 'You cannot delete a relationship that you are not a part of.';
+		} # end if
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		$variable{'error'} .= $R->save({'approved'=>1});
+		$variable{'information'} .= 'You are now ' . $R->type() . ' ' . $R->User1()->name();
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+	} # end if
+	$variable{'User'} = new openprint::User( $param{'user_id'} );
+} # end sub _relationships
+
 1;
 __END__

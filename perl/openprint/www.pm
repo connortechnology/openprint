@@ -75,7 +75,7 @@ sub handler {
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
 		if ( ref $param{$key} eq 'ARRAY' ) {
-			$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if

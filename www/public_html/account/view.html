@@ -15,19 +15,6 @@
 				return $html;
 			) ?>
 		</p>
-		<? if ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
-		<form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{'User'}->id() ) ?>" method="post">
-		<p><label>Your relationship to <? echo ( $$variable{'User'}->name() ) ?>:</label>
-			<select name="relationship_type_id" id="relationship_type_id" onchange="f1.submit();">
-				<option value="">select</option>
-				<? echo ( 
-					my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{'user_id'}, 'user_id2'=>$$variable{'User'}->id() );
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User_Relationship_Type->find('order'=>'sort,lower(name)') ], $Relationship ? $Relationship->type_id() : undef );
-				) ?>
-			</select>
-		</p>
-		</form>
-		<? endif ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
 		
 		<div id="ProfilePicture">
 			<? if ( $$variable{'User'}->asset_id() ) ?>
@@ -67,6 +54,13 @@
 			</div><!--Albums-->
 			</div><!--Albums-->
 		</div><!--ProfilePicture-->
+		<? if ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
+		<div class="Relationships">
+			<fieldset><legend>Relationships</legend>
+				<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
+			</fieldset>
+		</div>
+		<? endif ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 
 		<div id="UserInformation">

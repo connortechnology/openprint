@@ -28,10 +28,14 @@ $table = 'user_relationships';
 	'user_id1'	=>	'user_id1',
 	'user_id2'	=>	'user_id2',
 	'type_id'	=>	'type_id',
+	'approved'	=>	'approved',
 );
 %find_fields = (
 	'type'		=>	'(SELECT name from user_relationship_types WHERE id=type_id)',
 	'user_id'	=>	[ 'user_id1', 'user_id2' ],
+);
+%defaults = (
+	'approved'	=>	0,
 );
 
 sub User {
@@ -53,7 +57,10 @@ sub type {
 		$_[0]{'type_id'} = $Type;
 		return $Type->name();
 	} # end if
-	return new openprint::User_Relationship_Type( $_[0]{'type_id'} );
+	return new openprint::User_Relationship_Type( $_[0]{'type_id'} )->name();
 } # end sub type
+sub Type {
+	return new openprint::User_Relationship_Type( $_[0]{'type_id'} );
+} # end sub Type
 1;
 __END__
