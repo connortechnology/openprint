@@ -168,8 +168,29 @@ sub load_used {
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
-
-} # edn sub load_used
+	if ( ! $$self{'Press'} ) {
+		if ( $$self{'UsePress'} ) {
+			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'UsePress'});
+			if ( ! $$self{'Press'} ) {
+				$openprint::log->error("No Press found for $qty_index " . $$specs{'UsePress'} );
+			} # end if
+		} # end if
+		if ( ! $$self{'Press'} ) {
+			if ( ! $$specs{'ddmPress'.$qty_index} ) {
+				$openprint::log->error("No ddmPress for $qty_index");
+			} else {
+				$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+				if ( ! $$self{'Press'} ) {
+					$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
+				} # end if
+			} # end if
+		} # end if
+		if ( ! $$self{'Press'} ) {
+			$$self{'Press'} = new openprint::Equipment();
+		} # end 
+	} # end if
+	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
+} # end sub load_used
 
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
