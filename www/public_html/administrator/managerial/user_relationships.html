@@ -22,5 +22,12 @@
 				return $html;
 			) ?>
 		</table>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
+						ssi::button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
+				); ) ?>
+		</p>
+		<input type="hidden" name="action"/>
 	</form>
 </div>
