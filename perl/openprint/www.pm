@@ -24,6 +24,7 @@ require openprint::print;
 require openprint::print_project;
 require openprint::Estimating::Proofs;
 require openprint::usergroup;
+require openprint::Page_Setting;
 
 require openprint::logs;
 
@@ -36,7 +37,7 @@ use openprint::Object;
 use openprint::Currency;
 
 use openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -100,6 +101,31 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
+		if ( ! ( %page_settings and $page_settings{$page} ) ) {
+$log->debug("Page Settings not found for $page");
+			# First step, reload page settings
+			%page_settings = map { $_{'url'}, $_ } openprint::Page_Setting->find();
+			if ( ! $page_settings{$page} ) {
+				# Need to create one.
+				my @chunks = split('/', $page );
+				while ( @chunks ) {
+					pop @chunks;
+					my $chunk = join('/', @chunks);
+$log->debug("Chunk $chunk");
+					if ( $page_settings{$chunk} ) {
+						my $NewPageSettings = $page_settings{$chunk}->copy();
+						$NewPageSettings->save({'url'=>$page});
+						$page_settings{$page} = $NewPageSettings;
+						last;
+					} # end if
+				} # end while chunks
+
+			} # end if
+			if ( ! $page_settings{$page} ) {
+				$page_settings{$page} = new openprint::Page_Setting();
+				$page_settings{$page}->save({'url'=>$page});
+			} # end if
+		} # end if
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;

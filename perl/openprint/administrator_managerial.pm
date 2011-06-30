@@ -768,5 +768,23 @@ sub _company_fields_tbody {
 sub _search_by_email {
 } # end sub _search_by_email
 
+sub page_settings {
+	require openprint::Page_Setting;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $PS ( openprint::Page_Setting->find() ) {
+			if ( 
+					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
+					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
+					( $PS->user_level() ne $param{'user_level-'.$PS->id()} )
+				) {
+				$variable{'error'} .= $PS->save({
+						'url'=>$param{'url-'.$$PS{id}},
+						'cacheable'=>$param{'cacheable-'.$$PS{id}},
+						'user_level'=>$param{'user_level-'.$$PS{id}},
+						});
+			} # end if need to save
+		} # end foreach PS
+	} # end if
+} # end sub page_settings
 1;
 __END__
