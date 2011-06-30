@@ -1,0 +1,26 @@
+<div class="User_Relationships">
+	<form id="f1" name="f1" action="user_relationships.html" method="post">
+		<table>
+			<tr>
+				<th>id</td>
+				<th>text1</th>
+				<th>text2</th>
+				<th>text3</th>
+			</tr>
+			<? echo (
+				my $html;
+				foreach my $R ( openprint::User_Relationship_Type->find() ) {
+					$html .= sprintf(q`
+						<tr>
+							<td>%1$d</td>
+							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
+							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
+							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
+						</tr>
+						`, $R->id(), $R->name(), $R->name(), $R->name() );
+				} # end foreach R
+				return $html;
+			) ?>
+		</table>
+	</form>
+</div>
