@@ -101,17 +101,21 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
+		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
 $log->debug("Page Settings not found for $page");
 			# First step, reload page settings
-			%page_settings = map { $_{'url'}, $_ } openprint::Page_Setting->find();
+			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
 			if ( ! $page_settings{$page} ) {
 				# Need to create one.
 				my @chunks = split('/', $page );
 				while ( @chunks ) {
 					pop @chunks;
+					last if ! @chunks;
+					
 					my $chunk = join('/', @chunks);
-$log->debug("Chunk $chunk");
+					last if ! $chunk;
+		
 					if ( $page_settings{$chunk} ) {
 						my $NewPageSettings = $page_settings{$chunk}->copy();
 						$NewPageSettings->save({'url'=>$page});
@@ -130,7 +134,6 @@ $log->debug("Chunk $chunk");
 			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 		} # end foreach
-		openprint::session_init();
 
 		$openprint::log->debug("Page: $page");
 		while ( $page and $lastpage ne $page ) {

@@ -293,12 +293,11 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 } # end sub set
 
 sub copy {
-	my $self = shift;
 
-	my $type = ref $self;
+	my $type = ref $_[0];
 	my $new = new $type;
-	my %fields = eval ('%'.$type.'::fields');
-	@$new{keys %fields} = @$self{keys %fields};
+	my $fields = eval ('\%'.$type.'::fields');
+	@$new{keys %$fields} = @{$_[0]}{keys %$fields};
 	delete $$new{id};
 
 	return $new;
