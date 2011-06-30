@@ -13,11 +13,11 @@
 					$html .= sprintf(q`
 						<tr>
 							<td>%1$d</td>
-							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
-							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
-							<td><input type="text" name="text1" id="text1" value="%2$s"/></td>
+							<td><input type="text" name="text1-%1$d" id="text1-%1$d" value="%2$s"/></td>
+							<td><input type="text" name="text2-%1$d" id="text2-%1$d" value="%2$s"/></td>
+							<td><input type="text" name="text3-%1$d" id="text3-%1$d" value="%2$s"/></td>
 						</tr>
-						`, $R->id(), $R->name(), $R->name(), $R->name() );
+						`, $R->id(), $R->text1(), $R->text2(), $R->text3() );
 				} # end foreach R
 				return $html;
 			) ?>
