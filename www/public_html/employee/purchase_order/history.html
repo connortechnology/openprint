@@ -31,11 +31,11 @@
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 		<li><label>PO #:</label>
-			<input type="text" id="po_id" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="po_id" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 		</li>
 		<li><label>Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 		</li>
 		<li><label>Manifest:</label>
