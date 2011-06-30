@@ -441,6 +441,10 @@ if ( ! sets::isin( 'bookmarks', \@tables ) ) {
 if ( ! $config{'public_URIs'} ) {
 $dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
 } # end if
+if ( ! sets::isin( 'page_settings', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
 $dbh->disconnect();
 1;

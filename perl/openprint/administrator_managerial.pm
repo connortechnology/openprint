@@ -789,6 +789,15 @@ sub page_settings {
 
 sub user_relationships {
 	require openprint::User_Relationship;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $URT ( openprint::User_Relationship_Type->find() ) {
+			$variable{'error'} .= $URT->save({
+				'text1'	=>	$param{'text1-'.$URT->id()},
+				'text2'	=>	$param{'text2-'.$URT->id()},
+				'text3'	=>	$param{'text3-'.$URT->id()},
+			});
+		} # end foreach URT
+	} # end if
 } # end sub user_relationships
 
 1;

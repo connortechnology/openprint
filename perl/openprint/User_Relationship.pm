@@ -10,6 +10,9 @@ $serial = 'user_relationship_types_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',
+	'text1'	=>	'text1',
+	'text2'	=>	'text2',
+	'text3'	=>	'text3',
 	'sort'	=>	'sort',
 );
 %defaults = (
