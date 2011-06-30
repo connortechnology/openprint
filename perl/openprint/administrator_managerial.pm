@@ -786,5 +786,10 @@ sub page_settings {
 		} # end foreach PS
 	} # end if
 } # end sub page_settings
+
+sub user_relationships {
+	require openprint::User_Relationship;
+} # end sub user_relationships
+
 1;
 __END__
