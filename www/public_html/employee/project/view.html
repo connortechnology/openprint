@@ -352,7 +352,7 @@ $log->debug("Have no job: $Job");
 <? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() );
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
 <fieldset><legend>Purchase Orders:</legend>
@@ -361,7 +361,7 @@ $log->debug("Have no job: $Job");
 <? echo (
 	my $html = '';
 	foreach my $PO_Content ( @{$$variable{'PurchaseOrders'}} ) {
-		$html .= sprintf('<tr><td><a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
+		$html .= sprintf('<tr><td><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$d%4$s</td></tr>', 
 			$PO_Content->po_id(),
 			$PO_Content->description(),
 			$PO_Content->qty(),

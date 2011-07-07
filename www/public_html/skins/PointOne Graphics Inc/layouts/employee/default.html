@@ -1,8 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html lang="en">
 	<head>
 		<title><?PageTitle?> - Employee</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta charset="utf-8" />
 		<link href="/css/common.css" rel="stylesheet" type="text/css" />
 		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
@@ -40,7 +40,7 @@
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js?version=3.4.3.1"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
@@ -170,9 +170,9 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-						<li id="InventoryMenu" class="<? echo ( ($$variable{'uri'} =~ /employee\/inventory/ or $$variable{'uri'} =~ /employee\/claim/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
+						<li id="InventoryMenu" class="<? echo ( ($$variable{'uri'} =~ /employee\/inventory/ or $$variable{'uri'} =~ /employee\/claim/ or $$variable{'uri'} =~ /employee\/purchase_order/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
-								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
+								<li><a href="/employee/purchase_order/history.html;NOSSL">&raquo; Purchase Orders</a></li>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
@@ -184,6 +184,7 @@
 								<li><a href="/employee/inventory/manifest.html;NOSSL">&raquo; Update Inventory</a></li>
 								<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
 								<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
+								<li><a href="/employee/inventory/packingslips.html;NOSSL">&raquo; Packing Slips</a></li>
 							</ul>
 						</li>
 						<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>

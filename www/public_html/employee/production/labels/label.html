@@ -15,12 +15,12 @@
 	<div class="buttons">
 		<? echo ( join('',
 			ssi::button( 'Print', { 'onclick' => 'window.print();' } ),
-			ssi::button( 'Back', { 'href' => (
+			ssi::button( 'Project', { 'href' => (
 				$param{'project_id'} ? 
 				'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
 				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket() ),
 				} ),
-			ssi::button( 'PO', { 'href' => "/employee/inventory/purchase_order_edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", 'text' => 'Generate PO' } ),
+			ssi::button( 'PO', { 'href' => "/employee/purchase_order/edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", 'text' => 'Generate PO' } ),
 			ssi::button( 'Send', { 'onclick' => qq`popup_window('_send_email.html?id=$$variable{Label}{id}');` } ),
 		); ) ?>
 	</div>

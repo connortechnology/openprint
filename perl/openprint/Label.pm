@@ -2,9 +2,10 @@ use strict;
 package openprint::Label;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
+require openprint::LabelType;
 
 use openprint ();
-use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -20,6 +21,9 @@ $serial = 'labels_id_seq';
 	'content'		=>	'content',
 	'docket'		=>	'docket',
 	'created_on'	=>	'created_on',
+);
+%find_fields = (
+	'company_id'	=>	'(SELECT DISTINCT companyindex FROM tbl_Projects WHERE tbl_Projects.lngDocketNumber=labels.docket)',
 );
 
 %transforms = (

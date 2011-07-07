@@ -1,11 +1,11 @@
+use strict;
 package openprint::PurchaseOrder_Content;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh $table $serial %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh $debug $table $serial %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -13,8 +13,9 @@ use vars qw(%variable $log $dbh $table $serial %config %fields %transforms %defa
 
 require sql;
 require openprint::PurchaseOrder_ContentType;
+require openprint::PurchaseOrder_Item;
 
-my $debug = 0;
+$debug = 1;
 $table = 'PurchaseOrder_Contents';
 $serial = 'PurchaseOrder_Contents_id_seq';
 
@@ -26,6 +27,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'price'			=>	'price',
 	'total'			=>	'total',
 	'item'			=>	'item',
+	'item_id'		=>	'item_id',
 	'docket'		=>	'docket',
 	'description'	=>	'description',
 	'type_id'		=>	'type_id',
@@ -45,84 +47,20 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'total'			=>	undef,
 	'qty'			=>	undef,
 	'type_id'		=>	undef,
+	'item_id'		=>	undef,
 );
-
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM PurchaseOrder_Contents WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( exists $params{'po_id'} ) {
-		if ( $params{'po_id'} ) {
-			$sql .= ' AND po_id=?';
-			push @values, $params{'po_id'};
-		} else {
-			$sql .= ' AND po_id IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'item_like'} ) {
-		$sql .= ' AND item LIKE ?';
-		push @values, $params{'item_like'};
-	} # end if
-	if ( $params{'description_like'} ) {
-		$sql .= ' AND description LIKE ?';
-		push @values, $params{'description_like'};
-	} # end if
-	if ( exists $params{'docket'} ) {
-		if ( defined $params{'docket'} ) {
-			$sql .= 'AND docket=?';
-			push @values, $params{'docket'};
-		} else {
-			$sql .= 'AND docket IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading PurchaseOrder_Contents SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No PurchaseOrder_Contents loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded PurchaseOrder_Contents ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::PurchaseOrder_Content( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM PurchaseOrder_Contents WHERE id=?}, $$self{'id'} );
-} # end sub delete
 
 sub PurchaseOrder {
 	return new openprint::PurchaseOrder( $_[0]{po_id} );
 } # end sub Supplier
 
 sub Type {
-return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
+	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
+
+sub Item {
+	return new openprint::PurchaseOrder_Item( $_[0]{item_id} );
+} # end sub Item
 
 sub type {
 	if ( @_ > 1 ) {
@@ -144,6 +82,25 @@ sub units {
 	} # end if
 	return;
 } # end sub units
+
+sub Item {
+	return new openprint::PurchaseOrder_Item( $_[0]{'item_id'} );
+} # end sub Item
+
+sub item {
+	my $Item = new openprint::PurchaseOrder_Item( $_[0]{'item_id'} );
+	if ( @_ > 1 ) {
+		if ( $Item->name() ne $_[1] ) {
+			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name'=>$_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} );
+			if ( ! $NewItem ) {
+				$NewItem = new openprint::PurchaseOrder_Item();
+				$NewItem->save( { 'name'=>$_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} } );
+			} # end if
+			$_[0]{'item_id'} = $$NewItem{'id'};
+		} # end if
+	} # end if
+	return $Item->name();
+} # end sub item
 
 1;
 __END__
