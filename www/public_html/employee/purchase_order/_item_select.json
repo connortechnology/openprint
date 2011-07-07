@@ -6,13 +6,14 @@
 	$desc =~ s/\r\n//g;
 	$desc =~ s/\n//g;
 	return sprintf( q`
+		$('product-%1$d').value = '%3$s';
+		$('item-%1$d').value = '%4$s';
+		$('description-%1$d').value = '%2$s';
 		if ( $('description-%1$d').type == 'textarea' ) {
-		var desc = tinyMCE.getInstanceById('description-%1$d');
-		desc.setContent('%2$s');
-		} else {
-			$('description-%1$d').value = '%2$s';
+			var desc = tinyMCE.getInstanceById('description-%1$d');
+			desc.setContent('%2$s');
 		} // end if
-		$('price-%1$d').value='%3$s';
+		$('price-%1$d').value='%5$s';
 		calc_price($('item_id-%1$d'));
-		`, $param{'content_id'}, $desc, $Item->price() );
+		`, $param{'content_id'}, $desc, $Item->product(), $Item->name(), $Item->price() );
 ) ?>

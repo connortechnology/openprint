@@ -524,5 +524,23 @@ sub _similar_pos {
 sub _item_select {
 } # end sub _item_select
 
+sub items {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $item_id ( ref $param{'item_id'} eq 'ARRAY' ? @{$param{'item_id'}} : $param{'item_id'} ) {
+			my $Item = new openprint::PurchaseOrder_Item( $item_id );
+			if ( $_ = $Item->delete() ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} # end if
+		} # end foreach item_id
+		delete $param{'item_id'};
+	} else {
+		ssi::save_params( '/employee/purchase_order/items.html', ( 'supplier_id','types', 'item_contains' ) );
+	} # end if
+} # end sub items
+
+sub _items {
+	ssi::save_params( '/employee/purchase_order/items.html', ( 'supplier_id','types', 'item_contains' ) );
+} # end sub _items
+
 1;
 __END__
