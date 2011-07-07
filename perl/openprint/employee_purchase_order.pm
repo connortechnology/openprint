@@ -132,9 +132,24 @@ sub view {
 
 				my $Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
 				if ( ! $Item->id() ) {
-					$Item->save({'company_id'=>$PO->company_id(), 'vendor_id'=>$PO->supplier_id(), 'type_id'=>$param{'type_id-'.$content_id}, 'name'=>$param{'item-'.$content_id}, 'description'=>$param{'description-'.$content_id}, 'price'=>$param{'price-'.$content_id} });
-				} elsif ( $Item->price() != $param{'price-'.$content_id} ) {
-				# Update the latest price
+					$Item = openprint::PurchaseOrder_Item->find_one(
+						'company_id'	=>	$PO->company_id(),
+						'vendor_id'		=>	$PO->supplier_id(),
+						'type_id'		=>	$param{'type_id-'.$content_id},
+						'name_lc'		=>	lc $param{'item-'.$content_id}, 
+						'product_lc'	=>	lc $param{'product-'.$content_id},
+					);
+					$Item->save({
+						'company_id'	=>	$PO->company_id(),
+						'vendor_id'		=>	$PO->supplier_id(),
+						'type_id'		=>	$param{'type_id-'.$content_id},
+						'name'			=>	$param{'item-'.$content_id}, 
+						'price'			=>	$param{'price-'.$content_id},
+						'product'		=>	$param{'product-'.$content_id},
+					 }) if ! $Item;
+				} # end if
+				if ( $Item->price() != $param{'price-'.$content_id} ) {
+					# Update the latest price
 					$Item->save({'price'=>$param{'price-'.$content_id}});
 				} # end if
 
