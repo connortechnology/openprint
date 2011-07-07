@@ -1677,9 +1677,8 @@ sub _skids_results {
 sub _paper_log {
 	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
 } # end _paper_log
-
-sub _similar_pos {
-} # end sub _similar_pos
+sub _skid_log {
+} # end _skid_log
 
 sub skid_label {
 } # end sub skid_label

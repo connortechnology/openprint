@@ -23,6 +23,9 @@ $serial = 'purchaseorder_items_id_seq';
 	'description'	=>	[ 's/\.//g', 's/^\s+//' ],
 	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
+%defaults = (
+	'price'	=>	undef,
+);
 
 sub Vendor {
 	return new openprint::Company( $_[0]{'vendor_id'} );

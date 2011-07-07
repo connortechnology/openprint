@@ -143,6 +143,7 @@ sub view {
 				$variable{'error'} .= $C->save( {
 						'po_id'         =>  $PO->id(),
 						'qty'           =>  $param{'qty-'.$content_id},
+						'product'		=>	$param{'product-'.$content_id},
 						'item_id'       =>  $$Item{'id'},
 						'description'   =>  $param{'description-'.$content_id},
 						'docket'        =>  $param{'docket-'.$content_id},
@@ -484,6 +485,7 @@ sub _po_content_line {
             'po_id'         =>  $param{'po_id'},
             'qty'           =>  $param{'qty'},
             'item'          =>  $param{'item'},
+			'product'		=>	$param{'product'},
             'description'   =>  $param{'description'},
             'docket'        =>  $param{'docket'},
             'price'         =>  $param{'price'},
