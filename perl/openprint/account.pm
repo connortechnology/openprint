@@ -30,7 +30,6 @@ sub select_company {
 } # end sub select_company
 
 sub registration {
-$log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserAccountActivation} $config{NewNonFirstUserAccountActivation}");
 	if ( $param{'btnFunction'} ne 'Register' ) {
 		$log->debug("Not registering");
 		return;
@@ -172,23 +171,23 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 				);
 		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 
-		# send notification
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		foreach my $to ( split(',', $config{'UserRegistrationEmail'} ) ) {
-			%mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $agent,
-					TO		=> $to,
-					SUBJECT => 'New Login Application',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
-		} # end foreach
-
 		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			# If I'm a salesrep, then only change my company, not the user.
 			$session{'company_id'} = $Company->id();
 		} else { 
+# send notification
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			foreach my $to ( split(',', $config{'UserRegistrationEmail'} ) ) {
+				%mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $agent,
+						TO		=> $to,
+						SUBJECT => 'New Login Application',
+						'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
+			} # end foreach
 			if ( $config{'NewFirstUserAccountActivation'} eq 'Y' and $config{'NewCustomerAccountActivation'} eq 'Y') {
 				# auto log in.
 				@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
@@ -239,6 +238,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 					SMTP	=> $config{'Mail Server'},
 					FROM	=> $agent,
 					TO		=> $to,
+					'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
 					SUBJECT => 'New Login Application'
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
