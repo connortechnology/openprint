@@ -53,17 +53,17 @@
 				<input type="text" name="product-%1$d" id="product-%1$d" value="%3$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');};"/>
 			</td>
 			<td class="description">
-				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: this.getValue() } } );"><option value="">select</option>%12$s</select><br/>
 				<input type="hidden" name="item-%1$d" id="item-%1$d" value="%4$s"/>
+				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: this.getValue() } } );"><option value="">select</option>%13$s</select><br/>
 
 				<input type="number" class="SheetMWeight" name="mweight-%1$d" id="mweight-%1$d" value="%5$s" onkeyup="calc_price(this);set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />M
 				<input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" onkeyup="set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" value="%6$s"/>
-				<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_item('%1$d');">%7$s</select>
-				<textarea name="description-%1$d" id="description-%1$d" rows="%5$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%4$s</textarea>
+				<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_item('%1$d');">%8$s</select>
+				<textarea name="description-%1$d" id="description-%1$d" rows="%7$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%4$s</textarea>
 			</td>
-			<td class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%8$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %9$d} });" onblur="$('similar_pos').innerHTML='';"/></td>
-			<td class="price"><input type="number" name="price-%1$d" id="price-%1$d" value="%10$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/>/100lb<br/><span id="price-%1$d-alert" class="error"></span></td>
-			<td class="total"><input type="number" name="total-%1$d" id="total-%1$d" value="%11$.2f" onkeyup="calc_price(this);" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
+			<td class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%9$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %10$d} });" onblur="$('similar_pos').innerHTML='';"/></td>
+			<td class="price"><input type="number" name="price-%1$d" id="price-%1$d" value="%11$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/>/100lb<br/><span id="price-%1$d-alert" class="error"></span></td>
+			<td class="total"><input type="number" name="total-%1$d" id="total-%1$d" value="%12$.2f" onkeyup="calc_price(this);" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
 		`, $C->id(), $C->qty(), $C->product(), $C->item(),
 		$mweight, $name, $C->description(), ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
 		$C->docket(), $C->po_id(),
