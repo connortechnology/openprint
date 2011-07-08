@@ -17,11 +17,12 @@ $serial = 'purchaseorder_items_id_seq';
 	'name'			=>	'name',
 	'description'	=>	'description',
 	'price'			=>	'price',
+	'product'		=>	'product',
 );
 
 %transforms = (
-	'name'	=>	[ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
-	'description'	=>	[ 's/\.//g', 's/^\s+//' ],
+	'name'	=>	[ 's/^\s+//', 's/\s+$//' ],
+	'product'	=>	[ 's/^\s+//', 's/\s+$//' ],
 	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
