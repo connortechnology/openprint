@@ -162,8 +162,8 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 ) ?>
 	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="5" class="totals">SUBTOTAL</td>
-		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		<td colspan="5" class="totals">SUBTOTAL:</td>
+		<td class="price"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
                 <? echo ( 
                     my $html;
@@ -175,8 +175,8 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
                     return $html;
                 ) ?>
 	<tr>
-		<td colspan="5" class="totals">TOTAL</td>
-		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+		<td colspan="5" class="totals">TOTAL:</td>
+		<td class="price"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>

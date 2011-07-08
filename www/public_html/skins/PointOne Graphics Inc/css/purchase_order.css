@@ -1,22 +1,11 @@
 
-@media screen {
-.unprintable {
-}
-}
-@media print {
-.unprintable {
-	display: none;
-}
-}
 
 .PO {
 	background-color: white;
-
 }
 
 .PO table {
 	border-top: 1px solid #3b5e91;
-	table-layout: fixed;
 }
 .PO table td {
 	border: 1px solid #aebdd2;
@@ -26,15 +15,15 @@
 	border: 1px solid #aebdd2;
 	background-color: #e4ebf4;
 }
-	
-.PO table td.totals {
+
+.PO table .totals {
 	text-align: right;
 }
 .PO table td input {
 	width: 96%;
-	min-width:0px;
-	margin: 0px;
-	padding: 0px;
+	min-width:0;
+	margin: 0;
+	padding: 0;
 }
 .PO table td input.RollQTY {
 	width: 60px;
@@ -75,11 +64,6 @@ table td input.SheetQTY {
 	resize: vertical;
 }
 
-@media print {
-body #Header {
-	display: none;
-}
-}
 
 .PO .Header {
 	display: block;
@@ -240,14 +224,6 @@ div.autocomplete ul li {
 	width: 45px;
 	text-align: left;
 } 
-.ShippingMethod {
-	width: 374px;
-}
-.ShippingTerms {
-}
-.DeliveryDate {
-	width: 256px;
-}
 table .buttons {
 	width: 55px;
 }
@@ -269,7 +245,17 @@ table .docket {
 	width: 120px;
 	text-align: left;
 }
+.method {
+	width: 253px;
+}
+.terms {
+}
 .delivery_date {
-	width: 203px;
+	width: 291px;
 	text-align: center;
+}
+@media print {
+	.unprintable, #Header {
+		display: none;
+	}
 }

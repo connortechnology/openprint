@@ -107,10 +107,10 @@ function update_taxes( form ) {
 		</div>
 		<br class="spacer"/>
 		<table>
-			<tr>
-				<th class="ShippingMethod">Shipping Method</th>
-				<th class="ShippingTerms">Shipping Terms</th>
-				<th class="DeliveryDate">Delivery Date</th>
+			<tr class="Shipping">
+				<th class="method">Shipping Method</th>
+				<th class="terms">Shipping Terms</th>
+				<th class="delivery_date">Delivery Date</th>
 			</tr>
 			<tr>
 				<td class="ShippingMethod"><textarea name="shipping_method" id="shipping_method" rows="<? echo ( ssi::count_lines( $$variable{'PurchaseOrder'}->shipping_method()); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></textarea></td>
