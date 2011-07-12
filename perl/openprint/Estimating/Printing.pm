@@ -3432,12 +3432,15 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 		} # end if
 
-		my %InkService = openprint::service::get_price_object( $real_colour, $qty, $Press );
+		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
 		if ( %InkService ) {
 			if ( lc $InkService{'units'} eq 'per m' ) {
-				$InkService{'Total'} = $InkService{'Price'} * $qty/1000;
+				$InkService{'Total'} = $InkService{'Price'} * $impressions/1000;
+			} else {
+				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
+				$openprint::log->error('unknown units for ' . $real_colour );
 			} # end if
-			$price{'Ink breakdown'} .= sprintf(' Run: $%.2f%s = $%.2f', @InkService{'Price','units','Total'} );
+			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
 			$price{'Ink Price'} += $InkService{'Total'};
 		} # end if
 
