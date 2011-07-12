@@ -66,12 +66,16 @@ sub _hosts {
 } # end sub _hosts
 
 sub host {
-	$variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
 	if ( $param{'btnFunction'} eq 'Resolve' ) {
-		$variable{'error'} .= $variable{'Host'}->save({
-				'hostname'=> $variable{'Host'}->resolve(),
-				'mac'=> $variable{'Host'}->get_mac(),
+		if ( ! $Host->ip() ) {
+			$variable{'error'} .= 'No ip.  Cant resolve without an ip.';
+		} else {
+		$variable{'error'} .= $Host->save({
+				'hostname'	=> $Host->resolve(),
+				'mac'		=> $Host->get_mac(),
 				});
+		} # end if
 	} # end if
 } # end sub view_host
 

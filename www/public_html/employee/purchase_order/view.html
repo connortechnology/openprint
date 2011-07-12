@@ -168,7 +168,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
                 <? echo ( 
                     my $html;
                     foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="price">%s</td></tr>',
                             $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
                             );
                     } # end foreach Tax
