@@ -2,6 +2,8 @@ package openprint::Host;
 @ISA = qw( openprint::Object );
 require openprint::Object;
 use Net::ARP;
+use Net::Ping;
+use IO::Interface::Simple;
 use strict;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults %types );
@@ -15,26 +17,28 @@ $serial = 'hosts_id_seq';
 	'mac'			=>	'mac',	
 	'blacklist'		=>	'blacklist',
 	'whitelist'		=>	'whitelist',
-	'monitor'		=>	'monitor',
+	'monitored'		=>	'monitored',
 	'description'	=>	'description',
 	'dhcp'			=>	'dhcp',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'count'			=>	'count',
 	'deleted'		=>	'deleted',
+	'online'		=>	'online',
 );
 %transforms = (
 );
 %defaults = (
 	'blacklist'	=>	0,
 	'whitelist'	=>	0,
-	'monitor'	=>	0,
+	'monitored'	=>	0,
 	'mac'		=>	undef,
 	'hostname'	=>	undef,
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
 	'count'		=>	undef,
 	'deleted'	=>	0,
+	'online'	=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;
@@ -49,9 +53,25 @@ sub resolve {
 
 sub get_mac {
 	my ( $self ) = @_;
-	my $mac = Net::ARP::arp_lookup( 'eth1', $$self{'ip'} );
-$openprint::log->debug("Mac: $mac");
-	return $mac;
+
+	my ( $subnet ) = $$self{'ip'} =~ /^(\d+\.\d+\.\d+)\.\d+$/;
+
+	my $use_iface;
+
+	foreach my $iface ( IO::Interface::Simple->interfaces ) {
+$openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
+		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
+			$use_iface = $iface;
+		} # end if
+	}
+
+	if ( $use_iface ) {
+		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
+		$openprint::log->debug("Mac: $mac");
+		return $mac;
+	} else {
+		$openprint::log->debug("Unable to determine interface");
+	} # end if
 } # end sub get_mac
 
 sub destroy {
@@ -63,6 +83,13 @@ sub destroy {
 	$error .= $_[0]->SUPER::destroy();
 	return $error;
 } # end sub destroy
+
+sub ping {
+	my $p = Net::Ping->new();
+	my $rc = $p->ping($_[0]{'ip'});
+	$p->close();
+	return $rc;
+} # end sub ping
 
 1;
 __END__
