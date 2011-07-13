@@ -26,27 +26,25 @@
 				</li>
 				<li>
 					<label>Blacklist:</label>
-					<input type="radio" name="blacklist" id="blacklist1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->blacklist() ); ) ?>
-					<label class="radio" for="blacklist1">Yes</label>
-					<input type="radio" name="blacklist" id="blacklist0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->blacklist() ); ) ?>
-					<label class="radio" for="blacklist0">No</label>
+					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{'Host'}->blacklist() ); ) ?>
 				</li>
 				<li>
 					<label>Access violation count:</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
 				</li>
 				<li>
 					<label>Whitelist:</label>
-					<input type="radio" name="whitelist" id="whitelist1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->whitelist() ); ) ?>
-					<label class="radio" for="whitelist1">Yes</label>
-					<input type="radio" name="whitelist" id="whitelist0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->whitelist() ); ) ?>
-					<label class="radio" for="whitelist0">No</label>
+					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{'Host'}->whitelist() ); ) ?>
 				</li>
 				<li>
 					<label>Monitor:</label>
-					<input type="radio" name="monitor" id="monitor1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->monitor() ); ) ?>
-					<label class="radio" for="monitor1">Yes</label>
-					<input type="radio" name="monitor" id="monitor0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->monitor() ); ) ?>
-					<label class="radio" for="monitor0">No</label>
+					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{'Host'}->monitored() ); ) ?>
+				</li>
+				<? if ( $$variable{'Host'}->monitored() ) ?>
+				<li><label>Actions:</label>
+				</li>
+				<? endif ( $$variable{'Host'}->monitored() ) ?>
+				<li>
+					<label>Online:</label><? echo ( $$variable{'Host'}->online() ? 'Yes' : 'No' ) ?>
 				</li>
 				<li><label>Description:</label>
 					<textarea id="description" name="description" cols="" rows=""><? echo ( $$variable{'Host'}->description() ) ?></textarea>
