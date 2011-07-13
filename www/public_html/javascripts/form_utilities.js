@@ -73,7 +73,7 @@ function fill_ddm ( ddm, options, onchange ) {
 		ddm.disabled = true;
 		//ddm.onchange = null;
 		clear_ddm( ddm );
-		for( var index = 0; index < options.length; index += 1 ) {
+		for( var index = 0, len = options.length; index < len; index += 1 ) {
 			ddm.options[ddm.options.length] = create_option( options[index].value, options[index].text );
 		} // end for
 		//ddm.onchange = onchange;
@@ -84,12 +84,12 @@ function fill_ddm_from_array ( ddm, options, onchange ) {
 	if ( ddm ) {
 		ddm.disabled = true;
 		clear_ddm( ddm );
-		for( var index = 0; index < options.length; index += 2 ) {
+		for( var index = 0, len=options.length; index < len; index += 2 ) {
 			ddm.options[ddm.options.length] = create_option( options[index], options[index+1] );
 		} // end for
 		ddm.disabled = false;
 	} // end if
-} // end function fill_ddm
+} // end function fill_ddm_from_array
 
 function clear_ddm ( ddm ) {
 
@@ -240,19 +240,32 @@ function ddm_select_by_value( ddm, value, defaultValue ) {
 } // end function ddm_select_by_value( ddm, value );
 function ddm_select_by_text( ddm, value, defaultValue ) {
 	if ( ddm ) {
-		for ( var index = 0; index < ddm.options.length; index += 1 ) {
-			if ( ddm.options[index] && ddm.options[index].text == value ) {
+		for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+			if ( ddm.options[index].text == value ) {
 				ddm_select_by_index( ddm, index );
 				return;
 			} // end if
 		} // end for
-		if ( defaultValue ) {
-			ddm_select_by_index( ddm, defaultValue );
-		} // end nif
+		ddm_select_by_index( ddm, defaultValue );
 	} else {
 		alert( "null ddm passed to ddm_select_by_text" );
 	} // end if
 } // end function ddm_select_by_text( ddm, value );
+function ddm_select_by_text_case_insensitive( ddm, value, defaultValue ) {
+	var lowervalue = value.toLowerCase();
+    if ( ddm ) {
+        for ( var index = 0, len = ddm.options.length; index < len; index += 1 ) {
+            if ( ddm.options[index].text.toLowerCase() == lowervalue ) {
+                ddm_select_by_index( ddm, index );
+                return;
+            } // end if
+        } // end for
+        ddm_select_by_index( ddm, defaultValue );
+    } else {
+        alert( "null ddm passed to ddm_select_by_text" );
+    } // end if
+} // end function ddm_select_by_text( ddm, value );
+
 
 function filterDDM( filter, ddm ) {
 	if ( ! filter.value.length ) {
@@ -712,6 +725,21 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
+function Location_onchange( parent_element, child_element, type ) {
+	if ( parent_element.getValue() ) {
+		// only do anything if we have selected something	
+		new Ajax.Request( '_location_ddm.json', { 
+			parameters: { 
+					type: type,
+					parent_element: parent_element.id,
+					parent_id: parent_element.getValue(), 
+					child_element: child_element.id
+				}, evalScripts: true
+			}
+			);
+	} // end if
+}
+
 function countLines(strtocount, cols) {
 	var hard_lines = 1;
 	var last = 0;
@@ -876,30 +904,39 @@ function set_date( form, from, to ) {
 	//ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
 } // end function set_date
 
-function check_time_starting( form, starting_prefix, ending_prefix ) {
+function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
+	if ( ! suffix ) suffix = '';
     var start;
     var end;
 	var do_time = 0;
 
-    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+    if ( form.elements['time_assocated'+suffix] ) {
+		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
+	} else if ( form.elements['all_day_event'+suffix] ) {
+		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
+	} else if ( form.elements[starting_prefix+suffix+'_hour']) {
 		do_time = 1;
 	} // end if
+
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
     } else {
-        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
     } // end if
 
     if ( start > end ) {
-        ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
-        ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
-		form.elements[ending_prefix+'_month'].onchange();
-        ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
+        ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
+        ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
+		form.elements[ending_prefix+suffix+'_month'].onchange();
+        ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
 		if ( do_time ){
-            ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );
-            ddm_select_by_value( form.elements[ending_prefix+'_minute'], form.elements[starting_prefix+'_minute'].value );
+            ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
+            ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
+		} else {
+			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
+			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
         } // end if
     } // end if
 } // end function check_time_starting
@@ -930,28 +967,71 @@ function check_time_ending( form, starting_prefix, ending_prefix ) {
     } // end if
 } // end function check_time_ending
 
-function update_duration(form, starting_prefix, ending_prefix ) {
+function update_duration(form, starting_prefix, ending_prefix, suffix ) {
+	if ( ! suffix ) suffix = '';
 	var do_time = 0;
+	var unknown_time = 0;
+	if ( form.elements['unknown_time'+suffix] ) {
+		if ( get_value( form.elements['unknown_time'+suffix] ) == 1 ) unknown_time = 1;
+	} // end if
 
-    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+    if ( form.elements['time_assocated'+suffix] ) {
+		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
+	} else if ( form.elements['all_day_event'+suffix] ) {
+		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
+	} else if ( form.elements[starting_prefix+suffix+'_hour']) {
 		do_time = 1;
 	} // end if
+
 	if ( do_time ) {
-        var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
-        var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+		if ( unknown_time ) {
+			$(starting_prefix+suffix+'_time').hide();
+			$(ending_prefix+suffix+'_time').hide();
+			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
+			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
+			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
+			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
+		} else {
+			$(starting_prefix+suffix+'_time').show();
+			$(ending_prefix+suffix+'_time').show();
+		} // end if
+		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
+        var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+        var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
         var difference = parseInt( ( end - start ) / 1000 );
         var days = parseInt(difference/(60*60*24));
         difference -= days * ( 60*60*24 );
         var hours = parseInt( difference/(60*60) );
         difference -= hours * (60*60);
         var minutes = parseInt( difference/60 );
-        $('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+		if ( form.elements['duration'+suffix+'_days'] ) {
+			form.elements['duration'+suffix+'_days'].value=days;
+			if ( ! unknown_time ) {
+				ddm_select_by_value( form.elements['duration'+suffix+'_hours'], hours );
+				ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], minutes );
+			}
+		} else {
+			var duration = $('duration'+suffix);
+			if ( duration )
+				duration.innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+		} // end if
     } else {
-        var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
-        var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+		$(starting_prefix+suffix+'_time').hide();
+		$(ending_prefix+suffix+'_time').hide(); 
+		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
+        var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
+        var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
         var difference = parseInt( ( end - start ) / 1000 );
         var days = parseInt(difference/(60*60*24));
-        $('duration').innerHTML = days +'days';
+		if ( form.elements['duration'+suffix+'_days'] ) {
+			form.elements['duration'+suffix+'_days'].value=days;
+			if ( form.elements['duration'+suffix+'_hours'] ) ddm_select_by_value( form.elements['duration'+suffix+'_hours'], 0 );
+			if ( form.elements['duration'+suffix+'_minutes'] ) ddm_select_by_value( form.elements['duration'+suffix+'_minutes'], 0 );
+		} else {
+			var duration = $('duration'+suffix);
+			if ( duration )
+				duration.innerHTML = days +'days';
+		} // end if
     } // end if
 } // end function update_duration
 
@@ -1244,4 +1324,23 @@ $('txt'+name).value='';
 $(name).selectedIndex=0;
 $(name).toggle();
 $('txt'+name).toggle();
+}
+function getValues( form, element_names ) {
+	var results = new Hash();
+	for ( var index = element_names.length; index; index -- ) {
+		var form_element = form.elements[element_names[index-1]];
+		if ( form_element ) 
+			results.set(element_names[index-1], form_element.getValue());
+	} // end for
+	return results;
+} // end function getValues
+function trim (str) {
+	str = str.replace(/^\s+/, '');
+	for (var i = str.length - 1; i >= 0; i--) {
+		if (/\S/.test(str.charAt(i))) {
+			str = str.substring(0, i + 1);
+			break;
+		}
+	}
+	return str;
 }

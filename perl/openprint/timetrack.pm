@@ -14,7 +14,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Timetrack;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'starting'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_year','starting_month','starting_day','starting_hour','starting_minute'} );
 		$param{'ending'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_year','ending_month','ending_day','ending_hour','ending_minute'} );
@@ -34,14 +34,50 @@ sub history {
 		} else {
 			ssi::save_params( '/timetrack/edit.html', 'ending', 'company_id' );
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->destroy();
-	} elsif ( $param{'action'} eq 'reset' ) {
+	} elsif ( $param{'func'} eq 'Download' ) {
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id') );
+        my @header = ('Who', 'Company', 'Start', 'End', 'Duration', 'Service', 'Description', 'Rate', 'Price');
+        my @data;
+        my ( $total_hours, $total_value );
+        foreach my $Timetrack ( openprint::Timetrack->find(
+					ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
+					ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+					( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
+					  ( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'   => $session{'/timetrack/history.html?company_id'} ) : () ) :
+					  ( 'company_id'  => $session{'company_id'} ) ),
+					( $session{'/timetrack/history.html?user_id'} ? ( 'user_id' => $session{'/timetrack/history.html?user_id'} ) : () ),
+					( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'   => $session{'/timetrack/history.html?service_id'} ) : () ),
+					'order'             => 'starting',
+					) ) {
+			next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
+			next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
+			next if $Timetrack->invoiced() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+			next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+
+			push @data, ( $Timetrack->User()->name(), $Timetrack->Company()->name(), 
+					Date::Format::time2str(($Timetrack->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $Timetrack->starting() ) ),
+					Date::Format::time2str(($Timetrack->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $Timetrack->ending() ) ),
+					misc::seconds_to_pretty_interval( $Timetrack->elapsed() ),
+					$Timetrack->Service()->name(),
+					$Timetrack->description(),
+					join('',$Timetrack->get('rate','units' ) ),
+					openprint::Currency::format( $Timetrack->value() ),
+					);
+			$total_hours += $Timetrack->elapsed();
+			$total_value += $Timetrack->value();
+		} # end foreach Timetrack
+		push @data, '','','','Totals:',misc::seconds_to_pretty_interval($total_hours),'','','',openprint::Currency::format($total_value);
+		misc::export_csv( $r, $log, \%variable, 'timetracks.csv', \@header, \@data );
+$log->debug("Exported");
+
+	} elsif ( $param{'func'} eq 'reset' ) {
 		foreach ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id', 'lastupdated' ) {
 			delete $session{'/timetrack/history.html?'.$_}
 		} # end foreach
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( ! $param{'func'} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id') );
 	} # end if
 
@@ -58,17 +94,17 @@ sub history {
 } # end sub history
 
 sub _history {
-	if ( ! $param{'btnFunction'} ) {
+	if ( ! $param{'func'} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','user_id','company_id', 'service_id') );
 	} # end if
 } # end sub _history
 
 sub edit {
 	$variable{'Timetrack'} = new openprint::Timetrack( $param{'timetrack_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'func'} eq 'Save' ) {
 		$variable{'error'} .= $variable{'Timetrack'}->save(\%param);
 		$variable{'Redirect'} = '/timetrack/history.html';
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Timetrack'} = $variable{'Timetrack'}->copy();
 		$variable{'error'} .= $variable{'Timetrack'}->save();
 	} # end if

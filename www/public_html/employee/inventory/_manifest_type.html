@@ -1,6 +1,6 @@
 <fieldset>
 	<? eval (
-		if ( ! $param{'Name-'.$$variable{'type_id'}} ) {
+		if ( ! $param{'Brand-'.$$variable{'type_id'}} ) {
 			my $Paper;
 			if ( $$variable{'Type'}->paper_id() ) {
 				$Paper = $$variable{'Type'}->Paper();
@@ -18,7 +18,7 @@
 			if ( $Paper ) {
 				$param{'Owner-'.$$variable{'type_id'}} = $Paper->owner_id();
 				$param{'Manufacturer-'.$$variable{'type_id'}} = $Paper->manufacturer_id();
-				$param{'Name-'.$$variable{'type_id'}} = $Paper->name_id();
+				$param{'Brand-'.$$variable{'type_id'}} = $Paper->brand_id();
 				$param{'Finish-'.$$variable{'type_id'}} = $Paper->finish_id();
 				$param{'Colour-'.$$variable{'type_id'}} = $Paper->colour_id();
 				if ( $Paper->weight() =~ /^(\d+)lb$/ ) {
@@ -51,26 +51,26 @@
 							$param{'Manufacturer-'.$$variable{'type_id'}} = $Manufacturers[0]->id();
 						} # end if
 					} # end if
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::Manufacturer->find('order'=>'lower(longname)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $param{'Manufacturer-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
-		<p id="Name-<?type_id?>_div">
-			<label for="txtName-<?type_id?>" onclick="toggleInput('Name-<?type_id?>');">Name:</label>
-			<select id="Name-<?type_id?>" name="Name-<?type_id?>" size="1" onchange="Name_onChange(this,'-<?type_id?>');">
+		<p id="Brand-<?type_id?>_div">
+			<label for="txtBrand-<?type_id?>" onclick="toggleInput('Brand-<?type_id?>');">Brand:</label>
+			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockName->find('order'=>'lower(longname)') ], $param{'Name-'.$$variable{'type_id'}} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $param{'Brand-'.$$variable{'type_id'}} );
 					) ?>
 			</select>
-			<input style="display: none;" type="text" id="txtName-<?type_id?>" name="txtName-<?type_id?>" />
+			<input style="display: none;" type="text" id="txtBrand-<?type_id?>" name="txtBrand-<?type_id?>" />
 		</p><p id="Finish-<?type_id?>_div">
 			<label for="txtFinish-<?type_id?>" onclick="toggleInput('Finish-<?type_id?>');">Finish:</label>
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockFinish->find('order'=>'lower(longname)') ], $param{'Finish-'.$$variable{'type_id'}} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find('order'=>'lower(name)') ], $param{'Finish-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
@@ -80,16 +80,16 @@
 				<option value="">select</option>
 			<? echo (
 				if ( ! $param{'Colour-'.$$variable{'type_id'}} ) {
-					my @Colours = openprint::StockColour->find('shortname'=>'White');
+					my @Colours = openprint::StockColour->find('name'=>'White');
 					if ( @Colours ) {
 						$param{'Colour'} = $Colours[0]->id();
 					} # end if
 				} # end if
-				my @Colours = openprint::StockColour->find('order'=>'lower(shortname)');
+				my @Colours = openprint::StockColour->find('order'=>'lower(name)');
 				if ( @Colours == 1 ) {
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $Colours[0]->id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $Colours[0]->id() );
 				} else {
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Colours ], $param{'Colour-'.$$variable{'type_id'}} );
 				} # end if
 				) ?>
 			</select>
@@ -105,12 +105,12 @@
 				<option value="">select</option>
 			<? echo (
 				if ( ! $param{'Quality-'.$$variable{'type_id'}} ) {
-					my @Qualities = openprint::StockQuality->find('shortname'=>'new');
+					my @Qualities = openprint::StockQuality->find('name'=>'new');
 					if ( @Qualities ) {
 						$param{'Quality-'.$$variable{'type_id'}} = $Qualities[0]->id();
 					} # end if
 				} # end if
-				my @Qualities = openprint::StockQuality->find('order'=>'lower(shortname)');
+				my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
 				if ( @Qualities == 1 ) {
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 				} else {
@@ -158,7 +158,7 @@
 		</p>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
+			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
 		</p>
 		<? if ( $$variable{'Type'}->po_id() ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>

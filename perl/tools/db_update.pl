@@ -266,7 +266,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
 }
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( $data ) {
 	print "Updating Users...\n";
 	if ( ! exists $$data{'deleted'} ) {
@@ -1542,6 +1542,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		} # end if
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{'strcurrencyname'} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{'strcurrencysymbol'} );
+		$dbh->do('ALTER TABLE quotes ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') if ! exists $$data{'deleted'};
 	} # end if
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
@@ -2625,12 +2626,15 @@ if ( 0 and ! openprint::Host->find_one() ) {
 		die if $dbh->errstr();
 	} # end foreach Log
 } # end if
+if ( sets::isin( 'log', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
 	if ( $data ) {
 		$dbh->do('ALTER TABLE Log DROP COLUMN ip_address') if ( exists $$data{'ip_address'} );
 		$dbh->do('ALTER TABLE Log DROP COLUMN hostname') if ( exists $$data{'hostname'} );
 	} # end if
 	$dbh->commit();
+} # end if
+
 foreach my $Service ( openprint::Service->find('name'=>'1ColourImpressionPerfecting') ) {
 	$_ = $Service->save({'name'=>'PerfectingImpression1/1'});
 	print $_ if $_;

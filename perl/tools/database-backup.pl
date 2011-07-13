@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+use warnings;
 use Getopt::Long;
 use lib '/var/www/testing/perl';
 use strict;
@@ -17,13 +18,18 @@ if ($opts->{help}) {
     usage();
     exit 0;
 }
+my $path;
 if ( ! $$opts{'path'} ) {
-	# error
-	die "Must specify path";
+	$path = '/var/backups/postgres';
+} else {
+	$path = $$opts{'path'};
+} # end if
+if ( $$opts{'host'} ) {
+	$path .= '/'.$$opts{'host'};
 } # end if
 
-if ( ! -d "$$opts{path}/$$opts{host}" ) {
-	`mkdir $$opts{path}/$$opts{host}` or die "Cannot make directory $$opts{path}/$$opts{host}";
+if ( ! -d $path ) {
+	mkdir($path) or die "Cannot make directory $path: $!";
 } # end if
 
 my @dbs = @ARGV;
@@ -36,10 +42,12 @@ if ( ! @dbs ) {
 	die "Can't get db list: ($!)" if $?;
 	@dbs = split "\n", $_;
 } # end if
+print "@dbs\n" if $$opts{'debug'};
 
 foreach my $db ( @dbs ) {
-	$db =~ s/^\s*([\w\-]*)\s*$/$1/;
-	next if $db =~ /template\d/;
+	$db =~ s/^\s+//;
+	$db =~ s/\s+$//;
+	next if $db =~ /^template\d/;
 	next if $db eq 'postgres';
 	my $dbh = DBI->connect("dbi:Pg:dbname=$db;".($$opts{host}?'host='.$$opts{host}:''), 'postgres', undef, {AutoCommit=>1} );
 	if ( ! $dbh ) {
@@ -53,30 +61,34 @@ foreach my $db ( @dbs ) {
 	} # end if
 	
 	if ( ! sets::isin( 'database_info', $tables ) ) {
-		print "No database_info table in $db @$tables\n";
+		print "No database_info table in $db $tables\n";
+		print 'Tables: ' . join(',', @$tables);
 		next;
 	} # end if
-	my $row = $dbh->selectrow_hashref( q{SELECT backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+	my $row = $dbh->selectrow_hashref( 'SELECT * FROM database_info ORDER BY updated_on DESC LIMIT 1' );
 	if ( ! $row ) {
 		#print "Error loading row from database_info of $db " . $dbh->errstr()."\n";
 		next;
 	} # end if
 	if ( $$row{'backup'} ) {
-		print "Backing up $db to $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.bz2\n" if $$opts{'debug'};
-		if ( ! -e "$$opts{path}/$$opts{host}/$db" ) {
-			print "Making $$opts{path}/$$opts{host}/$db ..\n" if $$opts{'debug'};
-			if ( ! `mkdir $$opts{path}/$$opts{host}/$db` ) {
-				print "Unable to mkdir $$opts{path}/$$opts{host}/$db .. skipping\n";
+		print "Backing up $db to $path/$db/$year-$mon-$mday.sql.bz2\n" if $$opts{'debug'};
+		if ( ! -e "$path/$db" ) {
+			print "Making $path/$db ..\n" if $$opts{'debug'};
+			if ( ! mkdir $path/$db ) {
+				print "Unable to mkdir $path/$db .. skipping\n";
 				next;
 			} # end if
 		} # end if
 		if ( $$opts{host} and $$opts{host} ne 'local' ) {
-			`pg_dump -h $$opts{host} $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
+			system("pg_dump -h $$opts{host} $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2" );
 		} else {
-			`pg_dump $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
+			system("pg_dump $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2" );
 		} # end if
 		die "Can't dump $db" if $?;
-		`mv $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2 $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.bz2`;
+		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {
+			print "ERror renaming $path/$db/$year-$mon-$mday.sql.new.bz2 to $path/$db/$year-$mon-$mday.sql.bz2 : $!\n";
+			next;
+		} # end if
 		print "Done backing up $db\n" if $$opts{'debug'};
 
 		if ( $$opts{'days'} ) {

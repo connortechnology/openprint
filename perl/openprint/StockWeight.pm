@@ -4,16 +4,14 @@ package openprint::StockWeight;
 use strict;
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'paperweights';
-$serial= 'paperweight_id_seq';
+$table = 'stockweights';
+$serial= 'stockweights_id_seq';
 %fields = (
     'id'    =>  'id',
-    'shortname' =>  'shortname',
-    'longname'  =>  'longname',
+    'name' =>  'name',
 );
 %transforms = (
-    'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-    'longname' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );

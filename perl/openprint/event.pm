@@ -116,7 +116,7 @@ sub category {
 
 sub view {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'function'} eq 'Save' ) {
 		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
 		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
@@ -176,8 +176,8 @@ sub view {
 			} # end if
 			$param{'location_id'} = $Location->id();
 		} # end if
-		if ( ( ! $param{'event_id'} ) and ( $Event = openprint::Event->find_one('location_id'=>$param{'location_id'}, 'starting_on'=>$param{'starting_on'}, 'name'=>$param{'name'} ) ) ) {
-			$variable{'Event'} = $Event;
+		if ( ( ! $param{'event_id'} ) and ( $_ = openprint::Event->find_one('location_id'=>$param{'location_id'}, 'starting_on'=>$param{'starting_on'}, 'name'=>$param{'name'} ) ) ) {
+			$variable{'Event'} = $Event = $_;
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
 			$variable{'error'} .= $Event->save(\%param);

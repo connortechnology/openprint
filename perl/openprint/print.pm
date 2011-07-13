@@ -60,27 +60,14 @@ sub view_services {
 		return if $$variable{'Redirect'};
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
-		my $services = $Project->services();
-
 		# On project creation, almost nothing should be done.  On Edit, a recalculate should be done, to pick up any missing 
 		# information, set statuses so that continue project will pick up which service to display.
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
 		# Will insert starting signatures
 		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
 		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
-		
-		# Recealc project service
-		if ( $$services{''} ) {
-			my $service_index = $$services{''}[0];
-			my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
-			if ( $status ne 'calculated' ) {
-				# Recal signatures
-				eval ('openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );');
-				# Recalc everything else
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-			} # end if
-		} # end if
-# Display any resulting uncalculated services
+		$Project->recalculate();	
+		# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 		return if $$variable{'ExternalRedirect'};
 	} # end if
@@ -121,15 +108,15 @@ sub view_services {
 				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $Project );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
 					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	
@@ -139,7 +126,7 @@ sub view_services {
 						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'SaddleStitching'}[0], 'Stitching' );
 					} # end if
 				} # end if
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index ) if $recalc;
+				openprint::service::auto_calculate( $Project, $service_index ) if $recalc;
 		
 				$Project->summary(undef);
 				$Project->save();
@@ -200,7 +187,7 @@ sub view_services {
 
 			} elsif ( $openprint::param{'btnFunction'} eq 'Delete Services' ) {
 				foreach my $service_id ( ref $openprint::param{'service_id'} eq 'ARRAY' ? @$openprint::param{'service_id'} : ( $openprint::param{'service_id'} ) ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				openprint::print_project::delete_service( $project_index, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				if ( exists $openprint::param{'markup'} ) {
@@ -210,25 +197,12 @@ sub view_services {
 				} # end if
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				my $service_index = $$services{''}[0];
-				my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-				if ( $status ne 'uncalculated' ) {
-					eval ('openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures( $log, $dbh, $variable, $project_index );');
-					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
-				} # end if
-				$Project->summary(undef);
-				$Project->save();
+				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
-				if ( $status ne 'uncalculated' ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
-					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
-				} # end if
-				$Project->summary(undef);
-				$Project->save();
+				$Project->recalculate();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 			} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
 				$project_index = openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_index );
@@ -241,7 +215,7 @@ sub view_services {
 				my $ServiceType = $PS->ServiceType();
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
+				openprint::print_project::delete_service( $project_index, $s_id );
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 			$Project->summary(undef);
@@ -404,10 +378,10 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	} else {
 # Don't need a cover, so get rid of it
 		foreach ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 		foreach ( $Project->signatures({'Group'=>1}) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 	} # end if Self or Different Cover
 
@@ -477,8 +451,8 @@ $log->debug('add interiorpages');
 		# We have to do this for simple printing.  Simple printing calls here, but doesn't have these fields, so it clears out the defaults!
 		foreach my $spec ( 
 				'txtSignatureType','pages_supplied','supplied_format',
-				'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight',
-				'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
@@ -564,7 +538,7 @@ $log->debug('add interiorpages');
 	my $old_bindery_type = get_book_type( $project_index );
 	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
 		foreach ( @{$$services{$old_bindery_type}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+			openprint::print_project::delete_service( $project_index, $_ );
 		} # end foreach
 		delete $$services{$old_bindery_type};
 	} # end if
@@ -574,7 +548,7 @@ $log->debug('add interiorpages');
 		foreach my $service_id ( keys %bindery_services ) { 
 			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
 			if ( $ServiceType->name() ne 'NoBindery' ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
+				openprint::print_project::delete_service( $project_index, $service_id );
 				@{$$services{$_}} = sets::exclude( [ $service_id ], $$services{$service_id} );
 			} # end if
 		} # end foreach
@@ -584,7 +558,7 @@ $log->debug('add interiorpages');
 		# Delete No Bindery Service
 		if ( $$services{'NoBindery'} ) {
 			foreach ( @{$$services{'NoBindery'}} ) {
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
+				openprint::print_project::delete_service( $project_index, $_ );
 			} # end foreach
 			delete $$services{'NoBindery'};
 		} # end if
@@ -633,8 +607,8 @@ sub publication_pages {
 		my $type = $$sig_specs{'Group'};
 $log->error("No Group!") if ! $type;
 		foreach my $spec ( 
-				'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight',
-				'txtSpecificStockName','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
+				'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight',
 				'txtSpecificStockWidth','txtSpecificStockHeight','txtSpecificStockCalliper',
 				'rdbSuppliedStock','rdbSpecificStock','StockType',
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',

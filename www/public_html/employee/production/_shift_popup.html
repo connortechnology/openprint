@@ -17,7 +17,7 @@
 			<li><label>Shift:</label>
 				<select name="equipmentshift_id" id="equipmentshift_id">
 					<option value=""> select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment_Shift->find('equipment_id'=>$$variable{'Shift'}{'equipment_id'}, 'order'=>'starttime' ) ], $$variable{'Shift'}{'shift_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment_Shift->find('equipment_id'=>$$variable{'Shift'}{'equipment_id'}, 'order'=>'starttime_seconds' ) ], $$variable{'Shift'}{'shift_id'} ); ) ?>
 				</select>
 			</li>
 			<li>

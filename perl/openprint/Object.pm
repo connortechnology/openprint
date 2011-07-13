@@ -65,15 +65,15 @@ sub new {
 		} # end if
 		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
-		my $self = {};
-		bless $self, $parent;
-# First off, for now, don't cache figure that out later
+		#my $self = {};
 		my @keys = keys %{$id};
-		@$self{@keys} = @$id{@keys};
+		bless $id, $parent;
+# First off, for now, don't cache figure that out later
+		#@$self{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
-		$self->load( $data );
-#$log->debug("New by hash @keys : " . $self->to_string() );
-		return $self;
+		$id->load( $data );
+#$log->debug("New by hash @keys : " . $id->to_string() );
+		return $id;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 		my $self = {};
 		bless $self, $parent;
@@ -103,7 +103,7 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
-			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ) ) if $debug;
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $_ } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
@@ -111,8 +111,8 @@ sub load {
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
-		} elsif ( $debug ) {
-			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
+		#} elsif ( $debug ) {
+			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
@@ -208,10 +208,11 @@ sub save {
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
+				my $error = $dbh->errstr;
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $error);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -243,12 +244,7 @@ sub save {
 
 sub get {
 	my $self = shift;
-	my @results;
-	foreach ( @_ ) {
-		push @results, $self->$_();
-	} # end foreach
-
-	return @results;
+	return map { $self->$_() } @_;
 } # end sub get
 
 sub set {
@@ -260,6 +256,7 @@ sub set {
 	if ( ! $fields ) {
 $log->warn('Object::set called on an object with no fields');
 	} # end if
+	my %defaults = eval('%'.$type.'::defaults');
 
 	foreach my $field ( keys %$fields ) {
 $log->debug("field: $field, param: ".$$params{$field}) if $debug;
@@ -271,8 +268,8 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 					$$self{$field} = $$params{$field} if defined $$fields{$field};
 					push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
-				eval "\$self->$field( \$\$params{\$field} );";
-				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
+				$self->$field( $$params{$field} );
+				#$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 
@@ -283,8 +280,6 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 			foreach my $transform ( @transforms ) {
 				eval '$$self{$field} =~ ' . $transform;
 			} # end foreach
-
-			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
@@ -298,12 +293,11 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 } # end sub set
 
 sub copy {
-	my $self = shift;
 
-	my $type = ref $self;
+	my $type = ref $_[0];
 	my $new = new $type;
-	my %fields = eval ('%'.$type.'::fields');
-	@$new{keys %fields} = @$self{keys %fields};
+	my $fields = eval ('\%'.$type.'::fields');
+	@$new{keys %$fields} = @{$_[0]}{keys %$fields};
 	delete $$new{id};
 
 	return $new;
@@ -404,6 +398,9 @@ sub find_operators {
 	if ( exists $$params{$k.'_null_or_>='} ) {
 		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
 	} # end if
+	if ( exists $$params{$k.' is null or ='} ) {
+		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
+	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
 	} # end if
@@ -420,9 +417,8 @@ sub find_operators {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
 				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
-			} else {
-				delete $$params{$k.' not in'};
 			} # end if
+			delete $$params{$k.' not in'};
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
 		} else {
@@ -668,7 +664,8 @@ sub AUTOLOAD {
 #}
 	$name =~ s/.*://;
 	if ( @_ ) {
-		return $self->{$name} = shift;
+$openprint::log->debug("Autoload $type $name $_[0]");
+		return $$self{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
@@ -690,8 +687,17 @@ sub to_string {
 
 sub dropdown {
 	my $type = shift;
-$log->debug("dropdown");
 	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
 } # end sub dropdown
+
+sub sort_value {
+	return $_[0]->name();
+}
+
+sub sort {
+	my $type = shift;
+	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+} # end sub sort
+
 1;
 __END__

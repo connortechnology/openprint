@@ -24,6 +24,8 @@ require openprint::ScheduledJob;
 require openprint::Project_Service;
 require openprint::Todo;
 require openprint::Bug;
+require openprint::Estimating::MultiPage;
+require openprint::service;
 
 $debug = 1;
 
@@ -690,6 +692,7 @@ sub copy {
 		} # end foreach
 	} # end while contents
 	sql::end_transaction( $openprint::dbh, $ac );
+	delete $$new{'Services'};
 
 	return $new;
 } # end sub copy
@@ -764,7 +767,9 @@ sub services {
 		$$self{'Services'} = \%results;
 	} # end if
 	if ( $name ) {
+$openprint::log->debug("looking for $name in Project::services");
 		if ( $$self{'Services'}{$name} ) {
+$openprint::log->debug("looking for $name in Project::services: foudn it");
 			return @{$$self{'Services'}{$name}};
 		} # end if
 		return;
@@ -843,6 +848,7 @@ sub summary {
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
 					my $project_summary = eval( 'openprint::Estimating::'.$ServiceType->type().'::project_summary( $self, $service_id, $service_specs );' );
+					#$openprint::log->warn("Error eval $$ServiceType{type} ::project_summary() : $@") if $@;
 					if ( $project_summary ) {
 						$summary .= $project_summary;
 					} else {
@@ -895,6 +901,7 @@ sub shippingtype {
 	} # end if
 	return $$self{'shippingtype'};
 } # end sub shippingtype
+
 sub ordered_quantity {
 	my $self = shift;
 	return $$self{'quantity'.$self->ordered_quantity_index()};
@@ -1388,5 +1395,29 @@ sub add_Service {
 	my $service_id = $_[0]->add_service( $_[1] );
 	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
 } # end sub add_Service
+sub recalculate {
+	my $self = shift;
+$openprint::log->debug("Project::recalculate");
+	$self->currency_id( $openprint::session{Currency_id} );
+	my $services = $self->services();
+	if ( $$services{''} ) {
+		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
+		if ( $status ne 'calculated' ) {
+			# Recal signatures
+			my $function = 'openprint::Estimating::'.$self->Type()->type().'::calculate_signatures';
+			eval ($function.'( $self );');
+			$openprint::log->error("Project->recalculate $function $@") if $@;
+
+			openprint::service::auto_calculate( $self, $$services{''}[0] );
+		} # end if
+	} # end if
+	$self->update_status();
+	$self->summary(undef);
+	return $self->save();
+} # end sub recalculate
+sub Project {
+	return $_[0];
+} # end sub Proejct;
+
 1;
 __END__

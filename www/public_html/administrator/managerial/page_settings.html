@@ -1,0 +1,34 @@
+<div class="PageSettings">
+	<form id="f1" name="f1" action="page_settings.html" method="post">
+		<table>
+			<tr>
+				<th class="url">URL</th>
+				<th class="cacheable">Cacheable</th>
+				<th class="user_level">User Level</th>
+			</tr>
+		<? echo ( 
+			my $html;
+			foreach my $PS ( openprint::Page_Setting->find('order'=>'url') ) {
+				$html .= sprintf(q`
+					<tr>	
+						<td class="url"><input type="text" name="url-%1$d" value="%2$s"/></td>
+						<td class="cacheable"><select name="cacheable-%1$d">%3$s</select></td>
+						<td class="user_level"><select name="user_level-%1$d">%4$s</select></td>
+					</tr>`,
+					$PS->id(), $PS->url(), 
+					ssi::make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
+					ssi::make_drop_down( [ '', 'all', 'C', 'Regular User', 'E', 'Employee', 'A', 'Administrator' ], $PS->user_level() ),
+				);
+			} # end foreach
+			return $html;
+		) ?>
+		</table>
+		<p class="buttons">
+			<? echo ( join('',
+						ssi::button( 'Save', {'onclick'=>q`var f1=$('f1');f1.elements['action'].value='save';f1.submit();` } ),
+						ssi::button( 'Reset', {'onclick'=>q`$('f1').reset();` } ),
+				); ) ?>
+		</p>
+		<input type="hidden" name="action"/>
+	</form>
+</div>

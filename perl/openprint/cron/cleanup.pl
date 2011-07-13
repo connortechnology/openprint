@@ -2,6 +2,7 @@
 use lib '/etc/apache2/lib/perl';
 use strict;
 use warnings;
+use Digest::MD5;
 
 require sql;
 require ssi;
@@ -16,6 +17,7 @@ require openprint::PaperInventory;
 require openprint::CIP3_PPF;
 require openprint::Host;
 require openprint::Log;
+require openprint::Asset;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -71,6 +73,7 @@ $log->warn("Deleted $deleted_session_count sessions");
 if ( 0 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project->find(
+			'predefined'	=>	0,
 			'status'=>'uncalculated',
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -98,6 +101,7 @@ if ( 0 ) {
 	} # end if
 
 	@Projects = openprint::Project->find(
+			'predefined'	=>	0,
 			'status'=>'Unordered',
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -130,6 +134,7 @@ if ( 0 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project->find(
+			'predefined'	=>	0,
 			'status'=>'Deleted','order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -292,8 +297,10 @@ foreach my $Host ( openprint::Host->find('hostname'=>undef) ) {
 
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find() ) {
-	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+	if ( $Paper->wpsi() != $Paper->wpsi(undef) ) {
+$openprint::log->debug("Updating wpsi for " . $Paper->to_string() );
 		$Paper->save();
+		last if $dbh->errstr();
 	} # end if
 } # end foreach my Paper
 my $log_count = 0;
@@ -303,6 +310,15 @@ foreach my $Log ( openprint::Log->find('date_time <'=>sprintf('%.4d-%.2d-%.2d', 
 } # end foreach Log
 $log->warn("Deleted $log_count log entries");
 
+if ( $config{'AssetPath'} ) {
+foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
+	my $data = misc::load_file( $log, $Asset->on_disk_path() );
+	if ( $data ) {
+		$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
+		last if $_;
+	} # end if
+} # end foreach Asset
+} 
 $dbh->disconnect();
 1;
 __END__

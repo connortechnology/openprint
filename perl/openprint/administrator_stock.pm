@@ -3,13 +3,12 @@ use Text::CSV_XS;
 use strict;
 require sql;
 require misc;
-require openprint::paper;
 require openprint::Paper;
 
 require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
-require openprint::StockName;
+require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
@@ -27,6 +26,9 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 sub _stocks {
+	if ( %param and ! $param{'btnFunction'} ) {
+		ssi::save_params('/administrator/stock/list.html', 'Group','owner_id','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
+	} # end if
 } # end sub _stocks
 
 sub list {
@@ -361,10 +363,10 @@ sub usage {
 	} else {
 		@{$variable{'Groups'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
-	if ( $param{'ddmStockName'} ) {
-		@{$variable{'Names'}} = ( $param{'ddmStockName'} );
+	if ( $param{'ddmStockBrand'} ) {
+		@{$variable{'Brands'}} = ( $param{'ddmStockBrand'} );
 	} else {
-		@{$variable{'Names'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
+		@{$variable{'Brands'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
 	if ( $param{'ddmStockFinish'} ) {
 		@{$variable{'Finishes'}} = ( $param{'ddmStockFinish'} );
@@ -400,7 +402,7 @@ sub usage {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				if ( ! sets::isin( $$specs{'ddmStockName'}, @{$variable{'Names'}} ) ) {
+				if ( ! sets::isin( $$specs{'ddmStockBrand'}, @{$variable{'Brands'}} ) ) {
 					next;
 				} # end if
 				if ( ! sets::isin( $$specs{'ddmStockFinish'}, @{$variable{'Finishes'}} ) ) {
@@ -414,7 +416,7 @@ sub usage {
 				} # end if
 				my %paper;
 				@paper{'index','mweight'} = sql::execute( $log, $dbh, "SELECT lngIndex,MWeight FROM Paper\n"
-						. "WHERE name='$$specs{'ddmStockName'}'\n"
+						. "WHERE name='$$specs{'ddmStockBrand'}'\n"
 						. "AND finish='$$specs{'ddmStockFinish'}'\n"
 						. "AND colour='$$specs{'ddmStockColour'}'\n"
 						. "AND calliper=$$specs{'ddmStockWeight'}\n"
@@ -423,7 +425,7 @@ sub usage {
 						);
 				if ( $paper{'index'} ) {
 					my $price = openprint::paper::get_price( $log, $dbh, \%variable, \%paper, @$specs{'ddmPress','hdnGrossSheetCount'.$qty_index} );
-					push @{$variable{'Results'.$$specs{'ddmStockName'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
+					push @{$variable{'Results'.$$specs{'ddmStockBrand'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
 						 sprintf( '$%.2f', $$specs{'hdnGrossSheetCount'.$qty_index}*$$price{'Price'} ),
 						 sprintf( '$%.2f', $$specs{'UsedSheetQuantity'}*$$price{'Price'} );
 				} # end if
@@ -464,6 +466,9 @@ sub _price_tr {
 	} # end if
 
 } # end sub _price_tr
+
+sub _stock { 
+} # end sub _stock
 
 1;
 __END__

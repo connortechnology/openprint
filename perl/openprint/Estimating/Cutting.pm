@@ -968,7 +968,7 @@ sub display {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals'] ) ) {
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
 
@@ -1010,8 +1010,8 @@ sub jdf {
 	$Media->setAttribute( 'ID', 'Paper'.$sig_id );
 	$Media->setAttribute( 'Class', 'Consumable' );
 	$Media->setAttribute( 'Status', 'Available' );
-	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockName'} );
-	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
+	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockBrand'} );
+	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
 	$Media->setAttribute( 'Dimension', join(' ',
                 Math::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()},'in','mm'),
                 Math::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()},'in','mm'),

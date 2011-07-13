@@ -24,6 +24,7 @@ require openprint::print;
 require openprint::print_project;
 require openprint::Estimating::Proofs;
 require openprint::usergroup;
+require openprint::Page_Setting;
 
 require openprint::logs;
 
@@ -36,7 +37,7 @@ use openprint::Object;
 use openprint::Currency;
 
 use openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -75,7 +76,7 @@ sub handler {
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
 		if ( ref $param{$key} eq 'ARRAY' ) {
-			$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
@@ -100,11 +101,39 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
+		openprint::session_init();
+		if ( ! ( %page_settings and $page_settings{$page} ) ) {
+$log->debug("Page Settings not found for $page");
+			# First step, reload page settings
+			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
+			if ( ! $page_settings{$page} ) {
+				# Need to create one.
+				my @chunks = split('/', $page );
+				while ( @chunks ) {
+					pop @chunks;
+					last if ! @chunks;
+					
+					my $chunk = join('/', @chunks);
+					last if ! $chunk;
+		
+					if ( $page_settings{$chunk} ) {
+						my $NewPageSettings = $page_settings{$chunk}->copy();
+						$NewPageSettings->save({'url'=>$page});
+						$page_settings{$page} = $NewPageSettings;
+						last;
+					} # end if
+				} # end while chunks
+
+			} # end if
+			if ( ! $page_settings{$page} ) {
+				$page_settings{$page} = new openprint::Page_Setting();
+				$page_settings{$page}->save({'url'=>$page});
+			} # end if
+		} # end if
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 		} # end foreach
-		openprint::session_init();
 
 		$openprint::log->debug("Page: $page");
 		while ( $page and $lastpage ne $page ) {
@@ -179,7 +208,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
+			$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -282,12 +311,9 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 
 		if ( $second eq 'proj' ) {
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @openprint::param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
-			$variable{'ProjectIndex'} = $r->param('ProjectIndex');
-			$variable{'ServiceIndex'} = $r->param('ServiceIndex');
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
+			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
 			
-			$variable{'OrderID'} = $r->param('OrderID');
-
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
 			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};

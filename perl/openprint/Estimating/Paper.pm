@@ -77,9 +77,8 @@ sub signature_needs {
 } # end sub
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	return 0 if $$services{'NoPrinting'};
 
@@ -114,13 +113,15 @@ sub calc {
         foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
 			my $Supplied = $Paper->Supplied();
+$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
             $papers{$Supplied->to_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
 
 	my @stocks = sort keys %papers;
-	foreach my $stock_index ( 1 .. @stocks ) {
+	foreach my $stock_index ( 1 .. scalar @stocks ) {
 		my $paper_string = $stocks[$stock_index-1];
 		$indexes{$paper_string} = $stock_index;
 $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
@@ -138,6 +139,9 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
 			my $paper_string = $SuppliedStock->to_string();
 
 			my $stock_index = $indexes{$paper_string};
+			if ( ! $stock_index ) {
+$openprint::log->error("No stock index for $paper_string");
+			} # end if
 
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 				if ( $PressSheet->type() eq 'Sheet' ) {
@@ -196,12 +200,14 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 		} # end if
 	} # end foreach
 
+if ( 0 ) {
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 #$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
+}
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
@@ -212,6 +218,9 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 			my $Paper = $RunPaper->Supplied();
 			my $paper_id = $Paper->to_string();
 			my $stock_index = $indexes{$paper_id};
+			if ( ! $stock_index ) {
+$openprint::log->error("2No stock index for $paper_id");
+			} # end if
 			next if $Paper->supplied();
 
 			if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
@@ -271,7 +280,7 @@ sub display {
 		next if $$sig_specs{'rdbSuppliedStock'} eq 'Y';
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-			my $brand = $$sig_specs{'txtSpecificStockName'} ? $$sig_specs{'txtSpecificStockName'} : $$sig_specs{'ddmStockName'};
+			my $brand = $$sig_specs{'txtSpecificStockBrand'} ? $$sig_specs{'txtSpecificStockBrand'} : $$sig_specs{'ddmStockBrand'};
 			my $colour = $$sig_specs{'txtSpecificStockColour'} ? $$sig_specs{'txtSpecificStockColour'} : $$sig_specs{'ddmStockColour'};
 			my $finish = $$sig_specs{'txtSpecificStockFinish'} ? $$sig_specs{'txtSpecificStockFinish'} : $$sig_specs{'ddmStockFinish'};
 			my $weight = $$sig_specs{'txtSpecificStockWeight'} ? $$sig_specs{'txtSpecificStockWeight'} : $$sig_specs{'ddmStockWeight'};
@@ -279,7 +288,7 @@ sub display {
 			my $id = $qty_index.$brand.$colour.$finish.$weight.$$sig_specs{'hdnSuppliedSheetSizeWidth'.$qty_index}.'x'.$$sig_specs{'hdnSuppliedSheetSizeHeigth'.$qty_index};
 
 			if ( ! exists $totals{$id} ) {
-				$totals{$id}{Name} = $brand;
+				$totals{$id}{Brand} = $brand;
 				$totals{$id}{Colour} = $colour;
 				$totals{$id}{Finish} = $finish;
 				$totals{$id}{Weight} = $weight;
@@ -301,7 +310,7 @@ sub display {
 				$discount = $price - $discounted_price;
 			} # end if
 
-			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{Name}, $totals{$id}{Colour}, $totals{$id}{Finish}, $totals{$id}{Weight}, $totals{$id}{SheetSize};
+			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{Brand}, $totals{$id}{Colour}, $totals{$id}{Finish}, $totals{$id}{Weight}, $totals{$id}{SheetSize};
 			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{'hdnGrossSheetCount'.$qty_index}, sprintf('%.2f',$price), sprintf('%.2f',$discount);
 		} # end foreach
 	} # end foreach
@@ -320,20 +329,20 @@ sub summary {
     my %Papers;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			# Convert back to original size
-			@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
-			$Paper->mweight(0); # force recalc
+		foreach my $q_index ( $Project->quantity_indexes() ) {
+			next if ! $$sig_specs{'txtImposition'.$q_index};
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $q_index )->Supplied();
 			$Papers{$Paper->to_string()} = $Paper;
         } # end foreach qty_index
     } # end foreach
 
+	my @keys = sort keys %Papers;
+#$openprint::log->debug("Keys: " . @keys );
+
 	if ( $qty_index ) {
 		my @summaries;
 		my $stock_id = 1;
-		foreach my $key ( sort keys %Papers ) {
+		foreach my $key ( @keys ) {
 			my $html = '';
 			my $Paper = $Papers{$key};
 #$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
@@ -347,6 +356,7 @@ sub summary {
 					$html .= sprintf(' %.0f sq feet', ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 );
 				} elsif ( $$Price{'units'} eq 'per square inch' ) {
 					$html .= sprintf(' %.0f sq inches', $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() );
+				} elsif ( $$Price{'units'} eq 'Per 100lbs' ) {
 				} elsif ( $$Price{'units'} ) {
 					$html .= 'unknown units: ' . $$Price{'units'};
 				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
@@ -360,7 +370,7 @@ sub summary {
 		} # end foreach key
 		return \@summaries;
 	} # end if
-	return [ sort keys %Papers ];
+	return \@keys;
 } # end sub summary
 
 sub save {

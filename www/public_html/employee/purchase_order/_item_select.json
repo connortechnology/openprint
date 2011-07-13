@@ -1,0 +1,18 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Item = new openprint::PurchaseOrder_Item( $param{'item_id'} );
+	my $desc = $Item->description();
+	$desc =~ s/'/&apos;/mg;
+	$desc =~ s/\r\n//g;
+	$desc =~ s/\n//g;
+	return sprintf( q`
+		if ( $('description-%1$d').type == 'textarea' ) {
+		var desc = tinyMCE.getInstanceById('description-%1$d');
+		desc.setContent('%2$s');
+		} else {
+			$('description-%1$d').value = '%2$s';
+		} // end if
+		$('price-%1$d').value='%3$s';
+		calc_price($('item_id-%1$d'));
+		`, $param{'content_id'}, $desc, $Item->price() );
+) ?>

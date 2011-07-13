@@ -13,6 +13,26 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 require openprint::Photo_Album;
 require openprint::Asset;
 
+sub history {
+	if ( ( ! $session{'/photo_albums/history.html?lastupdated'} ) or ( time - $session{'/photo_albums/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/photo_albums/history.html', 'created_on_start', -31 );
+		ssi::setup_date_select( '/photo_albums/history.html', 'created_on_end', '' );
+		ssi::setup_date_select( '/photo_albums/history.html', 'starting_on_start', 0 );
+		ssi::setup_date_select( '/photo_albums/history.html', 'starting_on_end', '' );
+	} # end if
+	ssi::save_params( '/photo_albums/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'company_id', 'user_id' ) );
+	$session{'/photo_albums/history.html?company_id'} = $session{'company_id'} if ! $session{'/photo_albums/history.html?company_id'};
+} # end sub history
+sub _history {
+	ssi::save_params( '/photo_albums/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'company_id', 'user_id' ) );
+} # end sub _history
+
 sub list {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
@@ -20,23 +40,8 @@ sub list {
 		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
 
         if ( $param{'filename'} ) {
-            my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                #$Asset->save({'file'=>''});
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-			} else {
-				my $Asset = new openprint::Asset();
-				$variable{'error'} .= $Asset->save({'filename'=>$param{'filename'}});
-				if ( ! $upload->link( $Asset->on_disk_path() ) ) {
-					$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-#$Asset->save({'filename'=>''});
-				} else {
-					my $Photo = new openprint::Photo_in_Album();
-					$variable{'error'} .= $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$Album->id()});	
-					$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-					new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
-				} # end if
-            } # end if
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
         } # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Album->delete();
@@ -49,6 +54,23 @@ sub view {
 } # end sub view
 sub edit {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $Album->save(\%param);
+		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+
+        if ( $param{'filename'} ) {
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
+        } # end if
+	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
+        if ( $param{'filename'} ) {
+			$variable{'error'} .= $Album->upload( 'filename' );
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
+        } # end if
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Album->delete();
+		$variable{'ExternalRedirect'} = '/photo_albums/list.html';
+	} # end if
 } # end sub edit
 
 sub _photos {
@@ -132,7 +154,6 @@ $log->error("Attempt to approve a comment without rights");
 		} # end if
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $Comment = openprint::Comment->find_one('object_id'=>$$Photo{'asset_id'}, 'object_type'=>'openprint::Asset', 'id'=>$param{'comment_id'} );
-		
 		if ( $Comment ) {
 			if ( $Comment->can_delete() ) {
 				$variable{'error'} .= $Comment->delete();
@@ -155,8 +176,11 @@ sub _photo_actions {
 	} # end if
 	if ( $param{'function'} eq 'rotate' ) {
 		my $filepath = $Asset->on_disk_path();
-		$variable{'error'} .= `convert rotate $param{degrees} $filepath $filepath`;
-		$log->error( 'error rotating ' . $! ) if $!;
+		$_ = system('convert', '-rotate', $param{degrees}, $filepath, $filepath );
+		if ( $_ ) {
+			$variable{'error'} .= $?;
+			$log->error( 'error rotating ' . $? );
+		} # end if
 	} # end if function
 } # end sub _photo_actions
 1;

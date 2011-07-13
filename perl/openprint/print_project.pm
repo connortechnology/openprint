@@ -641,7 +641,7 @@ sub create_edit_process {
 	if ( $OldProjectType->id() ne $ProjectType->id() ) {
 		$recalculate = 1;
 		if ( $services{''} ) {
-			foreach ( @{$services{''}} ) { delete_service( $log, $dbh, $Project->id(), $_ ); };
+			foreach ( @{$services{''}} ) { delete_service( $Project->id(), $_ ); };
 		} # end if
 		delete $services{''};
 		$Project->type_id( $ProjectType->id() );
@@ -670,7 +670,7 @@ sub create_edit_process {
 			if ( $services{$ServiceType->name()} ) {
 				foreach my $s_id ( @{$services{$ServiceType->name()}} ) {
 					if ( $statuses{$s_id} ne 'Completed' ) {
-						delete_service( $log, $dbh, $Project->id(), $s_id );
+						delete_service( $Project->id(), $s_id );
 					} # end if
 				} # end foreach
 				delete $services{$ServiceType->name()};
@@ -689,7 +689,7 @@ sub create_edit_process {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $signature_service_index, 'Printing' );
 		} # end foreach
-		openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $Project->id(), undef );
+		openprint::service::auto_calculate( $Project, undef );
 		$Project->summary( undef );
 		$Project->save();
 	} # end if
@@ -703,23 +703,23 @@ sub del_service {
 	my %services = $Project->get_services();
 	if ( $services{$service_id} ) {
 		foreach my $service_index ( @{$services{$service_id}} ) {
-			delete_service( $log, $dbh, $project_index, $service_index );
+			delete_service( $project_index, $service_index );
 		} # end foreach
 	} # end if
 } # end sub del_service
 
 sub delete_service {
-	my ( $log, $dbh, $project_index, $service_index ) = @_;
-	my $ac = sql::start_transaction( $dbh );
-	sql::execute( $log, $dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
-	sql::execute( $log, $dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	my ( $project_index, $service_index ) = @_;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::execute( undef,undef, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	sql::execute( undef,undef, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index );
+	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id any'=>$service_index );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ] } ) if $Job;
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
 
@@ -801,8 +801,8 @@ $openprint::log->debug("reusing $project_index");
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {
-		openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $NewProject->id() );
-		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
+		openprint::Estimating::MultiPage::calculate_signatures( $NewProject );
+		openprint::service::auto_calculate( $NewProject, undef );
 	} # endif
 	$session{'project_id'} = $NewProject->id();
 	return $NewProject->id();

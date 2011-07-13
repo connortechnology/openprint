@@ -303,30 +303,30 @@ sub get_li {
 	} # end if
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
+		$html .= sprintf( q`<div class="Comment" onclick="job_popup('%1$d');">%2$s</div>`, $$self{'id'}, $self->comment() );
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
 			if ( sets::isin( $self->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
-				$html .= sprintf( q`<span class="Forms" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+				$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			} # end if
 			if ( $Equipment->smartscheduling() ) {
-				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
+				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
-				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $self->impressions() );
+				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps</span>`, $$self{'id'}, $self->impressions() );
 			} # end if
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
+			$html .= sprintf( q`<span class="StartTime" onclick="job_popup('%1$d');">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
 					$$self{'locked'} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
-		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '/employee/production/_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= sprintf( q`<span class="RunTime" onclick="job_popup('%1$d');">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
 		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-			$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '/employee/production/_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
+			$html .= sprintf( q`<span class="StockVerified" onclick="job_popup('%1$d');">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
 		} # end if
 
 		$html .= '<span class="Buttons">';
@@ -428,10 +428,12 @@ sub operator_id {
 	} # end if
 	if ( ! $$self{'operator_id'} ) {
 		if ( $$self{'project_id'} ) {
+$openprint::log->debug("Servic_ids: @{$$self{'service_id'}}");
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				my $Service = $Project->Service( $sig_id );
+$openprint::log->debug($Service->to_string() );
 				$$self{'operator_id'} = $Service->operator_id();
-				last;
+				last if $$self{'operator_id'};
 			} # end foreach
 		} # end if
 	} # end if
@@ -513,6 +515,7 @@ sub shift_id {
 	return;
 } # end sub shift_id
 
+
 sub Shift {
 	my ( $self ) = @_;
 
@@ -536,29 +539,21 @@ sub Shift {
 					#'limit'			=>	1,
 					});
 			if ( ! @Shifts ) {
-				# Things like Bump can push a job to the very end, where a shift might need to be created.
-				@Shifts = openprint::Equipment_Shift->find({
-						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime <='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'endtime >'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'limit'		 =>  1,
-						});
-				@Shifts = openprint::Equipment_Shift->find({
-						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime >'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'order'		 =>  'starttime',
-						'limit'		 =>  1,
-						} ) if ! @Shifts;
-				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-			} else {
-				$Shift = shift @Shifts;
-				if ( @Shifts ) {
-					$log->error("Deleting duplicate shifts! " . @Shifts );
-					foreach ( @Shifts ) {
-						$log->error( $_->to_string() );
-						#$_->delete();
-					} # end foreach
-				} # end if
+				my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+
+				@Shifts = openprint::Shift::get_Shifts( $self->Equipment(), 
+					DateTime->from_epoch('epoch'=>$self->starttime_seconds(), 'time_zone'=>$TZ ),
+					DateTime->from_epoch('epoch'=>$self->endtime_seconds(), 'time_zone'=>$TZ ),
+				);
+			} # end if
+
+			$Shift = shift @Shifts;
+			if ( @Shifts ) {
+				$log->error("Deleting duplicate shifts! " . @Shifts );
+				foreach ( @Shifts ) {
+					$log->error( $_->to_string() );
+					#$_->delete();
+				} # end foreach
 			} # end if
 		} # end if
 		return if ! $Shift;

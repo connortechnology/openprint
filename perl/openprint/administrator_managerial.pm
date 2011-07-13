@@ -36,13 +36,22 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub configuration {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
-		sql::insert( $log, $dbh, 'configuration', {
-			'name'	=>	$param{'name'},
-			'description'	=>	$param{'description'},
-			'type'			=>	$param{'type'},
-			'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
-			'value'			=>	$param{'value'},
-		} );
+		if ( sql::execute( $log, $dbh, 'SELECT * FROM Configuration WHERE name=? LIMIT 1', $param{'name'} ) ) {
+			sql::update( $log, $dbh, 'configuration', [ 'name', $param{'name'} ], {
+				'description'	=>	$param{'description'},
+				'type'			=>	$param{'type'},
+				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+				'value'			=>	$param{'value'},
+			} );
+		} else {
+			sql::insert( $log, $dbh, 'configuration', {
+				'name'	=>	$param{'name'},
+				'description'	=>	$param{'description'},
+				'type'			=>	$param{'type'},
+				'category'		=>	( $param{'new_category'} ? $param{'new_category'} : $param{'category'} ),
+				'value'			=>	$param{'value'},
+			} );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type FROM Configuration ORDER BY lower(category), name' );
 		while ( my ( $name, $value, $type ) = splice @config,0,3 ) {
@@ -61,6 +70,11 @@ sub configuration {
 } # end sub configuration
 
 sub _configuration_popup {
+	my $Entry = {};
+	if ( $param{'name'} ) {
+		@$Entry{'name','value','type','description','category'} = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration WHERE name=?', $param{'name'} );
+	} # end if
+	$variable{'Entry'} = $Entry;
 } # end sub
 
 sub taxes {
@@ -186,22 +200,26 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
-		if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-			if ( $param{'VacationState'} ) {
-				email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
-			} else {
-				email::stop_vacation( $User->email() );
+		if ( $config{mail_db_name} ) {
+			my @domains = email::domains();
+			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+			if ( sets::isin( $domain, \@domains ) ) {
+				if ( $param{'VacationState'} ) {
+					email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+				} else {
+					email::stop_vacation( $User->email() );
+				} # end if
+				if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+					email::set_password( @param{'email','EmailPassword'} );
+				} # end if
+				my @aliases = ();
+				foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+					next if ! $alias;
+					push @aliases, $alias;
+				} # end foreach
+				push @aliases, $User->email() if ! @aliases;
+				email::aliases( $User->email(), @aliases );
 			} # end if
-			if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-				email::set_password( @param{'email','EmailPassword'} );
-			} # end if
-			my @aliases = ();
-			foreach my $alias ( split "\r\n", $param{'aliases'} ) {
-				next if ! $alias;
-				push @aliases, $alias;
-			} # end foreach
-			push @aliases, $User->email() if ! @aliases;
-			email::aliases( $User->email(), @aliases );
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -289,9 +307,13 @@ sub user_profiles {
 		} # end foreach
 	} # end if 
 
-	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-		@{$variable{'Aliases'}} = email::aliases( $User->email() );
+	if ( $config{mail_db_name} ) {
+		my @domains = email::domains();
+		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+		if ( sets::isin( $domain, \@domains ) ) {
+			@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+			@{$variable{'Aliases'}} = email::aliases( $User->email() );
+		} # end if
 	} # end if
 				
 	# fill in User Name Drop Down Menu
@@ -662,6 +684,7 @@ sub user_profile_fields {
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
 				'name'	=>	$param{'name-'.$Field->id()},
+				'description'	=>	$param{'description-'.$Field->id()},
 				'type'	=>	$param{'type-'.$Field->id()},
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
@@ -744,6 +767,38 @@ sub _company_fields_tbody {
 
 sub _search_by_email {
 } # end sub _search_by_email
+
+sub page_settings {
+	require openprint::Page_Setting;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $PS ( openprint::Page_Setting->find() ) {
+			if ( 
+					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
+					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
+					( $PS->user_level() ne $param{'user_level-'.$PS->id()} )
+				) {
+				$variable{'error'} .= $PS->save({
+						'url'=>$param{'url-'.$$PS{id}},
+						'cacheable'=>$param{'cacheable-'.$$PS{id}},
+						'user_level'=>$param{'user_level-'.$$PS{id}},
+						});
+			} # end if need to save
+		} # end foreach PS
+	} # end if
+} # end sub page_settings
+
+sub user_relationships {
+	require openprint::User_Relationship;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $URT ( openprint::User_Relationship_Type->find() ) {
+			$variable{'error'} .= $URT->save({
+				'text1'	=>	$param{'text1-'.$URT->id()},
+				'text2'	=>	$param{'text2-'.$URT->id()},
+				'text3'	=>	$param{'text3-'.$URT->id()},
+			});
+		} # end foreach URT
+	} # end if
+} # end sub user_relationships
 
 1;
 __END__

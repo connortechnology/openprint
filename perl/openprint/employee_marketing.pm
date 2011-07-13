@@ -37,16 +37,16 @@ sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{'campaign_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{'nextrun_year'};
-		$Campaign->save( \%param );
+		$variable{'error'} .= $Campaign->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
-        $Campaign->save( \%param );
+        $variable{'error'} .= $Campaign->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Delete' ) {
-        $Campaign->delete();
+        $variable{'error'} .= $Campaign->delete();
     } elsif ( $param{'btnFunction'} eq 'Run' ) {
-        $variable{'Results'} = $Campaign->send();
+        $variable{'information'} = $Campaign->send();
     } elsif ( $param{'btnFunction'} eq 'TrialRun' ) {
-        $variable{'Results'} = $Campaign->trial( $param{'TrialEmailAddress'} );
+        $variable{'information'} = $Campaign->trial( $param{'TrialEmailAddress'} );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
@@ -60,9 +60,7 @@ sub email_campaigns {
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
 	} # end if
 
-	@{$variable{'Campaigns'}} = openprint::EmailCampaign->find( 'order' => 'lower(name)' );
 	$variable{'campaign_id'} = $Campaign->id();
-
 } # end sub email_campaigns
 
 sub categories {

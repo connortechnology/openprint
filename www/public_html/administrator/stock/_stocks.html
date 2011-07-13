@@ -1,21 +1,18 @@
 <? eval (
-	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
-	} # end if
-
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
-			'group_id'		=> $session{'/administrator/stock/list.html?Group'},
-			'owner_id'		=> $session{'/administrator/stock/list.html?Owner'},
-			'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'},
-			'name_id'	=> $session{'/administrator/stock/list.html?Name'},
-			'finish_id'	=> $session{'/administrator/stock/list.html?Finish'},
-			'colour_id'	=> $session{'/administrator/stock/list.html?Colour'},
-			'weight_id'	=> $session{'/administrator/stock/list.html?Weight'}, 
-			'quality_id'	=> $session{'/administrator/stock/list.html?Quality'}, 
-			'material_id'	=> $session{'/administrator/stock/list.html?material_id'}, 
-			'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ],
-			'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'}, 
+			'columns'	=>	'*,(select shortname from papernames where id=name_id) AS name, (select shortname from paperfinishes where id=finish_id) AS finish, (select shortname from papercolours where id=colour_id) AS colour, (select shortname from paperweights where id=weight_id) AS weight',
+			( $session{'/administrator/stock/list.html?Group'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?Group'} ) : () ),
+			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?Manufacturer'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'} ) : () ),
+			( $session{'/administrator/stock/list.html?Name'} ? ( 'name_id'	=> $session{'/administrator/stock/list.html?Name'} ) : () ),
+			( $session{'/administrator/stock/list.html?Finish'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?Finish'} ) : () ),
+			( $session{'/administrator/stock/list.html?Colour'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?Colour'} ) : () ),
+			( $session{'/administrator/stock/list.html?Weight'} ? ( 'weight_id'	=> $session{'/administrator/stock/list.html?Weight'} ) : () ), 
+			( $session{'/administrator/stock/list.html?Quality'} ? ( 'quality_id'	=> $session{'/administrator/stock/list.html?Quality'} ) : () ),
+			( $session{'/administrator/stock/list.html?material_id'} ? ( 'material_id'	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
+			( $session{'/administrator/stock/list.html?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {

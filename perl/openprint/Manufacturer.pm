@@ -9,12 +9,10 @@ $table = 'manufacturers';
 $serial= 'manufacturers_id_seq';
 %fields = (
     'id'    =>  'id',
-    'shortname' =>  'shortname',
-    'longname'  =>  'longname',
+    'name' =>  'name',
 );
 %transforms = (
-    'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-    'longname' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );

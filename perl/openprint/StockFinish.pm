@@ -1,22 +1,27 @@
-package openprint::StockFinish;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockFinish;
+our @ISA = qw(openprint::Object);
+use openprint ();
+
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'paperfinishes';
-$serial= 'paperfinish_id_seq';
+$table = 'stockfinishes';
+$serial= 'stockfinishes_id_seq';
 %fields = (
 	'id'	=>	'id',
-	'shortname'	=>	'shortname',
-	'longname'	=>	'longname',
+	'name'	=>	'name',
 );
 %transforms = (
-	'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-	'longname' => [ 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );
+
+sub sort {
+	shift if $_[0] eq 'openprint::StockFinish';
+$openprint::log->debug("Sorting Finish");
+	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+}# end sub sort
 
 1;
 __END__

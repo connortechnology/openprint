@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::MarketingCategory;
 require openprint::User_Profile_Field;
 require openprint::Photo_Album;
+require openprint::Video_Album;
 require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
@@ -367,11 +368,17 @@ sub user_profile {
 			delete $param{'password'};
 		} # end if
 		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
-		$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-		$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-		$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-		$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
 		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
+		if ( $config{'UserProfileRequiredFields'} ) {
+			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
+				$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
+			} # end foreach required field
+		} else {
+			$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
+			$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
+			$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
+			$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
+		} # end if
 		if ( $error ne '' ) {
 			$variable{'error'} = 'Bad Field';
 			$variable{'information'} = $error;
@@ -682,6 +689,7 @@ sub search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
+				map { 'field-'.$_->id() } openprint::User_Profile_Field->find('order'=>'sort,name') 
 				) );
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
@@ -695,6 +703,7 @@ sub _search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
+				map { 'field-'.$_->id() } openprint::User_Profile_Field->find('order'=>'sort,name') 
 				) );
 } # end sub _search
 
@@ -711,6 +720,29 @@ sub _wall {
 
 sub forgotten_password {
 } # end sub forgotten_password
+
+sub _location_ddm {
+} # end sub _location_ddm
+
+sub _relationships {
+	if ( $param{'action'} eq 'delete' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		if ( sets::isin( $session{'user_id'}, [ $R->user_id1(), $R->user_id2() ] ) ) {
+			$variable{'error'} .= $R->delete();
+		} else {
+			$log->error("Can't delete a relationship taht we are not in.");
+			$variable{'error'} .= 'You cannot delete a relationship that you are not a part of.';
+		} # end if
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		$variable{'error'} .= $R->save({'approved'=>1});
+		$variable{'information'} .= 'You are now ' . $R->type() . ' ' . $R->User1()->name();
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+	} # end if
+	$variable{'User'} = new openprint::User( $param{'user_id'} );
+} # end sub _relationships
 
 1;
 __END__

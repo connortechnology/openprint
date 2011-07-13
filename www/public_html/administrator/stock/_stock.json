@@ -1,0 +1,74 @@
+<? echo (
+	my $debug = 0;
+	my %specs;
+	$specs{'form'} = $param{'form'};
+	my @options = ( 'Group','Manufacturer','Name','Finish','Colour','Weight','Quality','Material' );
+	my %find = ();
+    foreach my $option ( @options ) {
+        if ( $param{$option} ) {
+            $find{(lc $option).'_id'} = $param{$option};
+        } # end if
+        last if $option eq $param{'selected'};
+    } # end foreach option
+
+	my @Stocks = openprint::Paper->find( \%find );
+
+	# Find the index of the selected option
+	my $option_index = 0;
+	if ( sets::isin( $param{'selected'}, \@options ) ) {
+		for ( ; $option_index < @options; $option_index += 1 ) {
+			last if $options[$option_index] eq $param{'selected'};
+		} # end for
+	} # end if
+	$option_index += 1 if $param{'selected'} ne 'rdbSuppliedStock';
+
+	for ( my $i = $option_index; $i < @options; $i += 1 ) {
+		my @removed_Stocks;
+
+		if ( $i and $param{$options[$i-1]} ) {
+			for ( my $stock_index = 0; $stock_index < @Stocks; $stock_index += 1 ) {
+				# This ensures that the stock matches the previous option.  
+				my ( $value ) = $Stocks[$stock_index]->get(lc $options[$i-1]);
+
+				if ( $value ne $param{$options[$i-1]} ) {
+					push @removed_Stocks, splice @Stocks, $stock_index, 1;
+					$stock_index -= 1;
+					next;
+				} # end if
+			} # end for
+		} # end if $i and $param{$options[$i-1]} 
+
+		if ( ! @Stocks ) {
+			# If we have removed all stocks, then drop the filter, so we get some results.
+			push @Stocks, @removed_Stocks;
+			$param{$options[$i]} = '';
+		} # end if
+
+		@{$specs{$options[$i]}} = ();
+		my %data = map { $_->get(lc($options[$i]), lc($options[$i]).'_id' ) } @Stocks;
+		if ( $options[$i] =~ /Size/ ) {
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } 
+				 sort {
+					my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+					if ( $a_w != $b_w ) {
+						return $a_w <=> $b_w;
+					}
+					if ( $a_h != $b_h ) {
+						return $a_w <=> $b_w;
+					}
+					return $a <=> $b;
+				}
+			keys %data;
+		} else {
+			@{$specs{$options[$i]}} = map { $data{$_}, $_ } sort keys %data;
+		} # end if Size or other, size gets special treatment for sorting
+	} # end foreach option
+
+	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
+#foreach my $k ( keys %specs ) {
+#$log->debug("$k => $specs{$k}");
+#}
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+) ?>

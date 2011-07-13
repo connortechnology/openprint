@@ -11,7 +11,7 @@ require sql;
 
 $debug = 0;
 $table = 'Currencies';
-$serial = 'CurrencyIndex_seq';
+$serial = 'currencies_id_seq';
 %fields = (
 	'id'		=>	'id',
 	'short'		=>	'short',

@@ -6,10 +6,9 @@ require openprint::Product;
 require openprint::Project;
 require openprint::Order;
 
-use vars qw( $serial $table $log $dbh %fields %transforms %defaults );
+use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults );
 
-my $debug = 1;
-
+$debug = 1;
 $serial = 'ordered_product_id_seq';
 $table = 'ordered_products';
 
@@ -62,6 +61,7 @@ $openprint::log->debug("Creating proejct from template: " . $self->Product()->pr
 	$Project->user_id( $openprint::session{'user_id'} );
 	$Project->company_id( $openprint::session{'company_id'} );
 	$Project->currency_id( $self->Order()->currency_id() );
+	$Project->status('Unordered'); # To prevent deleted status
 	$Project->save();
 	$$self{'project_id'} = $Project->id();
 	my $e = $self->save();
@@ -108,6 +108,31 @@ sub shippingtype {
     return $$self{'shippingtype'};
 } # end sub shippingtype
 
+sub requested_for {
+	if ( @_ > 1 ) {
+		$_[0]{'requested_for'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'requested_for'} ) {
+$openprint::log->debug("Calcing requested_fro");
+		my $days = 7; # Default to 7, I don't know why, just chose it.
+		my $Project = $_[0]->Project();
+		my $services = $Project->services('Turnaround');
+		if ( $$services{'Turnaround'} ) {
+$openprint::log->debug("Have turnaround_id ");
+			my $Turnaround = $Project->Service( @{$$services{'Turnaround'}} );
+$openprint::log->debug("Turnaround: " . $Turnaround);
+			if ( $Turnaround ) {
+				my $specs = $Turnaround->specs();
+				$openprint::log->debug("Turnaround specs; $specs $$specs{'TurnaroundDays'}days");
+				$days = $$specs{'TurnaroundDays'} if $$specs{'TurnaroundDays'};
+			} else {
+				$openprint::log->debug("No Turnaround");
+			} # end if
+		} # end if
+		$_[0]{'requested_for'} = sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $days ) );
+	} # end if
+	return $_[0]{'requested_for'};
+} # end sub erquested_for
 
 1;
 __END__

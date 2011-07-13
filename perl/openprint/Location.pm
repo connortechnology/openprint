@@ -117,6 +117,41 @@ sub ancestor {
 	return;
 } # end sub ancestor
 
+sub parent_type {
+	my $type;
+	if ( $_[0] eq 'openprint::Location' ) {
+		$type = $_[1];
+	} else { 
+		$type = $_[0]->type();
+	} # end if
+	if ( $type eq 'country' ) {
+		return undef;
+	} elsif ( $type eq 'state' ) {
+		return 'country';
+	} elsif ( $type eq 'city' ) {
+		return 'state';
+	} elsif ( $type eq 'place' ) {
+		return 'city';
+	} # end if
+} # end sub parent_type
+
+sub child_type {
+	my $type;
+	if ( $_[0] eq 'openprint::Location' ) {
+		$type = $_[1];
+	} else { 
+		$type = $_[0]->type();
+	} # end if
+	if ( $type eq 'country' ) {
+		return 'state';
+	} elsif ( $type eq 'state' ) {
+		return 'city';
+	} elsif ( $type eq 'city' ) {
+		return 'place';
+	} elsif ( $type eq 'place' ) {
+		return undef;
+	} # end if
+} # end sub child_type
 
 1;
 __END__

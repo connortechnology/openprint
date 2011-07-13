@@ -1,6 +1,7 @@
 use strict;
 package openprint::Log;
 our @ISA = qw( openprint::Object );
+use openprint ();
 require openprint::Object;
 require openprint::User;
 require openprint::Log_Action;
@@ -9,7 +10,7 @@ require openprint::Host;
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 1;
 $table = 'logs';
-$serial = 'log_id_seq';
+$serial = 'logs_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'user_id'		=>	'user_id',
@@ -34,7 +35,6 @@ $serial = 'log_id_seq';
 
 );
 
-use openprint ();
 
 sub User {
 	my $self = shift;

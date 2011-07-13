@@ -33,6 +33,7 @@ BEGIN {
 
 	use Carp (cluck);
 
+	use CGI;
 	use sql;
 	use misc;
 	use ssi;

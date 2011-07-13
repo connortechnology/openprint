@@ -1,7 +1,6 @@
-package openprint::StockQuality;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockQuality;
+our @ISA = qw(openprint::Object);
 
 use vars qw( $table $serial %fields %transforms %defaults );
 
@@ -9,12 +8,10 @@ $table = 'paperqualities';
 $serial= 'paperqualities_id_seq';
 %fields = (
 	'id'	=>	'id',
-	'shortname'	=>	'shortname',
-	'longname'	=>	'longname',
+	'name'	=>	'name',
 );
 %transforms = (
-	'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-	'longname' => [ 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );

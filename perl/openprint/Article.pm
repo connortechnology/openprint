@@ -43,6 +43,7 @@ $serial = 'articles_id_seq';
 	'category'			=>	undef,
 	'source'			=>	'source',
 	'source_content'	=>	'source_content',
+	'summary'			=>	'summary',
 );
 
 %transforms = (
@@ -121,6 +122,16 @@ sub Comments {
 	} # end if
 	return @{$_[0]{'Comments'}};
 } # end sub Comments
+
+sub summary {
+	if ( @_ > 1 ) {
+		$_[0]{'summary'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'summary'} ) {
+		$_[0]{'summary'} = substr $_[0]{'body'},0,100;
+	} 
+	return $_[0]{'summary'};
+} # end sub summary
 
 1;
 __END__

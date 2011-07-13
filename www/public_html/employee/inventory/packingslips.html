@@ -1,0 +1,47 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+Please select an allocation to view/edit.<br>
+<form id="f1" name="f1" method="post" action="packingslips.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
+			<label>Docket:</label>
+			<input type="text" name="docket" size="6" value="<? echo ( $session{'/employee/inventory/packingslips.html?docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_packingslips.html', \$('f1').serialize() );",'','Go' ); ) ?>
+		</li>
+		</ul>
+		<hr/>
+		<ul>
+		<li>
+			<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
+			<select name="company_id" id="company_id">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Type:</label>
+			<select name="type_id" id="type_id">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
+			</select>
+		<li>
+			<label>Date Added:</label>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			</span>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
+			</span>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button( 'ShowResults', { 'onclick'=>"AjaxLoadContent( 'Results', '/employee/inventory/_packingslips.html', \$('f1').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f1.reset();', 'text'=>'Reset' } ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><!--#include virtual="_packingslips.html"--></div>
+<script type="text/javascript">document.f1.Docket.focus();</script>

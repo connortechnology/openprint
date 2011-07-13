@@ -36,11 +36,15 @@
 						<li><label>Filename:</label>
 						<? echo ( 
 								my $html = $$variable{'Asset'}->filename() ;
-								if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/ ) {
-								$html .= '<br/><img src="/assets/'.$$variable{'Asset'}->on_disk_filename().'" />';
+								if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/i ) {
+									$html .= '<br/><img src="/assets/'.$$variable{'Asset'}->on_disk_filename().'" />';
 								} # end if
 								return $html;
 						) ?>
+						</li>
+						<li><label>Used in:</label>
+						<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->claim_id() ); } openprint::Claim_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
+						<? echo ( join(',', map { sprintf('<a href="/employee/sred/view.html?content_id=%1$d">SRED %1$d</a>', $_->content_id() ); } openprint::SRED_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 						</li>
 					</ul>
 				</div>

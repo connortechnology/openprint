@@ -17,10 +17,12 @@
 	my %papers;
 	my %indexes;
 	my $Project = $$variable{'Project'};
+
+	# prime that papers hash, which is then used to assign an index to each Stock
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
 			my $paper_string = $Paper->to_string();
 			$papers{$paper_string} = $Paper;
 		} # end foreach

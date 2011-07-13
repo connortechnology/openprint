@@ -17,5 +17,3 @@ CREATE INDEX Service_Types_name_Idx ON Service_Types (name);
 
 
 
-ALTER TABLE ONLY tbl_project_contents
-    ADD CONSTRAINT tbl_project_contents_servicetype_id_fkey FOREIGN KEY (servicetype_id) REFERENCES service_types(id);

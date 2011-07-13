@@ -3,8 +3,7 @@ package email;
 
 use openprint ();
 use warnings;
-use vars qw( $r %config $log );
-*r = \$openprint::r;
+use vars qw( %config $log );
 *log = \$openprint::log;
 *config = \%openprint::config;
 
@@ -15,7 +14,7 @@ my $dbh;
 sub db_connect {
 	if ( $config{'mail_db_name'} ) {
 # Fairly important to us the config hash.  r->dir_config causes crashes
-		return $dbh = sql::open_sql( $log, 
+		$dbh = sql::open_sql( $openprint::log, 
 				(
 				 'host'		=>	$config{'mail_db_hostname'},
 				 'database'	=>	$config{'mail_db_name'},
@@ -128,6 +127,19 @@ sub aliases {
 	} # end if
 	return @aliases;
 } # end sub get_aliases
+
+sub domains {
+	$dbh = email::db_connect() if ! $dbh;
+	if ( ! $dbh ) {
+		$openprint::log->debug("No connection to mail database");
+	} # end if;
+	my $domains = $dbh->selectall_arrayref( 'SELECT * FROM domain', { Slice => {} } );
+	if ( $domains ) {
+		return map { $$_{'domain'} } @{$domains};
+	}  # end if
+	$openprint::log->debug("No domains found");
+	return ();
+} # end sub domains
 
 1;
 __END__

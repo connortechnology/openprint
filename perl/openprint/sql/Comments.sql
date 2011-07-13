@@ -8,6 +8,7 @@ CREATE TABLE Comments (
 	object_id	INTEGER,
 	text		TEXT,
 	deleted	BOOLEAN NOT NULL Default false,
+	approved BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 

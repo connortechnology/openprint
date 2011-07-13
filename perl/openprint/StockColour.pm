@@ -1,24 +1,25 @@
-package openprint::StockColour;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockColour;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'papercolours';
-$serial= 'papercolour_id_seq';
+$table = 'stockcolours';
+$serial= 'stockcolour_id_seq';
 %fields = (
-    'id'    =>  'id',
-    'shortname' =>  'shortname',
-    'longname'  =>  'longname',
+	'id'	=>  'id',
+	'name' =>  'name',
 );
 %transforms = (
-    'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-    'longname' => [ 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 );
 
-require sql;
+sub sort {
+	shift if $_[0] eq 'openprint::StockColour';
+	return sort { $$a{'name'} cmp $$b{'name'} } @_;
+}# end sub sort
 
 1;
 __END__

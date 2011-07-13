@@ -4,9 +4,8 @@
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-	<span class="required"></span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
-		<div class="UserProfile">
+		<div class="Account">
 			<fieldset class="filters">
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				<p>
@@ -28,6 +27,8 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
+		<div class="UserProfile">
+			<span class="required"></span> denotes required information.<br/>
 			<div id="ProfilePicture">
 			<? if ( $$variable{'User'}->asset_id() ) ?>
 			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
@@ -35,7 +36,10 @@
 			No profile picture set.
 			<? endif ( $$variable{'User'}->asset_id() ) ?>
 			</div>
-	
+			<div id="Statistics">
+   			<fieldset><legend>Statistics:</legend>
+			</fieldset>
+			</div>
 			<div id="UserInformation">
    			<fieldset><legend>User Information:</legend>
 				<div class="content">
@@ -59,23 +63,23 @@
    					<label for="lastname">Last Name:</label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
    				</li>
-   				<li> 
+   				<li class="notrequired"> 
    					<label for="title">Title:</label>
    					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
    				</li>
-   				<li class="required"> 
+   				<li class="notrequired"> 
    					<label for="phone">Phone:</label>
    					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" />
    				</li>
-   				<li>
+   				<li class="notrequired">
    					<label for="mobile">Mobile:</label>
    					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{'User'}->mobile() ) ?>" />
    				</li>
-   				<li>
+   				<li class="notrequired">
    					<label for="fax">Fax:</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
    				</li>
-   				<li>
+   				<li class="notrequired">
    					<label>Add to our Mailing List:</label>
 					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() eq 'Y' ); ) ?> value="Y" />
 					<label class="radio" for="MailingListY">Yes</label>
@@ -83,28 +87,28 @@
 					<label class="radio" for="MailingListN">No</label>
    				</li>
 			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
-   				<li>
+   				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="web_activeY">Yes</label>
    					<input type="radio" id="web_activeN" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() ne 'Y' ); ) ?> value="N" />
    					<label class="radio" for="web_activeN">No</label>
    				</li>
-				<li>
+				<li class="ftp_active notrequired">
 					<label>Can login to the FTP site?</label>
 					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( ssi::checked( $$variable{'User'}->ftp_active() ); ) ?> value="1" />
 					<label class="radio" for="ftp_active1"/>Yes</label>
 					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( ssi::checked( ! $$variable{'User'}->ftp_active() ); ) ?> value="0" />
 					<label class="radio" for="ftp_active0"/>No</label>
 				</li>
-   				<li>
+   				<li class="administrator notrequired">
    					<label>Company administrator?</label>
    					<input type="radio" id="AdministratorY" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="AdministratorY">Yes</label>
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() ne 'Y' ); ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</li>
-   				<li>
+   				<li class="email_quotes notrequired">
    					<label>Email my quotes to myself?</label>
    					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="1" />
    					<label class="radio" for="email_quotes_to_myself1">Yes</label>
@@ -113,7 +117,7 @@
    				</li>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-   				<li>
+   				<li class="notrequired">
    					<label>Quote Level:</label>
 					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
@@ -150,7 +154,7 @@
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
 	</form>
-	<!--#include virtual="/includes/login_log.html"-->
+</div>
 <? else ( $session{'user_id'} ) ?>
 You must be logged in to edit user profiles.<br/>
 <? endif ( $session{'user_id'} ) ?>

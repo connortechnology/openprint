@@ -33,6 +33,9 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 if ( ! exists $$data{'source'} ) {
 		$dbh->do('ALTER TABLE articles ADD source TEXT');
 } # end if
+if ( ! exists $$data{'summary'} ) {
+		$dbh->do('ALTER TABLE articles ADD summary TEXT');
+} # end if
 if ( ! exists $$data{'source_content'} ) {
 		$dbh->do('ALTER TABLE articles ADD source_content TEXT');
 } # end if
@@ -64,6 +67,9 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='assets'", 'column_name');
 	if ( ! exists $$data{'md5'} ) {
 		$dbh->do('ALTER TABLE Assets ADD md5 char(32)');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
 } # end if
 
@@ -127,6 +133,11 @@ if ( ! exists $$data{'service'} ) {
 if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profile_Fields.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_profile_fields'", 'column_name');
+	if ( ! $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add deleted BOOLEAN not null default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );
@@ -180,6 +191,10 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'locations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
@@ -248,6 +263,7 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 } # end if
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
+	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # en dif
 if ( ! sets::isin( 'logs', \@tables ) ) {
@@ -260,9 +276,13 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
 } # end if
+if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
+	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
+} # end if
 my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
+	'Select Company'	=>	79,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
@@ -296,6 +316,136 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
 }
+if ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Shifts.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
+	if ( ! exists $$data{'starttime_seconds'} ) {
+		if ( exists $$data{'starttime'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD starttime_seconds INTEGER');
+			$dbh->do('update equipment_shifts set starttime_seconds = extract(epoch from starttime)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop starttime');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'duration_seconds'} ) {
+		if ( exists $$data{'duration'} ) {
+			$dbh->do('ALTER TABLE Equipment_Shifts ADD duration_seconds INTEGER');
+			$dbh->do('update equipment_shifts set duration_seconds = extract(epoch from duration)');
+			$dbh->do('ALTER TABLE Equipment_shifts drop duration');
+		} # end if
+	} # end if
+} # end if
+if ( ! sets::isin( 'privacy_groups', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy_Groups.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'project_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Project_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
+	if ( ! exists $$data{'please_call'} ) {
+		$dbh->do('ALTER TABLE Project_Types add please_call boolean not null default false');
+	} # endif
+}
+if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaigns.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
+	if ( ! exists $$data{'nextrun'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add nextrun TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'email_subject'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add email_subject TEXT');
+	} # end if
+	if ( ! exists $$data{'email_from'} ) {
+		if ( exists $$data{'fromemail'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns rename column fromemail to email_from');
+		} else {
+		$dbh->do('ALTER TABLE emailcampaigns add email_from TEXT');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'email_text'} ) {
+		if ( exists $$data{'emailtext'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns rename column emailtext to email_text');
+		} else {
+		$dbh->do('ALTER TABLE emailcampaigns add email_text TEXT');
+		} # end if
+	} # end if
+	if ( ! exists $$data{'attachments'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns add attachments TEXT');
+	} # end if
+	if ( ! exists $$data{'timeofday'} ) {
+		$dbh->do('ALTER TABLE emailcampaigns ADD timeofday TIME WITHOUT TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'template_id'} ) {
+		if ( ! sets::isin( 'emailtemplates', \@tables ) ) {
+			$dbh->do( misc::load_file( $log, '../openprint/sql/EmailTemplates.sql' ) );
+			die $dbh->errstr() if $dbh->errstr();
+		}
+		$dbh->do('ALTER TABLE emailcampaigns add template_id INTEGER');
+		$dbh->do('ALTER TABLE emailcampaigns add FOREIGN KEY (template_id) REFERENCES emailtemplates(id)');
+		
+	} # end if
+} # end if
+if ( ! sets::isin( 'emailcampaign_log', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaign_Log.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'currencies_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'currencyindex_seq', \@sequences ) ) {
+		$dbh->do('DROP SEQUENCE currencyindex_seq');
+	} # end if
+	$dbh->do('CREATE SEQUENCE currencies_id_seq');
+	$dbh->do("SELECT setval('currencies_id_seq', (select max(id) FROM currencies) )");
+	$dbh->do("ALTER TABLE CURRENCIES ALTER COLUMN ID SET DEFAULT nextval('currencies_id_seq')");
+} # end if
+foreach my $thingy ( 'names','finishes','colours', 'weights','qualities' ) {
+if ( sets::isin( 'paper'.$thingy, \@tables ) ) {
+$log->warn("Renaming paper$thingy");
+	$dbh->do("ALTER TABLE Paper$thingy rename to Stock$thingy");
+	$dbh->do("ALTER TABLE stock$thingy rename column shortname to name");
+	$dbh->do("ALTER TABLE stock$thingy drop column longname");
+	if ( sets::isin( $thingy.'_id_seq' ) ) {
+		$dbh->do('ALTER SEQUENCE paper'.$thingy.'_id_seq RENAME TO stock'.$thingy.'_id_seq');
+	} # end if
+} # end if
+} # end foreach thingy
+@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+if ( sets::isin( 'stocknames', \@tables ) ) {
+	$dbh->do('ALTER TABLE stocknames rename to stockbrands');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
+	$dbh->do('ALTER TABLE Papers rename column name_id to brand_id') if exists $$data{'name_id'};
+if ( sets::isin( 'papername_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE papername_id_seq RENAME TO stocknames_id_seq');
+} # end if
+if ( sets::isin( 'paperfinish_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE paperfinish_id_seq RENAME TO stockfinishes_id_seq');
+} # end if
+if ( sets::isin( 'papercolour_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE papercolour_id_seq RENAME TO stockcolours_id_seq');
+} # end if
+if ( sets::isin( 'paperweight_id_seq' ) ) {
+	$dbh->do('ALTER SEQUENCE paperweight_id_seq RENAME TO stockweights_id_seq');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+$dbh->do("ALTER TABLE manufacturers rename column shortname to name") if exists $$data{'shortname'};
+$dbh->do("ALTER TABLE manufacturers drop column longname") if exists $$data{'longname'};
+if ( ! sets::isin( 'bookmarks', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Bookmarks.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! $config{'public_URIs'} ) {
+$dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/account/login.html,/account/registration.html', 'text', 'Comma separated list of pages on the site that can be read without logging in','Miscellaneous Settings' );` );
+} # end if
+if ( ! sets::isin( 'page_settings', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+
 $dbh->disconnect();
 1;
 __END__

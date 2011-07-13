@@ -272,6 +272,7 @@ sub return_years {
 	$start = $openprint::config{'startYear'} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
 	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
+$log->debug("sub return_years $start .. $end $selected");
 	return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
@@ -435,6 +436,8 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= qq`title="$$options{title}" ` if $$options{'title'};
+	$html .= 'target="$$options{target}" ' if $$options{'target'};
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
 		$html .= $$options{'onclick'}."return false;\" ";
@@ -495,7 +498,7 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
-	if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+	if ( ( ! ( exists $session{$page.'?'.$prefix.'_year'} and exists $session{$page.'?'.$prefix.'_month'} and exists $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
 		if ( $delta ne '' ) {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
 		} else {
@@ -515,8 +518,9 @@ sub date_select {
 	} elsif ( $value eq ' ' ) {
 		( $year, $month, $day ) = ( '', '', '' );
 	} else {
-		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+		( $year, $month, $day ) = split('-', $value );
 	} # end if
+$log->debug("In date_select $year $month $day");
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
 		$options = {'onchange'=>$options};
@@ -528,9 +532,8 @@ sub date_select {
 		@fields = split(',', $$options{'fields'} );
 	} 
 	
-	my ( $start_year, $start_month, $start_day ) = split('-', $$options{'start'} ) if $$options{'start'};
-	my ( $end_year, $end_month, $end_day ) = split('-', $$options{'end'} ) if $$options{'end'};
-	
+	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{'start'} ) if $$options{'start'};
+	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{'end'} ) if $$options{'end'};
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
@@ -539,21 +542,24 @@ sub date_select {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
+$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
+$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
+$log->debug($html);
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C', 'title'=>'Clear', 'class'=>'Clear'} );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T', 'title'=>'Today', 'class'=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';
@@ -592,32 +598,29 @@ $openprint::log->error("No date from $value");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'},
-			( ( exists $$options{'showtime'} and ! $$options{'showtime'} ) ? ' style="display:none;"' : '' ) 
-			);
-
-	$html .= '<option value=""> </option>';
-	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
-	$html .= '</select>';
-	$html .= ':';
-	$html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $$options{'onchange'} );
-	$html .= '<option value=""> </option>';
-	$html .= make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min );
-	$html .= '</select></span>';
+	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
+	<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">
+	<option value=""> </option>%5$s
+	</select></span>
+', $prefix, $$options{'onchange'}, 
+( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
+	make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
+	make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
+);
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $F('%1$s_year'), $F('%1$s_month'), $F('%1$s_day') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
@@ -632,15 +635,17 @@ sub datetime_text {
 	 my $html = '';
 	 $html .= sprintf('<span id="%1$s_year">%2$.4d</span>-<span id="%1$s_month">%3$.2d</span>-<span id="%1$s_day">%4$.2d</span> <span id="%1$s_hour">%5$.2d</span>:<span id="%1$s_minute">%6$.2d</span>', $prefix, $year, $month, $day, $hour, $month );
 	 return $html;
-} # end sub datetime_select
+} # end sub datetime_text
 
 sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
+#$openprint::log->debug("key $_");
 		next if ! exists $param{$_};
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
+#$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")");
 		} else {
 #$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
 			$session{"$url?$_"} = $param{$_};

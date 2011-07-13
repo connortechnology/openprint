@@ -95,7 +95,6 @@ sub Area {
 sub Reason {
 	return new openprint::PAR_Reason( $_[0]{reason_id} );
 } # end sub Reason
-1;
 
+1;
 __END__
-~       
