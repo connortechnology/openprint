@@ -19,7 +19,7 @@ use DBI;
 use strict;
 
 my $db_type = 'Pg';
-my $db_host = 'localhost';
+my $db_host = 'www5';
 my $db_user = 'postfix';
 my $db_pass = 'postfix';
 my $db_name = 'mail';
