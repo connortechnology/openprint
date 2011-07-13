@@ -6,7 +6,7 @@
 <div class="Host"><div class="Edit">
 <form id="f1" name="f1" method="post" action="/employee/it/hosts.html">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
-	<input type="hidden" id="btnFunction" name="btnFunction" />
+	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{'Host'}->id() ) ?></legend>
 		<div class="content">
 			<ul>
@@ -56,12 +56,13 @@
 				<li class="buttons">
 					<? echo ( 
 						my $html;
-						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+						$html .= ssi::button( 'Save', { 'onclick'=>"if( check_inputs( f1 ) ){f1.elements['action'].value='Save';f1.submit();}" } );
+						$html .= ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } );
 						if ( $$variable{'Host'}->id() ) {
-						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'Host'}->id();
+							$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } ) if $$variable{'Host'}->id();
 						} # end if
-						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
-						$html .= ssi::writeButton( $log, $dbh, 'resolve', 'resolve.gif', "f1.btnFunction.value='Resolve';f1.action='/employee/it/host.html';f1.submit();", '', 'Resolve' );
+						$html .= ssi::button( 'Resolve', { 'onclick'=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
+						$html .= ssi::button( 'Ping', { 'onclick'=>"f1.elements['action'].value='Resolve';f1.action='/employee/it/host.html';f1.submit();" } );
 						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 						return $html;
 					) ?>

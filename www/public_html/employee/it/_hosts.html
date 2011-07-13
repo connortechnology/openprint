@@ -13,23 +13,12 @@
 			'order' => $param{'order'} ? $param{'order'} : 'lower(hostname)',
 			( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
 			( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
+			( $param{'monitored'} ne '' ? ( 'monitored'=>$param{'monitored'} ) : () ),
 			( $param{'has_hostname'} ne '' ? ( 'hostname is null' => ! $param{'has_hostname'} ) : () ),
-			( Date::Calc::check_date( @session{
-									  '/employee/it/hosts.html?created_on_start_year',
-									  '/employee/it/hosts.html?created_on_start_month',
-									  '/employee/it/hosts.html?created_on_start_day',
-									  } ) ? 
-											( 'created_on_>=' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-											 '/employee/it/hosts.html?created_on_start_year',
-											 '/employee/it/hosts.html?created_on_start_month',
-											 '/employee/it/hosts.html?created_on_start_day',
-											 } ) ) : 
-			  () ),
-			( Date::Calc::check_date( @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ) ? ( 'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ) ) : () ),
-	( Date::Calc::check_date( @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ) ?
-		( 'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ) ) : () ),
-	( Date::Calc::check_date(@session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'}) ?
-		( 'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'} ) ) : () ),
+			ssi::date_filter( 'created_on_start', 'created_on >=' ),
+			ssi::date_filter( 'created_on_end', 'created_on <=' ),
+			ssi::date_filter( 'updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( 'updated_on_end', 'updated_on <=' ),
 			);
 	} 
 ) ?>
@@ -64,7 +53,7 @@
 						( $Host->dhcp() ? 'dhcp' : () ),
 						( $Host->blacklist() ? 'blacklisted' : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
-						( $Host->monitor() ? 'monitored' : () ),
+						( $Host->monitored() ? 'monitored' : () ),
 					) ),
 					$Host->description(),
 $rowclass,

@@ -34,11 +34,11 @@
 		Please enter your e-mail address and password.<br/>
 		<p>
 			<label for="UserID">UserID:</label>
-			<input type="text" id="UserID" name="UserID" emptyok="emptyok" format="5N" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
+			<input type="number" id="UserID" name="UserID" emptyok="emptyok" format="5N" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
 		</p>
 		<p>
 			<label for="email">E-mail:</label>
-			<input type="text" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
+			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
 			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
 		</p>
 		<p> 
@@ -68,7 +68,7 @@
 		To have your password e-mailed to you, please submit your e-mail address below.<br/>
 		<p>
 			<label for="txtEmail2">E-mail:</label>
-			<input type="text" id="txtEmail2" name="txtEmail2" />
+			<input type="email" id="txtEmail2" name="txtEmail2" />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',

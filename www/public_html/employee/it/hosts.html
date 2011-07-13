@@ -25,17 +25,18 @@ Please select a host to view/edit.<br/>
 <form id="f2" name="f2" method="post" action="hosts.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Date Added:</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			to 
 			</span>
+			to 
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Last Updated:</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
@@ -44,43 +45,38 @@ Please select a host to view/edit.<br/>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Blacklisted:</label>
-            <input type="radio" id="blacklisted1" name="blacklisted" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '1' ); ) ?> />
-            <label class="radio" for="blacklisted">Yes</label>
-            <input type="radio" id="blacklisted0" name="blacklisted" value="0" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '0' ); ) ?> />
-            <label class="radio" for="blacklisted0">No</label>
-            <input type="radio" id="blacklisted" name="blacklisted" value="" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '' ); ) ?> />
-            <label class="radio" for="blacklisted">Both</label>
-		</p>
-		<p>
+			<? echo ( ssi::radio( 'blacklisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?blacklisted'} ); ) ?>
+		</li>
+		<li>
 			<label>Whitelisted:</label>
-            <input type="radio" id="whitelisted1" name="whitelisted" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '1' ); ) ?> />
-            <label class="radio" for="whitelisted">Yes</label>
-            <input type="radio" id="whitelisted0" name="whitelisted" value="0" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '0' ); ) ?> />
-            <label class="radio" for="whitelisted0">No</label>
-            <input type="radio" id="whitelisted" name="whitelisted" value="" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '' ); ) ?> />
-            <label class="radio" for="whitelisted">Both</label>
-		</p>
-		<p>
+			<? echo ( ssi::radio( 'whitelisted', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?whitelisted'} ); ) ?>
+		</li>
+		<li>
+			<label>Monitored:</label>
+			<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?monitored'} ); ) ?>
+		</li>
+		<li>
 			<label>Has hostname:</label>
 			<? echo ( ssi::radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?has_hostname'} ); ) ?>
-		</p>
+		</li>
 <!--
-		<p>
+		<li>
             <label>Assigned/Unassigned?</label>
             <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?assigned'} ); ) ?> />
             <label class="radio" for="assigned">Assigned</label>
             <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?notassigned'} ); ) ?> />
             <label class="radio" for="notassigned">Unassigned</label>
-		</p>
+		</li>
 -->
+		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/it/_hosts.html', \$('f2').serialize() );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'host.html', 'Add New Host' ),
+				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/it/_hosts.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f2.reset();' } ),
+				ssi::button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
 				); ) ?>
 		</p>
 	</fieldset>

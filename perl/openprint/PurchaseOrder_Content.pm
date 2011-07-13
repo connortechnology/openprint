@@ -25,6 +25,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'qty'			=>	'qty',
 	'price'			=>	'price',
 	'total'			=>	'total',
+	'product'		=>	'product',
 	'item'			=>	'item',
 	'item_id'		=>	'item_id',
 	'docket'		=>	'docket',
@@ -93,7 +94,14 @@ sub item {
 			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name'=>$_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} );
 			if ( ! $NewItem ) {
 				$NewItem = new openprint::PurchaseOrder_Item();
-				$NewItem->save( { 'name'=>$_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} } );
+				$NewItem->save( { 
+					'name'=>$_[1], 
+					'company_id'=>$_[0]->PurchaseOrder()->company_id(), 
+					'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 
+					'type_id'=>$_[0]{'type_id'},
+					'price'	=>	$_[0]{'price'},
+					'product'	=>	$_[0]{'product'},
+				 } );
 			} # end if
 			$_[0]{'item_id'} = $$NewItem{'id'};
 		} # end if

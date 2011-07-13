@@ -139,7 +139,6 @@ function getSelectionId(input, li) {
 var project_description_options = {
 	mode: "specific_textareas",
 	editor_selector : "project_description",
-	plugins: "paste,save",
 	theme : "advanced",
 	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,formatselect,bullist,numlist,outdent,indent,undo,redo,html",
 	theme_advanced_buttons2 : '',
@@ -150,11 +149,10 @@ var project_description_options = {
     var content_description_options = {
 	mode: "specific_textareas",
 	editor_selector : "content_description",
-        plugins: "paste,save",
         theme : "advanced",
 		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect",
 		theme_advanced_buttons2 : "formatselect,bullist,numlist,outdent,indent",
-	theme_advanced_buttons3 : '',
+		theme_advanced_buttons3 : '',
 		auto_resize : true,
 		cleanup : true
     };
@@ -168,9 +166,8 @@ textarea_init();
 
 function save_content(form, content_id ) {
 	tinyMCE.triggerSave();
-	if ( 1 ) {
-		form.function.value='SaveContent';
-		//form.action='/employee/sred/project.html';
+	if ( true ) {
+		form.elements['action'].value = 'SaveContent';
 		form.submit();
 	} else {
 		var parameters = getValues( form, new Array(
@@ -178,7 +175,7 @@ function save_content(form, content_id ) {
 					'ending_year', 'ending_month', 'ending_day', 'ending_hour', 'ending_minute',
 					'user_id', 'docket', 'description-new', 'notes', 'project_id'
 				) );
-		parameters.set('function','SaveContent');
+		parameters.set('action','SaveContent');
 		new Ajax.Updater( 'Contents','_contents.html', {
 				method: 'post', 
 				parameters: parameters,
@@ -194,13 +191,13 @@ function delete_content(form, content_id ) {
 			parameters: {
 				project_id: form.project_id.value,
 				content_id: content_id,
-				func: 'delete'
+				action: 'delete'
 			},
 			onComplete: textarea_init,
 			evalScripts: true
 		}
 	);
-} // end function add_Content(form)
+} // end function delete_content(form, content_id)
 function edit_content( form, content_id ) {
 	new Ajax.Updater( 'content-'+content_id, '_content_edit.html', {
 			parameters: {
@@ -213,6 +210,20 @@ function edit_content( form, content_id ) {
 	);
 } // end function edit_content
 
+function copy_content(form, content_id ) {
+	tinyMCE.triggerSave();
+	new Ajax.Updater( 'Contents','_contents.html', {
+			parameters: {
+				project_id: form.project_id.value,
+				content_id: content_id,
+				action: 'copy'
+			},
+			onComplete: textarea_init,
+			evalScripts: true
+		}
+	);
+} // end function delete_content(form, content_id)
+
 function view_content( content_id ) {
 	new Ajax.Updater( 'content-'+content_id, '_content_view.html', {
 			parameters: {
@@ -222,5 +233,5 @@ function view_content( content_id ) {
 			evalScripts: true
 		}
 	);
-} // end function edit_content
+} // end function view_content
 

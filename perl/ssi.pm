@@ -716,5 +716,17 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day ), ( $field =~ /end$/ ? ( 23,59,59 ) : ( 0, 0, 0 ) ) ) );
 } # end sub date_filter
 
+sub input {
+	my %options = @_;
+	my $html = '<input';
+	$html .= ' type="'.$options{type}.'"' if $options{type};
+	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+	$html .= ' name="'.$options{name}.'"' if $options{name};
+	$html .= ' id="'.$options{id}.'"' if $options{id};
+	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
+	$html .= '/>';
+	return $html;
+} # end sub input
+
 1;
 __END__

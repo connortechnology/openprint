@@ -1385,6 +1385,7 @@ sub Supplied {
 	$Supplied->mweight(0); # force recalc
 	return $Supplied;
 } # end sub Supplied
+
 sub long {
 	my ( $self ) = @_;
 	return $$self{'width'} > $$self{'height'} ? 'width' : 'height';
