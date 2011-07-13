@@ -1,22 +1,11 @@
 
-@media screen {
-.unprintable {
-}
-}
-@media print {
-.unprintable {
-	display: none;
-}
-}
 
 .PO {
 	background-color: white;
-
 }
 
 .PO table {
 	border-top: 1px solid #3b5e91;
-	table-layout: fixed;
 }
 .PO table td {
 	border: 1px solid #aebdd2;
@@ -26,33 +15,35 @@
 	border: 1px solid #aebdd2;
 	background-color: #e4ebf4;
 }
-	
-.PO table td.totals {
+
+.PO table .totals {
 	text-align: right;
 }
 .PO table td input {
 	width: 96%;
-	min-width:0px;
-	margin: 0px;
-	padding: 0px;
+	min-width:0;
+	margin: 0;
+	padding: 0;
 }
 .PO table td input.RollQTY {
 	width: 60px;
 } 
-.PO table td.price {
-text-align: right;
+table .price {
+	width: 110px;
+	text-align: right;
 }
-.PO table td.price input {
+table .price input {
 	text-align: right;
 	width: 65px;
 }
-.PO table td.total {
-text-align: right;
-}
-.PO table td.total input {
+table .total {
+	width: 90px;
 	text-align: right;
 }
-.PO table td input.SheetQTY {
+table .total input {
+	text-align: right;
+}
+table td input.SheetQTY {
 	width: 60px;
 } 
 .PO table td input.SheetName {
@@ -70,13 +61,9 @@ text-align: right;
 	margin: 0px;
 	padding: 0px;
 	min-height: 0px;
+	resize: vertical;
 }
 
-@media print {
-body #Header {
-	display: none;
-}
-}
 
 .PO .Header {
 	display: block;
@@ -98,20 +85,20 @@ body #Header {
 	background: none;
 	float: left;
 }
-.PO div.Header .Logo table {
+.PO .Header .Logo table {
 	text-align: center;
 	margin-left: auto;
 	margin-right: auto;
-	border: none;
-	border-top: none;
 }
-.PO .Header .Logo table td {
+.PO .Header .Logo a.image, .Logo img {
+	width: 75px;
+}
+.PO .Logo table.HeaderText {
 	border: none;
-	vertical-align: top;
-	padding: 1px;
 }
 .PO .Header .Logo table.HeaderText td {
 	font-size: 12px;
+	border: none;
 }
 
 .PO .Header .Logo a {
@@ -119,7 +106,8 @@ body #Header {
 	border: none;
 }
 .PO .Header .Logo a img {
-	width: 100%;
+	width: 75px;
+	float: left;
 }
 .PO .Header .Logo .PointOne {
 	border-bottom: none;
@@ -159,7 +147,7 @@ p:after {
 }
 
 label {
-outline: 0;
+	outline: 0;
 }
 
 p label {
@@ -232,7 +220,42 @@ div.autocomplete ul li {
 .PO ul.notifications li {
 	padding: 0px;
 }
-.PurchaseOrder table .id {
+.PurchaseOrder table .id, .PurchaseOrder_Items table .id {
 	width: 45px;
 	text-align: left;
 } 
+table .buttons {
+	width: 55px;
+}
+table .quantity {
+	width: 100px;
+	text-align: center;
+}
+table .product {
+	width: 150px;
+}
+table .description {
+	text-align: left;
+}
+table .docket {
+	width: 75px;
+	text-align: center;
+}
+.who, .when {
+	width: 120px;
+	text-align: left;
+}
+.method {
+	width: 253px;
+}
+.terms {
+}
+.delivery_date {
+	width: 291px;
+	text-align: center;
+}
+@media print {
+	.unprintable, #Header {
+		display: none;
+	}
+}

@@ -123,44 +123,6 @@ sub view {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
 
-		# Used to get a list of the types in this PO, so we can add automatic notifications
-		my %types;
-		foreach my $k ( keys %param ) {
-			my ( $content_id ) = $k =~ /qty-(.*)/;
-			if ( defined $content_id ) {
-				next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
-
-				my $Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
-				if ( ! $Item->id() ) {
-					$Item->save({'company_id'=>$PO->company_id(), 'vendor_id'=>$PO->supplier_id(), 'type_id'=>$param{'type_id-'.$content_id}, 'name'=>$param{'item-'.$content_id}, 'description'=>$param{'description-'.$content_id}, 'price'=>$param{'price-'.$content_id} });
-				} elsif ( $Item->price() != $param{'price-'.$content_id} ) {
-				# Update the latest price
-					$Item->save({'price'=>$param{'price-'.$content_id}});
-				} # end if
-
-				my $C = new openprint::PurchaseOrder_Content( $content_id );
-				
-				$variable{'error'} .= $C->save( {
-						'po_id'         =>  $PO->id(),
-						'qty'           =>  $param{'qty-'.$content_id},
-						'item_id'       =>  $$Item{'id'},
-						'description'   =>  $param{'description-'.$content_id},
-						'docket'        =>  $param{'docket-'.$content_id},
-						'price'         =>  $param{'price-'.$content_id},
-						'total'         =>  $param{'total-'.$content_id},
-						'type_id'		=>	$param{'type_id-'.$content_id},
-						});
-
-				$types{$C->Type()->name()} = 1;
-				if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
-						$P->add_to_log( @session{'company_id','user_id'}, 
-								sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
-									$PO->id(), $C->qty(), $C->units(), $C->description() ) );
-					} # end foreach Project
-				} # end if docket
-			} # end if
-		} # end foreach
 		if ( ! $param{'supplier_id'} ) {
 			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
 			if ( ! @Companies ) {
@@ -222,6 +184,61 @@ sub view {
 		if ( ( $param{'vendor_country'} ne $PO->vendor_country() ) or ( $param{'vendor_state'} ne $PO->vendor_state() ) ) {
 			$PO->Taxes(1);
 		} # end if need to change taxes
+
+		# Used to get a list of the types in this PO, so we can add automatic notifications
+		my %types;
+		foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
+			next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
+
+			my $Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
+			if ( ! $Item->id() ) {
+				$Item = openprint::PurchaseOrder_Item->find_one(
+					'company_id'	=>	$PO->company_id(),
+					'vendor_id'		=>	$PO->supplier_id(),
+					'type_id'		=>	$param{'type_id-'.$content_id},
+					'name_lc'		=>	lc $param{'item-'.$content_id}, 
+					'product_lc'	=>	lc $param{'product-'.$content_id},
+					);
+				if ( ! $Item ) {
+					$Item = new openprint::PurchaseOrder_Item();
+					$Item->save({
+							'company_id'	=>	$PO->company_id(),
+							'vendor_id'		=>	$PO->supplier_id(),
+							'type_id'		=>	$param{'type_id-'.$content_id},
+							'name'			=>	$param{'item-'.$content_id}, 
+							'price'			=>	$param{'price-'.$content_id},
+							'product'		=>	$param{'product-'.$content_id},
+							});
+				} # end if
+			} # end if
+			if ( $Item->price() != $param{'price-'.$content_id} ) {
+				# Update the latest price
+				$Item->save({'price'=>$param{'price-'.$content_id}});
+			} # end if
+
+			my $C = new openprint::PurchaseOrder_Content( $content_id );
+			
+			$variable{'error'} .= $C->save( {
+					'po_id'         =>  $PO->id(),
+					'qty'           =>  $param{'qty-'.$content_id},
+					'product'		=>	$param{'product-'.$content_id},
+					'item_id'       =>  $$Item{'id'},
+					'description'   =>  $param{'description-'.$content_id},
+					'docket'        =>  $param{'docket-'.$content_id},
+					'price'         =>  $param{'price-'.$content_id},
+					'total'         =>  $param{'total-'.$content_id},
+					'type_id'		=>	$param{'type_id-'.$content_id},
+					});
+
+			$types{$C->Type()->name()} = 1;
+			if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
+				foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+					$P->add_to_log( @session{'company_id','user_id'}, 
+							sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
+								$PO->id(), $C->qty(), $C->units(), $C->description() ) );
+				} # end foreach Project
+			} # end if docket
+		} # end foreach Content id
 		foreach my $Tax ( $PO->Taxes() ) {
 			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
 			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
@@ -484,6 +501,7 @@ sub _po_content_line {
             'po_id'         =>  $param{'po_id'},
             'qty'           =>  $param{'qty'},
             'item'          =>  $param{'item'},
+			'product'		=>	$param{'product'},
             'description'   =>  $param{'description'},
             'docket'        =>  $param{'docket'},
             'price'         =>  $param{'price'},
@@ -521,6 +539,24 @@ sub _similar_pos {
 
 sub _item_select {
 } # end sub _item_select
+
+sub items {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $item_id ( ref $param{'item_id'} eq 'ARRAY' ? @{$param{'item_id'}} : $param{'item_id'} ) {
+			my $Item = new openprint::PurchaseOrder_Item( $item_id );
+			if ( $_ = $Item->delete() ) {
+				$variable{'error'} .= $_ . '<br/>';
+			} # end if
+		} # end foreach item_id
+		delete $param{'item_id'};
+	} else {
+		ssi::save_params( '/employee/purchase_order/items.html', ( 'supplier_id','types', 'item_contains' ) );
+	} # end if
+} # end sub items
+
+sub _items {
+	ssi::save_params( '/employee/purchase_order/items.html', ( 'supplier_id','types', 'item_contains' ) );
+} # end sub _items
 
 1;
 __END__

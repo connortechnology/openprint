@@ -139,6 +139,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			if ( $Paper->start_area() and $Paper->area() ) {
 				$sheets /= ( $Paper->start_area() / $Paper->area() );
 				$sheets = ceil( $sheets );
+				$Paper = $Paper->Supplied();
 			} else {
 				$log->debug("No area in project view: " . $Paper->to_string() );
 			} # end if

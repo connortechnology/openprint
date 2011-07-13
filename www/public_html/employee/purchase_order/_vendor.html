@@ -2,13 +2,13 @@
 	<fieldset><legend>VENDOR:</legend>
 		<p><label>Select:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
-			<select name="supplier_id" onchange="new Ajax.Request('_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
+			<select name="supplier_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
 			</select>
 		</p>
 		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts:</label>
-			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
+			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->supplier_id() ) {

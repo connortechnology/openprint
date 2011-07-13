@@ -490,7 +490,7 @@ sub get_li {
 		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
+			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
 		} # end if
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );

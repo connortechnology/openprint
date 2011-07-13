@@ -510,7 +510,7 @@ sub summary {
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
-	my $specs = get_specs_ref( $Project->id(), $service_id );
+	my $specs = get_specs_ref( $Project, $service_id );
 	if ( $$specs{'ServiceType'} eq 'AdditionalSignature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
 		if ( $qty_index ) {
 			if ( ! $$specs{'txtSpreadSize'} ) {

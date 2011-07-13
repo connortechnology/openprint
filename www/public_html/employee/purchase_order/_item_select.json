@@ -5,14 +5,13 @@
 	$desc =~ s/'/&apos;/mg;
 	$desc =~ s/\r\n//g;
 	$desc =~ s/\n//g;
-	return sprintf( q`
-		if ( $('description-%1$d').type == 'textarea' ) {
-		var desc = tinyMCE.getInstanceById('description-%1$d');
-		desc.setContent('%2$s');
-		} else {
-			$('description-%1$d').value = '%2$s';
-		} // end if
-		$('price-%1$d').value='%3$s';
+
+	my $html;
+
+	$html .= sprintf( q`$('product-%1$d').value = '%2$s';`, $param{'content_id'}, $Item->product() ) if $Item->product();
+	$html .= sprintf( q`$('price-%1$d').value = '%2$s';`, $param{'content_id'}, $Item->price() ) if $Item->price();
+	$html .= sprintf( q`$('item-%1$d').value = '%2$s';
 		calc_price($('item_id-%1$d'));
-		`, $param{'content_id'}, $desc, $Item->price() );
+		`, $param{'content_id'}, $Item->name() );
+	return $html;
 ) ?>

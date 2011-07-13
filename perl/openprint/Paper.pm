@@ -1312,6 +1312,16 @@ sub units {
 	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
 } # end sub units
 
+sub Supplied {
+	my ( $self ) = @_;
+	my $Supplied = $self->clone();
+	$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
+	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+	delete $$Supplied{'to_string'};
+	$Supplied->mweight(0); # force recalc
+	return $Supplied;
+} # end sub Supplied
+
 sub long {
 	my ( $self ) = @_;
 	return $$self{'width'} > $$self{'height'} ? 'width' : 'height';
