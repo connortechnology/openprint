@@ -31,6 +31,6 @@
 				$C->duration_days(),
 				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 24 ) ], $C->duration_hours() ),
 				ssi::make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $C->duration_minutes() ),
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $C->user_id() ? $C->user_id() : $session{'user_id'} ),
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)' ) ], $C->user_id() ? $C->user_id() : $session{'user_id'} ),
 	);
 ) ?>

@@ -6,10 +6,10 @@
 				<select name="operator_id" id="operator_id">
 					<option value="">select one</option>
 					<? echo ( 
-							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
+							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 									'usergroup'	=>	[ 'Bindery', 'Printing' ],
 									'type'		=>	'E',
-									'order'		=>	'lower(strfirstname),lower(strlastname)',
+									'order'		=>	'lower(firstname),lower(lastname)',
 									) ], $session{'/employee/performance/history.html?operator_id'} );
 							) ?>
 				</select>

@@ -232,7 +232,7 @@ sub view {
 
 			$types{$C->Type()->name()} = 1;
 			if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-				foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+				foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
 					$P->add_to_log( @session{'company_id','user_id'}, 
 							sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
 								$PO->id(), $C->qty(), $C->units(), $C->description() ) );

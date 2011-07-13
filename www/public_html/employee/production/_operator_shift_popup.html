@@ -41,7 +41,7 @@
 			<li><label>Operator:</label>
 				<select name="operator_id" id="operator_id">
 					<option value=""> select </option>
-				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('usergroup'=>$$variable{'Shift'}->Equipment()->category(),'type'=>'E','order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'Shift'}->operator_id() ); ) ?>
+				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User->find('usergroup'=>$$variable{'Shift'}->Equipment()->category(),'type'=>'E','order'=>'lower(firstname),lower(lastname)') ], $$variable{'Shift'}->operator_id() ); ) ?>
 				</select>
 			</li>
 		</ul>
