@@ -14,38 +14,29 @@ Please select an RFID Scanner to view/edit.<br/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Date Added:</label>
-			<span class="DateSelector">
-<? echo ( 
-	
-	@session{'/employee/inventory/rfidscanners.html?created_on_start_year','/employee/inventory/rfidscanners.html?created_on_start_month','/employee/inventory/rfidscanners.html?created_on_start_day'} = ( '','','' ) if ! exists $session{'/employee/inventory/rfidscanners.html?created_on_start_year'};
-	@session{'/employee/inventory/rfidscanners.html?created_on_end_year','/employee/inventory/rfidscanners.html?created_on_end_month','/employee/inventory/rfidscanners.html?created_on_end_day'} = ( '','','' ) if ! exists $session{'/employee/inventory/rfidscanners.html?created_on_end_year'};
-
-	return ssi::date_select( 'created_on_start', [@session{'/employee/inventory/rfidscanners.html?created_on_start_year','/employee/inventory/rfidscanners.html?created_on_start_month','/employee/inventory/rfidscanners.html?created_on_start_day'}] ); ) ?>
-			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
-			<span class="DateSelector">
-<? echo (
- ssi::date_select( 'created_on_end', [@session{'/employee/inventory/rfidscanners.html?created_on_end_year','/employee/inventory/rfidscanners.html?created_on_end_month','/employee/inventory/rfidscanners.html?created_on_end_day'}] ); ) ?>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
-			<span class="DateSelector">
-	<? echo (
-	@session{'/employee/inventory/rfidscanners.html?updated_on_start_year','/employee/inventory/rfidscanners.html?updated_on_start_month','/employee/inventory/rfidscanners.html?updated_on_start_day'} = ( '','','' ) if ! exists $session{'/employee/inventory/rfidscanners.html?updated_on_start_year'};
-	@session{'/employee/inventory/rfidscanners.html?updated_on_end_year','/employee/inventory/rfidscanners.html?updated_on_end_month','/employee/inventory/rfidscanners.html?updated_on_end_day'} = ( '','','' ) if ! exists $session{'/employee/inventory/rfidscanners.html?updated_on_end_year'};
- return ssi::date_select( 'updated_on_start', [@session{'/employee/inventory/rfidscanners.html?updated_on_start_year','/employee/inventory/rfidscanners.html?updated_on_start_month','/employee/inventory/rfidscanners.html?updated_on_start_day'}] ); ) ?>
-			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_end', [@session{'/employee/inventory/rfidscanners.html?updated_on_end_year','/employee/inventory/rfidscanners.html?updated_on_end_month','/employee/inventory/rfidscanners.html?updated_on_end_day'}] ); ) ?>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_rfidscanners_results.html', \$('f2').serialize() );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidscanner_details.html', 'Add New RFID Scanner' ),
+				ssi::button( 'ShowResults', { 'onclick'=>"AjaxLoadContent( 'Results', '/employee/inventory/_rfidscanners_results.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f2.reset();' } ),
+				ssi::button( 'Add', { 'href'=>'rfidscanner_details.html', 'text'=>'Add New RFID Scanner' } ),
 				); ) ?>
 		</p>
 	</fieldset>
