@@ -1200,7 +1200,9 @@ sub rfidscanners {
 			$variable{'error'} .= $RFIDScanner->delete();
 		} # end if
 	} # end if
-} # end sub rfidtags
+} # end sub rfidscanners
+sub _rfidscanners {
+} # end sub _rfidscanners
 
 sub rfidscanner_details {
 	my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );

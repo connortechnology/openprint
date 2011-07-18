@@ -34,12 +34,12 @@ Please select an RFID Scanner to view/edit.<br/>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"AjaxLoadContent( 'Results', '/employee/inventory/_rfidscanners_results.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/inventory/_rfidscanners.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
 				ssi::button( 'Reset', { 'onclick'=>'f2.reset();' } ),
 				ssi::button( 'Add', { 'href'=>'rfidscanner_details.html', 'text'=>'Add New RFID Scanner' } ),
 				); ) ?>
 		</p>
 	</fieldset>
 </form>
-<div id="Results"><!--#include virtual="_rfidscanners_results.html"--></div>
+<div id="Results"><!--#include virtual="_rfidscanners.html"--></div>
 <script type="text/javascript">document.f1.rfidscanner_id.focus();</script>
