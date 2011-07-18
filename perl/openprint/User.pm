@@ -6,7 +6,7 @@ use MIME::QuotedPrint;
 
 require openprint::Company;
 require openprint::logs;
-require openprint::Usergroup;
+require openprint::UserGroup;
 require openprint::User_Notification;
 require openprint::Asset;
 require openprint::User_Profile;
@@ -284,7 +284,7 @@ sub csr_ids {
 sub Groups {
 	my ( $self ) = @_;
 
-    return openprint::Usergroup->find('user_id_in'=>$$self{id} );
+    return openprint::UserGroup->find('user_id in'=>$$self{id} );
 } # end sub Groups
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;

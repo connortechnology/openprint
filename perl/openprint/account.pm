@@ -461,7 +461,7 @@ sub change_password_confirmation {
 
 	if ( $User->password() eq $param{'txtOldPassword'} ) {
 		$User->password( $param{'txtNewPassword'} );
-		$User->changepassword( 'N' );
+		$User->change_password( 'N' );
 		$variable{'error'} .= $User->save();
 	} else {
 		$variable{'error'} = 'You entered the wrong old password.<br/>';

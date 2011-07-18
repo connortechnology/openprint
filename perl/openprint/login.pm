@@ -159,14 +159,8 @@ sub verify_login {
 		$Cookie->bake( $r );
 	} # end if	
 
-	if ( $User->changepassword() eq 'Y' ) {
-		if ( $site eq 'A' ) {
-			$$variable{'Redirect'} = '/administrator/account/change_password.html';
-		} elsif ( $site eq 'E' ) {
-			$$variable{'Redirect'} = '/employee/account/change_password.html';
-		} else {
-			$$variable{'Redirect'} = '/account/change_password.html';
-		} # end if
+	if ( $User->change_password() eq 'Y' ) {
+		$$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
      
