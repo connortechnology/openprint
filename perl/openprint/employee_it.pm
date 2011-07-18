@@ -15,12 +15,12 @@ require openprint::Host;
 use strict;
 
 sub hosts {
-	if ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{'action'} eq 'Delete' ) {
 		foreach my $host_id ( ref $param{'host_id'} eq 'ARRAY' ? @{$param{'host_id'}} : $param{'host_id'} ) {
 			my $Host = new openprint::Host( $host_id );
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{'action'} eq 'Save' ) {
 		my $Host = new openprint::Host( $param{'host_id'} );
 		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
 		$variable{'error'} .= $Host->save(\%param);
@@ -31,7 +31,7 @@ sub hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
-			'has_hostname', 'monitored', 'whitelisted','blacklisted',
+			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
 			);
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -61,7 +61,7 @@ sub _hosts {
 			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
-			'has_hostname', 'monitored','whitelisted','blacklisted',
+			'has_hostname', 'monitored','whitelisted','blacklisted','online',
 			);
 } # end sub _hosts
 

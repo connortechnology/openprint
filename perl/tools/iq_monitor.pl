@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/perl
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
@@ -13,7 +13,7 @@ use vars qw( $log $dbh %config);
 *dbh = \$openprint::dbh;
 #*config = \%openprint::config;
 $log = logger->new();
-$log->{level} = 'warn';
+$log->{level} = 'debug';
 
 use Getopt::Long;
 use File::Basename qw(basename);
@@ -39,6 +39,7 @@ if (my $err = ReadCfg('/etc/iq_monitor.conf')) {
 		$log->debug("$k => $CFG::Config{$k}");
 	} # end foreach
 }
+	$log->debug("Successfully read cfg");
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
 	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
@@ -59,20 +60,33 @@ $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
 $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
+$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
+
 $CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
+$log->debug("Sleep duration $CFG::Config{sleep}");
+
+$log->debug("Finalised cfg");
+foreach my $k ( keys %CFG::Config ) {
+	$log->debug("$k => $CFG::Config{$k}");
+} # end foreach
 
 if ( $CFG::Config{'pid_file'} ) {
+	$log->debug("Creating pid file at $CFG::Config{'pid_file'} $$");
 	my $pidh;
 	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
-		die "Unable to open pid file";
+		die 'Unable to open pid file';
 	} # end if
 } # end if
 
+# udp has less network traffic overhead
+my $p = Net::Ping->new('icmp');
+
 while(1) {
 	if ( ! $dbh ) {
+		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
 				'host'		=> $CFG::Config{'db_host'},
 				'database'	=> $CFG::Config{'db_name'},
@@ -87,14 +101,24 @@ while(1) {
 		} # end if ! dbh
 	} # end if ! dbh
 
-	foreach my $Host ( openprint::Host->find('monitored'=>1) ) {
-		my $ping = $Host->ping();
+	$log->debug( "Getting hosts" );
+	my @Hosts = openprint::Host->find('monitored'=>1);
+	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
+	foreach my $Host ( @Hosts ) {
+		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
+		my $ping = $p->ping($Host->ip());
+		if ( ! defined $ping ) {
+			$log->warn("Problem with ping for " . $Host->hostname() );
+			next;
+		} # end if
 		if ( $Host->online() != $ping ) {
 			$Host->save({'online'=>$ping});
+			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 		} # end if
 	} # end foreach $Host
 	sleep $CFG::Config{'sleep'};
 } # end while
+$p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
 
@@ -111,5 +135,35 @@ Command-line options:
 
 EOH
 } # end sub usage
+
+# Read a configuration file
+#   The arg can be a relative or full path, or
+#   it can be a file located somewhere in @INC.
+sub ReadCfg {
+    my $file = $_[0];
+
+    our $err;
+
+    {   # Put config data into a separate namespace
+        package CFG;
+		use vars qw( %Config );
+
+        # Process the contents of the config file
+        my $rc = do($file);
+
+        # Check for errors
+        if ($@) {
+            $::err = "ERROR: Failure compiling '$file' - $@";
+        } elsif (! defined($rc)) {
+            $::err = "ERROR: Failure reading '$file' - $!";
+        } elsif (! $rc) {
+            $::err = "ERROR: Failure processing '$file'";
+        }
+    }
+
+    return ($err);
+}
+
+
 1;
 __END__

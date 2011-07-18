@@ -29,7 +29,7 @@
 					next if ! $$variable{'Quantity'.$qty_index};
 					$html .= '<td align="right">';
 					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $$variable{'Quantity'.$qty_index} ) {
-						$html .= "($$specs{txtQuantity$qty_index}) ";
+						$html .= '('.$$specs{"txtQuantity$qty_index"}.') ';
 					} # end if
 					if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) {
 						my $Service = $$variable{'Project'}->Service($service_ids[0]); 
