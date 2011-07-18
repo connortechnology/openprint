@@ -10,22 +10,18 @@ function load_host( form, options ) {
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a host to view/edit.<br/>
 <form id="f1" name="f1" method="post" action="hosts.html">
-	<fieldset class="filters"><legend>Choose Host</legend>
-		<p>
+	<input type="hidden" name="action"/>
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<ul>
+		<li>
 			<label for="ip">Host IP</label>
 			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d%]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
 			Hostname:
 			<input type="text" id="hostname" name="hostname" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
 			<input type="text" id="mac" name="mac" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "load_host(\$('f1'));",'','Load' ); ) ?>
-		</p>
-	</fieldset>
-</form>
-<form id="f2" name="f2" method="post" action="hosts.html">
-	<input type="hidden" name="btnFunction"/>
-	<fieldset class="filters"><legend>Search Criteria</legend>
-		<ul>
+			<? echo ( ssi::button( 'Load', { 'onclick'=>"load_host(\$('f1'));" } ); ) ?>
+		</li>
 		<li>
 			<label>Date Added:</label>
 			<span class="DateSelectorCT">
@@ -40,8 +36,8 @@ Please select a host to view/edit.<br/>
 			<label>Last Updated:</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
-			to 
 			</span>
+			to 
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
@@ -59,6 +55,10 @@ Please select a host to view/edit.<br/>
 			<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?monitored'} ); ) ?>
 		</li>
 		<li>
+			<label>Online:</label>
+			<? echo ( ssi::radio( 'online', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?online'} ); ) ?>
+		</li>
+		<li>
 			<label>Has hostname:</label>
 			<? echo ( ssi::radio( 'has_hostname', [ '1','Yes','0','No','','Both' ], $session{'/employee/it/hosts.html?has_hostname'} ); ) ?>
 		</li>
@@ -74,8 +74,8 @@ Please select a host to view/edit.<br/>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/it/_hosts.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f2.reset();' } ),
+				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/it/_hosts.html', \$('f1').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
 				ssi::button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
 				); ) ?>
 		</p>
