@@ -119,6 +119,14 @@ if ( ! exists $$data{'updated_on'} ) {
 if ( ! exists $$data{'deleted'} ) {
 	$dbh->do('ALTER TABLE hosts add deleted BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
+if ( ! exists $$data{'online'} ) {
+	$dbh->do('ALTER TABLE hosts add online BOOLEAN');
+} # end if
+if ( exists $$data{'monitor'} ) {
+	$dbh->do('ALTER TABLE hosts RENAME COLUMN monitor to monitored');
+} elsif ( ! exists $$data{'monitored'} ) {
+	$dbh->do('ALTER TABLE hosts add monitored BOOLEAN NOT NULL DEFAULT FALSE');
+} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {
