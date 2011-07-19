@@ -237,6 +237,9 @@ table .product {
 table .description {
 	text-align: left;
 }
+.description select {
+	max-width: 500px;
+}
 table .docket {
 	width: 75px;
 	text-align: center;
