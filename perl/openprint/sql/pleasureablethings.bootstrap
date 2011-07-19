@@ -21,7 +21,7 @@
 \i EmailCampaign_Sent.sql
 \i EmailTemplates.sql
 \i Helpdesk.sql
-\i hosts.sql
+\i Hosts.sql
 \i Labels.sql
 \i Logs.sql
 \i Taxes.sql
