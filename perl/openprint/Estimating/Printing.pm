@@ -561,7 +561,7 @@ sub calc_from_imposition {
 		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' and $$specs{'txtImposition'.$qty_index}!=$Imposition->imposition() ) {
 			$openprint::log->error("Invaluid page Imposition");
 		} else {
-		$$specs{'txtImposition'.$qty_index} = $Imposition->imposition() if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
+			$$specs{'txtImposition'.$qty_index} = $Imposition->imposition() if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
 		} # end if
 
 		$$specs{'PreviousForms'.$qty_index} = 0;
@@ -2144,10 +2144,10 @@ sub calculate_impositions {
 
 		foreach my $imp ( @impositions ) {
 			my $Paper = $imp->Paper();
-			if ( ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) ) {
-				$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug or 1;
-				next;
-			} # end if
+			#if ( ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) ) {
+				#$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug or 1;
+				#next;
+			#} # end if
 			if ( ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $imp->runstyle() ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
 #$openprint::log->debug("Doesn't match runstyle override " . $imp->runstyle() . ' != ' . $$sig_specs{'ddmRunStyle'.$qty_index}) if $debug or 1;
 				next;
@@ -2228,6 +2228,24 @@ $imp->display("Grain override next");
 			} # end if SpreadLayout
 			push @results, $imp;
 		} # end foreach imp
+
+# Now filter by imposition
+		if ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+			my @results2;
+			foreach my $I ( @impositions ) {
+				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
+					push @results2, $I;
+				} # end if
+			} # end foreach I
+			if ( ! @results2 ) {
+				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
+						push @results2, $I;
+					} # end if
+				} # end foreach I
+			} # end if
+			@results = @results2;
+		} # end if
 
 		my %imps;
 		foreach my $imp ( @results ) {
@@ -2360,24 +2378,6 @@ $imp->display("Grain override next");
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
-	if ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
-		my $found = 0;
-		foreach my $I ( @impositions ) {
-			if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-				$found = 1;
-			} # end if
-		} # end foreach I
-		if ( ! $found ) {
-			my @i;
-			foreach my $I ( openprint::imposition::get_all_impositions( @impositions ) ) {
-				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @i, $I;
-				} # end if
-			} # end foreach I
-			@impositions = @i;
-		} # end if
-	} # end if
-
 	return @impositions;
 } # end sub calculate_impositions
 
