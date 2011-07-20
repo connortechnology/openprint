@@ -414,8 +414,12 @@ sub pages {
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 
+# Is in relation to the image.
 sub grain_direction {
-	my $self = shift;
+	my $self = $_[0];
+	if ( @_ > 1 ) {
+		$$self{'grain_direction'} = $_[1];
+	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		if ( $$self{'rotate_sheet'} ) {
 			if ( $$self{'image_orientation'} eq 'Vertical' ) {

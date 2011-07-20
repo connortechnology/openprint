@@ -614,7 +614,7 @@ sub calc_from_imposition {
 		if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' and $$specs{'txtImposition'.$qty_index}!=$Imposition->imposition() ) {
 			$openprint::log->error("Invaluid page Imposition");
 		} else {
-		$$specs{'txtImposition'.$qty_index} = $Imposition->imposition() if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
+			$$specs{'txtImposition'.$qty_index} = $Imposition->imposition() if $$specs{'chkOverrideImposition'.$qty_index} ne 'Y';
 		} # end if
 
 		$$specs{'PreviousForms'.$qty_index} = 0;
@@ -834,9 +834,9 @@ sub get_Stocks {
 
 		# The reason for the reverse is that if we have already added a stock, then we will find it slightly quicker.
 		foreach my $P ( reverse @Papers ) {
-#$openprint::log->debug("Paper $qty_index " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
+$openprint::log->debug("Paper $qty_index " . $P->width() .'x'.$P->height() . ' ' . "$$specs{'OverrideStockWidth'.$qty_index }x$$specs{'OverrideStockHeight'.$qty_index}" );
 			if ( $P->width() == $$specs{'OverrideStockWidth'.$qty_index} and $P->height() == $$specs{'OverrideStockHeight'.$qty_index} ) {
-#$openprint::log->debug('gound it'); 
+$openprint::log->debug('gound it'); 
 				$found = 1;
 				# Don't need to add it, because it's already in @Papers
 				last;
@@ -845,7 +845,8 @@ sub get_Stocks {
 
 		if ( ! $found ) {
 			# Find ones that are an even cut
-			foreach my $P ( @Papers ) {
+			my @Pblah = @Papers;	
+			foreach my $P ( @Pblah ) {
 				next if ! $P->cuttable();
 				
 				my $width_factor1 = $$P{'start_width'} / $$specs{'OverrideStockWidth'.$qty_index} if $$specs{'OverrideStockWidth'.$qty_index};
@@ -863,13 +864,13 @@ sub get_Stocks {
 								( $width_factor1 == int($width_factor1) and $height_factor1 == int($height_factor1) ) or
 								( $width_factor2 == int($width_factor2) and $height_factor2 == int($height_factor2) )
 						   ) ) {
-						#$openprint::log->debug("No good: $qty_index " . $P->to_string() . ' '. ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) . 'x' . ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) );
+						$openprint::log->debug("No good: $qty_index " . $P->to_string() . ' '. ($P->start_width() % $$specs{'OverrideStockWidth'.$qty_index}) . 'x' . ($P->start_height() % $$specs{'OverrideStockHeight'.$qty_index} ) );
 
 						next;
 					} # end if
 				} # end if
 				$found = 1;
-#$openprint::log->debug( 'Found stock to cut: ' . $P->to_string() . ' for ' . $$specs{'OverrideStockWidth'.$qty_index} . 'x' . $$specs{'OverrideStockHeight'.$qty_index} );
+$openprint::log->debug( 'Found stock to cut: ' . $P->to_string() . ' for ' . $$specs{'OverrideStockWidth'.$qty_index} . 'x' . $$specs{'OverrideStockHeight'.$qty_index} );
 				my $P2 = $P->clone();
 # Make sure gsm has calculated
 				$P2->gsm();
@@ -887,7 +888,7 @@ sub get_Stocks {
 					$P2->start_width( $$specs{'OverrideStockWidth'.$qty_index} );
 				} # end if
 				push @Papers, $P2;
-			} # end foreach paper
+			} # end foreach Paper
 		} # end if found
 
 		if ( ! $found ) {
@@ -1105,6 +1106,7 @@ sub get_impositions {
 				if ( @cut_offs ) {
 # We start with the largest, which is the first.
 # We get our impositions.  Then we cut them, fitting them into the cut offs.
+# Why do we no longer pass in grain direction?
 					$$project{'Cut Off'} = $cut_offs[0];
 					my @start_impositions = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
 					foreach my $I ( @start_impositions ) {
@@ -2326,15 +2328,6 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 
 		foreach my $imp ( @impositions ) {
 			my $Paper = $imp->Paper();
-			if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
-				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-					$openprint::log->debug("imposition override without specified imposition " . $$sig_specs{'txtImposition'.$qty_index});
-					next;
-				} elsif ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) {
-					$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug or 1;
-					next;
-				} # end if
-			} # end if
 			if ( ( defined $$sig_specs{'chkOverrideRunStyle'.$qty_index} ) and ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $$imp{'runstyle'} ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
 #$openprint::log->debug("Doesn't match runstyle override " . $imp->runstyle() . ' != ' . $$sig_specs{'ddmRunStyle'.$qty_index}) if $debug or 1;
 				next;
@@ -2359,8 +2352,15 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 				next if $imp->dutch_columns();
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 				if ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Long' ) {
-					next if ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() < $imp->object_height() );
-					next if ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() > $imp->object_height() );
+
+$imp->display("Grain override");
+					if ( ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() < $imp->object_height() ) ) {
+$imp->display("Grain override next");
+						next;
+					} elsif ( ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() > $imp->object_height() ) ) {
+$imp->display("Grain override next");
+						next;
+					}  # end if
 				} elsif ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Short' ) {
 					next if ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() > $imp->object_height() );
 					next if ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() < $imp->object_height() );
@@ -2411,12 +2411,24 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 			push @results, $imp;
 		} # end foreach imp
 
- if ( $debug and 0 ) {
-$log->debug("Press $$Press{strid} Impositions before paper filtering: " . @results );
-	foreach my $imp ( @results ) {
-		$imp->display();
-	} # end foreach
-} # end if
+# Now filter by imposition
+		if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
+			my @results2;
+			foreach my $I ( @results ) {
+				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
+					push @results2, $I;
+				} # end if
+			} # end foreach I
+			if ( ! @results2 ) {
+				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+					if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
+						push @results2, $I;
+					} # end if
+				} # end foreach I
+			} # end if
+			@results = @results2;
+		} # end if
+
 		my %imps;
 		foreach my $imp ( @results ) {
 			my $add = 1;
@@ -2548,24 +2560,6 @@ $log->debug("Press $$Press{strid} Impositions before paper filtering: " . @resul
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
-	if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
-		my $found = 0;
-		foreach my $I ( @impositions ) {
-			if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-				$found = 1;
-			} # end if
-		} # end foreach I
-		if ( ! $found ) {
-			my @i;
-			foreach my $I ( openprint::imposition::get_all_impositions( @impositions ) ) {
-				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @i, $I;
-				} # end if
-			} # end foreach I
-			@impositions = @i;
-		} # end if
-	} # end if
-
 	return @impositions;
 } # end sub calculate_impositions
 
@@ -3638,12 +3632,15 @@ my $colourstarttime = gettimeofday();
 			} # end if
 		} # end if
 
-		my %InkService = openprint::service::get_price_object( $real_colour, $qty, $Press );
+		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
 		if ( %InkService ) {
 			if ( lc $InkService{'units'} eq 'per m' ) {
-				$InkService{'Total'} = $InkService{'Price'} * $qty/1000;
+				$InkService{'Total'} = $InkService{'Price'} * $impressions/1000;
+			} else {
+				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
+				$openprint::log->error('unknown units for ' . $real_colour );
 			} # end if
-			$price{'Ink breakdown'} .= sprintf(' Run: $%.2f%s = $%.2f', @InkService{'Price','units','Total'} );
+			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
 			$price{'Ink Price'} += $InkService{'Total'};
 		} # end if
 

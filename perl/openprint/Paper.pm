@@ -331,7 +331,7 @@ sub to_string {
 		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
-		$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
+		#$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
 		$$self{'to_string'} = $string;
 	} # end if
 	return $$self{'to_string'};
