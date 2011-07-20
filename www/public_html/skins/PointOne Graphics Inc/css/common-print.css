@@ -2,7 +2,7 @@ body {
 	background: none;
 	min-width: 100%;
 	max-width: 100%;
-	font-size: x-small;
+	font-size: small;
 }
 #Content {
 	padding: 5px 10px 0 10px;
@@ -20,16 +20,26 @@ body #Header #Logo {
 	background: none;
 	color: #000000;
 	float: none;
-	padding: 0px;
+	padding: 0;
 }
 body #Header #Logo a {
 	background: none;
 	color: #000000;
 }
 .PageTitle {
-	margin-top: -65px;
+	margin-top: -75px;
 	width: auto;
+	float: right;
 }
+.PageTitle h1 {
+	font-size: 26px;
+	margin: 0;
+}
+.PageTitle h2 {
+	font-size: 16px;
+	margin: 0;
+}
+
 #Menu,.Menu {
 display: none;
 }

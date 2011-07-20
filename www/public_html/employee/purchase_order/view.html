@@ -51,10 +51,8 @@
 Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>"><? echo ( $$variable{'PurchaseOrder'}->Manifest()->name() ) ?></a><br/>
 <? endif ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>
 			</div>
-			<br class="spacer"/>
 		</div>
-		<br class="spacer"/>
-		<div class="leftColumn">
+		<div class="Vendor">
 		<p>
 			<label>VENDOR:</label>
 <? echo (
@@ -72,7 +70,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 ) ?>
 		</p>
 		</div>
-		<div class="rightColumn">
+		<div class="ShipTo">
 			<p>
 				<label>SHIP TO:</label>
 				<? echo (
@@ -163,12 +161,12 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	<tr>
 		<td colspan="5" class="totals">SUBTOTAL:</td>
-		<td class="price"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
                 <? echo ( 
                     my $html;
                     foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="price">%s</td></tr>',
+                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
                             $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
                             );
                     } # end foreach Tax
@@ -176,7 +174,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
                 ) ?>
 	<tr>
 		<td colspan="5" class="totals">TOTAL:</td>
-		<td class="price"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
@@ -193,13 +191,13 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		<br/>
 		<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
+			<div class="PreparedBy"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i></div>
 <? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 		<br/>
 		<br class="spacer"/>
 		<hr/>
-			<div class="leftColumn"><i>Authorized <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
+			<div class="AuthorizedBy"><i>Authorized <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
+			<div class="AuthorizedOn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
 <? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 <? if ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
 		<br/>

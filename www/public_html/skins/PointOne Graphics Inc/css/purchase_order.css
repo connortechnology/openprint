@@ -77,6 +77,14 @@ table td input.SheetQTY {
 	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
 }
+.PO .Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
 .PO .Header .Logo {
 	margin: 7px;
 	padding: 0px;
@@ -90,8 +98,10 @@ table td input.SheetQTY {
 	margin-left: auto;
 	margin-right: auto;
 }
-.PO .Header .Logo a.image, .Logo img {
+.Logo img {
+	margin: 0 3px 0 0;
 	width: 75px;
+	float: left;
 }
 .PO .Logo table.HeaderText {
 	border: none;
@@ -101,12 +111,9 @@ table td input.SheetQTY {
 	border: none;
 }
 
-.PO .Header .Logo a {
+.Logo a {
 	color: black;
 	border: none;
-}
-.PO .Header .Logo a img {
-	width: 75px;
 	float: left;
 }
 .PO .Header .Logo .PointOne {
@@ -131,40 +138,27 @@ div.PO .Header .PageTitle h1 {
 	font-size:24px;
 	color: #3b5e91;
 } 
-p {
+fieldset p {
     margin: .4em 0 0 0;
-    padding: 0 0 0 100px;
+    padding: 0 0 0 120px;
     overflow: hidden;
 }
 
-p:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-
-label {
-	outline: 0;
-}
-
-p label {
-    width: 95px;
+fieldset p label {
+    width: 115px;
     text-align: right;
-    margin-left: -100px;
+    margin-left: -120px;
     vertical-align: top;
     float: left;
     overflow: visible;
 }
 
 td p {
-    padding: 0px;
+    padding: 0;
 }
 td p label {
     width: auto;
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 div.autocomplete {
@@ -261,11 +255,55 @@ table .docket {
 .terms {
 }
 .delivery_date {
-	width: 291px;
+	width: 281px;
 	text-align: center;
 }
+.AuthorizedBy,
+.PreparedBy {
+	width: 52%;
+	float: left;
+}
+.AuthorizedOn {
+	width: 48%;
+	float: right;
+}
+.Vendor {
+	float: left;
+	width: 50%;
+}
+.ShipTo {
+	float: right;
+	width: 50%;
+}
+.Vendor p, .ShipTo p {
+	padding: 0 0 0 80px;
+}
+.Vendor p label, .ShipTo p label {
+	margin-left: -80px;
+	display: inline-block;
+	width: 75px;
+	text-align: right;
+}
 @media print {
-	.unprintable, #Header {
+	.unprintable, #Header, .Logs {
 		display: none;
 	}
+	table .product {
+		width: 100px;
+	}
+	table .price {
+		width: 115px;
+	}
+	table .total {
+		width: 100px;
+	}
+	table .docket {
+		width: 70px;
+	}
+	.delivery_date {
+		width: 232px;
+	}
+.method {
+	width: 203px;
+}
 }
