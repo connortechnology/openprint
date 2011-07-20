@@ -7,7 +7,7 @@
 		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/email.css' ); ) ?>
 		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/purchase_order.css' ); ) ?>
 		</style>
-		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
 	</head>
 	<body>
 		<div class="PO">
@@ -27,16 +27,14 @@
 						</tr>
 					</table>
 				</div>
-				<div class="PageTitle" style="text-align: left;">
+				<div class="PageTitle">
 					<h1>PURCHASE ORDER</h1><br/>
 					P.O. # [ <? echo ( $$variable{'PurchaseOrder'}->id() ) ?> ]<br/>
 					Date: 
 					<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
 				</div>
-				<br class="spacer"/>
 			</div>
-			<br class="spacer"/>
-			<div class="leftColumn">
+			<div class="Vendor">
 			<p>
 				<label>VENDOR:</label>
 		<? echo (
@@ -53,7 +51,7 @@
 		) ?>
 			</p>
 			</div>
-			<div class="rightColumn">
+			<div class="ShipTo">
 				<p>
 					<label>SHIP TO:</label>
 		<? echo (
@@ -71,16 +69,16 @@
 				</p>
 			</div>
 			<br class="spacer"/><br/>
-			<table>
-				<tr class="Shipping">
+			<table class="Shipping">
+				<tr>
 					<th class="method">Shipping Method</th>
 					<th class="terms">Shipping Terms</th>
 					<th class="delivery_date">Delivery Date</th>
 				</tr>
 				<tr>
-					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
-					<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-					<td>
+					<td class="method"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
+					<td class="terms"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
+					<td class="delivery_date">
 						<? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
 						<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : '' ) ?>
 					</td>
@@ -116,7 +114,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="price">%s</td></tr>',
+				$html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
 					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 					);
 			} # end foreach Tax
@@ -124,7 +122,7 @@
 		) ?>
 		<tr>
 			<td colspan="5" class="totals">TOTAL:</td>
-			<td class="price"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+			<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 		</tr>
 		</table>
 			<div class="leftColumn">
@@ -136,14 +134,14 @@
 			</div>
 			<div class="rightColumn" style="text-align: right;">
 			All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
-			<br/>
+			<br/><br/>
 		<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
-				<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
-				<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
+				<div class="AuthorizedBy"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?></div>
+				<div class="AuthorizedOn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
 				<br class="spacer"/>
 				<hr/>
-				<div class="leftColumn"><i>Authorized<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?> by<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
-				<div class="rightColumn"><i>Date</i></div>
+				<div class="AuthorizedBy"><i>Authorized<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?> by<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
+				<div class="AuthorizedOn"><i>Date</i></div>
 		<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 			</div>
 			<br class="spacer"/>
