@@ -2414,7 +2414,7 @@ $imp->display("Grain override next");
 # Now filter by imposition
 		if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
 			my @results2;
-			foreach my $I ( @impositions ) {
+			foreach my $I ( @results ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
 					push @results2, $I;
 				} # end if
