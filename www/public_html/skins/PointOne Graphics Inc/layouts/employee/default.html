@@ -11,6 +11,22 @@
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
+<? echo (
+	my $html;
+	my $css = $$variable{'uri'};
+	$css =~ s/^\///;
+	$css =~ s/\..+$//;
+	my @parts = split '/', $css;
+	while ( @parts ) {
+	$css = join('_', @parts ) . '.css';
+		$log->debug("URI: $$variable{uri} $css");
+		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+		}
+		pop @parts;
+	} # end while
+	return $html;
+) ?>
 		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
 		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /claim/ ) ?>
@@ -40,7 +56,7 @@
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js?version=3.4.3.1"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js?version=3.4.3.2"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
@@ -57,22 +73,6 @@
 		<script src="/javascripts/ipre/src/inplacericheditor.js" type="text/javascript"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
-<? echo (
-	my $html;
-	my $css = $$variable{'uri'};
-	$css =~ s/^\///;
-	$css =~ s/\..+$//;
-	my @parts = split '/', $css;
-	while ( @parts ) {
-	$css = join('_', @parts ) . '.css';
-		$log->debug("URI: $$variable{uri} $css");
-		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
-		}
-		pop @parts;
-	} # end while
-	return $html;
-) ?>
 
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">

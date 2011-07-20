@@ -1900,5 +1900,8 @@ sub prepress_overview {
 sub _add_docket {
 } # end sub _add_docket
 
+sub _stock_allocations {
+} # end sub _stock_allocations
+
 1;
 __END__
