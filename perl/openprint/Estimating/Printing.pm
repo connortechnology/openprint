@@ -1036,7 +1036,8 @@ sub get_impositions {
 					$$project{'Cut Off'} = $cut_offs[0];
 					my @start_impositions = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							undef, 
-							$$specs{'rdbGrainDirection'.$qty_index},
+							undef,
+							#$$specs{'rdbGrainDirection'.$qty_index},
 							$Press,
 							);
 					foreach my $I ( @start_impositions ) {
@@ -1071,7 +1072,8 @@ sub get_impositions {
 				} else {
 					push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							undef, 
-							$$specs{'rdbGrainDirection'.$qty_index},
+							undef, 
+							#$$specs{'rdbGrainDirection'.$qty_index},
 							$Press,
 							);
 				} # end if
@@ -1138,7 +1140,8 @@ sub get_impositions {
 
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							undef, 
-							$$specs{'rdbGrainDirection'.$qty_index},
+							undef, 
+							#$$specs{'rdbGrainDirection'.$qty_index},
 							$Press );
 					last if ! @i;
 					push @imps, @i;
