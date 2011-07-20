@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -171,6 +171,7 @@ sub calc_setup_object {
 	} else {
 		$press_grain = $Press->specification('Grain', $Paper->gsm());
 	} # end if
+#$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
@@ -360,7 +361,8 @@ sub calc_setup_object {
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
-
+$openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_direction() . " 2: " . $setup2->grain_direction() );
+	# grain_direction is never set.
 	if ( 
 			( ! $grain_direction ) 
 			or ( $grain_direction eq $setup1->grain_direction() ) 

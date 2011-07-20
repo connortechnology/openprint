@@ -47,7 +47,7 @@
 				<th align="left" width="50">Calliper</th>
 				<th align="right" width="50">MWeight</th>
 				<th align="right" width="50">GSM</th>
-				<th align="left" width="25">SPP</th>
+				<th align="left" width="50">SPP/Min</th>
 				<th align="left" width="50">Pricing CWT</th>
 			</tr>
 		</thead>
@@ -71,7 +71,7 @@
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->calliper() ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->mweight() ); ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
-		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package() ) ?></a></td>
+		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package().'/'.$$variable{'Stock'}->minimum_order() ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
 my $Price = openprint::PaperPrice::find_one('stock_id'=>$$variable{'Stock'}->id(), 'service'=>'Material', 'order'=>$openprint::PaperPrice::fields{'pricelist_id'} );
 return sprintf('%.0f*%.0f%=%.0f', @$Price{'cost','markup','price'} ) if $Price;
