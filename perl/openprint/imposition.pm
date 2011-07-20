@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -196,6 +196,7 @@ sub calc_setup_object {
 	} else {
 		$press_grain = $Press->specification('Grain', $Paper->gsm());
 	} # end if
+#$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
