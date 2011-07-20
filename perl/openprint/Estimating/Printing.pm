@@ -782,7 +782,7 @@ sub get_Stocks {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
 		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
 		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
-		@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option} ) {
