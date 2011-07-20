@@ -1,7 +1,6 @@
-package openprint::ProductCategory;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::ProductCategory;
+our @ISA = qw( openprint::Object );
 
 use openprint ();
 use vars qw($serial $table $log $dbh %variable %fields %transforms %defaults );

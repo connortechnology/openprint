@@ -62,9 +62,7 @@ sub load_simple {
 	} # end if
 
 	my $services = $variable{'Project'}->services();
-$log->debug('blah' . $variable{'ProjectType'} );
 	if ( $$services{''} ) {
-$log->debug('blah2');
 		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );
 		foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
 			$variable{$k} = $$printing_specs{$k};
