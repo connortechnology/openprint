@@ -1108,16 +1108,7 @@ sub get_impositions {
 # We get our impositions.  Then we cut them, fitting them into the cut offs.
 # Why do we no longer pass in grain direction?
 					$$project{'Cut Off'} = $cut_offs[0];
-<<<<<<< HEAD
 					my @start_impositions = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
-=======
-					my @start_impositions = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
-							undef, 
-							undef,
-							#$$specs{'rdbGrainDirection'.$qty_index},
-							$Press,
-							);
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 					foreach my $I ( @start_impositions ) {
 #find minimum cut off
 						my $used_height = $I->used_height();
@@ -1148,16 +1139,7 @@ sub get_impositions {
 						} # end while
 					} # end foreach $I
 				} else {
-<<<<<<< HEAD
 					push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
-=======
-					push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
-							undef, 
-							undef, 
-							#$$specs{'rdbGrainDirection'.$qty_index},
-							$Press,
-							);
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 				} # end if
 				if ( $P->start_width() ) {
 					push @impositions, @i;
@@ -1222,15 +1204,7 @@ sub get_impositions {
 						last;
 					} # end if
 
-<<<<<<< HEAD
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press );
-=======
-					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
-							undef, 
-							undef, 
-							#$$specs{'rdbGrainDirection'.$qty_index},
-							$Press );
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 					last if ! @i;
 					push @impositions, @i;
 
@@ -1402,17 +1376,10 @@ sub get_impositions {
 		@impositions = map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-<<<<<<< HEAD
 		if ( $debug or 0 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $Press->strid() . ': ' . @impositions );
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'} );
-=======
-		if ( $debug or 1 ) {
-			$openprint::log->warn('Impositions after filtering for '. $Press->strid() . ': ' . @impositions );
-			foreach my $I ( @impositions ) {
-				$I->display();
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 			} # end foreach
 		} # end if
 		if ( ! @impositions ) {
@@ -2361,20 +2328,7 @@ $openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f'
 
 		foreach my $imp ( @impositions ) {
 			my $Paper = $imp->Paper();
-<<<<<<< HEAD
-			if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
-				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-					$openprint::log->debug("imposition override without specified imposition " . $$sig_specs{'txtImposition'.$qty_index});
-					next;
-				} elsif ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) {
-					$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug or 1;
-					next;
-				} # end if
-			} # end if
 			if ( ( defined $$sig_specs{'chkOverrideRunStyle'.$qty_index} ) and ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $$imp{'runstyle'} ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
-=======
-			if ( ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $imp->runstyle() ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 #$openprint::log->debug("Doesn't match runstyle override " . $imp->runstyle() . ' != ' . $$sig_specs{'ddmRunStyle'.$qty_index}) if $debug or 1;
 				next;
 			} # end if
@@ -2457,16 +2411,8 @@ $imp->display("Grain override next");
 			push @results, $imp;
 		} # end foreach imp
 
-<<<<<<< HEAD
- if ( $debug and 0 ) {
-$log->debug("Press $$Press{strid} Impositions before paper filtering: " . @results );
-	foreach my $imp ( @results ) {
-		$imp->display();
-	} # end foreach
-} # end if
-=======
 # Now filter by imposition
-		if ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+		if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
 			my @results2;
 			foreach my $I ( @impositions ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -2483,7 +2429,6 @@ $log->debug("Press $$Press{strid} Impositions before paper filtering: " . @resul
 			@results = @results2;
 		} # end if
 
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 		my %imps;
 		foreach my $imp ( @results ) {
 			my $add = 1;
@@ -2615,27 +2560,6 @@ $log->debug("Press $$Press{strid} Impositions before paper filtering: " . @resul
 		} # end foreach
 	} # end if
 	$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions) if $debug;
-<<<<<<< HEAD
-	if ( ( defined $$sig_specs{'chkOverrideImposition'.$qty_index} ) and ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) ) {
-		my $found = 0;
-		foreach my $I ( @impositions ) {
-			if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-				$found = 1;
-			} # end if
-		} # end foreach I
-		if ( ! $found ) {
-			my @i;
-			foreach my $I ( openprint::imposition::get_all_impositions( @impositions ) ) {
-				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-					push @i, $I;
-				} # end if
-			} # end foreach I
-			@impositions = @i;
-		} # end if
-	} # end if
-
-=======
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 	return @impositions;
 } # end sub calculate_impositions
 

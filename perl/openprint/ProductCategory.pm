@@ -1,13 +1,10 @@
 use strict;
-<<<<<<< HEAD
 require openprint::Log;
+require openprint::Product;
+require openprint::ProjectType;
 package openprint::ProductCategory;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
-=======
-package openprint::ProductCategory;
-our @ISA = qw( openprint::Object );
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 
 $debug = 0;
 $serial = 'product_categories_id_seq';

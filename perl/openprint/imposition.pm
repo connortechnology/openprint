@@ -386,19 +386,6 @@ sub calc_setup_object {
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
-<<<<<<< HEAD
-=======
-$openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_direction() . " 2: " . $setup2->grain_direction() );
-	# grain_direction is never set.
-	if ( 
-			( ! $grain_direction ) 
-			or ( $grain_direction eq $setup1->grain_direction() ) 
-			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
-			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
-			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
-			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
-	) {
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 
 # Setup 1. Width to Width
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {

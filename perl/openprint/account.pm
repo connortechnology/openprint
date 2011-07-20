@@ -36,10 +36,6 @@ sub select_company {
 } # end sub select_company
 
 sub registration {
-<<<<<<< HEAD
-#$log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserAccountActivation} $config{NewNonFirstUserAccountActivation}");
-=======
->>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 	if ( $param{'btnFunction'} ne 'Register' ) {
 		$log->debug("Not registering");
 		return;
