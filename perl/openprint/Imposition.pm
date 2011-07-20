@@ -96,8 +96,13 @@ sub display {
 	my $Paper = $$self{'paper'};
 	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
 	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
+<<<<<<< HEAD
 	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout%s pages:%dx%d=%d %s on: %sx%s->%sx%s=%dsq min: %s %s %s', $prefix,
 	@$self{'columns','rows','dutch_columns','dutch_rows','imposition','image_orientation'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, @$Paper{'start_width','start_height','width','height'}, $Paper->area(),$$Paper{'minimum_order'}, $$self{Press}->{strid}, ( $$self{'Price'} ? $$self{'Price'} : '' ) ) );
+=======
+	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout pages:%dx%d=%d %s on: %sx%s %s %s %s', $prefix,
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height}, $self->grain_direction(), $$self{Press}->{strid}, $$self{'Price'} ? $$self{'Price'} : '' ) );
+>>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 } # end sub display
 
 sub get {
@@ -414,8 +419,12 @@ sub pages {
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 
+# Is in relation to the image.
 sub grain_direction {
-	my $self = shift;
+	my $self = $_[0];
+	if ( @_ > 1 ) {
+		$$self{'grain_direction'} = $_[1];
+	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		if ( $$self{'rotate_sheet'} ) {
 			if ( $$self{'image_orientation'} eq 'Vertical' ) {

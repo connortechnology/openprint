@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -196,6 +196,7 @@ sub calc_setup_object {
 	} else {
 		$press_grain = $Press->specification('Grain', $Paper->gsm());
 	} # end if
+#$openprint::log->debug("Grains: $grain_direction, Press: $press_grain, Paper: ". $Paper->grain_direction() . ', paper->long: ' . $Paper->long() );
 	if ( $press_grain and $press_grain ne 'Both' ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
@@ -385,6 +386,19 @@ sub calc_setup_object {
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
+<<<<<<< HEAD
+=======
+$openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_direction() . " 2: " . $setup2->grain_direction() );
+	# grain_direction is never set.
+	if ( 
+			( ! $grain_direction ) 
+			or ( $grain_direction eq $setup1->grain_direction() ) 
+			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
+	) {
+>>>>>>> e5a27bc133df2dd6b8cc6832a8aa399b6e155a35
 
 # Setup 1. Width to Width
 	if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
