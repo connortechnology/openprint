@@ -33,8 +33,8 @@
 			<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%8$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { parameters: { docket: this.value, po_id: '%9$d'} });" onblur="$('similar_pos').innerHTML='';"/></td>
 			<td class="price"><input type="number" class="StockCost" name="price-%1$d" id="price-%1$d" value="%10$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/>/100lb<br/><span id="price-%1$d-alert" class="error"></span></td>
 			<td class="total"><input type="number" name="total-%1$d" id="total-%1$d" value="%11$.2f" onkeyup="calc_price(this);" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
-		`, $C->id(), $C->qty(), $C->product(), $C->item(),
-		$C->description(), $name, ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ), 
+		`, $C->id(), $C->qty(), ssi::escape_quotes( $C->product(), $C->item() ),
+		CGI::escapeHTML($C->description()), ssi::escape_quotes($name), ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ), 
 		$C->docket(), $C->po_id(),
 		$C->price(),
 		$C->total(),
@@ -59,13 +59,13 @@
 				<input type="number" class="SheetMWeight" name="mweight-%1$d" id="mweight-%1$d" value="%5$s" onkeyup="calc_price(this);set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />M
 				<input type="text" class="SheetName" name="name-%1$d" id="name-%1$d" onkeyup="set_item('%1$d');if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" value="%6$s"/>
 				<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_item('%1$d');">%8$s</select>
-				<textarea name="description-%1$d" id="description-%1$d" rows="%7$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%4$s</textarea>
+				<textarea name="description-%1$d" id="description-%1$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%7$s</textarea>
 			</td>
 			<td class="docket"><input type="text" name="docket-%1$d" id="docket-%1$d" value="%9$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %10$d} });" onblur="$('similar_pos').innerHTML='';"/></td>
 			<td class="price"><input type="number" name="price-%1$d" id="price-%1$d" value="%11$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/>/100lb<br/><span id="price-%1$d-alert" class="error"></span></td>
 			<td class="total"><input type="number" name="total-%1$d" id="total-%1$d" value="%12$.2f" onkeyup="calc_price(this);" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
-		`, $C->id(), $C->qty(), $C->product(), $C->item(),
-		$mweight, $name, $C->description(), ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
+		`, $C->id(), $C->qty(), ssi::escape_quotes( $C->product(), $C->item(),
+		$mweight, $name), CGI::escapeHTML( $C->description() ), ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ),
 		$C->docket(), $C->po_id(),
 		$C->price(), $C->total(),
 			ssi::make_drop_down( openprint::PurchaseOrder_Item->dropdown( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'vendor_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'type_id'=>$C->type_id(), 'order'=>'lower(name)' ), $C->item_id() ),
@@ -79,7 +79,7 @@
 				<input type="text" name="product-%1$d" id="product-%1$d" value="%3$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};ddm_select_by_text_case_insensitive( $('item_id-%1$d'), trim(this.value), 0 );"/>
 			</td>
 			<td class="description">
-				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: this.getValue() } } );"><option value="">select</option>%10$s</select><br/>
+				<select id="item_id-%1$d" name="item_id-%1$d" onchange="$('item-%1$d').value='';new Ajax.Request( '_item_select.json', { parameters: { content_id: %1$d, item_id: this.getValue() } } );"><option value="">select</option>%11$s</select><br/>
 				<input type="text" name="item-%1$d" id="item-%1$d" value="%4$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');};ddm_select_by_text_case_insensitive( $('item_id-%1$d'), trim(this.value), 0 );"/>
 				<textarea name="description-%1$d" id="description-%1$d" rows="%6$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%5$s</textarea>
 			</td>
@@ -91,6 +91,7 @@
 			ssi::make_drop_down( openprint::PurchaseOrder_Item->dropdown( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'vendor_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'type_id'=>$C->type_id(), 'order'=>'lower(name)' ), $C->item_id() ),
 		);
 	} # end if
+$log->debug("item_id: " . $C->item_id() );
 	$html .= '</tr>';
 	return $html;
 ) ?>

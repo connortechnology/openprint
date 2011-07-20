@@ -145,6 +145,14 @@ sub html_escape {
     return $_;
 }
 
+sub escape_quotes {
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/"/&quot;/mg;
+	} 
+	return @_;
+} # end sub escape_quotes
+
 sub htmlize {
 	return if ! @_;
 	if ( @_ == 1 ) {

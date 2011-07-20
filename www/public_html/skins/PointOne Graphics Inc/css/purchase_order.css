@@ -218,7 +218,14 @@ div.autocomplete ul li {
 	text-align: right;
 }
 .PO ul.notifications li {
-	padding: 0px;
+	padding: 0;
+	width: 230px;
+}
+.PO .notifications .name {
+}
+.PO .notifications .buttons {
+	float: right;
+	margin: 0;
 }
 .PurchaseOrder table .id, .PurchaseOrder_Items table .id {
 	width: 45px;
