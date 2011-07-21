@@ -763,7 +763,7 @@ sub get_Stocks {
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->to_string() );
 		push @Papers, $Paper;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight', 'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
@@ -773,6 +773,9 @@ sub get_Stocks {
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
 			$variables{'basis_mweight'} = [ sets::union( 'output', @{$variables{'basis_mweight'}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
+		} elsif ( @{$variables{'basis_mweight'}} > 1 ) {
+			# Always has save
+			$variables{'basis_mweight'} = [ sets::exclude( ['output'], $variables{'basis_mweight'} ) ];
 		} # end if
 		if ( ! $$specs{'txtStockGSM'} ) {
 			$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];

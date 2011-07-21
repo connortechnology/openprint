@@ -51,20 +51,22 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs );
+	my ( $project_index, $service_index, $specs ) = @_;
+$openprint::log->debug("no_outputs: project_id: $project_index");
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if ! sets::isin( 'output', $variables{$k} );
     } # end foreach;
-	my @outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
-$openprint::log->debug("Prinintg no_outputs: @outputs ");
+	my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
+	my @groups = groups( $project_index, $specs );
+$openprint::log->debug("Prinintg no_outputs: (@groups) @no_outputs ");
 	foreach my $Group ( groups( $project_index, $specs ) ) {
-		push @v, map { $_.$Group } @outputs;
+		push @v, map { $_.$Group } @no_outputs;
 	} # end foreach Group
     return @v;
 }
 sub outputs {
-	my ( $project_index, $service_index, $specs );
+	my ( $project_index, $service_index, $specs ) = @_;
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if sets::isin( 'output', $variables{$k} );
