@@ -108,7 +108,7 @@
 				<label for="sheets_per_package<?Signature?>">Quantity Per Package:</label>
 				<input type="text" id="sheets_per_package<?Signature?>" name="sheets_per_package<?Signature?>" size="9" value="<? echo ( $$variable{'sheets_per_package'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
  <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
-				<input type="checkbox" id="full_packages" name="full_packages" value="1" <? echo ( ssi::checked( $$variable{'full_packages'} ); )?> onclick="calc(this.form.name);" /> Order full packages
+				<input type="checkbox" id="full_packages<?Signature?>" name="full_packages<?Signature?>" value="1" <? echo ( ssi::checked( $$variable{'full_packages'.$$variable{'Signature'}} ); )?> onclick="calc(this.form.name);" /> Order full packages
 
 			</p>
 		</div><!-- Specific -->

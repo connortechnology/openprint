@@ -30,13 +30,13 @@
 			return ssi::make_drop_down( \@options, $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} );
 		) ?>
 	</select>
-	<input type="text" id="ColourCoatingColour<?index?><?Side?><?Signature?>" name="ColourCoatingColour<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingColour$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="9" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?> />
+	<input type="text" id="ColourCoatingColour<?index?><?Side?><?Signature?>" name="ColourCoatingColour<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingColour$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?> />
 	<span id="ColourCoatingCoverage<?index?><?Side?><?Signature?>" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /Overall/ ? 'style="display:none;"' : '' ) ?> >
-	<input type="number" class="ColourCoverage" name="ColourCoatingCoverage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingCoverage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="3" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />%</span>
+	<input type="number" class="ColourCoverage" name="ColourCoatingCoverage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingCoverage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />%</span>
 	<span id="ColourCoatingPrice<?index?><?Side?><?Signature?>" class="Price">
-		Price: ($/Kg)<input type="text" name="ColourCoatingPrice<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingPrice$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="6" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />
+		Price: ($/Kg)<input type="text" name="ColourCoatingPrice<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingPrice$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />
 	</span>
 	<span id="ColourCoatingMileage<?index?><?Side?><?Signature?>" class="Mileage">
-		Mileage: (inches/Kg) <input type="number" name="ColourCoatingMileage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingMileage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="6" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />
+		Mileage: (inches/Kg) <input type="number" name="ColourCoatingMileage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingMileage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />
 	</span>
 </div>

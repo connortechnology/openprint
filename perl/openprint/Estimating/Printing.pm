@@ -308,10 +308,30 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
+	my ( $project_index, $service_index, $specs, $signature ) = @_;
 	my @v;
 	foreach my $k ( keys %variables ) {
-		push @v, $k if ! sets::isin( 'output', $variables{$k} );
+		push @v, $k.$signature if ! sets::isin( 'output', $variables{$k} );
 	} # end foreach
+
+    foreach my $side ( 'SideOne','SideTwo' ) {
+        foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+            if ( $$specs{'chk'.$colour.$side.$signature} ) {
+				@v = sets::exclude( [ $colour.'Spot'.$side.'Coverage'.$signature ], \@v );
+            } # end if
+        } # end foreach
+        if ( $$specs{'chkProcessColour'.$side.$signature} ) {
+			@v = sets::exclude( [ map { $_ .$side.'Coverage'.$signature } ( 'Cyan','Magenta','Yellow','Black' ) ], \@v );
+        } # end if
+
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
+				next if ! $$specs{"chkColourCoating$index$side$signature"};
+				@v = sets::exclude( [ 'ColourCoatingCoverage'.$index.$side.$signature ], \@v );
+			} # end if
+		} # end foreach
+	} # end foreach Side
+
 	return @v;
 } # end sub no_outputs
 sub outputs {
@@ -518,7 +538,7 @@ sub get_inkcoverage {
 				$c =~ s/[^\d\.]//g;
 				if ( ! $c ) {
 					$c = $openprint::config{'DefaultInkCoverage'};
-					$c =~ s/[^\d\.]//g;
+					$c =~ s/[^\d\.]//g if $c;
 				} # end if
 				if ( $c ne $$specs{$key} ) {
 					$$v{$key} = [ sets::union( 'output', @{$$v{$key}} ) ];

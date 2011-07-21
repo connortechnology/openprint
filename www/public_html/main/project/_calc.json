@@ -18,8 +18,8 @@
 	} # end if
 
     # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
-	my %specs_cache = %param;
-    $openprint::service::specs_cache{$param{ServiceIndex}} = \%specs_cache;
+	#my %specs_cache = %param;
+    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
     my %specs = %param;
 	$param{'method'} = 'calc' if ! $param{'method'};
 

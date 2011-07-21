@@ -54,14 +54,20 @@ sub no_outputs {
 	my ( $project_index, $service_index, $specs ) = @_;
 $openprint::log->debug("no_outputs: project_id: $project_index");
     my @v;
+	my @outputs;
     foreach my $k ( keys %variables ) {
-        push @v, $k, if ! sets::isin( 'output', $variables{$k} );
+		if ( ! sets::isin( 'output', $variables{$k} ) ) {
+			push @v, $k; 
+		} else {
+			push @outputs, $k;
+		} # end if
     } # end foreach;
-	my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
 	my @groups = groups( $project_index, $specs );
-$openprint::log->debug("Prinintg no_outputs: (@groups) @no_outputs ");
-	foreach my $Group ( groups( $project_index, $specs ) ) {
-		push @v, map { $_.$Group } @no_outputs;
+	foreach my $Group ( @groups ) {
+		my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs, $Group );
+		# Will come with signature appended
+$openprint::log->debug("Prinintg $Group no_outputs: @no_outputs ");
+		push @v, sets::exclude( \@outputs, \@no_outputs );
 	} # end foreach Group
     return @v;
 }
@@ -175,10 +181,15 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 			$remaining_pages = 0;
 		} # end if
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
+		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
+$openprint::log->debug("Setting output on GroupPageQuantity$group_id");
+			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})]
+		} # end if
 		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
 		} # end if
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 	} # end foreach group_id
 
 	if ( $$specs{'remaining_pages'} = $remaining_pages ) {
