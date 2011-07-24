@@ -348,7 +348,7 @@ $openprint::log->debug("No printing runspeed");
 			} else {
 				$runspeed = $$Runspeed{'value'};
 			} # end if
-$openprint::log->debug("Runspeed setting on $$Equipment{strid} $$Runspeed{value}$$Runspeed{'units'} $runspeed");
+#$openprint::log->debug("Runspeed setting on $$Equipment{strid} $$Runspeed{value}$$Runspeed{'units'} $runspeed");
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * ($qty/$imposition->imposition())/ 1000;
