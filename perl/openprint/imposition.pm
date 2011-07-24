@@ -696,7 +696,7 @@ sub add_imposition {
 
 	#$openprint::log->debug(" ** Run Styles to consider: @styles **") if $debug;
 	foreach my $run_style ( @styles ) {
-		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} CutOff: $$project{'Cut Off'} $override_grain_direction**") if $debug;
+		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} CutOff: $$project{'Cut Off'}**") if $debug;
 
 		if ( ! $Paper->cuttable() ) {
 			if ( ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] ) ) {

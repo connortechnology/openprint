@@ -672,11 +672,11 @@ sub AUTOLOAD {
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
 				if ( eval '\%openprint::'.$name.'::fields' ) {
-					return new("openprint::$name", $$self{$field});
+					return new("openprint::$name", $_[0]{$field});
 				} # end if
 			} # end if
 		} # end if
-		return $$self{$name};
+		return $_[0]{$name};
 	} # end if
 } # end sub AUTOLOAD
 

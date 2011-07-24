@@ -3991,12 +3991,13 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 			$service = 'ImpositionMakeReady';
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
-		if ( ! %ImpositionMakeReady ) {
-			#$openprint::log->debug("$service no price found");
-		} # end if
-		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
+		if ( %ImpositionMakeReady ) {
+			if ( $ImpositionMakeReady{'units'} eq 'Per Form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
-			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
+				%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
+			} # end if
+		} else {	
+#$openprint::log->debug("$service no price found");
 		} # end if
 
 		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
@@ -4050,8 +4051,9 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 		} # end if pages
 	} # end if Plate Type Conventional
 
-	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press );
-	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	if ( my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press ) ) {
+		$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	} # end if
 	$setup_cost += $price{'Runstyle Charge'};
 
 	$price{'Comparison Cost'} += $setup_cost;
