@@ -33,9 +33,9 @@
 					$html .= sprintf( q`
 						<table>
 							<tr>
-								<th width="40">Qty</th>
-								<th width="170">Dimensions</th>
-								<th width="105" align="left">Type</th>
+								<th class="quantity">Qty</th>
+								<th class="dimensions">Dimensions</th>
+								<th class="type">Type</th>
 								<th class="Price">MR (%1$s)</th>
 								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
@@ -47,24 +47,21 @@
 					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type, $ddmProofType ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,6 ) {
 						$html .= sprintf( q`
 							<tr>
-								<td align="center"><input type="text" name="txtProofQuantity-%1$d-%3$d-%2$d" value="%4$d" size="3" onkeyup="calc(this.form.name)"  /></td>
-								<td align="center">
-									<input type="text" name="txtProofWidth-%1$d-%3$d-%2$d" value="%5$s" size="6" onkeyup="calc(this.form.name)"	/>
+								<td class="quantity"><input type="number" name="txtProofQuantity-%1$d-%3$d-%2$d" value="%4$d" onkeyup="calc(this.form.name)" /></td>
+								<td class="dimensions">
+									<input type="number" name="txtProofWidth-%1$d-%3$d-%2$d" value="%5$s" onkeyup="calc(this.form.name)" />
 									x 
-									<input type="text" name="txtProofHeight-%1$d-%3$d-%2$d" value="%6$s" size="6" onkeyup="calc(this.form.name)" />
+									<input type="number" name="txtProofHeight-%1$d-%3$d-%2$d" value="%6$s" onkeyup="calc(this.form.name)" />
 								</td>
-								<td><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);">
-								<option value="">select one</option>
-								%7$s
-								</select></td>
-								<td class="Price"><input type="text" name="MRPrice-%1$d-%3$d-%2$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="type"><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
+								<td class="Price"><input type="text" name="MRPrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" /></td>
 								<td class="Price">
-									<input type="text" name="ServicePrice-%1$d-%3$d-%2$d" value="" size="9" readonly="readonly" onfocus="this.blur();" />
+									<input type="text" name="ServicePrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" />
 								</td>
 								<td class="Units">
 									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
 								</td>
-								<td class="Price"><input type="text" name="txtProofUnitPrice-%1$d-%3$d-%2$s" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="Price"><input type="text" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
 								<td class="Override"> %8$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
@@ -75,8 +72,8 @@
 									);
 					} # end while proofs
 					$html .= sprintf(q`
-						<tr>
-							<td colspan="6" align="right">Additional proofs?</td>
+						<tr class="additional">
+							<td colspan="6">Additional proofs?</td>
 							<td class="Price">
 								<input type="radio" id="rdbAdditional-%1$d-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
 								<label class="radio" for="rdbAdditional-%1$d-%2$dY">Yes</label>
@@ -91,22 +88,21 @@
 				} # end foreach Signature
 				$html .= sprintf( q`
 					<table>
-						<tr>
-							<td align="right"><b>Total Service Price (%2$s):</b></td>
-							<td class="Price"><input type="text" name="txtPrice%1$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+						<tr class="totals">
+							<td><b>Total Service Price (%2$s):</b></td>
+							<td class="Price"><input type="text" name="txtPrice%1$d" readonly="readonly" onfocus="this.blur();" /></td>
 							<td class="Override">&nbsp;</td>
 						</tr>
-						<tr>
-							<td colspan="2" align="right">%4$s</td>
+						<tr class="breakdown">
+							<td colspan="2">%4$s</td>
 							<td class="Override">&nbsp;</td>
 						</tr>
 					</table>
-					<br class="spacer"/>
 					<input type="hidden" name="txtQuantity%1$d" value="%3$d"/>
 				</fieldset>
 					`, $qty_index, @$variable{'CurrencySymbol','txtQuantity'.$qty_index}, 
 					sets::isin($session{'user_type'}, ['A','E'] ) ? 
-					ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown('$qty_index');", '', 'Breakdown' ) : ''
+					ssi::button( 'Breakdown'.$qty_index, { 'onclick'=>"show_breakdown('$qty_index');", 'text'=>'Breakdown' } ) : ''
 					
 					);
 				} # end foreach qty_index
