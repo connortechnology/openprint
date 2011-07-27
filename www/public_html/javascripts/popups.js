@@ -234,3 +234,8 @@ $(name).selectedIndex=0;
 $(name).toggle();
 $('txt'+name).toggle();
 }
+
+function toggle_input( ddm, txt ) {
+	ddm.toggle();
+	txt.toggle();
+}

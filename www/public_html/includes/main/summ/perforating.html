@@ -1,44 +1,29 @@
-<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-
-<? endif ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
-	<? if ( $$variable{'Reference'} ) ?>
-	<div class="row"> Information for <b><?Reference?></b> </div>
-	<? endif ( $$variable{'Reference'} ) ?>
-	<div class="row"> 
-		<span class="label">Number of <?ServiceTypeName?>s per item:</span>
 <? echo (
-	my $html;
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{'txtQuantity'.$qty_index};
-		$html .= '<span class="value">';
-		$html .= $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"}.' Vertical';
-		$html .= $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} . ' Horizontal'; 
-		$html .= '</span>';
-	} # end foreach
+	my $html = '';
+	foreach my $service_id ( $$variable{'Project'}->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+		my $signature_index = $$sig_specs{'SignatureIndex'};
+		next if ! ( $$variable{"txtVerticalQty-$signature_index"} or $$variable{"txtHorizontalQty-$signature_index"} );
+		if ( $$sig_specs{'txtServiceDescription'} ) {
+			$html .= '<div class="row"> Information for <b>'.$$sig_specs{'txtServiceDescription'}.'</b> </div>';
+		} # end if
+		$html .= '<div class="row"><span class="label">Number of Perforations per item:</span>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<span class="value">%d Vertical %d Horizontal</span>', @$variable{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
+		} # end foreach
+		$html .= '</div>
+		<div class="row">
+			<span class="label">Imposition:</span>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= qq`<span class="value">$$variable{"txtImposition-$signature_index-$qty_index"}out $$variable{'txtLayoutWidth'.$qty_index} x $$variable{'txtLayoutHeight'.$qty_index}</span>`;
+		} # end foreach
+		$html .= '</div>
+		<div class="row">
+			<span class="label">Equipment:</span>';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= qq`<span class="value">$$variable{"ddmEquipment-$signature_index-$qty_index"}</span>`;
+		} # end foreach
+		$html .= '</div>';
+	} # end foreach signature
 	return $html;
 ) ?>
-	</div>
-	<div class="row">
-		<span class="label">Imposition:</span>
-<? echo (
-	my $html;
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{'txtQuantity'.$qty_index};
-		$html .= qq`<span class="value">$$variable{"txtImposition-$$variable{'SignatureIndex'}-$qty_index"}out $$variable{'txtLayoutWidth'.$qty_index} x $$variable{'txtLayoutHeight'.$qty_index}</span>`;
-	} # end foreach
-	return $html;
-) ?>
-	</div>
-	<div class="row">
-		<span class="label">Equipment:</span>
-<? echo (
-	my $html;
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{'txtQuantity'.$qty_index};
-		$html .= qq`<span class="value">$$variable{"ddmEquipment-$$variable{'SignatureIndex'}-$qty_index"}</span>`;
-	} # end foreach
-	return $html;
-) ?>
-	</div>
-<? endif ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
-<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>

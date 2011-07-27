@@ -2388,7 +2388,7 @@ sub calc_price {
 	if ( $$project{'HasPerforating'} ) {
 $openprint::log->debug("Perforating");
 $$specs{'Runspeed'} = $run_speed;
-		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 #$openprint::log->debug("Perforating");
 		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
 			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
