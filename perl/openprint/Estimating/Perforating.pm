@@ -459,18 +459,12 @@ sub get_specs {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	@{$$variable{'SignatureGroups'}} = ();
 
 	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 
 	if ( $$services{'Folding'} ) {
 		push @{$$variable{'Equipment'}}, openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>'When Folding'}, 'useinestimating'=>1,'order'=>'strName');
 	} # end if
-
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		push @{$$variable{'SignatureGroups'}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
-	} # end foreach
 
 } # end sub get_scoring_specs
 
