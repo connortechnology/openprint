@@ -282,6 +282,10 @@ sub signature_calc {
 		} # end if
 	} # end if
 
+	my $Rule = openprint::Material::find_one('name'=>'PerforatingRule');
+	my $Wheel = openprint::Material::find_one('name'=>'PerforatingWheel');
+	$Wheel = $Rule if ! $Wheel;
+
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= sprintf("\t\tEquipment: %s, ", $Equipment->name() );
 
@@ -314,9 +318,6 @@ sub signature_calc {
 		$Runspeed = $Equipment->Specification('Perforating Runspeed') if ! $Runspeed;
 		my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, \%openprint::variable, 'PerforatingMakeReady', undef, $Equipment );
 		$Results{'Breakdown'} .= sprintf( 'Setup: $%.2f<br/>', $setupPrice );
-		my $Rule = openprint::Material::find_one('name'=>'PerforatingRule');
-		my $Wheel = openprint::Material::find_one('name'=>'PerforatingWheel');
-		$Wheel = $Rule if ! $Wheel;
 
 		foreach my $imposition ( @impositions ) {
 			$Results{'Breakdown'} .= "Imposition: " . $imposition->imposition() .": ";
@@ -389,7 +390,7 @@ $openprint::log->debug("No printing runspeed");
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
 					} elsif ( lc $horizontal_price{'units'} eq 'per foot' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length/12;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units ($horizontal_price{'units'}) set on rule price ($horizontal_price{'Price'})<br/>";
 					} # end if
@@ -423,7 +424,7 @@ $openprint::log->debug("No printing runspeed");
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
 					} elsif ( lc $vertical_price{'units'} eq 'per foot' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length/12;
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2ffeet=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on wheel price ($vertical_price{'units'})<br/>";
 					} # end if
@@ -517,7 +518,8 @@ sub summary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$html .= 'Form ' . $signature_index;
 			$html .= $$sig_specs{'txtServiceDescription'} if $$sig_specs{'txtServiceDescription'};
-			$html .= sprintf('<span class="value">%d Vertical %d Horizontal</span>', @$specs{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
+			$html .= ': ';
+			$html .= sprintf('%d Vertical %d Horizontal', @$specs{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
 			$html .= ': ';
 			$html .= '<br/>';
 		} # end foreach
