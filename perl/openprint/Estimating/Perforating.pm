@@ -520,7 +520,6 @@ sub summary {
 			$html .= $$sig_specs{'txtServiceDescription'} if $$sig_specs{'txtServiceDescription'};
 			$html .= ': ';
 			$html .= sprintf('%d Vertical %d Horizontal', @$specs{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
-			$html .= ': ';
 			$html .= '<br/>';
 		} # end foreach
 		return $html;
