@@ -135,11 +135,7 @@ sub calc {
 				next;
 			} # end if
 			if ( $Price{'Equipment'} ) {
-<<<<<<< HEAD
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
-=======
-				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->strid();
->>>>>>> cce030487aa29198387c05fbdddb68b4cb8a11b0
 				$$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->imposition();
 				$$specs{"txtLayoutWidth-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_width();
 				$$specs{"txtLayoutHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Imposition'}->layout_height();
@@ -217,11 +213,7 @@ sub signature_calc {
 	my @equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-<<<<<<< HEAD
 		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-=======
-		@equipment = openprint::Equipment->find( 'strid'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
->>>>>>> cce030487aa29198387c05fbdddb68b4cb8a11b0
 		#$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if $debug;
 	} elsif ( ! $stitching_service_index ) {
 		@equipment = sets::exclude( \@stitchers, \@all_equipment );
