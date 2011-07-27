@@ -32,6 +32,11 @@ sub hosts {
 	} elsif ( $param{'action'} eq 'Save' ) {
 		my $Host = new openprint::Host( $param{'host_id'} );
 		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
+		if ( $param{'type_id'} ) {
+			delete $param{'type'};
+		} else {
+			delete $param{'type_id'};
+		} # end if
 		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if

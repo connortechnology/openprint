@@ -1,11 +1,25 @@
 use strict;
-package openprint::Host;
-our @ISA = qw( openprint::Object );
 require openprint::Object;
 use Net::ARP;
 use Net::Ping;
 use IO::Interface::Simple;
-use strict;
+
+package openprint::Host_Type;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+$debug = 1;
+$table = 'host_types';
+$serial = 'host_types_id_seq';
+%fields = (
+	'id'			=>	'id',
+	'name'			=>	'name',
+);
+%transforms = (
+    'name'  =>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+
+package openprint::Host;
+our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
@@ -26,6 +40,8 @@ $serial = 'hosts_id_seq';
 	'count'			=>	'count',
 	'deleted'		=>	'deleted',
 	'online'		=>	'online',
+	'type_id'		=>	'type_id',
+	'type'			=>	undef,
 );
 %transforms = (
 );
@@ -42,6 +58,7 @@ $serial = 'hosts_id_seq';
 	'count'		=>	undef,
 	'deleted'	=>	0,
 	'online'	=>	undef,
+	'type_id'	=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;
@@ -93,6 +110,23 @@ sub ping {
 	$p->close();
 	return $rc;
 } # end sub ping
+
+sub Type {
+	return new openprint::Host_Type( $_[0]{type_id} );
+} # end sub Type
+
+sub type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc $_[1] );
+		if ( ! $Type ) {
+			$Type = new openprint::Host_Type();
+			$Type->save({'name'=>$_[1]});
+		}
+		$_[0]{'type_id'} = $Type->id();
+		return $Type->name();
+	}
+	return new openprint::Host_Type( $_[0]{'type_id'} )->name();
+} # end sub type
 
 1;
 __END__

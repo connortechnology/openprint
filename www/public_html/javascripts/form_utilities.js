@@ -1325,6 +1325,10 @@ $(name).selectedIndex=0;
 $(name).toggle();
 $('txt'+name).toggle();
 }
+function toggle_input( ddm, txt ) {
+	ddm.toggle();
+	txt.toggle();
+}
 function getValues( form, element_names ) {
 	var results = new Hash();
 	for ( var index = element_names.length; index; index -- ) {
