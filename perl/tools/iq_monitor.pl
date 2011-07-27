@@ -2,6 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
+use LWP;
 
 require configuration;
 require sql;
@@ -33,13 +34,12 @@ if ($opts->{help}) {
 # Get our configuration information
 if (my $err = ReadCfg('/etc/iq_monitor.conf')) {
     die $err;
-} else {
-	$log->debug("Successfully read cfg");
-	foreach my $k ( keys %CFG::Config ) {
-		$log->debug("$k => $CFG::Config{$k}");
-	} # end foreach
+#} else {
+	#$log->debug("Successfully read cfg");
+	#foreach my $k ( keys %CFG::Config ) {
+		#$log->debug("$k => $CFG::Config{$k}");
+	#} # end foreach
 }
-	$log->debug("Successfully read cfg");
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
 	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
@@ -63,15 +63,15 @@ $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
 $log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
 
 $CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
-$log->debug("Sleep duration $CFG::Config{sleep}");
+#$log->debug("Sleep duration $CFG::Config{sleep}");
 
-$log->debug("Finalised cfg");
-foreach my $k ( keys %CFG::Config ) {
-	$log->debug("$k => $CFG::Config{$k}");
-} # end foreach
+#$log->debug("Finalised cfg");
+#foreach my $k ( keys %CFG::Config ) {
+	#$log->debug("$k => $CFG::Config{$k}");
+#} # end foreach
 
 if ( $CFG::Config{'pid_file'} ) {
-	$log->debug("Creating pid file at $CFG::Config{'pid_file'} $$");
+	#$log->debug("Creating pid file at $CFG::Config{'pid_file'} $$");
 	my $pidh;
 	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
 		print $pidh $$."\n"; 
@@ -115,6 +115,38 @@ while(1) {
 			$Host->save({'online'=>$ping});
 			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 		} # end if
+		if ( $Host->online() ) {
+			if ( $Host->type() eq 'AIC500W' ) {
+				my $browser = LWP::UserAgent->new();
+				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
+
+				$log->debug("URL: " . $Host->hostname().'/cgi/jpg/image.cgi' );
+				my $response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
+				if ( ! $response->is_success ) {
+					if ( $response->status_line() eq '401 Unauthorized' ) {
+						my $header = $response->header('WWW-Authenticate');
+						my ( $realm ) = $header =~ /realm="(.*)"/;
+						if ( $realm and $realm ne 'Netcam' ) {
+							$browser->credentials( $Host->hostname().':80', $realm, 'admin'=>'p1GraPHic' );
+							$response = $browser->get('http://'.$Host->hostname().'/cgi/jpg/image.cgi');
+						} # end if
+					} # end if
+				} # end if
+				if ( ! $response->is_success ) {
+					$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
+				my $headers = $response->headers();
+					foreach my $k ( keys %$headers ) {
+$log->debug("Header $k => $$headers{$k}");
+					}  # end foreach
+					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
+					$log->debug($response->is_success);
+				} else {
+					$log->debug("Got content from host. Size: " . $response->content_type );
+				} # end if
+			} elsif ( $Host->type() ) {
+				$log->warn("unsupported type: " . $Host->type() );
+			} # end if
+		} # end if online
 	} # end foreach $Host
 	sleep $CFG::Config{'sleep'};
 } # end while

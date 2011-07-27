@@ -24,6 +24,13 @@
 					<label>MAC:</label>
 					<textarea id="mac" name="mac" rows="<? echo ( $$variable{'Host'}->mac() ? scalar @{$$variable{'Host'}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{'Host'}->mac() ? join("\n", @{$$variable{'Host'}->mac()} ) : '' ) ?></textarea>
 				</li>
+				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type:</label>
+					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_value( $('type_id'), this.value, 0 );" />
+					<select name="type_id" id="type_id" onchange="$('type').value='';">
+						<option value="">select</option>
+						<? echo ( ssi::make_drop_down( openprint::Host_Type->dropdown(), $$variable{'Host'}->type_id() ); ) ?>
+					</select>
+				</li>
 				<li>
 					<label>Blacklist:</label>
 					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{'Host'}->blacklist() ); ) ?>

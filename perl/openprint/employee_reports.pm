@@ -52,5 +52,11 @@ sub prepress_overview {
 sub delivery {
 } # end sub delivery
 
+sub turnaround {
+}# end sub turnaround
+
+sub _turnaround_results {
+} # end sub _turnaround_results
+
 1;
 __END__

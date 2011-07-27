@@ -11,10 +11,18 @@
         <fieldset><legend><?ServiceTypeName?></legend>
 			<? echo (
 				my $html = '';
+<<<<<<< HEAD
 				
 				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sig_id );
 					my $signature_index = $$sig_specs{'SignatureIndex'};
+=======
+				@{$$variable{'SignatureGroups'}} = ();	
+				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sig_id );
+					my $signature_index = $$sig_specs{'SignatureIndex'};
+					push @{$$variable{'SignatureGroups'}}, $signature_index, '';
+>>>>>>> cce030487aa29198387c05fbdddb68b4cb8a11b0
 					
 					$html .= '<div class="Signature">';
 					$html .= 'Information for ' . $$sig_specs{'txtServiceDescription'} .':' if $$sig_specs{'txtServiceDescription'};
