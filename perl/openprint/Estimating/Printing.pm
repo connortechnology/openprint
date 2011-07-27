@@ -1282,7 +1282,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1344,7 +1344,7 @@ $i->display();
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->warn('Impositions after filter for '. $Press->strid() );
 foreach my $I ( @impositions ) {
 $I->display();
@@ -2388,8 +2388,8 @@ sub calc_price {
 	if ( $$project{'HasPerforating'} ) {
 $openprint::log->debug("Perforating");
 $$specs{'Runspeed'} = $run_speed;
-		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index );
-$openprint::log->debug("Perforating");
+		my %perforating_results = openprint::Estimating::Perforating::signature_calc( $Project, @$project{'HasPerforating','PerforatingSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+#$openprint::log->debug("Perforating");
 		if ( $perforating_results{'Status'} eq 'uncalculated' ) {
 			$price{'Perforating Breakdown'} .= "Perforating error: $perforating_results{'alert'} $$project{'PerforatingSpecs'}{alert} " . $$project{'PerforatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 

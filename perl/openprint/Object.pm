@@ -397,7 +397,11 @@ sub find {
 				if ( exists $params{$k.'_lc'} ) {
 					$sql .= " AND lower($$f{$k}) = ?";
 					push @values, lc $params{$k.'_lc'};
-					delete $params{$k.'_lc'};
+					delete $params{$k.' lc'};
+				} elsif ( exists $params{$k.' lc'} ) {
+					$sql .= " AND lower($$f{$k}) = ?";
+					push @values, lc $params{$k.' lc'};
+					delete $params{$k.' lc'};
 				} # end if
 				if ( exists $params{$k.'_null'} ) {
 					if ( $params{$k.'_null'} ) {
@@ -487,7 +491,7 @@ sub AUTOLOAD {
 #}
 	$name =~ s/.*://;
 	if ( @_ ) {
-$openprint::log->debug("Autoload $type $name $_[0]");
+#$openprint::log->debug("Autoload $type $name $_[0]");
 		return $self->{$name} = $_[0];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';

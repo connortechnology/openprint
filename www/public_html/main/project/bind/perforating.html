@@ -1,5 +1,4 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -7,24 +6,48 @@
     $$variable{'Columns'} = 'Two';
     } # end if
 ) ?>
-<div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
         <fieldset><legend><?ServiceTypeName?></legend>
-			<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
-			<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
-				<div class="PerforationSignature">
-					<? if ( $$variable{'Reference'} ne '' ) ?>
-					Information for <?Reference?>:
-					<? endif ( $$variable{'Reference'} ne '' ) ?>
-					<p> 
-						<label>Perforation Quantity:</label>
-						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
-						Vertical +
-						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
-						Horizontal
-					</p>
-				</div>
-			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
+			<? echo (
+				my $html = '';
+				@{$$variable{'SignatureGroups'}} = ();	
+				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $sig_id );
+					my $signature_index = $$sig_specs{'SignatureIndex'};
+					push @{$$variable{'SignatureGroups'}}, $signature_index, '';
+					
+					$html .= '<div class="Signature">';
+					$html .= 'Information for ' . $$sig_specs{'txtServiceDescription'} .':' if $$sig_specs{'txtServiceDescription'};
+					$html .= '<p><label>Perforation Quantity:</label>Vertical:';
+					$html .= ssi::input( 
+						'id'=>"txtVerticalQty-$signature_index",
+						'name'=>"txtVerticalQty-$signature_index",
+						'value'=>$$variable{"txtVerticalQty-$signature_index"},
+						'type'=>'numeric',
+						'onkeyup'=>'calc(this.form.name);',
+						);
+	
+					$html .= qq`<select name="VerticalTeeth-$signature_index">
+							<option value="">select</option>`;
+					$html .= ssi::make_drop_down( [ ( 3,'3 Tooth',4,'4 Tooth',5,'5 Tooth',6,'6 Tooth',7,'7 Tooth',8,'8 Tooth',9,'9 Tooth',10,'10 Tooth',11,'11 Tooth',12,'12 Tooth',13,'13 Tooth',14,'14 Tooth',15,'15 Tooth',16,'16 Tooth',17,'17 Tooth') ], $$variable{'VerticalTeeth-'.$signature_index} );
+					$html .= q`</select>
+						Horizontal:`;
+					$html .= ssi::input( 
+						'id'=>"txtHorizontalQty-$signature_index",
+						'name'=>"txtHorizontalQty-$signature_index",
+						'value'=>$$variable{"txtHorizontalQty-$signature_index"},
+						'type'=>'numeric',
+						'onkeyup'=>'calc(this.form.name);',
+						);
+		
+					$html .= qq`<select name="HorizontalTeeth-$signature_index">
+							<option value="">select</option>`;
+					$html .= ssi::make_drop_down( [ ( 3,'3 Tooth',4,'4 Tooth',5,'5 Tooth',6,'6 Tooth',7,'7 Tooth',8,'8 Tooth',9,'9 Tooth',10,'10 Tooth',11,'11 Tooth',12,'12 Tooth',13,'13 Tooth',14,'14 Tooth',15,'15 Tooth',16,'16 Tooth',17,'17 Tooth') ], $$variable{'HorizontalTeeth-'.$signature_index} );
+					$html .= '</select></p></div>';
+				} # end foreach signature
+				return $html;
+			) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/scoring_results.html"-->
