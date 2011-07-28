@@ -647,10 +647,11 @@ sub quantity3 {
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Project();
-	foreach my $key ( keys %$self ) {
-		$$new{$key} = $$self{$key};
-	} # end foreach
-	$new->save({'id'=>undef, 'created_on'=>undef,'Services'=>undef} );
+	my @keys = keys %$self;
+	@$new{@keys} = @$self{@keys};
+
+	delete $$new{'Services'};
+	$new->save({'id'=>undef, 'created_on'=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',
@@ -945,13 +946,15 @@ sub price {
 		$$self{'price'.$qty_index} = $new;
 	} # end if
 	if ( ! defined $$self{'price'.$qty_index} ) {
-		my $services = $self->services();
-		foreach my $k ( keys %$services ) {
-			foreach ( @{$$services{$k}} ) {
-				my $specs = openprint::service::get_specs_ref( $self, $_ );
-				$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+		if ( $$self{'id'} ) {
+			my $services = $self->services();
+			foreach my $k ( keys %$services ) {
+				foreach ( @{$$services{$k}} ) {
+					my $specs = openprint::service::get_specs_ref( $self, $_ );
+					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+				} # end foreach
 			} # end foreach
-		} # end foreach
+		} # end if
 	} # end if
 #$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
