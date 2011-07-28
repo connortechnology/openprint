@@ -29,9 +29,13 @@ $table = 'mailbox';
 sub send {
 	my ( $self, %params ) = @_;
 $log->debug("Sending an email");
+foreach my $k ( keys %params ) {
+$log->debug("Params: $k => $params{$k}");
+} # end 
 
 	my $results;
 	if ( $params{'FROM'} ) {
+$log->debug(" getting from $params{'FROM'} ng an email");
 		if ( ref $params{'FROM'} eq 'openprint::User' ) {
 			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
 		} else {
@@ -40,12 +44,14 @@ $log->debug("Sending an email");
 	} # end if
 
     my %mail = (
-            SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
+            SMTP    => ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
             FROM    => $$self{'from'},
-            SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},
+            SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
             );
+$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
 
+$log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();
 $log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
@@ -121,3 +127,9 @@ sub delete {
 	
 	#sql::execute( undef, $dbh, 'DELETE FROM mailbox WHERE username=?', $_[0]{'id'} );
 } # end sub delete
+
+sub to {
+	return ();
+} # end sub to
+1;
+__END__

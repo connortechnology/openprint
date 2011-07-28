@@ -412,7 +412,6 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 } # end sub edit
 
 sub history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -470,6 +469,7 @@ sub history {
 		$variable{'error'} .= $PO->send_to_vendor();
 		delete $param{'po_id'};
 	} # end if
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_end', '' );
 

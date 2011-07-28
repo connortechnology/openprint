@@ -29,10 +29,7 @@
 	 } // end function
 -->
 </script>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<hr/>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a CAR to view/edit.<br>
 <form id="f1" name="f1" method="post" action="car.html">
 	<fieldset class="filters"><legend>Choose CAR</legend>
@@ -46,39 +43,21 @@ Please select a CAR to view/edit.<br>
 <form id="f2" name="f2" method="post" action="cars.html">
 	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<? eval (
-			if ( ! $session{'/employee/iso/cars.html?StartYear'} ) {
-				@session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
-			} # end if
-			if ( ! $session{'/employee/iso/cars.html?EndYear'} ) {
-				@session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'} = Date::Calc::Today();
-			} # end if
-			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/iso/cars.html?StartYear','/employee/iso/cars.html?StartMonth','/employee/iso/cars.html?StartDay'}
-				);
-			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/iso/cars.html?EndYear','/employee/iso/cars.html?EndMonth','/employee/iso/cars.html?EndDay'}
-				);
-		) ?>
 		<p>
 			<label>Date Issued:</label>
-			<span class="DateSelector">
-			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartYears?></select>
-			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartMonths?></select>
-			<select name="StartDay"><option value="">select</option><?StartDays?></select>
-			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_start',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
-			<span class="DateSelector">
-			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndYears?></select>
-			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndMonths?></select>
-			<select name="EndDay"><option value="">select</option><?EndDays?></select>
+			to 
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_end',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Status:</label>
-			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( ssi::checked( sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusOpen">Open</label>
-			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( ssi::checked( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusClosed">Closed</label>
 		</p>
 		<p>
