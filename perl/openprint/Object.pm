@@ -44,7 +44,7 @@ sub new {
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
-		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
 
