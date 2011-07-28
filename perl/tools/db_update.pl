@@ -1738,7 +1738,6 @@ if ( ! openprint::ServiceCategory->find('name'=>'Coating') ) {
 		'name'=>'Coating',
 	});
 } # end if
-if ( ! openprint::Service->find('name'=>'Perforating') ) {
 	if ( my @S = openprint::Service->find('name'=>'Perforation') ) {
 		foreach my $S ( @S ) {
 			$S->save({'name'=>'Perforating'});
@@ -1749,7 +1748,6 @@ if ( ! openprint::Service->find('name'=>'Perforating') ) {
 			$S->save({'name'=>'PerforatingMakeReady'});
 		}
 	} # end if
-}
 if ( ! openprint::Material->find('name'=>'PerforatingWheel') ) {
 	if ( my @M = openprint::Material->find('name'=>'PerforatingRule') ) {
 		foreach my $M ( @M ) {

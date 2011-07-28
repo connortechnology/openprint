@@ -595,10 +595,10 @@ sub summary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					if ( my $Service = openprint::Service->find_one('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'PressProof' ) {
-							my $desc = sprintf('</td><td align="left">%s', $Service->description() );
+							my $desc = sprintf('</td><td>%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} else {
-							my $desc = sprintf('%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+							my $desc = sprintf('%s&quot;x%s&quot;</td><td>%s', @$specs{
 									"txtProofWidth-$signature_index-$proof_index-$qty_index",
 									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -613,7 +613,7 @@ sub summary {
 		my $summary = '<table class="ProofsSummary">';
 		foreach my $k ( keys %proof_totals ) {
 			next if ! $proof_totals{$k};
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'</td><td>'.$k.'</td></tr>';
+			$summary .= '<tr><td>'.$proof_totals{$k}.'</td><td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
@@ -636,7 +636,7 @@ sub breakupsummary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
 					if ( @Service ) {	
-						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+						my $desc = sprintf('<td> %s&quot;x%s&quot;</td><td>%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
 						my $qty      = $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -656,12 +656,12 @@ sub breakupsummary {
 			} # end foreach key
 		} # end foreach signature
 ##		my $summary = '<table class = "insideservice" style="width:auto;table-layout:auto;">';
-		my $summary = '<table style="width:100%;table-layout:auto;">';
+		my $summary = '<table>';
 
 		foreach my $k ( keys %proof_totals ) {
 			next if ! $proof_totals{$k};
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
-			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
+			$summary .= '<tr><td>'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+			$summary .= '<td class="Price">'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index

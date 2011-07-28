@@ -656,29 +656,30 @@ sub find_one {
 } # end sub find_one
 
 sub AUTOLOAD {
-	my $self = shift;
-	my $type = ref($self);
+	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 #if ( $self eq 'supplier' ) {
 #$log->debug("Autoload $type $name");
 #}
 	$name =~ s/.*://;
-	if ( @_ ) {
-$openprint::log->debug("Autoload $type $name $_[0]");
-		return $$self{$name} = $_[0];
+	if ( @_ > 1 ) {
+#$openprint::log->debug("Autoload $type $name $_[0]");
+		return $_[0]{$name} = $_[1];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
+			# This looks to handle returning Objects
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
 				if ( eval '\%openprint::'.$name.'::fields' ) {
-					return new("openprint::$name", $$self{$field});
+					return new("openprint::$name", $_[0]{$field});
 				} # end if
 			} # end if
 		} # end if
-		return $$self{$name};
+		return $_[0]{$name};
 	} # end if
 } # end sub AUTOLOAD
+
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';

@@ -308,10 +308,30 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
+	my ( $project_index, $service_index, $specs, $signature ) = @_;
 	my @v;
 	foreach my $k ( keys %variables ) {
-		push @v, $k if ! sets::isin( 'output', $variables{$k} );
+		push @v, $k.$signature if ! sets::isin( 'output', $variables{$k} );
 	} # end foreach
+
+    foreach my $side ( 'SideOne','SideTwo' ) {
+        foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+            if ( $$specs{'chk'.$colour.$side.$signature} ) {
+				@v = sets::exclude( [ $colour.'Spot'.$side.'Coverage'.$signature ], \@v );
+            } # end if
+        } # end foreach
+        if ( $$specs{'chkProcessColour'.$side.$signature} ) {
+			@v = sets::exclude( [ map { $_ .$side.'Coverage'.$signature } ( 'Cyan','Magenta','Yellow','Black' ) ], \@v );
+        } # end if
+
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
+				next if ! $$specs{"chkColourCoating$index$side$signature"};
+				@v = sets::exclude( [ 'ColourCoatingCoverage'.$index.$side.$signature ], \@v );
+			} # end if
+		} # end foreach
+	} # end foreach Side
+
 	return @v;
 } # end sub no_outputs
 sub outputs {
@@ -518,7 +538,7 @@ sub get_inkcoverage {
 				$c =~ s/[^\d\.]//g;
 				if ( ! $c ) {
 					$c = $openprint::config{'DefaultInkCoverage'};
-					$c =~ s/[^\d\.]//g;
+					$c =~ s/[^\d\.]//g if $c;
 				} # end if
 				if ( $c ne $$specs{$key} ) {
 					$$v{$key} = [ sets::union( 'output', @{$$v{$key}} ) ];
@@ -763,7 +783,7 @@ sub get_Stocks {
 		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
 #$openprint::log->debug( $Paper->to_string() );
 		push @Papers, $Paper;
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight', 'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
@@ -773,6 +793,9 @@ sub get_Stocks {
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
 			$variables{'basis_mweight'} = [ sets::union( 'output', @{$variables{'basis_mweight'}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
+		} elsif ( @{$variables{'basis_mweight'}} > 1 ) {
+			# Always has save
+			$variables{'basis_mweight'} = [ sets::exclude( ['output'], $variables{'basis_mweight'} ) ];
 		} # end if
 		if ( ! $$specs{'txtStockGSM'} ) {
 			$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
@@ -782,7 +805,7 @@ sub get_Stocks {
 		$variables{'txtStockGSM'} = [ sets::union( 'output', @{$variables{'txtStockGSM'}} ) ];
 		my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ));
 		@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
-		@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+		@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 		foreach my $option ( @StockOptions ) {
 			if ( ! $$specs{'ddmStock'.$option} ) {
@@ -3968,12 +3991,13 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 			$service = 'ImpositionMakeReady';
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
-		if ( ! %ImpositionMakeReady ) {
-			#$openprint::log->debug("$service no price found");
-		} # end if
-		if ( $ImpositionMakeReady{units} eq 'Per Form' ) {
+		if ( %ImpositionMakeReady ) {
+			if ( $ImpositionMakeReady{'units'} eq 'Per Form' ) {
 #$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
-			%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
+				%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
+			} # end if
+		} else {	
+#$openprint::log->debug("$service no price found");
 		} # end if
 
 		$price{'Imposition MakeReady'} = $ImpositionMakeReady{'Price'};
@@ -4027,8 +4051,9 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 		} # end if pages
 	} # end if Plate Type Conventional
 
-	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press );
-	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	if ( my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press ) ) {
+		$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	} # end if
 	$setup_cost += $price{'Runstyle Charge'};
 
 	$price{'Comparison Cost'} += $setup_cost;
@@ -4825,9 +4850,6 @@ sub summary {
 					join(', ', @$specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} )
 					,
 					);
-foreach ( keys %$specs ) {
-$openprint::log->debug(" Stock: $_ => $$specs{$_}");
-}
 		} # end if
 		if ( $$specs{'pages_supplied'} eq 'Y' ) {
 			$string .= ' pages supplied by customer as ';

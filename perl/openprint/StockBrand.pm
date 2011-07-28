@@ -4,8 +4,8 @@ package openprint::StockBrand;
 use strict;
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'stocknames';
-$serial= 'stockname_id_seq';
+$table = 'stockbrands';
+$serial= 'stockbrands_id_seq';
 %fields = (
     'id'    =>  'id',
     'name' =>  'name',

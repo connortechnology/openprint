@@ -58,19 +58,19 @@
 				</tr></thead><tbody>
 				<tr>
 					<td><input type="checkbox" name="chk-$$Pricelist{id}-New-0" /></td>
-					<td><select name="supplier_id-$$Pricelist{id}-New-0"><option value=""> all </option>`;
+					<td class="Supplier"><select name="supplier_id-$$Pricelist{id}-New-0"><option value=""> all </option>`;
 $html .= ssi::make_drop_down( $$variable{'company_ids'} );
 $html .= qq`</select></td>
 					<td class="Range">
-						<input type="text" name="min-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
+						<input type="number" name="min-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
 						-
-						<input type="text" name="max-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
+						<input type="number" name="max-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
 					</td>
-					<td><input type="text" name="units-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td><input type="text" name="cost-$$Pricelist{id}-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td><input type="text" name="markup-$$Pricelist{id}-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td><input type="text" name="price-$$Pricelist{id}-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
-					<td>
+					<td class="Units"><input type="text" name="units-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
+					<td class="Cost"><input type="number" name="cost-$$Pricelist{id}-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
+					<td class="Markup"><input type="number" name="markup-$$Pricelist{id}-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
+					<td class="Price"><input type="number" name="price-$$Pricelist{id}-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"></td>
+					<td class="Discount">
 						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />
 						<label class="radio" for="discount-$$Pricelist{id}-New-0Y">Yes</label>
 						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0N" value='N'  onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />

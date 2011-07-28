@@ -27,7 +27,7 @@
 		my $html = '';
 		my $rowclass;
 		foreach my $Shift ( @{$$variable{'Shifts'}} ) {
-			$html .= sprintf(q`<tr%1$s id="tr-%2$d-1" onmouseover="$('tr-%2$d').addClassName('highlightOn');" onmouseout="$('tr-%2$d').removeClassName('highlightOn');">
+			$html .= sprintf(q`<tr%1$s id="tr-%2$d">
 				<td class="ID"><a href="/employee/performance/edit.html?shift_id=%2$d">%3$s</a></td>
 				<td class="Records">
 			`, $rowclass, $Shift->id(), $Shift->to_string(),

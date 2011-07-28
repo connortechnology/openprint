@@ -170,7 +170,7 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 				} # end if
 				my $html = '';
 				foreach my $Group ( @Groups ) {
-					$$variable{'Signature'} = $Group;
+					$$variable{'Group'} = $$variable{'Signature'} = $Group;
 				
 					my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
 					$html .= variable_substitution( \$h, $variable );
