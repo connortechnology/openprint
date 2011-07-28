@@ -14,10 +14,14 @@ $debug = 1;
 
 sub send {
 	my ( $self, %params ) = @_;
-$log->debug("Sending an email");
+#$log->debug("Sending an email");
+#foreach my $k ( keys %params ) {
+#$log->debug("Params: $k => $params{$k}");
+#} # end 
 
 	my $results;
 	if ( $params{'FROM'} ) {
+#$log->debug(" getting from $params{'FROM'} ng an email");
 		if ( ref $params{'FROM'} eq 'openprint::User' ) {
 			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
 		} else {
@@ -29,12 +33,14 @@ $log->debug("Sending an email");
 			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
             FROM    => $$self{'from'},
-            SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},
+            SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
             );
+#$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
 
+#$log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();
-$log->debug("Email: Recipients @recipients");
+#$log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
 		if ( ref $params{'TO'} eq 'ARRAY' ) {
 			@recipients = @{$params{'TO'}};
@@ -42,7 +48,7 @@ $log->debug("Email: Recipients @recipients");
 			@recipients = ( $params{'TO'} );
 		} # end if
 	} # end if
-$log->debug("Email: Recipients @recipients");
+#$log->debug("Email: Recipients @recipients");
 	foreach my $recipient ( @recipients ) {
 		next if ! $recipient;
 		
@@ -50,10 +56,10 @@ $log->debug("Email: Recipients @recipients");
 			my @to;
 			foreach my $email ( split (',',  $recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
-$log->debug("Email: checking vacation for $email");
+#$log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {
 					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-$log->debug("Email: got vacation for $email");
+#$log->debug("Email: got vacation for $email");
 					next;
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
@@ -88,3 +94,9 @@ sub delete {
 	
 	#sql::execute( undef, $dbh, 'DELETE FROM mailbox WHERE username=?', $_[0]{'id'} );
 } # end sub delete
+
+sub to {
+	return ();
+} # end sub to
+1;
+__END__

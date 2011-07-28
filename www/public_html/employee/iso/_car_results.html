@@ -1,17 +1,9 @@
 <? eval (
 	@{$$variable{'CARs'}} = openprint::CAR->find( 
-( Date::Calc::check_date( @session{'/employee/iso/cars.html?issued_on_start_year','/employee/iso/cars.html?issued_on_start_month','/employee/iso/cars.html?issued_on_start_day'} ) ? ( 
-		'issued_on_start'	=>	sprintf('%.4d-%.2d-%.2d', @session{
-			'/employee/iso/cars.html?issued_on_start_year',
-			'/employee/iso/cars.html?issued_on_start_month',
-			'/employee/iso/cars.html?issued_on_start_day'} ) ) : () ),
-( Date::Calc::check_date( @session{'/employee/iso/cars.html?issued_on_end_year','/employee/iso/cars.html?issued_on_end_month','/employee/iso/cars.html?issued_on_end_day'} ) ? (
-		'issued_on_end'	=>	sprintf('%.4d-%.2d-%.2d', @session{
-			'/employee/iso/cars.html?issued_on_end_year',
-			'/employee/iso/cars.html?issued_on_end_month',
-			'/employee/iso/cars.html?issued_on_end_day'} ),
-		( $session{'/employee/iso/cars.html?docket'} ? ('docket'	=>	$session{'/employee/iso/cars.html?docket'} ) : () ),
-		'order'		=>	'id',
+		ssi::date_filter( 'issued_on_start', 'issued_on >=' ),
+		ssi::date_filter( 'issued_on_end', 'issued_on <=' ),
+		( $session{'/employee/iso/cars.html?docket'} ? ( 'docket'	=>	$session{'/employee/iso/cars.html?docket'} ) : () ),
+		'order'		=>	'id DESC',
 		'deleted'	=>	0,
 		);
 ) ?>

@@ -29,10 +29,7 @@
 	 } // end function
 -->
 </script>
-<? if ( $$variable{'information'} ) ?>
-<p class="information"><?information?></p>
-<hr/>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 Please select a CAR to view/edit.<br>
 <form id="f1" name="f1" method="post" action="car.html">
 	<fieldset class="filters"><legend>Choose CAR</legend>
@@ -49,18 +46,18 @@ Please select a CAR to view/edit.<br>
 		<p>
 			<label>Date Issued:</label>
 			<span class="DateSelectorCT">
-			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_start', { 'onchange'=>'', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_start',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
 			to 
 			<span class="DateSelectorCT">
-			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_end', { 'onchange'=>'', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_end',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Status:</label>
-			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( ssi::checked( sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusOpen">Open</label>
-			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( ssi::checked( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusClosed">Closed</label>
 		</p>
 		<p>

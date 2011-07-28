@@ -60,7 +60,8 @@
 	Invalid CAR # specified.
 	<? else ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 
-	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
+		<? echo ( ssi::button( 'Send', { 'href'=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{'CAR'}->id() } ); ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
 			my $html;

@@ -1,8 +1,11 @@
 use strict;
-package openprint::CAR;
-our @ISA = qw(openprint::Object);
+require sql;
 require openprint::CAR_Area;
 require openprint::CAR_Reason;
+require openprint::Email;
+
+package openprint::CAR;
+our @ISA = qw(openprint::Object);
 
 use vars qw( %config $log %session );
 *session = \%openprint::session;
@@ -10,7 +13,6 @@ use vars qw( %config $log %session );
 *log = \$openprint::log;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-
 
 $debug = 1;
 $table = 'car';
@@ -84,23 +86,19 @@ sub send_notifications {
 	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-
 		my %info = (
 			'CAR'	=>	$self,
+			'ReplacementText' => '<!--#include virtual="/email_content/iso_car_notification.html"-->',
 		);
-		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = '<!--#include virtual="/email_content/iso_car_notification.html"-->';
-			my @body = ('', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new CAR has been generated requiring your attention.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-		} # end foreach
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM    => new openprint::User( $session{'user_id'} ),
+				TO      => \@Users,
+				SUBJECT => 'A new CAR has been generated requiring your attention.',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+				);
+
 	} # end if to
 
 } # end sub send_notification
