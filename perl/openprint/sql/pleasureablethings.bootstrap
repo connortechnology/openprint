@@ -61,3 +61,12 @@
 \i users_in_marketing_categories.sql
 \i users_in_user_groups.sql
 \i Wall.sql
+\i Page_Settings.sql
+\i User_Profile_Fields.sql
+\i User_Profiles.sql
+\i ServiceType_Categories.sql
+\i Service_Types.sql
+\i Locations.sql
+\i Equipment.sql
+\i Services.sql
+\i Service_Prices.sql

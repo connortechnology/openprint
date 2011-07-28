@@ -11,7 +11,8 @@
 	foreach my $Article ( openprint::Article->find( 
 		'published'			=>	1,
 		'category_id'		=>	$param{'category_id'},
-		'order'				=> 'published_on',
+		'order'				=> 'published_on DESC',
+		'limit'				=>	10,
 		) ) {
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article
@@ -25,7 +26,7 @@
 	<div class="name"><? echo ( $$variable{'Category'}->name() ) ?></div>
 	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
 	<? if ( $$variable{'Category'}->image_filename() ) ?>
-	<div class="image"><img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
+	<div class="image"><img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt=""/></div>
 	<? endif ( $$variable{'Category'}->image_filename() ) ?>
 </div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>

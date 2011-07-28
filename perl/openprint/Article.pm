@@ -64,7 +64,7 @@ sub send_notifications {
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
+		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/article_notification.html' );
 
 		my %info = (
 			'Article'	=>	$self,
@@ -132,6 +132,13 @@ sub summary {
 	} 
 	return $_[0]{'summary'};
 } # end sub summary
+
+sub can_edit {
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( $session{'user_id'} and ( $session{'user_id'} == $_[0]{'created_by'} ) );
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

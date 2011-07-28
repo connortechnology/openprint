@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS Service_Types;
 CREATE TABLE Service_Types (
 	id				SERIAL NOT NULL,
-	Name			TEXT,
+	name			TEXT,
 	description		TEXT,
 	category_id		INTEGER,FOREIGN KEY (category_id) REFERENCES ServiceType_Categories (id),
 	strDetailedURL	TEXT,
@@ -13,7 +13,7 @@ CREATE TABLE Service_Types (
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX Service_Types_name_Idx ON Service_Types (name);
+CREATE INDEX service_types_name_idx ON Service_Types (name);
 
 
 
