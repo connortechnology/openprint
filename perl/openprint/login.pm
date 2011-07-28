@@ -160,24 +160,24 @@ sub verify_login {
 	} # end if	
 
 	if ( $User->change_password() eq 'Y' ) {
-		$$variable{'Redirect'} = '/account/change_password.html';
+		$$variable{'ExternalRedirect'} = '/account/change_password.html';
 		return;
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a>/ ) {
      
-		$$variable{'Redirect'} = $1.'.html';
-		foreach my $p ( split('&', $2 ) ) {
-			my ( $k, $v ) = split('=', $p );
-			$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
-		} # end foreach
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
+		$$variable{'ExternalRedirect'} = $1;
+		#foreach my $p ( split('&', $2 ) ) {
+			#my ( $k, $v ) = split('=', $p );
+			#$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
+			#$openprint::param{$k} = $v;
+		#} # end foreach
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a> to continue the survey\./ ) {
      
-		$$variable{'Redirect'} = $1.'.html';
-		foreach my $p ( split('&', $2 ) ) {
-			my ( $k, $v ) = split('=', $p );
-			$openprint::log->debug("Psrsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
-		} # end foreach
+		$$variable{'ExternalRedirect'} = $1;
+		#foreach my $p ( split('&', $2 ) ) {
+			#my ( $k, $v ) = split('=', $p );
+			#$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			#$openprint::param{$k} = $v;
+		#} # end foreach
 	} # end if
 
 } # sub verify_login

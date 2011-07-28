@@ -20,6 +20,10 @@ sub history {
 		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
 		my $Article = new openprint::Article( $param{'article_id'} );
+		if ( ! $Article->can_edit() ) {
+			$variable{'error'} .= 'You do not have rights to edit this article.';
+			return;
+		} # end if
 		if ( $param{'category_id'} ) {
 			delete $param{'category'};
 		} else {
@@ -97,15 +101,23 @@ sub history {
 		my $pre;
 my $a;
 		while ( $remainder ) {
-			( $pre, $a, $remainder ) =~ /(.*)<a (.*)><\/a>(.*)/im;
-			$body .= $pre;
-			# Do stuff to a
-			$body .= $a;
+			if ( ( $pre, $a, $remainder ) =~ /(.*)<a (.*)><\/a>(.*)/im ) {
+				$body .= $pre;
+				# Do stuff to a
+				$body .= $a;
+			} else {
+				$body = $remainder;
+				$remainder = '';
+			} 
 		} # end while
 		$param{'body'} = $body;
 		$variable{'error'} .= $Article->save(\%param);
 	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
+		if ( ! $Article->can_edit() ) {
+			$variable{'error'} .= 'You do not have rights to destroy this article.';
+			return;
+		} # end if
 		$variable{'error'} .= $Article->destroy();
 	} elsif ( ! $param{'func'} ) {
 	} # end if

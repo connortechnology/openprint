@@ -28,7 +28,7 @@ CREATE TABLE Users (
 	purchasing_limit		float,
 	purchasing_total_limit	float,
 	wage					float,
-	email_quotes_to_mysql	boolean not null default false,
+	email_quotes_to_myself	boolean not null default false,
 	quote_level				integer,
 	howdidyouhearaboutus	text,
 	howdidyouhearaboutusother	text,
