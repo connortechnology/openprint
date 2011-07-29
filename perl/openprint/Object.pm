@@ -44,7 +44,7 @@ sub new {
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
-		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
 
@@ -397,7 +397,7 @@ sub find {
 				if ( exists $params{$k.'_lc'} ) {
 					$sql .= " AND lower($$f{$k}) = ?";
 					push @values, lc $params{$k.'_lc'};
-					delete $params{$k.' lc'};
+					delete $params{$k.'_lc'};
 				} elsif ( exists $params{$k.' lc'} ) {
 					$sql .= " AND lower($$f{$k}) = ?";
 					push @values, lc $params{$k.' lc'};

@@ -1,5 +1,11 @@
+use strict;
+require sql;
+require openprint::CAR_Area;
+require openprint::CAR_Reason;
+require openprint::Email;
+
 package openprint::CAR;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 use vars qw( $r %config $log $dbh %session );
 *r = \$openprint::r;
@@ -8,14 +14,10 @@ use vars qw( $r %config $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
-
-use strict;
-use vars qw( %fields %defaults %transforms );
-
-require sql;
-require openprint::CAR_Area;
-require openprint::CAR_Reason;
+use vars qw( $debug $table $serial %fields %defaults %transforms );
+$debug = 1;
+$table = 'car';
+$serial = 'car_id_seq';
 
 %fields = (
 	'id'			=>	'id',
@@ -80,125 +82,6 @@ require openprint::CAR_Reason;
 	'reprint_value'	=>	undef,
 );
 
-sub find {
-	my %params = @_;
-
-	my $sql = q{SELECT * FROM CAR WHERE 1>0};
-	my @values;
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( $params{'issued_on_start'} and $params{'issued_on_end'} ) {
-		$sql .= ' AND ( issued_on BETWEEN ? AND ? )';
-		push @values, @params{'issued_on_start','issued_on_end'};
-	} elsif ( $params{'issued_on_start'} ) {
-		$sql .= ' AND issued_on >= ?';
-		push @values, $params{'issued_on_start'};
-	} elsif ( $params{'issued_on_end'} ) {
-		$sql .= ' AND issued_on <= ?';
-		push @values, $params{'issued_on_end'};
-	} # end if
-
-	if ( $params{'docket'} ) {
-		$sql .= ' AND docket=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading CARs: ($sql) (@values)" . $openprint::dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::CAR::find($sql) (@values)");
-	} # end if
-	return map { new openprint::CAR( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CAR WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %fields} = @$data{keys %fields};
-} # end sub load
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM CAR WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
-sub save {
-	my ( $self, $param ) = @_;
-	
-	$self->set( $param ) if $param;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('car_id_seq')});
-		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'CAR', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return '';
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::CAR();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
-
 sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
@@ -209,23 +92,19 @@ sub send_notifications {
 	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-
 		my %info = (
 			'CAR'	=>	$self,
+			'ReplacementText' => '<!--#include virtual="/email_content/iso_car_notification.html"-->',
 		);
-		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = '<!--#include virtual="/email_content/iso_car_notification.html"-->';
-			my @body = ('', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ), 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new CAR has been generated requiring your attention.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-		} # end foreach
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM    => new openprint::User( $session{'user_id'} ),
+				TO      => \@Users,
+				SUBJECT => 'A new CAR has been generated requiring your attention.',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+				);
+
 	} # end if to
 
 } # end sub send_notification
