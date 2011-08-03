@@ -1889,6 +1889,7 @@ sub bindery_schedule {
 } # end sub bindery_schedule
 
 sub prepress_overview {
+	ssi::save_params( '/employee/production/prepress_overview.html', ( 'operator_id' ) );
 } # end sub prepress_overview
 
 sub _add_docket {
