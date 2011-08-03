@@ -1406,11 +1406,13 @@ $openprint::log->debug("Project::recalculate");
 	if ( $$services{''} ) {
 		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
 		if ( $status ne 'calculated' ) {
-			# Recal signatures
-			my $function = 'openprint::Estimating::'.$self->Type()->type().'::calculate_signatures';
-			eval ($function.'( $self );');
-			$openprint::log->error("Project->recalculate $function $@") if $@;
-
+			# Recalc signatures
+			my $module = 'openprint::Estimating::'.$self->Type()->type();
+			if ( my $function = $module->can( 'calculate_signatures' ) ) {
+				$status = $function->( $self );
+$openprint::log->debug("Calculate_Sigs: status: $status");
+				openprint::service::status( $$self{'id'}, $$services{''}[0], $status );
+			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] );
 		} # end if
 	} # end if

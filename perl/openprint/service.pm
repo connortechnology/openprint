@@ -372,7 +372,7 @@ sub auto_calculate {
 	} # end while service_type
 
 	foreach my $type ( keys %{$services} ) {
-		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding' ] );
+		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding','Signature' ] );
 		next if $exclude and sets::isin( $type, $exclude );
 
 		foreach my $service_index ( @{$$services{$type}} ) {
@@ -470,24 +470,30 @@ sub internal_calc {
 
 	my $status;
 	my $starttime = time;
+
+	my $package = 'openprint::Estimating::'.$service_type;
+	#require $package;
 	eval 'require openprint::Estimating::'.$service_type;
-	$log->error("Error in requiring openprint::Estiamting::$service_type ::calc: $@") if $@;
-	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );' ) {
-		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
+	$log->error("Error in requiring $package $@") if $@;
+$log->debug("can calc");
+	if ( my $function = $package->can('calc') ) {
+		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
+		$specs{'Status'} = $status;
+		my $elapsed = time - $starttime;
+		$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+
+		my $ac = sql::start_transaction( $dbh );
+		status( $project_index, $service_index, $status );
+
+		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
+
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+	} else {
+		$log->error($package . ' cant calc');
 	} # end if
-	$specs{'Status'} = $status;
-	my $elapsed = time - $starttime;
-	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
-
-	my $ac = sql::start_transaction( $dbh );
-	status( $project_index, $service_index, $status );
-
-	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
-
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
-	} # end foreach
-	sql::end_transaction( $dbh, $ac );
 	return \%specs;
 } # end sub internal_calc
 
