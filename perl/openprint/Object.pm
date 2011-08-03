@@ -383,6 +383,10 @@ sub find {
 					$sql .= " AND ? IN $$f{$k}";
 					push @values, $params{$k.'_in'};
 					delete $params{$k.'_in'};
+				} elsif ( exists $params{$k.' in'} ) {
+					$sql .= " AND ? IN $$f{$k}";
+					push @values, $params{$k.' in'};
+					delete $params{$k.' in'};
 				} # end if
 				if ( exists $params{$k.' !='} ) {
 					$sql .= " AND $$f{$k} != ?";
