@@ -20,7 +20,7 @@
 		<label>Press:</label>
 		<select name="ddmPress<?Signature?>" size="1">
 			<option value="">Auto</option>
-			<? echo ( ssi::make_drop_down( $$variable{'ddmPressOptions'}, $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)') ], $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
 		</select>
 	</p>
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>

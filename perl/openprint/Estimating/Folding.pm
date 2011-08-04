@@ -939,12 +939,12 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 				my $width_folds;
 				my $height_folds;
-				if ( $$sig_specs{'txtFinalWidth'} ) {
-					$width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-					$height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+				if ( $$sig_specs{'txtFinalWidth'} and $$sig_specs{'txtFinalHeight'} ) {
+					$width_folds = int($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1;
+					$height_folds = int($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1;
 				} else {
-					$width_folds = sprintf('%.0f', ($Imposition->image_width()/$Imposition->object_width())-1 );
-					$height_folds = sprintf('%.0f', ($Imposition->image_height()/$Imposition->object_height())-1 );
+					$width_folds = int($Imposition->image_width()/$Imposition->object_width())-1;
+					$height_folds = int($Imposition->image_height()/$Imposition->object_height())-1;
 				} # end if
 				if ( $Fold->folds() or $Fold->angles() ) {
 					if ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) {
@@ -1015,7 +1015,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 				} # end if
 
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
-#$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
+$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
 					last;
 				} # end if
 
@@ -1029,7 +1029,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					$runTime = sprintf( '%.4f', $run_qty / $runspeed ); # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
-#$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );
+$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( $Fold->type(), $run_qty, $Equipment );
@@ -1099,6 +1099,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 			} # end foreach fold_type
 			my %cutting_results;
 			if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {
+$openprint::log->debug("Cutting for folding");
 				%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $$services{'Cutting'}[0], $sig_specs, $$calc_hash{'cutting_specs'}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
 			} # end if
 			my $stitching_part;
@@ -1107,6 +1108,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
+$openprint::log->debug("Stitiching in folding");
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, $Signature_Impositions, $calc_hash );
 					if ( ! $$results{'Equipment'} ) {
 						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
@@ -1126,7 +1128,7 @@ $Breakdown .= $$results{'Breakdown'};
 					$stitching_part = $$specs{'StitchingCost'};
 					$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
 				} # end if
-			} # end if
+			} # end if has sittiching
 
 			my $comparison_cost = $totalPrice + $stitching_part + $cutting_results{'Price'};
 			if ( $cutting_results{'Equipment'} ) {
@@ -1187,7 +1189,7 @@ $Breakdown .= $$results{'Breakdown'};
 	} # end foreach
 	
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
-#$openprint::log->debug("Return from folding");
+$openprint::log->debug("Return from folding");
 	return %results;
 } # end sub signature_calc
 

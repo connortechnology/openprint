@@ -264,7 +264,8 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $Project ) = @_;
+	shift @_ if $_[0] eq 'openprint::Estimating::MultiPage::calculate_signatures';
+	my $Project = $_[0];
 
 	my $status;
 $openprint::log->debug("****************************************************************Starting MultiPage::calculate_signatures");
@@ -376,7 +377,7 @@ $openprint::log->debug("After calc_from_imposition" );
 					@signatures = sets::exclude( [ $ss_id ], \@signatures );
 				} # end while sigs
 			} else {
-				$openprint::log->debug("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
+				$openprint::log->warn("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 				return 'uncalculated';
 			} # end if
 		} # end foreach group
