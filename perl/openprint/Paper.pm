@@ -355,6 +355,10 @@ sub material {
 	return $$self{'material'};
 } # end sub material
 
+sub Material {
+	return new openprint::StockMaterial( $_[0]{'material_id'} );
+} # end sub Material
+
 sub group {
 	my ( $self, $group ) = @_;
 

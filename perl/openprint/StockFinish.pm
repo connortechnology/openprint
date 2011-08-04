@@ -19,7 +19,6 @@ $serial= 'stockfinishes_id_seq';
 
 sub sort {
 	shift if $_[0] eq 'openprint::StockFinish';
-$openprint::log->debug("Sorting Finish");
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 }# end sub sort
 

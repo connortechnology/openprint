@@ -4,8 +4,8 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'paperqualities';
-$serial= 'paperqualities_id_seq';
+$table = 'stockqualities';
+$serial= 'stockqualities_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',

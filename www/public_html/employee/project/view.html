@@ -291,7 +291,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Total:</b></td>
-			<td class="Price"><? echo ( openprint::Currency::form( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td></td>
 		</tr>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
