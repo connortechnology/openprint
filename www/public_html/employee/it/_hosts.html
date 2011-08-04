@@ -1,6 +1,6 @@
 <? eval (
 	if ( $param{'mac'} ) {
-		@{$$variable{'Hosts'}} = openprint::Host->find('mac_any'=>$param{'mac'}, 'order'=>'lower(hostname)');
+		@{$$variable{'Hosts'}} = openprint::Host->find('mac any'=>$param{'mac'}, 'order'=>'lower(hostname)');
 	} elsif ( $param{'ip'} ) {
 		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=> $param{'ip'}, 'order'=>'lower(hostname)');
 	} elsif ( $param{'hostname'} ) {

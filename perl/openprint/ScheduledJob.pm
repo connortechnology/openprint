@@ -4,11 +4,10 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
+use vars qw(%variable $log $dbh %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 *session = \%openprint::session;
 
 require sql;
@@ -19,7 +18,7 @@ require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';
@@ -680,7 +679,7 @@ sub bump {
 		$$sig_specs{'SignatureIndex'};
 	} @{$self->service_id()} if $self->service_id();
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($openprint::config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
 

@@ -428,8 +428,8 @@ sub find_operators {
 	if ( exists $$params{$k.'_lc'} ) {
 		push @{$results{'_lc'}}, "lower($f) = ?", $$params{$k.'_lc'};
 	} # end if
-	if ( exists $$params{$k.'_any'} ) {
-		push @{$results{'_any'}}, "? = ANY($f)", $$params{$k.'_any'};
+	if ( exists $$params{$k.' any'} ) {
+		push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
 	} # end if
 	if ( exists $$params{$k.' is null'} ) {
 		if ( $$params{$k.' is null'} ) {

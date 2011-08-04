@@ -57,7 +57,7 @@ while ( my $line = <ARP> ) {
 	}
 	
 	next if ! $dbh;
-	my $Host = openprint::Host->find_one('mac_any'=>$mac);
+	my $Host = openprint::Host->find_one('mac any'=>$mac);
 	if ( $Host ) {
 		if ( ! $Host->ip() ) {
 			$Host->save({'ip'=>$ip});
