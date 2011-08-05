@@ -249,6 +249,11 @@ $openprint::log->debug("No for info");
 # pull information to pre-fill input fields
                 @$variable{'ForCompanyName', 'ForAddress1', 'ForAddress2', 'ForCity', 'ForStateProvince', 'ForPostalCode', 'ForCountry', 'ForPhone','ForExtension', 'ForFax' } = (
 				$Company->business_name(), $Company->address1(), $Company->address2(), $Company->city(), $Company->state(), $Company->postalcode(), $Company->country(), $Company->phone(), $Company->extension(), $Company->fax() );
+
+				my @Users = openprint::User::find('company_id'=>$openprint::session{'company_id'},'limit'=>2);
+				if ( @Users == 1 ) {
+					@$variable{'ForFirstName','ForLastName','ForTitle','ForEmail','ForSalutation'} = $Users[0]->get('firstname','lastname','title','email','salutation');
+				} # end if
             } # end if
         } # end if
     } # end if
