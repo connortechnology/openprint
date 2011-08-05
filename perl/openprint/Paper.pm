@@ -36,9 +36,9 @@ use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
 $debug = 1;
 $table = 'papers';
-$serial	=	'paper_id_seq';
+$serial	= 'paper_id_seq';
 %fields = (
-		'id'	=>	'id', 
+		'id'			=>	'id', 
 		'created_on'	=>	'created_on',
 		'group_id'		=>	'group_id',
 		'owner_id'		=>	'owner_id',
@@ -316,7 +316,7 @@ sub delete {
 sub to_string {
 	my $self = shift;
 	if ( ! $$self{'to_string'} ) {
-		my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
+		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
 			$string .= ' ' . $self->width.'"' if $self->width();
 			$string .= ' Roll ';
@@ -899,7 +899,7 @@ sub get_price {
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-#$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
+$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'})") if $debug;
 	return $price;
 } # end sub get_price
 
@@ -1139,11 +1139,11 @@ $openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 		if ( ! $Paper ) {
 			my %params = (
 					'supplied'	=> $$specs{'rdbSuppliedStock'},
-					'brand'	 => $$specs{'ddmStockBrand'},
+					'brand'	 	=> $$specs{'ddmStockBrand'},
 					'finish'	=> $$specs{'ddmStockFinish'},
 					'colour'	=> $$specs{'ddmStockColour'},
 					'weight'	=> $$specs{'ddmStockWeight'},
-					'project_type_id in'=> $Project ? $Project->type_id() : undef,
+					( $Project ? ( 'project_type_id in'=> $Project->type_id() ) : () ),
 					'order'		=>	'minimum_order',
 					);
 			if ( $qty_index ) {
@@ -1153,12 +1153,12 @@ $openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 					$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				} # end if
 			} # end if
-			my @Papers = openprint::Paper->find( \%params );
+			my @Papers = openprint::Paper->find( %params );
 			if ( ! @Papers ) {
-$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
+$log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
-				@Papers = openprint::Paper->find( \%params );
+				@Papers = openprint::Paper->find( %params );
 			} elsif ( $qty_index and ( @Papers > 1 ) ) {
 				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if

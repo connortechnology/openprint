@@ -182,7 +182,7 @@
 				</p>
 				<p>
 					<label>Calliper:</label>
-					<input type="text" id="calliper" name="calliper" value="<? echo ( $$variable{'Stock'}->calliper(); ) ?>" /> inches
+					<input type="number" id="calliper" name="calliper" value="<? echo ( $$variable{'Stock'}->calliper(); ) ?>" /> inches
 				</p>
 				<p>
 					<label>Type:</label>
@@ -193,29 +193,29 @@
 				</p>
 				<p>
 					<label>Size:</label>
-					<input type="text" name="width" value="<? echo ( $$variable{'Stock'}->width(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
+					<input type="number" id="width" name="width" value="<? echo ( $$variable{'Stock'}->width(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
 					<span id="StockHeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> x
-					<input type="text" name="height" value="<? echo ( $$variable{'Stock'}->height(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
+					<input type="number" id="height" name="height" value="<? echo ( $$variable{'Stock'}->height(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight( this.form );"/>
 				
 					</span> inches
 				</p>
 				<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
 					<label>MWeight:</label>
-					<input type="text" name="mweight" value="<? echo ( $$variable{'Stock'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
+					<input type="number" id="mweight" name="mweight" value="<? echo ( $$variable{'Stock'}->mweight(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
 				</p>
 				<p id="BasisSize" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() ne 'Roll' ) ?>>
-					<label>Basis MWeight:</label><input type="text" name="basis_mweight" size="9" value="<? echo ( $$variable{Stock}->basis_mweight() ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" style="width: auto;" /><br/>
+					<label>Basis MWeight:</label><input type="number" id="basis_mweight" name="basis_mweight" value="<? echo ( $$variable{Stock}->basis_mweight() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm(this.form);" /><br/>
 					<label>Basis Size:</label>
-					<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
-					<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Stock}->basis_height() ?  $$variable{Stock}->basis_height() : 38 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
+					<input type="number" id="basis_width" name="basis_width" value="<? echo ( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" /> x
+					<input type="number" id="basis_height" name="basis_height" value="<? echo ( $$variable{Stock}->basis_height() ?  $$variable{Stock}->basis_height() : 38 ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" />
 				</p>
 				<p>
 					<label>GSM:</label>
-					<input type="text" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
+					<input type="number" id="gsm" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>" onkeyup="gsm_to_mweight( this.form );" />
 				</p>
 				<p>
 					<label>WPSI:</label>
-					<input type="text" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
+					<input type="number" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
 				</p>
 				<p>
 					<label>Grain Direction:</label>
@@ -235,7 +235,7 @@
 				</p>
 				<p>
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
-					<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"/>
+					<input type="number" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>" />
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
@@ -248,7 +248,7 @@
 				</p>
 				<p class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
-					<input type="text" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
+					<input type="number" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
 				</p>
 				<p class="fsc_code">
 					<label>FSC Code:</label>
@@ -260,7 +260,7 @@
 				</p>
 				<p class="message">
 					<label>Message:</label>
-					<textarea id="message" name="message" rows="2" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
+					<textarea id="message" name="message" rows="2" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
 				</p>
 				<p class="cuttable">
 					<label>Can this stock be cut?:</label>
@@ -285,7 +285,7 @@
 				</p>
 				<p id="parts_div" <? echo ( $$variable{'Stock'}->multipart() ? '' : 'style="display:none;"' ) ?>>
 					<label>How many parts:</label>
-					<input type="text" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
+					<input type="number" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
 				</p>
 				<p class="perfecting">
 					<label>Is this stock stiff enough to perfect without gutters?:</label>

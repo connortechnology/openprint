@@ -192,11 +192,13 @@ sub load_used {
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
 } # end sub load_used
 
+
+# Passing in the Project helps us load the paper by recommendation
 sub load {
-	my ( $self, $specs, $qty_index ) = @_;
+	my ( $self, $specs, $qty_index, $Project ) = @_;
 
 	$$self{'specs'} = $specs;
-	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
+	$$self{'paper'} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
 			$openprint::log->error("No ddmPress for $qty_index");

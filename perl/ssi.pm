@@ -72,15 +72,6 @@ sub do_new_substitution {
 			$log->debug("Unable to find terminating if ( $$command ) in $$text");
 			return variable_substitution( $text, $variable );
 		} # end if
-	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
-		my $variables = $1;
-		my $dataname = variable_substitution( \$2, $variable );
-		my @var_names = split( ',', $variables );
-		foreach my $name ( @var_names ) {
-			$name =~ s/^\s*(\w+)\s*$/$1/;
-			$$variable{$name} = shift @{$$variable{$dataname}};
-		} # end foreach
-		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 		$_ = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -94,6 +85,10 @@ sub do_new_substitution {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 		$result = htmlize($result);
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
+	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
+		my $result = checked( eval $1 );
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} else {

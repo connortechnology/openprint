@@ -10,13 +10,13 @@
 		$html .= sprintf(q`<tr id="paperprice-%1$d">
 				<td class="Equipment"><select name="equipment_id-%1$d" onchange="check_price(this);"><option value=""> all </option>%8$s</select></td>
 				<td class="Range">
-					<input type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
-					<input type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
+					<input type="numeric" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
+					<input type="numeric" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
 				</td>
 				<td class="Units"><input type="text" name="units-%1$d" value="%4$s" onkeyup="check_price(this);" /></td>
-				<td class="Cost"><input type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
-				<td class="Markup"><input type="text" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				<td class="Price"><input type="text" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Cost"><input type="numeric" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
+				<td class="Markup"><input type="numeric" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Price"><input type="numeric" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
 			`,
 			$Price->id(), 
 			( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
@@ -29,11 +29,11 @@
 		$html .= sprintf(q`<tr id="paperprice-%1$d">
 				<td class="Equipment"><input type="hidden" name="equipment_id-%1$d" id="equipment_id-%1$d" /></td>
 				<td class="Range">
-					<input class="text" type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
-					<input class="text" type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
+					<input type="numeric" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
+					<input type="numeric" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
 				</td>
 				<td class="Units"><input type="text" name="units-%1$d" value="%4$s"/></td>
-				<td class="Cost"><input class="text" type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`,
+				<td class="Cost"><input type="numeric" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`,
 				$Price->id(), 
 				( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
 				( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ),
@@ -42,20 +42,20 @@
 			);
 
 		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
-			$html .= sprintf( q`<td class="Cost"><input class="text" type="text" name="costperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperm() );
+			$html .= sprintf( q`<td class="Cost"><input type="numeric" name="costperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperm() );
 		} else {
-			$html .= sprintf( q`<td class="Cost"><input class="text" type="text" name="costperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperfoot() );
+			$html .= sprintf( q`<td class="Cost"><input type="numeric" name="costperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperfoot() );
 		} # end if
 		$html .= sprintf(q`
-				<td class="Markup"><input class="text" type="text" name="markup-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
-				<td class="Price"><input class="text" type="text" name="price-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Markup"><input type="numeric" name="markup-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Price"><input type="numeric" name="price-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
 				`, $Price->id(), $Price->markup(), $Price->price(),
 			);
 
 		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
-				$html .= sprintf( q`<td class="Price"><input class="text" type="text" name="priceperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperm() );
+				$html .= sprintf( q`<td class="Price"><input type="numeric" name="priceperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperm() );
 		} else {
-				$html .= sprintf( q`<td class="Price"><input class="text" type="text" name="priceperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperfoot() );
+				$html .= sprintf( q`<td class="Price"><input type="numeric" name="priceperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperfoot() );
 		} # end if
 	} # end if
 	$html .= sprintf(q`

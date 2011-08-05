@@ -413,16 +413,40 @@ sub find_operators {
 	if ( exists $$params{$k.' in'} ) {
 		push @{$results{' in'}}, "? IN $f", $$params{$k.' in'};
 	} # end if
+	if ( exists $$params{$k.' &&'} ) {
+		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
+			if ( @{$$params{$k.' &&'}} ) {
+				push @{$results{' &&'}}, $f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', @{$$params{$k.' <@'}};
+			} # end if
+		} else {
+			push @{$results{' &&'}}, "$f && ?", $$params{$k.' &&'};
+		} # end if
+	} # end if
+	if ( exists $$params{$k.' <@'} ) {
+		if ( ref $$params{$k.' <@'} eq 'ARRAY' ) {
+			if ( @{$$params{$k.' <@'}} ) {
+				push @{$results{' <@'}}, $f . ' <@ ARRAY['. join(',', map { '?' } @{$$params{$k.' <@'}} ).']', @{$$params{$k.' <@'}};
+			} # end if
+		} else {
+			push @{$results{' <@'}}, "$f <@ ?", $$params{$k.' <@'};
+		} # end if
+	} # end if
+	if ( exists $$params{$k.' @>'} ) {
+		if ( ref $$params{$k.' @>'} eq 'ARRAY' ) {
+			if ( @{$$params{$k.' @>'}} ) {
+				push @{$results{' @>'}}, $f . ' @> ARRAY['. join(',', map { '?' } @{$$params{$k.' @>'}} ).']', @{$$params{$k.' @>'}};
+			} # end if
+		} else {
+			push @{$results{' @>'}}, "$f @> ?", $$params{$k.' @>'};
+		} # end if
+	} # end if
 	if ( exists $$params{$k.' not in'} ) {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
 				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
 			} # end if
-			delete $$params{$k.' not in'};
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
-		} else {
-			delete $$params{$k.' not in'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
