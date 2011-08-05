@@ -289,6 +289,10 @@ sub _expenses {
 
 sub expense {
 	my $Expense = $variable{'Expense'} = new openprint::Expense( $param{'expense_id'} );
+	if ( $param{'btnFunction'} eq 'Copy' ) {
+		$variable{'information'} .= $Expense->id() . ' has been copied';
+		$variable{'Expense'} = $Expense = $Expense->copy();
+	} # end if
 	$Expense->owner_id( $session{'company_id'} ) if ! $Expense->owner_id();
 	$Expense->invoiced_on( join('-', Date::Calc::Today() ) ) if ! $Expense->invoiced_on();
 
