@@ -99,6 +99,11 @@ if ( ! exists $$data{'account_id'} ) {
 	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
 }
 
+if ( ! sets::isin( 'host_types', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Host_Types.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
 if ( ! exists $$data{'count'} ) {
 	$dbh->do('ALTER TABLE hosts add count integer');
@@ -122,6 +127,13 @@ if ( ! exists $$data{'deleted'} ) {
 if ( ! exists $$data{'online'} ) {
 	$dbh->do('ALTER TABLE hosts add online BOOLEAN');
 } # end if
+if ( ! exists $$data{'type_id'} ) {
+	$dbh->do('ALTER TABLE hosts add type_id INTEGER');
+	$dbh->do('ALTER TABLE hosts add FOREIGN KEY (type_id) REFERENCES Host_types (id)');
+} # end if
+if ( exists $$data{'type'} ) {
+	$dbh->do('ALTER TABLE hosts drop type');
+}
 if ( exists $$data{'monitor'} ) {
 	$dbh->do('ALTER TABLE hosts RENAME COLUMN monitor to monitored');
 } elsif ( ! exists $$data{'monitored'} ) {

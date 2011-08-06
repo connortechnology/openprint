@@ -23,35 +23,38 @@
 			No profile picture set.
 			<? endif ( $$variable{'User'}->asset_id() ) ?>
 			<div id="Albums">
-			<fieldset><legend>Photo Albums</legend>
-				<? echo (
-					my $html = '';
-					foreach my $Album ( openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } ) ) {
+				<fieldset><legend>Photo Albums</legend>
+					<? echo (
+						my $html = '';
+						my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
+						return $variable{'User'}->firstname() . ' has no albums' if ! @Albums;
+						foreach my $Album ( @Albums ) {
+							
+							my $Photo = $Album->Thumbnail();
+							if ( $Photo->asset_id() ) {
+								$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
 						
-						my $Photo = $Album->Thumbnail();
-						if ( $Photo->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-			<fieldset><legend>Video Albums</legend>
-				<? echo (
-					my $html = '';
-					foreach my $Album ( openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } ) ) {
+							} # end if Thumbnail
+						} # end foreach Album
+						return $html;
+					) ?>
+				</fieldset>
+				<fieldset><legend>Video Albums</legend>
+					<? echo (
+						my $html = '';
+						my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
+						return $variable{'User'}->firstname() . ' has no albums' if ! @Albums;
+						foreach my $Album ( @Albums ) {
+							
+							my $Video = $Album->Thumbnail();
+							if ( $Video->asset_id() ) {
+								$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
 						
-						my $Video = $Album->Thumbnail();
-						if ( $Video->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-			</div><!--Albums-->
+							} # end if Thumbnail
+						} # end foreach Album
+						return $html;
+					) ?>
+				</fieldset>
 			</div><!--Albums-->
 		</div><!--ProfilePicture-->
 		<? if ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
