@@ -349,6 +349,44 @@ sub Profile {
 	return new openprint::User_Profile( $_[0]{'id'} );
 }
 
+sub html {
+	my $User = $_[0];
+	my $Profile = $_[1] ? $_[1] : $_[0]->Profile();
+
+	my $age = 0;
+	if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
+		my @Birthday = split('-', $Profile->Birthday() );
+		$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+	} 
+
+	return sprintf(q`
+				<div class="User">
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" />
+					<div class="Name">%2$s</div>
+					<div class="Details">%5$s year old %6$s</div>
+					</a>
+				</div>`,
+				$User->id(), $User->name(),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : '',
+);
+	return sprintf(q`
+				<div class="User">
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>
+					<div class="Name"><label>Name:</label>%2$s</div>
+					<div class="Age"><label>Age:</label>%5$s</div>
+					<div class="Gender"><label>Gender:</label>%6$s</div>
+					<div class="Joined"><label>Joined:</label>%7$s</div>
+				</div>`,
+				$User->id(), $User->name(),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
+				Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+			);
+} # end sub html
+
 1;
 
 __END__

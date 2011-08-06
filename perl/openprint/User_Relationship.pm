@@ -65,5 +65,8 @@ sub type {
 sub Type {
 	return new openprint::User_Relationship_Type( $_[0]{'type_id'} );
 } # end sub Type
+
+sub html {
+} # end sub html
 1;
 __END__

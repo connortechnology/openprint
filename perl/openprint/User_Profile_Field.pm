@@ -10,6 +10,7 @@ $serial = 'user_profile_fields_id_seq';
 	'id'	=>	'id',
 	'name'	=>	'name',
 	'required'	=>	'required',
+	'searchable'	=>	'searchable',
 	'description'	=>	'description',
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
@@ -21,6 +22,7 @@ $serial = 'user_profile_fields_id_seq';
 );
 %defaults = (
 	'required'	=>	0,
+	'searchable'	=>	0,
 	'sort'		=>	'undef',
 	'deleted'	=>	0,
 );

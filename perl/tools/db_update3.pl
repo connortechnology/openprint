@@ -158,6 +158,9 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	if ( ! $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add deleted BOOLEAN not null default false');
 	} # end if
+	if ( ! $$data{'searchable'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add searchable BOOLEAN not null default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );

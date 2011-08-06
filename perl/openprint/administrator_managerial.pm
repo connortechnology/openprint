@@ -688,6 +688,7 @@ sub user_profile_fields {
 				'type'	=>	$param{'type-'.$Field->id()},
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
+				'searchable'	=>	$param{'searchable-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if

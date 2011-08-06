@@ -744,5 +744,9 @@ sub _relationships {
 	$variable{'User'} = new openprint::User( $param{'user_id'} );
 } # end sub _relationships
 
+sub relationships {
+} # end sub relationships
+
+
 1;
 __END__

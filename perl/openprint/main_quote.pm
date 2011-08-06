@@ -248,7 +248,7 @@ $log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
 
 				my @Users = openprint::User->find('company_id'=>$openprint::session{'company_id'},'limit'=>2);
 				if ( @Users == 1 ) {
-					@$variable{'ForFirstName','ForLastName','ForTitle','ForEmail','ForSalutation'} = $Users[0]->get('firstname','lastname','title','email','salutation');
+					@variable{'ForFirstName','ForLastName','ForTitle','ForEmail','ForSalutation'} = $Users[0]->get('firstname','lastname','title','email','salutation');
 				} # end if
             } # end if
         } # end if
