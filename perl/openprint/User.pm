@@ -341,8 +341,24 @@ sub po_limit {
 } # end sub po_limit
 
 sub Asset {
-$log->debug("loading asset");
-	return new openprint::Asset( $_[0]{'asset_id'} );
+	if ( ! $_[0]{'Asset'} ) {
+		if ( $_[0]{'asset_id'} ) {
+			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
+		} else {
+			if ( $_[0]->Profile()->Gender() ) {
+				$openprint::log->debug("Loading by gender");
+				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+			} # end if
+			if ( ! $_[0]{'Asset'} ) {
+				$openprint::log->debug("Loading by default");
+				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
+			} # end if
+			if ( ! $_[0]{'Asset'} ) {
+				$_[0]{'Asset'} = new openprint::Asset( );
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{'Asset'};
 } # end sub Asset
 
 sub Profile {

@@ -37,10 +37,13 @@ sub session_init {
 				-name	=> '_session_id',
 				-value => $session{_session_id},
 				-path		=>	'/',
-				#-domain	=> '.point-one.com',
 				);
-		$Cookie->bake( $r );
-		$cookie = $Cookie->value;
+		if ( $Cookie ) {
+			$Cookie->bake( $r );
+			$cookie = $Cookie->value;
+		} else {
+			$log->error("No Cookie.  Does db have a sessions table?");
+		} # end if
 	} # end if
 
 # Now set some defaults right away, if we can

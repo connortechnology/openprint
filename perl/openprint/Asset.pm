@@ -1,4 +1,5 @@
 use strict;
+use openprint;
 require Digest::MD5;
 
 package openprint::Asset_Type;
@@ -76,6 +77,7 @@ sub thumbnail_url {
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
+$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
     my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
@@ -84,6 +86,7 @@ sub thumbnail_url {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			`convert  -adaptive-resize 75x $src $dest`;
 		} # end if
+$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';

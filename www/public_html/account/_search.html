@@ -89,7 +89,7 @@ if ( 1 ) {
 					<div class="Joined"><label>Joined:</label>%6$s</div>
 				</div>`,
 				$User->id(),
-				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$User->Asset()->thumbnail_url(), '',
 				$age ? $age : 'old!',
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
