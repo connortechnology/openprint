@@ -1,4 +1,47 @@
+<script type="text/javascript">
+	function calc_line( element ) {
+		var re = /^\w+(-\d+-\d+)$/;
+		var matches = re.exec( element.name );
+		if ( ! matches ) { alert('no match'); return; }
+		var index = matches[1];
+		$('total'+index).innerHTML = $('value'+index).innerHTML * element.value;
+		update_totals(element);
+	} // 
+	function add_docket( element ) {
+		new Ajax.Updater( 'dockets', '_docket_records.html', { 
+			parameters: {
+				report_id: '<? echo ( $variable{'Report'}->id() ) ?>', 
+				shift_id: '<? echo ( $$variable{'Shift'}->id() ) ?>', 
+				docket: $('docket-new').value,
+				operator_id: $('operator_id').getValue()
+			}, insertion: 'bottom'
+		} );
+	} // end function add_docket
+
+	var type_ids = new Array( <? echo ( join(',', map { $_->type_id() } openprint::Performance_Point->find( 'equipment_id'=>$$variable{'Shift'}->equipment_id() ) ); ) ?> );
+	function update_totals( element ) {
+		var re = /^\w+-(\d+)-(\d+)$/;
+		var matches = re.exec( element.name );
+		if ( ! matches ) { alert('update_totals: no match'); return; }
+		var docket = matches[1];
+
+		var total = 0;
+		for ( var index = 0, len = type_ids.length; index < len; index += 1 ) {
+			var total_div = $('total-'+docket+'-'+type_ids[index]);
+	
+			if ( ! total_div ) {
+				alert("No total div for total-"+docket+'-'+type_ids[index]);
+				continue;
+			} 
+			total += 1*parseInt( total_div.innerHTML );
+		} // end for			
+		$('total-'+docket).innerHTML = total;
+	} // end function update_totals
+</script>
 <div class="Performance"><div class="Edit">
+	<form name="f1" id="f1" action="/employee/performance/history.html" method="post">
+		<input type="hidden" name="shift_id" value="<? echo ( $$variable{'Shift'}->id() ) ?>"/>
+		<input type="hidden" name="action"/>
 	<fieldset><legend>Shift &amp; Operator</legend>
 		<ul>
 			<li><label>Shift:</label><? echo ( $$variable{'Shift'}->to_string() ) ?></li>
@@ -10,32 +53,34 @@
 									'usergroup'	=>	[ 'Bindery', 'Printing' ],
 									'type'		=>	'E',
 									'order'		=>	'lower(firstname),lower(lastname)',
-									) ], $session{'/employee/performance/history.html?operator_id'} );
+									) ], $variable{'Report'}->operator_id() ? $variable{'Report'}->operator_id() : $variable{'Shift'}->operator_id() );
 							) ?>
 				</select>
 			</li>
 		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button('Save', { 'onclick'=>q`f1.elements['action'].value='Save';f1.submit();` } ),
+			); ) ?>
+		</p>
 	</fieldset>
 	<fieldset><legend>Dockets</legend>
+		<div id="dockets">
 			<? echo ( 
-				my $html;
-				my @dockets = sort( sets::union( map { $_{'docket'} } $$variable{'Report'}->Records() ) );
-				foreach my $docket ( @dockets ) {	
-					$html .= '<fieldset><legend>Points for docket '.$docket.'</legend>';
-					$html .= '<ul>';
-					foreach my $Type ( openprint::Performance_Point_Type->find() ) {
-						my $Point = openprint::Performance_Point->find_one( 'type_id'=>$$Type{'id'}, 'equipment_id'=>$$variable{'Report'}->Shift()->equipment_id() );
-						my $Record = openprint::Performance_Record->find_one( 'report_id'=>$$variable{'Report'}->id(), 'point_id'=>$$Point{'id'} );
-						$Record = new openprint::Performance_Record() if ! $Record;
-						$html .= sprintf('<li><label>%s</label>%d points %s * <input type="text" name="quantity" value="" /> = <input type="text" name="total" value=""/> total points</li>',
-							$Type->name(), $Point->value(), $Point->units(), $Record->quantity(), $Record->total()
-							);
+				my $docket_records = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/performance/_docket_records.html' );
 
-					} # end foreach Type
-					$html .= '</fieldset>';
+				my $html;
+				foreach my $docket ( sort( sets::union( map { $$_{'docket'} } $$variable{'Report'}->Records() ) ) ) {
+					$$variable{'docket'} = $docket;
+					$html .= ssi::variable_substitution( \$docket_records, $variable );
+	
 				} # end foreach docket
 				return $html;
 			) ?>
-			<p><label>New Docket:</label><input type="text" name="docket-new" id="docket-new" /><? echo ( ssi::button( 'Add Docket' ); ) ?></p>
+		</div>
+			<p><label>New Docket:</label>
+				<input type="number" name="docket-new" id="docket-new" onkeyup="this.value=this.value.replace(/\D/, '');" onkeydown="if(event.keyCode == 13){add_docket();return false;}" />
+				<? echo ( ssi::button( 'AddDocket', { 'onclick'=>'add_docket();', 'text'=>'Add' } ); ) ?></p>
 	</fieldset>
+	</form>
 </div></div>

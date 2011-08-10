@@ -19,25 +19,31 @@
 	<thead>
 		<tr>
 			<th class="Shift">Shift</th>
-			<th class="Date">Records</th>
+			<th class="Points">Points</th>
 		</tr>
 	</thead>
 	<tbody>
 	<? echo ( 
 		my $html = '';
 		my $rowclass;
+		my $total;
+
 		foreach my $Shift ( @{$$variable{'Shifts'}} ) {
+			my $Report = openprint::Performance_Report->find_one('shift_id'=>$Shift->id());
+			$Report = new openprint::Performance_Report() if ! $Report;
+
 			$html .= sprintf(q`<tr%1$s id="tr-%2$d">
 				<td class="ID"><a href="/employee/performance/edit.html?shift_id=%2$d">%3$s</a></td>
-				<td class="Records">
-			`, $rowclass, $Shift->id(), $Shift->to_string(),
+				<td class="Points">%4$d</td>
+				</tr>
+			`, $rowclass, $Shift->id(), $Shift->to_string(), $Report->total(),
 				);
-			foreach my $Record ( openprint::Performance_Record->find('shift_id'=>$$Shift{'id'}) ) {
-				$html .= sprintf('<a href="/employee/performance/edit.html?record_id=%d">%s</a><br/>', $Record->id(), 'blah' );
-			} # end foreach Record
 			$html .= '</td></tr>';
+
+			$total += $Report->total();
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach
+		$html .= '<tr class="totals"><td>Totals:</td><td>'.$total.'</td></tr>';
 		return $html;
 	) ?>
 		</tbody>	
