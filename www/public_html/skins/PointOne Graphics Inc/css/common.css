@@ -692,3 +692,33 @@ td p label {
 .thumbnail {
 	width: 48px;
 }
+.ServerInfo ul {
+	color:#E3BF28; 
+	font-weight: bold;
+	background-color: #22275e;
+	font-size: 16px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.ServerInfo li {
+	list-style: none;
+	margin: 0;
+	padding: 4px 4px 4px 70px;
+	text-align: right;
+}
+.ServerInfo label {
+	margin: 0 0 0 -60px;
+	font-weight: bold;
+	width: 55px;
+	text-align: left;
+	float: left;
+}
+.ServerInfo li:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
