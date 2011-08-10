@@ -5,8 +5,8 @@ use openprint ();
 package openprint::Performance_Point_Type;
 our @ISA = qw( openprint::Object );
 use vars qw( $table $serial %fields %transforms %defaults );
-$table = 'performancepoint_types';
-$serial = 'performancepoint_types_id_seq';
+$table = 'performance_point_types';
+$serial = 'performance_point_types_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',
@@ -29,8 +29,8 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $table $serial %fields %transforms %defaults @identified_by );
 
-$table = 'performancepoints';
-$serial = 'performancepoints_id_seq';
+$table = 'performance_points';
+$serial = 'performance_points_id_seq';
 
 @identified_by = ('type_id','equipment_id');
 

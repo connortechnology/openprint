@@ -56,6 +56,7 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Shift';
 	my %params = @_;
 
 	my @values;
@@ -74,9 +75,17 @@ sub find {
 		$sql .= ' AND shift_id IN (SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
 		push @values, $params{'name'},$params{'equipment_id'};
 	} # end if
+	if ( exists $params{'operator_id'} ) {
+		$sql .= ' AND operator_id=?';
+		push @values, $params{'operator_id'};
+	} # end if
 	if ( exists $params{'equipment_id'} ) {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
+	} # end if
+	if ( exists $params{'equipment_id in'} ) {
+		$sql .= ' AND equipment_id in (' . join(',', map { '?' } @{$params{'equipment_id in'}} ) . ')';
+		push @values, @{$params{'equipment_id in'}};
 	} # end if
 	if ( exists $params{'shift_id'} ) {
 		$sql .= ' AND shift_id=?';
@@ -287,7 +296,12 @@ sub Equipment {
 
 sub to_string {
 	my ( $self ) = @_;
-	return sprintf('%s %d %s %s to %s %s', $self->Equipment()->name(), $self->shift_id(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
+	if ( ! exists $$self{'to_string'} ) {
+		$$self{'to_string'} = sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'starttime'} ) ),
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'endtime'} ) ), $self->Operator()->name() );
+	} # end if
+	return $$self{'to_string'};
 } # end sub to_string
 
 sub get_lis {

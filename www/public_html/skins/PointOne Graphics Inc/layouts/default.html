@@ -173,25 +173,29 @@
 
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
-						<div id="DidYouKnowText">
-						<? echo ( 
-							my @messages = (
-								#'Our 8 colour Heidelberg Perfector Press enables printing both sides of the sheet in a single pass saving you time and money.',
-								#'PointOne continues to invest in new technology, ensuring old equipment does not limit our production.',
-								'PointOne is ISO 9001:2000 certified which means that we are constantly measuring our performance and initiating procedures for continuous improvement.',
-								#'PointOne matches the capabilities of our press production to our finishing equipment to ensure efficiency.',
-								#'Our new MAN Roland Heat Set Web Press is capable of running 65,000 impressions per hour.',
-								#'The PointOne online estimating tool allows you to track jobs through production, 24 hours a day, 7 days a week.',
-								#'PointOne has 2 separate FUJI CTP imaging systems to ensure we have back up plate burning capabilities.',
-								#'The PoineOne ftp site is fibre optic based for fast, easy file uploads.',
-								#'Our Rampage ripping software is one of the largest installations in Canada.',
-								q{We shop the globe for technology, equipment and paper to ensure we're offering clients the very best in service and value.},	
-								q{The PointOne name originated from our desire to provide clients with 'One Point' for complete printing services - from prepress to delivery!},
-							);
-							return '&quot;'.$messages[rand @messages].'&quot;';
-						) ?>
+					<div id="DidYouKnowText">
+					<? echo ( 
+						my @messages = (
+							#'Our 8 colour Heidelberg Perfector Press enables printing both sides of the sheet in a single pass saving you time and money.',
+							#'PointOne continues to invest in new technology, ensuring old equipment does not limit our production.',
+							'PointOne is ISO 9001:2000 certified which means that we are constantly measuring our performance and initiating procedures for continuous improvement.',
+							#'PointOne matches the capabilities of our press production to our finishing equipment to ensure efficiency.',
+							#'Our new MAN Roland Heat Set Web Press is capable of running 65,000 impressions per hour.',
+							#'The PointOne online estimating tool allows you to track jobs through production, 24 hours a day, 7 days a week.',
+							#'PointOne has 2 separate FUJI CTP imaging systems to ensure we have back up plate burning capabilities.',
+							#'The PoineOne ftp site is fibre optic based for fast, easy file uploads.',
+							#'Our Rampage ripping software is one of the largest installations in Canada.',
+							q{We shop the globe for technology, equipment and paper to ensure we're offering clients the very best in service and value.},	
+							q{The PointOne name originated from our desire to provide clients with 'One Point' for complete printing services - from prepress to delivery!},
+						);
+						return '&quot;'.$messages[rand @messages].'&quot;';
+					) ?>
 					</div>
 				</div>
+<? echo (
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+	} # end if
+) ?>
 			</div>
 		<div id="Content">
 			<div id="ContentInner">

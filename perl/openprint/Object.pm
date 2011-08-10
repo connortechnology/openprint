@@ -208,9 +208,10 @@ $openprint::log->debug("field: $field, $$self{$field} =? param: ".$$params{$fiel
 					$$self{$field} = $$params{$field};
 					push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 				} # end if
-$openprint::log->debug("Running $field") if $debug;
-				eval "\$self->$field( \$\$params{\$field} );";
-				$log->error( "Eval error of ( -> $field ), Reason: " . $@ ) if $@;
+$openprint::log->debug("Running $field with $$params{$field}") if $debug;
+				if ( my $func = $self->can( $field ) ) {
+					$func->( $self, $$params{$field} );
+				} # end if
 			} # end if
 		} # end if
 

@@ -11,7 +11,7 @@
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 			<li><label>Docket:</label>
-				<input type="text" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
+				<input type="number" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
 			</li>
 			<li>
                 <label>Category:</label>
@@ -28,10 +28,8 @@
 				my @presses = openprint::Equipment::find('category'=>$session{'/employee/performance/history.html?category'},'use_in_scheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 
 				my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/performance/history.html?equipment_id'} ) );
-				if ( ! @selected_equipment ) {
-					@selected_equipment = map { $_->id() } @presses;
-					$session{'/employee/performance/history.html?equipment_id'} = join(',', @selected_equipment );
-				}
+				@selected_equipment = map { $_->id() } @presses if ( ! @selected_equipment );
+				$session{'/employee/performance/history.html?equipment_id'} = join(',', @selected_equipment );
 
 				foreach (@presses) {
 					push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
