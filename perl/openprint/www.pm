@@ -423,7 +423,6 @@ $log->debug("Dset: $variable{'Destination'}");
 				@variable{'ServiceTypeID','ServiceTypeName'} = ($variable{'ServiceType'}->name(), $variable{'ServiceType'}->description() ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from tbl_Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 
