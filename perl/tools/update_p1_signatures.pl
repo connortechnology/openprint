@@ -28,7 +28,7 @@ my $projects_count = 100;
 my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
-my $company_id = 0;
+my $company_id = 6;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
