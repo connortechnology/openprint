@@ -37,13 +37,14 @@
 			<fieldset><legend>Upload</legend>
 				<div class="content">
 					<ul>
-						<li>Select file:<input type="file" name="filename"/>
+						<li><label>Select file:</label><input type="file" name="filename"/>
 			<? if ( $$variable{'Album'}->id() ) ?>
 						<? echo ( ssi::button( 'Upload', { 'onclick'=>"f1.action='/photo_albums/edit.html?album_id=$$variable{Album}{id}';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
 			<? endif ( $$variable{'Album'}->id() ) ?>
 </li>
 					</ul>
 				</div>
+				<? echo ( $config{'PhotoUploadDisclaimer'} ) ?>
 			</fieldset>
 		</form>
 	</div>

@@ -103,10 +103,11 @@ sub handler {
 	if ( $dbh ) {
 		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
-$log->debug("Page Settings not found for $page");
+$log->debug("Page Settings not found in cache for $page");
 			# First step, reload page settings
 			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
 			if ( ! $page_settings{$page} ) {
+$log->debug("Page Settings not found for $page");
 				# Need to create one.
 				my @chunks = split('/', $page );
 				while ( @chunks ) {
