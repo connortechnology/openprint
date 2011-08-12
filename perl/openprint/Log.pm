@@ -35,7 +35,6 @@ $serial = 'logs_id_seq';
 
 );
 
-
 sub User {
 	my $self = shift;
 	return new openprint::User( $$self{user_id} );	

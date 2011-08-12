@@ -5,6 +5,7 @@ package openprint::Event;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'events';
 $serial = 'events_id_seq';
 

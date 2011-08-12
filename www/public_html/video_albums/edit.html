@@ -34,12 +34,13 @@
 			<fieldset><legend>Upload Option 2</legend>
 				<div class="content">
 					<ul>
-						<li>Select file:<input type="file" name="filename"/></li>
+						<li><label>Select file:</label><input type="file" name="filename"/></li>
 <!--
 						<? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?>
 -->
 					</ul>
 				</div>
+				<? echo ( $config{'VideoUploadDisclaimer'} ) ?>
 			</fieldset>
 		</form>
 	</div>

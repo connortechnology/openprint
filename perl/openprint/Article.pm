@@ -140,5 +140,35 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub html {
+	my $Article = $_[0];
+	my @Comments = $Article->Comments();
+	my $html = sprintf(q`
+			<div class="Article">
+			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
+			Posted on %6$s by %5$s<br/>
+			<div class="source_content">%3$s</div>
+			<div class="summary">%4$s</div>
+			`, $Article->id(),
+			ssi::htmlize($Article->title()),
+			$Article->source_content(),
+			$Article->summary(),
+			ssi::htmlize( $Article->Author()->name() ),
+			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+
+                );
+	if ( $openprint::session{'user_id'} ) {
+		$html .= sprintf(q`
+			<div id="comments-%1$d" class="comments"><div onclick="new Ajax.Updater('comments-%1$d', '/article/_comments.html', { parameters: { article_id: %1$d } } );">This article has %2$s. Click to view/Add.</div></div>
+			`, $Article->id(),
+			( @Comments == 1 ? '1 comment' : @Comments . ' comments' )
+		);
+	} # end if
+	$html .= '</div>';
+	return $html;
+} # end  sub html
+
+sub summary_html {
+} # end sub sumary
 1;
 __END__
