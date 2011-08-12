@@ -410,7 +410,6 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 

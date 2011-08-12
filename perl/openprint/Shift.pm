@@ -139,7 +139,12 @@ sub Equipment {
 
 sub to_string {
 	my ( $self ) = @_;
-	return sprintf('%s %d %s %s to %s %s', $self->Equipment()->name(), $self->shift_id(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
+	if ( ! exists $$self{'to_string'} ) {
+		$$self{'to_string'} = sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'starttime'} ) ),
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'endtime'} ) ), $self->Operator()->name() );
+	} # end if
+	return $$self{'to_string'};
 } # end sub to_string
 
 sub get_lis {
