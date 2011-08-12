@@ -472,6 +472,7 @@ sub history {
 	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_end', '' );
+	$session{'/employee/purchase_order/history.html?cancelled'} = '0' if ! exists $session{'/employee/purchase_order/history.html?cancelled'};
 
 } # end sub history
 
