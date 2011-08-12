@@ -127,9 +127,6 @@ sub summary {
 	if ( @_ > 1 ) {
 		$_[0]{'summary'} = $_[1];
 	} # end if
-	if ( ! $_[0]{'summary'} ) {
-		$_[0]{'summary'} = substr $_[0]{'body'},0,100;
-	} 
 	return $_[0]{'summary'};
 } # end sub summary
 
@@ -152,7 +149,7 @@ sub html {
 			`, $Article->id(),
 			ssi::htmlize($Article->title()),
 			$Article->source_content(),
-			$Article->summary(),
+			$Article->summary() ? $Article->summary() : $Article->body(),
 			ssi::htmlize( $Article->Author()->name() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 
