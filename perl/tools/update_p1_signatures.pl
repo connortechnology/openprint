@@ -192,7 +192,6 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 		} # end if
 	} # end foreach
 	my $summary = $Project->summary();
-
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
 	openprint::service::init_cache();
 
