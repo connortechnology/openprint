@@ -145,7 +145,7 @@ sub html {
 	my @Comments = $Article->Comments();
 	my $html = sprintf(q`
 			<div class="Article">
-			<h1><a href="view.html?article_id=%1$d">%2$s</a></h1>
+			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			Posted on %6$s by %5$s<br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
