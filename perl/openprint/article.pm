@@ -167,6 +167,9 @@ sub edit {
 		} else {
 			my $Article_Asset = new openprint::Article_Asset();
 			$variable{'error'} .= $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$Article->id()});
+			if ( $param{'asset_name'} and ! $Asset->name() ) {
+				$Asset->save({'name'=>$param{'asset_name'}});
+			} # end if
 		} # end if
 	} # end if
 	if ( time - $session{'/article/edit.html?lastupdated'} < ( 12*60*60 ) ) {
@@ -247,6 +250,19 @@ sub _comments {
 		} # end if
 	} # end if
 } # end sub _comments
+
+sub _assets {
+	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	if ( $param{'func'} eq 'delete' ) {
+		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
+		$Asset->delete();
+	} else {
+		$log->error("article/_assets: Uknown function");
+	} # end if
+} # end sub _assets
+
+sub _asset_search_results {
+} # end sub _asset_search_results
 
 1;
 __END__

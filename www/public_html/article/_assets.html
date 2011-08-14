@@ -1,17 +1,15 @@
 <? echo ( 
 	my $html;
 	foreach my $Asset ( openprint::Article_Asset->find( 'article_id' => $$variable{'Article'}->id() ) ) {
-$log->debug("Asset");
 		$html .= sprintf(q`<li><img src="%2$s" alt="%3$s"/>%3$s<span class="buttons">%4$s</span></li>`,
 			$Asset->id(), $Asset->url(), $Asset->Asset()->caption(),
 			join('',
 				ssi::button( 'delete'.$Asset->asset_id(), { 
-					'onclick'=> qq`new Ajax.Updater( 'article_assets', '_article_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{asset_id}', func: 'delete' } } );`, 
+					'onclick'=> qq`new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{asset_id}', func: 'delete' } } );`, 
 					'text'=>'Delete' } ),
 				ssi::button( 'edit'.$Asset->asset_id(), { 'href'=>'/employee/assets/edit.html?asset_id=' . $Asset->asset_id(), 'text'=>'Edit', 'target'=>'_blank' } ),
 					),
 				);
-$log->debug("Asset");
 	} # end foreach Asset
 	return $html;
 ) ?>
