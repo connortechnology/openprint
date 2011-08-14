@@ -145,22 +145,28 @@
 <div class="Payments">
 	<fieldset><legend>Payments</legend>
 		<table>
-			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th class="Price">Amount</th></tr>
+			<tr><th>ID</th><th class="transaction">Transaction/Cheque #</th><th align="left">When</th><th>Notes</th><th class="Price">Amount</th></tr>
 			<? echo ( 
 				my $html = '';
 				$$variable{'payment_total'} = 0;
 				foreach my $P ( $$variable{'Invoice'}->Payments() ) {
 					my $Payment = $P->Payment();
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td class="Price">%4$s</td></tr>', 
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td>
+						<td><a href="/payment/edit.html?payment_id=%1$d">%2$s</a></td>
+						<td>%3$s</td>
+						<td>%4$s</td><td class="Price">%5$s</td></tr>', 
 						$Payment->id(), 
+						$Payment->transaction_id(), 
 						Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ),
-						$Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
-					$$variable{'payment_total'} += $Payment->amount();
+						$Payment->memo(), 
+						( $P->amount() != $Payment->amount() ? openprint::Currency::format( $P->amount() ).'/'.openprint::Currency::format($Payment->amount()) : openprint::Currency::format( $P->amount() ) ),
+ );
+					$$variable{'payment_total'} += $P->amount();
 				} # end foreach
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td align="right" colspan="3">Total:</td>
+				<td align="right" colspan="4">Total:</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
 		</table>
