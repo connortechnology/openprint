@@ -3,6 +3,8 @@
 <script type="text/javascript">
 <!--
 	tinyMCE.init({
+		relative_urls : false,
+		convert_urls : false,
 		mode : "textareas",
 		theme : "advanced",
 		plugins: "paste",
@@ -11,7 +13,8 @@
 -->
 </script>
 <div class="Article"><div class="Edit">
-	<form name="f1" id="f1" action="/article/history.html" method="post">
+	<!--#include virtual="/includes/error_reporting.html"-->
+	<form name="f1" id="f1" action="/article/history.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{'Article'}->deleted() ) ?>
 			<span class="warning">This article has been deleted</span>
@@ -66,20 +69,6 @@
 						<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Article'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->body() ) ) ?></textarea>
 					</li>
 				</ul>
-			</div>
-			<div class="rightColumn">
-				<ul>
-				<? echo ( 
-					my $html;
-					foreach my $Asset ( openprint::Asset->find('company_id'=>$session{'company_id'}) ) {
-						$html .= sprintf(q`<li><img src="%2$s"/>%3$s</li>`,
-							$Asset->id(), $Asset->thumbnail_url(), $Asset->caption(),
-						);
-					} # end foreach Asset
-					return $html;
-				) ?>
-				</ul>
-			</div>
 			<p class="buttons">
 				<? echo (
 					my $html = '';
@@ -98,6 +87,19 @@
 					return $html;
 				) ?>
 			</p>
+			</div>
+			<div class="rightColumn">
+				<fieldset><legend>Assets in this article</legend>
+				<ul id="article_assets"><!--#include virtual="/article/_assets.html"--></ul>
+				</fieldset>
+				<fieldset><legend>Upload a new Asset</legend>
+				<input type="file" name="filename" />
+				<input type="text" name="tags" placeholder="tags"/>
+				<p class="buttons">
+					<? echo ( ssi::button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/article/edit.html';form.elements['func'].value='Upload';form.submit();`} ); ) ?>
+				</p>
+				</fieldset>
+			</div>
 		</fieldset>
 		<input type="hidden" name="func" />
 	</form>

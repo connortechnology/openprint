@@ -22,10 +22,9 @@
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 
-		$$variable{'Asset'}->id() ? 'Save' : 'Create Asset' );
+	$html .= ssi::button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", 'text'=> $$variable{'Asset'}->id() ? 'Save' : 'Create Asset' } );
 	if ( $$variable{'Asset'}->id() ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+		$html .= ssi::button( 'Delete', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();" } );
 	}  # end if
 	return $html;
 ) ?>
@@ -37,6 +36,9 @@
 		<fieldset>
 			<div class="content">
 				<ul>
+					<li><label></label>
+				<img src="<? echo ( $$variable{'Asset'}->url() ) ?>"/>
+					</li>
 					<li><label>Name:</label>
 						<input type="text" name="name" id="name" value="<? echo ( $$variable{'Asset'}->name() ) ?>" />
 					</li>

@@ -14,6 +14,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Article;
 require openprint::Article_Category;
+require openprint::Article_Asset;
 
 sub history {
 	if ( $param{'func'} eq 'Save' ) {
@@ -150,13 +151,23 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	$variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'func'} eq 'Save' ) {
-		$variable{'error'} .= $variable{'Article'}->save(\%param);
+		$variable{'error'} .= $Article->save(\%param);
 		$variable{'Redirect'} = '/article/history.html';
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
+	} elsif ( $param{'func'} eq 'Upload' ) {
+		# Save any changes made to Article
+		$variable{'error'} .= $variable{'Article'}->save(\%param);
+		my $Asset = openprint::Asset::upload( 'filename' );
+		if ( ref $Asset ne 'openprint::Asset' ) {
+			$variable{'error'} .= $Asset;
+		} else {
+			my $Article_Asset = new openprint::Article_Asset();
+			$variable{'error'} .= $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$Article->id()});
+		} # end if
 	} # end if
 	if ( time - $session{'/article/edit.html?lastupdated'} < ( 12*60*60 ) ) {
 		$variable{'Article'}->company_id( $session{'/article/edit.html?company_id'} ) if ! $variable{'Article'}->company_id();
