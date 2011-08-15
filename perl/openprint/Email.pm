@@ -77,6 +77,7 @@ sub send {
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
 			} # end foreach email
+			next if ! @to;
 			$mail{'TO'} = join(',', @to );
 		} else {
 			s/^\s+//, s/\s+$// for $recipient;
