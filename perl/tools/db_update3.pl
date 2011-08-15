@@ -298,6 +298,12 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
+	if ( ! exists $$data{'object'} ) {
+		$dbh->do('ALTER TABLE Logs add object TEXT');
+	}
+	if ( ! exists $$data{'object_id'} ) {
+		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
+	} # end if
 } # end if
 if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
 	$Action->save({'name'=>'Select Company','description'=>'Select Company'});

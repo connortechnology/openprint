@@ -112,7 +112,12 @@ my $a;
 			} 
 		} # end while
 		$param{'body'} = $body;
-		$variable{'error'} .= $Article->save(\%param);
+		if ( ! $Article->id() ) {
+			$variable{'error'} .= $Article->save(\%param);
+			new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});
+		} else {
+			$variable{'error'} .= $Article->save(\%param);
+		} # end if
 	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		if ( ! $Article->can_edit() ) {
