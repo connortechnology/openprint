@@ -38,7 +38,11 @@
 					</li>
 					<li>
 						<label for="description">Description:</label>
-						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
+						<textarea id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
+					</li>
+					<li>
+						<label for="summary">Summary:</label>
+						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines($$variable{'Category'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->summary() ) ?></textarea>
 					</li>
 					<li><label>Image Filename:</label>
 						<input type="text" id="image_filename" name="image_filename" value="<? echo ( $$variable{'Category'}->image_filename() ) ?>" />
@@ -60,12 +64,12 @@
 				my $html = '';
 				if ( $$variable{'Category'}->id() ) {
 					if ( $$variable{'Category'}->deleted() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 					} else {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+						$html .= ssi::button( 'Delete',  { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					} # end if
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
 		</p>

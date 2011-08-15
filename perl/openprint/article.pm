@@ -97,21 +97,25 @@ sub history {
 				 } # end if
 			} # end if
 		} # end if source
+if ( 0 ) {
 		my $body = '';
 		my $remainder = $param{'body'};
 		my $pre;
-my $a;
+		my $a1;
+		my $a2;
 		while ( $remainder ) {
-			if ( ( $pre, $a, $remainder ) =~ /(.*)<a (.*)><\/a>(.*)/im ) {
+			if ( ( $pre, $a1, $a2, $remainder ) =~ /^(.*?)<a(.+?)>(.+?)<\/a>(.*)$/ims ) {
+$log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 				$body .= $pre;
 				# Do stuff to a
-				$body .= $a;
+				$body .= '<a'.$a1.'>'.$a2.'</a>';
 			} else {
-				$body = $remainder;
+				$body .= $remainder;
 				$remainder = '';
 			} 
 		} # end while
 		$param{'body'} = $body;
+} 
 		if ( ! $Article->id() ) {
 			$variable{'error'} .= $Article->save(\%param);
 			new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});

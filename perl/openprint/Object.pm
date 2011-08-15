@@ -412,9 +412,6 @@ sub find_operators {
 	if ( exists $$params{$k.'_in'} ) {
 		push @{$results{'_in'}}, "? IN $f", $$params{$k.'_in'};
 	} # end if
-	if ( exists $$params{$k.' in'} ) {
-		push @{$results{' in'}}, "? IN $f", $$params{$k.' in'};
-	} # end if
 	if ( exists $$params{$k.' &&'} ) {
 		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' &&'}} ) {
@@ -440,6 +437,15 @@ sub find_operators {
 			} # end if
 		} else {
 			push @{$results{' @>'}}, "$f @> ?", $$params{$k.' @>'};
+		} # end if
+	} # end if
+	if ( exists $$params{$k.' in'} ) {
+		if ( ref $$params{$k.' in'} eq 'ARRAY' ) {
+			if ( @{$$params{$k.' in'}} ) {
+				push @{$results{' in'}}, $f.' IN (' . join(',', map { '?' } @{$$params{$k.' in'}} ).')', @{$$params{$k.' in'}};
+			} # end if
+		} elsif ( $$params{$k.' in'} ) {
+			push @{$results{' in'}}, $f.' != ?', $$params{$k.' in'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' not in'} ) {

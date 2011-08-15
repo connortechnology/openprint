@@ -12,6 +12,7 @@ $serial = 'article_categories_id_seq';
 	'id'				=>	'id',
 	'name'				=>	'name',
 	'description'		=>	'description',
+	'summary'			=>	'summary',
 	'position'			=>	'position',
 	'permalink'			=>	'permalink',
 	'image_filename'	=>	'image_filename',
