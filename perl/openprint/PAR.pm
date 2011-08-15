@@ -64,7 +64,7 @@ $serial = 'par_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );

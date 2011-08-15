@@ -1189,7 +1189,6 @@ $Breakdown .= $$results{'Breakdown'};
 	} # end foreach
 	
 	$$specs{'Status'} = $bestEquipment ? 'calculated' : 'uncalculated';
-$openprint::log->debug("Return from folding");
 	return %results;
 } # end sub signature_calc
 

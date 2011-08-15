@@ -1,9 +1,11 @@
-<p> 
+<div class="Dimensions"> 
+<p>
 	<label>Dimensions:</label>
-	<input name="txtFinalWidth" size="9" value="<?txtFinalWidth?>"  onKeyUp="calc(this.form.name);" /> x
-	<input name="txtFinalHeight" size="9" value="<?txtFinalHeight?>"  onKeyUp="calc(this.form.name);" />
+	<input type="number" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" /> x
+	<input type="number" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" />
 	<span class="smTbl">(<? echo ( ssi::writeTip('Finished'); ) ?> - W x H in inches)</span><br>
-	<input name="txtWidth" size="9" value="<?txtWidth?>"  onKeyUp="calc(this.form.name);" /> x
-	<input name="txtHeight" size="9" value="<?txtHeight?>"  onKeyUp="calc(this.form.name);" />
+	<input type="number" name="txtWidth" value="<?txtWidth?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" /> x
+	<input type="number" name="txtHeight" value="<?txtHeight?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" />
 	<span class="smTbl">(<? echo ( ssi::writeTip('Flat'); ) ?> - W x H in inches)</span>
 </p>
+</div>

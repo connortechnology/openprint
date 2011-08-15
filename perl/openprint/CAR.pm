@@ -83,7 +83,7 @@ $serial = 'car_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
@@ -189,7 +189,7 @@ sub send_changed_notification {
     my ($self) = @_;
 
     my $From = new openprint::User( $session{'user_id'} );
-	foreach my $To ( new openprint::User( $$self{'issued_by_id'} ), openprint::User->find('usergroups'=>['Quality Control Notifications']) ) {
+	foreach my $To ( new openprint::User( $$self{'issued_by_id'} ), openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Quality Control Notifications']) ) {
 		if ( $To->id() == $session{'user_id'} ) {
 			$log->debug("Not Sending PART2 because I am ME to " . $To->email());
 			next;

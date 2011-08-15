@@ -849,7 +849,7 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 
 		my @imps;
 		my $start = $impo > $desired_signature_size ? $desired_signature_size : $impo;
-$imp->display("Converting From Desired: $desired_signature_size impo: $impo From reverse 1 to $start" );
+$imp->display("Converting From Desired: $desired_signature_size impo: $impo From reverse 1 to $start" ) if $debug;
 		foreach my $signature_size ( reverse 1 .. $start ) {
 		#my $a = int($start/3);
 		#$a -= 1 if $a % 3;

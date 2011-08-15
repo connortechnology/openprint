@@ -1,4 +1,4 @@
-<div id="Dimensions">
+<div class="Dimensions">
 	<fieldset><legend>Dimensions</legend>
 		<div class="leftColumn">
 			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
@@ -10,11 +10,11 @@
 			</select>
 		</div>
 		<div class="rightColumn">
-			<input type="text" id="txtFinalWidth" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
-			<input type="text" id="txtFinalHeight" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
 			(<? echo ( ssi::writeTip( 'Finished' ); ) ?> - W x H in inches)<br/>
-			<input type="text" id="txtWidth" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
-			<input type="text" id="txtHeight" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtWidth" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtHeight" name="txtHeight" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
 			(<? echo ( ssi::writeTip( 'Flat' ); ) ?> - W x H in inches)
 		</div>
 	</fieldset>
