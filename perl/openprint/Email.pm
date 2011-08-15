@@ -7,21 +7,19 @@ use openprint ();
 require openprint::User;
 require email;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults $log %config );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
-*log = \$openprint::log;
-*config = \%openprint::config;
 
 sub send {
 	my ( $self, %params ) = @_;
-#$log->debug("Sending an email");
+#$openprint::log->debug("Sending an email");
 #foreach my $k ( keys %params ) {
-#$log->debug("Params: $k => $params{$k}");
+#$openprint::log->debug("Params: $k => $params{$k}");
 #} # end 
 
 	my $results;
 	if ( $params{'FROM'} ) {
-#$log->debug(" getting from $params{'FROM'} ng an email");
+#$openprint::log->debug(" getting from $params{'FROM'} ng an email");
 		if ( ref $params{'FROM'} eq 'openprint::User' ) {
 			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
 		} else {
@@ -31,16 +29,16 @@ sub send {
 
     my %mail = (
 			BCC		=>	$params{'BCC'},
-            SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
+            SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
             );
-#$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
+#$openprint::log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
 
-#$log->debug("Email: Attachments @attachments");
+#$openprint::log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();
-#$log->debug("Email: Recipients @recipients");
+#$openprint::log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
 		if ( ref $params{'TO'} eq 'ARRAY' ) {
 			@recipients = @{$params{'TO'}};
@@ -48,18 +46,23 @@ sub send {
 			@recipients = ( $params{'TO'} );
 		} # end if
 	} # end if
-#$log->debug("Email: Recipients @recipients");
+#$openprint::log->debug("Email: Recipients @recipients");
 	foreach my $recipient ( @recipients ) {
 		next if ! $recipient;
 		
 		if ( ref $recipient eq 'openprint::User' ) {
+			if ( $params{'TO_EXCLUDE'} and filter_exclude( $recipient, $params{'TO_EXCLUDE'} ) ) {
+				$results .= 'Not sending to ' . $recipient . ' because they have been excluded.<br/>';
+				next;
+			} # end if
+			
 			my @to;
 			foreach my $email ( split (',',  $recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
-#$log->debug("Email: checking vacation for $email");
+#$openprint::log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {
 					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
-#$log->debug("Email: got vacation for $email");
+#$openprint::log->debug("Email: got vacation for $email");
 					next;
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
@@ -69,12 +72,22 @@ sub send {
 			s/^\s+//, s/\s+$// for $recipient;
 			if ( $recipient =~ /^"(.*)" <(.*)>$/ ) {
 				my ( $name, $email ) = ( $1, $2 );
+
+				if ( $params{'TO_EXCLUDE'} and filter_exclude( $email, $params{'TO_EXCLUDE'} ) ) {
+					$results .= 'Not sending to ' . $email . ' because they have been excluded.<br/>';
+					next;
+				} # end if
+
 				if ( email::get_vacation( $email ) ) {
 					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
 					next;
 				} # end if
 				$mail{'TO'} = $recipient;
 			} else {
+				if ( $params{'TO_EXCLUDE'} and filter_exclude( $recipient, $params{'TO_EXCLUDE'} ) ) {
+					$results .= 'Not sending to ' . $recipient . ' because they have been excluded.<br/>';
+					next;
+				} # end if
 				if ( email::get_vacation( $recipient ) ) {
 					$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
 					next;
@@ -82,13 +95,29 @@ sub send {
 				$mail{'TO'} = $recipient;
 			} # end if
 		} # end if
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		misc::send_email_with_attachment( $openprint::log, \%mail, @attachments );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
 
 	} # end foreach recipient
 	return $results;
 
 } # end sub send
+
+sub filter_exclude {
+	my ( $email, $exclude ) = @_;
+	$email = $email->email() if ref $email eq 'openprint::User';
+
+	if ( ref $exclude eq 'ARRAY' ) {
+		if ( ref $$exclude[0] eq 'openprint::User' ) {
+			return 1 if sets::isin( $email, [ map { $_->email() } @{$exclude} ] );
+		} else {
+			return 1 if sets::isin( $email, $exclude );
+		} # end if
+	} elsif ( ref $exclude eq 'openprint::User' ) {
+		return 1 if $email eq $exclude->email();
+	} # end if
+	return 0;
+}
 
 sub delete {
 	
