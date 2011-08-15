@@ -32,7 +32,7 @@ require sql;
 	'reason_id'		=> 'reason_id',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
-	'part2_user_id'		=> 'part1_user_id',
+	'part2_user_id'		=> 'part2_user_id',
 	'part2_signed_on'	=> 'part2_signed_on',
 	'part3_user_id'		=> 'part3_user_id',
 	'part3_signed_on'	=> 'part3_signed_on',
