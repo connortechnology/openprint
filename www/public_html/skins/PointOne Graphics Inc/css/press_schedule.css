@@ -146,6 +146,7 @@ width: 196px;
         border: 1px outset gray;
         width: 65px;
         text-align: center;
+		min-height: 14px;
 	}
 	.DueDate {
 		font-weight: bold;
@@ -159,6 +160,7 @@ width: 196px;
         border: 1px outset gray;
         text-align: center;
 		padding:0 4px 0 4px;
+		min-height: 14px;
 	}
 	.RunTime {
 		float: left;
@@ -166,6 +168,7 @@ width: 196px;
         border: 1px outset gray;
         width: 85px;
         text-align: center;
+		min-height: 14px;
 	}
 	.StockVerified {
 		float: left;
@@ -173,6 +176,7 @@ width: 196px;
         border: 1px outset gray;
         width: 80px;
         text-align: center;
+		min-height: 14px;
 	}
 	.StartTime {
 		float: left;
@@ -181,6 +185,7 @@ width: 196px;
         width: 80px;
         text-align: center;
         padding:0;
+		min-height: 14px;
 	}
 .StartTime img {
     margin:0;
