@@ -5,6 +5,7 @@ our @ISA = qw( openprint::Object );
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 
 $debug = 1;
+$table = 'likes';
 %fields = (
 	'user_id'		=>	'user_id',
 	'object_type'	=>	'object_type',

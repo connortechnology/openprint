@@ -4,6 +4,7 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 use strict;
 use openprint ();
 require sets;
+require openprint::Like;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -728,6 +729,38 @@ sub sort {
 	my $type = shift;
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
+
+sub like_button {
+	if ( $_[0]->Like() ) {
+		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
+	} else {
+		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
+	} # end if
+} # end sub like_button
+
+sub like {
+	my $Like = $_[0]->Like();
+	if ( ! $Like ) {
+		$Like = new openprint::Like()->save({'user_id'=>$openprint::session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}});
+		$_[0]{'Like'} = $Like;
+	} # end if
+} # end sub like
+
+sub unlike {
+	my $Like = $_[0]->Like();
+	$Like->delete() if $Like;
+	delete $_[0]{'Like'};
+}
+
+sub Like { 
+	if ( @_ > 1 ) {
+		$_[0]{'Like'} = $_[1];
+	} 
+	if ( ! defined $_[0]{'Like'} ) {
+		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$openprint::session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'});
+	} # end if
+	return $_[0]{'Like'};
+} # end sub Like
 
 1;
 __END__
