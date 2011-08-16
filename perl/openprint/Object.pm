@@ -732,9 +732,9 @@ sub sort {
 
 sub like_button {
 	if ( $_[0]->Like() ) {
-		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
+		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
 	} else {
-		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
+		return ssi::button( $_[1], { 'onclick'=>sprintf( q`new Ajax.Updater( 'Like', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, ref $_[0], $_[0]{'id'} ) } );
 	} # end if
 } # end sub like_button
 
