@@ -17,7 +17,7 @@ sub _states {
 sub _provinces {
 } # end sub _provinces
 
-sub like_button {
+sub _like_button {
 	my $Object = $$variable{'Object'} = $param{'object_type'}->new( $param{'object_id'} );
 	if ( 
 	my $Like = $Object->Like();
