@@ -1715,5 +1715,8 @@ sub _packingslips {
 sub _rfidscanners_results {
 } # end sub _rfidscanners_results
 
+sub _map {
+} # end sub _map
+
 1;
 __END__
