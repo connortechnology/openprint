@@ -1718,5 +1718,7 @@ sub _rfidscanners_results {
 sub _map {
 } # end sub _map
 
+sub _docket_label {
+} # end sub _docket_label
 1;
 __END__
