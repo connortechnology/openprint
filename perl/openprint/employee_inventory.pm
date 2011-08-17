@@ -1712,5 +1712,8 @@ sub _packingslips {
 				) );
 } # end sub _packingslips
 
+sub _rfidscanners_results {
+} # end sub _rfidscanners_results
+
 1;
 __END__
