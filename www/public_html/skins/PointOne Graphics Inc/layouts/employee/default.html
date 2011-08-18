@@ -111,7 +111,7 @@
 							</ul>
 						</li>
 <? if ( $session{'user_id'} ) ?>
-						<li id="ProductionMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/p/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
+						<li id="ProductionMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/pro/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
@@ -173,6 +173,9 @@
 						<li id="InventoryMenu" class="<? echo ( ($$variable{'uri'} =~ /employee\/inventory/ or $$variable{'uri'} =~ /employee\/claim/ or $$variable{'uri'} =~ /employee\/purchase_order/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/purchase_order/history.html;NOSSL">&raquo; Purchase Orders</a></li>
+<? if ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+								<li><a href="/employee/purchase_order/items.html;NOSSL">&raquo; Purchase Order Items</a></li>
+<? endif ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>

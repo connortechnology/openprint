@@ -69,7 +69,7 @@ foreach my $session ( @session_ids ) {
 @session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
-if ( 0 ) {
+if ( 1 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project::find(
 			'status'=>'uncalculated',

@@ -298,6 +298,10 @@ sub find {
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
 	delete $params{'dbh'};
+    if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
+        $sql .= ' AND (deleted=? OR deleted IS NULL)';
+        push @values, 0;
+    } # end if
 
     if ( %params ) {
 		foreach ( 'find_fields', 'fields' ) {
@@ -452,10 +456,6 @@ sub find {
 		$log->error("Unknown paramter in $type find: $k => $params{$k}");
 	} # end foreach k
 
-    if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
-        $sql .= ' AND (deleted=? OR deleted IS NULL)';
-        push @values, 0;
-    } # end if
 
 	$sql .= " OR $params{'or'}" if $params{'or'};
     $sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -519,6 +519,26 @@ sub dropdown {
 $log->debug("dropdown");
     return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
 } # end sub dropdown
+
+sub transform {
+	
+	my $type = ref $_[0];
+	$type = $_[0] if ! $type;
+	my $fields = eval '\%'.$type.'::fields';
+
+	if ( defined $$fields{$_[1]} ) {
+		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
+		$openprint::log->debug("Transforms: @transforms") if $debug;
+
+		foreach my $transform ( @transforms ) {
+			eval '$_[2] =~ ' . $transform;
+		} # end foreach
+	} else {
+		$openprint::log->error("$_[1] not in fields for $type");
+	} # end if
+	return $_[2];
+
+} # end sub transform
 
 
 1;

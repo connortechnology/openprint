@@ -307,3 +307,7 @@ table .docket {
 	width: 203px;
 }
 }
+
+table .supplier, table .item_name, table .product {
+	text-align: left;
+}

@@ -465,7 +465,7 @@ sub notification {
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
