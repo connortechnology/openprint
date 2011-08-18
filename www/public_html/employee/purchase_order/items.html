@@ -24,11 +24,8 @@
 				<label>Types:</label>
 				<? echo (
 					my $html;
-					foreach my $type ( 'Other', 'Roll Stock','Sheet Stock' ) {
-						my $id = $type;
-						$id =~ s/\s//g;
-
-						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $id, $type, ssi::checked( sets::isin( $type, [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/items.html?types'} ) );
+					foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id, $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/items.html?types'} ) );
 					} # end foreach type
 					return $html;
 				) ?>
