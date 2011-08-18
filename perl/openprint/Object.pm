@@ -728,6 +728,25 @@ sub sort {
 	my $type = shift;
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
+sub transform {
+	
+	my $type = ref $_[0];
+	$type = $_[0] if ! $type;
+	my $fields = eval '\%'.$type.'::fields';
+
+	if ( defined $$fields{$_[1]} ) {
+		my @transforms = eval('@{$'.$type.'::transforms{$_[1]}}');
+		$openprint::log->debug("Transforms: @transforms") if $debug;
+
+		foreach my $transform ( @transforms ) {
+			eval '$_[2] =~ ' . $transform;
+		} # end foreach
+	} else {
+		$openprint::log->error("$_[1] not in fields for $type");
+	} # end if
+	return $_[2];
+
+} # end sub transform
 
 1;
 __END__

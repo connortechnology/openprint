@@ -22,8 +22,8 @@ $serial = 'purchaseorder_items_id_seq';
 );
 
 %transforms = (
-	'name'	=>	[ 's/^\s+//', 's/\s+$//' ],
-	'product'	=>	[ 's/^\s+//', 's/\s+$//' ],
+	'name'	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
+	'product'	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
 	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
@@ -48,6 +48,33 @@ sub type {
 	}
 	return new openprint::PurchaseOrder_ContentType( $_[0]{'type_id'} )->name();
 } # end sub type
+
+sub PurchaseOrders {
+	return openprint::PurchaseOrder->find( 'supplier_id'=>$_[0]{'vendor_id'}, 'item_id in'=>$_[0]{'id'}, 'order'=>'id' );
+} # end sub PurchaseOrders
+
+sub delete {
+	if ( ! $_[0]{'id'} ) {
+		return "PurchaseOrder_Item->delete called without an id";
+	} # end if
+	my $error = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach my $C ( openprint::PurchaseOrder_Content->find( 'item_id'=>$_[0]{'id'} ) ) {
+		if ( $error .= $C->save({'item_id'=>undef}) ) {
+			$openprint::dbh->rollback();
+			return $error;
+		} # end if
+	} # end foreach C
+
+	$error = $_[0]->SUPER::delete();
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		return $error;
+	} # end if	
+
+	sql::end_transaction( $openprint::dbh, $ac );
+	return;
+} # end sub delete
 
 1;
 __END__
