@@ -550,6 +550,30 @@ sub items {
 			} # end if
 		} # end foreach item_id
 		delete $param{'item_id'};
+	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
+		my @ids = sort( ref $param{'item_id'} eq 'ARRAY' ? @{$param{'item_id'}} : $param{'item_id'} );
+		if ( ! @ids ) {
+			$variable{'error'} .= 'No items selected. Nothing done.';
+			return;
+		} # end if
+		my $final_id = shift @ids;
+		my $Final_Item = new openprint::PurchaseOrder_Item( $final_id );
+		if ( ! $Final_Item->id() ) {
+			$variable{'error'} .= 'Unable to get final item. Nothing done.';
+			return;
+		} # end if
+		foreach my $id ( @ids ) {
+			foreach my $Content ( openprint::PurchaseOrder_Content->find('item_id'=>$id) ) {
+				if ( $Content->item_id() != $id ) {
+					$log->error("DANGER: Content has different item_id than asked for.");
+					$variable{'error'} .= 'Crazy things have happened. Some merging has been done, some hasnt';
+					return;
+				} # end if
+				$Content->save({'item_id'=>$final_id});
+			} # end foreach Content
+			my $Item = new openprint::PurchaseOrder_Item( $id );
+			$variable{'error'} .= $Item->delete();
+		} # end foreach id
 	} else {
 		ssi::save_params( '/employee/purchase_order/items.html', ( 'supplier_id','types', 'item_contains' ) );
 	} # end if

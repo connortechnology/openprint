@@ -389,8 +389,13 @@ sub find {
 					push @values, $params{$k.'_in'};
 					delete $params{$k.'_in'};
 				} elsif ( exists $params{$k.' in'} ) {
-					$sql .= " AND ? IN $$f{$k}";
-					push @values, $params{$k.' in'};
+					if ( ref $params{$k.' in'} eq 'ARRAY' ) {
+						$sql .= ' AND ' . $$f{$k}. ' IN ('.join(',', map {'?'} @{$params{$k.' in'}} ) . ')';
+						push @values, @{$params{$k.' in'}};
+					} else {
+						$sql .= " AND ? IN $$f{$k}";
+						push @values, $params{$k.' in'};
+					} # end if
 					delete $params{$k.' in'};
 				} # end if
 				if ( exists $params{$k.' !='} ) {
