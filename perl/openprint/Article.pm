@@ -154,6 +154,9 @@ sub html {
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 
                 );
+	if ( $Article->source() ) {
+		$html .= sprintf('<a class="source" href="%1$s" title="Original Article">%1$s</a>', $Article->source() );
+	} # end if
 	if ( $openprint::session{'user_id'} ) {
 		$html .= sprintf(q`
 			<div id="comments-%1$d" class="comments"><div onclick="new Ajax.Updater('comments-%1$d', '/article/_comments.html', { parameters: { article_id: %1$d } } );">This article has %2$s. Click to view/Add.</div></div>

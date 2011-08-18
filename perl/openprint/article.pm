@@ -122,6 +122,7 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 		} else {
 			$variable{'error'} .= $Article->save(\%param);
 		} # end if
+		%param = ();
 	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		if ( ! $Article->can_edit() ) {
