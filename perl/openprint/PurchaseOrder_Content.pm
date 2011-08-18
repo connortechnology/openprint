@@ -58,10 +58,6 @@ sub Type {
 	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
 
-sub Item {
-	return new openprint::PurchaseOrder_Item( $_[0]{item_id} );
-} # end sub Item
-
 sub type {
 	if ( @_ > 1 ) {
 		my $Type = openprint::PurchaseOrder_ContentType->find_one('name'=>$_[1]);
@@ -91,7 +87,7 @@ sub item {
 	my $Item = new openprint::PurchaseOrder_Item( $_[0]{'item_id'} );
 	if ( @_ > 1 ) {
 		if ( $Item->name() ne $_[1] ) {
-			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name'=>$_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} );
+			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name lc'=>lc $_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} );
 			if ( ! $NewItem ) {
 				$NewItem = new openprint::PurchaseOrder_Item();
 				$NewItem->save( { 
@@ -105,6 +101,9 @@ sub item {
 			} # end if
 			$_[0]{'item_id'} = $$NewItem{'id'};
 		} # end if
+	} # end if
+	if ( ! $Item->id() ) {
+		return $_[0]{'item'};
 	} # end if
 	return $Item->name();
 } # end sub item

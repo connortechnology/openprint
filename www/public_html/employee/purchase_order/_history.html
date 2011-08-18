@@ -26,6 +26,7 @@
 		$search{'supplier_id'} = $session{'/employee/purchase_order/history.html?supplier_id'} if $session{'/employee/purchase_order/history.html?supplier_id'};
 		$search{'created_by'} = $session{'/employee/purchase_order/history.html?created_by'} if $session{'/employee/purchase_order/history.html?created_by'};
 		$search{'cancelled'} = $session{'/employee/purchase_order/history.html?cancelled'} if $session{'/employee/purchase_order/history.html?cancelled'} ne '';
+		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {

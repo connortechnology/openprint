@@ -7,14 +7,25 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
 			</select>
 		</p>
-		<p id="contacts"><label>Available Contacts:</label>
+		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ) ?>:</label>
 			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->supplier_id() ) {
-						my @Users = openprint::User->find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'name'=>$$variable{'PurchaseOrder'}->vendor_contact() );
-			
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'company_id'=>$$variable{'PurchaseOrder'}->supplier_id() ) ], @Users ? $Users[0]->id() : undef );
+						my @Users = openprint::User->find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(),'order'=>'lower(strfirstname),lower(strlastname)' );
+						my $selected;
+						if ( ( ! $$variable{'PurchaseOrder'}->contact_id() ) and ( $$variable{'PurchaseOrder'}->vendor_contact() ) ) {
+							foreach my $U ( @Users ) {
+								if ( lc $U->name() eq lc $$variable{'PurchaseOrder'}->vendor_contact() ) {
+									$selected = $$U{'id'};
+									last;
+								} # end if
+							}
+						} elsif ( @Users == 1 ) {
+							$selected = $Users[0]{'id'};
+						}
+							
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $selected ? $selected : undef );
 					} # end if
 					return;
 				) ?>

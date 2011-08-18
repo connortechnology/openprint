@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -75,6 +75,11 @@ $serial = 'purchaseorders_id_seq';
 	'cancelled'			=>	'cancelled',
 );
 
+%find_fields = (
+	'docket'	=>	'(SELECT docket FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+	'item_id'	=>	'(SELECT item_id FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+);
+
 %transforms = (
 );
 
@@ -88,138 +93,6 @@ $serial = 'purchaseorders_id_seq';
 	'manifest_id'	=>	undef,
 	'cancelled'		=>	0,
 );
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM PurchaseOrders WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'id_start'} and $params{'id_end'} ) {
-		$sql .= ' AND ( id BETWEEN ? AND ? )';
-		push @values, @params{'id_start','id_end'}
-	} elsif ( $params{'id_start'} ) {
-		$sql .= ' AND ( id >= ?)';
-		push @values, $params{'id_start'};
-	} elsif ( $params{'id_end'} ) {
-		$sql .= ' AND ( id <= ?)';
-		push @values, $params{'id_end'};
-	} # end if
-	if ( exists $params{'company_id'} ) {
-		if ( ref $params{'company_id'} eq 'ARRAY' ) {
-			$sql .= ' AND company_id IN ('. join(',', map {'?'} @{$params{'company_id'}} ) . ')';
-			push @values, @{$params{'company_id'}};
-		} else {
-			$sql .= ' AND company_id=?';
-			push @values, $params{'company_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'supplier_id'} ) {
-		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
-			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
-			push @values, @{$params{'supplier_id'}};
-		} elsif ( $params{'supplier_id'} ) {
-			$sql .= ' AND supplier_id=?';
-			push @values, $params{'supplier_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'created_by'} ) {
-		if ( ref $params{'created_by'} eq 'ARRAY' ) {
-			$sql .= ' AND created_by IN ('. join(',', map {'?'} @{$params{'created_by'}} ) . ')';
-			push @values, @{$params{'created_by'}};
-		} elsif ( $params{'created_by'} ) {
-			$sql .= ' AND created_by=?';
-			push @values, $params{'created_by'};
-		} # end if
-	} # end if
-	if ( exists $params{'manifest_id'} ) {
-		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
-			if ( @{$params{'manifest_id'}} ) {
-				$sql .= ' AND manifest_id IN ('. join(',', map {'?'} @{$params{'manifest_id'}} ) . ')';
-				push @values, @{$params{'manifest_id'}};
-			} else {
-				return ();
-			} # end if
-		} elsif ( $params{'manifest_id'} ) {
-			$sql .= ' AND manifest_id=?';
-			push @values, $params{'manifest_id'};
-		} else {
-			$sql .= ' AND manifest_id IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'authorized'} eq 'Y' ) {
-		$sql .= ' AND authorized_by IS NOT NULL';
-	} elsif ( $params{'authorized'} eq 'N' ) {
-		$sql .= ' AND authorized_by IS NULL';
-	} # end if
-	if ( exists $params{'cancelled'} ) {
-		if ( ref $params{'cancelled'} eq 'ARRAY' ) {
-			if ( @{$params{'cancelled'}} ) {
-				$sql .= ' AND cancelled IN ('. join(',', map {'?'} @{$params{'cancelled'}} ) . ')';
-				push @values, @{$params{'cancelled'}};
-			} else {
-				return ();
-			} # end if
-		} elsif ( $params{'cancelled'} ne '' ) {
-			$sql .= ' AND cancelled=?';
-			push @values, $params{'cancelled'};
-		} # end if
-	} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			if ( @{$params{'deleted'}} ) {
-				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
-				push @values, @{$params{'deleted'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= ' AND id IN (SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
-		push @values, $params{'docket'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading PurchaseOrders SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No PurchaseOrders loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded PurchaseOrders ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::PurchaseOrder( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub save {
 	my ( $self, $param ) = @_;
@@ -265,10 +138,10 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	if ( $_[0]{'id'} ) {
-		return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
+	if ( $_[0]{'id'} and ! $_[0]{'Contents'} ) {
+		@{$_[0]{'Contents'}} = openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 	} # end if
-	return ();
+	return @{$_[0]{'Contents'}};
 } # end sub Contents
 
 sub send_approval_required_notification {
