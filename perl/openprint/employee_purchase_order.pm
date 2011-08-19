@@ -326,7 +326,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
-		if ( ! $param{'supplier_id'} ) {
+		if ( ( ! $param{'supplier_id'} ) and $param{'vendor_name'} ) {
 			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();

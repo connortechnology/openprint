@@ -145,7 +145,8 @@ sub Contents {
 	if ( $_[0]{'id'} and ! $_[0]{'Contents'} ) {
 		@{$_[0]{'Contents'}} = openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 	} # end if
-	return @{$_[0]{'Contents'}};
+	return @{$_[0]{'Contents'}} if $_[0]{'Contents'};
+	return ();
 } # end sub Contents
 
 sub send_approval_required_notification {
