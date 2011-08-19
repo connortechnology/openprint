@@ -26,7 +26,7 @@
 		<form id="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" name="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" action="list.html" method="post">
 			<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>"/>
 			<textarea name="text" id="text-<? echo ( $$variable{'Article'}->id() ) ?>"></textarea>
-			<? echo ( ssi::button( 'SaveComment'.$$variable{'Article'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '_comments.html', { parameters: \$('comment-form-$$variable{Article}{id}').serialize() } );` } ); ) ?>
+			<? echo ( ssi::button( 'SaveComment'.$$variable{'Article'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '/article/_comments.html', { parameters: \$('comment-form-$$variable{Article}{id}').serialize() } );` } ); ) ?>
 		</form>
 	</div>
 </fieldset>

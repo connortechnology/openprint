@@ -751,17 +751,29 @@ sub transform {
 
 sub like_button {
 	my $Like = $_[0]->Like();
-	if ( $Like ) {
-		return ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $_[1], ref $_[0], $_[0]{'id'} ) } );
-	} else {
-		return ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $_[1], ref $_[0], $_[0]{'id'} ) } );
+	my $html;
+	my $div = $_[1];
+	if ( ! $div ) {
+		$div = 'like_button';
+		$html = '<span id="like_button">';
 	} # end if
+	if ( $Like ) {
+		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+	} else {
+		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+	} # end if
+	if ( ! $_[1] ) {
+		$html .= '</span>';
+	} # end if
+	return $html;
 } # end sub like_button
 
 sub like {
 	my $Like = $_[0]->Like();
+	my $type = ref $_[0];
+	$type =~ s/^openprint:://;
 	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}});
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'}});
 		$_[0]{'Like'} = $Like;
 	} # end if
 } # end sub like
@@ -776,8 +788,10 @@ sub Like {
 	if ( @_ > 1 ) {
 		$_[0]{'Like'} = $_[1];
 	} 
+	my $type = ref $_[0];
+	$type =~ s/^openprint:://;
 	if ( ! defined $_[0]{'Like'} ) {
-		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'});
+		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'});
 	} # end if
 	return $_[0]{'Like'};
 } # end sub Like

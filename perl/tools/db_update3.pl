@@ -480,6 +480,11 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
 if ( ! sets::isin( 'likes', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Likes.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='likes'", 'column_name');
+	if ( ! exists $$data{'created_on'} ) {
+		$dbh->do('ALTER TABLE likes add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
 }
 
 $dbh->disconnect();

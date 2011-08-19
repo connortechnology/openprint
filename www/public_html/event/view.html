@@ -51,6 +51,7 @@
 					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 				} # end if
+				$html .= $$variable{'Event'}->like_button();
 				return $html;
 			) ?>
 		</p>
