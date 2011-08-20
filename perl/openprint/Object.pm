@@ -631,6 +631,10 @@ sub find {
 		$sql .= " ORDER BY $$params{'order'}";
 		delete $$params{'order'};
 	} # end if
+	if ( $$params{'group'} ) {
+		$sql .= " GROUP BY $$params{'group'}";
+		delete $$params{'group'};
+	} # end if
 	if ( exists $$params{'limit'} ) {
 		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
 		delete $$params{'limit'};

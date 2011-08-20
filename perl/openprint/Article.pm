@@ -97,13 +97,17 @@ sub Author {
 
 sub category {
 	if ( @_ > 1 ) {
-		my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
-		if ( ! $Category ) {
-			$Category = new openprint::Article_Category();
-			$Category->save({'name'=>$_[1]})
-		} # end if	
-		$_[0]{'category_id'} = $Category->id();
-		return $Category->name();
+		if ( $_[1] ) {
+			my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
+			if ( ! $Category ) {
+				$Category = new openprint::Article_Category();
+				$Category->save({'name'=>$_[1]})
+			} # end if	
+			$_[0]{'category_id'} = $Category->id();
+			return $Category->name();
+		} else {
+			$_[0]{'category_id'} = undef;
+		} # end if
 	} # end if
 	return new openprint::Article_Category( $_[0]{'category_id'} )->name();
 } # end sub category

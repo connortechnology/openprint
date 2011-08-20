@@ -16,7 +16,5 @@
 
 <? echo ( $$variable{'Article'}->body() ) ?>
 <span id="Like"><? echo ( $$variable{'Article'}->like_button( 'Like') ) ?></span>
-<div class="Comments"><fieldset><legend>Comments</legend>
 <div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>"><!--#include virtual="_comments.html"--></div>
-</div>
 </div></div>
