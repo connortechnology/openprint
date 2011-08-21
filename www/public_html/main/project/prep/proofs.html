@@ -56,7 +56,7 @@
 					<td><input type="text" name="txtProofUnitPrice-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
 					<td>
 					<input type="checkbox" id="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" name="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverride-$$variable{'SignatureIndex'}-$$variable{'ProofIndex'}-$$variable{'QTYIndex'}"} ) ?> onchange="if ( ! this.checked ) calc(this.form.name);" />
-					<label for="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>">Override</label>
+					<label class="radio" for="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>">Override</label>
 					<input type="hidden" name="txtProofIndex-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofIndex?>"/>
 					</td>
 				</tr>
@@ -65,9 +65,9 @@
 					<td colspan="4" align="right">Additional proofs?</td>
 					<td colspan="1">
 						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="Yes" />
-						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y">Yes</label>
+						<label class="radio" for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y">Yes</label>
 						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="No" checked="checked" />
-						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N">No</label>
+						<label class="radio" for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N">No</label>
 					</td>
 				</tr>
 			</table>
