@@ -15,6 +15,16 @@
 <? endif ( $$variable{'Article'}->source() ) ?>
 
 <? echo ( $$variable{'Article'}->body() ) ?>
-<span id="Like"><? echo ( $$variable{'Article'}->like_button( 'Like') ) ?></span>
+<? echo ( 
+	my @Likes = openprint::Like->find('user_id !='=>$session{'user_id'}, 'object_type'=>'Article', 'object_id'=>$$variable{'Article'}->id() );
+	if ( ! @Likes ) {
+		return 'No one loves this yet.  Be the first!';
+	} elsif ( @Likes == 1 ) {
+		return '1 other person loves this article.';
+	} else {
+		return @Likes . ' people love this article.';
+	} # end if
+) ?>
+<? echo ( $$variable{'Article'}->like_button(); ) ?>
 <div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>"><!--#include virtual="_comments.html"--></div>
 </div></div>

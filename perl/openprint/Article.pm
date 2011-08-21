@@ -164,7 +164,7 @@ sub html {
 
                 );
 	if ( $Article->source() ) {
-		$html .= sprintf('<a class="source" href="%1$s" title="Original Article">%1$s</a>', $Article->source() );
+		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
 	} # end if
 	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
 	$html .= '</div>';
@@ -172,6 +172,7 @@ sub html {
 } # end  sub html
 
 sub summary_html {
-} # end sub sumary
+} # end sub summary_html
+
 1;
 __END__
