@@ -31,7 +31,7 @@
 <table class="List sortable">
 	<thead>
 		<tr>
-			<th width="20"><input type="checkbox" onclick="select_all( $('f2'), 'asset_id', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( $('f2'), 'asset_id', this.checked );"/></th>
 			<th class="ID">ID</th>
 			<th class="DateTime">Created On</th>
 			<th class="CreatedBy">Created By</th>
@@ -45,9 +45,9 @@
 		my $html = '';
 		my $report_total = 0;
 		while ( my $Asset = shift @{$$variable{'Assets'}} ) {
-			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $Asset->id() );
+			$html .= sprintf(q`<tr id="tr-%1$d">`, $Asset->id() );
 			$html .= sprintf( q`
-				<td><input type="checkbox" id="asset_id" name="asset_id" value="%1$d"/></td>
+				<td class="checkbox"><input type="checkbox" id="asset_id" name="asset_id" value="%1$d"/></td>
 				<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
 				<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
 				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>

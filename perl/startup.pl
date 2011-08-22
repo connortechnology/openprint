@@ -72,6 +72,7 @@ BEGIN {
 	use openprint::Article_Category;
 	use openprint::Host;
 	use openprint::Log;
+	use openprint::Like;
 
 #use MapImage;
 

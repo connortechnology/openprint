@@ -43,13 +43,19 @@
 						<input type="text" name="name" id="name" value="<? echo ( $$variable{'Asset'}->name() ) ?>" />
 					</li>
 					<li><label>Description:</label>
-						<textarea name="description" id="description"><? echo ( $$variable{'Asset'}->description() ) ?></textarea>
+						<textarea name="description" id="description"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
 					</li>
 <? if ( ! $$variable{'Asset'}->filename() ) ?>
 					<li><label>File:</label>
 						<input type="file" id="filename" name="filename"/>
 					</li>
 <? endif ( ! $$variable{'Asset'}->filename() ) ?>
+					<li><label>Attribution:</label>
+						<input type="text" name="attribution" id="attribution" value="<? echo ( $$variable{'Asset'}->attribution() ) ?>" />
+					</li>
+					<li><label>License:</label>
+						<textarea name="license" id="license"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
+					</li>
 				</ul>
 			</div>
 		</div><!--Edit-->

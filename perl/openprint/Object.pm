@@ -4,6 +4,7 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 use strict;
 use openprint ();
 require sets;
+require openprint::Like;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -630,6 +631,10 @@ sub find {
 		$sql .= " ORDER BY $$params{'order'}";
 		delete $$params{'order'};
 	} # end if
+	if ( $$params{'group'} ) {
+		$sql .= " GROUP BY $$params{'group'}";
+		delete $$params{'group'};
+	} # end if
 	if ( exists $$params{'limit'} ) {
 		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
 		delete $$params{'limit'};
@@ -747,6 +752,53 @@ sub transform {
 	return $_[2];
 
 } # end sub transform
+
+sub like_button {
+	my $Like = $_[0]->Like();
+	my $html;
+	my $div = $_[1];
+	if ( ! $div ) {
+		$div = 'like_button';
+		$html = '<span id="like_button">';
+	} # end if
+	if ( $Like ) {
+		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+	} else {
+		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+	} # end if
+	if ( ! $_[1] ) {
+		$html .= '</span>';
+	} # end if
+	return $html;
+} # end sub like_button
+
+sub like {
+	my $Like = $_[0]->Like();
+	my $type = ref $_[0];
+	$type =~ s/^openprint:://;
+	if ( ! $Like ) {
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'}});
+		$_[0]{'Like'} = $Like;
+	} # end if
+} # end sub like
+
+sub unlike {
+	my $Like = $_[0]->Like();
+	$Like->delete() if $Like;
+	delete $_[0]{'Like'};
+}
+
+sub Like { 
+	if ( @_ > 1 ) {
+		$_[0]{'Like'} = $_[1];
+	} 
+	my $type = ref $_[0];
+	$type =~ s/^openprint:://;
+	if ( ! defined $_[0]{'Like'} ) {
+		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'});
+	} # end if
+	return $_[0]{'Like'};
+} # end sub Like
 
 1;
 __END__

@@ -84,28 +84,6 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
 	if ( $data ) {
-		if ( ! exists $$data{'style_id'} ) {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
-			$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-			sql::end_transaction( $dbh, $ac );
-		} # end if
-		if ( ! exists $$data{'rush'} ) {
-			print "Adding rush to projects";
-			$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
-		} # end if
-		if ( ! exists $$data{'predefined'} ) {
-			my $ac = sql::start_transaction( $dbh );
-			print "Adding predefined to tbl_Projects\n";
-			$dbh->do(q`alter table tbl_Projects add predefined boolean`);
-			$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
-			$dbh->do(q`update tbl_Projects set predefined=false`);
-			$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
-			sql::end_transaction( $dbh, $ac );
-		} # end if
-		if ( ! exists $$data{'externalrefnumber'} ) {
-			$dbh->do('ALTER TABLE tbl_projects add externalrefnumber text');
-		}
 		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
 	} # end if
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -114,6 +92,28 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) ) or die;
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projects'", 'column_name');
+	if ( ! exists $$data{'style_id'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
+		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	if ( ! exists $$data{'rush'} ) {
+		print "Adding rush to projects";
+		$dbh->do(q`alter table Projects add rush boolean default false`);
+	} # end if
+	if ( ! exists $$data{'predefined'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding predefined to Projects\n";
+		$dbh->do(q`alter table Projects add predefined boolean`);
+		$dbh->do(q`alter table Projects alter predefined set default false`);
+		$dbh->do(q`update Projects set predefined=false`);
+		$dbh->do(q`ALTER TABLE Projects ALTER predefined set not null`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	if ( ! exists $$data{'externalrefnumber'} ) {
+		$dbh->do('ALTER TABLE projects add externalrefnumber text');
+	}
 	if ( exists $$data{'index'} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');

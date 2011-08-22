@@ -523,7 +523,6 @@ sub date_select {
 	} else {
 		( $year, $month, $day ) = split('-', $value );
 	} # end if
-$log->debug("In date_select $year $month $day");
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
 		$options = {'onchange'=>$options};
