@@ -33,6 +33,8 @@ $debug = 1;
 	'updated_on'	=>	'updated_on',
 	'deleted'		=>	'deleted',
 	'md5'			=>	'md5',
+	'attribution'	=>	'attribution',
+	'license'		=>	'license',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -45,7 +47,11 @@ $debug = 1;
 	'deleted'	=>	0,
 );
 %transforms = (
-	'filename' => [ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
+	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
+	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	'attribution'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	'license'		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 $table = 'assets';
 $serial = 'assets_id_seq';

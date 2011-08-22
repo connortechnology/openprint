@@ -42,9 +42,16 @@
 								return $html;
 						) ?>
 						</li>
+						<li><label>Attribution:</label>
+						<? echo ( $$variable{'Asset'}->attribution() ) ?>
+						</li>
+						<li><label>License:</label>
+						<? echo ( $$variable{'Asset'}->license() ) ?>
+						</li>
 						<li><label>Used in:</label>
 						<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->claim_id() ); } openprint::Claim_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 						<? echo ( join(',', map { sprintf('<a href="/employee/sred/view.html?content_id=%1$d">SRED %1$d</a>', $_->content_id() ); } openprint::SRED_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
+						<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 						</li>
 					</ul>
 				</div>

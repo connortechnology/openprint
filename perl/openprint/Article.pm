@@ -139,9 +139,10 @@ sub summary {
 } # end sub summary
 
 sub can_edit {
+	return 0 if ! $session{'user_id'};
 	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if ( $session{'user_id'} and ( $session{'user_id'} == $_[0]{'created_by'} ) );
+	return 1 if $session{'user_type'} eq 'A';
+	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
 	return 0;
 } # end sub can_edit
 

@@ -15,6 +15,7 @@
 <? endif ( $$variable{'Article'}->source() ) ?>
 
 <? echo ( $$variable{'Article'}->body() ) ?>
+<? if ( $session{'user_id'} ) ?>
 <? echo ( 
 	my @Likes = openprint::Like->find('user_id !='=>$session{'user_id'}, 'object_type'=>'Article', 'object_id'=>$$variable{'Article'}->id() );
 	if ( ! @Likes ) {
@@ -27,4 +28,5 @@
 ) ?>
 <? echo ( $$variable{'Article'}->like_button(); ) ?>
 <div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>"><!--#include virtual="_comments.html"--></div>
+<? endif ( $session{'user_id'} ) ?>
 </div></div>

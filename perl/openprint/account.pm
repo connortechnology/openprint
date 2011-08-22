@@ -736,7 +736,6 @@ sub _relationships {
 	} elsif ( $param{'action'} eq 'approve' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
 		$variable{'error'} .= $R->save({'approved'=>1});
-		$variable{'information'} .= 'You are now ' . $R->type() . ' ' . $R->User1()->name();
 	} elsif ( $param{'action'} eq 'add' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
 		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );

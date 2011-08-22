@@ -74,6 +74,12 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	if ( ! exists $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
+	if ( ! exists $$data{'license'} ) {
+		$dbh->do('ALTER TABLE Assets ADD license TEXT');
+	} # end if
+	if ( ! exists $$data{'attribution'} ) {
+		$dbh->do('ALTER TABLE Assets ADD attribution TEXT');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
