@@ -5,7 +5,7 @@
 <? eval (
 	$$variable{'User'} = new openprint::User( $session{'user_id'} );
 ) ?>
-<form method="post" name="f1" action="confirmation_help_desk.html">
+<form method="post" id="f1" name="f1" action="confirmation_help_desk.html">
 <fieldset>
 	<p> 
 		<label>Company Name: <span class="requiredFieldIndicator">&nbsp;</span></label>
@@ -76,7 +76,7 @@
 	</p>
 	<p> 
 		<label>E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="txtEmail" value="<? hecho ( $$variable{'User'}->email(); ) ?>" />
+		<input type="email" name="txtEmail" value="<? hecho ( $$variable{'User'}->email(); ) ?>" />
 	</p>
 	<p> 
 		<label>Question or Comment: <span class="requiredFieldIndicator">*</span></label>
@@ -84,7 +84,7 @@
 	</p>
 <? echo (
 		my $html;
-		if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+		if ( ! $session{'user_id'} ) {
 			use Authen::Captcha;
 			my $Captcha = new Authen::Captcha(
 				'data_folder'	=>	'/tmp',
@@ -100,7 +100,6 @@
 		return $html;
 ) ?>
 	</p>
-<? endif ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ?>
 
 </fieldset>
 		<fieldset>

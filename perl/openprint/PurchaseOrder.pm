@@ -141,7 +141,8 @@ sub Contents {
 	if ( $_[0]{'id'} and ! $_[0]{'Contents'} ) {
 		@{$_[0]{'Contents'}} = openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 	} # end if
-	return @{$_[0]{'Contents'}};
+	return @{$_[0]{'Contents'}} if $_[0]{'Contents'};
+	return ();
 } # end sub Contents
 
 sub send_approval_required_notification {
@@ -409,6 +410,29 @@ sub Tax {
     } # end if
     return $result;
 } # end sub Tax
+
+sub can_edit {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
+			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_edit
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
+			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_view
 
 1;
 __END__

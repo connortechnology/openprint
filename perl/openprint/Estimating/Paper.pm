@@ -337,7 +337,7 @@ sub summary {
     } # end foreach
 
 	my @keys = sort keys %Papers;
-#$openprint::log->debug("Keys: " . @keys );
+$openprint::log->debug("Keys: " . @keys );
 
 	if ( $qty_index ) {
 		my @summaries;

@@ -161,6 +161,23 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 				$index += 1;
 			} # end if	
 		} # end foreach side
+
+			if ( $$services{'Scoring'} ) {
+				foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
+					my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
+						my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+						if ( ! $Equipment ) {
+							$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+							next;
+						} 
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
+					} # end foreach
+					
+				} # end foreach service_id in Scoring
+			} # end if Scoring
+
 	} # end foreach sig_id
 	foreach my $service ( 'BulkSkids', 'PlainCartons' ) {
 		if ( $$services{$service} ) {
@@ -309,15 +326,15 @@ if ( 1 ) {
 						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $spec.'-1', $$specs{$spec.'-0'} );
 						openprint::service::delete_service_spec( $Project->id(), $service_id, $spec.'0' );
 					} # end foreach specs
-					foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition' ) {
+					foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition','chkOverrideImposition', 'ddmEquipment','chkOverrideEquipment' ) {
 						foreach my $qty_index ( $Project->quantity_indexes() ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
 							openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
 						} # end foreach qty_index
 					} # end foreach spec
 					
-				} # end foreach service_id in Perforating
-			} # end if Perforating
+				} # end foreach service_id in Scoring
+			} # end if Scoring
 		} # end foreach Project
 	} # end if Type
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
