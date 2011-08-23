@@ -405,10 +405,10 @@ sub html {
 
 sub last_logged_in {
 	if ( ! $_[0]{'last_logged_on'} ) {
-		# We assume that the most recent entry is the current login
-		my @Logs = openprint::Log->find('limit'=>2, 'action'=>'Login','user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs == 2 ) {
-			$_[0]{'last_logged_on'} = $Logs[1]{'date_time'};
+		# Almost any entry means we were logged in.  
+		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( @Logs == 1 ) {
+			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
 		} else {
 			$openprint::log->debug("@ of logs returned " . @Logs );
 		} # end if
