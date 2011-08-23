@@ -1,5 +1,6 @@
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
+use Carp qw( cluck );
 
 use strict;
 use openprint ();
@@ -111,7 +112,10 @@ sub load {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
+ if ( $d->errstr ) {
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+			Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
@@ -443,7 +447,7 @@ sub find_operators {
 				push @{$results{' in'}}, $f.' IN (' . join(',', map { '?' } @{$$params{$k.' in'}} ).')', @{$$params{$k.' in'}};
 			} # end if
 		} elsif ( $$params{$k.' in'} ) {
-			push @{$results{' in'}}, $f.' != ?', $$params{$k.' in'};
+			push @{$results{' in'}}, $f.' IN (?)', $$params{$k.' in'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' not in'} ) {
@@ -457,6 +461,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
 		push @{$results{'_lc'}}, "lower($f) = ?", $$params{$k.'_lc'};
+	} # end if
+	if ( exists $$params{$k.' lc'} ) {
+		push @{$results{' lc'}}, "lower($f) = ?", $$params{$k.' lc'};
 	} # end if
 	if ( exists $$params{$k.' any'} ) {
 		push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
@@ -641,6 +648,7 @@ sub find {
 	} # end if
 	foreach my $k ( keys %$params ) {
 		$log->error("Extra parameters in $type ::find $k => $$params{$k}");
+		Carp::cluck("Extra parameters in $type ::find $k => $$params{$k}");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;

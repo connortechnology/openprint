@@ -114,14 +114,21 @@ $log->debug("Page Settings not found for $page");
 					pop @chunks;
 					last if ! @chunks;
 					
+					# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
 					my $chunk = join('/', @chunks);
-					last if ! $chunk;
+					$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 		
 					if ( $page_settings{$chunk} ) {
-						my $NewPageSettings = $page_settings{$chunk}->copy();
-						$NewPageSettings->save({'url'=>$page});
-						$page_settings{$page} = $NewPageSettings;
+$log->debug("Using page settings for $chunk");
+						#my $NewPageSettings = $page_settings{$chunk}->copy();
+						#$NewPageSettings->save({'url'=>$page});
+						#$page_settings{$page} = $NewPageSettings;
+
+						# Why stuff up the db with entries, just fill the hash with copies.
+						$page_settings{$page} = $page_settings{$chunk};
 						last;
+} else {
+$log->debug("No page settings for $chunk");
 					} # end if
 				} # end while chunks
 
