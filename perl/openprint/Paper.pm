@@ -386,50 +386,43 @@ sub Brand {
 }
 
 sub brand {
-	my ( $self, $brand ) = @_;
-
-	if ( defined $brand ) {
-		foreach my $transform ( @{$openprint::StockBrand::transforms{'name'}} ) {
-			eval '$brand =~ '.$transform;
-		} # end foreach transforms
-		if ( ! $$self{'custom'} ) {
-			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $brand );
+	if ( defined $_[1] ) {
+		$_[1] = openprint::StockBrand->transform( 'name', $_[1] );
+		if ( ! $_[0]{'custom'} ) {
+			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] );
 			if ( ! $Brand ) {
 				$Brand = new openprint::StockBrand();
-				$Brand->save({'name'=>$brand});
+				$Brand->save({'name'=>$_[1]});
 			} # end if
-			@$self{'brand_id','brand'} = @$Brand{'id','name'};
+			@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
 		} else {
-			$$self{'brand'} = $brand;
+			$_[0]{'brand'} = $_[1];
 		} # end if
-	} elsif ( $$self{'brand_id'} and ! $$self{'brand'} ) {
-		$$self{'brand'} = new openprint::StockBrand( $$self{'brand_id'} )->name();
+	} elsif ( $_[0]{'brand_id'} and ! $_[0]{'brand'} ) {
+		$_[0]{'brand'} = new openprint::StockBrand( $_[0]{'brand_id'} )->name();
 	} # end if
-	return $$self{'brand'};
+	return $_[0]{'brand'};
 } # end sub brand
 
 sub Manufacturer {
 	return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
 }
 sub manufacturer {
-	my ( $self, $manufacturer ) = @_;
 
-	if ( defined $manufacturer ) {
-		$manufacturer =~ s/^\s+//;
-		$manufacturer =~ s/\s+$//;
-		$manufacturer =~ s/\s\s+$/ /;
-		if ( ! $$self{'custom'} ) {
-			@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, name FROM Manufacturers WHERE lower(name)=?}, lc $manufacturer );
-			if ( ! $$self{'manufacturer_id'} ) {
-				$$self{'manufacturer'} = $manufacturer;
+	if ( defined $_[1] ) {
+		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
+		if ( ! $_[0]{'custom'} ) {
+			@{$_[0]}{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, name FROM Manufacturers WHERE lower(name)=?}, lc $_[1] );
+			if ( ! $_[0]{'manufacturer_id'} ) {
+				$_[0]{'manufacturer'} = $_[1];
 			} # end if
 		} else {
-			$$self{'manufacturer'} = $manufacturer;
+			$_[0]{'manufacturer'} = $_[1];
 		} # end if
-	} elsif ( $$self{'manufacturer_id'} and ! $$self{'manufacturer'} ) {
-		$$self{'manufacturer'} = new openprint::Manufacturer( $$self{'manufacturer_id'} )->name();
+	} elsif ( $_[0]{'manufacturer_id'} and ! $_[0]{'manufacturer'} ) {
+		$_[0]{'manufacturer'} = new openprint::Manufacturer( $_[0]{'manufacturer_id'} )->name();
 	} # end if
-	return $$self{'manufacturer'};
+	return $_[0]{'manufacturer'};
 } # end sub manufacturer
 
 sub Finish {
@@ -439,9 +432,7 @@ sub finish {
 	my ( $self, $finish ) = @_;
 
 	if ( defined $finish ) {
-		$finish =~ s/^\s+//;
-		$finish =~ s/\s+$//;
-		$finish =~ s/\s\s+$/ /;
+		$finish = openprint::StockFinish->transform( 'name', $finish );
 		if ( ! $$self{'custom'} ) {
 			@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,name FROM StockFinishes WHERE lower(name)=?}, lc $finish );
 			if ( ! $$self{'finish_id'} ) {
@@ -463,9 +454,7 @@ sub colour {
 	my ( $self, $colour ) = @_;
 
 	if ( defined $colour ) {
-		$colour =~ s/^\s+//;
-		$colour =~ s/\s+$//;
-		$colour =~ s/\s\s+$/ /;
+		$colour = openprint::StockColour->transform( 'name', $colour );
 		if ( ! $$self{'custom'} ) {
 			@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,name FROM StockColours WHERE lower(name)=?}, lc $colour );
 			if ( ! $$self{'colour_id'} ) {
@@ -486,9 +475,7 @@ sub Quality {
 
 sub quality {
 	if ( @_ > 1 ) {
-		$_[1] =~ s/^\s+//;
-		$_[1] =~ s/\s+$//;
-		$_[1] =~ s/\s\s+$/ /;
+		$_[1] = openprint::StockQuality->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
 			my $Quality = openprint::StockQuality->find_one('name lc'=>lc $_[1]);
 			if ( $Quality ) {
@@ -513,9 +500,7 @@ sub weight {
 
 
 	if ( defined $weight ) {
-		$weight =~ s/^\s+//;
-		$weight =~ s/\s+$//;
-		$weight =~ s/\s\s+$/ /;
+		$weight = openprint::StockWeight->transform( 'name', $weight );
 		if ( ! $$self{'custom'} ) {
 			@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, name FROM StockWeights WHERE lower(name)=?}, lc $weight );
 			if ( ! $$self{'weight_id'} ) {
@@ -797,7 +782,9 @@ sub skids {
 
 sub previous {
 	my $self = shift;
-	my @papers = openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find( 
+'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'order'=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
 	} # end if
@@ -805,7 +792,9 @@ sub previous {
 } # end sub previous
 sub next {
 	my $self = shift;
-	my @papers = openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find( 
+'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'order'=>'brand,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
 	} # end if
@@ -995,7 +984,7 @@ sub JDF_Media {
 	$Paper->setAttribute('Status','Available');
 	$Paper->setAttribute('MediaType','Paper');
 	$Paper->setAttribute('MediaUnit', $self->type() );
-	$Paper->setAttribute('Brand',$self->name() );
+	$Paper->setAttribute('Brand',$self->brand() );
 	#$Paper->setAttribute('Class', 'Consumable' );
 	#$Paper->setAttribute('Grade', '1' );
 	#$Paper->setAttribute('Locked', 'false' );
@@ -1021,7 +1010,7 @@ sub JDF_MediaIntent {
 	my $Paper = $doc->createElement('MediaIntent');
 	$Paper->setAttribute('Status','Available');
 	#$Paper->setAttribute('MediaUnit', $self->type() eq 'Roll' ? '' : 'Sheet' );
-	#$Paper->setAttribute('Brand',$self->name() );
+	#$Paper->setAttribute('Brand',$self->brand() );
 	$Paper->setAttribute('Class', 'Intent' );
 	$Paper->setAttribute('Locked', 'false' );
 	$Paper->setAttribute('DescriptiveName',$self->to_string() );
@@ -1059,7 +1048,7 @@ sub JDF_MediaIntent {
 
 	my $MediaBrand = $Paper->appendChild( $doc->createElement( 'StockBrand' ) );
 	$MediaBrand->setAttribute('DataType','StringSpan');
-	$MediaBrand->setAttribute('Preferred',$self->name() );
+	$MediaBrand->setAttribute('Preferred',$self->brand() );
 
 	my $FrontCoatings = $Paper->appendChild( $doc->createElement( 'FrontCoatings' ) );
 	$FrontCoatings->setAttribute('DataType','EnumerationSpan');
@@ -1090,7 +1079,7 @@ sub load_from_signature {
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
 		$Paper = new openprint::Paper();
 		$$Paper{'custom'} = 1;
-		$Paper->name( $$specs{'txtSpecificStockBrand'} );
+		$Paper->brand( $$specs{'txtSpecificStockBrand'} );
 		$Paper->finish( $$specs{'txtSpecificStockFinish'} );
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
 		$Paper->weight( $$specs{'txtSpecificStockWeight'} );
@@ -1341,7 +1330,7 @@ sub basis_width {
 		$$self{'basis_width'} = $width;
 	} # end if
 	if ( ! $$self{'basis_width'} ) {
-		if ( $self->name() =~ /cover/i ) {
+		if ( $self->brand() =~ /cover/i ) {
 			$$self{'basis_width'} = 20;
 		} else {
 			$$self{'basis_width'} = 25;
@@ -1357,7 +1346,7 @@ sub basis_height {
 		$$self{'basis_height'} = $height;
 	} # end if
 	if ( ! $$self{'basis_height'} ) {
-		if ( $self->name() =~ /cover/i ) {
+		if ( $self->brand() =~ /cover/i ) {
 			$$self{'basis_height'} = 26;
 		} else {
 			$$self{'basis_height'} = 38;

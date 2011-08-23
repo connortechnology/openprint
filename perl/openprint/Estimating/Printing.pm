@@ -1625,8 +1625,8 @@ sub set_size {
 			} elsif ( $$specs{'ddmStockSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
-				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
-						'project_type_id'=>$Project->type()->id(),
+				my @Papers = openprint::Paper->find( 'brand'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+						'project_type_id in'=>$Project->type_id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
 				my %sizes;

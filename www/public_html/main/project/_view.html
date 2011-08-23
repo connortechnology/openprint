@@ -24,6 +24,7 @@
 	my $html = '';
 	my $rowclass = '';
 	my $Project = $$variable{'Project'};
+	my $Project_Type = $Project->Type();
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
@@ -31,11 +32,15 @@
 
 	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
-			my $summary = eval( 'openprint::Estimating::'.$Project->Type()->type().q`::summary($Project, $$services{''}[0], $printing_specs )` );
+			my $function_name = 'openprint::Estimating::'.$Project_Type->type();
+			my $summary = '';
+			if ( my $function = $function_name->can('summary') ) {
+				$summary = $function->($Project, $$services{''}[0], $printing_specs );
+			} # end if
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
 					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
-						$rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0], $summary );
+						$rowclass, $Project_Type->url(), $Project->id(), $$services{''}[0], $summary );
 				} else {
 					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
 				} # end if
@@ -47,17 +52,13 @@
 				my @totals;
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
-					if ( $$printing_specs{"txtPrice$qty_index"} ) {
-					$html .= '<td class="price">'.$$printing_specs{"txtPrice$qty_index"}.'</td>';
-					} else {
-					$html .= '<td class="price">&nbsp;</td>';
-					} 
+					$html .= '<td class="price">'.($$printing_specs{"txtPrice$qty_index"} ? $$printing_specs{"txtPrice$qty_index"} : '&nbsp;').'</td>';
 				} # end foreach
 				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 					$html .= '<td class="unprintable actions">';
-					if ( $Project->Type()->url() ) {
-						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project->Type()->url() );
+					if ( $Project_Type->url() ) {
+						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project_Type->url() );
 					} # end if
 					$html .= '</td>';
 				} # end nif
