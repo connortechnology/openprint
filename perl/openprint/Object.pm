@@ -112,7 +112,10 @@ sub load {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
+ if ( $d->errstr ) {
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+			Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if

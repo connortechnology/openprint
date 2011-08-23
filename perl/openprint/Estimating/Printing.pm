@@ -826,7 +826,7 @@ sub get_Stocks {
 				( exists $$specs{'ddmStockQuality'} ? ( 'quality'=>$$specs{'ddmStockQuality'} ) : () ),
 				( exists $$specs{'ddmStockWidth'} ? ( 'width'=>$$specs{'ddmStockWidth'} ) : () ),
 				( exists $$specs{'ddmStockHeight'} ? ( 'height'=>$$specs{'ddmStockHeight'} ) : () ),
-				'project_type_id in'=>$Project->Type()->id(),
+				'project_type_id any'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
 		foreach my $P ( @Papers ) {
@@ -1626,7 +1626,7 @@ sub set_size {
 				@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 			} else {
 				my @Papers = openprint::Paper->find( 'brand'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
-						'project_type_id in'=>$Project->type_id(),
+						'project_type_id any'=>$Project->type_id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
 				my %sizes;
