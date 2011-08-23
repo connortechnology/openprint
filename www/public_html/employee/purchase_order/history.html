@@ -45,12 +45,14 @@
 		</ul>
 		<hr/>
 		<ul>
+<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			<li><label>Created By:</label>
 				<select id="created_by" name="created_by" onchange="page_load('Results',$('f1'));">
 	<!--#include virtual="_po_created_by_options.html"-->
 				</select>
 				<input type="checkbox" name="created_by_deleted" id="created_by_deleted" value="1" onclick="new Ajax.Updater($('created_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="created_by_deleted">Show Deleted Users</label>
 			</li>
+<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			<li><label>Vendor:</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 				<select name="supplier_id" id="supplier_id" onchange="if ( $('supplier_id').getValue() ) { new Ajax.Updater( 'item_id', '_item_filter.html', { parameters: { supplier_id: $('supplier_id').getValue() } } ); $('item_filter').show(); } else { $('item_filter').hide(); };page_load('Results',$('f1'));">

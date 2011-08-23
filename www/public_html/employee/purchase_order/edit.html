@@ -1,3 +1,4 @@
+<? if ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 <script type="text/javascript" src="/employee/purchase_order/edit.js"></script>
 <script type="text/javascript">
 <!--
@@ -282,3 +283,6 @@ function update_taxes( form ) {
 	</div><!--PO-->
 	<input type="hidden" name="btnFunction" />
 </form>
+<? else ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+You do not have rights to edit this PO
+<? endif ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

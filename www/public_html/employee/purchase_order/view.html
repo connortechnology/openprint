@@ -1,3 +1,4 @@
+<? if ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
@@ -236,3 +237,6 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	</div><!--PO-->
 	<br class="spacer"/>
 </form>
+<? else ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+You do not have the rights to view this PO.
+<? endif ( $session{'user_type'} eq 'A' or $session{'user_id'} eq $$variable{'PurchaseOrder'}->created_by() or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
