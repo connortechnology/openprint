@@ -60,12 +60,16 @@ sub history {
 		if ( $param{'shift_id'} ) {
 			$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
 			$variable{'Report'} = openprint::Performance_Report->find_one('shift_id'=>$param{'shift_id'});
+		} else {
+			$variable{'error'} .= 'No shift given!';
+			return;
 		} # end if
 		foreach my $Record ( $variable{'Report'}->Records() ) {
 			$Record->save({
 				'quantity'	=>	$param{'quantity-'.$$Record{'docket'}.'-'.$$Record{'type_id'}}
 			});
 		} # end foreach $Record
+		%param = ();
 	} # end if
     ssi::save_params( '/employee/performance/history.html', (
                 'starttime_start_year','starttime_start_month','starttime_start_day',
