@@ -419,5 +419,28 @@ sub Tax {
     return $result;
 } # end sub Tax
 
+sub can_edit {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
+			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_edit
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
+			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_view
+
 1;
 __END__
