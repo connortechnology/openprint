@@ -194,7 +194,7 @@ sub view {
 			if ( ! $Item->id() ) {
 				$Item = openprint::PurchaseOrder_Item->find_one(
 					'company_id'	=>	$PO->company_id(),
-					'vendor_id'		=>	$PO->supplier_id(),
+					'vendor_id'		=>	$param{'supplier_id'},
 					'type_id'		=>	$param{'type_id-'.$content_id},
 					'name_lc'		=>	lc $param{'item-'.$content_id}, 
 					'product_lc'	=>	lc $param{'product-'.$content_id},
@@ -203,7 +203,7 @@ sub view {
 					$Item = new openprint::PurchaseOrder_Item();
 					$Item->save({
 							'company_id'	=>	$PO->company_id(),
-							'vendor_id'		=>	$PO->supplier_id(),
+							'vendor_id'		=>	$param{'supplier_id'},
 							'type_id'		=>	$param{'type_id-'.$content_id},
 							'name'			=>	$param{'item-'.$content_id}, 
 							'price'			=>	$param{'price-'.$content_id},
