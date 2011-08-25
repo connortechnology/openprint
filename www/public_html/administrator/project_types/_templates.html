@@ -7,13 +7,13 @@
 ) ?>
 <table class="List">
 	<tr>
-		<th width="150">Type</th>
-		<th>Description</th>
-		<th width="80">Finished Width</th>
-		<th width="80">Finished Height</th>
-		<th width="80">Flat Width</th>
-		<th width="80">Flat Height</th>
-		<th width="90">&nbsp;</th>
+		<th class="type">Type</th>
+		<th class="description">Description</th>
+		<th class="finished_width">Finished Width</th>
+		<th class="finished_height">Finished Height</th>
+		<th class="flat_width">Flat Width</th>
+		<th class="flat_height">Flat Height</th>
+		<th class="buttons">&nbsp;</th>
 	</tr>
 	<? echo (
 		my $html;
@@ -25,9 +25,9 @@
 	<tr>
 		<td><input type="text" name="typeNew"/></td>
 		<td><input type="text" name="descriptionNew"/></td>
-		<td><input type="text" name="finishedwidthNew"/></td>
-		<td><input type="text" name="finishedheightNew"/></td>
-		<td><input type="text" name="flatwidthNew"/></td>
-		<td><input type="text" name="flatheightNew"/></td>
+		<td><input type="number" name="finishedwidthNew"/></td>
+		<td><input type="number" name="finishedheightNew"/></td>
+		<td><input type="number" name="flatwidthNew"/></td>
+		<td><input type="number" name="flatheightNew"/></td>
 	</tr>
 </table>
