@@ -132,15 +132,12 @@ sub verify_login {
 
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM	=> $config{'LoginEmail'},
-					TO		=> $config{'LoginEmail'},
+					TO	=> $config{'LoginEmail'},
 					SUBJECT => "Login notification",
+					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-
 		} # end if
 
 	} # end if
@@ -193,30 +190,24 @@ sub logout {
 sub email_password {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $email = lc $openprint::param{'txtEmail2'};
-
-	my @Users = openprint::User->find('email'=>$email);
+	my @Users = openprint::User->find('email'=> lc $param{'txtEmail2'} );
 
 	if ( ! @Users ) {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
 	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
-		my %info;
 		
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = ssi::variable_substitution( \$content, \%info );
-			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			$info{'ReplacementText'} = ssi::variable_substitution( \$content, {} );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, {} ) );
+			new openprint::Email()->send(
 					FROM 	=> $config{'AdministratorEmail'},
-					TO		=> $openprint::param{'txtEmail2'},
+					TO	=> @Users,
 					SUBJECT	=> 'Forgotten Password',
+					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
 		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );

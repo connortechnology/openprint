@@ -459,9 +459,7 @@ sub send_additional_charges_notifications {
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	my %mail = (
-			SMTP    => $config{'Mail Server'},
+	new openprint::Email()->send(
 			FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com, rick@point-one.com',
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
@@ -470,8 +468,8 @@ sub send_additional_charges_notifications {
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
 			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
 			SUBJECT => 'Additional Charges required',
+			ATTACHMENT	=>	['', $_, 'text/html', 'quoted-printable'],
 			);
-	misc::send_email_with_attachment( $log, \%mail, @body );
 	my $Project = new openprint::Project( $project_index );
 	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $mail{TO}." );
 
@@ -636,15 +634,12 @@ sub send_duedate_change_notification {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => 'iconnor@point-one.com',
-				TO      => sprintf( '"%s %s" <%s>', $CSR->firstname(), $CSR->lastname(), $CSR->email() ),
+		new openprint::Email()->send(
+				FROM    => $User,
+				TO      => $CSR,
 				SUBJECT => "Docket $info{'DocketNumber'} DueDate Changed",
+				ATTACHMENTS	=>	['', $_, 'text/html', 'quoted-printable'],
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end if
 } # end sub send_duedate_change_notification
 

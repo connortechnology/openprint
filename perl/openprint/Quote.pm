@@ -313,13 +313,12 @@ sub send {
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 			push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
+					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
 		} # end if
 
 		if ( $quote{'ForEmail'} ne '' and (
@@ -351,15 +350,12 @@ sub send {
 			$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 			push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
 
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					#TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
-BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
+					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
 		} # end if for someone else
 
 	} else {
@@ -378,14 +374,12 @@ BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		push @attachments, "Quote$$self{id}.html", encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+		new openprint::Email()->send(
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
-BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
+				ATTACHMENTS	=>	[ @attachments ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
 	} # end if reseller or admin
 
 	if ( $openprint::config{'SendQuoteToAdmin'} eq 'Y' ) {
@@ -393,22 +387,20 @@ BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-
-		openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
-		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		if ( $email_template ) {
+			$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
+			my @body = ('', $_, 'text/html', 'quoted-printable');
+
+			openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
+			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
+			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 			$email_template = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
-			my %mail = (
-					SMTP    => $openprint::config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM    => $openprint::config{'QuotingEmail'},
 					TO      => $openprint::config{'QuotingEmail'},
-BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",
+					ATTACHMENTS	=> [ @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' );
 		} # end if
 	} # end if
 

@@ -63,28 +63,22 @@ sub name {
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'],'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/article_notification.html' );
 
-		my %info = (
-			'Article'	=>	$self,
-		);
+		my %info = ( 'Article'	=>	$self );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
 
 		my $body = ssi::variable_substitution( \$email_template, \%info );
-		foreach my $User ( @Users ) {
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new Article has been generated.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ('', encode_qp($body), 'text/html', 'quoted-printable'));
-		} # end foreach
+		new openprint::Email()->send(
+				FROM    => new openprint::User( $session{'user_id'} ),
+				TO      => \@Users,
+				SUBJECT => 'A new Article has been generated.',
+				ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable'],
+				);
 	} # end if to
 
 } # end sub send_notification

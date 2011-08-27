@@ -116,13 +116,12 @@ sub save {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+		new openprint::Email()->send(
 				FROM    => $openprint::config{'LoginEmail'},
 				TO      => $openprint::config{'LoginEmail'},
 				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!"
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
 	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) and ( $$params{'web_active'} eq 'Y' ) ) {
@@ -134,14 +133,13 @@ sub save {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+		new openprint::Email()->send(
 				FROM    => $openprint::config{'AdministratorEmail'},
 				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
 				SUBJECT => 'User account status has changed!',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-    } # end if
+	} # end if
 
 	my $error = $self->SUPER::save( $params );
 	return $error if $error;

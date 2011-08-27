@@ -352,12 +352,11 @@ sub credit_applications {
 		if ( $credit_app ) {
 			sql::update( $log, $dbh, 'CreditApplications', ['Id = ?',$credit_app],
 					'strStatus',			$param{'verdict'},
-					'lngGrantedTerms',			$param{'txtTerms'},
+					'lngGrantedTerms',		$param{'txtTerms'},
 					'dblGrantedCreditLimit',	$param{'CreditLimit'},
 					'dblGrantedDownpayment',	$param{'txtDownpayment'},
 					);
-			$_ = "SELECT company_id, user_id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,strAnnualPurchases, dblCreditLimit, strAccountsPayableContact, to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI') FROM CreditApplications ".
-				"WHERE id=?";
+			$_ = "SELECT company_id, user_id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,strAnnualPurchases, dblCreditLimit, strAccountsPayableContact, to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI') FROM CreditApplications WHERE id=?";
 
 			@variable{
 				'hiddenCustomerID',
@@ -371,8 +370,9 @@ sub credit_applications {
 					'SubmissionDate',
 			} = sql::execute( $log, $dbh, $_, $credit_app );
 
-			if ( ! sql::execute( $log, $dbh, 'SELECT index FROM company WHERE index=?', $variable{'hiddenCustomerID'} ) ) {
-				return misc::error( $log, $dbh, \%variable, 'Deleted Customer', "The company that created this credit app has been deleted from the system.  This credit app has been deleted." );
+			my $Company = new openprint::Company( $variable{'hiddenCustomerID'} );
+			if ( ( ! $Company->id() ) or $Company->deleted() ) {
+				return misc::error( $log, $dbh, \%variable, 'Deleted Customer', 'The company that created this credit app has been deleted from the system.' );
 			} # end if
 
 			my $customer_credit = new openprint::customer_credit( $variable{'hiddenCustomerID'}, $session{'company_id'} );
@@ -386,19 +386,18 @@ sub credit_applications {
 			$params{'siteURL'} = $config{'siteURL'};
 			$params{'SecureSiteURL'} = $config{'SecureSiteURL'};
 
-			my $Me = new openprint::User( $variable{'UserIndex'} );
+			my $User = new openprint::User( $variable{'UserIndex'} );
 
 			$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
 			$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
 			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 			my $template = ssi::variable_substitution( \$_, \%params );
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM	=> $config{'AdministratorEmail'},
-					TO		=> $Me->email(),
+					TO	=> $User,
 					SUBJECT => 'Credit Status Changed.'
+					ATTACHMENTS	=>	[ '', encode_qp($template), 'text/html', 'quoted-printable' ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 		} # end if
 	} # end if
 	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_start', -180 );
@@ -414,7 +413,7 @@ sub credit_applications {
 sub credit_application {
 
 	my %credit_fields = (
-			'txtTerms'			=>	'Terms',
+			'txtTerms'		=>	'Terms',
 			'CreditLimit'		=>	'CreditLimit',
 			'txtDownpayment'	=>	'Downpayment',
 			);

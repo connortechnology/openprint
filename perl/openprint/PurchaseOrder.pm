@@ -1,4 +1,5 @@
 use strict;
+use Math::Round qw(nearest);
 package openprint::PurchaseOrder;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
@@ -154,20 +155,19 @@ sub send_approval_required_notification {
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
+	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit >='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
 		next if ! Email::Valid->address($U->email() );
 
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
-				TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+		new openprint::Email()->send(
+				FROM    => $Me,
+				TO      => $U,
 				SUBJECT => 'Purchase Order requiring approval: ' . $self->id(),
+				ATTACHMENTS	=>	 \@body,
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end foreach U
 } # end sub send_approval_required_notification
 
@@ -191,9 +191,9 @@ sub send_to_vendor {
 	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
-			SMTP    => $config{'Mail Server'},
-			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			FROM    => $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			ATTACHMENTS => \@attachments;
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
@@ -201,7 +201,7 @@ sub send_to_vendor {
 		$email =~ s/^\s*(.*)\s*$/$1/;
 		next if ! $email;
 		$mail{'TO'}	= $email;
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		new openprint::Email()->send(%mail);
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
@@ -243,14 +243,11 @@ sub subtotal {
 	} # end if
 	if ( ! defined $_[0]{'subtotal'} ) {
 		$_[0]{'subtotal'} = 0;
-$openprint::log->debug("subtotal");
 		foreach my $C ( $_[0]->Contents() ) {
-$openprint::log->debug("Content : " . $C->total() );
 			$_[0]{'subtotal'} += $C->total();
 		} # end foreach
-		$_[0]{'subtotal'} = sprintf( '%.2f', $_[0]{'subtotal'} );
+		$_[0]{'subtotal'} = Math::Round::nearest( 0.01, $_[0]{'subtotal'} );
 	} # end if
-$openprint::log->debug("subtotal: $_[0]{subtotal}");
 	return $_[0]{'subtotal'};
 } # end sub subtotal
 
@@ -261,10 +258,10 @@ sub total {
 	} # end if
 	if ( ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal();
-        foreach my $Tax ( $self->Taxes() ) {
-            $$self{'total'} += $Tax->amount();
-        } # end foreach Tax
-		$$self{'total'} = sprintf('%.2f', $$self{'total'} );
+		foreach my $Tax ( $self->Taxes() ) {
+			$$self{'total'} += $Tax->amount();
+		} # end foreach Tax
+		$$self{'total'} = Math::Round::nearest( 0.01, $$self{'total'} );
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -359,12 +356,12 @@ sub Taxes {
                     'country'   =>  $self->Supplier()->country(),
                     'state'     =>  $self->Supplier()->state(),
                 ) ) {
-            my $T = new openprint::PurchaseOrder_Tax();
-            $T->set({
+		my $T = new openprint::PurchaseOrder_Tax();
+		$T->set({
 				'PurchaseOrder'		=>	$self,
-                'tax_id'    		=>  $$Tax{'id'},
-                'rate'      		=>  $$Tax{'rate'},
-            });
+				'tax_id'    		=>  $$Tax{'id'},
+				'rate'      		=>  $$Tax{'rate'},
+				});
 			if ( $$self{'id'} ) {
 				$T->save({'purchaseorder_id'	=>  $$self{'id'}});
 			} # end if
@@ -377,7 +374,7 @@ sub Taxes {
 				'period_end_null_or_>='     =>  $$self{'created_on'},
 				'country'   =>  $self->Supplier()->country(),
 				'state'     =>  $self->Supplier()->state(),
-		   );
+				);
 
 		# Clear out any no longer valid taxes
 		foreach my $Tax ( @{$$self{'Taxes'}} ) {
@@ -385,7 +382,7 @@ sub Taxes {
 				$Tax->delete();
 			} # end if
 		} # end foreach old Tax
-        @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
+		@{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
 		if ( @new_taxes != @{$$self{'Taxes'}} ) {
 			foreach my $Tax ( @new_taxes ) {
 				if ( ! sets::isin( $Tax->id(), [ map { $_->tax_id() } @{$$self{'Taxes'}} ] ) ) {
