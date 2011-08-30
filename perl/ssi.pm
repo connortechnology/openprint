@@ -645,6 +645,20 @@ sub radio {
 	} # end foreach value
 	return $html;
 } # end sub radio
+sub checkboxes {
+	my ( $name, $values, $selected, $options ) = @_;
+
+	my $onclick = $$options{'onclick'} if $options;
+	my $html;
+
+	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= sprintf(q`
+				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+				<label class="radio" for="%1$s%2$s">%3$s</label>
+				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+	} # end foreach value
+	return $html;
+} # end sub checkboxes
 
 sub date_filter {
     my ( $field, $sql_field, $hash ) = @_;

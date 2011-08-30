@@ -66,6 +66,10 @@
 				<? echo ( ssi::date_select_session( '/employee/performance/history.html', 'starttime_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} ); ) ?>
 				</span>
 			</li>
+			<li>
+			<label>Unreported Shifts:</label>
+			<? echo ( ssi::radio( 'unreported', [ 'Y', 'Yes','N', 'No', '', 'Both' ], $session{'/employee/performance/history.html?unreported'}, { 'onclick'=>q`load('Results', $('f1'));` } ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( '',

@@ -696,20 +696,18 @@ sub skid_details {
 			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
 			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} # end if
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	$variable{'skid_id'} = $param{'skid_id'};
-	$variable{'rfidtag_id'} = $param{'rfidtag_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
 	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
@@ -750,8 +748,8 @@ sub skid_details {
 				return;
 			} # end if
 
-			foreach my $rfidtag_id ( misc::trim( @rfidtags ) ) {
-				$log->debug( $rfidtag_id );
+			foreach my $rfidtag_id ( @rfidtags ) {
+				#$log->debug( $rfidtag_id );
 				if ( $_ = openprint::RFIDTag::is_invalid_id( $rfidtag_id ) ) {
 					$variable{'error'} .= "RFIDTAG $rfidtag_id is invalid: $_.<br/>";
 					next;
@@ -766,6 +764,7 @@ sub skid_details {
 				} # end if
 			} # end foreach rfidtag_id
 		} # end if
+		return if $variable{'error'};
 
 		if ( $param{'skid_quantity'} ) {
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {

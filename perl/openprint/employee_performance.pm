@@ -115,14 +115,14 @@ sub history {
 		foreach ( 
                 'starttime_start_year','starttime_start_month','starttime_start_day',
                 'starttime_end_year','starttime_end_month','starttime_end_day',
-                'category', 'equipment_id', 'operator_id' ) {
+                'category', 'equipment_id', 'operator_id', 'unreported' ) {
 			delete $session{'/employee/performance/history.html?$_'};
 		} # end foreach
 	} # end if
     ssi::save_params( '/employee/performance/history.html', (
                 'starttime_start_year','starttime_start_month','starttime_start_day',
                 'starttime_end_year','starttime_end_month','starttime_end_day',
-                'category', 'equipment_id', 'operator_id' ) );
+                'category', 'equipment_id', 'operator_id', 'unreported' ) );
     ssi::setup_date_select( '/employee/performance/history.html', 'starttime_start', -7 );
     ssi::setup_date_select( '/employee/performance/history.html', 'starttime_end', '' );
 	$session{'/employee/performance/history.html?category'} = 'Printing' if ! $session{'/employee/performance/history.html?category'};
