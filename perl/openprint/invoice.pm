@@ -2,6 +2,7 @@ package openprint::invoice;
 
 use strict;
 use openprint;
+use Math::Round;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -214,7 +215,7 @@ $log->debug("Total: $total");
 					my $I = new openprint::Invoice_Interest();
 					$_ = $I->save({
 							'invoice_id'=>$variable{'Invoice'}->id(),
-							'amount'	=>	sprintf('%.2f', ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
+							'amount'	=>	Math::Round::nearest( .01, ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
 							'compounded_on'	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {

@@ -1,4 +1,5 @@
 use strict;
+use Math::Round;
 package openprint::Invoice;
 our @ISA = qw(openprint::Object);
 #use Carp qw(cluck);
@@ -90,7 +91,7 @@ sub is_paid {
 
 sub owing {
 #$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
-	return sprintf('%.2f', $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
+	return Math::Round::nearest( .01, $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
 sub Invoicee {
@@ -120,7 +121,7 @@ sub subtotal {
 			$$self{'subtotal'} += $P->total();
 		}# end foreach P
 	} # end if
-	return sprintf('%.2f', $$self{'subtotal'} );
+	return Math::Round::nearest( .01, $$self{'subtotal'} );
 } # end sub subtotal
 
 sub total {
@@ -136,7 +137,7 @@ sub total {
 			$$self{'total'} += $Tax->amount();
 		} # end foreach Tax
 	} # end if
-	return sprintf('%.2f', $$self{'total'} );
+	return Math::Round::nearest( .01, $$self{'total'} );
 } # end sub total
 
 sub interest {

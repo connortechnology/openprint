@@ -274,5 +274,9 @@ sub _assets {
 sub _asset_search_results {
 } # end sub _asset_search_results
 
+sub _like {
+	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	
+} # end sub _like
 1;
 __END__

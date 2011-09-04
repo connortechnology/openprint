@@ -27,5 +27,15 @@ sub _like_button {
 	} # end if
 } # end sub like_button
 
+sub _likes {
+	my $Object = $variable{'Object'} = $param{'object_type'}->new( $param{'object_id'} );
+	my $Like = $Object->Like();
+	if ( $Like ) {
+		$Object->unlike();
+	} else {
+		$Object->like();
+	} # end if
+} # end sub _likes
+
 1;
 __END__

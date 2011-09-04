@@ -761,18 +761,35 @@ sub transform {
 
 } # end sub transform
 
+sub likes {
+	my $type = ref $_[0];
+	$type =~ s/^openprint:://;
+	my $html;
+	my @Likes = openprint::Like->find('user_id !='=>$session{'user_id'}, 'object_type'=> $type, 'object_id'=>$_[0]->id() );
+	if ( ! @Likes ) {
+		$html = 'No one loves this yet.  Be the first!';
+	} elsif ( @Likes == 1 ) {
+		$html = '1 other person loves this.';
+	} else {
+		$html = @Likes . ' people love this.';
+	} # end if
+	$html .= $_[0]->like_button( 'Likes', '/includes/_likes.html' );
+	return $html;
+} # end sub likes
+
 sub like_button {
 	my $Like = $_[0]->Like();
 	my $html;
 	my $div = $_[1];
+	my $url = @_ > 2 ? $_[2] : '/includes/_like_button.html';
 	if ( ! $div ) {
 		$div = 'like_button';
 		$html = '<span id="like_button">';
 	} # end if
 	if ( $Like ) {
-		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
 	} else {
-		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '/includes/_like_button.html', { parameters: { object_type: '%s', object_id: %d } } );`, $div, ref $_[0], $_[0]{'id'} ) } );
+		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
 	} # end if
 	if ( ! $_[1] ) {
 		$html .= '</span>';
