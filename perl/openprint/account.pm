@@ -228,7 +228,7 @@ sub registration {
 				new openprint::Email()->send(
 						FROM	=> $agent,
 						TO	=> $Notification,
-						SUBJECT => 'New Login Application'
+						SUBJECT => 'New Login Application',
 						ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
@@ -241,7 +241,7 @@ sub registration {
 					FROM	=> $agent,
 					TO	=> $to,
 					'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
-					SUBJECT => 'New Login Application'
+					SUBJECT => 'New Login Application',
 					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 					);
 		} # end foreach
@@ -253,7 +253,7 @@ sub registration {
 			new openprint::Email()->send(
 					FROM	=> $agent,
 					TO	=> $User,
-					SUBJECT => 'New Login Application'
+					SUBJECT => 'New Login Application',
 					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 					);
 		} # end if
@@ -484,7 +484,7 @@ sub login {
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
 					FROM 	=> $config{'AdministratorEmail'},
-					TO	=> sprintf('"%s %s" <%s>', $Users[0]->get('firstname','lastname','email') ),
+					TO	=> $User,
 					SUBJECT	=> 'Forgotten Password',
 					ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
@@ -640,7 +640,7 @@ sub credit_application {
 		new openprint::Email()->send(
 				FROM	=> $config{'CreditApplicationEmail'},
 				TO	=> $config{'CreditApplicationEmail'},
-				SUBJECT => "New Credit Application"
+				SUBJECT => 'New Credit Application',
 				ATTACHMENTS	=> [ '', encode_qp($template), 'text/html', 'quoted-printable' ],
 				);
 	} # end if Apply

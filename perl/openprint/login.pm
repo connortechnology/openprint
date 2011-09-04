@@ -200,8 +200,9 @@ sub email_password {
 		
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = ssi::variable_substitution( \$content, {} );
-			$_ = encode_qp( ssi::variable_substitution( \$email_template, {} ) );
+			my %info;
+			$info{'ReplacementText'} = ssi::variable_substitution( \$content, \%info );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			new openprint::Email()->send(
 					FROM 	=> $config{'AdministratorEmail'},
 					TO	=> @Users,

@@ -193,7 +193,7 @@ sub send_to_vendor {
 	my %mail = (
 			FROM    => $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
-			ATTACHMENTS => \@attachments;
+			ATTACHMENTS => \@attachments,
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';

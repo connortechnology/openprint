@@ -119,7 +119,7 @@ sub save {
 		new openprint::Email()->send(
 				FROM    => $openprint::config{'LoginEmail'},
 				TO      => $openprint::config{'LoginEmail'},
-				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!"
+				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!",
 				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
 	} # end if
