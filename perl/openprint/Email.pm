@@ -96,6 +96,9 @@ sub send {
 				$mail{'TO'} = $recipient;
 			} # end if
 		} # end if
+		if ( $openprint::config{'EmailTo'} ) {
+			$mail{'TO'} = $openprint::config{EmailTo};
+		} # end if
 		misc::send_email_with_attachment( $openprint::log, \%mail, @attachments );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
 

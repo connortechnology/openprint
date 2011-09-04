@@ -17,7 +17,7 @@
 				</p>
 				<table class="List">
 					<tr> 
-						<th class="Add">&nbsp;</th>
+						<th class="checkbox">&nbsp;</th>
 						<th class="Range">Quantity Range</th>
 						<th class="Units">Units</th>
 						<th class="Cost">Cost</th>
@@ -30,15 +30,17 @@
 						my @Prices = openprint::MaterialPrice->find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
 						foreach my $Price ( @Prices ) {
 							$html .= '<tr>';
-							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
+							$html .= sprintf('<td class="checkbox"><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
 							$html .= sprintf('<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%4$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%5$s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->min(), $Price->max() );
-							$html .= sprintf('<td><input type="text" name="units-%d-%s-%d" value="%s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->units() );
-							$html .= sprintf('<td><input type="number" name="cost-%d-%s-%d" value="%s" onkeyup="calc_from_cost(this);" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->cost() );
-							$html .= sprintf('<td><input type="number" name="markup-%d-%s-%d" value="%s" onkeyup="calc_from_markup(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->markup() );
-							$html .= sprintf('<td><input type="number" name="price-%d-%s-%d" value="%s" onkeyup="calc_from_price(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->price() );
+							$html .= sprintf('<td class="Units"><input type="text" name="units-%d-%s-%d" value="%s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->units() );
+							$html .= sprintf('<td class="Cost"><input type="number" name="cost-%d-%s-%d" value="%s" onkeyup="calc_from_cost(this);" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->cost() );
+							$html .= sprintf('<td class="Markup"><input type="number" name="markup-%d-%s-%d" value="%s" onkeyup="calc_from_markup(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->markup() );
+							$html .= sprintf('<td class="Price"><input type="number" name="price-%d-%s-%d" value="%s" onkeyup="calc_from_price(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->price() );
 							$html .= sprintf('<td class="Discount"> 
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="Y" %4$s /> Yes
-								<input type="radio" name="discount-%1$d-%2$s-%3$d" value="N" %5$s /> No 
+								<input type="radio" name="discount-%1$d-%2$s-%3$d" id="discount-%1$d-%2$s-%3$dY" value="Y" %4$s />
+								<label class="radio" for="discount-%1$d-%2$s-%3$dY">Yes</label>
+								<input type="radio" name="discount-%1$d-%2$s-%3$d" id="discount-%1$d-%2$s-%3$dN" value="N" %5$s />
+								<label class="radio" for="discount-%1$d-%2$s-%3$dN">No</label>
 							</td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) );
 							$html .= '</tr>';
 						} # end foreach
@@ -58,7 +60,7 @@
 			</p>
 			<table class="List">
 			<tr> 
-				<th class="Add">&nbsp;</th>
+				<th class="checkbox">&nbsp;</th>
 				<th class="Range">Quantity Range</th>
 				<th class="Units">Units</th>
 				<th class="Cost">Cost</th>
@@ -73,13 +75,15 @@
 					-
 					<input type="number" name="max-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;">
 				</td>
-				<td><input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="number" name="cost-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="number" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td><input type="number" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-				<td>
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> Yes
-					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" /> No
+				<td class="Units"><input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
+				<td class="Cost"><input type="number" name="cost-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
+				<td class="Markup"><input type="number" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
+				<td class="Price"><input type="number" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
+				<td class="Discount">
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y" value="Y" checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y">Yes</label>
+					<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N" value="N" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
+					<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N">No</label>
 				</td>
 			</tr>
 			</table>

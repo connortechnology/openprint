@@ -1102,19 +1102,16 @@ sub send_paper_arrival_notification {
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $From = new openprint::User( $session{'user_id'} );
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO		=> join(',', map { sprintf('"%s" <%s>', $_->name(), $_->email()) } @To ),
+			new openprint::Email()->send(
+					FROM	=> new openprint::User( $session{'user_id'} ),
+					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
+					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
 		} # end if to
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
