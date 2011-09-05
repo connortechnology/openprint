@@ -345,6 +345,13 @@ foreach my $config_action ( keys %config_actions ) {
 	} # end if
 } # end foreach config_action
 
+if ( ! sets::isin( 'object_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
+}
+
 if ( ! sets::isin( 'comments', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -353,6 +360,16 @@ if ( ! sets::isin( 'comments', \@tables ) ) {
 	if ( ! exists $$data{'approved'} ) {
 		$dbh->do('ALTER TABLE Comments add approved boolean not null default false');
 	} # endif
+	if ( exists $$data{'object_type'} ) {
+		if ( ! exists $$data{'object_type_id'} ) {
+		$dbh->do('ALTER TABLE comments add object_type_id INTEGER');
+		$dbh->do('UPDATE comments set object_type_id=(SELECT id FROM object_types WHERE name=object_type)');
+		$dbh->do('ALTER TABLE comments add FOREIGN KEY (object_type_id) REFERENCES object_types (id)');
+		$dbh->do('ALTER TABLE comments alter object_type_Id SET NOT NULL');
+		} # end if
+		$dbh->do('ALTER TABLE comments DROP object_type');
+		$dbh->do('CREATE INDEX comments_idx ON comments ( object_type_id, object_id )');
+	} # end if
 }
 if ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Shifts.sql' ) );
@@ -490,6 +507,17 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='likes'", 'column_name');
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('ALTER TABLE likes add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( exists $$data{'object_type'} ) {
+		if ( ! exists $$data{'object_type_id'} ) {
+		$dbh->do('ALTER TABLE likes add object_type_id INTEGER');
+		$dbh->do('UPDATE likes set object_type_id=(SELECT id FROM object_types WHERE name=object_type)');
+		$dbh->do('ALTER TABLE likes add FOREIGN KEY (object_type_id) REFERENCES object_types (id)');
+		$dbh->do('ALTER TABLE likes alter object_type_Id SET NOT NULL');
+		
+		} # end if
+		$dbh->do('ALTER TABLE likes DROP object_type');
+		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
 	} # end if
 }
 

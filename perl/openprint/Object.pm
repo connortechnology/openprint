@@ -6,6 +6,7 @@ use strict;
 use openprint ();
 require sets;
 require openprint::Like;
+require openprint::Object_Type;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -763,13 +764,16 @@ sub transform {
 
 sub likes {
 	my $type = ref $_[0];
-	$type =~ s/^openprint:://;
 	my $html;
-	my @Likes = openprint::Like->find('user_id !='=>$session{'user_id'}, 'object_type'=> $type, 'object_id'=>$_[0]->id() );
+	my @Likes = openprint::Like->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	if ( ! @Likes ) {
 		$html = 'No one loves this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
-		$html = '1 other person loves this.';
+		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
+			$html .= 'You love this.';
+		} else {
+			$html = '1 person loves this.';
+		} # end if
 	} else {
 		$html = @Likes . ' people love this.';
 	} # end if
@@ -799,10 +803,8 @@ sub like_button {
 
 sub like {
 	my $Like = $_[0]->Like();
-	my $type = ref $_[0];
-	$type =~ s/^openprint:://;
 	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'}});
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}});
 		$_[0]{'Like'} = $Like;
 	} # end if
 } # end sub like
@@ -818,12 +820,21 @@ sub Like {
 		$_[0]{'Like'} = $_[1];
 	} 
 	my $type = ref $_[0];
-	$type =~ s/^openprint:://;
 	if ( ! defined $_[0]{'Like'} ) {
 		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'});
 	} # end if
 	return $_[0]{'Like'};
 } # end sub Like
+
+sub Object_Type {
+	if ( $_[0]{'object_type_id'} ) {
+		$_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
+	} else {
+		$_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
+		$_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
+	} # end if
+	return $_[0]{'Object_Type'};
+} # end sub Object_Type
 
 1;
 __END__
