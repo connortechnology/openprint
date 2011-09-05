@@ -1,4 +1,5 @@
 package openprint::maps;
+use strict;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
@@ -11,7 +12,6 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 require openprint::Location;
 
-use strict;
 
 sub index {
    if ( $param{'selected_name'} ) {
@@ -31,9 +31,14 @@ sub index {
     if ( defined $param{'parent'} and $variable{'Location'}->parent() ) {
         $variable{'Location'} = $variable{'Location'}->parent();
     } # end if
-    $variable{'MapFile'} = $variable{'Selected'} ? join('_', $variable{'Location'}->name(), $variable{'Selected'}->name() ) : $variable{'Location'}->name();
+	if ( $variable{'Selected'} and ( $variable{'Selected'}->id() != $variable{'Location'}->id() ) ) {
+$log->debug("selected $param{selected_id} $param{located_id} " . $variable{'Location'}->name() . ' -> ' . $variable{'Selected'}->name() );
+		$variable{'MapFile'} = join('/', $variable{'Location'}->name(), $variable{'Selected'}->name() );
+	} else {
+		$variable{'MapFile'} = $variable{'Location'}->name();
+	} # end if
 
-} # end sub view_host
+} # end sub index
 
 1;
 __END__

@@ -100,7 +100,7 @@
 				<? echo ( join('',
 				#ssi::writeButton( $log, $dbh, 'updateLocation', 'update.gif', "jsrsExecute( '/jsrs.htm',  cbFillResults, 'openprint::Ekahau::jsrs_find', serialize(f1) );", '', 'Update Location' ),
 				#ssi::writeButton( $log, $dbh, 'showLocation', 'show.gif', "open_window('/ekahau.png?skid_id=$$variable{Skid}{id}','Location','width=640,height=640');", '', 'Show Location' ),
-				ssi::writeButton( $log, $dbh, 'showMap', 'show.gif', "open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');", '', 'Map' ),
+				ssi::button( 'Map', { 'onclick'=>"open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{Skid}{id}','Location','width=400,height=400,scrollbars=yes');" } ),
 				); ) ?>
 			</p>
 <? if ( $$variable{'Skid'}->id() ) ?>
