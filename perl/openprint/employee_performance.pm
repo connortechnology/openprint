@@ -76,7 +76,7 @@ sub history {
 		push @header, map { $_->name() } @Types;
 		push @header, 'Total';
 		my @data;
-		foreach my $Shift ( openprint::Shift::find( 
+		foreach my $Shift ( openprint::Shift->find( 
 					( $session{'/employee/performance/history.html?operator_id'} ? ( 'operator_id'=>$session{'/employee/performance/history.html?operator_id'} ) : () ),
 					( $session{'/employee/performance/history.html?equipment_id'} ? ( 'equipment_id in'=>[ split(',',$session{'/employee/performance/history.html?equipment_id'} ) ] ) : () ),
 					ssi::date_filter( '/employee/performance/history.html?starttime_start', 'starttime >=' ),
