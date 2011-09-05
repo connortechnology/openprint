@@ -340,6 +340,10 @@ sub location {
 sub location_id {
 	my ( $self, $new ) = @_;
 
+	if ( $new ) {
+		$$self{'location_id'} = $new;
+	} # end if
+
 	if ( $$self{'rfidtag_id'} ) {
 		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
 		if ( $new ) {
@@ -350,8 +354,6 @@ sub location_id {
 		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
 			$$self{'location_id'} = $Tag->location_id();
 		} # end if
-	} elsif ( $new ) {
-		$$self{'location_id'} = $new;
 	} # end if
 	return $$self{'location_id'};
 } # end sub location_id

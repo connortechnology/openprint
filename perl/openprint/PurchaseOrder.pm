@@ -427,7 +427,7 @@ sub can_view {
 	if ( 
 			( $openprint::session{'user_type'} eq 'A' )
 			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
-			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
 	   ) {
 		return 1;
 	} # end if
