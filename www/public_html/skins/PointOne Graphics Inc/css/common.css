@@ -514,7 +514,7 @@ td.Date, th.Date {
 	width: 120px;
 	text-align: right;
 }
-td.DateTime, th.DateTime {
+table .DateTime {
 	width: 150px;
 	text-align: left;
 }
@@ -558,7 +558,7 @@ td.Price, th.Price {
 	width: 100px;
 	text-align: right;
 }
-td.Status, th.Status {
+table .Status {
 	width: 100px;
 	text-align: right;
 	padding-right: 4px;

@@ -1,15 +1,13 @@
-package openprint::Upload;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Upload;
+our @ISA = qw( openprint::Object );
 
 require openprint::Company;
 require openprint::File;
 use openprint ();
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
+$debug = 1;
 $table = 'uploads';
 $serial = 'upload_id_seq';
 %fields = (
@@ -23,39 +21,6 @@ $serial = 'upload_id_seq';
 	'company'		=>	'company',	
 	'type'			=>	'type',
 );
-
-my $debug = 1;
-
-sub find {
-	my %params = @_;
-	my $sql = q{SELECT * FROM Uploads WHERE 1>0};
-	my @values;
-	if ( $params{'company_id'} ) {
-		$sql .= q{ AND company_id=?};
-		push @values, $params{'company_id'};
-	} # end if
-	if ( $params{'started_on_start'} and $params{'started_on_end'} ) {
-		$sql .= q{ AND (start BETWEEN ? AND ?)};
-		push @values, $params{'started_on_start'},$params{'started_on_end'};
-	} elsif ( $params{'started_on_start'} ) {
-		$sql .= q{ AND started_on >= ?};
-		push @values, $params{'started_on_start'};
-	} elsif ( $params{'started_on_end'} ) {
-		$sql .= q{ AND started_on <= ?};
-		push @values, $params{'started_on_end'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-	$sql .= " LIMIT $params{'limit'}" if ( $params{'limit'} );
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading Upload: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Upload: ($sql) (@values) (".@$data.')');
-	} # end if
-	return map { new openprint::Upload( $_->{id}, $_ ); } @$data;
-} # end sub find
 
 sub Company {
 	my $self = shift;
@@ -74,12 +39,11 @@ sub Files {
 
 sub total_text {
 	my ( $self ) = @_;
-	return misc::format_bytes( $$self{'total'} );
+	return misc::format_bytes( $$self{'total'}, '.1' );
 } #end sub total_text
 sub size_text {
 	my ( $self ) = @_;
-	return misc::format_bytes( $$self{'size'} );
+	return misc::format_bytes( $$self{'size'}, '.1' );
 } #end sub size_text
 1;
 __END__
-
