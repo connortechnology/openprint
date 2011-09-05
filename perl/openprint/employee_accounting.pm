@@ -395,7 +395,7 @@ sub credit_applications {
 			new openprint::Email()->send(
 					FROM	=> $config{'AdministratorEmail'},
 					TO	=> $User,
-					SUBJECT => 'Credit Status Changed.'
+					SUBJECT => 'Credit Status Changed.',
 					ATTACHMENTS	=>	[ '', encode_qp($template), 'text/html', 'quoted-printable' ],
 					);
 		} # end if
