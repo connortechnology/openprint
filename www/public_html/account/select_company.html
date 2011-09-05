@@ -62,7 +62,6 @@
 				$html .= sprintf('<a href="/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
 					$Log->company_id(), $Log->Company()->name(),
 				);
-				last if @companies >= 10;
 			} # end foreach
 			return $html;
 			) ?>
