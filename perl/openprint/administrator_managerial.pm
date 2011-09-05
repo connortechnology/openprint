@@ -804,6 +804,7 @@ sub upload_log {
 	ssi::save_params( '/administrator/managerial/upload_log.html', ( 
 		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
 		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+		'company_id','type',
 	) );
 
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );

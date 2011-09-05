@@ -1,25 +1,30 @@
 <form name="searchLog" action="upload_log.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
-		<p>
-			<label>Date:</label>
-			<span class="DateSelector">
-			<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
-			</span>
-			to
-			<span class="DateSelector">
-			<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
-			</span>
-		</p>
-		<p>
-			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
-			<select name="company_id" id="company_id" onchange="searchLog.submit();" >
-				<option value="">All</option>
-				<? echo (
-					return openprint::Company::get_dropdown( $param{'company_id'} );
-				) ?>
-			</select>
-		</p>
+		<ul>
+			<li>
+				<label>Date:</label>
+				<span class="DateSelector">
+				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
+				</span>
+				to
+				<span class="DateSelector">
+				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_end',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
+				</span>
+			</li>
+			<li>
+				<label>Company:</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
+				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
+					<option value="">All</option>
+					<? echo (
+						return openprint::Company::get_dropdown( $param{'company_id'} );
+					) ?>
+				</select>
+			</li>
+			<li><label>Type:</label>
+				<? echo ( ssi::radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
+			</li>
+		</ul>
 		<p class="buttons">
 		<? echo ( ssi::button( 'Search',{ 'onclick'=>'document.searchLog.submit();'} ); ) ?>
 		</p>
@@ -36,26 +41,29 @@
 			<th class="Size">Received / Size</th>
 			<th class="Status">Status</th>
 		</tr>
-			<? echo (
-				require openprint::Upload;
-				my $html = '';
-				my $rowclass;
-				my @Uploads = openprint::Upload->find(
-					( $param{'company_id'} ? ( 'company_id'=>$param{'company_id'} ) : () ),
-					ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
-					ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
-					'limit'	=>	1000,
-					'order'=>'start DESC',
-				);
+		<? echo (
+			require openprint::Upload;
+			my $html = '';
+			my $rowclass;
+			my @Uploads = openprint::Upload->find(
+				ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_start', 'start >=' ),
+				ssi::date_filter( '/administrator/managerial/upload_log.html?uploaded_on_end', 'start <=' ),
+				( $session{'/administrator/managerial/upload_log.html?type'} ? ( 'type'=>$session{'/administrator/managerial/upload_log.html?type'} ) : () ),
+				( $session{'/administrator/managerial/upload_log.html?company_id'} ? ( 'company_id'=>$session{'/administrator/managerial/upload_log.html?company_id'} ) : () ),
+				'limit'	=>	1000,
+				'order'=>'start DESC',
+			);
+			my $total = 0;
 
-				my $total = 0;
+			foreach my $Upload ( @Uploads ) {
+
 				my $company_name = $Upload->company_id() ? $Upload->Company()->name() : $Upload->company();
 
 				my @files = map { $_->filename() } $Upload->Files();
 				for ( my $i = 0; $i < @files; $i += 1 ) {
-				if ( ( $_ ) = $files[$i] =~ /^\/$company_name(.*)/ ) {
-					$files[$i] = $_;
-				} # end if
+					if ( ( $_ ) = $files[$i] =~ /^\/$company_name(.*)/ ) {
+						$files[$i] = $_;
+					} # end if
 				} # end for
 
 				$html .= sprintf('<tr%s><td class="DateTime">%s</td>
