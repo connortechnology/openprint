@@ -459,7 +459,7 @@ sub send_additional_charges_notifications {
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-	new openprint::Email()->send(
+	my $results = ( new openprint::Email() )->send(
 			FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 #TO      => 'iconnor@point-one.com, rick@point-one.com',
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
@@ -471,7 +471,7 @@ sub send_additional_charges_notifications {
 			ATTACHMENT	=>	['', $_, 'text/html', 'quoted-printable'],
 			);
 	my $Project = new openprint::Project( $project_index );
-	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $mail{TO}." );
+	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $results." );
 
 } # End sub send_additional_charges_notifications
 

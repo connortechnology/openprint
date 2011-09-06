@@ -471,7 +471,6 @@ sub view {
 		openprint::main_project::view( $project_index );
 	} # end if
 	$variable{'Project'} = $Project if ! $variable{'Project'};
-
 } # end sub view
 
 sub send_additional_charges_notifications {
