@@ -827,9 +827,13 @@ sub Like {
 } # end sub Like
 
 sub Object_Type {
+$log->debug(" Object_Type: id " . $_[0]);
+
 	if ( $_[0]{'object_type_id'} ) {
+$log->debug("Object: Object_Type: id " . $_[0]{'object_type_id'} );
 		$_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
 	} else {
+$log->debug("Object: Object_Type: No id, looking up by name" . ref $_[0] );
 		$_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
 		$_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
 	} # end if

@@ -44,8 +44,12 @@ if ( ! exists $$data{'category_id'} ) {
 } # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
-	if ( ! exists $$data{'image_filename'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD image_filename TEXT');
+	if ( exists $$data{'image_filename'} ) {
+		$dbh->do('ALTER TABLE article_categories DROP image_filename');
+	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE article_categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
 	} # end if
 	if ( ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
