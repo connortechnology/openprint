@@ -434,12 +434,15 @@ sub can_view {
 	return 1 if ! $_[0]{'id'};
 	if ( 
 			( $openprint::session{'user_type'} eq 'A' )
-			or ( $openprint::session{'user_id'} == $_[0]{'created_by'} )
+			or ( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($session{'user_id'})->assistant_ids(), new openprint::User($session{'user_id'})->csr_ids() ] ) )
 			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
-			or ( sets::isin( $openprint::session{'user_id'}, map { $_->Order()->salesrep_id() } $_[0]->Contents() ) )
+			
+			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
 	   ) {
+$openprint::log->debug("Can view");
 		return 1;
 	} # end if
+$openprint::log->debug("Cannot view");
 	return 0;
 } # end sub can_view
 
