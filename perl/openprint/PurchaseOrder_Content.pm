@@ -114,5 +114,17 @@ sub Order {
 	return new openprint::Order();
 } # end sub Order
 
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} == $_[0]->PurchaseOrder()->created_by() )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
+			or ( $openprint::session{'user_id'} == $_[0]->Order()->salesrep_id() )
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_view
 1;
 __END__
