@@ -205,7 +205,12 @@ sub category {
 			$variable{'error'} .= $Album->save({'name'=>'Images for article category: ' . $Category->name()});
 			$variable{'error'} .= $Category->save({'album_id'=>$Album->id()});
 		} # end if
-		$variable{'error'} .= $Album->upload('filename');
+		$variable{'error'} .= $Album->upload('filename', {
+				'name' => $param{'asset_name'},
+				'description' => $param{'asset_description'},
+				'license' => $param{'asset_license'},
+				'attribution' => $param{'asset_attribution'},
+				} );
 	} # end if
 } # end sub category
 
@@ -247,6 +252,13 @@ sub _comments {
 		} else {
 			$variable{'error'} .= 'You are not authorized to approve this comment.';
 		} # end if
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Comment = new openprint::Comment( $param{'comment_id'} );
+		if ( $Comment->can_delete() ) {
+			$Comment->delete();
+		} else {
+			$variable{'error'} .= 'You do not have the right to delete that comment.';
+		} # end if
 	} # end if
 } # end sub _comments
 
@@ -254,11 +266,21 @@ sub _assets {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'func'} eq 'delete' ) {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
-		$Asset->delete();
+		$variable{'error'} .= $Asset->delete();
 	} else {
 		$log->error("article/_assets: Uknown function");
 	} # end if
 } # end sub _assets
+
+sub _category_photos {
+	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Asset = new openprint::Photo_in_Album({'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'}});
+		$variable{'error'} .= $Asset->delete();
+	} else {
+		$log->error("article/_category_photos: Uknown function");
+	} # end if
+} # end sub _category_photos
 
 sub _asset_search_results {
 } # end sub _asset_search_results

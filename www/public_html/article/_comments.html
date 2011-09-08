@@ -16,17 +16,21 @@
 		} # end if
 		foreach my $Comment ( $$variable{'Article'}->Comments( { 'approved' => 1 } ) ) {
 			$html .= sprintf( q`
-				<div class="comment">At %s %s said:<br/>%s</div>
-			`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text() );
+				<div class="comment"><span class="buttons">%4$s</span>At %1$s %2$s said:<br/>%3$s</div>
+			`, Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Comment->created_on() ) ), $Comment->User()->name(), $Comment->text(),
+			join('',
+				( $Comment->can_delete() ? ssi::button( 'Delete'.$Comment->id(), { 'onclick'=>qq`new Ajax.Updater('comments-$$variable{Article}{id}', '/article/_comments.html', { parameters: { comment_id: $$Comment{id}, article_id: '$$variable{Article}{id}', action: 'delete' } } );`, 'text'=>'Delete' } ) : '' ),
+				),
+			);
 		} # end foreach Comment
 		return $html;
 	) ?>
 	<div class="comment">
 		<h1>Add</h1>
-		<form id="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" name="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" action="list.html" method="post">
+		<form id="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" name="comment-form-<? echo ( $$variable{'Article'}->id() ) ?>" action="" method="post" onsubmit="new Ajax.Updater('comments-<? echo ( $$variable{Article}{id} ) ?>', '/article/_comments.html', { parameters: $('comment-form-<? echo ( $$variable{Article}{id} ) ?>').serialize() } );return false;">
 			<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>"/>
 			<textarea name="text" id="text-<? echo ( $$variable{'Article'}->id() ) ?>"></textarea>
-			<? echo ( ssi::button( 'SaveComment'.$$variable{'Article'}->id(), { 'text' => 'Save', 'onclick' => qq`new Ajax.Updater('comments-$$variable{Article}{id}', '/article/_comments.html', { parameters: \$('comment-form-$$variable{Article}{id}').serialize() } );` } ); ) ?>
+			<? echo ( ssi::button( 'SaveComment'.$$variable{'Article'}->id(), { 'text' => 'Save', 'onclick' => qq`\$('comment-form-$$variable{Article}{id}').onsubmit();` } ); ) ?>
 		</form>
 	</div>
 </fieldset>

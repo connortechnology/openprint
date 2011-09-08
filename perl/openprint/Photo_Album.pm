@@ -60,7 +60,7 @@ sub destroy {
 
 sub upload {
 	my $error = '';
-	my $Asset = openprint::Asset::upload( $_[1] );
+	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
 	if ( ref $Asset eq 'openprint::Asset' ) {
 		my $Photo = new openprint::Photo_in_Album({'asset_id'=>$$Asset{'id'},'album_id'=>$_[0]{'id'}});
 		if ( ! $Photo->asset_id() ) {

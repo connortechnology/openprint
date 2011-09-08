@@ -184,6 +184,10 @@ sub upload {
 		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
 			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
+		if ( $_[1] ) {
+			# Should be a hash of more attribute
+			$Asset->save($_[1]);
+		} # end if
 	} # end if
 	return $Asset;
 } # end sub upload

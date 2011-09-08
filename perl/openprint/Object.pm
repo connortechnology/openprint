@@ -762,7 +762,7 @@ sub transform {
 			eval '$_[2] =~ ' . $transform;
 		} # end foreach
 	} else {
-		$openprint::log->error("$_[1] not in fields for $type");
+		$openprint::log->error("Object::transform $_[1] not in fields for $type");
 	} # end if
 	return $_[2];
 
