@@ -275,7 +275,7 @@ sub return_years {
 	$start = $openprint::config{'startYear'} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
 	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
-$log->debug("sub return_years $start .. $end $selected");
+#$log->debug("sub return_years $start .. $end $selected");
 	return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
