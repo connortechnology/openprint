@@ -48,7 +48,7 @@
 			</div>
 		</div>
 		<div class="rightColumn">
-           <fieldset><legend>Photos</legend>
+           <fieldset><legend><a href="/photo_albums/view.html?album_id=<? echo ( $$variable{'Category'}->album_id() ) ?>">Photos</a></legend>
             <? if ( $$variable{'Category'}->id() ) ?>
                 <div id="Photos"><? echo ( 
 					$$variable{'Album'} = $$variable{'Category'}->Photo_Album();

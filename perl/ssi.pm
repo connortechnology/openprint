@@ -544,17 +544,17 @@ sub date_select {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {

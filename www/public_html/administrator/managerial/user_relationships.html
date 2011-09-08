@@ -3,7 +3,8 @@
 		<table>
 			<tr>
 				<th>id</td>
-				<th>text1</th>
+				<th>Name</th>
+				<th>You are/want to be/</th>
 				<th>text2</th>
 				<th>text3</th>
 			</tr>
@@ -13,11 +14,12 @@
 					$html .= sprintf(q`
 						<tr>
 							<td>%1$d</td>
-							<td><input type="text" name="text1-%1$d" id="text1-%1$d" value="%2$s"/></td>
-							<td><input type="text" name="text2-%1$d" id="text2-%1$d" value="%2$s"/></td>
-							<td><input type="text" name="text3-%1$d" id="text3-%1$d" value="%2$s"/></td>
+							<td><input type="text" name="name-%1$d" id="name-%1$d" value="%2$s"/></td>
+							<td><input type="text" name="text1-%1$d" id="text1-%1$d" value="%3$s"/></td>
+							<td><input type="text" name="text2-%1$d" id="text2-%1$d" value="%4$s"/></td>
+							<td><input type="text" name="text3-%1$d" id="text3-%1$d" value="%5$s"/></td>
 						</tr>
-						`, $R->id(), $R->text1(), $R->text2(), $R->text3() );
+						`, $R->id(), $R->name(), $R->text1(), $R->text2(), $R->text3() );
 				} # end foreach R
 				return $html;
 			) ?>

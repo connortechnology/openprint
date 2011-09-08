@@ -21,6 +21,9 @@ sub thumbnail_url {
 
 sub url {
 	my $Asset = $_[0]->Asset();
+if ( ! $Asset ) {
+$openprint::log->error('Photo_in_Album: no aasset in url: ');
+}
 	return $Asset->url();
 } # end sub url 
 

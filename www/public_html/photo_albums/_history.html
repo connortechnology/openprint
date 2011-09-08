@@ -3,7 +3,10 @@
 	foreach my $Album ( openprint::Photo_Album->find( 
 		ssi::date_filter( 'created_on_start', 'created_on >=' ),
 		ssi::date_filter( 'created_on_end', 'created_on <=' ),
+( sets::isin( $session{'user_type'}, ['E','A'] ) ? (
 		( $session{'/photo_albums/history.html?user_id'} ? ( 'user_id' => $session{'/photo_albums/history.html?user_id'} ) : () ),
+		( ( ( defined $session{'/photo_albums/history.html?deleted'} ) and ( $session{'/photo_albums/history.html?deleted'} eq '' ) ) ? ( 'deleted' => [0,1] ) : ( 'deleted'=>$session{'/photo_albums/history.html?deleted'} ) ),
+) : () ),
 		'order'				=> 'created_on',
 		) ) {
 		push @{$$variable{'Albums'}}, $Album;
@@ -22,6 +25,7 @@
 			<th class="thumbnail">&nbsp;</th>
 			<th class="Name">Name</th>
 			<th class="DateTime">Created</th>
+			<th class="Photos"># of Photos</th>
 		</tr>
 		<? echo ( 
 			my $html;
@@ -32,11 +36,13 @@
 						<td class="thumbnail"><a href="/photo_albums/view.html?album_id=%1$d"><img src="%4$s" alt=""/></a></td>
 						<td class="Name"><a href="/photo_albums/view.html?album_id=%1$d">%2$s</a></td>
 						<td class="DateTime"><a href="/photo_albums/view.html?album_id=%1$d">%3$s</a></td>
+						<td class="Photos"><a href="/photo_albums/view.html?album_id=%1$d">%6$d photos</a></td>
 					</tr>
 					`, $Album->id(), ssi::html_escape($Album->name()),
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Album->created_on() ) ),
 					$Album->thumbnail_url(),
 					$rowclass,
+					scalar $Album->Photos(),
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Albums

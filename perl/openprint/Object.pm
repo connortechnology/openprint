@@ -361,8 +361,8 @@ sub destroy {
 	my ( $self ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
-	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{'id'}.'=?', $$self{'id'} );
+	my $fields = eval '\%'.$type.'::fields';
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
 	delete $openprint::Object::cache{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
@@ -535,6 +535,9 @@ sub find {
 		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
 	} # end if
 
+	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
+	my @used_fields;
+
 	foreach ( 'find_fields', 'fields' ) {
 		my $f = eval '\%'.$type.'::'.$_;
 		next if ! $f;
@@ -569,6 +572,7 @@ sub find {
 				} # end if
 			} # end foreach field
 			delete $$params{$k};
+			push @used_fields, $k;
 		} # end foreach k
 		last if ! %$params;
 
@@ -583,6 +587,7 @@ sub find {
 						push @w, shift @{$$results{$operator}};
 						push @d, $k.$operator;
 						push @values, @{$$results{$operator}};
+						push @used_fields, $k;
 					} # end foreach
 				} # end foreach field
 				foreach ( @d ) { delete $$params{$_}; };
@@ -593,6 +598,7 @@ sub find {
 					delete $$params{$k.$operator};
 					push @where, shift @{$$results{$operator}};
 					push @values, @{$$results{$operator}};
+					push @used_fields, $k;
 				} # end foraech
 			} # end if
 		} # end foreach k in fields
@@ -608,6 +614,7 @@ sub find {
 			next if sets::isin( ref $$params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $$fields{$f} ) {
+Carp::cluck("Use of deprecated Object ref in find");
 				if ( $$params{$k}->id() ) {
 					push @where, "$$fields{$f} = ?";
 					push @values, $$params{$k}->id();
@@ -618,8 +625,7 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
-
-	if ( $$fields{'deleted'} and ! exists $$params{'deleted'} ) {
+	if ( $$fields{'deleted'} and ! sets::isin( @used_fields, 'deleted') ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
@@ -660,7 +666,7 @@ sub find {
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
 		if ( $cache_field and 1 ) {
