@@ -8,10 +8,11 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) {
+				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) or ( $$variable{'User'}->id() == $session{'user_id'} ) 
+				) {
 					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } );
+					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html' } );
 				} # end if
-				$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html' } );
 				return $html;
 			) ?>
 		</p>
