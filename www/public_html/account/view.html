@@ -24,9 +24,13 @@
 				} # end if
 				return sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
 			) ?>
+		</div><!--ProfilePicture-->
 				
 			<div id="Albums">
 				<fieldset><legend>Photo Albums</legend>
+					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+					<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+					<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 					<? echo (
 						my $html = '';
 						my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
@@ -43,6 +47,9 @@
 					) ?>
 				</fieldset>
 				<fieldset><legend>Video Albums</legend>
+					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+					<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+					<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 					<? echo (
 						my $html = '';
 						my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
@@ -59,7 +66,6 @@
 					) ?>
 				</fieldset>
 			</div><!--Albums-->
-		</div><!--ProfilePicture-->
 		<div class="Relationships">
 			<fieldset><legend>Relationships</legend>
 				<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
@@ -107,9 +113,11 @@
 							return $html;
 						) ?>
 					</ul>
+					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 					<p class="buttons">
 						<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'New' } ); ) ?>
 					</p>
+					<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 				</div>
 			</fieldset>
 		</div>

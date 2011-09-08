@@ -64,7 +64,7 @@
 					} elsif ( $R->user_id2() == $session{'user_id'} ) {
 						# You are the person confirming
 						$html .= sprintf('<li><span class="buttons">%3$s</span>%1$s claims they are %2$s you</li>',
-								$R->User1()->firstname(), $R->type(),
+								sprintf('<a href="/account/view.html?user_id=%s">%s</a>', $R->user_id1(), $R->User1()->name() ), $R->type(),
 								join('',
 									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Deny'} ),
 									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'Approve'} ),
@@ -75,9 +75,11 @@
 			} # end foreach $Type
 		} # end if %UNapproved
 		
-		$html .= sprintf(q`<li>You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%3$s</select><p class="buttons">%4$s</p></li>`,
+		@Relationships = map { sets::isin( $session{'user_id'}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
+		$html .= sprintf(q`<li class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%3$s</select>%4$s<p class="buttons">%5$s</p></li>`,
 			$session{'user_id'}, $$variable{'User'}->id(), 
 			ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 'id not in'=>[ map { $_->type_id() } @Relationships ] ) ),
+			$$variable{'User'}->name(),
 			ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
 			);
 		return $html;
