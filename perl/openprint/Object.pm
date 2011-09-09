@@ -179,11 +179,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -193,11 +194,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -229,11 +231,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;

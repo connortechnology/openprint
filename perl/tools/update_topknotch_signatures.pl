@@ -75,6 +75,102 @@ if ( 1 ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 		} # end foreach
+            if ( $$services{'Folding'} ) {
+                foreach my $service ( @{$$services{'Folding'}} ) {
+                    my $specs = openprint::service::get_specs_ref( $Project, $service );
+                    foreach my $qty_index ( $Project->quantity_indexes() ) {
+                        if ( $$specs{"ddmEquipment-0-$qty_index"} and ! $$specs{"ddmEquipment-1-$qty_index"} ) {
+                            openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "ddmEquipment-1-$qty_index", $$specs{"ddmEquipment-0-$qty_index"} );
+                            openprint::service::delete_service_spec( $Project->id(), $service, "ddmEquipment-0-$qty_index" );
+                        } # end if
+                    }
+                } # end foraech service
+            } # end if
+            if ( $$services{'Proofs'} ) {
+                foreach my $service ( @{$$services{'Proofs'}} ) {
+                    my $specs = openprint::service::get_specs_ref( $Project, $service );
+                    foreach my $key ( keys %{$specs} ) {
+                        if ( $key =~ /^txtProofIndex-0-(\d*)-(\d*)$/ ) {
+                            my ( $proof_index, $qty_index ) = ( $1, $2 );
+
+                            foreach my $spec (
+                                    'txtProofWidth',
+                                    'txtProofHeight',
+                                    'txtProofQuantity',
+                                    'ddmProofType',
+                                    'txtProofUnitPrice',
+                                    'txtProofIndex',
+                                    'chkOverride',) {
+
+                                openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "$spec-1-$proof_index-$qty_index", $$specs{"$spec-0-$proof_index-$qty_index"} );
+                                openprint::service::delete_service_spec( $Project->id(), $service, "$spec-0-$proof_index-$qty_index" );
+                            } # end foreach spec
+                        } # end if
+                    } # end foreach key
+                } # end foraech service
+            } # end if Proofs
+            if ( $$services{'Cutting'} ) {
+                foreach my $service ( @{$$services{'Cutting'}} ) {
+                    my $specs = openprint::service::get_specs_ref( $Project, $service );
+                    foreach my $spec ( "txtStockCalliper-", "chkOverrideCalliper-", "txtAdditionalCuts" ) {
+                        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, $spec.'1', $$specs{$spec.'0'} );
+                        openprint::service::delete_service_spec( $Project->id(), $service, $spec.'0' );
+                    } # end foreach
+                    foreach my $spec (
+                            "txtCalculatedCuts",
+                            "ddmEquipment",
+                            "ddmStockCutEquipment",
+                            "chkOverrideStockCutEquipment",
+                            "chkOverrideCalculatedCuts",
+                            "OverrideVerticalCuts",
+                            "txtVerticalCuts",
+                            "OverrideHorizontalCuts",
+                            "txtHorizontalCuts",
+                            "OverrideDVerticalCuts",
+                            "txtDVerticalCuts",
+                            "OverrideDHorizontalCuts",
+                            "txtDHorizontalCuts",
+                            ) {
+                        foreach my $qty_index ( $Project->quantity_indexes() ) {
+                            openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+                            openprint::service::delete_service_spec( $Project->id(), $service, "$spec-0-$qty_index" );
+                        } # end foreach qty
+                    } # end foreach spec
+                } # end foraech service
+            } # end if Cutting
+            if ( $$services{'Perforating'} ) {
+                foreach my $service_id ( @{$$services{'Perforating'}} ) {
+                    my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+                    foreach my $spec ( 'txtHorizontalQty', 'txtVerticalQty' ) {
+                        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $spec.'-1', $$specs{$spec.'-0'} );
+                        openprint::service::delete_service_spec( $Project->id(), $service_id, $spec.'0' );
+                    } # end foreach specs
+                    foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition' ) {
+                        foreach my $qty_index ( $Project->quantity_indexes() ) {
+                            openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+                            openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
+                        } # end foreach qty_index
+                    } # end foreach spec
+
+                } # end foreach service_id in Perforating
+            } # end if Perforating
+           if ( $$services{'Scoring'} ) {
+                foreach my $service_id ( @{$$services{'Scoring'}} ) {
+                    my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+                    foreach my $spec ( 'txtHorizontalQty', 'txtVerticalQty' ) {
+                        openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $spec.'-1', $$specs{$spec.'-0'} );
+                        openprint::service::delete_service_spec( $Project->id(), $service_id, $spec.'0' );
+                    } # end foreach specs
+                    foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition','chkOverrideImposition', 'ddmEquipment','chkOverrideEquipment' ) {
+                        foreach my $qty_index ( $Project->quantity_indexes() ) {
+                            openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+                            openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
+                        } # end foreach qty_index
+                    } # end foreach spec
+
+                } # end foreach service_id in Scoring
+            } # end if Scoring
+
 	} # end foreach Project
 	# Only Multipage and Scratch pads have a spceific page, everything else, uses the Signature ServiceType
 	$dbh->do(q`UPDATE project_types set url=NULL WHERE url='prin/prin_broc.html'`);
@@ -94,12 +190,13 @@ if ( ! $ServiceType ) {
 # Copy ProjectType Defaults into ServiceType Defaults
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
-	$SD->save({	
+	$_ = $SD->save({	
 			'name'			=>	$Default->name(),
 			'value'			=>	$Default->value(),
 			'projecttype_id'=>	$Default->projecttype_id(),
 			'servicetype_id'	=>	$ServiceType->id(),
 			} );
+	die $_ if $_;
 	$Default->destroy();
 } # end foreach
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
@@ -110,6 +207,7 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 			'projecttype_id'=>	$Default->projecttype_id(),
 			'servicetype_id'	=>	$ServiceType->id(),
 			} );
+	die $_ if $_;
 	$Default->destroy();
 } # end foreach
 
