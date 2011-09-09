@@ -107,7 +107,7 @@ $log->warn("Not a B") if $debug;
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)Sg(\d+)/i;
 	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
