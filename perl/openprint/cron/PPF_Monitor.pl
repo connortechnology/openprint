@@ -216,7 +216,7 @@ if ( $mangle ) {
 				$log->error("No data! $file_base $docket $sig $side");
 				next;
 			} # end if
-			my $PPF = store_PPF( $docket, $sig, $side, $data );
+			my $PPF = store_PPF( $docket, $name, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
