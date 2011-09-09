@@ -30,6 +30,7 @@ $serial = 'CIP3_PPF_id_seq';
 	'signature'		=>	'signature',
 	'side'			=>	'side',
 	'docket'		=>	'docket',
+	'version'		=>	'version',
 	'deleted'		=>	'deleted',
 	'compressed'	=>	'compressed',
 );
@@ -413,7 +414,7 @@ sub send_ppf {
 		} 
 	} 
 $log->debug("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ) );
-	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
+	my $error = misc::save_file( $log, sprintf('%s/%d_%sSg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'version','docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
 		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {

@@ -19,9 +19,8 @@
 		} else {
 			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
-	} else {
-		$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 	} # end if can edit
+	$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 	return $html;
 ) ?>
 	</p>
