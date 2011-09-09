@@ -108,8 +108,8 @@ sub _photos {
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
-	my $Photo = new openprint::Photo_in_Album( { 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} } );
-	if ( $Photo->user_id() == $session{'user_id'} ) {
+	my $Photo = openprint::Photo_in_Album->find_one( 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} );
+	if ( $Photo and ( $Photo->user_id() == $session{'user_id'} ) ) {
 		if ( $param{'btnFunction'} eq 'Delete' ) {
 			$variable{'error'} .= $Photo->delete();
 			if ( ! $variable{'error'} ) {

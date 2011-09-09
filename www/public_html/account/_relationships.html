@@ -75,13 +75,15 @@
 			} # end foreach $Type
 		} # end if %UNapproved
 		
-		@Relationships = map { sets::isin( $session{'user_id'}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
-		$html .= sprintf(q`<li class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%3$s</select>%4$s<p class="buttons">%5$s</p></li>`,
-			$session{'user_id'}, $$variable{'User'}->id(), 
-			ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 'id not in'=>[ map { $_->type_id() } @Relationships ] ) ),
-			$$variable{'User'}->name(),
-			ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
-			);
+		if ( $session{'user_id'} != $$variable{'User'}->id() ) {
+			@Relationships = map { sets::isin( $session{'user_id'}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
+			$html .= sprintf(q`<li class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%3$s</select>%4$s<p class="buttons">%5$s</p></li>`,
+				$session{'user_id'}, $$variable{'User'}->id(), 
+				ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 'id not in'=>[ map { $_->type_id() } @Relationships ] ) ),
+				$$variable{'User'}->name(),
+				ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
+				);
+		} # end if
 		return $html;
 	) ?>
 </form>

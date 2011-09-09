@@ -224,6 +224,13 @@ if ( ! sets::isin( 'event_categories', \@tables ) ) {
 if ( ! sets::isin( 'photo_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photos_in_albums'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do( 'ALTER TABLE photos_in_albums ADD id SERIAL' );
+		$dbh->do( 'ALTER TABLE photos_in_albums DROP CONSTRAINT photos_in_albums_pkey');
+		$dbh->do( 'ALTER TABLE photos_in_albums ADD PRIMARY KEY (id)' );
+	} # end if
 } # end if
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );

@@ -23,11 +23,15 @@
 <div class="Article">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
+	<? echo (
+		my $Image = $$variable{'Category'}->Image();
+		if ( $Image->id() and $Image->url() ) {
+			return sprintf('<img src="%s" alt=""/>', $Image->url() );
+		} # end if
+		return;
+	) ?>
 	<div class="name"><? echo ( $$variable{'Category'}->name() ) ?></div>
 	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
-	<? if ( $$variable{'Category'}->image_filename() ) ?>
-	<div class="image"><img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt=""/></div>
-	<? endif ( $$variable{'Category'}->image_filename() ) ?>
 </div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>
 <div class="Articles">
