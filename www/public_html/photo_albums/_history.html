@@ -1,8 +1,8 @@
 <? eval (
 	@{$$variable{'Albums'}} = ();
 	foreach my $Album ( openprint::Photo_Album->find( 
-		ssi::date_filter( 'created_on_start', 'created_on >=' ),
-		ssi::date_filter( 'created_on_end', 'created_on <=' ),
+		ssi::date_filter( '/photo_albums/history.html?created_on_start', 'created_on >=' ),
+		ssi::date_filter( '/photo_albums/history.html?created_on_end', 'created_on <=' ),
 ( sets::isin( $session{'user_type'}, ['E','A'] ) ? (
 		( $session{'/photo_albums/history.html?user_id'} ? ( 'user_id' => $session{'/photo_albums/history.html?user_id'} ) : () ),
 		( ( ( defined $session{'/photo_albums/history.html?deleted'} ) and ( $session{'/photo_albums/history.html?deleted'} eq '' ) ) ? ( 'deleted' => [0,1] ) : ( 'deleted'=>$session{'/photo_albums/history.html?deleted'} ) ),

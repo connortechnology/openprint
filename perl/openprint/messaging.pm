@@ -48,7 +48,15 @@ sub _history {
 } # end sub _history
 
 sub inbox {
-	if ( ! $param{'btnFunction'} ) {
+	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
+		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
+			$Message->sent_on('NOW()');
+		} # end if send
+		$variable{'error'} .= $Message->save(\%param);
+	} elsif ( ! $param{'btnFunction'} ) {
+		$log->error("Invalid value for btnFunction $param{btnFunction}");
+	} else {
 		ssi::save_params( '/messaging/inbox.html', ( 
 				'sent_on_start_year','sent_on_start_month','sent_on_start_day',
 				'sent_on_end_year','sent_on_end_month','sent_on_end_day',
@@ -139,8 +147,9 @@ sub _view {
 
 sub _to {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	$Message->save() if ! $Message->id();
 	if ( $param{'action'} eq 'add' ) {
-		my $To = new openprint::Message_To(\%param);
+		my $To = new openprint::Message_To();
 		$variable{'error'} .= $To->save({
 			'message_id'=>	$param{'message_id'},
 			'user_id'	=>	$param{'user_id'},

@@ -24,14 +24,14 @@
 				<div class="content">
 					<ul>
 						<li><label>To:</label>
-							<div id="To"><!--#include virtual="_to.html"--></div>
+							<span id="To"><!--#include virtual="_to.html"--></span>
 						</li>
 						<li><label>Subject:</label>
 							<input type="text" id="subject" name="subject" />
 						</li>
 						<li>
 							<label for="body">Body:</label>
-							<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
+							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
 						</li>
 					</ul>
 				</div>

@@ -72,8 +72,9 @@ sub new {
 		my @keys = keys %{$id};
 		bless $id, $parent;
 # First off, for now, don't cache figure that out later
-		#@$self{@keys} = @$id{@keys};
+		#@$id{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
+$log->debug("New by hash @keys : " . $id->to_string() );
 		$id->load( $data );
 #$log->debug("New by hash @keys : " . $id->to_string() );
 		return $id;
@@ -106,7 +107,7 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
-			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $_ } @identified_by ) ) if $debug;
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
@@ -458,6 +459,8 @@ sub find_operators {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
 				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+			} else {
+					push @{$results{' not in'}}, ();
 			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
@@ -587,9 +590,11 @@ sub find {
 				foreach my $field ( @{$$f{$k}} ) {
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
-						push @w, shift @{$$results{$operator}};
-						push @d, $k.$operator;
-						push @values, @{$$results{$operator}};
+						if ( @{$$results{$operator}} ) {
+							push @w, shift @{$$results{$operator}};
+							push @d, $k.$operator;
+							push @values, @{$$results{$operator}};
+						} # end if
 						push @used_fields, $k;
 					} # end foreach
 				} # end foreach field
@@ -599,8 +604,10 @@ sub find {
 				my $results = find_operators( $params, $k, $$f{$k} );
 				foreach my $operator ( keys %$results ) {
 					delete $$params{$k.$operator};
-					push @where, shift @{$$results{$operator}};
-					push @values, @{$$results{$operator}};
+					if ( @{$$results{$operator}} ) {
+						push @where, shift @{$$results{$operator}};
+						push @values, @{$$results{$operator}};
+					} # end if
 					push @used_fields, $k;
 				} # end foraech
 			} # end if

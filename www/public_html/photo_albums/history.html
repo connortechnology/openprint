@@ -32,7 +32,6 @@
 <div class="Photo_Albums"><div class="History">
 	<form id="f1" name="f1" method="post" action="/photo_albums/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
-			<div class="leftColumn">
 				<ul>
 		<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 <!--
@@ -57,17 +56,16 @@
 					</li>
 		<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li>
-						<label>When:</label>
-						<span class="DateSelector">
+						<label>Created:</label>
+						<span class="DateSelectorCT">
 						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_start', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 						</span>
 							to 
-						<span class="DateSelector">
+						<span class="DateSelectorCT">
 						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_end', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 						</span>
 					</li>
 				</ul>
-			</div>
 			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
