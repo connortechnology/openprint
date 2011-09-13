@@ -22,6 +22,8 @@ $serial = 'logs_id_seq';
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
 	'url'			=>	'url',
+	'object'		=>	'object',
+	'object_id'		=>	'object_id',
 );
 %find_fields = (
 	'action'	=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',
@@ -32,9 +34,9 @@ $serial = 'logs_id_seq';
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
 	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{'host_id'};`,
-
+	'object'		=>	q`undef`,
+	'object_id'		=>	q`undef`,
 );
-
 
 sub User {
 	my $self = shift;

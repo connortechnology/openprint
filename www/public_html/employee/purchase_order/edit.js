@@ -3,17 +3,18 @@ function load_content_type( index, type ) {
 	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
 
-function set_description(index) {
-	var desc = $('description-'+index);
-	desc.value = '';
+function set_item(index) {
+	var item = $('item-'+index);
+	item.value = '';
 	if ( $('mweight-'+index) ) { 
-		desc.value += $('mweight-'+index).value +'M ';
+		item.value += $('mweight-'+index).value +'M ';
 	} // end if
 	var type = $('stocktype-'+index);
 	if ( type && type.options[type.selectedIndex].value ) {
-		desc.value += type.options[type.selectedIndex].value + ' ';
+		item.value += type.options[type.selectedIndex].value + ' ';
 	} // end if
-	desc.value += $('name-'+index).value;
+	item.value += $('name-'+index).value;
+	ddm_select_by_text_case_insensitive( $('item_id-'+index), trim(item.value), 0 );
 }
 
 
@@ -24,8 +25,8 @@ function calc_price( element ) {
 		var index = matches[2];
 		$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
 		re =  /^\s*(\+|-)?((\d+(\.\d+)?)|(\.\d+))\s*$/;
-		if ( ! re.test($('price-'+index).value) ) $('price-'+index+'-alert').innerHTML = 'Not a valid price!';
-		else $('price-'+index+'-alert').innerHTML = '';
+		if ( ! re.test($('price-'+index).value) ) { $('price-'+index+'-alert').innerHTML = 'Not a valid price!';
+		} else { $('price-'+index+'-alert').innerHTML = ''; }
 		$('qty-'+index).value = $('qty-'+index).value.replace(/[^\d\-\.]/g, '' );
 		var cost = parseFloat( $('price-'+index).value );
 		var qty = parseFloat( $('qty-'+index).value );

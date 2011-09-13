@@ -2,6 +2,22 @@
 <form name="f1" method="post" action="prepress_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="schedule_id" />
+	<fieldset class="filters">
+		<div class="content">
+			<ul>
+				<li><label>Operator:</label>
+					<select name="operator_id" id="operator_id" onchange="this.form.submit();">
+						<option value=""> select </option>
+						<? echo (
+							ssi::make_drop_down(
+								[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup in'=>'Prepress','order'=>'lower(firstname),lower(lastname)') ], $session{'/employee/production/prepress_overview.html?operator_id'}
+							);
+						) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
+	</fieldset>
 	<div class="unprintable">
 		Please click on the <b>Docket #</b> to view details.<br/>
 	</div><!--unprintable-->
@@ -24,7 +40,9 @@
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
 			$html .= '<ul>';
-			foreach my $Project ( openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber' ) ) {
+			foreach my $Project ( openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber',
+				( $param{'operator_id'} ? ( 'operator_id in' => $param{'operator_id'} ) : () ),
+					) ) {
 				next if ! $Project->docket();
 				my $services = $Project->services();
 

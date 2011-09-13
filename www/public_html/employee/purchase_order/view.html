@@ -1,3 +1,4 @@
+<? if ( $$variable{'PurchaseOrder'}->can_view() ) ?>
 <form id="f1" name="f1" action="history.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
@@ -27,12 +28,9 @@
 	<div class="PO">
 		<div class="Header">
 			<div class="Logo">
-				<table><tr>
-				<td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
-				<td align="left">
-					<a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
-				</td>
-				</tr></table>
+				<a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/>
+				<span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+				
 				<table class="HeaderText">
 					<tr>
 						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
@@ -54,10 +52,8 @@
 Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>"><? echo ( $$variable{'PurchaseOrder'}->Manifest()->name() ) ?></a><br/>
 <? endif ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>
 			</div>
-			<br class="spacer"/>
 		</div>
-		<br class="spacer"/>
-		<div class="leftColumn">
+		<div class="Vendor">
 		<p>
 			<label>VENDOR:</label>
 <? echo (
@@ -75,7 +71,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 ) ?>
 		</p>
 		</div>
-		<div class="rightColumn">
+		<div class="ShipTo">
 			<p>
 				<label>SHIP TO:</label>
 				<? echo (
@@ -106,16 +102,16 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 <? endif ( $$variable{'PurchaseOrder'}->notifications() ) ?>
 		</div>
 		<br class="spacer"/><br/>
-		<table style="table-layout: fixed;">
+		<table class="Shipping">
 			<tr>
-				<th>Shipping Method</th>
-				<th>Shipping Terms</th>
-				<th width="203" style="text-align: center;">Delivery Date</th>
+				<th class="method">Shipping Method</th>
+				<th class="terms">Shipping Terms</th>
+				<th class="delivery_date">Delivery Date</th>
 			</tr>
 			<tr>
-				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
-				<td><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
-				<td style="text-align: center;"><? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
+				<td class="method"><? echo ( $$variable{'PurchaseOrder'}->shipping_method() ) ?></td>
+				<td class="terms"><? echo ( $$variable{'PurchaseOrder'}->shipping_terms() ) ?></td>
+				<td class="delivery_date"><? echo ( $$variable{'PurchaseOrder'}->delivered_on_switch() ne 'DATE' ? $$variable{'PurchaseOrder'}->delivered_on_switch().'<br/>' : '' ) ?>
 					<? echo ( $$variable{'PurchaseOrder'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->delivered_on() ) ) : '' ) ?>
 				</td>
 			</tr>
@@ -123,90 +119,63 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<br class="spacer"/>
 <table>
 	<tr>
-		<th width="90" style="text-align: center;">QTY</th>
-		<th width="110">ITEM</th>
-		<th>DESCRIPTION</th>
-		<th width="90">DOCKET</th>
+		<th class="quantity">QTY</th>
+		<th class="product">PRODUCT #</th>
+		<th class="description">ITEM / DESCRIPTION</th>
+		<th class="docket">DOCKET</th>
 		<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-		<th width="110">UNIT PRICE</th>
-		<th width="90">LINE TOTAL</th>
+		<th class="price">UNIT PRICE</th>
+		<th class="total">LINE TOTAL</th>
 		<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
-		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-			if ( $C->Type()->name() eq 'Roll Stock' ) {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$dlbs</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-					<td class="price">%5$s/100lb</td>
-					<td class="total">%6$s</td>
-				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
-			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$dsheets</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-					<td class="price">%5$s/100lb</td>
-					<td class="total">%6$s</td>
-				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
-			} else {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$d</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-					<td class="price">%5$s</td>
-					<td class="total">%6$s</td>
-				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
-			} # end if
+			
+		if ( $C->Type()->name() eq 'Roll Stock' ) {
+			$html .= sprintf('<tr><td class="quantity">%dlbs</td>', $C->qty() );
+		} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
+			$html .= sprintf('<tr><td class="quantity">%dsheets</td>', $C->qty() );
 		} else {
-			if ( $C->Type()->name() eq 'Roll Stock' ) {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$dlbs</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
-			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$dsheets</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
+			$html .= sprintf('<tr><td class="quantity">%d</td>', $C->qty() );
+		} # end if
+			
+		$html .= sprintf('
+			<td class="product">%1$s</td>
+			<td class="description">%2$s<br/>%3$s</td>
+			<td class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
+			', $C->product(), $C->item(), $C->description(), $C->docket(), 
+			);
+
+		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
+			if ( sets::isin( $C->Type()->name(), [ 'Roll Stock', 'Sheet Stock' ] ) ) {
+				$html .= sprintf('<td class="price">%s/100lb</td><td class="total">%s</td>',
+					openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} else {
-				$html .= sprintf('<tr>
-					<td style="text-align: center;">%1$d</td>
-					<td>%2$s</td>
-					<td>%3$s</td>
-					<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				</tr>', $C->qty(), $C->item(),$C->description(), $C->docket() );
+				$html .= sprintf('<td class="price">%s</td><td class="total">%s</td>',
+					openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
 			} # end if
 		} # end if
+		$html .= '</tr>';
 	} # end foreach C
 	return $html;
 ) ?>
 	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="5" class="totals">SUBTOTAL</td>
-		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		<td colspan="5" class="totals">SUBTOTAL:</td>
+		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
                 <? echo ( 
                     my $html;
                     foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
                             $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
                             );
                     } # end foreach Tax
                     return $html;
                 ) ?>
 	<tr>
-		<td colspan="5" class="totals">TOTAL</td>
-		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+		<td colspan="5" class="totals">TOTAL:</td>
+		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
@@ -223,13 +192,13 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		<br/>
 		<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i><br/></div>
+			<div class="PreparedBy"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i></div>
 <? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 		<br/>
 		<br class="spacer"/>
 		<hr/>
-			<div class="leftColumn"><i>Authorized <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
+			<div class="AuthorizedBy"><i>Authorized <? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>by: <? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
+			<div class="AuthorizedOn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?></div>
 <? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 <? if ( $$variable{'PurchaseOrder'}->authorized() eq '0' ) ?>
 		<br/>
@@ -247,22 +216,27 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 <? endif ( $$variable{'PurchaseOrder'}->authorized() eq '' ) ?>
 		</div>
 		<br class="spacer"/>
+		<div class="Logs">
 		<fieldset><legend>Logs</legend>
 			<table class="List">
 				<tr>
-					<th align="left" width="120">Who</th>
-					<th align="left" width="120">When</th>
-					<th align="left">Description</th>
+					<th class="who">Who</th>
+					<th class="when">When</th>
+					<th class="description">Description</th>
 				</tr>
 				<? echo (
 					my $html = '';
 					foreach my $L ( $$variable{'PurchaseOrder'}->Logs() ) {
-						$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>', $L->User()->name(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
+						$html .= sprintf('<tr><td class="who">%s</td><td class="when">%s</td><td class="description">%s</td></tr>', $L->User()->name(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $L->created_on() ) ), $L->reason() );
 					} # end foreach
 					return $html;
 				) ?>
 			</table>
 		</fieldset>
+		</div>
 	</div><!--PO-->
 	<br class="spacer"/>
 </form>
+<? else ( $$variable{'PurchaseOrder'}->can_view() ) ?>
+You do not have the rights to view this PO.
+<? endif ( $$variable{'PurchaseOrder'}->can_view() ) ?>

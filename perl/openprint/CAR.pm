@@ -1,8 +1,11 @@
 use strict;
-package openprint::CAR;
-our @ISA = qw(openprint::Object);
+require sql;
 require openprint::CAR_Area;
 require openprint::CAR_Reason;
+require openprint::Email;
+
+package openprint::CAR;
+our @ISA = qw(openprint::Object);
 
 use vars qw( %config $log %session );
 *session = \%openprint::session;
@@ -10,7 +13,6 @@ use vars qw( %config $log %session );
 *log = \$openprint::log;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-
 
 $debug = 1;
 $table = 'car';
@@ -32,7 +34,7 @@ $serial = 'car_id_seq';
 	'presses'		=> 'presses',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
-	'part2_user_id'		=> 'part1_user_id',
+	'part2_user_id'		=> 'part2_user_id',
 	'part2_signed_on'	=> 'part2_signed_on',
 	'part3_user_id'		=> 'part3_user_id',
 	'part3_signed_on'	=> 'part3_signed_on',
@@ -81,26 +83,22 @@ $serial = 'car_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-
 		my %info = (
 			'CAR'	=>	$self,
+			'ReplacementText' => '<!--#include virtual="/email_content/iso_car_notification.html"-->',
 		);
-		foreach my $User ( @Users ) {
-			$info{'ReplacementText'} = '<!--#include virtual="/email_content/iso_car_notification.html"-->';
-			my @body = ('', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new CAR has been generated requiring your attention.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-		} # end foreach
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM    => new openprint::User( $session{'user_id'} ),
+				TO      => \@Users,
+				SUBJECT => 'A new CAR has been generated requiring your attention.',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+				);
+
 	} # end if to
 
 } # end sub send_notification
@@ -120,43 +118,35 @@ sub send_assignee_notification {
 				'From'  =>  $From,
 				'ReplacementText' => '<!--#include virtual="/email_content/iso_car_assignee_notification.html"-->',
 				);
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM    => $From,
+				TO      => $To,
 				SUBJECT => 'NEW CAR',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end if
 } # end sub send_assignee_notification
 
 sub send_reprint_request_notification {
 	my ($self) = @_;
 	my $From = new openprint::User( $session{'user_id'} );
-	foreach my $To ( openprint::User->find('usergroups'=>['Reprint Approvals']) ) {
-		if ( $To->id() == $session{'user_id'} ) {
-			next;
-		} # end if
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my %info = (
-				'CAR'   =>  $self,
-				'To'    =>  $To,
-				'From'  =>  $From,
-				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_request.html\"-->",
-				);
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-                        FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-						TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
-						SUBJECT => 'CAR Reprint Request',
-				);
-		$log->debug("Sending Reprint Notifications to " . $To->email());
-		misc::send_email_with_attachment( $log, \%mail, @body );
-	} # end foreach Reprint Approver
+
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+	my %info = (
+			'CAR'   =>  $self,
+			'To'    =>  $To,
+			'From'  =>  $From,
+			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_request.html\"-->",
+			);
+
+	my $Email = new openprint::Email();
+	$Email->send(
+			FROM    => $From,
+			TO      => [ openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Reprint Approvals']) ],
+			SUBJECT => 'CAR Reprint Request',
+			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+			);
 } # end sub send_reprint_request_notification
 sub send_reprint_approval_notification {
 	my ($self) = @_;
@@ -174,15 +164,13 @@ sub send_reprint_approval_notification {
 				'From'  =>  $From,
 				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_approval.html\"-->",
 				);
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+		my $Email = new openprint::Email();
+		$Email->send(
+				FROM    => $From,
 				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
 				SUBJECT => 'Reprint ' . ($$self{'reprint_approval'} eq 'Yes' ? 'approved' : 'not approved' ) . ' for CAR ' . $$self{id},
+				ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end if
 
 } # end sub send_reprint_approval_notification
@@ -191,28 +179,20 @@ sub send_changed_notification {
     my ($self) = @_;
 
     my $From = new openprint::User( $session{'user_id'} );
-	foreach my $To ( new openprint::User( $$self{'issued_by_id'} ), openprint::User->find('usergroups'=>['Quality Control Notifications']) ) {
-		if ( $To->id() == $session{'user_id'} ) {
-			$log->debug("Not Sending PART2 because I am ME to " . $To->email());
-			next;
-		} # end if
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my %info = (
-				'CAR'   =>  $self,
-				'To'    =>  $To,
-				'From'  =>  $From,
-				'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_changed_notification.html\"-->",
-				);
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-				TO      => sprintf( '"%s" <%s>', $To->name(), $To->email() ),
-				SUBJECT => 'CAR ' . $$self{id} . ' has been changed.',
-				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
-	} # end foreach To
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+	my %info = (
+			'CAR'   =>  $self,
+			'To'    =>  $To,
+			'From'  =>  $From,
+			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_changed_notification.html\"-->",
+			);
+	my $Email = new openprint::Email();
+	$Email->send(
+			FROM    => $From,
+			TO      => [ new openprint::User( $$self{'issued_by_id'} ), openprint::User->find( 'type'=>['E','A'], 'usergroup @>'=>['Quality Control Notifications']) ],
+			SUBJECT => 'CAR ' . $$self{id} . ' has been changed.',
+			ATTACHMENTS => ['', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+			);
 
 } # end sub send_part2
 

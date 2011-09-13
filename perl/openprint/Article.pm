@@ -56,31 +56,29 @@ $serial = 'articles_id_seq';
 	'category_id'	=>	undef,
 );
 
+sub name {
+	return $_[0]->title();
+} # end sub name
+
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'],'usergroup any'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
+		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/article_notification.html' );
 
-		my %info = (
-			'Article'	=>	$self,
-		);
+		my %info = ( 'Article'	=>	$self );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
 
 		my $body = ssi::variable_substitution( \$email_template, \%info );
-		foreach my $User ( @Users ) {
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-					SUBJECT => 'A new Article has been generated.',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ('', encode_qp($body), 'text/html', 'quoted-printable'));
-		} # end foreach
+		new openprint::Email()->send(
+				FROM    => new openprint::User( $session{'user_id'} ),
+				TO      => \@Users,
+				SUBJECT => 'A new Article has been generated.',
+				ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable'],
+				);
 	} # end if to
 
 } # end sub send_notification
@@ -93,13 +91,17 @@ sub Author {
 
 sub category {
 	if ( @_ > 1 ) {
-		my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
-		if ( ! $Category ) {
-			$Category = new openprint::Article_Category();
-			$Category->save({'name'=>$_[1]})
-		} # end if	
-		$_[0]{'category_id'} = $Category->id();
-		return $Category->name();
+		if ( $_[1] ) {
+			my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
+			if ( ! $Category ) {
+				$Category = new openprint::Article_Category();
+				$Category->save({'name'=>$_[1]})
+			} # end if	
+			$_[0]{'category_id'} = $Category->id();
+			return $Category->name();
+		} else {
+			$_[0]{'category_id'} = undef;
+		} # end if
 	} # end if
 	return new openprint::Article_Category( $_[0]{'category_id'} )->name();
 } # end sub category
@@ -127,11 +129,49 @@ sub summary {
 	if ( @_ > 1 ) {
 		$_[0]{'summary'} = $_[1];
 	} # end if
-	if ( ! $_[0]{'summary'} ) {
-		$_[0]{'summary'} = substr $_[0]{'body'},0,100;
-	} 
 	return $_[0]{'summary'};
 } # end sub summary
+
+sub can_edit {
+	return 0 if ! $session{'user_id'};
+	return 1 if ! $_[0]{'id'};
+	return 1 if $session{'user_type'} eq 'A';
+	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
+	return 0;
+} # end sub can_edit
+
+sub html {
+	my $Article = $_[0];
+	my @Comments = $Article->Comments();
+	my $html = sprintf(q`
+			<div class="Article">
+			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
+			Posted on %7$s by <a href="/account/view.html?user_id=%5$d">%6$s</a><br/>
+			<div class="source_content">%3$s</div>
+			<div class="summary">%4$s</div>
+			`, $Article->id(),
+			ssi::htmlize($Article->title()),
+			$Article->source_content(),
+			$Article->summary() ? $Article->summary() : $Article->body(),
+			$Article->created_by(),
+			ssi::htmlize( $Article->Author()->name() ),
+			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+
+                );
+	if ( $Article->source() ) {
+		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
+	} # end if
+	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	$html .= '</div>';
+	return $html;
+} # end  sub html
+
+sub summary_html {
+} # end sub summary_html
+
+sub view_url {
+	return '/article/view.html?article_id='.$_[0]{'id'};	
+} # end sub view_url
 
 1;
 __END__

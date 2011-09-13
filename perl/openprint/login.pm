@@ -132,15 +132,12 @@ sub verify_login {
 
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM	=> $config{'LoginEmail'},
-					TO		=> $config{'LoginEmail'},
+					TO	=> $config{'LoginEmail'},
 					SUBJECT => "Login notification",
+					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-
 		} # end if
 
 	} # end if
@@ -159,31 +156,25 @@ sub verify_login {
 		$Cookie->bake( $r );
 	} # end if	
 
-	if ( $User->changepassword() eq 'Y' ) {
-		if ( $site eq 'A' ) {
-			$$variable{'Redirect'} = '/administrator/account/change_password.html';
-		} elsif ( $site eq 'E' ) {
-			$$variable{'Redirect'} = '/employee/account/change_password.html';
-		} else {
-			$$variable{'Redirect'} = '/account/change_password.html';
-		} # end if
+	if ( $User->change_password() eq 'Y' ) {
+		$$variable{'ExternalRedirect'} = '/account/change_password.html';
 		return;
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a>/ ) {
      
-		$$variable{'Redirect'} = $1.'.html';
-		foreach my $p ( split('&', $2 ) ) {
-			my ( $k, $v ) = split('=', $p );
-			$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
-		} # end foreach
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
+		$$variable{'ExternalRedirect'} = $1;
+		#foreach my $p ( split('&', $2 ) ) {
+			#my ( $k, $v ) = split('=', $p );
+			#$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
+			#$openprint::param{$k} = $v;
+		#} # end foreach
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)">here<\/a> to continue the survey\./ ) {
      
-		$$variable{'Redirect'} = $1.'.html';
-		foreach my $p ( split('&', $2 ) ) {
-			my ( $k, $v ) = split('=', $p );
-			$openprint::log->debug("Psrsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
-		} # end foreach
+		$$variable{'ExternalRedirect'} = $1;
+		#foreach my $p ( split('&', $2 ) ) {
+			#my ( $k, $v ) = split('=', $p );
+			#$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			#$openprint::param{$k} = $v;
+		#} # end foreach
 	} # end if
 
 } # sub verify_login
@@ -199,30 +190,25 @@ sub logout {
 sub email_password {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $email = lc $openprint::param{'txtEmail2'};
-
-	my @Users = openprint::User->find('email'=>$email);
+	my @Users = openprint::User->find('email'=> lc $param{'txtEmail2'} );
 
 	if ( ! @Users ) {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
 	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
-		my %info;
 		
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 		foreach my $User ( @Users ) {
+			my %info;
 			$info{'ReplacementText'} = ssi::variable_substitution( \$content, \%info );
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			new openprint::Email()->send(
 					FROM 	=> $config{'AdministratorEmail'},
-					TO		=> $openprint::param{'txtEmail2'},
+					TO	=> @Users,
 					SUBJECT	=> 'Forgotten Password',
+					ATTACHMENTS	=> ['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
 		} # end foreach $User
 	} else {
 		return misc::error( $log, $dbh, $variable, 'System Error.', 'We were unable to email your password to you.	Please contact support.' );

@@ -38,21 +38,46 @@
 					</li>
 					<li>
 						<label for="description">Description:</label>
-						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
-					</li>
-					<li><label>Image Filename:</label>
-						<input type="text" id="image_filename" name="image_filename" value="<? echo ( $$variable{'Category'}->image_filename() ) ?>" />
+						<textarea id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
 					</li>
 					<li>
-						<label for="image">Image Upload:</label><input type="file" id="filename" name="filename"/>
+						<label for="summary">Summary:</label>
+						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines($$variable{'Category'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->summary() ) ?></textarea>
 					</li>
 				</ul>
 			</div>
 		</div>
 		<div class="rightColumn">
-			<? if ( $$variable{'Category'}->image_filename() ) ?>
-				<img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt="" />
-			<? endif ( $$variable{'Category'}->image_filename() ) ?>
+           <fieldset><legend><a href="/photo_albums/view.html?album_id=<? echo ( $$variable{'Category'}->album_id() ) ?>">Photos</a></legend>
+            <? if ( $$variable{'Category'}->id() ) ?>
+                <div id="Photos"><!--#include virtual="_category_photos.html"--></div>
+				<fieldset><legend>Upload Asset</legend>
+					<div class="content">
+						<ul>
+							<li><label>Select file:</label><input type="file" name="filename"/>
+							</li>
+							<li><label>Name:</label>
+								<input type="text" name="asset_name" id="asset_name" />
+							</li>
+							<li><label>Description:</label>
+								<textarea name="asset_description" id="asset_description"></textarea>
+							</li>
+							<li><label>Attribution:</label>
+								<input type="text" name="asset_attribution" id="asset_attribution"/>
+							</li>
+							<li><label>License:</label>
+								<textarea name="asset_license" id="asset_license"></textarea>
+							</li>
+						</ul>
+						<p class="buttons">
+							<? echo ( ssi::button( 'Upload', { 'onclick'=>"f1.action='/article/category.html';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
+						</p>
+					</div>
+				</fieldset>
+            <? else ( $$variable{'Category'}->id() ) ?>
+			You will be able to add photos once you save the category.
+            <? endif ( $$variable{'Category'}->id() ) ?>
+            </fieldset>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
@@ -60,12 +85,12 @@
 				my $html = '';
 				if ( $$variable{'Category'}->id() ) {
 					if ( $$variable{'Category'}->deleted() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}" } );
 					} else {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+						$html .= ssi::button( 'Delete',  { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					} # end if
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
 		</p>

@@ -24,7 +24,6 @@ $table = 'photo_albums';
 %defaults = (
 	'created_on'	=> q`'NOW()'`,
 	'thumbnail_id'	=>	undef,
-	'user_id'		=>	q`$openprint::session{'user_id'}`,
 	'deleted'		=>	0,
 );
 
@@ -51,14 +50,17 @@ sub Photos {
 } # end sub Photos
 
 sub destroy {
+	my $error = '';
 	foreach my $Photo ( $_[0]->Photos() ) {
-		$Photo->destroy();
+		$error .= $Photo->destroy();
 	} # end foreach Photo
+	$error .= $_[0]->SUPER::destroy();
+	return $error;
 } # end sub delete
 
 sub upload {
 	my $error = '';
-	my $Asset = openprint::Asset::upload( $_[1] );
+	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
 	if ( ref $Asset eq 'openprint::Asset' ) {
 		my $Photo = new openprint::Photo_in_Album({'asset_id'=>$$Asset{'id'},'album_id'=>$_[0]{'id'}});
 		if ( ! $Photo->asset_id() ) {

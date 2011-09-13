@@ -51,20 +51,28 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
-	my ( $project_index, $service_index, $specs );
+	my ( $project_index, $service_index, $specs ) = @_;
+$openprint::log->debug("no_outputs: project_id: $project_index");
     my @v;
+	my @outputs;
     foreach my $k ( keys %variables ) {
-        push @v, $k, if ! sets::isin( 'output', $variables{$k} );
+		if ( ! sets::isin( 'output', $variables{$k} ) ) {
+			push @v, $k; 
+		} else {
+			push @outputs, $k;
+		} # end if
     } # end foreach;
-	my @outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
-$openprint::log->debug("Prinintg no_outputs: @outputs ");
-	foreach my $Group ( groups( $project_index, $specs ) ) {
-		push @v, map { $_.$Group } @outputs;
+	my @groups = groups( $project_index, $specs );
+	foreach my $Group ( @groups ) {
+		my @no_outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs, $Group );
+		# Will come with signature appended
+$openprint::log->debug("Prinintg $Group no_outputs: @no_outputs ");
+		push @v, sets::exclude( \@outputs, \@no_outputs );
 	} # end foreach Group
     return @v;
 }
 sub outputs {
-	my ( $project_index, $service_index, $specs );
+	my ( $project_index, $service_index, $specs ) = @_;
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if sets::isin( 'output', $variables{$k} );
@@ -173,10 +181,15 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 			$remaining_pages = 0;
 		} # end if
 		$$specs{'GroupPageQuantity'.$group_id} = $override_pages{$group_id};
+		if ( ! ( $variables{'GroupPageQuantity'.$group_id} and @{$variables{'GroupPageQuantity'.$group_id}} ) ) {
+$openprint::log->debug("Setting output on GroupPageQuantity$group_id");
+			$variables{'GroupPageQuantity'.$group_id} = [sets::union('output', @{$variables{'GroupPageQuantity'.$group_id}})]
+		} # end if
 		if ( $$specs{'chkOverrideDimensions'.$group_id} ne 'Y' ) {
 			$$specs{'txtFinalWidth'.$group_id} = $$specs{'txtFinalWidth'};
 			$$specs{'txtFinalHeight'.$group_id} = $$specs{'txtFinalHeight'};
 		} # end if
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 	} # end foreach group_id
 
 	if ( $$specs{'remaining_pages'} = $remaining_pages ) {
@@ -251,7 +264,8 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $Project ) = @_;
+	shift @_ if $_[0] eq 'openprint::Estimating::MultiPage::calculate_signatures';
+	my $Project = $_[0];
 
 	my $status;
 $openprint::log->debug("****************************************************************Starting MultiPage::calculate_signatures");
@@ -363,7 +377,7 @@ $openprint::log->debug("After calc_from_imposition" );
 					@signatures = sets::exclude( [ $ss_id ], \@signatures );
 				} # end while sigs
 			} else {
-				$openprint::log->debug("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
+				$openprint::log->warn("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 				return 'uncalculated';
 			} # end if
 		} # end foreach group

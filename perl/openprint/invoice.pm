@@ -2,6 +2,7 @@ package openprint::invoice;
 
 use strict;
 use openprint;
+use Math::Round;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -134,18 +135,15 @@ sub history {
 		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
-		foreach my $Recipient ( new openprint::Company($param{'company_id'})->AccountingContacts() ) {
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
+		my @Recipients = new openprint::Company($param{'company_id'})->AccountingContacts();
+		new openprint::Email()->send(
 					FROM    => $config{'AccountingEmail'},
-					TO      => sprintf('"%s" <%s>', $Recipient->name(), $Recipient->email() ),
-					BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
-					#TO		=>	sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
+					TO      =>  \@Recipients,
+					BCC     => new openprint::User( $session{'user_id'} ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
+					ATTACHMENTS	=>	\@attachments,
 					);
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$variable{'information'} .= sprintf('Account statement sent to &quot;%s %s&quot; &lt;%s&gt;<br/>',$Recipient->get('firstname','lastname','email') );
-		} # end foreach Recipient
+		$variable{'information'} .= 'Account statement sent to ' . join('<br/>', map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients );
 	} # end if
 	ssi::save_params( '/invoice/history.html', ( 
 		'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 
@@ -214,7 +212,7 @@ $log->debug("Total: $total");
 					my $I = new openprint::Invoice_Interest();
 					$_ = $I->save({
 							'invoice_id'=>$variable{'Invoice'}->id(),
-							'amount'	=>	sprintf('%.2f', ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
+							'amount'	=>	Math::Round::nearest( .01, ($total - $paid) * $variable{'Invoice'}->monthly_interest()/100),
 							'compounded_on'	=>	sprintf('%.4d-%.2d-%.2d', $year, $month, $day ),
 							});
 					if ( ! $_ ) {

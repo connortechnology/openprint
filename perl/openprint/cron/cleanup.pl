@@ -70,7 +70,7 @@ foreach my $session ( @session_ids ) {
 @session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
-if ( 0 ) {
+if ( 1 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project->find(
 			'predefined'	=>	0,
@@ -304,7 +304,7 @@ $openprint::log->debug("Updating wpsi for " . $Paper->to_string() );
 	} # end if
 } # end foreach my Paper
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time <'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
+foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log

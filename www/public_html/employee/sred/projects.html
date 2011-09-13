@@ -48,14 +48,14 @@
 					<? echo ( join( '',
 					ssi::button( 'ShowResults', { 'onclick' => 'f1.submit();', 'text' => 'Show Results' } ),
 					ssi::button( 'Add', { 'href' => '/employee/sred/project.html', 'text' => 'Add New' } ),
-					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Export';form.submit();`, 'class'=>'Export' } ),
-					ssi::button( 'Reset', { 'href' => '/employee/sred/projects.html?function=reset' } ),
+					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, 'class'=>'Export' } ),
+					ssi::button( 'Reset', { 'href' => '/employee/sred/projects.html?action=reset' } ),
 					); ) ?>
 			</p>
 		</fieldset>
 	</form>
 	<form id="f2" name="f2" action="projects.html" method="post">
-		<input type="hidden" name="function"/>
+		<input type="hidden" name="action"/>
 		<div id="Results"><!--#include virtual="_projects.html"--></div>
 	</form>
 </div>

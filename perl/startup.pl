@@ -16,7 +16,7 @@ BEGIN {
 	use Apache::Session::Postgres;
 	use Apache2::Cookie;
 	use Apache2::Upload;
-	use Apache2::SizeLimit;
+	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape;
 	use HTML::Entities;
@@ -72,6 +72,7 @@ BEGIN {
 	use openprint::Article_Category;
 	use openprint::Host;
 	use openprint::Log;
+	use openprint::Like;
 
 #use MapImage;
 

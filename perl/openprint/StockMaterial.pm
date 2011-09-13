@@ -11,7 +11,7 @@ $serial= 'stockmaterials_id_seq';
 	'name'	=>	'name' 
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = ();
 

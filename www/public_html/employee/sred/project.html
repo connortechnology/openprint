@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/employee/sred/edit.js"></script>
+<script type="text/javascript" src="/employee/sred/edit.js?version=1"></script>
 <script type="text/javascript">
 	var tax_ids = new Array( <? echo ( join(',', map { $_->id() } $$variable{'Project'}->Taxes() ); ) ?> );
 </script>
@@ -13,19 +13,21 @@
 				<li><label>Name:</label>
 					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Project'}->name() ) ?>" />
 				</li>
-				<li><label>Description:</label>
-					<textarea name="description" id="description" class="project_description" rows="" cols=""><? echo ( $$variable{'Project'}->description() ) ?></textarea>
+				<li><label>Description:<br/>
+					<a href="#" onclick="toggletinymce('description', this);">Hide Editor</a>
+					</label>
+					<textarea name="description" id="description" class="project_description"><? echo ( $$variable{'Project'}->description() ) ?></textarea>
 				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Save';form.submit();`, 'class'=>'Save' } ),
-					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
-					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['function'].value='Export';form.submit();`, 'class'=>'Export' } ),
+					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Save';form.submit();`, 'class'=>'Save' } ),
+					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
+					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, 'class'=>'Export' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-	<input type="hidden" name="function" />
+	<input type="hidden" name="action" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
 </form>
 	<br class="spacer"/>

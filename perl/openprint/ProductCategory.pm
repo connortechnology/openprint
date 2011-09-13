@@ -1,5 +1,7 @@
 use strict;
 require openprint::Log;
+require openprint::Product;
+require openprint::ProjectType;
 package openprint::ProductCategory;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );

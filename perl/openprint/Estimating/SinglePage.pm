@@ -69,7 +69,8 @@ $log->debug("adding a sig");
 } # end sub calc
 
 sub calculate_signatures {
-	my ( $Project ) = @_;
+	shift @_ if $_[0] eq 'openprint::Estimating::SinglePage::calculate_signatures';
+	my ( $Project ) = $_[0];
 
 	my $status;
 $openprint::log->debug("****************************************************************Starting SinglePage::calculate_signatures");

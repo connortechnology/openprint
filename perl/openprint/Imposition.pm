@@ -1,6 +1,8 @@
+use strict;
+use Carp qw( cluck );
+
 package openprint::Imposition;
 use vars qw( $AUTOLOAD );
-
 
 my @fields = (
 	'start_imposition','start_columns','start_rows',
@@ -30,13 +32,9 @@ my @fields = (
 	'stock_weight',
 );
 
-use strict;
-
 sub new {
-	my $parent = shift;
-
 	my $self = {};
-	bless $self, $parent;
+	bless $self, $_[0];
 
 	return $self;
 } # end sub new
@@ -48,7 +46,7 @@ sub AUTOLOAD {
     $name =~ s/.*://;
 
     if ( @_ ) {
-		$self->{$name} = shift;
+		$$self{$name} = shift;
 		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
 			$$self{'dutch_rows'} = 1*$$self{'dutch_rows'};
 			$$self{'dutch_columns'} = 1*$$self{'dutch_columns'};
@@ -88,7 +86,7 @@ sub AUTOLOAD {
 			#} # end if
 		} # end if
 	} # end if
-	return $self->{$name};
+	return $$self{$name};
 } # end sub AUTOLOAD
 
 sub display {
@@ -192,16 +190,18 @@ sub load_used {
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
 } # end sub load_used
 
+
+# Passing in the Project helps us load the paper by recommendation
 sub load {
-	my ( $self, $specs, $qty_index ) = @_;
+	my ( $self, $specs, $qty_index, $Project ) = @_;
 
 	$$self{'specs'} = $specs;
-	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
+	$$self{'paper'} = openprint::Paper::load_from_signature( $Project, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
 		if ( ! $$specs{'ddmPress'.$qty_index} ) {
 			$openprint::log->error("No ddmPress for $qty_index");
 		} else {
-$openprint::log->warn("Loading press in Imposition::load");
+Carp::cluck("Loading press in Imposition::load");
 			$$self{'Press'} = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 			if ( ! $$self{'Press'} ) {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
@@ -225,6 +225,8 @@ $openprint::log->warn("Loading press in Imposition::load");
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ? 'Horizontal' : 'Vertical';
 	$$self{'cut_off'} = $$specs{'CutOff'.$qty_index};
+	$$self{'stock_width'} = $$self{'paper'}->width();
+	$$self{'stock_height'} = $$self{'cut_off'} ? $$self{'cut_off'} : $$self{'paper'}->height();
 
 	#'layout_width','layout_height',
 #,'rotate_sheet',
@@ -414,8 +416,12 @@ sub pages {
 	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 
+# Is in relation to the image.
 sub grain_direction {
-	my $self = shift;
+	my $self = $_[0];
+	if ( @_ > 1 ) {
+		$$self{'grain_direction'} = $_[1];
+	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		if ( $$self{'rotate_sheet'} ) {
 			if ( $$self{'image_orientation'} eq 'Vertical' ) {

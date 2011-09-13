@@ -17,12 +17,12 @@ function keepCompany( form ) {
 Please select a company or user to obtain login information.<br/>
 <br/>
 <div class="UserProfile">
-	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
+	<form id="f1" name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
 		<fieldset class="filters"><legend>Search:</legend>
 			<div class="content">
 				<ul>
 					<li><label>Email:</label>
-						<input type="text" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
+						<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
 						<span id="search_email_results"></span>
 					</li>	
 					<li>
@@ -32,7 +32,7 @@ Please select a company or user to obtain login information.<br/>
 							<option value="">All Companies</option>
 							<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 						</select>
-						<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+						<? echo ( ssi::button( 'Go1', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 					</li>
 					<li>
 						<label>User Type:</label>
@@ -106,14 +106,15 @@ Please select a company or user to obtain login information.<br/>
 					<li> 
 						<label>Company:</label>
 						<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
-						<select name="company_id">
+						<select id="company_id" name="company_id">
 							<option value=""> Select </option>
 							<? echo ( 
-		my @Companies = openprint::Company->find('order'=>'lower(name)');
-		if ( $$variable{'User'}->Company()->deleted() ) {
-		unshift @Companies, $$variable{'User'}->Company();
-		} # end if
-		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{'User'}->company_id() ); ) ?>
+								my @Companies = openprint::Company->find('order'=>'lower(name)');
+								if ( $$variable{'User'}->Company()->deleted() ) {
+									unshift @Companies, $$variable{'User'}->Company();
+								} # end if
+								return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{'User'}->company_id() );
+							) ?>
 						</select>
 					</li>
 					<li>
@@ -230,14 +231,14 @@ Please select a company or user to obtain login information.<br/>
 						} # end foreach PO_Type
 						return $html;
 					) ?>
-					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup in'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to:</label>
 						<select name="csr_ids" size="4" multiple="multiple">
-							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{'User'}->csr_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup in'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</div>
@@ -247,7 +248,7 @@ Please select a company or user to obtain login information.<br/>
 					<li class="user_categories">
 						<label>User Category:</label>
 						<select name="selectUserCategories" size="4" multiple="multiple">
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id'=>$$variable{'User'}->id()) ] ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id in'=>$$variable{'User'}->id()) ] ); ) ?>
 						</select>
 					</li>
 					<? endif ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
@@ -257,18 +258,19 @@ Please select a company or user to obtain login information.<br/>
 		<fieldset class="groups"><legend><a href="/administrator/managerial/usergroups.html">Groups</a></legend>
 			<ul>
 			<? echo (
-				require openprint::Usergroup;
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
-				foreach my $Group ( openprint::Usergroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), sets::isin( $Group->id(), \@UserGroups ) ? 'checked="checked"' : '' );
+				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
 			</ul>
 		</fieldset>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
+<div class="Email">
 		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
+<div class="Settings">
 		<fieldset><legend>Email Settings:</legend>
 			<ul>
 			<li>
@@ -285,6 +287,8 @@ Please select a company or user to obtain login information.<br/>
 			</li>
 			</ul>
 		</fieldset>
+</div>
+<div class="Vacation">
 		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
 			<ul>
 			<li>
@@ -304,32 +308,37 @@ Please select a company or user to obtain login information.<br/>
 			</li>
 			</ul>
 		</fieldset>
+</div>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
+</div>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 			<!--#include virtual="/account/_user_profile_edit.html"-->
-		<fieldset><legend>Login Information:</legend> 
-			<ul>
-			<li> 
-				<label>E-mail Address:</label>
-				<input	type="text" name="email" value="<? hecho ( $$variable{'User'}->email() ) ?>" />
-			</li>
-			<li> 
-				<label>Password:</label>
-				<input	type="text" name="password" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
-			</li>
-			<li> 
-				<label>Verify Password:</label>
-				<input	type="text" name="verifypassword" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
-			</li>
-			<li> 
-				<label>User must change password on next login?</label>
-				<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() eq 'Y' ); ) ?> value="Y"/>
-				<label for="change_passwordY" class="radio">Yes</label>
-				<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() ne 'Y' ); ) ?> value="N"/>
-				<label for="change_passwordN" class="radio">No</label>
-			</li>
-			</ul>
-		</fieldset>
+		<div class="LoginCredentials">
+			<fieldset><legend>Login Information:</legend> 
+				<ul>
+					<li> 
+						<label>E-mail Address:</label>
+						<input type="email" name="email" value="<? hecho ( $$variable{'User'}->email() ) ?>" />
+					</li>
+					<li> 
+						<label>Password:</label>
+						<input type="text" name="password" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
+					</li>
+					<li> 
+						<label>Verify Password:</label>
+						<input type="text" name="verifypassword" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
+					</li>
+					<li> 
+						<label>User must change password on next login?</label>
+						<input type="radio" id="change_passwordY" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() eq 'Y' ); ) ?> value="Y"/>
+						<label for="change_passwordY" class="radio">Yes</label>
+						<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() ne 'Y' ); ) ?> value="N"/>
+						<label for="change_passwordN" class="radio">No</label>
+					</li>
+				</ul>
+			</fieldset>
+		</div>
+		<div class="Notifications">
 		<fieldset><legend>Notifications</legend>
 			<ul>
 			<? echo ( 
@@ -345,11 +354,15 @@ Please select a company or user to obtain login information.<br/>
 			) ?>
 			</ul>
 		</fieldset>
+		</div>
 		<? if ( openprint::ServiceType->find_one() ) ?>
+		<div class="ServiceDefaults">
 		<fieldset><legend>Service Defaults</legend>
 			<!--#include virtual="_service_defaults.html"-->
 		</fieldset>
+		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>
+		<br class="spacer"/>
 		<fieldset>
 		<p id="ButtonsBottom">
 			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>

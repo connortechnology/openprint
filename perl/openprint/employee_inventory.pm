@@ -696,20 +696,18 @@ sub skid_details {
 			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
 			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} # end if
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	$variable{'skid_id'} = $param{'skid_id'};
-	$variable{'rfidtag_id'} = $param{'rfidtag_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
 	if ( $param{'skid_id'} and ! openprint::Skid->find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
@@ -748,8 +746,8 @@ sub skid_details {
 				return;
 			} # end if
 
-			foreach my $rfidtag_id ( misc::trim( @rfidtags ) ) {
-				$log->debug( $rfidtag_id );
+			foreach my $rfidtag_id ( @rfidtags ) {
+				#$log->debug( $rfidtag_id );
 				if ( $_ = openprint::RFIDTag::is_invalid_id( $rfidtag_id ) ) {
 					$variable{'error'} .= "RFIDTAG $rfidtag_id is invalid: $_.<br/>";
 					next;
@@ -764,6 +762,7 @@ sub skid_details {
 				} # end if
 			} # end foreach rfidtag_id
 		} # end if
+		return if $variable{'error'};
 
 		if ( $param{'skid_quantity'} ) {
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
@@ -1102,19 +1101,16 @@ sub send_paper_arrival_notification {
 
 		if ( @To ) {
 # Send notification to maybe CSR's
-			my $From = new openprint::User( $session{'user_id'} );
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO		=> join(',', map { sprintf('"%s" <%s>', $_->name(), $_->email()) } @To ),
+			new openprint::Email()->send(
+					FROM	=> new openprint::User( $session{'user_id'} ),
+					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
+					ATTACHMENTS=>['', $_, 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
 		} # end if to
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
@@ -1200,7 +1196,9 @@ sub rfidscanners {
 			$variable{'error'} .= $RFIDScanner->delete();
 		} # end if
 	} # end if
-} # end sub rfidtags
+} # end sub rfidscanners
+sub _rfidscanners {
+} # end sub _rfidscanners
 
 sub rfidscanner_details {
 	my $RFIDScanner = new openprint::RFIDScanner( $param{'rfidscanner_id'} );
@@ -1674,9 +1672,8 @@ sub _skids_results {
 sub _paper_log {
 	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
 } # end _paper_log
-
-sub _similar_pos {
-} # end sub _similar_pos
+sub _skid_log {
+} # end _skid_log
 
 sub skid_label {
 } # end sub skid_label
@@ -1710,5 +1707,13 @@ sub _packingslips {
 				) );
 } # end sub _packingslips
 
+sub _rfidscanners_results {
+} # end sub _rfidscanners_results
+
+sub _map {
+} # end sub _map
+
+sub _docket_label {
+} # end sub _docket_label
 1;
 __END__

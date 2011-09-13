@@ -11,7 +11,8 @@
 	foreach my $Article ( openprint::Article->find( 
 		'published'			=>	1,
 		'category_id'		=>	$param{'category_id'},
-		'order'				=> 'published_on',
+		'order'				=> 'published_on DESC',
+		'limit'				=>	10,
 		) ) {
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article
@@ -22,11 +23,15 @@
 <div class="Article">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
+	<? echo (
+		my $Image = $$variable{'Category'}->Image();
+		if ( $Image->id() and $Image->url() ) {
+			return sprintf('<img src="%s" alt=""/>', $Image->url() );
+		} # end if
+		return;
+	) ?>
 	<div class="name"><? echo ( $$variable{'Category'}->name() ) ?></div>
 	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
-	<? if ( $$variable{'Category'}->image_filename() ) ?>
-	<div class="image"><img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
-	<? endif ( $$variable{'Category'}->image_filename() ) ?>
 </div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>
 <div class="Articles">
@@ -37,24 +42,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
-				my @Comments = $Article->Comments();
-				$html .= sprintf(q` 
-				<div class="Article"> 
-					<h1><a href="view.html?article_id=%1$d">%2$s</a></h1>
-					Posted on %6$s by %5$s<br/>
-					<div class="source_content">%3$s</div>
-					<div class="summary">%4$s</div>
-					<div id="comments-%1$d" class="comments"><div onclick="new Ajax.Updater('comments-%1$d', '_comments.html', { parameters: { article_id: %1$d } } );">This article has %7$s. Click to view/Add.</div></div>
-				</div>
-				`, $Article->id(), 
-				ssi::htmlize($Article->title()),
-				$Article->source_content(), 
-				$Article->summary(), 
-				ssi::htmlize( $Article->Author()->name() ),
-				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
-				( @Comments == 1 ? '1 comment' : @Comments . ' comments' )
-
-				);
+				$html .= $Article->html();
 			} # end foreach Article
 			return $html;
 		) ?>

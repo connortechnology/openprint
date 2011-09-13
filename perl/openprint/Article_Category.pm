@@ -1,4 +1,6 @@
 use strict;
+require openprint::Photo_Album;
+require openprint::Photo_in_Album;
 package openprint::Article_Category;
 our @ISA = qw(openprint::Object);
 
@@ -12,18 +14,34 @@ $serial = 'article_categories_id_seq';
 	'id'				=>	'id',
 	'name'				=>	'name',
 	'description'		=>	'description',
+	'summary'			=>	'summary',
 	'position'			=>	'position',
 	'permalink'			=>	'permalink',
-	'image_filename'	=>	'image_filename',
 	'deleted'			=>	'deleted',
+	'album_id'			=>	'album_id',
 );
 
 %transforms = (
 );
 %defaults = (
+	'album_id'		=>	undef,
 	'position'		=>	undef,
 	'deleted'		=>	0,
 );
+
+sub Photo_Album {
+	return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Photo_Album
+
+sub Image {
+	my @Photos = $_[0]->Photo_Album()->Photos();
+	if ( @Photos == 1 ) {
+		return $Photos[0];
+	} elsif ( @Photos ) {
+		return $Photos[int(rand(@Photos))];
+	} 
+	return new openprint::Photo_In_Album();
+} # end sub Image
 
 1;
 __END__

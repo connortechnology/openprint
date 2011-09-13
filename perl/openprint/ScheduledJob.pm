@@ -4,11 +4,10 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
+use vars qw(%variable $log $dbh %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 *session = \%openprint::session;
 
 require sql;
@@ -19,7 +18,7 @@ require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';
@@ -213,7 +212,7 @@ sub stock {
 				$$self{'stock'} .= ' not allocated.';
 			} # end if
 			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find('docket'=>$Project->docket()) ) ) {
-				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
@@ -338,7 +337,7 @@ sub get_li {
 		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
+			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
 		} # end if
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
@@ -680,7 +679,7 @@ sub bump {
 		$$sig_specs{'SignatureIndex'};
 	} @{$self->service_id()} if $self->service_id();
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($openprint::config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
 

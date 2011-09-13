@@ -25,7 +25,7 @@
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
 					</li>
 					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+<? if ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<li><label>Pricing Markup:</label>
 					<span id="markup_view">
 					<? echo ( 1*$$variable{'Project'}->markup() ) ?>%
@@ -37,7 +37,7 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'CancelMarkup', 'cancelmarkup.gif', "f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", '', 'Cancel' ); ) ?>
 					</span>
 					</li>
-<? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
+<? endif ( 0 and openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<? if ( $$variable{'Project'}->docket() ) ?>
 					<? if ( $$variable{'Project'}->shippingtype() ) ?>

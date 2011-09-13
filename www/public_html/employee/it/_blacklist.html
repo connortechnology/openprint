@@ -2,7 +2,7 @@
 	if ( $param{'ip'} ) {
 		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('ip'=>$param{'ip'});
 	} elsif ( $param{'mac'} ) {
-		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('mac_any'=>$param{'mac'});
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('mac any'=>$param{'mac'});
 	} elsif ( $param{'hostname'} ) {
 		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('mac_like'=>'%'.$param{'hostname'}.'%');
 	} else {

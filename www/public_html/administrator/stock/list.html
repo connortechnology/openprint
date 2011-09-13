@@ -49,6 +49,13 @@
 -->
 </script>
 <form id="f1" name="f1" method="post" action="list.html">
+	<fieldset class="filters"><legend>Go to</legend>
+		<ul>
+			<li><label>Paper #:</label><input type="number" name="stock_id" id="stock_id"/>
+				<? echo ( ssi::button( 'Go', { 'onclick'=>q`window.location='/administrator/stock/stock.html?stock_id='+$('stock_id').value;` } ); ) ?>
+			</li>
+		</ul>
+	</fieldset>
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="leftColumn">
 			<ul>
@@ -110,15 +117,13 @@
 	foreach my $Stock ( @Stocks ) {
 		foreach my $option ( @options ) {
 			my $lc_option = lc $option;
-			#if ( $$Stock->$lc_option() == 
 			$results{$option}{$$Stock{$lc_option.'_id'}} = $Stock->$option();
 		} # end foreach Stock
 	}# end foreach option
 
 	foreach my $option ( @options ) {
 		my $lc_option = lc $option;
-$log->debug("Doin $option");
-	my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
+		my @sorted = ('openprint::Stock'.$option)->sort( map { $results{$option}{$_} } keys %{$results{$option}} );
 
 		$html .= sprintf(q`	
 		<li> 
@@ -162,11 +167,12 @@ $log->debug("Doin $option");
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-ssi::writeButton( $log, $dbh, 'applychanges1', 'applychanges.gif', "popup_window(f1);", '', 'Make Changes' ),
-				ssi::writeButton($log, $dbh, 'New1','new.gif',"",'stock.html','Add A New Stock'),
-				ssi::writeButton($log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete Checked Stocks'),
-				#ssi::writeButton($log, $dbh, 'Save1','blah.gif',"show_div('StockRecommendations', event );",'','Set Stock Recommendations'),
-				ssi::writeButton( $log, $dbh, "Copy1", 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
+				ssi::button( 'Show', { 'onclick'=>q`calc('f1');` } ),
+				ssi::button( 'applychanges', { 'onclick'=>'popup_window(f1);', 'text'=>'Make Changes' } ),
+				ssi::button( 'New', { 'href'=>'stock.html', 'text'=>'Add A New Stock' } ),
+				ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'text'=>'Delete Checked Stocks' } ),
+				#ssi::button( 'Save', { 'onclick'=>"show_div('StockRecommendations', event );",'text'=>'Set Stock Recommendations' } ),
+				ssi::button( "Copy", { 'onclick'=>"f1.btnFunction.value='Copy';f1.submit();", 'text'=>'Copy' } ),
 			); ) ?>
 		</p>
 	</fieldset>

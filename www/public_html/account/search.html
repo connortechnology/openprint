@@ -17,12 +17,14 @@
 						<li><label>Real Name:</label>
 							<input type="text" name="name" id="name" onkeyup="$('company_name').value='';if(this.value.length > 2){load_results();};" />
 						</li>
+<!--
 						<li><label>Distance:</label>
 							<select name="distance" id="distance">
 								<option value="">select</option>
 								<? echo ( ssi::make_drop_down( [ map { $_, $_.'km' } ( 5, 10, 50, 100 ) ], $session{'/account/search.html?distance'} ); ) ?>
 							</select>
 						</li>
+-->
 <!--
 						<li>
 							<label>Registered:</label>
@@ -52,7 +54,7 @@
 						<? echo ( 
 	my $html = '';
 	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+	foreach my $Field ( openprint::User_Profile_Field->find('searchable'=>1,'order'=>'sort,name') ) {
 		$html .= '<li><label>'.$Field->name().':</label><span id="field-'.$Field->id().'_container">';
 		my $value = $session{'/account/search.html?field-'.$Field->id()};
 
@@ -82,8 +84,8 @@ $log->debug( "Value: $v, text: $t");
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
 			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
 			$html .= '</select>';
-		} elsif ( $Field->type() eq 'text' ) {
-			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
+		} elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
+			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ( $value ? $value : $Field->default() ), $$Field{'type'} );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field

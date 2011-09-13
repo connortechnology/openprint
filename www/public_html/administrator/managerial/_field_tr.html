@@ -8,22 +8,19 @@
 			<td><select name="type-%1$d" id="type-%1$d" onchange="check_field(this);"><option value=""> choose </option>%4$s</select></td>
 			<td><input type="text" id="values-%1$d" name="values-%1$d" value="%5$s" onkeyup="check_field(this);"/></td>
 			<td><input type="text" id="default-%1$d" name="default-%1$d" value="%6$s" onkeyup="check_field(this);"/></td>
-			<td>
-				<input type="radio" name="required-%1$d" id="required-%1$d-1" value="1" %7$s onclick="check_field(this);"/>
-				<label for="required-%1$d-1">Yes</label>
-				<input type="radio" name="required-%1$d" id="required-%1$d-0" value="0" %8$s onclick="check_field(this);"/>
-				<label for="required-%1$d-0">No</label>
-			</td>
+			<td>%7$s</td>
+			<td>%8$s</td>
 			<td class="buttons">%9$s</td>
 		</tr>`, $Field->id(), $Field->name(), $Field->description(),
-			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
+			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
 			$Field->default(),
-			ssi::checked( $Field->required() ), ssi::checked( ! $Field->required() ),
+			ssi::radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required() ),
+			ssi::radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable() ),
 		join('', 
-			ssi::writeButton( $log, $dbh, 'x'.$Field->id(), 'delete.gif', qq`delField( $$Field{id} );`, '', 'X' ),
-			ssi::writeButton( $log, $dbh, 'c'.$Field->id(), 'copy.gif', qq`copyField( $$Field{id} );`, '', 'C' ),
-			( $Field->sort() ? ( ssi::writeButton( $log, $dbh, 'u'.$Field->id(), 'up.gif', qq`upField( $$Field{id} );`, '', 'U' ) ) : () ),
+			ssi::button( 'x'.$Field->id(), { 'onclick'=>qq`delField( $$Field{id} );`, 'text'=>'X' } ),
+			ssi::button( 'c'.$Field->id(), { 'onclick'=>qq`copyField( $$Field{id} );`, 'text'=>'C' } ),
+			( $Field->sort() ? ( ssi::button( 'u'.$Field->id(), { 'onclick'=>qq`upField( $$Field{id} );`, 'text'=>'U' } ) ) : () ),
 			),
 		);
 	} elsif ( $$variable{'error'} ) {

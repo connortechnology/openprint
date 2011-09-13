@@ -4,7 +4,7 @@
 	my $html;
 	foreach my $To ( $$variable{'Message'}->To() ) {
 		my $User = $To->User();
-		$html .= '<li>'.$User->name().writeButton( $log, $dbh, 'X'.$User->id(), 'delete.gif', "delete_to($$User{id});", '', 'X' ).'</li>';
+		$html .= '<li>'.$User->name().button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ).'</li>';
 	} # end foreach user
 	return $html;
 ) ?>
@@ -15,12 +15,11 @@
 	<? echo ( 
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
-			#'type'=>'Friend', 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
 			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Message'}->To() ],
 			'distinct' => 1,
 			);
 		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
 	) ?>
 </select>

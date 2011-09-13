@@ -181,7 +181,7 @@ sub view {
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
 			$variable{'error'} .= $Event->save(\%param);
-			new openprint::Log()->save({'action'=>'Create Event', 'object'=>$Event});
+			new openprint::Log()->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
 		} # end if
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
