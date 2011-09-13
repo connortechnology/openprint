@@ -601,6 +601,7 @@ sub item {
 			'name'		=>	$param{'name'},
 			'product'	=>	$param{'product'},
 			'price'		=>	$param{'price'},
+			'type_id'	=>	$param{'type_id'},
 		});
 	} elsif ( $param{'func'} eq 'Delete' ) {
 		$variable{'error'} .= $Item->delete();

@@ -506,7 +506,7 @@ sub paid_on_seconds {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return time;
 	} # end if
-	my $Last_Payment = openprint::Payment::find_one('order_id'=>$_[0]{'id'},'order'=>$openprint::Payment::fields{'received_on'}.' DESC');
+	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{'id'},'order'=>$openprint::Payment::fields{'received_on'}.' DESC');
 	if ( ! $Last_Payment ) {
 		return time;
 	} # end if
@@ -516,7 +516,7 @@ sub paid_on {
 	if ( $_[0]->paid() < $_[0]->total() ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
-	my $Last_Payment = openprint::Payment::find_one('order_id'=>$_[0]{'id'},'order'=>$openprint::Payment::fields{'received_on'}.' DESC');
+	my $Last_Payment = openprint::Payment->find_one('order_id'=>$_[0]{'id'},'order'=>$openprint::Payment::fields{'received_on'}.' DESC');
 	if ( ! $Last_Payment ) {
 		return Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	} # end if
