@@ -40,7 +40,7 @@ sub Image {
 	} elsif ( @Photos ) {
 		return $Photos[int(rand(@Photos))];
 	} 
-	return new openprint::Photo_In_Album();
+	return new openprint::Photo_in_Album();
 } # end sub Image
 
 1;
