@@ -61,6 +61,10 @@ sub find {
 		$sql .= ' AND valid=?';
 		push @values, $params{'valid'};
 	} # end if
+	if ( $params{'location_id'} ) {
+		$sql .= ' AND location_id=?';
+		push @values, $params{'location_id'};
+	} # end if
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};

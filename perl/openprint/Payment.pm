@@ -77,6 +77,5 @@ sub remaining {
 sub Type {
 	return new openprint::PaymentType( $_[0]{'type_id'} );
 } # end sub Type
-
 1;
 __END__

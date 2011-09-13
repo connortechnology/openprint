@@ -11,16 +11,16 @@
 		$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();" } );
 	} # end if
 	$html .= ssi::button( 'Print', { 'onclick'=>'window.print();' } );
-	if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
+	if ( $$variable{'PurchaseOrder'}->can_edit() ) {
 		$html .= ssi::button( 'Email', { 'onclick'=>"f1.btnFunction.value='Email Vendor';f1.submit();", 'text'=>'Send Email' } );
 		$html .= ssi::button( 'Edit', { 'href'=>'edit.html?po_id='.$$variable{'PurchaseOrder'}->id() } );
-		$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 		if ( $$variable{'PurchaseOrder'}->deleted() ) {
 			$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.btnFunction.value='Undelete';f1.submit();" } );
 		} else {
 			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
-	} # end if
+	} # end if can edit
+	$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 	return $html;
 ) ?>
 	</p>
@@ -123,13 +123,18 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<th class="product">PRODUCT #</th>
 		<th class="description">ITEM / DESCRIPTION</th>
 		<th class="docket">DOCKET</th>
-		<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+		<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 		<th class="price">UNIT PRICE</th>
 		<th class="total">LINE TOTAL</th>
-		<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+		<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
+	my $unseen = 0;
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
+		if ( ! $C->can_view() ) {
+			$unseen = 1;
+			next;
+		} # end if
 			
 		if ( $C->Type()->name() eq 'Roll Stock' ) {
 			$html .= sprintf('<tr><td class="quantity">%dlbs</td>', $C->qty() );
@@ -146,7 +151,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			', $C->product(), $C->item(), $C->description(), $C->docket(), 
 			);
 
-		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
+		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
 			if ( sets::isin( $C->Type()->name(), [ 'Roll Stock', 'Sheet Stock' ] ) ) {
 				$html .= sprintf('<td class="price">%s/100lb</td><td class="total">%s</td>',
 					openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
@@ -157,9 +162,16 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		} # end if
 		$html .= '</tr>';
 	} # end foreach C
+	if ( $unseen ) {
+		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
+		$html .= '<tr><td colspan="6">There are other items in this purchase order that you cannot see.</td></tr>';
+		} else {
+		$html .= '<tr><td colspan="4">There are other items in this purchase order that you cannot see.</td></tr>';
+		} # end if
+	} # end if $unseeen
 	return $html;
 ) ?>
-	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 	<tr>
 		<td colspan="5" class="totals">SUBTOTAL:</td>
 		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
@@ -177,7 +189,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<td colspan="5" class="totals">TOTAL:</td>
 		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
-	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 </table>
 		<div class="leftColumn">
 			<ol>
@@ -187,9 +199,9 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			</ol>
 		</div>
 		<div class="rightColumn" style="text-align: right;">
-	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
-	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 		<br/>
 		<br/>
 			<div class="PreparedBy"><i>Prepared by: <? echo ( $$variable{'PurchaseOrder'}->Creator()->name() ) ?></i></div>
