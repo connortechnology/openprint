@@ -118,7 +118,7 @@ sub can_view {
 	return 1 if ! $_[0]{'id'};
 	if ( 
 			( $openprint::session{'user_type'} eq 'A' )
-			or ( $openprint::session{'user_id'} == $_[0]->PurchaseOrder()->created_by() )
+			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
 			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
 			or ( $openprint::session{'user_id'} == $_[0]->Order()->salesrep_id() )
 	   ) {
