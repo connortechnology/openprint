@@ -395,5 +395,15 @@ $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets
 
+sub Payments {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'claim_id'} = $_[0]{'id'};
+	$param{'order'}	=	'payment_id' if ! $param{'order'};
+	my @Payments = openprint::Claim_Payment->find(%param);	
+$openprint::log->debug("# of Payments: " . scalar @Payments );
+	return @Payments;
+} # end sub Payments
+
 1;
 __END__

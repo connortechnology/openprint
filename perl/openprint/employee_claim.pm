@@ -6,6 +6,7 @@ require misc;
 require openprint::RFIDTag;
 require openprint::Claim;
 require openprint::Claim_Content;
+require openprint::Claim_Payment;
 require openprint::PurchaseOrder;
 require openprint::Asset;
 require openprint::Claim_Asset;
@@ -231,5 +232,16 @@ sub _assets {
 		$CA->delete();
 	} # end if
 } # end sub _assets
+
+sub _payments {
+	$variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'addpayment' ) {
+		my $Payment = new openprint::Payment();
+		$Payment->save({
+				'amount'        =>      $param{''},
+				});
+	} # end if
+} # end sub _payments
+
 1;
 __END__

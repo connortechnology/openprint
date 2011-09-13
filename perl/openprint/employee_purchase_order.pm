@@ -189,31 +189,38 @@ sub view {
 		my %types;
 		foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
 			next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
-
-			my $Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
-			if ( ! $Item->id() ) {
-				$Item = openprint::PurchaseOrder_Item->find_one(
-					'company_id'	=>	$PO->company_id(),
-					'vendor_id'		=>	$param{'supplier_id'},
-					'type_id'		=>	$param{'type_id-'.$content_id},
-					'name_lc'		=>	lc $param{'item-'.$content_id}, 
-					'product_lc'	=>	lc $param{'product-'.$content_id},
-					);
-				if ( ! $Item ) {
-					$Item = new openprint::PurchaseOrder_Item();
-					$Item->save({
+			my $Item;
+			if ( $param{'item-'.$content_id} ) {
+				$Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
+				if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $param{'item-'.$content_id}) ) ) {
+					$log->debug("Looking up (" . $param{'item-'.$content_id}.') (' . $Item->name() );
+					$Item = openprint::PurchaseOrder_Item->find_one(
 							'company_id'	=>	$PO->company_id(),
 							'vendor_id'		=>	$param{'supplier_id'},
 							'type_id'		=>	$param{'type_id-'.$content_id},
-							'name'			=>	$param{'item-'.$content_id}, 
-							'price'			=>	$param{'price-'.$content_id},
-							'product'		=>	$param{'product-'.$content_id},
-							});
+							'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$param{'item-'.$content_id}),
+							'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$param{'product-'.$content_id}),
+							);
+					if ( ! $Item ) {
+						$Item = new openprint::PurchaseOrder_Item();
+						$Item->save({
+								'company_id'	=>	$PO->company_id(),
+								'vendor_id'		=>	$param{'supplier_id'},
+								'type_id'		=>	$param{'type_id-'.$content_id},
+								'name'			=>	$param{'item-'.$content_id}, 
+								'price'			=>	$param{'price-'.$content_id},
+								'product'		=>	$param{'product-'.$content_id},
+								});
+					} # end if
+				} else {
+					$log->debug("Item is " . $Item->name() );
 				} # end if
-			} # end if
-			if ( $Item->price() != $param{'price-'.$content_id} ) {
-				# Update the latest price
-				$Item->save({'price'=>$param{'price-'.$content_id}});
+				if ( $Item->price() != $param{'price-'.$content_id} ) {
+# Update the latest price
+					$Item->save({'price'=>$param{'price-'.$content_id}});
+				} # end if
+			} else {
+				$log->debug("No item for $content_id");
 			} # end if
 
 			my $C = new openprint::PurchaseOrder_Content( $content_id );
