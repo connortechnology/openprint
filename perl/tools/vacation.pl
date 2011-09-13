@@ -19,17 +19,22 @@ use DBI;
 use strict;
 
 my $db_type = 'Pg';
-my $db_host = 'www5';
+my @db_host = ( 'www4', 'www5' );
 my $db_user = 'postfix';
 my $db_pass = 'postfix';
 my $db_name = 'mail';
 my $sendmail = "/usr/sbin/sendmail";
 my $logfile = "/tmp/vacation.log";    # specify a file name here for example: vacation.log
-my $debugfile = "";  # sepcify a file name here for example: vacation.debug
+my $debugfile = "/tmp/vacation.dbg";  # sepcify a file name here for example: vacation.debug
 my $syslog = 1;   # 1 if log entries should be sent to syslog
 my $vacation_for_aliases = 0;
 
-my $dbh = DBI->connect("DBI:$db_type:dbname=$db_name;host=$db_host", "$db_user", "$db_pass", { RaiseError => 1 });
+my $dbh;
+foreach my $db_host ( @db_host ) {
+	$dbh = DBI->connect("DBI:$db_type:dbname=$db_name;host=$db_host", "$db_user", "$db_pass", { RaiseError => 1 });
+	last if $dbh;
+} # end foreach db_host
+die "Couldnt connect to db!" if ! $dbh;
 
 # used to detect infinite address lookup loops
 my $loopcount=0;
@@ -190,3 +195,4 @@ for (@search_array) {
 }
 
 0;
+__END__
