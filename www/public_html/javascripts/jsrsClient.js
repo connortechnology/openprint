@@ -199,13 +199,20 @@ function contextGetPayload(){
 		case 'NS':
 			return this.container.document.forms['jsrs_Form'].elements['jsrs_Payload'].value;
 		case 'IE':
-		if ( ! this.container.document.forms['jsrs_Form']['jsrs_Payload'] ) {
-			//alert(this.container);
-		} else {
-			return this.container.document.forms['jsrs_Form']['jsrs_Payload'].value;
-		} // end if
-	case 'MOZ':
+			if ( ! this.container.document.forms['jsrs_Form']['jsrs_Payload'] ) {
+				//alert(this.container);
+			} else {
+				return this.container.document.forms['jsrs_Form']['jsrs_Payload'].value;
+			} // end if
+		case 'MOZ':
+			if ( ! window.frames[this.container.name] ) {
+				//alert('No frame for ' + this.container.name);
+				var frame = $(this.container.name);
+				var d = frame.document ? frame.document : frame.contentDocument;
+				return d.forms['jsrs_Form']['jsrs_Payload'].value;
+			} else {
 			return window.frames[this.container.name].document.forms['jsrs_Form']['jsrs_Payload'].value; 
+			}
 		case 'OPR':
 			var textElement = window.frames[this.container.name].document.getElementById("jsrs_Payload");
 			return textElement.value;
