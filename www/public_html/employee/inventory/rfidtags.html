@@ -62,6 +62,12 @@ Please select a RFID Tag to view/edit.<br>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType->find('order'=>'lower(name)') ], $session{'/employee/inventory/rfidtags.html?Type'} ); ) ?>
 			</select>
         </p>
+		<p><label>Location:</label>
+			<select name="location_id" id="location_id">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $session{'/employee/inventory/rfidtags.html?location_id'} ); ) ?>
+			</select>
+        </p>
 
 		<p class="buttons">
 			<? echo ( join('',

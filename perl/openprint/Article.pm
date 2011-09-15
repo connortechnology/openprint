@@ -169,5 +169,9 @@ sub html {
 sub summary_html {
 } # end sub summary_html
 
+sub view_url {
+	return '/article/view.html?article_id='.$_[0]{'id'};	
+} # end sub view_url
+
 1;
 __END__

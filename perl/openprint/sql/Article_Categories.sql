@@ -4,9 +4,9 @@ CREATE TABLE Article_Categories (
 	name	TEXT,
 	position	INTEGER,
 	permalink	text,
-	image_filename	TEXT,
 	description		TEXT,
 	deleted			BOOLEAN NOT NULL default false,
+	album_id		INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	PRIMARY KEY (id)
 );
 

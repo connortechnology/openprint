@@ -1304,6 +1304,7 @@ sub reorder_jobs {
 	} # end if
 
 	foreach my $Job ( @order ) {
+		next if ! $Job->project_id();	
 		my $Project = $Job->Project();
 		$log->debug($Job->id() .' ' . $Project->docket() . ' ' . $Project->Company()->name() . ' Due: (' . $Project->due_date().')' );
 		if ( ! $Project->due_date() ) {

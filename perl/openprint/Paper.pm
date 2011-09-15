@@ -34,7 +34,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -1127,7 +1127,7 @@ $openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 
 		if ( ! $Paper ) {
 			my %params = (
-					'supplied'	=> $$specs{'rdbSuppliedStock'},
+					'supplied is null or ='	=> $$specs{'rdbSuppliedStock'},
 					'brand'	 	=> $$specs{'ddmStockBrand'},
 					'finish'	=> $$specs{'ddmStockFinish'},
 					'colour'	=> $$specs{'ddmStockColour'},

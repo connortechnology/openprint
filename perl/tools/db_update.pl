@@ -1667,9 +1667,9 @@ foreach my $M ( openprint::Material->find('name_like'=>'Plain Carton%') ) {
 	$M->save();
 } # end foreach $M
 if ( ! openprint::MaterialCategory->find('name'=>'BulkSkids') ) {
+    print "Adding BulkSkids Category\n";
     my $Category = new openprint::MaterialCategory();
     $Category->save({'name'=>'BulkSkids'});
-    print "Adding BulkSkids Category\n";
 } # end if
 
 if ( my $M = openprint::Material->find_one('name'=>'BulkSkids') ) {
@@ -1727,8 +1727,8 @@ if ( my $S = openprint::ServiceType->find_one('name'=>'Aqueous') ) {
 } # end if
 
 foreach my $ST ( openprint::ServiceType->find('name'=>'DieCutting') ) {
-	$_ = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
-	die $_ if $_;
+	my $error = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
+	die 'Error saving '.$ST->to_string().': '.$error if $error;
 }
 
 if ( ! openprint::ServiceCategory->find('name'=>'Coating') ) {
@@ -1738,16 +1738,16 @@ if ( ! openprint::ServiceCategory->find('name'=>'Coating') ) {
 		'name'=>'Coating',
 	});
 } # end if
-	if ( my @S = openprint::Service->find('name'=>'Perforation') ) {
-		foreach my $S ( @S ) {
-			$S->save({'name'=>'Perforating'});
-		}
-	} # end if
-	if ( my @S = openprint::Service->find('name'=>'PerforationMakeReady') ) {
-		foreach my $S ( @S ) {
-			$S->save({'name'=>'PerforatingMakeReady'});
-		}
-	} # end if
+if ( my @S = openprint::Service->find('name'=>'Perforation') ) {
+	foreach my $S ( @S ) {
+		$S->save({'name'=>'Perforating'});
+	}
+} # end if
+if ( my @S = openprint::Service->find('name'=>'PerforationMakeReady') ) {
+	foreach my $S ( @S ) {
+		$S->save({'name'=>'PerforatingMakeReady'});
+	}
+} # end if
 if ( ! openprint::Material->find('name'=>'PerforatingWheel') ) {
 	if ( my @M = openprint::Material->find('name'=>'PerforatingRule') ) {
 		foreach my $M ( @M ) {

@@ -72,8 +72,9 @@ sub new {
 		my @keys = keys %{$id};
 		bless $id, $parent;
 # First off, for now, don't cache figure that out later
-		#@$self{@keys} = @$id{@keys};
+		#@$id{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
+$log->debug("New by hash @keys : " . $id->to_string() );
 		$id->load( $data );
 #$log->debug("New by hash @keys : " . $id->to_string() );
 		return $id;
@@ -106,7 +107,7 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
-			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $_ } @identified_by ) ) if $debug;
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
@@ -179,11 +180,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -193,11 +195,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -229,11 +232,12 @@ sub save {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
 			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
 				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
@@ -361,8 +365,8 @@ sub destroy {
 	my ( $self ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
-	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{'id'}.'=?', $$self{'id'} );
+	my $fields = eval '\%'.$type.'::fields';
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
 	delete $openprint::Object::cache{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
@@ -455,6 +459,8 @@ sub find_operators {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
 				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+			} else {
+					push @{$results{' not in'}}, ();
 			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
@@ -535,6 +541,9 @@ sub find {
 		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
 	} # end if
 
+	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
+	my @used_fields;
+
 	foreach ( 'find_fields', 'fields' ) {
 		my $f = eval '\%'.$type.'::'.$_;
 		next if ! $f;
@@ -569,6 +578,7 @@ sub find {
 				} # end if
 			} # end foreach field
 			delete $$params{$k};
+			push @used_fields, $k;
 		} # end foreach k
 		last if ! %$params;
 
@@ -580,9 +590,12 @@ sub find {
 				foreach my $field ( @{$$f{$k}} ) {
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
-						push @w, shift @{$$results{$operator}};
-						push @d, $k.$operator;
-						push @values, @{$$results{$operator}};
+						if ( @{$$results{$operator}} ) {
+							push @w, shift @{$$results{$operator}};
+							push @d, $k.$operator;
+							push @values, @{$$results{$operator}};
+						} # end if
+						push @used_fields, $k;
 					} # end foreach
 				} # end foreach field
 				foreach ( @d ) { delete $$params{$_}; };
@@ -591,8 +604,11 @@ sub find {
 				my $results = find_operators( $params, $k, $$f{$k} );
 				foreach my $operator ( keys %$results ) {
 					delete $$params{$k.$operator};
-					push @where, shift @{$$results{$operator}};
-					push @values, @{$$results{$operator}};
+					if ( @{$$results{$operator}} ) {
+						push @where, shift @{$$results{$operator}};
+						push @values, @{$$results{$operator}};
+					} # end if
+					push @used_fields, $k;
 				} # end foraech
 			} # end if
 		} # end foreach k in fields
@@ -608,6 +624,7 @@ sub find {
 			next if sets::isin( ref $$params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $$fields{$f} ) {
+Carp::cluck("Use of deprecated Object ref in find");
 				if ( $$params{$k}->id() ) {
 					push @where, "$$fields{$f} = ?";
 					push @values, $$params{$k}->id();
@@ -618,8 +635,7 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
-
-	if ( $$fields{'deleted'} and ! exists $$params{'deleted'} ) {
+	if ( $$fields{'deleted'} and ! sets::isin( @used_fields, 'deleted') ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
@@ -660,7 +676,7 @@ sub find {
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
 		if ( $cache_field and 1 ) {
@@ -756,7 +772,7 @@ sub transform {
 			eval '$_[2] =~ ' . $transform;
 		} # end foreach
 	} else {
-		$openprint::log->error("$_[1] not in fields for $type");
+		$openprint::log->error("Object::transform $_[1] not in fields for $type");
 	} # end if
 	return $_[2];
 
@@ -827,9 +843,13 @@ sub Like {
 } # end sub Like
 
 sub Object_Type {
+$log->debug(" Object_Type: id " . $_[0]);
+
 	if ( $_[0]{'object_type_id'} ) {
+$log->debug("Object: Object_Type: id " . $_[0]{'object_type_id'} );
 		$_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
 	} else {
+$log->debug("Object: Object_Type: No id, looking up by name" . ref $_[0] );
 		$_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
 		$_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
 	} # end if

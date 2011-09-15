@@ -32,7 +32,7 @@
 			</li>
 			<li>
 				<label>Item Contains:</label>
-				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
+				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" value="<? echo ( $param{'item_contains'} ) ?>" />
 			</li>
 		</ul>
 		<p class="buttons">

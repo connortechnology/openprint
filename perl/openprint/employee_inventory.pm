@@ -1127,7 +1127,7 @@ sub rfidtags {
 			$variable{'error'} .= $RFIDTag->save({'valid'=>1});
 		} # end foreach rfidtag_id
 	} else {
-		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid', 'location_id' );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_start', 0 );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_end', '' );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_start', '' );
@@ -1142,7 +1142,7 @@ sub rfidtags {
 } # end sub rfidtags
 
 sub _rfidtags_results {
-	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid','location_id' );
 } # end sub _rfidtags_results
 
 sub rfidtag_details {

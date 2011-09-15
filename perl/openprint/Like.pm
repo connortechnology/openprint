@@ -40,9 +40,13 @@ sub object_type {
 
 sub Object {
 	if ( ! $_[0]{'Object'} ) {
-#$openprint::log->debug("Like: new object openprint::$_[0]{'object_type'}");
-		if ( ($_[0]->object_type()->name())->can('new') ) {
-			$_[0]{'Object'} = ($_[0]->object_type())->new( $_[0]{'object_id'} );
+#$openprint::log->debug("Like: new object ".$_[0]->object_type());
+		my $type = $_[0]->object_type();
+		if ( ! $type ) {
+			$openprint::log->warn("No object_type $type");
+
+		} elsif ( $type->can('new') ) {
+			$_[0]{'Object'} = $type->new( $_[0]{'object_id'} );
 #$openprint::log->debug("lLike: new object type: " . (ref $_[0]{'Object'}) . ' id: ' . $_[0]{'Object'}->id() );
 		} else {
 			$openprint::log->warn("Unable to create an $_[0]{object_type}");

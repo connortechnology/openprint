@@ -83,7 +83,7 @@ sub thumbnail_url {
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
-$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
+#$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
     my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
@@ -92,12 +92,12 @@ $openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			`convert  -adaptive-resize 75x $src $dest`;
 		} # end if
-$openprint::log->debug("Return /thumbnails/$filename");
+#$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
 		if ( ! -e $dest ) {
-			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+			#$openprint::log->debug("Creating thumbnail at 75x $src $dest");
 			`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
 			`mv /tmp/00000001.jpg $dest`;
 			if ( $! ) {
@@ -107,7 +107,7 @@ $openprint::log->debug("Return /thumbnails/$filename");
 		} # end if
 		return  '/thumbnails/'.$blah.'.jpg';
 	} elsif ( sets::isin( lc $extension, [ 'mp3' ] ) ) {
-$openprint::log->debug("returning mp3 icon");
+#$openprint::log->debug("returning mp3 icon");
 		return '/images/icons/mp3.png';
 	} # end if
 	return '/images/icons/file.png';
@@ -183,6 +183,10 @@ sub upload {
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
 		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
 			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
+		} # end if
+		if ( $_[1] ) {
+			# Should be a hash of more attribute
+			$Asset->save($_[1]);
 		} # end if
 	} # end if
 	return $Asset;

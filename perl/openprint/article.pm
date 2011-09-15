@@ -195,28 +195,22 @@ sub category {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $Category->save(\%param);
-        if ( $param{'filename'} ) {
-            my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-            } else {
-				my $path = '/images/article_categories/' . $Category->id() . '_' . $param{'filename'};
-                if ( ! $upload->link( $config{'SkinPath'} . $path ) ) {
-                    $variable{'error'} .= "There was an error saving file $param{'filename'} to $config{SkinPath}$path : $!<br/>";
-#$Asset->save({'filename'=>''});
-                } else {
-                    $variable{'error'} .= $Category->save({'image_filename'=>$path});
-                    $variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-                } # end if
-            } # end if
-		} else {
-			$log->debug("No image uploaded");
-        } # end if
-
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Category->delete();
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		$variable{'error'} .= $Category->destroy();
+	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
+		my $Album = $Category->Photo_Album();
+		if ( ! $Album->id() ) {
+			$variable{'error'} .= $Album->save({'name'=>'Images for article category: ' . $Category->name()});
+			$variable{'error'} .= $Category->save({'album_id'=>$Album->id()});
+		} # end if
+		$variable{'error'} .= $Album->upload('filename', {
+				'name' => $param{'asset_name'},
+				'description' => $param{'asset_description'},
+				'license' => $param{'asset_license'},
+				'attribution' => $param{'asset_attribution'},
+				} );
 	} # end if
 } # end sub category
 
@@ -258,6 +252,13 @@ sub _comments {
 		} else {
 			$variable{'error'} .= 'You are not authorized to approve this comment.';
 		} # end if
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Comment = new openprint::Comment( $param{'comment_id'} );
+		if ( $Comment->can_delete() ) {
+			$Comment->delete();
+		} else {
+			$variable{'error'} .= 'You do not have the right to delete that comment.';
+		} # end if
 	} # end if
 } # end sub _comments
 
@@ -265,11 +266,21 @@ sub _assets {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'func'} eq 'delete' ) {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
-		$Asset->delete();
+		$variable{'error'} .= $Asset->delete();
 	} else {
 		$log->error("article/_assets: Uknown function");
 	} # end if
 } # end sub _assets
+
+sub _category_photos {
+	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Asset = new openprint::Photo_in_Album({'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'}});
+		$variable{'error'} .= $Asset->delete();
+	} else {
+		$log->error("article/_category_photos: Uknown function");
+	} # end if
+} # end sub _category_photos
 
 sub _asset_search_results {
 } # end sub _asset_search_results

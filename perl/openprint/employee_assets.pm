@@ -6,6 +6,7 @@ require misc;
 require openprint::Asset;
 require openprint::Claim_Asset;
 require openprint::SRED_Asset;
+require openprint::Article_Asset;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -24,15 +25,26 @@ sub history {
 
 		} # end foreach asset_id
 		%param = ();
+	} elsif ( $param{'action'} eq 'reset' ) {
+		foreach ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day'
+				,'type_id', 'created_by', 'company_id', 'deleted', 'lastupdated' 
+				) {
+			delete $session{"/employee/assets/history.html?$_"};
+		} # end foreach
+	} # end if
+	
+	if ( ( ! $session{'/employee/assets/history.html?lastupdated'} ) or ( time - $session{'/employee/assets/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', '' );
+		ssi::setup_date_select( '/employee/assets/history.html', 'created_on_end', '' );
+		$session{'/employee/assets/history.html?deleted'} = 0 if ! exists $session{'/employee/assets/history.html?deleted'};
 	} # end if
 	ssi::save_params( '/employee/assets/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day'
 				,'type_id', 'created_by', 'company_id', 'deleted'
 				) );
-	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', '' );
-	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_end', '' );
-	$session{'/employee/assets/history.html?deleted'} = 1 if ! exists $session{'/employee/assets/history.html?deleted'};
 
 } # end sub history
 

@@ -27,8 +27,8 @@ $dst_db = 'point-one' if ! $dst_db;
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
 
-	if ( ! -e "/media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2" ) {
-		die "No db dump /media/Storage/Backups/$src_db/$month-$day-$year.sql.bz2";
+	if ( ! -e "/media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2" ) {
+		die "No db dump /media/ARCHIVE1/Backups/$src_db/$month-$day-$year.sql.bz2";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -36,8 +36,8 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
-	print "Loading db... from /media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2";
-	`su postgres -c "bunzip2 < /media/Storage/Backups/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
+	print "Loading db... from /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2";
+	`su postgres -c "bunzip2 < /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty

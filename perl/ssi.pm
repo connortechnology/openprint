@@ -37,7 +37,7 @@ sub do_new_substitution {
 			} # end while
 			return $replacement_text . variable_substitution( \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating while ($$command)");
+			$log->error("Unable to find terminating while ($$command)");
 			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
@@ -69,7 +69,7 @@ sub do_new_substitution {
 			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
 			return $replacement_text;
 		} else {
-			$log->debug("Unable to find terminating if ( $$command ) in $$text");
+			$log->error("Unable to find terminating if ( $$command ) in $$text");
 			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
@@ -275,7 +275,7 @@ sub return_years {
 	$start = $openprint::config{'startYear'} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
 	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
-$log->debug("sub return_years $start .. $end $selected");
+#$log->debug("sub return_years $start .. $end $selected");
 	return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
@@ -544,17 +544,17 @@ sub date_select {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
-$log->debug($html);
+#$log->debug($html);
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
