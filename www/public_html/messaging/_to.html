@@ -4,12 +4,14 @@
 	my $html;
 	foreach my $To ( $$variable{'Message'}->To() ) {
 		my $User = $To->User();
-		$html .= '<li>'.$User->name().button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ).'</li>';
+		$html .= '<li>'.$User->name().'<span class="buttons">'.button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ).'</span></li>';
 	} # end foreach user
 	return $html;
 ) ?>
 </ul>
+<!--
 <input type="text" id="to_filter" name="to_filter"/>
+-->
 <select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
 	<option value="">select</option>
 	<? echo ( 

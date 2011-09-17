@@ -1,58 +1,56 @@
+<div class="PageTitle">
+<h1>Messaging</h1>
+<h2>Inbox</h2>
+</div>
 <script type="text/javascript">
 <!--
-	function load_events( form ) {
-		$('EventList').innerHTML = 'Please wait...';
-		new Ajax.Updater('EventList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	function load_messages( form ) {
+		$('MessageList').innerHTML = 'Please wait...';
+		new Ajax.Updater('MessageList','_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
+	function delete_message( message_id ) {
+		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', message_id: message_id } } );
+	} // end function delete_message
 -->
 </script>	 
-<? eval (
-	@{$$variable{'Events'}} = ();
-	foreach my $Event ( openprint::Event->find( 
-		'category_id'		=>	$param{'category_id'},
-		'order'				=> 'starting_on',
-		) ) {
-		push @{$$variable{'Events'}}, $Event;
-	} # end foreach Event
-	if ( $param{'category_id'} ) {
-		$$variable{'Category'} = new openprint::Event_Category( $param{'category_id'} );
-	} # end if
-) ?>
-<div class="Event">
-<? if ( $param{'category_id'} ) ?>
-<div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
-	<div class="name"><span><? echo ( $$variable{'Category'}->name() ) ?></span></div>
-	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
-	<? if ( $$variable{'Category'}->image_filename() ) ?>
-	<div class="image"><img src="/images/event_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
-	<? endif ( $$variable{'Category'}->image_filename() ) ?>
-</div><!--Category-->
-<? endif ( $param{'category_id'} ) ?>
-<div class="Events">
-
-<? if ( @{$$variable{'Events'}} == 0 ) ?>
-	There are no events which match your search criteria. 
-<? else ( @{$$variable{'Events'}} == 0 ) ?>
-		<? echo ( 
-			my $html;
-			foreach my $Event ( @{$$variable{'Events'}} ) {
-				$html .= sprintf(q` 
-				<div class="Event" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-					<h1>%2$s</h1>
-					Posted on %6$s by %5$s<br/>
-					<div class="source_content">%3$s</div>
-					<div class="body">%4$s</div>
-				</div>
-				`, $Event->id(), 
-				ssi::htmlize($Event->title()),
-				$Event->source_content(), 
-				ssi::html_escape($Event->body()), 
-				ssi::htmlize( $Event->Author()->name() ),
-				( $Event->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
-				);
-			} # end foreach Event
-			return $html;
-		) ?>
-<? endif ( @{$$variable{'Events'}} == 0 ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $session{'user_id'} ) ?>
+<div class="Messaging"><div class="Inbox">
+	<? echo ( join('',
+			( $session{'/messaging/list.html?folder'} ne 'Inbox' ? ssi::button( 'Inbox', { 'href'=>'/messaging/list.html?folder=Inbox' } ) : '' ),
+			( $session{'/messaging/list.html?folder'} ne 'Drafts' ? ssi::button( 'Drafts', { 'href'=>'/messaging/list.html?folder=Drafts' } ) : '' ),
+			( $session{'/messaging/list.html?folder'} ne 'Sent' ? ssi::button( 'Sent', { 'href'=>'/messaging/list.html?folder=Sent' } ) : '' ),
+			); ) ?>
+	
+	<form id="f1" name="f1" method="post" action="/messaging/list.html">
+		<fieldset class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>"><legend><? echo ( $session{'/messaging/list.html?folder'} ) ?></legend>
+			<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+				<ul>
+					<li>
+						<label>When:</label>
+						<span class="DateSelector">
+		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
+						</span>
+							to 
+						<span class="DateSelector">
+		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
+						</span>
+					</li>
+				</ul>
+				<br class="spacer"/>
+				<p class="buttons">
+					<? echo ( join('',
+						ssi::button( 'ShowResults', { 'onclick'=>'load_messages(f1);', 'text'=>'Show Results' } ),
+						ssi::button( 'Reset', { 'href'=>'/messaging/sent.html?action=reset', 'text'=>'Reset' } ),
+						ssi::button( 'New', { 'href'=>'/messaging/edit.html', 'text'=>'New Message' } ),
+						); ) ?>
+				</p>
+			</fieldset>
+			<div id="MessageList"><!--#include virtual="_list.html"--></div>
+		</fieldset>
+	</form>
+	</div>
 </div>
-</div><!--Event-->
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have an list.
+<? endif ( $session{'user_id'} ) ?>
