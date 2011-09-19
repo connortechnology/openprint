@@ -148,7 +148,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<td class="product">%1$s</td>
 			<td class="description">%2$s<br/>%3$s</td>
 			<td class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			', $C->product(), $C->item(), $C->description(), $C->docket(), 
+			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), 
 			);
 
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {

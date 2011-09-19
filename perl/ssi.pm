@@ -416,6 +416,9 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	if ( $$options{'target'} ) {
+		$html .= 'target="'.$$options{'target'}.'" ';
+	} # end if
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
 		#if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {

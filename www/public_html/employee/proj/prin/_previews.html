@@ -5,8 +5,11 @@
 	my $back_html;
 
 	my $services = $$variable{'Project'}->services();
-	my $signature = $$variable{'SignatureIndex'};
+	my $Service = $$variable{'Project'}->Service( $$variable{'ServiceIndex'} );
+	my $sig_specs = $Service->specs();
+	my $signature = $$sig_specs{'SignatureIndex'};
 	if ( $$services{'AdditionalSignature'} ) {
+$log->debug("Have additionalsignature, sig index is $$variable{SignatureIndex}");
 	} else {
 		$signature += 1;
 	} # end if
