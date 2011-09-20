@@ -114,33 +114,34 @@ $log->debug("find orders");
 		} # end if reprint
 
 		foreach my $Project ( $Order->Projects() ) {
+			my $services = $Project->services();
+			my @signatures = $Project->signatures();
+			next if ! @signatures;
+			if ( $Project->Type()->name() ne 'MultiPagePublication' ) {
+				if ( ! sets::isin( $$services{''}[0], \@signatures ) ) {
+					push @signatures, $$services{''}[0];
+				} # end if
+			} # end if
+
 			foreach my $sig_id ( $Project->signatures() ) {
 				my $Service = $Project->Service( $sig_id );
 				my $sig_specs = $Service->specs();
 
+				if ( ! $$sig_specs{'UsePress'} ) {
+					$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
+				} # end if
+
 				if ( @press_names ) {
-					my $on_press = 0;
-					if ( ! $$sig_specs{'UsePress'} ) {
-						$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
-					} # end if
-					next if ( sets::isin( $$sig_specs{'UsePress'}, \@press_names ) );
+					next if ( ! sets::isin( $$sig_specs{'UsePress'}, \@press_names ) );
 				} # end if press_names
 
 				if ( ! $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()} ) {
-					my $services = $Project->services();
-					my $sig_specs2 = $Project->Service( $$services{''}[0] )->specs() if $$services{''};
-					if ( $$sig_specs2{'hdnImpressionQuantity'.$Project->ordered_quantity_index()} ) {
-						$$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()} = $$sig_specs2{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-					} # end if
-					if ( $$sig_specs2{'txtPlateQuantity'.$Project->ordered_quantity_index()} ) {
-						$$sig_specs{'txtPlateQuantity'.$Project->ordered_quantity_index()} = $$sig_specs2{'txtPlateQuantity'.$Project->ordered_quantity_index()};
-					} # end if
-					if ( $$sig_specs2{'PlateID'.$Project->ordered_quantity_index()} ) {
-						$$sig_specs{'PlateID'.$Project->ordered_quantity_index()} = $$sig_specs2{'PlateID'.$Project->ordered_quantity_index()};
-					} # end if
-				} # end if
-				if ( ! $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()} ) {
 					next;
+				} # end if
+				if ( ! $$sig_specs{'PlateID'.$Project->ordered_quantity_index()} ) {
+					my $Press = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'});
+
+					$$sig_specs{'PlateID'.$Project->ordered_quantity_index()} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
 				} # end if
 	
 				my $Plate = openprint::Material::find_one('name'=>$$sig_specs{'PlateID'.$Project->ordered_quantity_index()}) if $$sig_specs{'PlateID'.$Project->ordered_quantity_index()};
@@ -151,16 +152,18 @@ $log->debug("find orders");
 					 ( $$sig_specs{'SignatureIndex'} ? $$sig_specs{'SignatureIndex'} : 1 ),
 					 $Order->company_name(), $Project->reference(), 
 					 $Order->created_on(), $Project->completed_on(), 
+					 $$sig_specs{'UsePress'},
 					 $$sig_specs{'txtPlateQuantity'.$Project->ordered_quantity_index()},
-					$plate_cost{'Cost'}, $plate_cost{'Price'}, $plate_cost{'units'}, $plate_cost{'Price'} * $$sig_specs{'txtPlateQuantity'.$Project->ordered_quantity_index()}, 
+					 $$sig_specs{'PlateID'.$Project->ordered_quantity_index()},
+					 $plate_cost{'Cost'}, $plate_cost{'Price'}, $plate_cost{'units'}, $plate_cost{'Price'} * $$sig_specs{'txtPlateQuantity'.$Project->ordered_quantity_index()}, 
 					 $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()}, $Project->status(),
-					$Project->ordered_price(), $Service->ordered_price(),
+					 $Project->ordered_price(), $Service->ordered_price(),
 					 );
 			} # end foreach sig
 		} # end foreach Project
 	} # end foreach Order
 
-	$variable{'Header'} = [ 'Order ID', 'Docket', 'Project ID', 'Form #', 'Company', 'Reference', 'Created On', 'Completed On', 'Plates', 'Plate Cost', 'Plate Price', 'Plate Units', 'Plate Total', 'Impressions', 'Status', 'Project Value', 'Form Value' ];
+	$variable{'Header'} = [ 'Order ID', 'Docket', 'Project ID', 'Form #', 'Company', 'Reference', 'Created On', 'Completed On', 'Press', 'Plates', 'Plate Type', 'Plate Cost', 'Plate Price', 'Plate Units', 'Plate Total', 'Impressions', 'Status', 'Project Value', 'Form Value' ];
 	$variable{'Data'} = \@Data;
 
 } # end sub _job_size
