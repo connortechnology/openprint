@@ -57,6 +57,7 @@ sub find {
 	if ( $_[0] eq 'openprint::Order' ) {
 		shift;
 	} # end if
+$openprint::log->debug("Order::find @_");
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE 1>0';
@@ -78,7 +79,7 @@ sub find {
 				$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
 				push @values, @{$params{'company_id'}};
 			} else {
-				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
+				$openprint::log->warn("EMpty company array passed to openprint::Order::find");
 			} # end if
 		} else {
 			$sql .= q{ AND CompanyIndex=?};
