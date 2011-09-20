@@ -123,9 +123,11 @@ $log->debug("find orders");
 				} # end if
 			} # end if
 
-			foreach my $sig_id ( $Project->signatures() ) {
+			foreach my $sig_id ( @signatures ) {
 				my $Service = $Project->Service( $sig_id );
 				my $sig_specs = $Service->specs();
+
+				next if ! $Service->ordered_price();
 
 				if ( ! $$sig_specs{'UsePress'} ) {
 					$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
