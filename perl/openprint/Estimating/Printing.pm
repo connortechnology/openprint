@@ -3672,7 +3672,7 @@ $log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
-$log->debug("Overs min " . $Paper->material() . " $min_overs");
+#$log->debug("Overs min " . $Paper->material() . " $min_overs");
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
 	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;

@@ -321,6 +321,10 @@ $openprint::log->debug("After calc_from_imposition" );
 				} # end while Additional Imposition
 
 # Clean up any leftovers
+# Can't delete services here, because we may delete a sig that is needed for another quantity, 
+# So... just set the Data to empty, and maybe we can clean them up later.
+
+# Or can we?  Need to think hard on this one
 				$openprint::log->debug("Remaining sigs " . @sigs);
 				while ( @sigs and ( my $ss_id = shift @sigs ) ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
