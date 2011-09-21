@@ -27,15 +27,22 @@ sub history {
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/article/history.html', 'published_on', -31 );
+		ssi::setup_date_select( '/article/history.html', 'created_on', -31 );
 	} # end if
-	ssi::save_params( '/article/history.html', ( 'published_on_start_year','published_on_start_month','published_on_start_day','published_on_end_year','published_on_end_month','published_on_end_day','published','employee_id','company_id') );
+	ssi::save_params( '/article/history.html', ( 
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+'published_on_start_year','published_on_start_month','published_on_start_day','published_on_end_year','published_on_end_month','published_on_end_day','published','employee_id','company_id') );
 
 	$session{'/article/history.html?published'} = '0' if ! $session{'/article/history.html?published'};
 } # end sub history
 
 sub _history {
 	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/article/history.html', ( 'published_on_start_year','published_on_start_month','published_on_start_day','published_on_end_year','published_on_end_month','published_on_end_day','published','employee_id','company_id') );
+		ssi::save_params( '/article/history.html', ( 
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+'published_on_start_year','published_on_start_month','published_on_start_day','published_on_end_year','published_on_end_month','published_on_end_day','published','employee_id','company_id') );
 	} # end if
 } # end sub _history
 

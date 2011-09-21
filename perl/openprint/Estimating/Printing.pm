@@ -159,8 +159,11 @@ my %variables = (
 		'PerPlateMkRd1' =>  ['save','output'], 'PerPlateMkRd2' => ['save','output'], 'PerPlateMkRd3' => ['save','output'],
 		'RunChargeTotal1' =>  ['save','output'], 'RunChargeTotal2' => ['save','output'], 'RunChargeTotal3' => ['save','output'],
 		'OverBase1' =>  ['save','output'], 'OverBase2' => ['save','output'], 'OverBase3' => ['save','output'],
+		'OverrideBase1' =>  ['save'], 'OverrideBase2' => ['save'], 'OverrideBase3' => ['save'],
 		'OverSetup1' =>  ['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
+		'OverrideSetup1' =>  ['save'], 'OverrideSetup2' => ['save'], 'OverrideSetup3' => ['save'],
 		'OverRun1' =>  ['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
+		'OverrideRun1' =>  ['save'], 'OverrideRun2' => ['save'], 'OverrideRun3' => ['save'],
 		'OverTotal1' =>  ['save','output'], 'OverTotal2' => ['save','output'], 'OverTotal3' => ['save','output'],
 		'PressWashPrice1' =>  ['save','output'], 'PressWashPrice2' => ['save','output'], 'PressWashPrice3' => ['save','output'],
 		'PressWashCharge1' =>  ['save','output'], 'PressWashCharge2' => ['save','output'], 'PressWashCharge3' => ['save','output'],
@@ -1937,7 +1940,6 @@ if ( 0 ) {
 		$$specs{'PlateTotalCost'.$qty_index} = $best_price{'Plate Price'};
 		$$specs{'PlateMakeReady'.$qty_index} = $best_price{'Plate Total'};
 
-$Imposition->display('Hello after TPRice'.$qty_index);
  		my %TPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
 		$$specs{'PerPlateMkRd'.$qty_index} = $TPrice{'Price'};
 
@@ -3594,7 +3596,7 @@ $openprint::log->debug("Using cached folding");
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{'side_one_colours'}} and @{$$project{'side_two_colours'}} ) {
-			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $press_setup_front->{'Plate Total'};
@@ -3602,7 +3604,7 @@ $openprint::log->debug("Using cached folding");
 			$price{'Plate Setup Count'} = $press_setup_front->{'Plate Count'};
 			$price{'Plate Setup Units'} = $press_setup_front->{'Plate Units'};
 			if ( $$press_setup_front{units} ne 'Total' ) {
-				my $back_press_setup = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+				my $back_press_setup = press_setup_cost( $Press, 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 				$press_setup += $back_press_setup->{'Total'};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $back_press_setup->{'Plate Total'};
@@ -4329,6 +4331,9 @@ sub press_setup_cost {
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
 			%PlateSetupPrice = openprint::service::get_price_object( $PlateSetupPrice{'ServiceName'}, $plates, $Press );
+			if ( ! %PlateSetupPrice ) {
+				$openprint::log->error("Error getting PlateMakeReady for $$Press{strid} for $plates plates runs: $plate_runs setup count: $setup_count change: $plate_change_qty");
+			} # end if
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
