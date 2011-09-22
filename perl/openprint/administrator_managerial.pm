@@ -492,8 +492,8 @@ if ( 0 ) {
 		
 		$$variable{'rdbAccountActivation'.$$variable{'rdbAccountActivation'}} = 'CHECKED';
 
-		$$variable{'txtPricingLevel'} = sprintf ( "%.0f", $$variable{'txtPricingLevel'} ) . "%";
-		$$variable{'txtDownpayment'} = sprintf ( "%.0f", $$variable{'txtDownpayment'} ) . "%";
+		$$variable{'txtPricingLevel'} = sprintf ( "%.3f", $$variable{'txtPricingLevel'} ) . "%";
+		$$variable{'txtDownpayment'} = sprintf ( "%.2f", $$variable{'txtDownpayment'} ) . "%";
 
 		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
 		my $shipping_address = $customer->get_shipping_address();
