@@ -420,64 +420,6 @@ sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
 }
 
-<<<<<<< HEAD
-sub send_additional_charges_notifications {
-	my ( $r, $log, $dbh, $order_id, $project_index ) = @_;
-# Email CSR
-	my %info;
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-
-	my $Order = new openprint::Order( $order_id );
-	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $Operator = new openprint::User( $session{'user_id'} );
-
-	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
-	@info{'OperatorFirstName','OperatorLastName','OperatorEmail'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email() );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
-
-	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
-
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-
-#$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_csr_notification.html\"-->";
-#$_ = encode_qp( ssi::variable_substitution( $email_template, \%info ) );
-#my @body = ('', $_, 'text/html', 'quoted-printable');
-#my %mail = (
-#SMTP    => $config{'Mail Server'},
-#FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Return-receipt-to'    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-##TO      => 'iconnor@point-one.com, rick@point-one.com',
-#TO      => 'iconnor@point-one.com',
-#SUBJECT => "Additional Charges required for project $project_index",
-#);
-#misc::send_email_with_attachment( $log, \%mail, @body );
-
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-	my $results = ( new openprint::Email() )->send(
-			FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => 'iconnor@point-one.com, rick@point-one.com',
-			'Return-receipt-to' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => 'iconnor@point-one.com',
-			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
-			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			SUBJECT => 'Additional Charges required',
-			ATTACHMENT	=>	['', $_, 'text/html', 'quoted-printable'],
-			);
-	my $Project = new openprint::Project( $project_index );
-	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $results." );
-
-} # End sub send_additional_charges_notifications
-
-=======
->>>>>>> 9d5f7f3a22db6852a7b7bbb2b05844d3629d3b52
 sub upload_pdfs {
 	my $project_index = $param{'ProjectIndex'};
 	my $Project = new openprint::Project( $project_index );
