@@ -41,6 +41,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 	return $html;
 ) ?>
 </div>
+<div class="Project">
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
 <form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
@@ -411,7 +412,7 @@ $log->debug("Have no job: $Job");
 		<span style="float: right;">
 	 	<? echo ( ssi::writeButton( $log, $dbh, 'AdditionalChargeNotify', 'additional.gif', "f1.btnFunction.value='AdditionalChargeNotify';f1.submit();", '', 'Send' );) ?>
 		</span>
-		Additional recipients (separate with a comma):<input type="text" style="width: 66%;" name="AdditionalEmailRecipients"  />
+		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
 
 	</fieldset>
 	<? endif ( $$variable{'Project'}->status() eq 'Waiting For Customer Approval' ) ?>
@@ -420,6 +421,7 @@ $log->debug("Have no job: $Job");
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
+</div>
 <br/>
 <? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">

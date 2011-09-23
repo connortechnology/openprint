@@ -109,7 +109,9 @@ sub item {
 } # end sub item
 
 sub Order {
-	return openprint::Order->find_one('docket'=>$_[0]{'docket'}) if $_[0]{'docket'};
+	my $docket = $_[0]{'docket'};
+	$docket =~ s/\D//g;
+	return openprint::Order->find_one('docket'=>$docket) if $docket;
 	return new openprint::Order();
 } # end sub Order
 

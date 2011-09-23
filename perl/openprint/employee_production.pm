@@ -420,6 +420,7 @@ sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
 }
 
+<<<<<<< HEAD
 sub send_additional_charges_notifications {
 	my ( $r, $log, $dbh, $order_id, $project_index ) = @_;
 # Email CSR
@@ -475,6 +476,8 @@ sub send_additional_charges_notifications {
 
 } # End sub send_additional_charges_notifications
 
+=======
+>>>>>>> 9d5f7f3a22db6852a7b7bbb2b05844d3629d3b52
 sub upload_pdfs {
 	my $project_index = $param{'ProjectIndex'};
 	my $Project = new openprint::Project( $project_index );

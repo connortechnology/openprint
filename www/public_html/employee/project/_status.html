@@ -1,4 +1,4 @@
-<?status?><br/>
+<span onclick="new Ajax.Updater('status<?index?>', '/employee/project/_status_dropdown.html', { parameters: { project_id: <?ProjectIndex?>, service_id: <?index?>} } );"><?status?><br/>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
@@ -44,3 +44,4 @@
 	} # end if
 	return $html;
 ) ?>
+</span>

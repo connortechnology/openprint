@@ -1,0 +1,75 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Job Size</h2>
+</div>
+<form id="f1" name="f1" action="/employee/reports/job_size.html" method="post">
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		<ul>
+		<li>
+			<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
+			<select name="company_id">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/job_size.html?company_id'} ); ) ?>
+			</select>
+		</li>
+		<li>
+			<label>Status:</label>
+			<select name="status" multiple="multiple" size="4" >
+			<? echo (
+					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
+					return ssi::make_select( \@options, $param{'status'} ? $param{'status'} : \@options);
+					) ?>
+			</select>
+		</li>
+		 <li>
+			 <label>Ordered:</label>
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/job_size.html', 'ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
+			to 
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/job_size.html', 'ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
+		</li>
+<!--
+		 <li>
+			 <label>Completed:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select_session('/employee/reports/job_size.html', 'completed_on_start' ); ) ?></span>
+			to 
+			<span class="DateSelector"><? echo ( ssi::date_select_session('/employee/reports/job_size.html', 'completed_on_end' ); ) ?></span>
+		</li>
+-->
+		<li>
+			<label>Press:</label>
+			<select id="press_id" name="press_id" multiple="multiple">
+				<option value="">All</option>
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)') ], [ split(',', $session{'/employee/reports/job_size.html?press_id'} ) ] ); ) ?>
+			</select>
+		</li>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<li>
+			<label>CSR:</label>
+			<select name="csr_id" id="csr_id" size="1">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					return ssi::make_drop_down( \@options, $session{'/employee/reports/job_size.html?csr_id'} );
+					) ?>
+
+			 </select>
+		</li>
+		<li>
+			<label>Reprint</label>
+			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked($param{reprint} eq 'Y' ); ) ?> /><label class="radio" for="reprintY">Yes</label>
+			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked($param{reprint} eq 'N' ); ) ?> /><label class="radio" for="reprintN">No</label>
+			<input type="radio" name="reprint" id="reprintAll" value="" <? echo ( ssi::checked(!$param{reprint}); ) ?> /><label class="radio" for="reprintAll">Both</label>
+			
+		</li>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('', 
+						ssi::button( 'Show', { 'onclick'=>"AjaxLoadContent('Results','/employee/reports/_job_size.html', f1.serialize() );", 'text'=>'Show Results' } ),
+						ssi::button( 'Download', { 'onclick'=>"f1.action='/employee/reports/job_size.html?action=download';f1.submit();" } ),
+						);) ?>
+		</p>
+	</fieldset>
+</form>
+<div id="Results"><!--#include virtual="/employee/reports/_job_size.html"--></div>

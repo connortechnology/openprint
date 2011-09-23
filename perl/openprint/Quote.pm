@@ -58,6 +58,7 @@ $serial = 'quotes_id_seq';
 	'user_id'		=>	'$openprint::session{user_id}',
 	'company_id'	=>	'$openprint::session{company_id}',
 	'status'		=>	q`'Incomplete'`,
+	'deleted'		=>	0,
 );
 
 sub load {

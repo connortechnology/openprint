@@ -40,7 +40,7 @@ GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
-	'scoreboard=s',
+	'scoreboard=s','max_files=s',
  );
 
 if ($opts->{help}) {
@@ -60,7 +60,7 @@ foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smt
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
-foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url' ) {
+foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
 	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
 } # end foreach non-requiredp aram
 if ( $CFG::Config{'site_url'} ) {
@@ -224,7 +224,7 @@ sub check_scoreboard {
 	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $user ( keys %uploads ) {
-		if ( ! sets::isin( $user, \@users ) ) {
+		if ( ( ! sets::isin( $user, \@users ) ) or ( $CFG::Config{'max_files'} and @{$uploads{$user}} > $CFG::Config{'max_files'} ) ) {
 			$log->debug( "Sending mail for $user\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$user}} );
@@ -370,7 +370,6 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();
 			$Mail->send(
-					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO      => \@to,
 #BCC		=>	'iconnor@penultima.org',

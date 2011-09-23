@@ -77,7 +77,15 @@ sub view {
 	} # end if
 	$variable{'OrderID'} = $order_id;
 
-	if ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
+	if ( $param{'action'} eq 'Change Status' ) {
+		my $Service = $Project->Service( $param{'service_id'} );
+		my $specs = $Service->specs();
+		$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
+		$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
+		if ( ! $variable{'error'} ) {
+			$Project->update_status();
+		} # end if
+	} elsif ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
 		$Project->rush( 1 );
 		$variable{'error'} .= $Project->save();
 		if ( ! $variable{'error'} ) {
@@ -486,14 +494,11 @@ sub send_additional_charges_notifications {
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
-	@info{'OperatorFirstName','OperatorLastName','OperatorEmail'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email() );
+	$info{'Operator'} = $Operator;
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-	my $Project = new openprint::Project( $project_index );
-	$info{'Project'} = $Project;
-
-	openprint::project::get_header( $log, $dbh, \%info, $project_index );
+	my $Project = $info{'Project'} = new openprint::Project( $project_index );
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
@@ -516,15 +521,16 @@ sub send_additional_charges_notifications {
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $results = ( new openprint::Email() )->send(
 			FROM    => $Operator,
-			'Return-receipt-to' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
+			'Return-receipt-to' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
+			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
 			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			#BCC		=>	'"Isaac Connor" <iconnor@point-one.com>',
+			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
+			#TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			ATTACHMENTS	=>	\@body,
 			);
-	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $results." );
+	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification : $results." );
 
 } # End sub send_additional_charges_notifications
 
@@ -936,6 +942,11 @@ sub _add_to_schedule {
 	
 	
 } # end sub _add_to_schedule
+
+sub _status_dropdown {
+	my $Project = $variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	my $Service = $variable{'Service'} = $Project->Service( $param{'service_id'} );
+} # end sub _status_dropdown
 
 1;
 __END__
