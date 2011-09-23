@@ -44,6 +44,8 @@ sub send {
 	} # end if
 
     my %mail = (
+			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
+			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
             SMTP    => ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
