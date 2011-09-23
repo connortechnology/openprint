@@ -510,10 +510,8 @@ sub send_additional_charges_notifications {
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => 'iconnor@point-one.com, rick@point-one.com',
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-#TO      => 'iconnor@point-one.com',
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
 			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
 			#BCC		=>	'"Isaac Connor" <iconnor@point-one.com>',
