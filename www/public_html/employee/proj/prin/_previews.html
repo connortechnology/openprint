@@ -5,11 +5,9 @@
 	my $back_html;
 
 	my $services = $$variable{'Project'}->services();
+	my $Service = $$variable{'Project'}->Service( $$variable{'ServiceIndex'} );
+	my $sig_specs = $Service->specs();
 	my $signature = $$variable{'SignatureIndex'};
-	if ( $$services{'Signature'} ) {
-	} else {
-		$signature += 1;
-	} # end if
 
 	my @PPFs = openprint::CIP3_PPF->find(
 				'docket'	=>	$$variable{'Project'}->docket(),

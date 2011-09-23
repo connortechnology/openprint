@@ -1,0 +1,45 @@
+table .plate_count {
+	text-align: right;
+	width: 50px;
+}
+table .impressions {
+	text-align: right;
+	width: 80px;
+}
+table .status {
+	text-align: left;
+	padding-left: 7px;
+	width: 80px;
+}
+table .order_id {
+	text-align: left;
+	width: 80px;
+}
+table .docket {
+	text-align: left;
+	width: 60px;
+}
+table .project_id {
+	text-align: left;
+	width: 75px;
+}
+table .form {
+	text-align: left;
+	width: 40px;
+}
+table .company_name {
+	text-align: left;
+}
+table .plate_type {
+	text-align: right;
+	width: 70px;
+}
+table .press {
+	text-align: right;
+	width: 45px;
+}
+
+table .plate_units {
+	text-align: left;
+	width: 70px;
+}
