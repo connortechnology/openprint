@@ -247,14 +247,11 @@ sub subtotal {
 	} # end if
 	if ( ! defined $_[0]{'subtotal'} ) {
 		$_[0]{'subtotal'} = 0;
-$openprint::log->debug("subtotal");
 		foreach my $C ( $_[0]->Contents() ) {
-$openprint::log->debug("Content : " . $C->total() );
 			$_[0]{'subtotal'} += $C->total();
 		} # end foreach
 		$_[0]{'subtotal'} = sprintf( '%.2f', $_[0]{'subtotal'} );
 	} # end if
-$openprint::log->debug("subtotal: $_[0]{subtotal}");
 	return $_[0]{'subtotal'};
 } # end sub subtotal
 
@@ -433,16 +430,14 @@ sub can_edit {
 sub can_view {
 	return 1 if ! $_[0]{'id'};
 	if ( 
-			( $openprint::session{'user_type'} eq 'A' )
-			or ( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
+			( $openprint::session{'user_type'} eq 'A' ) or
+			( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
 			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
 			
 			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
 	   ) {
-$openprint::log->debug("Can view");
 		return 1;
 	} # end if
-$openprint::log->debug("Cannot view");
 	return 0;
 } # end sub can_view
 
