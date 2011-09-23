@@ -78,20 +78,13 @@ sub view {
 	$variable{'OrderID'} = $order_id;
 
 	if ( $param{'action'} eq 'Change Status' ) {
-$openprint::log->debug("Change Status");
 		my $Service = $Project->Service( $param{'service_id'} );
-$openprint::log->debug("Got service " . $Service->to_string() );
 		my $specs = $Service->specs();
-		
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
 		$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
-		#openprint::service::status( $Project->id(), $Service->id(), $param{'status'} );
-$openprint::log->debug("Change Status saved");
 		if ( ! $variable{'error'} ) {
 			$Project->update_status();
 		} # end if
-$openprint::log->debug("Change Status");
-
 	} elsif ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
 		$Project->rush( 1 );
 		$variable{'error'} .= $Project->save();
@@ -523,9 +516,9 @@ sub send_additional_charges_notifications {
 			FROM    => $Operator,
 			'Return-receipt-to' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
 			'Disposition-Notification-To' => sprintf( '"%s %s" <%s>', $Operator->get('firstname','lastname','email') ),
-			#CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			#TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
-			TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
+			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
+			#TO		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			ATTACHMENTS =>	\@body,
 			);
