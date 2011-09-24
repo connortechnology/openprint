@@ -686,7 +686,7 @@ sub create_edit_process {
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {
 		$Project->Currency( openprint::Currency::get_current() );
-		openprint::service::internal_calc( $log, $dbh, $variable, $Project->id(), $$services{''}[0], $Project->Type()->type() );
+		openprint::service::internal_calc( $log, $dbh, \%variable, $Project->id(), $services{''}[0], $Project->Type()->type() );
 		openprint::Estimating::MultiPage::calculate_signatures( $Project );
 		openprint::service::auto_calculate( $Project, undef );
 		$Project->summary( undef );
