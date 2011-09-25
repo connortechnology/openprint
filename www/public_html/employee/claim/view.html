@@ -166,6 +166,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 </table>
 		</div><!--Contents-->
 		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
+		<div id="Payments"><!--#include virtual="_payments.html"-->
 		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"-->
 		 </div>
 		<div class="rightColumn" style="text-align: right;">

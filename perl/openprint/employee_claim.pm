@@ -6,6 +6,7 @@ require misc;
 require openprint::RFIDTag;
 require openprint::Claim;
 require openprint::Claim_Content;
+require openprint::Claim_Payment;
 require openprint::PurchaseOrder;
 require openprint::Asset;
 require openprint::Claim_Asset;
@@ -76,7 +77,7 @@ sub view {
 			} # end if
 			if ( $param{"skid_id-$$C{id}"} and ! $param{"weight-$$C{id}"} ) {
 				my $Skid = new openprint::Skid( $param{"skid_id-$$C{id}"} );
-				my @SkidContents  = $Skid->Contents();
+				my @SkidContents	= $Skid->Contents();
 				if ( @SkidContents == 1 ) {
 					$param{"weight-$$C{id}"} = $SkidContents[0]->quantity();
 				} # end if
@@ -116,26 +117,26 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
 		$variable{'error'} .= $Asset->save( \%param );
-        if ( ! $variable{'error'} ) {
-            $variable{'information'} .= 'Information successfully stored.<br/>';
-        } # end if
-        if ( $param{'filename'} ) {
-            my $upload = $r->upload('filename');
-            if ( ! $upload ) {
-                $Asset->save({'filename'=>''});
-                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
-            } elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
-                $variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
-                $Asset->save({'filename'=>''});
-            } else {
-                $variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-            } # end if
-        } # end if
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.<br/>';
+		} # end if
+		if ( $param{'filename'} ) {
+			my $upload = $r->upload('filename');
+			if ( ! $upload ) {
+				$Asset->save({'filename'=>''});
+				$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+			} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+				$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+				$Asset->save({'filename'=>''});
+			} else {
+				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			} # end if
+		} # end if
 		if ( $Asset->id() ) {
 			my $Claim_Asset = new openprint::Claim_Asset();
 			$variable{'error'} .= $Claim_Asset->save({'claim_id'=>$param{'claim_id'},'asset_id'=>$Asset->id()});
 		} # end if
-        %param = ();
+		%param = ();
 	} # end if btnfunction
 	$variable{'Claim'} = $Claim;
 } # end sub view
@@ -158,7 +159,7 @@ sub edit {
 
 sub _contents {
 	if ( ! $param{'claim_id'} ) {
-		$variable{'error'} .= 'No claim id.  Please enter the claim id before adding items to it.<br/>';
+		$variable{'error'} .= 'No claim id.	Please enter the claim id before adding items to it.<br/>';
 		return;
 	} # end if
 	my $Claim = new openprint::Claim( $param{'claim_id'} );
@@ -177,7 +178,7 @@ sub _contents {
 				or ( $C->weight_units() != $param{'weight_units-'.$C->id()} )
 				or ( $C->cost() != $param{'cost-'.$C->id()} )
 				or ( $C->cost_units() != $param{'cost_units-'.$C->id()} )
-		   ) {
+			) {
 			$variable{'error'} .= $C->save( {
 					'skid_id'	=>	$param{'skid_id-'.$C->id()},
 					'description'	=>	$param{'description-'.$C->id()},
@@ -231,5 +232,31 @@ sub _assets {
 		$CA->delete();
 	} # end if
 } # end sub _assets
+
+sub _payments {
+	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'addpayment' ) {
+		my $Payment = new openprint::Payment();
+		$variable{'error'} .= $Payment->save({
+				'amount'		=>	$param{'amount'},
+				'memo'			=>	$param{'notes'},
+				'recipient_id'	=>	$Claim->company_id(),
+				'payor_id'		=>	$Claim->supplier_id(),
+				'received_on'	=>	sprintf('%.4d-%.2d-%.2d', @param{'payment_when_year','payment_when_month','payment_when_day'}),
+				'transaction_id'	=>	$param{'transaction_id'},
+				'currency_id'	=>	$Claim->currency_id(),
+				'completed'		=>1,
+				});
+		if ( ! $variable{'error'} ) {
+			my $CP = new openprint::Claim_Payment();
+			$variable{'error'} .= $CP->save({
+					'claim_id'	=>	$Claim->id(),
+					'payment_id'	=>	$Payment->id(),
+					'amount'	=>	$param{'amount'},
+					});
+		} # end if no error
+	} # end if add payment
+} # end sub _payments
+
 1;
 __END__

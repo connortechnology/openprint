@@ -5,7 +5,7 @@ our @ISA = qw( openprint::Object );
 use openprint ();
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'photos_in_albums';
 $serial = 'photos_in_albums_id_seq';
 %fields = (

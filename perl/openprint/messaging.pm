@@ -54,7 +54,7 @@ sub inbox {
 			$Message->sent_on('NOW()');
 		} # end if send
 		$variable{'error'} .= $Message->save(\%param);
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( $param{'btnFunction'} ) {
 		$log->error("Invalid value for btnFunction $param{btnFunction}");
 	} else {
 		ssi::save_params( '/messaging/inbox.html', ( 

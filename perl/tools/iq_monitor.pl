@@ -85,7 +85,7 @@ if ( $CFG::Config{'pid_file'} ) {
 my $p = Net::Ping->new('icmp');
 
 while(1) {
-	if ( ! $dbh ) {
+	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
 				'host'		=> $CFG::Config{'db_host'},
