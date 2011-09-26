@@ -364,7 +364,7 @@ sub company_profiles {
 		if ( $openprint::param{'txtSearchAccountNum'} ne '' ) {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT Index from Company WHERE strAccountNum=?',$openprint::param{'txtSearchAccountNum'}); 
 		} # end if 
-	} elsif ( $openprint::param{'btnFunction'} eq 'Merge' ) {
+	} elsif ( $openprint::param{'btnFunction'} eq 'merge' ) {
 		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
 			$variable{'error'} .= 'Choose a different company to merge into.';
 		} else {
