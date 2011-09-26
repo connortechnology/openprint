@@ -106,7 +106,6 @@ $log->debug("Project Service runtime $$specs{'ServiceType'}");
 
 } # end sub get_runtime
 
-
 sub delete {
 	my ( $self ) = @_;
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -120,6 +119,11 @@ sub delete {
 	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
+
+sub ordered_price {
+	my $specs = $_[0]->specs();
+	return $$specs{'txtPrice'.$_[0]->Project()->ordered_quantity_index()};
+} # end sub ordered_price
 
 1;
 __END__

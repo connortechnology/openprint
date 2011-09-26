@@ -152,8 +152,8 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 sub _history {
 	if ( ! $param{'func'} ) {
 		ssi::save_params( '/article/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 				'published_on_start_year','published_on_start_month','published_on_start_day',
 				'published_on_end_year','published_on_end_month','published_on_end_day',
 				'published','employee_id','company_id', 'category_id' ) );

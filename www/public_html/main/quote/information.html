@@ -72,13 +72,13 @@
 			<fieldset><legend>Prepared By:</legend>
 			<div class="content">
 				<ul>
-					<li<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>>
+					<li>
 						<label>E-mail:</label>
-						<input type="text" id="ByEmail" name="ByEmail" value="<?ByEmail?>" />
+						<input type="email" id="ByEmail" name="ByEmail" value="<?ByEmail?>"<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
-					<li<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>>
+					<li>
 						<label>Company Name:</label>
-						<input type="text" id="ByCompanyName" name="ByCompanyName" value="<?ByCompanyName?>" />
+						<input type="text" id="ByCompanyName" name="ByCompanyName" value="<?ByCompanyName?>"<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
 					<li>
 						<label>Salutation:</label>
@@ -91,13 +91,13 @@
 						<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Miss' ); ) ?> />
 						<label class="radio" for="BySalutationMiss">Miss</label>
 					</li>
-					<li <? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>>
+					<li>
 						<label>First Name:</label>
-						<input type="text" id="ByFirstName" name="ByFirstName" value="<?ByFirstName?>" />
+						<input type="text" id="ByFirstName" name="ByFirstName" value="<?ByFirstName?>"<? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
-					<li <? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>>
+					<li>
 						<label>Last Name:</label>
-						<input type="text" id="ByLastName" name="ByLastName" value="<?ByLastName?>" />
+						<input type="text" id="ByLastName" name="ByLastName" value="<?ByLastName?>"<? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 					</li>
 					<li> 
 						<label>Title:</label>
@@ -152,7 +152,7 @@
 					<li> 
 						<label>Phone:</label>
 						<input type="text" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
-						<input type="text" id="ByExtension" name="ByExtension" value="<?ByExtension?>" />
+						<? echo ( ssi::input( 'type'=>'number', 'id'=>'ByExtension', 'name'=>'ByExtension', 'value'=>$$variable{'ByExtension'} ); ) ?> 
 					</li>
 					<li> 
 						<label>Fax:</label>
@@ -166,9 +166,9 @@
 		<div id="PreparedFor">
 			<fieldset><legend>Prepared For:</legend>
 			<div class="content"><ul>
-			<li<? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+			<li>
 				<label>E-mail:</label>
-				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
+				<input type="email" id="ForEmail" name="ForEmail" value="<?ForEmail?>"<? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li> 
@@ -188,9 +188,9 @@
 				</select>	
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<li<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+			<li>
 				<label>Company Name:</label>
-				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>" />
+				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>"<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 			</li>
 			<li> 
 				<label>Salutation:</label>
@@ -203,13 +203,13 @@
 				<input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <? echo ( ssi::checked( $$variable{'ForSalutation'} eq 'Miss' ); ) ?> />
 				<label class="radio" for="ForSalutationMiss">Miss</label>
 			</li>
-			<li<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+			<li>
 				<label>First Name:</label>
-				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" />
+				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>"<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 			</li>
-			<li<? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+			<li>
 				<label>Last Name:</label>
-				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" />
+				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>"<? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? ' required' : '' ) ?>/>
 			</li>
 			<li> 
 				<label>Title:</label>
@@ -264,7 +264,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<li> 
 				<label>Phone:</label>
 				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
-				<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" />
+				<? echo ( ssi::input( 'type'=>'number', 'id'=>'ForExtension', 'name'=>'ForExtension', 'value'=>$$variable{'ForExtension'} ); ) ?> 
 			</li>
 			<li> 
 				<label>Fax:</label>
@@ -280,11 +280,11 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<ul>
 						<li class="reference"> 
 							<label>Please provide a reference:</label>
-							<textarea id="reference" name="reference" rows="1" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->reference() ) ?></textarea>
+							<textarea id="reference" name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Quote'}->reference() ); ) ?>" onkeyup="textarea_resize( this );"><? hecho ( $$variable{'Quote'}->reference() ) ?></textarea>
 						</li>
 						<li class="comments">
 							<label>Additional comments or instructions:</label>
-							<textarea id="comments" name="comments" rows="1" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->comments() ) ?></textarea>
+							<textarea id="comments" name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Quote'}->comments() ); ) ?>" onkeyup="textarea_resize( this );"><? hecho ( $$variable{'Quote'}->comments() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
@@ -305,7 +305,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<th class="quantity">Qty</th>
 					<th class="price">Price</th>
 					<th class="newprice">New Price</th>
-					<th width="100" align="right">Changes</th>
+					<th class="changes">Changes</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -317,7 +317,23 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td class="markup"> 
-					<input type="text" name="markup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);` ); ) ?> 
+				</td>
+				<td class="quantity"><?qty?></td>
+				<td class="price"> 
+					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?>
+				</td>
+				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
+				</td>
+				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
+			</tr>
+			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? if ( $$variable{'qty'} ) ?>
+			<tr<?rowclass?>> 
+				<td class="markup"> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
@@ -325,33 +341,16 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
 				</td>
-				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
-			</tr>
-			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
-			<? if ( $$variable{'qty'} ) ?>
-			<tr<?rowclass?>> 
-				<td align="center"> 
-					<input type="text" name="markup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
-				</td>
-				<td align="right"><?qty?></td>
-				<td class="price"> 
-					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
-					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
-				</td>
-				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
-				</td>
-				<td align="right"></td>
+				<td class="changes"></td>
 			</tr>
 			<? endif ( $$variable{'qty'} ) ?>
 			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 			<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-			<tr> 
-				<td colspan="6" align="right">
-					<br/>
+			<tr class="totals"> 
+				<td colspan="6">
 					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 					Prices are subject to applicable taxes.<br/>
 					Prices are calculated to the best of our ability, 
@@ -364,42 +363,36 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<table class="List">
 			<tr> 
 				<th class="projects">Project</th>
-				<th width="50" align="right">Qty</th>
+				<th class="quantity">Qty</th>
 				<th class="price">Price</th>
-				<th width="100" align="right">Changes</th>
+				<th class="changes">Changes</th>
 			</tr>
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<tr<?rowclass?>> 
 				<td class="projects"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?></a></td>
-				<td align="right"><?qty?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
-				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?remove=<?project_index?>">Remove</a></td>
+				<td class="quantity"><?qty?></td>
+				<td class="price"><? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?></td>
+				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?remove=<?project_index?>">Remove</a></td>
 			</tr>
 			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
-				<td></td>
-				<td align="right"><?qty?></td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
-				<td align="right"></td>
+				<td class="projects"></td>
+				<td class="quantity"><?qty?></td>
+				<td class="price"><? echo ( $$variable{'Quote'}->Currency()->format($$variable{'stdprice'}); ) ?></td>
+				<td class="changes"></td>
 			</tr>
 			<? endif ( $$variable{'qty'} ) ?>
 			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 			<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-			<tr> 
-				<td colspan="4" height="5"><hr/></td>
-			</tr>
-			<tr> 
-				<td colspan="4" align="right"><br/>
+			<tr class="totals"> 
+				<td colspan="4">
 					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 					Prices are subject to applicable taxes.<br/>
 					Prices are calculated to the best of our ability, 
 					if changes are necessary you will be notified.</td>
-			</tr>
-			<tr> 
-				<td colspan="4" height="10"></td>
 			</tr>
 			<tr> 
 				<td colspan="4"> 

@@ -1,15 +1,7 @@
 <li id="Turnaround">
 	<label>Turnaround:</label>
 	<select id="TurnaroundDays" name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');calc(this.form.name);">
-<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<option value="7">7 days after approval</option>
-		<option value="5">5 days after approval</option>
-		<option value="4">4 days after approval</option>
-		<option value="2">48 hours after approval</option>
-<? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<option value="4">4 days after approval</option>
-		<option value="2">48 hours after approval</option>
+		<option value="2">2-4 days after approval</option>
 		<option value="1">24 hours after approval</option>
-<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 	</select>
 </li>

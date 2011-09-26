@@ -740,6 +740,7 @@ sub input {
 	$html .= ' name="'.$options{name}.'"' if $options{name};
 	$html .= ' id="'.$options{id}.'"' if $options{id};
 	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
+	$html .= ' required' if $options{required};
 	$html .= '/>';
 	return $html;
 } # end sub input

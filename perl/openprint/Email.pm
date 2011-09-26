@@ -30,6 +30,8 @@ sub send {
     my %mail = (
 			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
+			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
+			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
             );
