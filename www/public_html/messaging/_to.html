@@ -4,7 +4,8 @@
 	my $html;
 	foreach my $To ( $$variable{'Message'}->To() ) {
 		my $User = $To->User();
-		$html .= '<li>'.$User->name().'<span class="buttons">'.button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ).'</span></li>';
+		$html .= sprintf('<li><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
+			$User->id(), $User->name(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ) );
 	} # end foreach user
 	return $html;
 ) ?>

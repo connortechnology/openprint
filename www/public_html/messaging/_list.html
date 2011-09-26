@@ -39,7 +39,7 @@
 				$html .= sprintf(q` 
 					<tr class="Message"> 
 						<td class="actions">%6$s</td>
-						<td class="To"><a href="/messaging/edit.html?message_id=%1$d">%2$s</a></td>
+						<td class="To"><a href="/messaging/%7$s.html?message_id=%1$d">%2$s</a></td>
 						<td class="DateTime"><a href="/messaging/edit.html?message_id=%1$d">%4$s</a></td>
 						<td class="Subject"><a href="/messaging/edit.html?message_id=%1$d">%3$s</a></td>
 						<td class="Where"><a href="/messaging/edit.html?message_id=%1$d">%5$s</a></td>
@@ -52,6 +52,7 @@
 					join('', 
 						ssi::button( 'delete'.$Message->id(), {'onclick'=> 'delete_message( '.$Message->id().');', 'text'=>'X' } ),
 						),
+					( $session{'/messaging/list.html?folder'} eq 'Drafts' ? 'edit' : 'view' ),
 				);
 			} # end foreach Messages
 			return $html;

@@ -5,6 +5,7 @@
 		<span class="warning">This message has been deleted</span>
 		<? endif ( $$variable{'Message'}->deleted() ) ?>
 		<fieldset><legend></legend>
+			<? echo ( $$variable{'Message'}->From()->html() ) ?>
 			<div class="content">
 				<ul>
 					<li><label>Sent:</label>
@@ -18,7 +19,7 @@
 					</li>
 					<li>
 						<label for="info">Body:</label>
-						<? hecho ( $$variable{'Message'}->body() ) ?>
+						<? echo ( $$variable{'Message'}->body() ) ?>
 					</li>
 				</ul>
 			</div>
@@ -26,8 +27,8 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
-				$html .= ssi::writeButton( $log, $dbh, 'reply', 'reply.gif', '', 'edit.html?reply_to='.$$variable{'Message'}->id(), 'Reply' );
+				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", 'text'=>'Delete' } );
+				$html .= ssi::button( 'reply', { 'href'='edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
 				return $html;
 			) ?>
 		</p>

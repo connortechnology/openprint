@@ -1,6 +1,7 @@
 use strict;
 require openprint::Event_Category;
 require openprint::Comment;
+require openprint::Event_Attendance;
 package openprint::Event;
 our @ISA = qw( openprint::Object );
 
@@ -106,6 +107,13 @@ sub can_edit {
 sub Comments {
 	return openprint::Comment->find({'object_type'=>'openprint::Event','object_id'=>$_[0]{'id'}});
 } # end sub Comments
+
+sub Attendance {
+	if ( ! $_[0]{'Attendance'} ) {
+		@{$_[0]{'Attendance'}} = openprint::Event_Attendance->find('event_id'=>$_[0]{'id'});
+	} # end if
+	return @{$_[0]{'Attendance'}};
+} # end sub Attendance
 
 1;
 __END__

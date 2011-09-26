@@ -13,6 +13,7 @@
 					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } );
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html' } );
 				} # end if
+				$html .= ssi::button( 'Message', { 'href'=>'/messaging/edit.html?to_id='.$$variable{'User'}->id() } );
 				return $html;
 			) ?>
 		</p>

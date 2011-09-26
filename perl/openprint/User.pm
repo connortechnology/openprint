@@ -371,18 +371,21 @@ sub html {
 	if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
 		my @Birthday = split('-', $Profile->Birthday() );
 		$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-	} 
+	} # end if
+
+	my $Asset = $User->Asset();
+	$openprint::log->error($Asset->to_string() );
 
 	return sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" />
 					<div class="Name">%2$s</div>
-					<div class="Details">%5$s year old %6$s</div>
+					<div class="Details">%5$s %6$s</div>
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
 				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
-				$age ? $age : 'old!',
+				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
 );
 	return sprintf(q`

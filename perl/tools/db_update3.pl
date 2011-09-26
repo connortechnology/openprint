@@ -254,6 +254,10 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
 	} # end if
 } # end if
+if ( ! sets::isin( 'event_attendance', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
