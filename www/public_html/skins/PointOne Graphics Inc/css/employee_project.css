@@ -1,0 +1,22 @@
+.status {
+	width: 200px;
+text-align: right;
+}
+.Price {
+	width: 100px;
+text-align: right;
+}
+.service {
+	text-align: left;
+}
+.po_id {
+	width: 50px;
+	text-align: left;
+}
+.description {
+	text-align: left;
+}
+.quantity {
+	width: 75px;
+	text-align: left;
+}
