@@ -364,6 +364,47 @@ sub company_profiles {
 		if ( $openprint::param{'txtSearchAccountNum'} ne '' ) {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT Index from Company WHERE strAccountNum=?',$openprint::param{'txtSearchAccountNum'}); 
 		} # end if 
+	} elsif ( $openprint::param{'btnFunction'} eq 'Merge' ) {
+		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
+			$variable{'error'} .= 'Choose a different company to merge into.';
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $User ( openprint::User::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $User->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("User find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$User->save({'company_id'=>$index});
+			} # end foreach User
+			foreach my $Project ( openprint::Project::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Project->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Project find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Project->save({'company_id'=>$index});
+			} # end foreach Project
+			foreach my $Quote ( openprint::Quote::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Quote->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Project find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Quote->save({'company_id'=>$index});
+			} # end foreach Quote
+			foreach my $Order ( openprint::Order::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Order->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Orderct find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Order->save({'company_id'=>$index});
+			} # end foreach Order
+			my $MergeCompany = new openprint::Company( $openprint::param{'merge_company_id'} );
+			$MergeCompany->delete();
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
