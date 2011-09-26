@@ -109,7 +109,7 @@ sub load {
 		if ( @identified_by ) {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
-			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} else {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
@@ -127,15 +127,18 @@ sub load {
 
 sub save {
 	my ( $self, $data ) = @_;
+
 	my $type = ref $self;
 	$self->set( $data ? $data : {} );
-#if ( $data ) {
-#foreach my $k ( keys %$data ) {
-#$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
-#}
-#} else {
-#$log->debug("No data after set");
-#}
+if ( $debug ) {
+	if ( $data ) {
+	foreach my $k ( keys %$data ) {
+	$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+	}
+	} else {
+	$log->debug("No data after set");
+	}
+}
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
@@ -160,6 +163,7 @@ sub save {
 		my $insert = 0;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
+$log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
 			if ( ! ( ( $_ = $dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {

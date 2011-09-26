@@ -1,6 +1,7 @@
 use strict;
 require openprint::Event;
 require openprint::User;
+
 package openprint::Event_Attendance;
 our @ISA = qw( openprint::Object );
 
@@ -12,11 +13,11 @@ $table = 'event_attendance';
 %fields = (
 	'event_id'	=>	'event_id',
 	'user_id'	=>	'user_id',
-	'attendance'	=>	'attendance',
+	'attending'	=>	'attending',
 );
 
 %defaults = (
-	'attendance'			=> undef,
+	'attending'			=> undef,
 );
 
 1;

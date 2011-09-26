@@ -1,6 +1,8 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Event"><div class="View">
+	<form id="f1" name="f1" action="/event/view.html" method="post">
 	<fieldset><legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
 		<? if ( $$variable{'Event'}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
 		<? endif ( $$variable{'Event'}->deleted() ) ?>
@@ -17,9 +19,6 @@
 					</li>
 					<li><label>Category:</label>
 						<? echo ( $$variable{'Event'}->Category()->name() ) ?>
-					</li>
-					<li><label>Name:</label>
-						<? echo ( $$variable{'Event'}->name() ) ?>
 					</li>
 					<li>
 						<label for="info">More info:</label>
@@ -45,7 +44,7 @@
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
 <div id="Likes"><? echo ( $$variable{'Event'}->likes('Likes') ) ?></div>
-<!--#include virtual="_attendance.html"-->
+<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
@@ -57,4 +56,5 @@
 			) ?>
 		</p>
 	</fieldset>
+	</form>
 </div></div>

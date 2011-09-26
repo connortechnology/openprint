@@ -1,0 +1,44 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo (
+	my @Attending = $$variable{'Event'}->Attendance();
+	my ( $yes, $no, $maybe ) = ( 0, 0, 0 );
+	foreach my $A ( @Attending ) {
+		next if ! defined $$A{'attending'};
+		if ( $$A{'attending'} ) {
+			$yes += 1;
+		} elsif ( ! defined $$A{'attending'} ) {
+			$maybe += 1;
+		} else {
+			$no += 1;
+		} # end if
+	} # end foreach
+	my $html = '';
+	if ( $yes == 0 ) {
+		$html .= 'No one is attending (yet). ';
+	} elsif ( $yes == 1 ) {
+		$html .= '1 person is attending.(so far). ';
+	} else {
+		$html = $yes . ' people are attending. ';
+	} # end if
+	if ( $maybe == 1 ) {
+		$html .= '1 person might attend.';
+	} elsif ( $maybe ) {
+		$html .= $maybe. ' people might attend';
+	} # end if
+	my $myAttendance = new openprint::Event_Attendance( { 'event_id'=>$$variable{'Event'}{'id'}, 'user_id'=>$session{'user_id'} } );
+	if ( $$myAttendance{'attending'} eq '1' ) {
+		$html .= 'You are attending.';
+	} elsif ( $$myAttendance{'attending'} eq '0' ) {
+		$html .= 'You are not attending.';
+	} elsif ( $$myAttendance{event_id} ) {
+		$html .= 'You might attend.';
+	} else {
+		$html .= 'Attending: ';
+	} # end if
+	
+	$html .= ssi::radio( 'attending', [ '1', 'Yes', '', 'Maybe', '0', 'No' ], $$myAttendance{'attending'}, 
+			{ 'onclick'=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ) } } );` } );
+	return $html;
+
+) ?>
+
