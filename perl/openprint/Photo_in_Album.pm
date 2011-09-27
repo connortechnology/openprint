@@ -49,5 +49,9 @@ sub view_url {
 sub name {
 	return $_[0]->Album()->User()->name()."'s Photo";
 } # end sub name
+
+sub attribution {
+	return $_[0]->Asset()->attribution();
+} # end sub attribution
 1;
 __END__
