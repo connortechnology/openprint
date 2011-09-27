@@ -478,7 +478,7 @@ sub customer_performance {
 						$Company->name(), 
 						Number::Format::format_number( scalar @Orders ), 
 						openprint::Currency::format( $order_total ),
-						$Orders[@Orders-1]->created_on(),
+						Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $Orders[@Orders-1]->created_on() ) ),
 						$payment_cycle . ' days',
 						);
 			} # end foreach Company
