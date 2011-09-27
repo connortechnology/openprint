@@ -12,7 +12,7 @@ use vars qw( %config $log $dbh %session );
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 
-$debug = 1;
+$debug = 0;
 $table = 'payments';
 $serial = 'payments_id_seq';
 %fields = (
