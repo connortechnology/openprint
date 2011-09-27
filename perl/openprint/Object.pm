@@ -476,6 +476,9 @@ sub find_operators {
 	if ( exists $$params{$k.' lc'} ) {
 		push @{$results{' lc'}}, "lower($f) = ?", $$params{$k.' lc'};
 	} # end if
+	if ( exists $$params{$k.' uc'} ) {
+		push @{$results{' uc'}}, "upper($f) = ?", $$params{$k.' uc'};
+	} # end if
 	if ( exists $$params{$k.' any'} ) {
 		push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
 	} # end if
