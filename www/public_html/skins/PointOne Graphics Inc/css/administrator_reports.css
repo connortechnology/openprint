@@ -1,0 +1,9 @@
+.company_name {
+	text-align: left;
+}
+.orders,
+.order_value,
+.Date,
+.payment_cycle {
+	text-align: right;
+}
