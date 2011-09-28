@@ -1,20 +1,25 @@
 <table class="List">
 	<thead>
-		<tr><th>Paper</th><th>&nbsp;</th></tr>
+		<tr><th>Paper</th><th class="checkbox">&nbsp;</th></tr>
 	</thead>
 <? echo (
 	my $html;
 	
-	my @all_papers = openprint::Paper->find('order'=>'name,finish,colour,weight,width,height');
-	my @recommended_papers = openprint::Paper->find( 'project_type_id' => $$variable{'ProjectType'}->id(),'order'=>'name,finish,colour,weight,width,height' );
+	my @recommended_papers = openprint::Paper->find( 
+		'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+'project_type_id any' => $$variable{'ProjectType'}->id(),'order'=>'brand,finish,colour,weight,width,height' );
 	foreach my $Paper ( @recommended_papers ) {
-		$html .= '<tr><td>'.$Paper->to_string().'</td><td><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'" checked="checked" /></td></tr>';
+		$html .= '<tr><td>'.$Paper->to_string().'</td><td class="checkbox"><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'" checked="checked" /></td></tr>';
 
 	} # end foreach
+if ( 0 ) {
+	my @all_papers = openprint::Paper->find(
+		'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+		'order'=>'brand,finish,colour,weight,width,height');
 	foreach my $Paper ( sets::exclude( \@recommended_papers, \@all_papers ) ) {
-		$html .= '<tr><td>'.$Paper->to_string().'</td><td><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'"/></td></tr>';
+		$html .= '<tr><td>'.$Paper->to_string().'</td><td class="checkbox"><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'"/></td></tr>';
 	} # end foreach
-#$html .= ssi::writeButton( $log, $dbh, 'Paper'.$Paper->id(), '', "LoadContent( 'PaperRecommendations', '/administrator/project_types/_paper_recommendations.html', new Array('btnFunction','Remove','projecttype_id',".$$variable{'ProjectType'}->id().",'paper_id',".$Paper->id().") );", '', 'Remove' );
+}
 	return $html;
 ) ?>
 </table>

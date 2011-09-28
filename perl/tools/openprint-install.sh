@@ -1,6 +1,6 @@
 #!/bin/bash
 
-apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl libdigest-md5-file-perl make postgresql apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl apache2-mpm-prefork libxml-libxml-perl libyaml-perl units libxml-rss-perl libjson-rpc-perl
+apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl libdigest-md5-file-perl make postgresql apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl apache2-mpm-prefork libxml-libxml-perl libyaml-perl units libxml-rss-perl libjson-rpc-perl libio-interface-perl
 
 apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-calc-perl libbit-vector-perl libcarp-clan-perl libtext-csv-perl libdatetime-format-pg-perl libdatetime-perl
 apt-get -y install libemail-valid-perl libdigest-hmac-perl libdigest-sha1-perl libmailtools-perl libnet-dns-perl libnet-domain-tld-perl libtimedate-perl libcrypt-ssleay-perl

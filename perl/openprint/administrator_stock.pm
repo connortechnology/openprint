@@ -8,7 +8,7 @@ require openprint::Paper;
 require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
-require openprint::StockName;
+require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
@@ -26,6 +26,9 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 sub _stocks {
+	if ( %param and ! $param{'btnFunction'} ) {
+		ssi::save_params('/administrator/stock/list.html', 'Group','owner_id','Manufacturer','Brand','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
+	} # end if
 } # end sub _stocks
 
 sub list {
@@ -133,8 +136,8 @@ sub stock {
 		$Paper->manufacturer_id( $param{'ddmManufacturer'} ) if $param{'ddmManufacturer'};
 		$Paper->group( $param{'txtGroup'} ) if $param{'txtGroup'};
 		$Paper->group_id( $param{'Group'} ) if $param{'Group'};
-		$Paper->name( $param{'txtName'} ) if $param{'txtName'};
-		$Paper->name_id( $param{'ddmName'} ) if $param{'ddmName'};
+		$Paper->name( $param{'txtBrand'} ) if $param{'txtBrand'};
+		$Paper->name_id( $param{'ddmBrand'} ) if $param{'ddmBrand'};
 		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
 		$Paper->finish_id( $param{'ddmFinish'} ) if $param{'ddmFinish'};
 		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
@@ -246,7 +249,7 @@ sub _prices {
 sub import_export {
 
 	if ( $param{'btnFunction'} eq 'Export Stock' ) {
-		my @header = ( 'ID', 'Owner','Manufacturer','Group','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
+		my @header = ( 'ID', 'Owner','Manufacturer','Group','Brand', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
 		foreach my $Paper ( openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
@@ -360,10 +363,10 @@ sub usage {
 	} else {
 		@{$variable{'Groups'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
-	if ( $param{'ddmStockName'} ) {
-		@{$variable{'Names'}} = ( $param{'ddmStockName'} );
+	if ( $param{'ddmStockBrand'} ) {
+		@{$variable{'Brands'}} = ( $param{'ddmStockBrand'} );
 	} else {
-		@{$variable{'Names'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
+		@{$variable{'Brands'}} = sql::execute( $log, $dbh, "SELECT DISTINCT Name FROM Paper ORDER BY name" );
 	} # end if
 	if ( $param{'ddmStockFinish'} ) {
 		@{$variable{'Finishes'}} = ( $param{'ddmStockFinish'} );
@@ -386,7 +389,7 @@ sub usage {
 	} # end if
 
 
-	my $query = "SELECT Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT strName FROM Company WHERE Index=CompanyIndex) FROM Projects, Order_Contents WHERE Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
+	my $query = "SELECT Projects.lngProjectIndex,lngDocketNumber, intQuantityIndex, (SELECT name FROM Companies WHERE id=Company_id) FROM Projects, Order_Contents WHERE Projects.Index=lngProjectIndex AND strStatus IN ( 'Ordered','Complete','Printed','Proofs Out','Approved','In Prepress' )\n";
 	$query .= "AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}' ";
 	if ( $param{'ddmCustomer'} ) {
 		$query .= "AND Projects.CompanyIndex = $param{'ddmCustomer'}\n";
@@ -399,7 +402,7 @@ sub usage {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $signature_service_index ( $Project->signatures() ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-				if ( ! sets::isin( $$specs{'ddmStockName'}, @{$variable{'Names'}} ) ) {
+				if ( ! sets::isin( $$specs{'ddmStockBrand'}, @{$variable{'Brands'}} ) ) {
 					next;
 				} # end if
 				if ( ! sets::isin( $$specs{'ddmStockFinish'}, @{$variable{'Finishes'}} ) ) {
@@ -413,7 +416,7 @@ sub usage {
 				} # end if
 				my %paper;
 				@paper{'index','mweight'} = sql::execute( $log, $dbh, "SELECT lngIndex,MWeight FROM Paper\n"
-						. "WHERE name='$$specs{'ddmStockName'}'\n"
+						. "WHERE name='$$specs{'ddmStockBrand'}'\n"
 						. "AND finish='$$specs{'ddmStockFinish'}'\n"
 						. "AND colour='$$specs{'ddmStockColour'}'\n"
 						. "AND calliper=$$specs{'ddmStockWeight'}\n"
@@ -422,7 +425,7 @@ sub usage {
 						);
 				if ( $paper{'index'} ) {
 					my $price = openprint::paper::get_price( $log, $dbh, \%variable, \%paper, @$specs{'ddmPress','hdnGrossSheetCount'.$qty_index} );
-					push @{$variable{'Results'.$$specs{'ddmStockName'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
+					push @{$variable{'Results'.$$specs{'ddmStockBrand'}}}, $company,$project_index,$docket_number, @$specs{'hdnGrossSheetCount'.$qty_index,'UsedSheetQuantity'},
 						 sprintf( '$%.2f', $$specs{'hdnGrossSheetCount'.$qty_index}*$$price{'Price'} ),
 						 sprintf( '$%.2f', $$specs{'UsedSheetQuantity'}*$$price{'Price'} );
 				} # end if

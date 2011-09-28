@@ -1,9 +1,14 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Event"><div class="View">
+	<form id="f1" name="f1" action="/event/view.html" method="post">
 	<fieldset><legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
 		<? if ( $$variable{'Event'}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
 		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
+		<img class="Asset" src="<? echo ( $$variable{'Asset'}->thumbnail_url() ) ?>" alt="" />
+		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>
@@ -15,12 +20,9 @@
 					<li><label>Category:</label>
 						<? echo ( $$variable{'Event'}->Category()->name() ) ?>
 					</li>
-					<li><label>Name:</label>
-						<? echo ( $$variable{'Event'}->name() ) ?>
-					</li>
 					<li>
 						<label for="info">More info:</label>
-						<? hecho ( $$variable{'Event'}->info() ) ?>
+						<? echo ( $$variable{'Event'}->info() ) ?>
 					</li>
 				</ul>
 			</div>
@@ -37,19 +39,22 @@
 		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Event'}->id() ) ?>
 	<div id="Photos">
-			<!--#include virtual="_photos.html"-->
+		<!--#include virtual="_photos.html"-->
 	</div>
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
+<div id="Likes"><? echo ( $$variable{'Event'}->likes('Likes') ) ?></div>
+<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Event'}->id() and ( $session{'user_id'} == $$variable{'Event'}->created_by() or $session{'user_type'} eq 'A' ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
-					$html .= ssi::writeButton( $log, $dbh, 'edit', 'edit.gif', '', 'edit.html?event_id='.$$variable{'Event'}->id(), 'Edit' );
+				if ( $$variable{'Event'}->can_edit() ) {
+					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 				} # end if
 				return $html;
 			) ?>
 		</p>
 	</fieldset>
+	</form>
 </div></div>

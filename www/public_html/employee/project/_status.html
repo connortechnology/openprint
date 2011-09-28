@@ -1,4 +1,4 @@
-<?status?><br/>
+<span onclick="new Ajax.Updater('status<?index?>', '/employee/project/_status_dropdown.html', { parameters: { project_id: <?ProjectIndex?>, service_id: <?index?>} } );"><?status?><br/>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
@@ -13,7 +13,7 @@
 		return;
 	} 
 	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'Signature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
-		if ( my $Job = openprint::ScheduledJob->find_one('service_id <@'=>\@service_ids) ) {
+		if ( my $Job = openprint::ScheduledJob->find_one('service_id &&'=>\@service_ids) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';
 			} else {
@@ -44,3 +44,4 @@
 	} # end if
 	return $html;
 ) ?>
+</span>

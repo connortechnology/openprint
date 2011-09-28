@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	function load_projects( form ) {
-		$('ProjectList').innerHTML = 'Please wait...';
+		$('ProjectList').innerHTML = 'Loading... please wait.';
 		new Ajax.Updater('ProjectList','/employee/production/_project_list.html', { method: 'get', parameters: form.serialize() } );
 	} // end function
 </script>
@@ -9,8 +9,8 @@
 <fieldset class="filters"><legend>Enter Docket #</legend>
 	<p>
 		<label>Docket #:</label>
-		<input type="text" name="StartDocket" value="<?StartDocket?>" size="13" />
-		to <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  />
+		<input type="number" name="StartDocket" value="<?StartDocket?>" size="13" />
+		to <input type="number" name="EndDocket" value="<?EndDocket?>" size="13"  />
 		<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
 	</p>
 </fieldset>
@@ -136,7 +136,7 @@
 		</span>
 	</p>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', q`load_projects($('f1'));`, '', 'Show Results' ); ) ?>
+		<? echo ( ssi::button( 'ShowResults', { 'onclick'=> q`load_projects($('f1'));`, 'text'=>'Show Results' } ); ) ?>
 	</p>
 </fieldset>
 </form>

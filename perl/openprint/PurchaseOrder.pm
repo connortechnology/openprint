@@ -1,10 +1,11 @@
 use strict;
+use Math::Round qw(nearest);
 package openprint::PurchaseOrder;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -75,6 +76,11 @@ $serial = 'purchaseorders_id_seq';
 	'cancelled'			=>	'cancelled',
 );
 
+%find_fields = (
+	'docket'	=>	'(SELECT docket FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+	'item_id'	=>	'(SELECT item_id FROM PurchaseOrder_Contents WHERE PurchaseOrder_Contents.po_id=PurchaseOrders.id)',
+);
+
 %transforms = (
 );
 
@@ -88,138 +94,6 @@ $serial = 'purchaseorders_id_seq';
 	'manifest_id'	=>	undef,
 	'cancelled'		=>	0,
 );
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM PurchaseOrders WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'id_start'} and $params{'id_end'} ) {
-		$sql .= ' AND ( id BETWEEN ? AND ? )';
-		push @values, @params{'id_start','id_end'}
-	} elsif ( $params{'id_start'} ) {
-		$sql .= ' AND ( id >= ?)';
-		push @values, $params{'id_start'};
-	} elsif ( $params{'id_end'} ) {
-		$sql .= ' AND ( id <= ?)';
-		push @values, $params{'id_end'};
-	} # end if
-	if ( exists $params{'company_id'} ) {
-		if ( ref $params{'company_id'} eq 'ARRAY' ) {
-			$sql .= ' AND company_id IN ('. join(',', map {'?'} @{$params{'company_id'}} ) . ')';
-			push @values, @{$params{'company_id'}};
-		} else {
-			$sql .= ' AND company_id=?';
-			push @values, $params{'company_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'supplier_id'} ) {
-		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
-			$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
-			push @values, @{$params{'supplier_id'}};
-		} elsif ( $params{'supplier_id'} ) {
-			$sql .= ' AND supplier_id=?';
-			push @values, $params{'supplier_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'created_by'} ) {
-		if ( ref $params{'created_by'} eq 'ARRAY' ) {
-			$sql .= ' AND created_by IN ('. join(',', map {'?'} @{$params{'created_by'}} ) . ')';
-			push @values, @{$params{'created_by'}};
-		} elsif ( $params{'created_by'} ) {
-			$sql .= ' AND created_by=?';
-			push @values, $params{'created_by'};
-		} # end if
-	} # end if
-	if ( exists $params{'manifest_id'} ) {
-		if ( ref $params{'manifest_id'} eq 'ARRAY' ) {
-			if ( @{$params{'manifest_id'}} ) {
-				$sql .= ' AND manifest_id IN ('. join(',', map {'?'} @{$params{'manifest_id'}} ) . ')';
-				push @values, @{$params{'manifest_id'}};
-			} else {
-				return ();
-			} # end if
-		} elsif ( $params{'manifest_id'} ) {
-			$sql .= ' AND manifest_id=?';
-			push @values, $params{'manifest_id'};
-		} else {
-			$sql .= ' AND manifest_id IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'authorized'} eq 'Y' ) {
-		$sql .= ' AND authorized_by IS NOT NULL';
-	} elsif ( $params{'authorized'} eq 'N' ) {
-		$sql .= ' AND authorized_by IS NULL';
-	} # end if
-	if ( exists $params{'cancelled'} ) {
-		if ( ref $params{'cancelled'} eq 'ARRAY' ) {
-			if ( @{$params{'cancelled'}} ) {
-				$sql .= ' AND cancelled IN ('. join(',', map {'?'} @{$params{'cancelled'}} ) . ')';
-				push @values, @{$params{'cancelled'}};
-			} else {
-				return ();
-			} # end if
-		} elsif ( $params{'cancelled'} ne '' ) {
-			$sql .= ' AND cancelled=?';
-			push @values, $params{'cancelled'};
-		} # end if
-	} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			if ( @{$params{'deleted'}} ) {
-				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
-				push @values, @{$params{'deleted'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= ' AND id IN (SELECT po_id FROM PurchaseOrder_Contents WHERE docket=?)';
-		push @values, $params{'docket'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading PurchaseOrders SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No PurchaseOrders loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded PurchaseOrders ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::PurchaseOrder( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub save {
 	my ( $self, $param ) = @_;
@@ -265,9 +139,10 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	if ( $_[0]{'id'} ) {
-		return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
+	if ( $_[0]{'id'} and ! $_[0]{'Contents'} ) {
+		@{$_[0]{'Contents'}} = openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 	} # end if
+	return @{$_[0]{'Contents'}} if $_[0]{'Contents'};
 	return ();
 } # end sub Contents
 
@@ -280,20 +155,19 @@ sub send_approval_required_notification {
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
+	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit >='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
 		next if ! Email::Valid->address($U->email() );
 
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
-				TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+		new openprint::Email()->send(
+				FROM    => $Me,
+				TO      => $U,
 				SUBJECT => 'Purchase Order requiring approval: ' . $self->id(),
+				ATTACHMENTS	=>	 \@body,
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end foreach U
 } # end sub send_approval_required_notification
 
@@ -317,9 +191,9 @@ sub send_to_vendor {
 	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
-			SMTP    => $config{'Mail Server'},
-			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			FROM    => $From,
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+			ATTACHMENTS => \@attachments,
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
@@ -327,7 +201,7 @@ sub send_to_vendor {
 		$email =~ s/^\s*(.*)\s*$/$1/;
 		next if ! $email;
 		$mail{'TO'}	= $email;
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
+		new openprint::Email()->send(%mail);
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
@@ -369,14 +243,11 @@ sub subtotal {
 	} # end if
 	if ( ! defined $_[0]{'subtotal'} ) {
 		$_[0]{'subtotal'} = 0;
-$openprint::log->debug("subtotal");
 		foreach my $C ( $_[0]->Contents() ) {
-$openprint::log->debug("Content : " . $C->total() );
 			$_[0]{'subtotal'} += $C->total();
 		} # end foreach
-		$_[0]{'subtotal'} = sprintf( '%.2f', $_[0]{'subtotal'} );
+		$_[0]{'subtotal'} = Math::Round::nearest( 0.01, $_[0]{'subtotal'} );
 	} # end if
-$openprint::log->debug("subtotal: $_[0]{subtotal}");
 	return $_[0]{'subtotal'};
 } # end sub subtotal
 
@@ -387,10 +258,10 @@ sub total {
 	} # end if
 	if ( ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal();
-        foreach my $Tax ( $self->Taxes() ) {
-            $$self{'total'} += $Tax->amount();
-        } # end foreach Tax
-		$$self{'total'} = sprintf('%.2f', $$self{'total'} );
+		foreach my $Tax ( $self->Taxes() ) {
+			$$self{'total'} += $Tax->amount();
+		} # end foreach Tax
+		$$self{'total'} = Math::Round::nearest( 0.01, $$self{'total'} );
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -485,12 +356,12 @@ sub Taxes {
                     'country'   =>  $self->Supplier()->country(),
                     'state'     =>  $self->Supplier()->state(),
                 ) ) {
-            my $T = new openprint::PurchaseOrder_Tax();
-            $T->set({
+		my $T = new openprint::PurchaseOrder_Tax();
+		$T->set({
 				'PurchaseOrder'		=>	$self,
-                'tax_id'    		=>  $$Tax{'id'},
-                'rate'      		=>  $$Tax{'rate'},
-            });
+				'tax_id'    		=>  $$Tax{'id'},
+				'rate'      		=>  $$Tax{'rate'},
+				});
 			if ( $$self{'id'} ) {
 				$T->save({'purchaseorder_id'	=>  $$self{'id'}});
 			} # end if
@@ -503,7 +374,7 @@ sub Taxes {
 				'period_end_null_or_>='     =>  $$self{'created_on'},
 				'country'   =>  $self->Supplier()->country(),
 				'state'     =>  $self->Supplier()->state(),
-		   );
+				);
 
 		# Clear out any no longer valid taxes
 		foreach my $Tax ( @{$$self{'Taxes'}} ) {
@@ -511,7 +382,7 @@ sub Taxes {
 				$Tax->delete();
 			} # end if
 		} # end foreach old Tax
-        @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
+		@{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
 		if ( @new_taxes != @{$$self{'Taxes'}} ) {
 			foreach my $Tax ( @new_taxes ) {
 				if ( ! sets::isin( $Tax->id(), [ map { $_->tax_id() } @{$$self{'Taxes'}} ] ) ) {
@@ -536,6 +407,31 @@ sub Tax {
     } # end if
     return $result;
 } # end sub Tax
+
+sub can_edit {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( $openprint::session{'user_id'} eq $_[0]{'created_by'} )
+			or ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) 
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_edit
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' ) or
+			( sets::isin( $_[0]{'created_by'}, [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
+			
+			or ( sets::isin( $openprint::session{'user_id'}, [ map { $_->Order()->salesrep_id() } $_[0]->Contents() ] ) )
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_view
 
 1;
 __END__

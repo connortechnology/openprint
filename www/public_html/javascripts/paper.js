@@ -42,8 +42,8 @@ function cbStockFillResults( results ) {
 		} // end if
 		var selectedValue = ddm.getValue();
 
-		for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
-			options[options.length] = create_option( value[ddm_index], value[ddm_index] );
+		for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ddm_index += 2 ) {
+			options[options.length] = create_option( value[ddm_index], value[ddm_index+1] );
 		} // end for
 		fill_ddm( ddm, options );
 		if ( options.length == 2 ) {

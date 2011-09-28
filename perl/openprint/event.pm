@@ -14,6 +14,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Event;
 require openprint::Event_Category;
+require openprint::Event_Attendance;
 require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
@@ -181,7 +182,7 @@ sub view {
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
 			$variable{'error'} .= $Event->save(\%param);
-			new openprint::Log()->save({'action'=>'Create Event', 'object'=>$Event});
+			new openprint::Log()->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
 		} # end if
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
@@ -208,6 +209,19 @@ sub _photos {
 		$Photo->delete();
 	} # end if
 } # end sub _photos
+
+sub _attendance {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( exists $param{'attending'} ) {
+		my $Attending = new openprint::Event_Attendance( {'event_id'=>$param{'event_id'}, 'user_id'=>$session{'user_id'} } );
+$log->debug("Got: " . $Attending->to_string() );
+		$variable{'error'} .= $Attending->save({
+			'event_id'	=>	$param{'event_id'},
+			'user_id'	=>	$session{'user_id'},
+			'attending'	=>	$param{'attending'},
+		});
+	} # end if
+} # end sub _attendance
 
 1;
 __END__

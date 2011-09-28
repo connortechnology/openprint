@@ -33,12 +33,12 @@
             <div class="leftColumn">
 <? endif ( $$variable{'Group'} == 1 ) ?>
                 <p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-                <p>
+                <p class="Dimensions">
                     <label>Spread dimensions:</label>
-                        <input type="text" name="txtWidth" size="5" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="text" name="txtHeight" size="5" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
-                        <input type="text" name="txtFinalWidth" size="5" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="text" name="txtFinalHeight" size="5" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /><? echo (
+                        <input type="number" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="number" name="txtHeight" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
+                        <input type="number" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="number" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /><? echo (
 							return sets::isin( $session{'user_type'}, ['A','E'] ) ?
 							ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', "calc('f1');" ) : '';
 							) ?>

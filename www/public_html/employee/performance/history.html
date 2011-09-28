@@ -11,33 +11,31 @@
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 			<li><label>Docket:</label>
-				<input type="text" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
+				<input type="number" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
 			</li>
 			<li>
                 <label>Category:</label>
                 <select name="category" id="category" onchange="f1.submit();">
                     <option value="">All</option>
                 <? echo (
-						return ssi::make_drop_down( [ map { $_, $_ } sort( sets::union( map { $_->category() } openprint::Equipment->find( 'use_in_scheduling'=>1 ) ) ) ], $session{'/employee/performance/history.html?category'} );
+						return ssi::make_drop_down( [ map { $_, $_ } sort( sets::union( map { $_->category() } openprint::Equipment->find( 'useinscheduling'=>1 ) ) ) ], $session{'/employee/performance/history.html?category'} );
 						) ?>
                 </select>
             </li>
 			<li><label>Equipment:</label>
 			<? echo ( 
 				@{$$variable{'Equipment'}} = ();
-				my @presses = openprint::Equipment->find('category'=>$session{'/employee/performance/history.html?category'},'use_in_scheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+				my @presses = openprint::Equipment->find('category'=>$session{'/employee/performance/history.html?category'},'useinscheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 
 				my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/performance/history.html?equipment_id'} ) );
-				if ( ! @selected_equipment ) {
-					@selected_equipment = map { $_->id() } @presses;
-					$session{'/employee/performance/history.html?equipment_id'} = join(',', @selected_equipment );
-				}
+				@selected_equipment = map { $_->id() } @presses if ( ! @selected_equipment );
+				$session{'/employee/performance/history.html?equipment_id'} = join(',', @selected_equipment );
 
 				foreach (@presses) {
 					push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
 				} # end foreach press
 
-				my $html = '<select id="equipment_id" name="equipment_id" multiple="multiple" size="'. @presses.'">';
+				my $html = '<select id="equipment_id" name="equipment_id" multiple="multiple" size="'. @presses.q`" onchange="load('Results',$('f1'));">`;
 				$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 				return $html;
 			) ?>
@@ -68,12 +66,17 @@
 				<? echo ( ssi::date_select_session( '/employee/performance/history.html', 'starttime_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} ); ) ?>
 				</span>
 			</li>
+			<li>
+			<label>Unreported Shifts:</label>
+			<? echo ( ssi::radio( 'unreported', [ 'Y', 'Yes','N', 'No', '', 'Both' ], $session{'/employee/performance/history.html?unreported'}, { 'onclick'=>q`load('Results', $('f1'));` } ); ) ?>
+			</li>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( '',
-				ssi::button( 'ShowResults', { 'onclick' => 'f1.submit();', 'text'=>'Show Results' } ),
+				ssi::button( 'ShowResults', { 'onclick' => q`f1.action='/employee/performance/history.html';f1.submit();`, 'text'=>'Show Results' } ),
 				ssi::button( 'Add', { 'href' => '/employee/performance/edit.html', 'text'=>'Add New' } ),
-				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
+				ssi::button( 'Download', {'onclick'=>"f1.action='/employee/performance/history.html?action=Download';f1.submit();", 'text'=>'Download in CSV Format' } ),
+				ssi::button( 'Reset', { 'href'=>'/employee/performance/history.html?action=Reset' } ),
 				); ) ?>
 		</p>
 	</fieldset>

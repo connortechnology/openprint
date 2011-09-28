@@ -211,8 +211,14 @@ sub signature_calc {
 	my %Results;
 
 	my $signature_index = $$sig_specs{'SignatureIndex'};
-	$Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
-	next if ! $Equipment;
+	if ( ! $Equipment ) {
+		$openprint::log->debug("Looking up equipment in Proofs: signature_calc");
+		$Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} );
+		if ( ! $Equipment ) {
+			$openprint::log->warn("Proofs: signature_calc: No equipment for " . $$sig_specs{'ddmPress'.$qty_index} );
+			return %Results;
+		}
+	}
 
 	if ( ( ! sets::isin( 1, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
 		push @{$$indexes{$signature_index}}, 1;
@@ -257,16 +263,18 @@ sub signature_calc {
 		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{'Price'};
 		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{'units'};
 
+		$Results{'Breakdown'} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
 		if ( lc $price{'units'} eq 'per square inch' ) {
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity;
+		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} elsif ( lc $price{'units'} eq 'per square foot' ) {
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144 * $quantity;
+		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} else {
 			$price{'Total'} = $price{'Price'} * $quantity;
+		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		} # end if
 		$$specs{"txtProofUnitPrice-$signature_index-$proof_index-$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price{'Total'} );
-		$Results{'Breakdown'} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
-		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d*$%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, @price{'Price','units','Total'} );
 		$Results{'Total'} += $price{'Total'} + $MakeReady{'Price'};
 	} # end foreach my $proof_index
 	return %Results;
@@ -418,7 +426,7 @@ sub insert_layout_proof {
 		} # end if
 	} # end if
 
-	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->Paper()->width(), $Imposition->Paper()->height(), $default_proof_type, $qty_index );
+	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, $Imposition->stock_width(), $Imposition->stock_height(), $default_proof_type, $qty_index );
 
 } # end sub insert_layout_proof
 
@@ -595,10 +603,10 @@ sub summary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					if ( my $Service = openprint::Service->find_one('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'PressProof' ) {
-							my $desc = sprintf('</td><td align="left">%s', $Service->description() );
+							my $desc = sprintf('</td><td>%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} else {
-							my $desc = sprintf('%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+							my $desc = sprintf('%s&quot;x%s&quot;</td><td>%s', @$specs{
 									"txtProofWidth-$signature_index-$proof_index-$qty_index",
 									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -613,7 +621,7 @@ sub summary {
 		my $summary = '<table class="ProofsSummary">';
 		foreach my $k ( keys %proof_totals ) {
 			next if ! $proof_totals{$k};
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'</td><td>'.$k.'</td></tr>';
+			$summary .= '<tr><td>'.$proof_totals{$k}.'</td><td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
@@ -636,7 +644,7 @@ sub breakupsummary {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
 					my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
 					if ( @Service ) {	
-						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
+						my $desc = sprintf('<td> %s&quot;x%s&quot;</td><td>%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
 								"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
 						my $qty      = $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -656,12 +664,12 @@ sub breakupsummary {
 			} # end foreach key
 		} # end foreach signature
 ##		my $summary = '<table class = "insideservice" style="width:auto;table-layout:auto;">';
-		my $summary = '<table style="width:100%;table-layout:auto;">';
+		my $summary = '<table>';
 
 		foreach my $k ( keys %proof_totals ) {
 			next if ! $proof_totals{$k};
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
-			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
+			$summary .= '<tr><td>'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+			$summary .= '<td class="Price">'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index

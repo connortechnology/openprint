@@ -1,9 +1,11 @@
 <div id="Configuration">
 <form id="f1" name="f1" method="post" action="/administrator/managerial/configuration.html">
 <p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', q`popup_window('_configuration_popup.html');`, '', 'New' ); ) ?>
+		<? echo ( join('',
+					ssi::button( 'SaveTop', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
+					ssi::button( 'ResetTop', { 'onclick'=>'f1.reset();','text' => 'Reset' } ),
+					ssi::button( 'New', { 'onclick'=>q`popup_window('_configuration_popup.html');`, '', 'New' } )
+		); ) ?>
 </p>
 <? echo (
 	my $html;
@@ -13,15 +15,15 @@
         my ( $name, $value, $type, $description, $category ) = splice @config,0,5;
 
 		if ( ! defined $cat ) {
-			$html .= "<fieldset><legend>$category</legend>";
+			$html .= "<fieldset><legend>$category</legend><ul>";
 		} elsif ( $cat ne $category ) {
-			$html .= "</fieldset><fieldset><legend>$category</legend>";
+			$html .= "</ul></fieldset><fieldset><legend>$category</legend><ul>";
 		} # end if
 		
         if ( $description eq '' ) {
             $description = $name;
         } # end if
-        $html .= qq{<p><label>$description</label>\n};
+        $html .= qq{<li><label>$description</label>\n};
         if ( $type eq 'Supplier' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
             $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y','order'=>'lower(name)') ], $value );
@@ -47,16 +49,18 @@
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if
-        $html .= qq{</p>\n};
+		$html .= ssi::button( 'Edit'.$name, { 'onclick'=>qq`popup_window('_configuration_popup.html','name=$name');`, 'text'=>'Edit' } );
+        $html .= qq{</li>\n};
 		$cat = $category;
 		$cat = '' if ! defined $cat;
     } # end while
 	return $html;
 ) ?>
-	</fieldset>
-	<p class="buttons"> 
-		<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();",'','Reset' ); ) ?>
+	</ul></fieldset>
+	<p class="buttons"> <? echo ( join('',
+		ssi::button( 'SaveBottom', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();",'text'=>'Save' } ),
+		ssi::button( 'ResetBottom', { 'onclick'=>'f1.reset();','text'=>'Reset' } ),
+		); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>

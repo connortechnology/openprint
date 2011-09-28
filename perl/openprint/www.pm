@@ -24,6 +24,7 @@ require openprint::print;
 require openprint::print_project;
 require openprint::Estimating::Proofs;
 require openprint::usergroup;
+require openprint::Page_Setting;
 
 require openprint::logs;
 
@@ -36,7 +37,7 @@ use openprint::Object;
 use openprint::Currency;
 
 use openprint;
-use vars qw( $r %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -75,7 +76,7 @@ sub handler {
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
 		if ( ref $param{$key} eq 'ARRAY' ) {
-			$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
@@ -100,13 +101,71 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
+		openprint::session_init();
+		if ( ! ( %page_settings and $page_settings{$page} ) ) {
+$log->debug("Page Settings not found in cache for $page");
+			# First step, reload page settings
+			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
+			if ( ! $page_settings{$page} ) {
+$log->debug("Page Settings not found for $page");
+				# Need to create one.
+				my @chunks = split('/', $page );
+				while ( @chunks ) {
+					pop @chunks;
+					last if ! @chunks;
+					
+					# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
+					my $chunk = join('/', @chunks);
+					$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
+		
+					if ( $page_settings{$chunk} ) {
+$log->debug("Using page settings for $chunk");
+						#my $NewPageSettings = $page_settings{$chunk}->copy();
+						#$NewPageSettings->save({'url'=>$page});
+						#$page_settings{$page} = $NewPageSettings;
+
+						# Why stuff up the db with entries, just fill the hash with copies.
+						$page_settings{$page} = $page_settings{$chunk};
+						last;
+} else {
+$log->debug("No page settings for $chunk");
+					} # end if
+				} # end while chunks
+
+			} # end if
+			if ( ! $page_settings{$page} ) {
+				$page_settings{$page} = new openprint::Page_Setting();
+				$page_settings{$page}->save({'url'=>$page});
+			} # end if
+		} # end if Page Settings not found
+
+		# if not logged in, determine if they are allowed to see this page or not.
+		if ( $page_settings{$page}->user_level() ) {
+$log->debug("Checking user level, need : " . $page_settings{$page}->user_level() . ' session is: ' . $session{'user_type'} );
+			if ( 
+					( $page_settings{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
+					or
+					( $page_settings{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
+					or
+					( $page_settings{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
+			   ) {
+$log->debug("No good, need login");
+				$page = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
+			} # end if
+		} # end if
+
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 		} # end foreach
-		openprint::session_init();
 
 		$openprint::log->debug("Page: $page");
+
+		# Just does timeout
+		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
+		$page = $variable{'Redirect'} if $variable{'Redirect'};	
+
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;
@@ -225,26 +284,12 @@ $openprint::log->debug("Getfile");
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
-		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
-		return $status if $variable{'Redirect'};	
 		$status = Apache2::Const::OK;
 
 		# This needs special treatment.
 		if ( $filename eq 'login_confirmation.html') {
 			openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 			return $status if $variable{'Redirect'};	
-		} # end if
-
-		if ( $session{'user_type'} ne 'A' ) {
-$log->debug("User Type: $session{'user_type'}");
-			# If the page requires you to be logged in, check that we are logged in.
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
-					$variable{'Redirect'} = '/administrator/error/login.html';
-					$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
-					return $status;
-				} # end if
-			} # end if
 		} # end if
 
 		if ( $second eq 'account' ) {
@@ -263,21 +308,9 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
-
-		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-		return Apache2::Const::OK if $variable{'Redirect'};	
-
 		if ( $filename eq 'login_confirmation.html' ) {
 			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
 			return $status if $variable{'Redirect'};	
-		} # end if
-
-		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
-				$variable{'Redirect'} = '/employee/error/login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $uri );
-				return Apache2::Const::OK;
-			} # end if
 		} # end if
 
 		if ( $second eq 'proj' ) {
@@ -356,66 +389,19 @@ $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
-	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
-		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-		if ( $variable{'Redirect'} ) {
-			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
-			return Apache2::Const::OK;
-		} # end if
 	} elsif ( $first eq 'content' ) { # main
-		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-		return $status if $variable{'Redirect'};	
-
-		if ( ! $session{'user_id'} ) {
-			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $uri );
-				return Apache2::Const::OK;
-			} # end if
-		} # end if
 		eval( 'require openprint::'.join('_', @path ) );
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'account' ) {
-		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-#$log->debug("Account status($status) redirect($variable{'Redirect'}) error($variable{'details'}) details($variable{'error'})");
-		return $status if $variable{'Redirect'};	
-
-		if ( ! $session{'user_id'} ) {
-			# if not logged in, determine if they are allowed to see this page or not.
-#$log->debug("Not logged in $config{'public_URIs'}");
-			if ( ! $config{'public_URIs'} ) {
-#$log->error("No public_URIs");
-			} elsif ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-#$log->debug("redirecting $uri");
-				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $uri );
-				return Apache2::Const::OK;
-			} # end if
-		} else {
-#$log->debug("logged in");
-		} # end if
 		eval( 'require openprint::'.join('_', @path ) );
 		$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
-		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-		return $status if $variable{'Redirect'};	
-
-		if ( ! $session{'user_id'} ) {
-			# if not logged in, determine if they are allowed to see this page or not.
-			if ( $config{'public_URIs'} and ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $uri );
-				return Apache2::Const::OK;
-			} # end if
-		} # end if
-
 		if ( $second eq 'project' ) {
 			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
@@ -431,7 +417,6 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 
@@ -440,12 +425,6 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 				if ( $project_index and $service_index ) {
 					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
-if ( 0 ) {
-$log->debug("Variable %variable");
-foreach ( keys %variable ) {
-$log->debug("$_ => $variable{$_}");
-}
-}
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
 #$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
@@ -559,18 +538,6 @@ $openprint::log->debug("$1");
 		} # end if main:$second
 
 	} else {
-        $status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-        return $status if $variable{'Redirect'};
-
-        if ( ! $session{'user_id'} ) {
-            # if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
-				return Apache2::Const::OK;
-			} # end if
-		} # end if
-
 		if ( $first and -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my $module = 'openprint::' . lc $first;
 			$module .= '_'.$second if $second;

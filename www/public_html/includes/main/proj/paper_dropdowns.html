@@ -108,7 +108,7 @@
 				<label for="sheets_per_package<?Signature?>">Quantity Per Package:</label>
 				<input type="text" id="sheets_per_package<?Signature?>" name="sheets_per_package<?Signature?>" size="9" value="<? echo ( $$variable{'sheets_per_package'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
  <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
-				<input type="checkbox" id="full_packages" name="full_packages" value="1" <? echo ( ssi::checked( $$variable{'full_packages'} ); )?> onclick="calc(this.form.name);" /> Order full packages
+				<input type="checkbox" id="full_packages<?Signature?>" name="full_packages<?Signature?>" value="1" <? echo ( ssi::checked( $$variable{'full_packages'.$$variable{'Signature'}} ); )?> onclick="calc(this.form.name);" /> Order full packages
 
 			</p>
 		</div><!-- Specific -->
@@ -128,17 +128,13 @@
 
 	my @StockOptions = split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} );
 	@StockOptions = split( ',', $config{'StockOptions'} ) if ! @StockOptions;
-	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
 		my @Papers = openprint::Paper->find( %find );
 		my @options = map { $_, $_ } ( sort ( sets::union( map { $_->get( lc $option ); } @Papers ) ) );
 		$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $options[0] if @options == 2;
 
-		# Special case for Name which used to be called Brand
-		if ( ( $option eq 'Name' ) and ( ! $$variable{'ddmStock'.$option.$$variable{'Signature'}} ) and ( $$variable{'ddmStockBrand'.$$variable{'Signature'}} ) ) {
-			$$variable{'ddmStock'.$option.$$variable{'Signature'}} = $$variable{'ddmStockBrand'.$$variable{'Signature'}};
-		} # end if
 		$find{lc $option} = $$variable{'ddmStock'.$option.$$variable{'Signature'}} if $$variable{'ddmStock'.$option.$$variable{'Signature'}};
 		$html .= sprintf(q`<li><label>Stock %1$s:</label>
 				<select name="ddmStock%1$s%2$s" size="1" onchange="Stock_onchange( this, '%2$s' );">
@@ -150,7 +146,6 @@
 			ssi::make_drop_down( \@options, $$variable{'ddmStock'.$option.$$variable{'Signature'}} ),
 		);
 	} # end foreach option
-$log->debug('done');
 	return $html;
 ) ?>
 		</ul>

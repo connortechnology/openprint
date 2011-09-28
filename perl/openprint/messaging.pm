@@ -47,75 +47,40 @@ sub _history {
 	} # end if
 } # end sub _history
 
-sub inbox {
-	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/inbox.html', ( 
+sub list {
+	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
+		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
+			$Message->sent_on('NOW()');
+		} # end if send
+		$variable{'error'} .= $Message->save(\%param);
+	} elsif ( $param{'btnFunction'} ) {
+		$log->error("Invalid value for btnFunction $param{btnFunction}");
+	} else {
+		ssi::save_params( '/messaging/list.html', ( 
 				'sent_on_start_year','sent_on_start_month','sent_on_start_day',
 				'sent_on_end_year','sent_on_end_month','sent_on_end_day',
+				'folder',
 		) );
 	} # end if
-	if ( ( ! $session{'/messaging/inbox.html?lastupdated'} ) or ( time - $session{'/messaging/inbox.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/messaging/history.html', 'sent_on_start', -31 );
-		ssi::setup_date_select( '/messaging/history.html', 'sent_on_end', '' );
+	if ( ( ! $session{'/messaging/list.html?lastupdated'} ) or ( time - $session{'/messaging/list.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/messaging/list.html', 'sent_on_start', -31 );
+		ssi::setup_date_select( '/messaging/list.html', 'sent_on_end', '' );
 	} # end if
-} # end sub inbox
-sub _inbox {
+	$session{'/messaging/list.html?folder'} = 'Inbox' if ! $session{'/messaging/list.html?folder'};
+} # end sub list
+
+sub _list {
 	if ( $param{'action'} eq 'delete' ) {
 		my $To = new openprint::Message_To( { 'message_id'=>$param{'message_id'},'user_id'=>$session{'user_id'} } );
 		$variable{'error'} .= $To->delete();	
 	} elsif ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/inbox.html', ( 
+		ssi::save_params( '/messaging/list.html', ( 
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
 				'user_id', 'category_id' ) );
 	} # end if
-} # end sub _inbox
-sub drafts {
-	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/drafts.html', ( 
-				'sent_on_start_year','sent_on_start_month','sent_on_start_day',
-				'sent_on_end_year','sent_on_end_month','sent_on_end_day',
-		) );
-	} # end if
-	if ( ( ! $session{'/messaging/drafts.html?lastupdated'} ) or ( time - $session{'/messaging/drafts.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/messaging/drafts.html', 'sent_on_start', -31 );
-		ssi::setup_date_select( '/messaging/drafts.html', 'sent_on_end', '' );
-	} # end if
-} # end sub drafts
-sub _drafts {
-	if ( $param{'action'} eq 'delete' ) {
-		my $Message = new openprint::Message( $param{'message_id'} );
-		$variable{'error'} .= $Message->delete();	
-	} elsif ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/drafts.html', ( 
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'user_id', 'category_id' ) );
-	} # end if
-} # end sub _drafts
-sub sent {
-	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/sent.html', ( 
-				'sent_on_start_year','sent_on_start_month','sent_on_start_day',
-				'sent_on_end_year','sent_on_end_month','sent_on_end_day',
-		) );
-	} # end if
-	if ( ( ! $session{'/messaging/sent.html?lastupdated'} ) or ( time - $session{'/messaging/sent.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/messaging/sent.html', 'sent_on_start', -31 );
-		ssi::setup_date_select( '/messaging/sent.html', 'sent_on_end', '' );
-	} # end if
-} # end sub sent
-sub _sent {
-	if ( $param{'action'} eq 'delete' ) {
-		my $To = new openprint::Message_To( { 'message_id'=>$param{'message_id'},'user_id'=>$session{'user_id'} } );
-		$variable{'error'} .= $To->delete();	
-	} elsif ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/messaging/sent.html', ( 
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'user_id', 'category_id' ) );
-	} # end if
-} # end sub _sent
+} # end sub _list
 
 sub edit {
 	$variable{'Message'} = new openprint::Message( $param{'message_id'} );
@@ -139,8 +104,9 @@ sub _view {
 
 sub _to {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	$Message->save() if ! $Message->id();
 	if ( $param{'action'} eq 'add' ) {
-		my $To = new openprint::Message_To(\%param);
+		my $To = new openprint::Message_To();
 		$variable{'error'} .= $To->save({
 			'message_id'=>	$param{'message_id'},
 			'user_id'	=>	$param{'user_id'},

@@ -19,16 +19,48 @@
 			'order'	=>	'lower(firstname),lower(lastname)',
 			);
 	} else {
-		@Users = openprint::User->find(
+		foreach my $User ( openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_null_or_>=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_null_or_<=' ),
 			'order'	=>	'lower(firstname),lower(lastname)',
-			);
+			) ) {
+			my $filtered = 0;
+			my $Profile = $User->Profile();
+			foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+				my $value = $Profile->value( $Field->name() );
+#$log->debug("Field $$Field{name} $value");
+				if ( $session{'/account/search.html?field-'.$Field->id()} ) {
+					if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+						if ( ! sets::intersection( split(',',$session{'/account/search.html?field-'.$Field->id()} ), $value ) ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+							$filtered = 1; 
+						} # endif 
+					} elsif ( $Field->type() eq 'date' ) {
+					} elsif ( sets::isin( $Field->type(), [ 'country', 'state', ] ) ) {
+						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+							$filtered = 1; 
+						} # endif 
+					} else {
+						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+							$filtered = 1;
+							last;
+						} # end if
+					} # end if
+} else {
+#$log->debug("Not in session");
+				} # end if
+			} # end foreach Field
+			push @Users, $User if ! $filtered;
+		} # end foreach User
 	} # end if
 	if ( ! @Users ) {
 		return 'No results found.';
+	} elsif ( @Users == 1 and $Users[0]{'id'} == $session{'user_id'} ) {
+		return 'No results found, other than your account.';
 	} # end if
 
 	my $html;
@@ -39,7 +71,7 @@
 		$html .= sprintf(q`<div class="Info">
 								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
 								<div class="Address">%3$s</div>
-							</div>`, $User->id(), $User->name(), $Profile->City() . ', ' . $Profile->State() );
+							</div>`, $User->id(), $User->name(), new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
 if ( 1 ) {
 		my $age = 0;
 		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
@@ -57,12 +89,12 @@ if ( 1 ) {
 					<div class="Joined"><label>Joined:</label>%6$s</div>
 				</div>`,
 				$User->id(),
-				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$User->Asset()->thumbnail_url(), '',
 				$age ? $age : 'old!',
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
 			);
-#$log->debug($html);
+$log->debug($html);
 }
 		$html .= '</div>';
 	} # end foreach User

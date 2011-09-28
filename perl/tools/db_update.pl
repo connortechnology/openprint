@@ -84,28 +84,6 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 if ( sets::isin( 'tbl_projects', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projects'", 'column_name');
 	if ( $data ) {
-		if ( ! exists $$data{'style_id'} ) {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
-			$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-			sql::end_transaction( $dbh, $ac );
-		} # end if
-		if ( ! exists $$data{'rush'} ) {
-			print "Adding rush to projects";
-			$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
-		} # end if
-		if ( ! exists $$data{'predefined'} ) {
-			my $ac = sql::start_transaction( $dbh );
-			print "Adding predefined to tbl_Projects\n";
-			$dbh->do(q`alter table tbl_Projects add predefined boolean`);
-			$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
-			$dbh->do(q`update tbl_Projects set predefined=false`);
-			$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
-			sql::end_transaction( $dbh, $ac );
-		} # end if
-		if ( ! exists $$data{'externalrefnumber'} ) {
-			$dbh->do('ALTER TABLE tbl_projects add externalrefnumber text');
-		}
 		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
 	} # end if
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -114,6 +92,28 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) ) or die;
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projects'", 'column_name');
+	if ( ! exists $$data{'style_id'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
+		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	if ( ! exists $$data{'rush'} ) {
+		print "Adding rush to projects";
+		$dbh->do(q`alter table Projects add rush boolean default false`);
+	} # end if
+	if ( ! exists $$data{'predefined'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding predefined to Projects\n";
+		$dbh->do(q`alter table Projects add predefined boolean`);
+		$dbh->do(q`alter table Projects alter predefined set default false`);
+		$dbh->do(q`update Projects set predefined=false`);
+		$dbh->do(q`ALTER TABLE Projects ALTER predefined set not null`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	if ( ! exists $$data{'externalrefnumber'} ) {
+		$dbh->do('ALTER TABLE projects add externalrefnumber text');
+	}
 	if ( exists $$data{'index'} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
@@ -266,7 +266,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
 }
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( $data ) {
 	print "Updating Users...\n";
 	if ( ! exists $$data{'deleted'} ) {
@@ -1542,6 +1542,7 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		} # end if
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{'strcurrencyname'} );
 		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{'strcurrencysymbol'} );
+		$dbh->do('ALTER TABLE quotes ADD deleted BOOLEAN NOT NULL DEFAULT FALSE') if ! exists $$data{'deleted'};
 	} # end if
 
 if ( ! sets::isin( 'tbl_quote_details', \@tables ) ) {
@@ -1666,9 +1667,9 @@ foreach my $M ( openprint::Material->find('name_like'=>'Plain Carton%') ) {
 	$M->save();
 } # end foreach $M
 if ( ! openprint::MaterialCategory->find('name'=>'BulkSkids') ) {
+    print "Adding BulkSkids Category\n";
     my $Category = new openprint::MaterialCategory();
     $Category->save({'name'=>'BulkSkids'});
-    print "Adding BulkSkids Category\n";
 } # end if
 
 if ( my $M = openprint::Material->find_one('name'=>'BulkSkids') ) {
@@ -1726,8 +1727,8 @@ if ( my $S = openprint::ServiceType->find_one('name'=>'Aqueous') ) {
 } # end if
 
 foreach my $ST ( openprint::ServiceType->find('name'=>'DieCutting') ) {
-	$_ = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
-	die $_ if $_;
+	my $error = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
+	die 'Error saving '.$ST->to_string().': '.$error if $error;
 }
 
 if ( ! openprint::ServiceCategory->find('name'=>'Coating') ) {
@@ -1737,18 +1738,16 @@ if ( ! openprint::ServiceCategory->find('name'=>'Coating') ) {
 		'name'=>'Coating',
 	});
 } # end if
-if ( ! openprint::Service->find('name'=>'Perforating') ) {
-	if ( my @S = openprint::Service->find('name'=>'Perforation') ) {
-		foreach my $S ( @S ) {
-			$S->save({'name'=>'Perforating'});
-		}
-	} # end if
-	if ( my @S = openprint::Service->find('name'=>'PerforationMakeReady') ) {
-		foreach my $S ( @S ) {
-			$S->save({'name'=>'PerforatingMakeReady'});
-		}
-	} # end if
-}
+if ( my @S = openprint::Service->find('name'=>'Perforation') ) {
+	foreach my $S ( @S ) {
+		$S->save({'name'=>'Perforating'});
+	}
+} # end if
+if ( my @S = openprint::Service->find('name'=>'PerforationMakeReady') ) {
+	foreach my $S ( @S ) {
+		$S->save({'name'=>'PerforatingMakeReady'});
+	}
+} # end if
 if ( ! openprint::Material->find('name'=>'PerforatingWheel') ) {
 	if ( my @M = openprint::Material->find('name'=>'PerforatingRule') ) {
 		foreach my $M ( @M ) {
@@ -2528,7 +2527,7 @@ if ( ! sets::isin( 'paper_prices', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 	if ( ! exists $$data{'equipment_id'} ) {
 		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
-		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (index)');
+		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id)');
 	} # end if
 	if ( ! exists $$data{'service'} ) {
 		$dbh->do('ALTER TABLE paper_prices add service text');
@@ -2625,12 +2624,15 @@ if ( 0 and ! openprint::Host->find_one() ) {
 		die if $dbh->errstr();
 	} # end foreach Log
 } # end if
+if ( sets::isin( 'log', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
 	if ( $data ) {
 		$dbh->do('ALTER TABLE Log DROP COLUMN ip_address') if ( exists $$data{'ip_address'} );
 		$dbh->do('ALTER TABLE Log DROP COLUMN hostname') if ( exists $$data{'hostname'} );
 	} # end if
 	$dbh->commit();
+} # end if
+
 foreach my $Service ( openprint::Service->find('name'=>'1ColourImpressionPerfecting') ) {
 	$_ = $Service->save({'name'=>'PerfectingImpression1/1'});
 	print $_ if $_;

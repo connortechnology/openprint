@@ -28,7 +28,7 @@ $serial = 'claim_contents_id_seq';
 );
 
 %transforms = (
-	'quantity'	=> [ 's/\D//g' ],
+	'quantity'	=> [ 's/[^\d\.]//g' ],
 	'skid_id'	=> [ 's/\D//g' ],
 	'type_id'	=> [ 's/\D//g' ],
 	'cost'		=> [ 's/[^\d\.]//g' ],
@@ -81,7 +81,7 @@ sub total {
 	if ( $$self{'cost_units'} eq 'Each' ) {
 		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
 	} elsif ( $$self{'cost_units'} eq '/100lb' ) {
-		return sprintf('%.2f', $$self{'quantity'} * $$self{'cost'} * $$self{'weight'}/100 );
+		return sprintf('%.2f', $$self{'cost'} * $$self{'weight'}/100 );
 	} elsif ( $$self{'cost_units'} eq '/Kg' ) {
 		return sprintf('%.2f', $$self{'quantity'} * $$self{'cost'} * Math::Units::convert($$self{'weight'}, 'lb','kg' ) );
 	} elsif ( $$self{'cost_units'} eq '/1000' ) {

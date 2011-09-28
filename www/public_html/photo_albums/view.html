@@ -1,14 +1,24 @@
 <div class="PhotoAlbum">
 	<div class="View">
-		<form id="f1" name="f1" action="/photo_albums/list.html" enctype="multipart/form-data" method="post">
+		<form id="f1" name="f1" action="/photo_albums/<? echo ( $ENV{'HTTP_REFERER'} =~ /history/ ? 'history' : 'list' ) ?>.html" enctype="multipart/form-data" method="post">
 			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Album'}->id() ) ?>" />
 			<input type="hidden" name="btnFunction" />
+			<? if ( $$variable{'Album'}->deleted() ) ?>
+			<div class="warning">
+			This Album has been deleted.
+			</div>
+			<? endif ( $$variable{'Album'}->deleted() ) ?>
 			<p class="buttons">
 			<? echo (
 				my $html = '';
 				if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {
-					$html .= ssi::button( 'Delete', { 'onlick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
-					$html .= ssi::button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
+					if ( $$variable{'Album'}->deleted() ) {
+						$html .= ssi::button( 'Undelete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
+						$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
+					} else {
+						$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+					} # end if
+						$html .= ssi::button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
 				} # end if
 				return $html;
 			) ?>

@@ -157,7 +157,7 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $Host ( openprint::Host->find('blacklist'=>1, 'order'=>'ip' ) ) {
+		foreach my $Host ( openprint::Host->find('blacklist'=>1) ) {
 			if ( my $macs = $Host->mac() ) {
 				foreach my $mac ( @{$macs} ) {
 					$mac =~ s/:/\-/g;

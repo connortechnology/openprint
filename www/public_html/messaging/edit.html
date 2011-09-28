@@ -12,7 +12,7 @@
 -->
 </script>
 <div class="Message"><div class="Edit">
-	<form name="f1" id="f1" action="/messaging/inbox.html" method="post" enctype="multipart/form-data">
+	<form name="f1" id="f1" action="/messaging/list.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{'Message'}->deleted() ) ?>
 			<span class="warning">This messaging has been deleted</span>
@@ -31,7 +31,7 @@
 						</li>
 						<li>
 							<label for="body">Body:</label>
-							<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
+							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
@@ -39,13 +39,13 @@
 			<p class="buttons">
 				<? echo (
 					my $html = '';
-					$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'inbox.html', 'Cancel' );
+					$html = ssi::button( 'Cancel', { 'href'=>'inbox.html' } );
 					
 					if ( $$variable{'Message'}->id() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save (Draft)' );
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
+					$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();", 'text'=>'Save (Draft)' } );
+					$html .= ssi::button( 'Send', { 'onclick'=>"f1.btnFunction.value='Send';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>

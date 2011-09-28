@@ -43,11 +43,11 @@
 			<p>
 				<label>Received On:</label>
 				<span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', {'onchange'=>'load_payments(this.form);', 'with_today'=>1, 'with_clear'=>1} ); ) ?>
+<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', {'onchange'=>q`load_payments($('f1'));`, 'with_today'=>1, 'with_clear'=>1} ); ) ?>
 				</span>
 					to 
 				<span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>'load_payments(this.form);', 'with_today'=>1, 'with_clear'=>1} ); ) ?>
+<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>q`load_payments($('f1'));`, 'with_today'=>1, 'with_clear'=>1} ); ) ?>
 				</span>
 			</p>
 			<p class="buttons">

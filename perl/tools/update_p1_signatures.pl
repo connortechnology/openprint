@@ -28,7 +28,7 @@ my $projects_count = 100;
 my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
-my $company_id = 0;
+my $company_id = 6;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -161,6 +161,23 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 				$index += 1;
 			} # end if	
 		} # end foreach side
+
+			if ( $$services{'Scoring'} ) {
+				foreach my $scoring_service_id ( @{$$services{'Scoring'}} ) {
+					my $scoring_specs = openprint::service::get_specs_ref( $Project, $scoring_service_id );
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						next if ! $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"};
+						my $Equipment = openprint::Equipment->find_one( 'strid'=>$$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+						if ( ! $Equipment ) {
+							$log->error( 'No equipment found for ' . $$scoring_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} );
+							next;
+						} 
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $scoring_service_id, "ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index", $Equipment->id() );
+					} # end foreach
+					
+				} # end foreach service_id in Scoring
+			} # end if Scoring
+
 	} # end foreach sig_id
 	foreach my $service ( 'BulkSkids', 'PlainCartons' ) {
 		if ( $$services{$service} ) {
@@ -192,7 +209,6 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 		} # end if
 	} # end foreach
 	my $summary = $Project->summary();
-
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
 	openprint::service::init_cache();
 
@@ -286,7 +302,39 @@ if ( 1 ) {
 						} # end foreach qty
 					} # end foreach spec
 				} # end foraech service
-			} # end if Proofs
+			} # end if Cutting
+			if ( $$services{'Perforating'} ) {
+				foreach my $service_id ( @{$$services{'Perforating'}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+					foreach my $spec ( 'txtHorizontalQty', 'txtVerticalQty' ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $spec.'-1', $$specs{$spec.'-0'} );
+						openprint::service::delete_service_spec( $Project->id(), $service_id, $spec.'0' );
+					} # end foreach specs
+					foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition' ) {
+						foreach my $qty_index ( $Project->quantity_indexes() ) {
+							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+							openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
+						} # end foreach qty_index
+					} # end foreach spec
+					
+				} # end foreach service_id in Perforating
+			} # end if Perforating
+			if ( $$services{'Scoring'} ) {
+				foreach my $service_id ( @{$$services{'Scoring'}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+					foreach my $spec ( 'txtHorizontalQty', 'txtVerticalQty' ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $spec.'-1', $$specs{$spec.'-0'} );
+						openprint::service::delete_service_spec( $Project->id(), $service_id, $spec.'0' );
+					} # end foreach specs
+					foreach my $spec ( 'txtLayoutWidth','txtLayoutHeight','txtImposition','chkOverrideImposition', 'ddmEquipment','chkOverrideEquipment' ) {
+						foreach my $qty_index ( $Project->quantity_indexes() ) {
+							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+							openprint::service::delete_service_spec( $Project->id(), $service_id, "$spec-0-$qty_index" );
+						} # end foreach qty_index
+					} # end foreach spec
+					
+				} # end foreach service_id in Scoring
+			} # end if Scoring
 		} # end foreach Project
 	} # end if Type
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
@@ -323,7 +371,6 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 	$Default->destroy();
 } # end foreach
 
-sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=?', 'ddmStockBrand' ], 'strname', 'ddmStockName' );
 $dbh->disconnect();
 	
 1;

@@ -22,10 +22,9 @@
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
-	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 
-		$$variable{'Asset'}->id() ? 'Save' : 'Create Asset' );
+	$html .= ssi::button( 'Save', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", 'text'=> $$variable{'Asset'}->id() ? 'Save' : 'Create Asset' } );
 	if ( $$variable{'Asset'}->id() ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+		$html .= ssi::button( 'Delete', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();" } );
 	}  # end if
 	return $html;
 ) ?>
@@ -37,17 +36,26 @@
 		<fieldset>
 			<div class="content">
 				<ul>
+					<li><label></label>
+				<img src="<? echo ( $$variable{'Asset'}->url() ) ?>"/>
+					</li>
 					<li><label>Name:</label>
 						<input type="text" name="name" id="name" value="<? echo ( $$variable{'Asset'}->name() ) ?>" />
 					</li>
 					<li><label>Description:</label>
-						<textarea name="description" id="description"><? echo ( $$variable{'Asset'}->description() ) ?></textarea>
+						<textarea name="description" id="description"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
 					</li>
 <? if ( ! $$variable{'Asset'}->filename() ) ?>
 					<li><label>File:</label>
 						<input type="file" id="filename" name="filename"/>
 					</li>
 <? endif ( ! $$variable{'Asset'}->filename() ) ?>
+					<li><label>Attribution:</label>
+						<input type="text" name="attribution" id="attribution" value="<? echo ( $$variable{'Asset'}->attribution() ) ?>" />
+					</li>
+					<li><label>License:</label>
+						<textarea name="license" id="license"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
+					</li>
 				</ul>
 			</div>
 		</div><!--Edit-->

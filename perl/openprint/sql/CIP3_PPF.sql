@@ -4,6 +4,7 @@ CREATE TABLE CIP3_PPF (
 	docket			INTEGER NOT NULL,
 	signature		INTEGER,
 	side			text,
+	version			text,
 	data			bytea,
 	front_preview	bytea,
 	back_preview	bytea,

@@ -1,0 +1,61 @@
+<? eval (
+	@{$$variable{'Messages'}} = ();
+	foreach my $Message ( openprint::Message->find( 
+			ssi::date_filter( '/messaging/sent.html?sent_on_start', 'sent_on >=' ),
+			ssi::date_filter( '/messaging/sent.html?sent_on_end', 'sent_on <=' ),
+			( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
+			( $session{'/messaging/list.html?folder'} eq 'Inbox' ? (
+				'to_id'			=>	$session{'user_id'},
+				'sent_on is null'	=>	0,
+			) : () ),
+			( $session{'/messaging/list.html?folder'} eq 'Drafts' ? (
+				'from_id'			=>	$session{'user_id'},
+				'sent_on is null'	=>	1,
+			) : () ),
+			( $session{'/messaging/list.html?folder'} eq 'Sent' ? (
+				'from_id'			=>	$session{'user_id'},
+				'sent_on is null'	=>	0,
+			) : () ),
+			'order'				=> 'created_on',
+		) ) {
+		push @{$$variable{'Messages'}}, $Message;
+	} # end foreach Messages
+) ?>
+
+<? if ( @{$$variable{'Messages'}} == 0 ) ?>
+	There are no messages which match your search criteria. 
+<? else ( @{$$variable{'Messages'}} == 0 ) ?>
+	<table>
+		<tr class="Message">
+			<th class="actions"></th>
+			<th class="To">To</th>
+			<th class="DateTime">Created On</th>
+			<th class="Subject">Subject</th>
+			<th class="Where">Where</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			foreach my $Message ( @{$$variable{'Messages'}} ) {
+				$html .= sprintf(q` 
+					<tr class="Message"> 
+						<td class="actions">%6$s</td>
+						<td class="To"><a href="/messaging/%7$s.html?message_id=%1$d">%2$s</a></td>
+						<td class="DateTime"><a href="/messaging/edit.html?message_id=%1$d">%4$s</a></td>
+						<td class="Subject"><a href="/messaging/edit.html?message_id=%1$d">%3$s</a></td>
+						<td class="Where"><a href="/messaging/edit.html?message_id=%1$d">%5$s</a></td>
+					</tr>
+					`, $Message->id(), 
+					join( ',', map { $_->User()->name() } $Message->To() ),
+					ssi::html_escape($Message->subject()),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
+					$Message->where(),
+					join('', 
+						ssi::button( 'delete'.$Message->id(), {'onclick'=> 'delete_message( '.$Message->id().');', 'text'=>'X' } ),
+						),
+					( $session{'/messaging/list.html?folder'} eq 'Drafts' ? 'edit' : 'view' ),
+				);
+			} # end foreach Messages
+			return $html;
+		) ?>
+		</table>
+<? endif ( @{$$variable{'Messages'}} == 0 ) ?>

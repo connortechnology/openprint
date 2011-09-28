@@ -43,6 +43,7 @@ $serial = 'shifts_id_seq';
 
 %transforms = (
 	'id'			=>	[ 's/\D//g' ],
+	'operator_id'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
@@ -121,7 +122,9 @@ sub operator_id {
 			foreach my $Job ( $self->Schedule() ) {
 				$Job->save({'operator_id'=>$_[0]});	
 			} # end foreach
+$openprint::log->debug("Setting operator from $$self{'operator_id'} to $_[0]");
 			if ( $$self{'operator_id'} != $_[0] ) {
+$openprint::log->debug("Setting operator to $_[0]");
 				$$self{'operator_id'} = $_[0];
 				$self->save();
 			} # end if
@@ -136,7 +139,12 @@ sub Equipment {
 
 sub to_string {
 	my ( $self ) = @_;
-	return sprintf('%s %d %s %s to %s %s', $self->Equipment()->name(), $self->shift_id(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
+	if ( ! exists $$self{'to_string'} ) {
+		$$self{'to_string'} = sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'starttime'} ) ),
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$self{'endtime'} ) ), $self->Operator()->name() );
+	} # end if
+	return $$self{'to_string'};
 } # end sub to_string
 
 sub get_lis {
@@ -156,7 +164,11 @@ sub get_lis {
 	my $previous_row;
 	my $total_impressions;
 
-	foreach my $Job ( $self->Schedule() ) {
+	my @Jobs = $self->Schedule();
+	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
+		$html .= 'empty';
+	} # end if
+	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{'Status'} ) {
 				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
@@ -171,7 +183,7 @@ sub get_lis {
 		my $Operator = $Shift->Operator();
 
 		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
-			$html = sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d');"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`,
+			$html = sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`,
 
 			$Shift->id(), 
 Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
@@ -279,7 +291,7 @@ sub get_Shifts {
 	# Three cases, no shifts, shifts before, shifts after.
 
 	# Case #1 Shift before
-	if ( my $LastShift = openprint::Shift::find(
+	if ( my $LastShift = openprint::Shift->find(
 			'equipment_id'      =>  $Equipment->id(),
 			'starttime_<'       =>  $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime DESC',
@@ -290,7 +302,7 @@ sub get_Shifts {
 			$last_time = $Shift->starttime_seconds() + 1;
 			push @Shifts, $Shift if $Shift->starttime_seconds() > $start_dt->epoch();
 		} # end while
-	} elsif ( my $NextShift = openprint::Shift::find_one(
+	} elsif ( my $NextShift = openprint::Shift->find_one(
 		   'equipment_id'      =>  $Equipment->id(),
 			'starttime >'       => $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime',

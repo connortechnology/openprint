@@ -6,7 +6,7 @@ use MIME::QuotedPrint;
 
 require openprint::Company;
 require openprint::logs;
-require openprint::Usergroup;
+require openprint::UserGroup;
 require openprint::User_Notification;
 require openprint::Asset;
 require openprint::User_Profile;
@@ -21,7 +21,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'Users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -116,16 +116,15 @@ sub save {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+		new openprint::Email()->send(
 				FROM    => $openprint::config{'LoginEmail'},
 				TO      => $openprint::config{'LoginEmail'},
-				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!"
+				SUBJECT => join(' ', @$params{'firstname','lastname'})."'s User Type has changed!",
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) and ( $$params{'web_active'} eq 'Y' ) ) {
 		my %info;
 		$info{'User'} = $self;
 		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
@@ -134,14 +133,13 @@ sub save {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
-		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+		new openprint::Email()->send(
 				FROM    => $openprint::config{'AdministratorEmail'},
 				TO      => sprintf( '"%s %s" <%s>', @$params{'firstame','lastname','email'} ),
 				SUBJECT => 'User account status has changed!',
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 				);
-		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-    } # end if
+	} # end if
 
 	my $error = $self->SUPER::save( $params );
 	return $error if $error;
@@ -284,7 +282,7 @@ sub csr_ids {
 sub Groups {
 	my ( $self ) = @_;
 
-    return openprint::Usergroup->find('user_id_in'=>$$self{id} );
+    return openprint::UserGroup->find('user_id in'=>$$self{id} );
 } # end sub Groups
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
@@ -341,13 +339,83 @@ sub po_limit {
 } # end sub po_limit
 
 sub Asset {
-$log->debug("loading asset");
-	return new openprint::Asset( $_[0]{'asset_id'} );
+	if ( ! $_[0]{'Asset'} ) {
+		if ( $_[0]{'asset_id'} ) {
+			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
+		} else {
+			if ( $_[0]->Profile()->Gender() ) {
+				$openprint::log->debug("Loading by gender");
+				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
+			} # end if
+			if ( ! $_[0]{'Asset'} ) {
+				$openprint::log->debug("Loading by default");
+				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
+			} # end if
+			if ( ! $_[0]{'Asset'} ) {
+				$_[0]{'Asset'} = new openprint::Asset( );
+			} # end if
+		} # end if
+	} # end if
+	return $_[0]{'Asset'};
 } # end sub Asset
 
 sub Profile {
 	return new openprint::User_Profile( $_[0]{'id'} );
 }
+
+sub html {
+	my $User = $_[0];
+	my $Profile = $_[1] ? $_[1] : $_[0]->Profile();
+
+	my $age = 0;
+	if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
+		my @Birthday = split('-', $Profile->Birthday() );
+		$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+	} # end if
+
+	my $Asset = $User->Asset();
+	$openprint::log->error($Asset->to_string() );
+
+	return sprintf(q`
+				<div class="User">
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" />
+					<div class="Name">%2$s</div>
+					<div class="Details">%5$s %6$s</div>
+					</a>
+				</div>`,
+				$User->id(), $User->name(),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age ? $age.' year old' : '',
+				$Profile->Gender() ? $Profile->Gender() : '',
+);
+	return sprintf(q`
+				<div class="User">
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>
+					<div class="Name"><label>Name:</label>%2$s</div>
+					<div class="Age"><label>Age:</label>%5$s</div>
+					<div class="Gender"><label>Gender:</label>%6$s</div>
+					<div class="Joined"><label>Joined:</label>%7$s</div>
+				</div>`,
+				$User->id(), $User->name(),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
+				Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+			);
+} # end sub html
+
+sub last_logged_in {
+	if ( ! $_[0]{'last_logged_on'} ) {
+		# Almost any entry means we were logged in.  
+		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( @Logs == 1 ) {
+			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
+		} else {
+			$openprint::log->debug("@ of logs returned " . @Logs );
+		} # end if
+	}
+	return $_[0]{'last_logged_on'};
+} # end sub last_logged_in
 
 1;
 

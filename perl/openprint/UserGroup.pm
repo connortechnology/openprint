@@ -4,7 +4,7 @@ package openprint::UserGroup;
 use strict;
 require openprint::User;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
 
 $table = 'usergroups';
@@ -13,6 +13,10 @@ $serial= 'usergroups_id_seq';
     'id'    =>  'id',
     'name' =>  'name',
 );
+%find_fields = (
+    'user_id'       =>  '(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
+);
+
 %transforms = (
     'name' => [ 's/^\s+//', 's/\s+$//' ],
 );

@@ -107,8 +107,8 @@ $log->warn("Not a B") if $debug;
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
-	#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
+			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)Sg(\d+)/i;
+	print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n" if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
@@ -139,8 +139,8 @@ if ( $mangle ) {
 				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
-						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdB) def\r\n";
+						if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig."SdB) def\r\n";
 						} else {
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 						} # end if
@@ -216,7 +216,7 @@ if ( $mangle ) {
 				$log->error("No data! $file_base $docket $sig $side");
 				next;
 			} # end if
-			my $PPF = store_PPF( $docket, $sig, $side, $data );
+			my $PPF = store_PPF( $docket, $name, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension;
@@ -269,8 +269,8 @@ if ( $mangle ) {
 				my $job_name = $1;
 #$log->warn("Truncating JobName $job_name");
 				if ( length $job_name > 16 ) {
-					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
+					if ( my ( $pre, $j_name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						$line = '/CIP3AdmJobName ('.$pre.(substr($j_name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
 					} else {
 						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 					} # end if
@@ -284,7 +284,7 @@ if ( $mangle ) {
 			$log->error("File was not complete! $file_base");
 			next;
 		} # end if
-		my $PPF = store_PPF( $docket, $sig, $side, $data );
+		my $PPF = store_PPF( $docket, $name, $sig, $side, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
 	} # end foreach file in input hotfolder
@@ -294,7 +294,7 @@ if ( $mangle ) {
 $dbh->disconnect() if $dbh;
 
 sub store_PPF {
-	my ( $docket, $sig, $side, $data ) = @_;
+	my ( $docket, $version, $sig, $side, $data ) = @_;
 
 	my $compressed_data;
 	if ( $use_compression ) {
@@ -306,6 +306,7 @@ sub store_PPF {
 			'docket'    	=>  $docket,
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
+			'version'		=>	$version,
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
 			'compressed'	=>	($compressed_data ? 1 : 0),
 			});

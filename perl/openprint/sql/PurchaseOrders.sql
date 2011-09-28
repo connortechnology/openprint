@@ -66,6 +66,7 @@ CREATE TABLE PurchaseOrder_Contents (
 	price	float,
 	total	float,
 	item	text,
+	item_id	INTEGER, FOREIGN KEY (item_id) REFERENCES PurchaseOrder_Items (id),
 	docket	text,
 	description	text,
 	PRIMARY KEY (id)

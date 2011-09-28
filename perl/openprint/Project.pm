@@ -484,6 +484,7 @@ sub update_status {
 									$changed = 1;
 								} # end if
 							} # end foreach
+
 						} # end if
 					} elsif ( $$self{'status'} eq 'Proofs Out' ) {
 						if ( $services{'Proofs'} ) {
@@ -513,7 +514,11 @@ sub update_status {
 				} # end if
 			} # end if
 		} else { # there isn't any ordered services
-			if ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
+			if ( $services{'CustomerPickUp'} ) {
+				if ( openprint::service::status( $$self{'id'}, $services{'CustomerPickUp'}[0] ) eq 'Complete' ) {
+					$new_status = 'Picked Up';
+				} # end if
+			} elsif ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
 				if ( $$self{'status'} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
@@ -647,10 +652,11 @@ sub quantity3 {
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Project();
-	foreach my $key ( keys %$self ) {
-		$$new{$key} = $$self{$key};
-	} # end foreach
-	$new->save({'id'=>undef, 'created_on'=>undef,'Services'=>undef} );
+	my @keys = keys %$self;
+	@$new{@keys} = @$self{@keys};
+
+	delete $$new{'Services'};
+	$new->save({'id'=>undef, 'created_on'=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',
@@ -945,13 +951,15 @@ sub price {
 		$$self{'price'.$qty_index} = $new;
 	} # end if
 	if ( ! defined $$self{'price'.$qty_index} ) {
-		my $services = $self->services();
-		foreach my $k ( keys %$services ) {
-			foreach ( @{$$services{$k}} ) {
-				my $specs = openprint::service::get_specs_ref( $self, $_ );
-				$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+		if ( $$self{'id'} ) {
+			my $services = $self->services();
+			foreach my $k ( keys %$services ) {
+				foreach ( @{$$services{$k}} ) {
+					my $specs = openprint::service::get_specs_ref( $self, $_ );
+					$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+				} # end foreach
 			} # end foreach
-		} # end foreach
+		} # end if
 	} # end if
 #$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
@@ -1403,11 +1411,13 @@ $openprint::log->debug("Project::recalculate");
 	if ( $$services{''} ) {
 		my $status = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$self{'id'}, $$services{''}[0], $self->Type()->type() );
 		if ( $status ne 'calculated' ) {
-			# Recal signatures
-			my $function = 'openprint::Estimating::'.$self->Type()->type().'::calculate_signatures';
-			eval ($function.'( $self );');
-			$openprint::log->error("Project->recalculate $function $@") if $@;
-
+			# Recalc signatures
+			my $module = 'openprint::Estimating::'.$self->Type()->type();
+			if ( my $function = $module->can( 'calculate_signatures' ) ) {
+				$status = $function->( $self );
+$openprint::log->debug("Calculate_Sigs: status: $status");
+				openprint::service::status( $$self{'id'}, $$services{''}[0], $status );
+			} # end if
 			openprint::service::auto_calculate( $self, $$services{''}[0] );
 		} # end if
 	} # end if

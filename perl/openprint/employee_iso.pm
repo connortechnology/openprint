@@ -25,10 +25,10 @@ sub cars {
 		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Docket','Customer','Identified By','Printed On','Presses','Area','Reason','Problem','Cause','Action','Effectiveness', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On','Reprint Requested','Reprint Approved','Reprint Charge','Reprint Quantity', 'Reprint Value', 'Reprint On','Reprint Approved By', 'Approved On','Artwork' );
 		my @data;
 		my %params = (
-				'issued_on_start'   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
-				'issued_on_end' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
+			ssi::date_filter( 'issued_on_start', 'issued_on >=', \%param ),
+			ssi::date_filter( 'issued_on_end', 'issued_on <=', \%param ),
 		);
-		foreach my $CAR ( openprint::CAR->find() ) {
+		foreach my $CAR ( openprint::CAR->find(%params) ) {
 			push @data, (
 					new openprint::User($CAR->issued_to_id() )->name(),
 					$CAR->issued_on(),
@@ -39,8 +39,8 @@ sub cars {
 					$CAR->identified_by(),
 					$CAR->printed_on(),
 					join( ',', map { new openprint::Equipment($_)->name() } split(';', $CAR->presses()) ),
-					$CAR->area(),
-					$CAR->reason(),
+					$CAR->Area()->name(),
+					$CAR->Reason()->name(),
 					$CAR->problem(),
 					$CAR->cause(),
 					$CAR->action(),
@@ -61,25 +61,31 @@ sub cars {
 					$CAR->approved_on(),
 					$CAR->artwork(),
 					);
-
 		} # end foreach CAR
 		
 		misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
 	} # end if
 	ssi::save_params( '/employee/iso/cars.html', ( 
 				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
-				'issued_on_end_year','issued_on_end_month','issued_on_end_day', 'status',
-				'docket',
-				) );
-	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_start', -365 );
+				'issued_on_end_year','issued_on_end_month','issued_on_end_day',
+				'status','docket' ) );
+	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_start', -30 );
 	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_end', '' );
+	$session{'/employee/iso/cars.html?status'} = 'Open' if ! exists $session{'/employee/iso/cars.html?status'};
 } # end sub cars
 
 sub _car_results {
+	ssi::save_params( '/employee/iso/cars.html', ( 
+				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
+				'issued_on_end_year','issued_on_end_month','issued_on_end_day',
+				'status','docket' ) );
 } # end sub _car_results
 
 sub car {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
+	if ( $param{'action'} eq 'Send' ) {
+		$variable{'CAR'}->send_notifications();
+	} # end if
 } # end sub view_car
 
 sub _car_view_part1 {
@@ -121,12 +127,10 @@ sub _car_view_part1 {
 		} # end if reprint
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
-$openprint::log->debug("No errors");
 			if ( $variable{'CAR'}->id() and ( ! $param{'car_id'} ) and ! $send_reprint_request_notification ) {
 	# Send out notifications
 			} # end if
-$openprint::log->debug("send notifications");
-				$variable{'CAR'}->send_notifications();
+			$variable{'CAR'}->send_notifications();
 			if ( $send_assignee_notification ) {
 				$variable{'CAR'}->send_assignee_notification();
 			} # end if

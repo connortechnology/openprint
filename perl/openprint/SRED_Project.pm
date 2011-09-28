@@ -38,7 +38,17 @@ sub Contents {
 	my $self = shift;
 	my %params = @_;
 	$params{'project_id'} = $$self{'id'};
-	return openprint::SRED_Content->find(%params);
+	if ( @_ ) {
+		return openprint::SRED_Content->find(%params);
+	} else {
+		if ( ! exists $$self{'Contents'} ) {
+			@{$$self{'Contents'}} = openprint::SRED_Content->find(%params);
+		} # end if
+		return @{$$self{'Contents'}};
+	} # end if
 } # end sub Contents
+sub Taxes {
+	return ();
+}
 1;
 __END__

@@ -1,49 +1,20 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-	<ul>
-	<? echo (
-		my $html = '';
-		my @Contents = $$variable{'Project'}->Contents( 'order'=>'id');
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_view.html' );
-		foreach my $C ( @Contents ) {
-			$$variable{'C'} = $C;
-<<<<<<< HEAD
-			$html .= ssi::variable_substitution( \$content, $variable );
-=======
+<ul>
+<? echo (
+	my $html = '';
+	my @Contents = $$variable{'Project'}->Contents( 'order'=>'id');
+	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_view.html' );
+	foreach my $C ( @Contents ) {
+		$$variable{'C'} = $C;
 $html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
-$html .= '</li>';
->>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
-		} # end foreach tag_id
-		$$variable{'C'} = new openprint::SRED_Content();
-		$$variable{'C'}->id('new');
-$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
-		$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_edit.html' );
 		$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 $html .= '</li>';
-		return $html;
-	) ?>
-	</ul>
-<<<<<<< HEAD
-	<div id="new">
-	<ul>
-		<li>
-			<div class="leftColumn">
-				<ul>
-					<li><label>Start:</label><? echo ( ssi::datetime_select( 'starting' ) ) ?></li>
-					<li><label>End:</label><? echo ( ssi::datetime_select( 'ending' ) ) ?></li>
-					<li><label>Person:</label><select id="user_id" name="user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)' ) ], $session{'user_id'} ); ) ?></select></li>
-					<li><label>Docket:</label><input type="text" id="docket" name="docket" value="" /></li>
-				</ul>
-			</div>
-			<div class="rightColumn">
-				<ul>
-					<li class="Description"><label>Description:</label><textarea id="description" name="description-new" onkeyup="textarea_resize(this);"></textarea></li>
-					<li><label>Attachment:</label><input type="file" name="filename" /></li>
-				</ul>
-			</div>
-<? echo ( ssi::button( 'Add', { 'onclick' => q`var form = $('f1'); form.action='project.html';form.elements['function'].value='Add';f1.submit();`, } ); ) ?>
-		</li>
-	</ul>
-</div>
-=======
->>>>>>> 99c738e75f7f4c56639e37e39f5e37b41ac3a1ec
+	} # end foreach tag_id
+	$$variable{'C'} = new openprint::SRED_Content();
+$html .= '<li id="content-'.$$variable{'C'}{'id'}.'">';
+	$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/sred/_content_edit.html' );
+	$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+$html .= '</li>';
+	return $html;
+) ?>
+</ul>

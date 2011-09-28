@@ -1,5 +1,8 @@
 <script type="text/javascript">
 <!--
+	function job_popup( job_id ) {
+		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525} );
+	} // end function job_popup
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
@@ -58,6 +61,18 @@
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_duedate', new Array( ar[1], date.params.inputField.value ) );
 		calendar.hide();
 	}
+    var job_popup_options = {
+		mode: "textareas",
+		editor_selector : "mce",
+        plugins: "paste",
+        theme : "simple",
+    };
+
+function textarea_init() {
+    tinyMCE.init( project_description_options );
+    tinyMCE.init( content_description_options );
+}
+
 -->
 </script>
 <div id="FormsPopup" style="display:none;">

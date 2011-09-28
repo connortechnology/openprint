@@ -878,7 +878,6 @@ sub calc {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $signature_index<br/>";
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$openprint::log->debug("Got paper: " . $Paper->to_string() );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->paper( $Paper );
 			$Imposition->load( $sig_specs, $qty_index );
@@ -1010,8 +1009,8 @@ sub jdf {
 	$Media->setAttribute( 'ID', 'Paper'.$sig_id );
 	$Media->setAttribute( 'Class', 'Consumable' );
 	$Media->setAttribute( 'Status', 'Available' );
-	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockName'} );
-	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
+	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockBrand'} );
+	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
 	$Media->setAttribute( 'Dimension', join(' ',
                 Math::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()},'in','mm'),
                 Math::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()},'in','mm'),

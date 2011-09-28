@@ -4,12 +4,12 @@ my @Prices = openprint::ServicePrice->find('Service'=>$$variable{'Service'}, 'Pr
 foreach my $Price ( @Prices ) {
 	$html .= sprintf('<tr>
 			<td><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
-			<td><select name="supplier_id-%1$d-%2$s-%3$d"><option value=""> all </option>%4$s</select></td>
-			<td class="Range"><input type="text" name="min-%1$d-%2$s-%3$d" value="%5$s"/> - <input type="text" name="max-%1$d-%2$s-%3$d" value="%6$s"/></td>
-			<td><input type="text" name="units-%1$d-%2$s-%3$d" value="%7$s"/></td>
-			<td><input type="text" name="cost-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_cost(this);" /></td>
-			<td><input type="text" name="markup-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_markup(this);"/></td>
-			<td><input type="text" name="price-%1$d-%2$s-%3$d" value="%10$s" onkeyup="calc_from_price(this);"/></td>
+			<td class="Supplier"><select name="supplier_id-%1$d-%2$s-%3$d"><option value=""> all </option>%4$s</select></td>
+			<td class="Range"><input type="number" name="min-%1$d-%2$s-%3$d" value="%5$s"/> - <input type="number" name="max-%1$d-%2$s-%3$d" value="%6$s"/></td>
+			<td class="Units"><input type="text" name="units-%1$d-%2$s-%3$d" value="%7$s"/></td>
+			<td class="Cost"><input type="number" name="cost-%1$d-%2$s-%3$d" value="%8$s" onkeyup="calc_from_cost(this);" /></td>
+			<td class="Markup"><input type="number" name="markup-%1$d-%2$s-%3$d" value="%9$s" onkeyup="calc_from_markup(this);"/></td>
+			<td class="Price"><input type="number" name="price-%1$d-%2$s-%3$d" value="%10$s" onkeyup="calc_from_price(this);"/></td>
 			<td class="Discount"> 
 				<input type="radio" id="discount-%1$d-%2$s-%3$dY" name="discount-%1$d-%2$s-%3$d" value="Y" %11$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">Yes</label>
 				<input type="radio" id="discount-%1$d-%2$s-%3$dN" name="discount-%1$d-%2$s-%3$d" value="N" %12$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">No </label>
@@ -22,8 +22,8 @@ foreach my $Price ( @Prices ) {
 		$Price->cost(), $Price->markup(), $Price->price(),
 		( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
 		join('', 
-			ssi::writeButton( $log, $dbh, 'x'.$Price->id(), 'delete.gif', qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, '', 'X' ),
-			ssi::writeButton( $log, $dbh, 'c'.$Price->id(), 'copy.gif', qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, '', 'C' ),
+			ssi::button( 'x'.$Price->id(), { 'onclick'=>qq`del_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, 'text'=>'X' } ),
+			ssi::button( 'c'.$Price->id(), { 'onclick'=>qq`copy_price( \$('f1'), '$$variable{Pricelist}{id}', '$$variable{Equipment}{id}', $$Price{id} );`, 'text'=>'C' } ),
 			),
 	);
 } # end foreach Price

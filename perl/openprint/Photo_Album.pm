@@ -24,16 +24,17 @@ $table = 'photo_albums';
 %defaults = (
 	'created_on'	=> q`'NOW()'`,
 	'thumbnail_id'	=>	undef,
-	'user_id'		=>	q`$openprint::session{'user_id'}`,
 	'deleted'		=>	0,
 );
 
 
 sub Thumbnail {
 	if ( ! $_[0]{'thumbnail_id'} ) {
+$openprint::log->debug("No thumbnail assigned, showing first.");
 		my @Photos = $_[0]->Photos();
 		return $Photos[0] if @Photos;
 	} # end if
+$openprint::log->debug("thumbnail assigned.");
 	return new openprint::Photo_in_Album( { 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} } );
 } # end sub Thumbnail
 
@@ -49,39 +50,30 @@ sub Photos {
 } # end sub Photos
 
 sub destroy {
+	my $error = '';
 	foreach my $Photo ( $_[0]->Photos() ) {
-		$Photo->destroy();
+		$error .= $Photo->destroy();
 	} # end foreach Photo
+	$error .= $_[0]->SUPER::destroy();
+	return $error;
 } # end sub delete
 
 sub upload {
-	my $filename = $openprint::param{$_[1]};
-	my $upload = $openprint::r->upload($_[1]);
-	if ( ! $upload ) {
-		return "There was no upload for $filename<br/>";
-	} # end if
-	my $data;
-	$upload->slurp( $data );
-	my $md5 = Digest::MD5::md5_hex( $data );
-$openprint::log->debug("MD5: $md5");
-	foreach my $Photo ( $_[0]->Photos() ) {
-		if ( $md5 eq $Photo->Asset()->md5() ) {
-			return "Photo already exists in album.<br/>";
+	my $error = '';
+	my $Asset = openprint::Asset::upload( $_[1], $_[2] );
+	if ( ref $Asset eq 'openprint::Asset' ) {
+		my $Photo = new openprint::Photo_in_Album({'asset_id'=>$$Asset{'id'},'album_id'=>$_[0]{'id'}});
+		if ( ! $Photo->asset_id() ) {
+			$error .= $Photo->save({'asset_id'=>$$Asset{'id'}, 'album_id'=>$_[0]->id()});   
+			$error .= new openprint::Log()->save({'action'=>'Upload Photo', 'Object'=>$Photo});
 		} else {
-			$openprint::log->debug("Photos md5: " . $Photo->Asset()->md5() );
+			$error .= 'Photo already exists in album.';
 		} # end if
-	} # end foreach
-	my $error;
-	my $Asset = new openprint::Asset();
-	$error .= $Asset->save({'filename'=>$filename, 'md5'=>$md5});
-	if ( ! $upload->link( $Asset->on_disk_path() ) ) {
-		$error .= "There was an error saving file $filename to " . $Asset->on_disk_path() . ": $!<br/>";
 	} else {
-		my $data = misc::load_file( $openprint::log, $Asset->on_disk_path() );
-		my $Photo = new openprint::Photo_in_Album();
-		$error .= $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$_[0]->id()});
+		$error .= "Failed to upload photo: $Asset";
 	} # end if
 	return $error;
 } # end sub upload
+
 1;
 __END__

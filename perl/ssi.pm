@@ -37,7 +37,7 @@ sub do_new_substitution {
 			} # end while
 			return $replacement_text . variable_substitution( \$end, $variable );
 		} else {
-			$log->debug("Unable to find terminating while ($$command)");
+			$log->error("Unable to find terminating while ($$command)");
 			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
@@ -69,18 +69,9 @@ sub do_new_substitution {
 			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
 			return $replacement_text;
 		} else {
-			$log->debug("Unable to find terminating if ( $$command ) in $$text");
+			$log->error("Unable to find terminating if ( $$command ) in $$text");
 			return variable_substitution( $text, $variable );
 		} # end if
-	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
-		my $variables = $1;
-		my $dataname = variable_substitution( \$2, $variable );
-		my @var_names = split( ',', $variables );
-		foreach my $name ( @var_names ) {
-			$name =~ s/^\s*(\w+)\s*$/$1/;
-			$$variable{$name} = shift @{$$variable{$dataname}};
-		} # end foreach
-		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
 		$_ = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -94,6 +85,10 @@ sub do_new_substitution {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 		$result = htmlize($result);
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
+	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
+		my $result = checked( eval $1 );
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} else {
@@ -154,6 +149,14 @@ sub html_escape {
 	$_ =~ s/>/&gt;/mg;
 	return $_;
 }
+
+sub escape_quotes {
+	for( $_ = 0; $_ < @_; $_ += 1 ) {
+		next if ! defined $_[$_];
+		$_[$_] =~ s/"/&quot;/mg;
+	} 
+	return @_;
+} # end sub escape_quotes
 
 sub htmlize {
 	return if ! @_;
@@ -272,6 +275,7 @@ sub return_years {
 	$start = $openprint::config{'startYear'} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
 	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
+#$log->debug("sub return_years $start .. $end $selected");
 	return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
@@ -435,6 +439,7 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= qq`title="$$options{title}" ` if $$options{'title'};
 	$html .= 'target="$$options{target}" ' if $$options{'target'};
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
@@ -516,7 +521,7 @@ sub date_select {
 	} elsif ( $value eq ' ' ) {
 		( $year, $month, $day ) = ( '', '', '' );
 	} else {
-		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+		( $year, $month, $day ) = split('-', $value );
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
@@ -529,9 +534,8 @@ sub date_select {
 		@fields = split(',', $$options{'fields'} );
 	} 
 	
-	my ( $start_year, $start_month, $start_day ) = split('-', $$options{'start'} ) if $$options{'start'};
-	my ( $end_year, $end_month, $end_day ) = split('-', $$options{'end'} ) if $$options{'end'};
-	
+	my ( $start_year, $start_month, $start_day ) = split( '-', $$options{'start'} ) if $$options{'start'};
+	my ( $end_year, $end_month, $end_day ) = split( '-', $$options{'end'} ) if $$options{'end'};
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
@@ -540,21 +544,24 @@ sub date_select {
 			$html .= sprintf(q`<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
+#$log->debug($html);
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
 			$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s"><option value=""></option>`, $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
+#$log->debug($html);
 		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
+#$log->debug($html);
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C', 'title'=>'Clear', 'class'=>'Clear'} );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T', 'title'=>'Today', 'class'=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';
@@ -593,11 +600,11 @@ $openprint::log->error("No date from $value");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>';
@@ -605,20 +612,17 @@ $openprint::log->error("No date from $value");
 	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select id="%1$s_hour" name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'},
-			( ( exists $$options{'showtime'} and ! $$options{'showtime'} ) ? ' style="display:none;"' : '' ) 
-			);
-
-	$html .= '<option value=""> </option>';
-	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
-	$html .= '</select>';
-	$html .= ':';
-	$html .= sprintf('<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">', $prefix, $$options{'onchange'} );
-	$html .= '<option value=""> </option>';
-	$html .= make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min );
-	$html .= '</select></span>';
+	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
+	<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">
+	<option value=""> </option>%5$s
+	</select></span>
+', $prefix, $$options{'onchange'}, 
+( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
+	make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
+	make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
+);
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $F('%1$s_year'), $F('%1$s_month'), $F('%1$s_day') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
@@ -639,9 +643,11 @@ sub save_params {
 	my ( $url, @keys ) = @_;
 
 	foreach ( @keys ) {
+#$openprint::log->debug("key $_");
 		next if ! exists $param{$_};
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(',', @{$param{$_}} );
+#$openprint::log->debug("Storing ($_) (".$session{"$url?$_"}.")");
 		} else {
 #$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
 			$session{"$url?$_"} = $param{$_};
@@ -683,6 +689,20 @@ sub radio {
     } # end foreach value
     return $html;
 } # end sub radio
+sub checkboxes {
+	my ( $name, $values, $selected, $options ) = @_;
+
+	my $onclick = $$options{'onclick'} if $options;
+	my $html;
+
+	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= sprintf(q`
+				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+				<label class="radio" for="%1$s%2$s">%3$s</label>
+				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+	} # end foreach value
+	return $html;
+} # end sub checkboxes
 
 sub date {
 	my ( $field, $hash ) = @_;
@@ -711,6 +731,19 @@ sub date_filter {
 		
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day ), ( $field =~ /end$/ ? ( 23,59,59 ) : ( 0, 0, 0 ) ) ) );
 } # end sub date_filter
+
+sub input {
+	my %options = @_;
+	my $html = '<input';
+	$html .= ' type="'.$options{type}.'"' if $options{type};
+	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+	$html .= ' name="'.$options{name}.'"' if $options{name};
+	$html .= ' id="'.$options{id}.'"' if $options{id};
+	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
+	$html .= ' required' if $options{required};
+	$html .= '/>';
+	return $html;
+} # end sub input
 
 1;
 __END__

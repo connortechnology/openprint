@@ -280,7 +280,7 @@ sub display {
 		next if $$sig_specs{'rdbSuppliedStock'} eq 'Y';
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 
-			my $brand = $$sig_specs{'txtSpecificStockName'} ? $$sig_specs{'txtSpecificStockName'} : $$sig_specs{'ddmStockName'};
+			my $brand = $$sig_specs{'txtSpecificStockBrand'} ? $$sig_specs{'txtSpecificStockBrand'} : $$sig_specs{'ddmStockBrand'};
 			my $colour = $$sig_specs{'txtSpecificStockColour'} ? $$sig_specs{'txtSpecificStockColour'} : $$sig_specs{'ddmStockColour'};
 			my $finish = $$sig_specs{'txtSpecificStockFinish'} ? $$sig_specs{'txtSpecificStockFinish'} : $$sig_specs{'ddmStockFinish'};
 			my $weight = $$sig_specs{'txtSpecificStockWeight'} ? $$sig_specs{'txtSpecificStockWeight'} : $$sig_specs{'ddmStockWeight'};
@@ -288,7 +288,7 @@ sub display {
 			my $id = $qty_index.$brand.$colour.$finish.$weight.$$sig_specs{'hdnSuppliedSheetSizeWidth'.$qty_index}.'x'.$$sig_specs{'hdnSuppliedSheetSizeHeigth'.$qty_index};
 
 			if ( ! exists $totals{$id} ) {
-				$totals{$id}{Name} = $brand;
+				$totals{$id}{Brand} = $brand;
 				$totals{$id}{Colour} = $colour;
 				$totals{$id}{Finish} = $finish;
 				$totals{$id}{Weight} = $weight;
@@ -310,7 +310,7 @@ sub display {
 				$discount = $price - $discounted_price;
 			} # end if
 
-			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{Name}, $totals{$id}{Colour}, $totals{$id}{Finish}, $totals{$id}{Weight}, $totals{$id}{SheetSize};
+			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{Brand}, $totals{$id}{Colour}, $totals{$id}{Finish}, $totals{$id}{Weight}, $totals{$id}{SheetSize};
 			push @{$$variable{'PAPER'.$qty_index}}, $totals{$id}{'hdnGrossSheetCount'.$qty_index}, sprintf('%.2f',$price), sprintf('%.2f',$discount);
 		} # end foreach
 	} # end foreach
@@ -337,7 +337,7 @@ sub summary {
     } # end foreach
 
 	my @keys = sort keys %Papers;
-#$openprint::log->debug("Keys: " . @keys );
+$openprint::log->debug("Keys: " . @keys );
 
 	if ( $qty_index ) {
 		my @summaries;

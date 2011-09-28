@@ -61,6 +61,10 @@ sub find {
 		$sql .= ' AND valid=?';
 		push @values, $params{'valid'};
 	} # end if
+	if ( $params{'location_id'} ) {
+		$sql .= ' AND location_id=?';
+		push @values, $params{'location_id'};
+	} # end if
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};
@@ -144,7 +148,10 @@ sub save {
 	$$self{'updated_on'} = 'NOW()';
 
 	if ( $self->type() eq 'Skid' ) {
-		$self->Skid()->save({location_id=>$$self{'location_id'}});
+		my $Skid = $self->Skid();
+		if ( $Skid->id() and ( $Skid->location_id() != $$self{'location_id'} ) ) {
+			$Skid->save({location_id=>$$self{'location_id'}});
+		} # end if
 	} # end if
 
 	$$self{'updated_on'} = 'NOW()';

@@ -1,10 +1,10 @@
+use strict;
 package openprint::PurchaseOrder_Content;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh $table $serial %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh $debug $table $serial %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -12,8 +12,9 @@ use vars qw(%variable $log $dbh $table $serial %config %fields %transforms %defa
 
 require sql;
 require openprint::PurchaseOrder_ContentType;
+require openprint::PurchaseOrder_Item;
 
-my $debug = 0;
+$debug = 1;
 $table = 'PurchaseOrder_Contents';
 $serial = 'PurchaseOrder_Contents_id_seq';
 
@@ -24,7 +25,9 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'qty'			=>	'qty',
 	'price'			=>	'price',
 	'total'			=>	'total',
+	'product'		=>	'product',
 	'item'			=>	'item',
+	'item_id'		=>	'item_id',
 	'docket'		=>	'docket',
 	'description'	=>	'description',
 	'type_id'		=>	'type_id',
@@ -44,6 +47,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'total'			=>	undef,
 	'qty'			=>	undef,
 	'type_id'		=>	undef,
+	'item_id'		=>	undef,
 );
 
 sub PurchaseOrder {
@@ -51,7 +55,7 @@ sub PurchaseOrder {
 } # end sub Supplier
 
 sub Type {
-return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
+	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
 
 sub type {
@@ -75,5 +79,53 @@ sub units {
 	return;
 } # end sub units
 
+sub Item {
+	return new openprint::PurchaseOrder_Item( $_[0]{'item_id'} );
+} # end sub Item
+
+sub item {
+	my $Item = new openprint::PurchaseOrder_Item( $_[0]{'item_id'} );
+	if ( @_ > 1 ) {
+		if ( $Item->name() ne $_[1] ) {
+			my $NewItem = openprint::PurchaseOrder_Item->find_one( 'name lc'=>lc $_[1], 'company_id'=>$_[0]->PurchaseOrder()->company_id(), 'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 'type_id'=>$_[0]{'type_id'} );
+			if ( ! $NewItem ) {
+				$NewItem = new openprint::PurchaseOrder_Item();
+				$NewItem->save( { 
+					'name'=>$_[1], 
+					'company_id'=>$_[0]->PurchaseOrder()->company_id(), 
+					'vendor_id'=>$_[0]->PurchaseOrder()->supplier_id(), 
+					'type_id'=>$_[0]{'type_id'},
+					'price'	=>	$_[0]{'price'},
+					'product'	=>	$_[0]{'product'},
+				 } );
+			} # end if
+			$_[0]{'item_id'} = $$NewItem{'id'};
+		} # end if
+	} # end if
+	if ( ! $Item->id() ) {
+		return $_[0]{'item'};
+	} # end if
+	return $Item->name();
+} # end sub item
+
+sub Order {
+	my $docket = $_[0]{'docket'};
+	$docket =~ s/\D//g;
+	return openprint::Order->find_one('docket'=>$docket) if $docket;
+	return new openprint::Order();
+} # end sub Order
+
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	if ( 
+			( $openprint::session{'user_type'} eq 'A' )
+			or ( sets::isin( $_[0]->PurchaseOrder->created_by(), [ $openprint::session{'user_id'}, new openprint::User($openprint::session{'user_id'})->assistant_ids(), new openprint::User($openprint::session{'user_id'})->csr_ids() ] ) )
+			or ( openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) 
+			or ( $openprint::session{'user_id'} == $_[0]->Order()->salesrep_id() )
+	   ) {
+		return 1;
+	} # end if
+	return 0;
+} # end sub can_view
 1;
 __END__

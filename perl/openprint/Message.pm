@@ -34,7 +34,7 @@ $serial = 'messages_id_seq';
 	'conversation_id'	=>	'conversation_id',
 );
 %find_fields = (
-	'to_id'			=>	'(SELECT user_id FROM Message_to WHERE message_id=messages.id)',
+	'to_id'			=>	'(SELECT user_id FROM Message_to WHERE message_id=messages.id AND deleted!=true)',
 );
 %transforms = (
 );

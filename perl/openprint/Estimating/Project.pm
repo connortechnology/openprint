@@ -27,9 +27,9 @@ my @no_outputs = (
 	'txtShippingPostalCode',
 	'txtHoleQty','UPSShipping','HoleDrilling',
 	'Aqueous','txtTotalPageQuantity','Colours',
-	'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight',
-	'ddmStockName1','ddmStockFinish1','ddmStockColour1','ddmStockWeight1',
-	'ddmStockName2','ddmStockFinish2','ddmStockColour2','ddmStockWeight2',
+	'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight',
+	'ddmStockBrand1','ddmStockFinish1','ddmStockColour1','ddmStockWeight1',
+	'ddmStockBrand2','ddmStockFinish2','ddmStockColour2','ddmStockWeight2',
 	'txtHoleSize', 
 	'rdbAqueousSideOne','rdbAqueousSideTwo',
 	'chkProcessColourSideOne', 'chkProcessColourSideTwo',
@@ -399,14 +399,14 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			$$specs{'chkProcessColourSideTwo'} = undef;
 		} # end if
 		if ( 1 == ( my @Papers = openprint::Paper->find(
-						( exists $$specs{'ddmStockName'} ? ( 'name'		=>	$$specs{'ddmStockName'} ) : () ),
+						( exists $$specs{'ddmStockBrand'} ? ( 'brand'		=>	$$specs{'ddmStockBrand'} ) : () ),
 						( exists $$specs{'ddmStockFinish'} ? ( 'finish'	=>	$$specs{'ddmStockFinish'} ) : () ),
 						( exists $$specs{'ddmStockWeight'} ? ( 'weight'	=>	$$specs{'ddmStockWeight'} ) : () ),
 						( exists $$specs{'ddmStockColour'} ? ( 'colour'	=>	$$specs{'ddmStockColour'} ) : () ),
 						( exists $$specs{'ddmStockSheetSize'} ? ( 'size'		=>	$$specs{'ddmStockSheetSize'} ) : () ),
 						( exists $$specs{'ddmStockSize'} ? ( 'size'		=>	$$specs{'ddmStockSize'} ) : () ),
 						) ) ) {
-			$$specs{'ddmStockName'} = $Papers[0]->name() if ! $$specs{'ddmStockName'};
+			$$specs{'ddmStockBrand'} = $Papers[0]->name() if ! $$specs{'ddmStockBrand'};
 			$$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $$specs{'ddmStockFinish'};
 			$$specs{'ddmStockWeight'} = $Papers[0]->weight() if ! $$specs{'ddmStockWeight'};
 			$$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $$specs{'ddmStockColour'};
@@ -479,7 +479,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 		} # end if
 
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockName','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity', 'ddmStockSize' ) {
+		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity', 'ddmStockSize' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {

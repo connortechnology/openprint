@@ -35,7 +35,7 @@ $serial = 'par_id_seq';
 	'reason_id'		=> 'reason_id',
 	'part1_user_id'	=> 'part1_user_id',
 	'part1_signed_on'	=> 'part1_signed_on',
-	'part2_user_id'		=> 'part1_user_id',
+	'part2_user_id'		=> 'part2_user_id',
 	'part2_signed_on'	=> 'part2_signed_on',
 	'part3_user_id'		=> 'part3_user_id',
 	'part3_signed_on'	=> 'part3_signed_on',
@@ -64,28 +64,21 @@ $serial = 'par_id_seq';
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('type'=>['E','A'], 'usergroup @>'=>'Quality Control Notifications');
 
 	if ( @Users ) {
-		my $From = new openprint::User( $session{'user_id'} );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
 
-		my %info = (
-			'PAR'	=>	$self,
-		);
+		my %info = ( 'PAR'	=>	$self);
 		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
-
 		my $body = ssi::variable_substitution( \$email_template, \%info );
-		foreach my $User ( @Users ) {
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
+		new openprint::Email()->send(
+					FROM    => new openprint::User( $session{'user_id'} ),
+					TO      => \@Users,
 					SUBJECT => 'A new PAR has been generated.',
+					ATTACHMENTS	=> [ '', encode_qp($body), 'text/html', 'quoted-printable'],
 					);
-			misc::send_email_with_attachment( $log, \%mail, ('', encode_qp($body), 'text/html', 'quoted-printable'));
-		} # end foreach
 	} # end if to
 
 } # end sub send_notification

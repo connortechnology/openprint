@@ -1,6 +1,22 @@
+<div class="Article">
+	<div class="View">
+<? if ( $$variable{'Article'}->can_edit() ) ?>
+	<p class="buttons">
+		<? echo ( join('',
+			ssi::button( 'Edit', { 'href'=>'edit.html?article_id='.$$variable{'Article'}->id() } ),
+			ssi::button( 'Destroy', { 'href'=>'history.html?func=Destroy&amp;article_id='.$$variable{'Article'}->id() } ),
+		); ) ?>
+	</p>
+<? endif ( $$variable{'Article'}->can_edit() ) ?>
+
 <? if ( $$variable{'Article'}->source() ) ?>
 <? echo ( $$variable{'Article'}->source_content() ) ?>
 <a href="<? echo ( $$variable{'Article'}->source() ) ?>" target="_blank">View Original Article</a><br/>
 <? endif ( $$variable{'Article'}->source() ) ?>
 
 <? echo ( $$variable{'Article'}->body() ) ?>
+<? if ( $session{'user_id'} ) ?>
+<div id="Likes"><? echo ( $$variable{'Article'}->likes() ) ?></div>
+<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>"><!--#include virtual="_comments.html"--></div>
+<? endif ( $session{'user_id'} ) ?>
+</div></div>

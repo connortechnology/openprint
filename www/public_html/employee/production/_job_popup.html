@@ -4,11 +4,11 @@
 		<ul>
 			<li>
 				<label>Comment:</label>
-				<textarea id="comment" name="comment" rows="" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
+				<textarea id="comment" name="comment" rows="2"><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 			</li>
 			<li>
 				<label>Stock:</label>
-				<textarea id="stock" name="stock" rows="" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
+				<textarea id="stock" name="stock" rows="2"><? echo ( $$variable{'Job'}->stock() ) ?></textarea>
 			</li>
 	<? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 			<li>
@@ -39,11 +39,11 @@
 	<? if ( $$variable{'Job'}->project_id() ) ?>
 			<li>
 				<label>Impressions:</label>
-				<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
+				<input type="number" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
 			</li>
 			<li>
 				<label>Speed:</label>
-				<input type="text" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
+				<input type="number" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
 			</li>
 	<? endif ( $$variable{'Job'}->project_id() ) ?>
 			<li>
@@ -53,7 +53,7 @@
 	<? if ( $$variable{'Job'}->project_id() ) ?>
 			<li>
 				<label>Forms:</label>
-				<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
+				<input type="number" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 			</li>
 	<? endif ( $$variable{'Job'}->project_id() ) ?>
 	<? if ( $$variable{'Job'}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
@@ -68,8 +68,20 @@
 		</ul>
 	</fieldset>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+			<? echo ( join('',
+				ssi::button( 'SaveStartTime', { 'onclick'=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.destroy();}});`, 'text'=>'Save' } ),
+				ssi::button( 'CancelStartTime', { 'onclick'=>"popupWin.destroy();", 'text'=> 'Cancel' } ) 
+			); ) ?>
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />
 </form>
+<script type="text/javascript">
+    tinyMCE.init( {
+        mode: "textareas",
+        plugins: "paste",
+        theme : "advanced",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+		theme_advanced_buttons2 : '',
+		theme_advanced_buttons3 : '',
+    });
+</script>

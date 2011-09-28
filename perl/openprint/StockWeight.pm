@@ -4,36 +4,29 @@ package openprint::StockWeight;
 use strict;
 use vars qw( $table $serial %fields %transforms %defaults );
 
-$table = 'paperweights';
-$serial= 'paperweight_id_seq';
+$table = 'stockweights';
+$serial= 'stockweights_id_seq';
 %fields = (
     'id'    =>  'id',
-    'shortname' =>  'shortname',
-    'longname'  =>  'longname',
+    'name' =>  'name',
 );
 %transforms = (
-    'shortname' => [ 's/^\s+//', 's/\s+$//' ],
-    'longname' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
 
-sub sort_value {
-	if ( ! exists $_[0]{'sort_value'} ) {
-		$_[0]{'sort_value'} = $_[0]{'shortname'};
-		$_[0]{'sort_value'} =~ s/[^\-\d\.]//g;
-	} # end if
-	return $_[0]{'sort_value'};
-} # end sub sort_value
-
 sub sort {
 	shift if $_[0] eq 'openprint::StockWeight';
-	return sort { $a->sort_value() <=> $b->sort_value() } @_;
-} # end sub sort
-
-sub name {
-	$_[0]{'shortname'};
-} # end sub name
+$openprint::log->debug("Sorting Weight");
+	return sort { 
+		my $a_name = $$a{'name'};
+		$a_name =~ s/\D//g;
+		my $b_name = $$b{'name'};
+		$b_name =~ s/\D//g;
+	
+		$a_name <=> $b_name } @_;
+}# end sub sort
 
 1;
 __END__
