@@ -66,6 +66,10 @@ $log->debug("Done");
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'text' ) {
 			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
+		} elsif ( $Field->type() eq 'email' ) {
+			$html .= sprintf( q`<input type="email" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
+		} elsif ( $Field->type() eq 'number' ) {
+			$html .= sprintf( q`<input type="number" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
 		} elsif ( $Field->type() eq 'radio' ) {
 			$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value ? $value : $Field->default() );
 		} # end if

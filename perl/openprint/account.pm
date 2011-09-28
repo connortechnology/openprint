@@ -43,7 +43,6 @@ sub registration {
 		$log->debug("Registering");
 	} # end if
 
-	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
 	$param{'business_name'} = $param{'company_name'} if ! $param{'business_name'};
 
 	# perform input field validation
@@ -121,11 +120,13 @@ sub registration {
 	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(postalcode) = ? AND (deleted=false OR deleted IS NULL)}, @param{'company_name','postalcode'} );
-	if ( ! $cust_id ) {
+	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
+			( exists $param{'postalcode'} ? ( 'postalcode uc'=>uc $param{'postalcode'} ) : () )
+			);
+	if ( ! $Company ) {
 		$param{'name'} = $param{'company_name'};
 
-		my $Company = new openprint::Company();
+		$Company = new openprint::Company();
 		$Company->set( \%param );
 		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
@@ -198,7 +199,10 @@ sub registration {
 			} # end if
 		} # end if
 	} else {
-		my $Company = new openprint::Company( $cust_id );
+		if ( $config{'Require Unique Company'} ) {
+			$variable{'error'} .= $param{'company_name'} . ' is already taken.';
+			return;
+		} # end if
 
 		my $User = new openprint::User();
 		$User->set( \%param );
@@ -271,8 +275,8 @@ sub registration {
 			if ( $config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
-					@session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
-					openprint::logs::insertLogRecord('2','Automatic login after registration.');
+					@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+					(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
 				} # end if
 			} # end if
 		} # end if
