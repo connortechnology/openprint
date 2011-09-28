@@ -71,9 +71,9 @@ foreach my $db ( @dbs ) {
 			} # end if
 		} # end if
 		if ( $$opts{host} and $$opts{host} ne 'local' ) {
-			`pg_dump -h $$opts{host} $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
+			`pg_dump -b -h $$opts{host} $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
 		} else {
-			`pg_dump $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
+			`pg_dump -b $db | bzip2 > $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2`;
 		} # end if
 		die "Can't dump $db" if $?;
 		`mv $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.new.bz2 $$opts{path}/$$opts{host}/$db/$year-$mon-$mday.sql.bz2`;
