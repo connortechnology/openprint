@@ -10,7 +10,8 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Host;
-	require openprint::Blacklist;
+require openprint::Blacklist;
+require openprint::RADIUS_Check;
 
 use strict;
 
@@ -37,6 +38,7 @@ sub hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
+			'radius_auth',
 			);
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -50,6 +52,18 @@ sub hosts {
 	} # end if
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
+	} # end if
+	if ( $config{'RADIUS Support'} eq 'yes' ) {
+		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+				'database'  => $config{'RADIUS DB Name'},
+				'driver'    => $config{'RADIUS DB Driver'},
+				'host'      => $config{'RADIUS DB Server'},
+				'login'     => $config{'RADIUS DB Username'},
+				'password'  => $config{'RADIUS DB Password'},
+				);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
+		} # end if
 	} # end if
 
 } # end sub hosts
@@ -67,7 +81,20 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
+			'radius_auth',
 			);
+	if ( $config{'RADIUS Support'} eq 'yes' ) {
+		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+				'database'  => $config{'RADIUS DB Name'},
+				'driver'    => $config{'RADIUS DB Driver'},
+				'host'      => $config{'RADIUS DB Server'},
+				'login'     => $config{'RADIUS DB Username'},
+				'password'  => $config{'RADIUS DB Password'},
+				);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
+		} # end if
+	} # end if
 } # end sub _hosts
 
 sub host {
@@ -164,6 +191,47 @@ sub _blacklist_popup {
 
 sub logs {
 } # end sub logs
+
+sub _radius_mac_line {
+	if ( $config{'RADIUS Support'} ne 'yes' ) {
+		$variable{'error'} .= 'RADIUS Support is not enabled.';
+		return;
+	} # end if
+	$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+			'database'  => $config{'RADIUS DB Name'},
+			'driver'    => $config{'RADIUS DB Driver'},
+			'host'      => $config{'RADIUS DB Server'},
+			'login'     => $config{'RADIUS DB Username'},
+			'password'  => $config{'RADIUS DB Password'},
+			);
+	if ( ! $openprint::RADIUS_Check::dbh ) {
+		$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
+		return;
+	} # end if
+	if ( $param{'action'} eq 'add' ) {
+		if ( ! $param{'value'} ) {
+			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
+				$param{'value'} = 'password';
+			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
+				my $Host = openprint::Host->find_one('mac any'=>$param{'mac'});
+				if ( $Host ) {
+					$param{'value'} = $Host->ip();
+				} # end if
+			} # end if
+		} # end if
+		my $Check = new openprint::RADIUS_Check();
+		$variable{'error'} .= $Check->save({
+			'username'	=>	$param{'mac'},
+			'value'		=>	$param{'value'},
+			'op'		=>	':=',
+			'attribute'	=>	$param{'attribute'},
+		});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $Check = openprint::RADIUS_Check->find_one( 'username'=>$param{'mac'}, 'attribute'=>$param{'attribute'} );
+		$variable{'error'} .= $Check->delete() if $Check->id();
+	} # end if
+	$variable{'mac'} = $param{'mac'};
+} # end sub _radius_mac_line
 
 1;
 __END__

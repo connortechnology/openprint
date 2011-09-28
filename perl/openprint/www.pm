@@ -158,7 +158,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
 			##$log->warn("No template!");
-		$log->warn($variable{'PageContent'});
+		#$log->warn($variable{'PageContent'});
 			$r->print( $variable{'PageContent'} );
 		} # end if
 	} # end if

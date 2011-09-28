@@ -88,6 +88,8 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
 #$log->debug("$type ::save $k => $$data{$k}");
@@ -121,33 +123,33 @@ sub save {
 		} # end foreach
 	} # end if
 	my @identified_by = eval '@'.$type.'::identified_by';
-	my $ac = sql::start_transaction( $dbh );
+	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
 		my $insert = 0;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
-			sql::execute( undef, undef, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
+			sql::execute( undef, $local_dbh, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
 			$insert = 1;
 		} else {
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
-				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial{$id} . q{')} );
 				$insert = 1;
 			} # end foreach
 		} # end if
 		if ( $insert ) {
-			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+			if ( my $error = sql::insert( undef, $local_dbh, $table, \%sql ) ) {
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 		} else {
 			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
-			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+			if ( my $error = sql::update( undef, $local_dbh, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 		} # end if
@@ -155,22 +157,22 @@ sub save {
 		if ( ! $$self{'id'} ) {
 			my $serial = eval '$'.$type.'::serial';
 			if ( $serial ) {
-				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
 			} # end if
-			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+			if ( my $error = sql::insert( undef, $local_dbh, $table, \%sql ) ) {
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 		} else {
-			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+			if ( my $error = sql::update( undef, $local_dbh, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 		} # end if
 	} # end if
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -248,6 +250,7 @@ sub copy {
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
+	
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
@@ -257,14 +260,17 @@ sub delete {
 		return;
 	} # end if
 
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+
 	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
 	if ( exists $fields{'deleted'} ) {
-		sql::update( undef, undef, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
-		return $dbh->errstr if $dbh->errstr;
+		sql::update( undef, $local_dbh, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
+		return $local_dbh->errstr if $local_dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
-		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
-		return $dbh->errstr if $dbh->errstr;
+		sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
+		return $local_dbh->errstr if $local_dbh->errstr;
 		delete $openprint::Object::cache{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	return;
@@ -296,8 +302,12 @@ sub find {
 	delete $params{'distinct'};
 	$sql .= '* FROM '.$table.' WHERE 1>0';
 	my @values;
-	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
-	delete $params{'dbh'};
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+	if ( $params{'dbh'} ) {
+		$local_dbh = $params{'dbh'};
+		delete $params{'dbh'};
+	} # end if
     if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
         $sql .= ' AND (deleted=? OR deleted IS NULL)';
         push @values, 0;
@@ -329,6 +339,11 @@ sub find {
 					push @values, $params{$k.'_like'};
 					delete $params{$k.'_like'};
 				}
+				if ( exists $params{$k.' like'} ) {
+					$sql .= " AND $$f{$k} LIKE ?";
+					push @values, $params{$k.' like'};
+					delete $params{$k.' like'};
+				}
 				if ( exists $params{$k.'_ilike'} ) {
 					$sql .= " AND $$f{$k} ILIKE ?";
 					push @values, $params{$k.'_ilike'};
@@ -358,6 +373,11 @@ sub find {
 					$sql .= " AND $$f{$k} <= ?";
 					push @values, $params{$k.' <='};
 					delete $params{$k.' <='};
+				} # end if
+				if ( exists $params{$k.' <<='} ) {
+					$sql .= " AND $$f{$k} <<= ?";
+					push @values, $params{$k.' <<='};
+					delete $params{$k.' <<='};
 				} # end if
 				if ( exists $params{$k.'_null_or_<='} ) {
 					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
@@ -407,6 +427,11 @@ sub find {
 					$sql .= " AND ? = ANY($$f{$k})";
 					push @values, $params{$k.'_any'};
 					delete $params{$k.'_any'};
+				} # end if
+				if ( exists $params{$k.' any'} ) {
+					$sql .= " AND ? = ANY($$f{$k})";
+					push @values, $params{$k.' any'};
+					delete $params{$k.' any'};
 				} # end if
 				if ( exists $params{$k.'_lc'} ) {
 					$sql .= " AND lower($$f{$k}) = ?";
