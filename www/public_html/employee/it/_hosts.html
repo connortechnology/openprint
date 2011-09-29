@@ -105,5 +105,5 @@ $rowclass = $rowclass ? '' : ' class="colRow"';
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f2.btnFunction.value='Delete';new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: f2.serialize() } );", '', 'Delete Checked' ); ) ?>
+<? echo ( ssi::button( 'delete', { 'onclick'=> "f1.elements['action'].value='Delete';new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: f1.serialize() } );", 'text'=>'Delete Checked' } ); ) ?>
 </p>

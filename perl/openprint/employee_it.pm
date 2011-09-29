@@ -39,6 +39,7 @@ sub hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
 			'radius_auth',
+			'ip','hostname','mac',
 			);
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -69,7 +70,7 @@ sub hosts {
 } # end sub hosts
 
 sub _hosts {
-	if ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{'action'} eq 'Delete' ) {
 		foreach my $host_id ( ref $param{'host_id'} eq 'ARRAY' ? @{$param{'host_id'}} : $param{'host_id'} ) {
 			my $Host = new openprint::Host( $host_id );
 			$variable{'error'} .= $Host->delete();
@@ -81,6 +82,7 @@ sub _hosts {
 			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
+			'ip','hostname','mac',
 			'radius_auth',
 			);
 	if ( $config{'RADIUS Support'} eq 'yes' ) {

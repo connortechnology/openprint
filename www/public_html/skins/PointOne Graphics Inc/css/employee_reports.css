@@ -43,3 +43,12 @@ table .plate_units {
 	text-align: left;
 	width: 70px;
 }
+.company_name, .contact_name, .contact_phone, .contact_email {
+	text-align: left;
+}
+.orders,
+.order_value,
+.Date,
+.payment_cycle {
+	text-align: right;
+}

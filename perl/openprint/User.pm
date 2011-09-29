@@ -385,6 +385,14 @@ sub find {
 		$sql .= ' AND ysnaccountactivation=?';
 		push @values, $param{'web_active'};
 	} # end if
+	if ( exists $param{'administrator'} ) {
+		if ( ! sets::isin( $param{'administrator'}, ['Y','N'] ) ) {
+		$param{'administrator'} = 'N' if $param{'administrator'} == 0;
+		$param{'administrator'} = 'Y' if $param{'administrator'} == 1;
+		} # end if
+		$sql .= ' AND ysnadministrator=?';
+		push @values, $param{'administrator'};
+	} # end if
 	if ( exists $param{'deleted'} ) {
 		if ( ref $param{'deleted'} eq 'ARRAY' ) {
 			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . '))';
