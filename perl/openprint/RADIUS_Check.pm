@@ -2,8 +2,10 @@ use strict;
 package openprint::RADIUS_Check;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table $serial $dbh );
+use vars qw( %attributes );
 
-$debug=0;
+
+$debug = 0;
 $table = 'radcheck';
 $serial = 'radcheck_id_seq';
 %fields = (
@@ -12,6 +14,11 @@ $serial = 'radcheck_id_seq';
 	'attribute'	=>	'attribute',
 	'op'		=>	'op',
 	'value'		=>	'value',
+);
+
+%attributes = (
+	'Cleartext-Password'	=>	'Cleartext Password', 
+	'Framed-IP-Address'		=>	'IP Address',
 );
 
 1;

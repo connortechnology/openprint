@@ -224,6 +224,33 @@
 			<label class="radio" for="VacationState0">Disabled</label>
 		</p>
 	</fieldset>
+<? if ( $config{'RADIUS Support'} ) ?>
+    <fieldset><legend>RADIUS Auth</legend>
+        <ul>
+    <? echo ( 
+        $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+            'database'  => $config{'RADIUS DB Name'},
+            'driver'    => $config{'RADIUS DB Driver'},
+            'host'      => $config{'RADIUS DB Server'},
+            'login'     => $config{'RADIUS DB Username'},
+            'password'  => $config{'RADIUS DB Password'},
+            );
+        if ( ! $openprint::RADIUS_Check::dbh ) {
+            return 'Unable to connect to RADIUS DB server.';
+        } # end if
+
+        my $html = '';
+        my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
+		$$variable{'username'} = $$variable{'User'}->email();
+		$html .= qq`<li id="mac_$$variable{username}">`;
+		$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
+		$html .= '</li>';
+        return $html;
+    ) ?>
+        </ul>
+    </fieldset>
+<? endif ( $config{'RADIUS Support'} ) ?>
+
 
 	</div>
 	<input type="hidden" name="btnFunction"/>

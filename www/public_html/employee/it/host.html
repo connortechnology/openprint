@@ -96,7 +96,7 @@
 		foreach my $mac ( @{$$variable{'Host'}->mac()} ) {
 			$mac =~ s/[^a-zA-Z0-9]//g;
 			$html .= qq`<li id="mac_$mac">`;
-			$$variable{'mac'} = $mac;
+			$$variable{'username'} = $mac;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
 			$html .= '</li>';
 		} # end foreach mac

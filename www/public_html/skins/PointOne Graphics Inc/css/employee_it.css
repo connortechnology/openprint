@@ -38,4 +38,6 @@ img.stream {
 #Available li {
 	width: 100px;
 }
-	
+.RADIUS .username, .RADIUS .attribute, .RADIUS .value {
+	text-align: left;
+}

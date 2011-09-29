@@ -2,26 +2,26 @@
 <? echo (
 	my $html = '';
 
-	my @Attributes = openprint::RADIUS_Check->find( 'username'=>$$variable{'mac'} );
+	my @Attributes = openprint::RADIUS_Check->find( 'username'=>$$variable{'username'} );
 	if ( @Attributes ) {
 		foreach my $Check ( @Attributes ) {
 			$html .= $Check->attribute() . ' := ' . $Check->value();
 			$html .= ssi::button( 'RemoveRadius'.$Check->attribute(), { 
-				'onclick'=>qq`new Ajax.Updater( 'mac_$$variable{mac}', '_radius_mac_line.html', { parameters: { mac: '$$variable{mac}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
+				'onclick'=>qq`new Ajax.Updater( 'mac_$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: '$$Check{attribute}', action: 'remove' } } );`, 
 				'text'=>'Remove',
 				} );
 			$html .= '<br/>';
 		} # end foreach
 	} else {
-		$html .= "No RADIUS record found for $$variable{mac}<br/>";
+		$html .= "No RADIUS record found for $$variable{username}<br/>";
 	} # end if
 		$html .= sprintf('
 			<select id="attribute-%1$s" name="attribute-%1$s" >%2$s</select>
-			<input type="text" id="value-%1$s" name="value-%1$s"/>', $$variable{'mac'},
-			ssi::make_drop_down( [ map { $_, $_ } ( 'Cleartext-Password', 'Framed-IP-Address' ) ] )
+			<input type="text" id="value-%1$s" name="value-%1$s"/>', $$variable{'username'},
+			ssi::make_drop_down( [ map { $_, $openprint::RADIUS_Check::attributes{$_} } sort keys %openprint::RADIUS_Check::attributes ] )
 			);
 		$html .= ssi::button( 'AddRadius', { 
-			'onclick'=>qq`new Ajax.Updater( 'mac_$$variable{mac}', '_radius_mac_line.html', { parameters: { mac: '$$variable{mac}', attribute: \$('attribute-$$variable{mac}').getValue(), value: \$('value-$$variable{mac}').getValue(), action: 'add' } } );`, 
+			'onclick'=>qq`new Ajax.Updater( 'mac_$$variable{username}', '/employee/it/_radius_mac_line.html', { parameters: { username: '$$variable{username}', attribute: \$('attribute-$$variable{username}').getValue(), value: \$('value-$$variable{username}').getValue(), action: 'add' } } );`, 
 			'text'=>'Add',
 			} );
 

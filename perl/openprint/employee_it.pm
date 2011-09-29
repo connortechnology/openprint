@@ -215,7 +215,7 @@ sub _radius_mac_line {
 			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
 				$param{'value'} = 'password';
 			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
-				my $Host = openprint::Host->find_one('mac any'=>$param{'mac'});
+				my $Host = openprint::Host->find_one('mac any'=>$param{'username'});
 				if ( $Host ) {
 					$param{'value'} = $Host->ip();
 				} # end if
@@ -223,17 +223,45 @@ sub _radius_mac_line {
 		} # end if
 		my $Check = new openprint::RADIUS_Check();
 		$variable{'error'} .= $Check->save({
-			'username'	=>	$param{'mac'},
+			'username'	=>	$param{'username'},
 			'value'		=>	$param{'value'},
 			'op'		=>	':=',
 			'attribute'	=>	$param{'attribute'},
 		});
 	} elsif ( $param{'action'} eq 'remove' ) {
-		my $Check = openprint::RADIUS_Check->find_one( 'username'=>$param{'mac'}, 'attribute'=>$param{'attribute'} );
+		my $Check = openprint::RADIUS_Check->find_one( 'username'=>$param{'username'}, 'attribute'=>$param{'attribute'} );
 		$variable{'error'} .= $Check->delete() if $Check->id();
 	} # end if
-	$variable{'mac'} = $param{'mac'};
+	$variable{'username'} = $param{'username'};
 } # end sub _radius_mac_line
+
+sub radius {
+	_radius();
+} # end sub radius
+
+sub _radius {
+	if ( $config{'RADIUS Support'} eq 'yes' and ( ! $openprint::RADIUS_Check::dbh ) ) {
+		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+				'database'  => $config{'RADIUS DB Name'},
+				'driver'    => $config{'RADIUS DB Driver'},
+				'host'      => $config{'RADIUS DB Server'},
+				'login'     => $config{'RADIUS DB Username'},
+				'password'  => $config{'RADIUS DB Password'},
+				);
+		if ( ! $openprint::RADIUS_Check::dbh ) {
+			$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
+		} # end if
+	} # end if
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'record_id'} eq 'ARRAY' ? @{$param{'record_id'}} : $param{'record_id'} ) {
+			my $Record = new openprint::openprint::RADIUS_Check( $id );
+			$variable{'error'} .= $Record->delete();
+		} # end foreach host_id
+	} # end if
+	ssi::save_params( '/employee/it/radius.html', 
+			'attribute','username'
+			);
+} # end sub _radius
 
 1;
 __END__
