@@ -1,6 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Event"><div class="View">
-	<form id="f1" name="f1" action="/event/view.html" method="post">
+	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="action"/>
 	<fieldset><legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
 		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
 		<? if ( $$variable{'Event'}->deleted() ) ?>

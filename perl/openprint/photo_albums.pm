@@ -61,8 +61,12 @@ sub list {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Album->delete();
 	} # end if
+	ssi::save_params( '/photo_albums/list.html', ( 'user_id' ) );
+	$session{'/photo_albums/list.html?user_id'} = $session{'user_id'} if ! exists $session{'/photo_albums/list.html?user_id'};
 } # end sub list
 sub _list {
+	ssi::save_params( '/photo_albums/list.html', ( 'user_id' ) );
+
 } # end sub _list
 sub view {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );

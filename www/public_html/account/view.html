@@ -11,7 +11,7 @@
 				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) or ( $$variable{'User'}->id() == $session{'user_id'} ) 
 				) {
 					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", 'text'=>'Delete Profile' } );
-					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html' } );
+					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html?ddmUser='.$$variable{'User'}->id() } );
 				} # end if
 				if ( $$variable{'User'}->id() and ( $session{'user_id'} != $$variable{'User'}->id() ) ) {
 					$html .= ssi::button( 'Message', { 'href'=>'/messaging/edit.html?to_id='.$$variable{'User'}->id() } );

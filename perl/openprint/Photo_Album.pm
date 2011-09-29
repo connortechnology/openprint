@@ -75,5 +75,9 @@ sub upload {
 	return $error;
 } # end sub upload
 
+sub User {
+	return new openprint::User( $_[0]{'user_id'} );
+} # end sub User
+
 1;
 __END__
