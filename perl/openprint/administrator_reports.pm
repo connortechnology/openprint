@@ -37,7 +37,7 @@ sub projects {
 	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 	} # end if
 
-	@{$variable{'Projects'}} = openprint::Project::find( %filters );
+	@{$variable{'Projects'}} = openprint::Project::find( %filters ) if $filters{'created_on_end'} or $filters{'created_on_start'};
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');

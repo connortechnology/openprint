@@ -93,6 +93,7 @@
 						( $Host->blacklist() ? 'blacklisted' : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitored() ? 'monitored' : () ),
+						( ( defined $Host->online() and ! $Host->online() ) ? 'offline' : () ),
 					) ),
 					$Host->description(),
 $rowclass,
