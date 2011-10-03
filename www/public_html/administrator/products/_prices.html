@@ -21,20 +21,20 @@
 			<tr> 
 				<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" name="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" checked="checked" /></span>
 				<td class="Range"> 
-					<input type="text" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->min() ne '' ? Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');"/>
-					<input type="text" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->max() ne '' ? Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');" />
+					<input type="number" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->min() ne '' ? Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');"/>
+					<input type="number" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->max() ne '' ? Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');" />
 				</td>
 				<td class="Units"> 
 					<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />
 				</td>
 				<td class="Cost"> 
-					<input type="text" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->cost(),4,4 ); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);">
+					<input type="number" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->cost(),4,4 ); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);">
 				</td>
 				<td class="Markup"> 
-					<input type="text" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);">
+					<input type="number" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);">
 				</td>
 				<td class="Price"> 
-					<input type="text" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->price(),4,4); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);">
+					<input type="number" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->price(),4,4); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);">
 				</td>
 				<td class="Discount"> 
 					<input type="radio" id="discount-<? echo ( $$variable{'Price'}->id(); ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id(); ) ?>" value='Y' 
@@ -53,20 +53,20 @@
 			<tr>
 				<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
 				<td class="Range"> 
-					<input type="text" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
-					<input type="text" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
+					<input type="number" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
+					<input type="number" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
 				</td>
 				<td class="Units"> 
 					<input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;" />
 				</td>
 				<td class="Cost"> 
-					<input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);" />
+					<input type="number" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);" />
 				</td>
 				<td class="Markup"> 
-					<input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="6"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
+					<input type="number" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="6"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
 				</td>
 				<td class="Price"> 
-					<input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="9"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
+					<input type="number" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="9"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
 				</td>
 				<td class="Discount"> 
 					<input type="radio" id="discount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-NewY" name="rdbDiscount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" value='Y' checked="checked"  />
@@ -83,7 +83,7 @@
 	<input type="hidden" name="product_id" value="<? echo ( $$variable{'Product'}->id() ) ?>" />
 </form>
 <p class="buttons"><? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'SavePrices','save.gif',"document.PricesForm.btnFunction.value='Save';new Ajax.Updater('Prices','_prices.html', { method: 'get', parameters: document.forms['PricesForm'].serialize() } );",'','Save'),
-		ssi::writeButton( $log, $dbh, 'ResetPrices','reset.gif','PricesForm.reset();','','Reset'),
+		ssi::button( 'SavePrices', { 'onclick'=>q`var form = $('PricesForm');form.btnFunction.value='Save';new Ajax.Updater('Prices','_prices.html', { parameters: form.serialize() } );`,'text'=>'Save Prices' } ),
+		ssi::button( 'ResetPrices',{ 'onclick'=>q`$('PricesForm').reset();`,'text'=>'Reset Prices' } ),
 		); ) ?>
 </p>

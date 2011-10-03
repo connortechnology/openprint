@@ -731,6 +731,28 @@ sub _relationships {
 sub relationships {
 } # end sub relationships
 
+# Assume that user_id2 is session{user_id}
+sub _unapproved_relationships {
+$log->debug("In unapproved");
+	if ( $param{'action'} eq 'delete' ) {
+$log->debug("delete");
+		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
+		if ( $R->user_id2() == $session{'user_id'} ) {
+			$variable{'error'} .= $R->delete();
+		} else {
+			$log->error("Can't delete a relationship that we are not in.");
+			$variable{'error'} .= 'You cannot delete a relationship that you are not a part of.';
+		} # end if
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
+		if ( $R->user_id2() == $session{'user_id'} ) {
+			$variable{'error'} .= $R->save({'approved'=>1});
+		} else {
+			$log->error("Can't approve a relationship that we are not in.");
+			$variable{'error'} .= 'You cannot approve a relationship that you are not a part of.';
+		} # end if
+	} # end if
+} # end sub _unapproved_relationships
 
 1;
 __END__

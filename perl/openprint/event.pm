@@ -205,8 +205,8 @@ sub _view {
 sub _photos {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Photo = new openprint::Photo_in_Album( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
-		$Photo->delete();
+		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$variable{'error'} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
 

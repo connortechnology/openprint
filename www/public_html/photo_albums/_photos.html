@@ -4,7 +4,7 @@
 
 	foreach my $Photo ( $$variable{'Album'}->Photos() ) {
 		$html .= '<div class="Photo">';
-		$html .= sprintf('<a href="view_photo.html?asset_id=%d&amp;album_id=%d"><img src="%s" alt="%s"/></a>', $Photo->asset_id(), $Photo->album_id(), $Photo->thumbnail_url(), $Photo->caption() );
+		$html .= sprintf('<a class="thumbnail" href="view_photo.html?asset_id=%d&amp;album_id=%d"><img src="%s" alt="%s"/></a>', $Photo->asset_id(), $Photo->album_id(), $Photo->thumbnail_url(), $Photo->caption() );
 		$html .= '<br/>';
 
 if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {

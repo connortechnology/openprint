@@ -535,6 +535,10 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
 	} # end if
 }
+if ( ! sets::isin( 'keywords', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
 $dbh->disconnect();
 1;

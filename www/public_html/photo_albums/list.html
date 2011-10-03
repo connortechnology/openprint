@@ -10,7 +10,7 @@
 						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
 							<option value=""> all </option>
 							<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/photo_albums/list.html?user_id'} ? $session{'/photo_albums/list.html?user_id'} : $session{'user_id'} );
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/photo_albums/list.html?user_id'} );
 							) ?>
 						</select>
 					</li>
@@ -23,7 +23,7 @@
 					); ) ?>
 				</p>
 			</fieldset>
-			<div class="Results"><!--#include virtual="_list.html"--></div>
+			<div id="Results"><!--#include virtual="_list.html"--></div>
 		</form>
 	</div>
 </div>

@@ -9,7 +9,7 @@
 			<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+				$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};", 'text'=>'Delete Album' } );
 				$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } );
 				return $html;
 			) ?>
@@ -17,7 +17,7 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Name:</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
+						<li><label>Album Name:</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
 					</ul>
 				</div>
 			</fieldset>
@@ -44,7 +44,7 @@
 </li>
 					</ul>
 				</div>
-				<? echo ( $config{'PhotoUploadDisclaimer'} ) ?>
+				<div class="disclaimer"><? echo ( $config{'PhotoUploadDisclaimer'} ) ?></div>
 			</fieldset>
 		</form>
 	</div>
