@@ -2,6 +2,7 @@ package openprint::login;
 
 use Mail::Sendmail;
 use MIME::QuotedPrint;
+use Data::Password qw(:all);
 use strict;
 
 require sql;
@@ -257,6 +258,12 @@ sub change_password {
 
 	if ( $openprint::param{'txtNewPassword'} eq '' ) {
 		$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
+		$$variable{'Redirect'} = '/main/account/change_password.html';
+		return;
+	} # end if
+
+	if ( IsBadPassword( $openprint::param{'txtNewPassword'} ) ) {
+		$$variable{'error'} = 'The new password you entered was not good enough.<br/>';
 		$$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if

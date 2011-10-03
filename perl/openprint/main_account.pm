@@ -3,6 +3,7 @@ package openprint::main_account;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
 use Email::Valid;
+use Data::Password qw(:all);
 
 use strict;
 
@@ -354,7 +355,14 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = "";
-		$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+		if ( $param{'password'} ne $User->password() ) {
+			if ( ! $param{'verifypassword'} ) {
+				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{'password'};
+			} else {
+				$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+			} # end if
+		} # end if
 		$error .= "First Name cannot be blank.<br/>" if ! $param{'firstname'};
 		$error .= "Last Name cannot be blank.<br/>" if ! $param{'lastname'};
 		$error .= "Salutation cannot be blank.<br/>" if ! $param{'salutation'};
@@ -373,7 +381,13 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
-		$param{'change_password'} = 'N' if $param{'password'};
+		if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+			# Are changing passwords
+			if ( IsBadPassword( $param{'password'} ) ) {
+				return misc::error( $log, $dbh, \%variable, 'Bad Field', 'The new password you entered was not good enough.<br/>' );
+			} # end if
+			$param{'change_password'} = 'N' if $param{'password'};
+		} # end if
 		$variable{'error'} .= $User->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
@@ -413,35 +427,39 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 		if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
-			$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
+			$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
+			$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 
 		if ( $openprint::param{'txtNewPassword'} eq '' ) {
-			$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
+			$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
+			$variable{'Redirect'} = '/main/account/change_password.html';
+			return;
+		} # end if
+		if ( IsBadPassword( $openprint::param{'txtNewPassword'} ) ) {
+			$variable{'error'} = 'The new password you entered was not good enough.<br/>';
+			$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 
 		my $User = new openprint::User( $openprint::session{'user_id'} );
 
 		if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
-			$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
+			$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
+			$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 		
 		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
 			$User->password( $openprint::param{'txtNewPassword'} );
 			$User->change_password( 'N' );
-			$$variable{'error'} .= $User->save();
+			$variable{'error'} .= $User->save();
 		} else {
-			$$variable{'error'} = 'You entered the wrong old password.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
+			$variable{'error'} = 'You entered the wrong old password.<br/>';
+			$variable{'Redirect'} = '/main/account/change_password.html';
 			return;
 		} # end if
 } # sub change_password

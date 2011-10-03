@@ -1,0 +1,16 @@
+#psContainer {
+	height:20px;
+	width:100px;
+	border:1px solid #999999;
+	margin: 1px 0 0 5px;
+	background-color:#DDDDDD;
+	display: inline-block;
+}
+
+#psStrength {
+	background-image:url('/images/password_strength.png');
+	background-repeat: repeat-y;
+	height:20px;
+	width:0;
+	display: inline-block;
+}
