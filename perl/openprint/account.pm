@@ -3,6 +3,7 @@ package openprint::account;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
 use Email::Valid;
+use Data::Password qw(:all);
 
 use strict;
 
@@ -363,10 +364,15 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = '';
-		if ( ( $User->password() eq $param{'password'} ) and ! $param{'verifypassword'} ) {
-			delete $param{'password'};
-		} # end if
-		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+        if ( $param{'password'} ne $User->password() ) {
+            if ( ! $param{'verifypassword'} ) {
+                $variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+                delete $param{'password'};
+            } else {
+                $error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+            } # end if
+        } # end if
+
 		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
 		if ( $config{'UserProfileRequiredFields'} ) {
 			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
@@ -385,7 +391,7 @@ sub user_profile {
 			return;
 		} # end if
 
-		foreach my $U ( openprint::User->find('email_lc'=>lc $param{'email'}) ) {
+		foreach my $U ( openprint::User->find('email lc'=>lc $param{'email'}) ) {
 			if ( $U->id() != $User->id() ) {
 				$variable{'error'} = 'User already exists.';
 				$variable{'information'} = $param{'email'} . ' is already a user.';
@@ -397,7 +403,14 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
-		$param{'change_password'} = 'N' if $param{'password'};
+        if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+            # Are changing passwords
+            if ( IsBadPassword( $param{'password'} ) ) {
+                return misc::error( $log, $dbh, \%variable, 'Bad Field', 'The new password you entered was not good enough.<br/>' );
+            } # end if
+            $param{'change_password'} = 'N' if $param{'password'};
+        } # end if
+
 		$variable{'error'} .= $User->save( \%param );
 
 		$User->Profile()->save( \%param );
@@ -435,35 +448,7 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-	if ( $param{'txtNewPassword'} ne $param{'txtConfirmPassword'} ) {
-		$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	if ( $param{'txtNewPassword'} eq '' ) {
-		$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	my $User = new openprint::User( $session{'user_id'} );
-
-	if ( $param{'txtNewPassword'} eq $User->password() ) {
-		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	if ( $User->password() eq $param{'txtOldPassword'} ) {
-		$User->password( $param{'txtNewPassword'} );
-		$User->change_password( 'N' );
-		$variable{'error'} .= $User->save();
-	} else {
-		$variable{'error'} = 'You entered the wrong old password.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
+	openprint::login::change_password();
 } # sub change_password
 
 sub login {

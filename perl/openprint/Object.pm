@@ -129,6 +129,8 @@ sub save {
 	my ( $self, $data ) = @_;
 
 	my $type = ref $self;
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
 	$self->set( $data ? $data : {} );
 if ( $debug ) {
 	if ( $data ) {
@@ -158,7 +160,7 @@ if ( $debug ) {
 		#} # end foreach
 	#} # end if
 	my @identified_by = eval '@'.$type.'::identified_by';
-	my $ac = sql::start_transaction( $dbh );
+	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
 		my $insert = 0;
 		my %serial = eval '%'.$type.'::serial';
@@ -166,29 +168,29 @@ if ( $debug ) {
 $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
-			if ( ! ( ( $_ = $dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
+			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
 				$log->error('Error deleting: ' . $dbh->errstr);
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
-				return $dbh->errstr;
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
+				return $local_dbh->errstr;
 			} # end if
 			$insert = 1;
 		} else {
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
-				($$self{$id}) = ($sql{$$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				($$self{$id}) = ($sql{$$fields{$id}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial{$id} . q{')} );
 				$insert = 1;
 			} # end foreach
 		} # end if
 		if ( $insert ) {
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
-			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
 				my $error = $dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $local_dbh->errstr);
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
@@ -198,12 +200,12 @@ $log->debug("No serial") if $debug;
 		} else {
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
-			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
-				my $error = $dbh->errstr;
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+				$log->error('SQL failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $local_dbh->errstr);
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
@@ -215,16 +217,16 @@ $log->debug("No serial") if $debug;
 		if ( ! $$self{'id'} ) {
 			my $serial = eval '$'.$type.'::serial';
 			if ( $serial ) {
-				($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+				($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
 			} # end if
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
-			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
 				$command =~ s/\?/\%s/g;
-				my $error = $dbh->errstr;
+				my $error = $local_dbh->errstr;
 				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $error);
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
@@ -235,12 +237,12 @@ $log->debug("No serial") if $debug;
 			delete $sql{'created_on'};
 			my @keys = keys %sql;
 			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
-			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
-				my $error = $dbh->errstr;
+			if ( ! ( $_ = $local_dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+				my $error = $local_dbh->errstr;
 				$command =~ s/\?/\%s/g;
-				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
-				$dbh->rollback();
-				sql::end_transaction( $dbh, $ac );
+				$log->error('SQL failed: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $error) if $log;
+				$local_dbh->rollback();
+				sql::end_transaction( $local_dbh, $ac );
 				return $error;
 			} # end if
 			if ( $debug or $debug_all ) {
@@ -249,7 +251,7 @@ $log->debug("No serial") if $debug;
 			} # end if
 		} # end if
 	} # end if
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 	delete $openprint::Object::cache{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
@@ -329,6 +331,7 @@ sub clone {
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
+	
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
@@ -338,14 +341,17 @@ sub delete {
 		return "Object::delete: No id in object: " . $self->to_string();
 	} # end if
 
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+
 	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
 	if ( exists $fields{'deleted'} ) {
-		sql::update( undef, undef, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
-		return $dbh->errstr if $dbh->errstr;
+		sql::update( undef, $local_dbh, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
+		return $local_dbh->errstr if $local_dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
-		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
-		return $dbh->errstr if $dbh->errstr;
+		sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
+		return $local_dbh->errstr if $local_dbh->errstr;
 		delete $openprint::Object::cache{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
@@ -523,7 +529,12 @@ sub find {
 	} # end if
 	$sql .= ' FROM '.$table;
 	my @values;
-	my $local_dbh = $$params{'dbh'} ? $$params{'dbh'} : $openprint::dbh;
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+	if ( $params{'dbh'} ) {
+		$local_dbh = $params{'dbh'};
+		delete $params{'dbh'};
+	} # end if
 	return () if ! $local_dbh;
 	delete $$params{'dbh'};
 

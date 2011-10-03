@@ -22,3 +22,5 @@ insert into Configuration values ('NewNonFirstUserAccountActivation', 'N', 'yes/
 insert into Configuration values ('NewCustomerAccountActivation', 'N', 'yes/no', 'Whether to automatically activate new companies when they register.','Miscellaneous Settings' );
 insert into Configuration values ('Mail Server', 'localhost', 'text', '','Miscellaneous Settings' );
 insert into Configuration values ('startYear', '2011', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );
+insert into Configuration values ('password_checks_min_length', '8', 'text', 'Minimum length a password must be.', 'Password Settings');
+insert into Configuration values ('password_checks_alphanumeric', 'yes', 'yes/no', 'Make sure the password contains one of each from the following sets: a-z, A-Z and 0-9.', 'Password Settings');

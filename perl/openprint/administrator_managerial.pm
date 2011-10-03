@@ -375,30 +375,34 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'}); 
 		} # end if 
 	} elsif ( $param{'btnFunction'} eq 'merge' ) {
-		my $Company = new openprint::Company( $index );
-		foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
-			eval q`
-				foreach ( openprint::`.$type.q`->find('company_id'=>$param{'merge_company_id'}) ) {
+		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
+			$variable{'error'} .= 'Choose a different company to merge into.';
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			my $Company = new openprint::Company( $index );
+			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
+				foreach ( "openprint::$type"->find('company_id'=>$param{'merge_company_id'}) ) {
 					$_->save({'company_id'=>$Company->id()});
 				} # end foreach
-			`;
-		} # end foreach type
-		foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
-			$Timetrack->save({'owner_id'=>$Company->id()});
-		} # end foreach Timetrack
-		foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
-			$_->save({'invoicer_id'=>$Company->id()});
-		} # end foreach 
-		foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
-			$_->save({'invoicee_id'=>$Company->id()});
-		} # end foreach 
-		foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
-			$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
-		} # end foreach  Payment
-		foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
-			$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
-		} # end foreach  Payment
-		new openprint::Company( $param{'merge_company_id'} )->delete();
+			} # end foreach type
+			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
+				$Timetrack->save({'owner_id'=>$Company->id()});
+			} # end foreach Timetrack
+			foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
+				$_->save({'invoicer_id'=>$Company->id()});
+			} # end foreach 
+			foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
+				$_->save({'invoicee_id'=>$Company->id()});
+			} # end foreach 
+			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
+				$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
+			} # end foreach  Payment
+			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
+				$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
+			} # end foreach  Payment
+			new openprint::Company( $param{'merge_company_id'} )->delete();
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
 		$index = $param{'company_id'};

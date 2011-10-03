@@ -15,11 +15,11 @@ Please select a host to view/edit.<br/>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d%]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
-			<input type="text" id="mac" name="mac" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			<? echo ( ssi::button( 'Load', { 'onclick'=>"load_host(\$('f1'));" } ); ) ?>
 		</li>
 		<li>
@@ -71,6 +71,11 @@ Please select a host to view/edit.<br/>
             <label class="radio" for="notassigned">Unassigned</label>
 		</li>
 -->
+<? if ( $config{'RADIUS Support'} ) ?>
+	<li><label>Has RADIUS Auth:</label>
+		<? echo ( ssi::radio( 'radius_auth', [ 1, 'Yes', 0, 'No', '', 'Both' ], $session{'/employee/it/hosts.html?radius_auth'} ); ) ?>
+	</li>
+<? endif ( $config{'RADIUS Support'} ) ?>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
