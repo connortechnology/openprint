@@ -90,7 +90,7 @@ sub _job_size {
 	} elsif ( $param{'csr_id'} ) {
 		$parameters{'salesrep_id'} = $param{'csr_id'};
 	} # end if
-	my @Companies = openprint::Company::find( %parameters );
+	my @Companies = openprint::Company->find( %parameters );
 	if ( ! @Companies ) {
 		$variable{'error'} .= 'There were no companies to filter on.<br/>';
 		return;
@@ -99,7 +99,7 @@ sub _job_size {
 	my @press_names = map { new openprint::Equipment( $_ )->strid() } split(',', $session{'/employee/reports/job_size.html?press_id'} );
 	my @Data;
 
-	foreach my $Order ( openprint::Order::find(
+	foreach my $Order ( openprint::Order->find(
 				'company_id' => ( ($session{'/employee/reports/job_size.html?company_id'} and exists $companies{$session{'/employee/reports/job_size.html?company_id'}} ) ? $session{'/employee/reports/job_size.html?company_id'} : [ keys %companies ] ),
 				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_start', 'created_on_start' ),
 				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_end', 'created_on_end' ),
@@ -150,12 +150,12 @@ $log->debug("find orders");
 					next;
 				} # end if
 				if ( ! $$sig_specs{'PlateID'.$Project->ordered_quantity_index()} ) {
-					my $Press = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'});
+					my $Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'});
 
 					$$sig_specs{'PlateID'.$Project->ordered_quantity_index()} = $Press->specification('Plate Size').'"-'.$Press->specification('Plate Type').'Plate';
 				} # end if
 	
-				my $Plate = openprint::Material::find_one('name'=>$$sig_specs{'PlateID'.$Project->ordered_quantity_index()}) if $$sig_specs{'PlateID'.$Project->ordered_quantity_index()};
+				my $Plate = openprint::Material->find_one('name'=>$$sig_specs{'PlateID'.$Project->ordered_quantity_index()}) if $$sig_specs{'PlateID'.$Project->ordered_quantity_index()};
 				my %plate_cost = $Plate->get_price( $$sig_specs{'txtPlateQuantity'.$Project->ordered_quantity_index()} ) if $Plate;
 				
 
@@ -201,15 +201,15 @@ sub customer_performance {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
 		} # end if
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
-			foreach my $Company ( openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+			foreach my $Company ( openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
 				my $order_total;
 				my $payment_cycle;
 
-				my @Orders = openprint::Order::find( 
+				my @Orders = openprint::Order->find( 
 						'company_id' => $Company->id(),
 						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on_start' ),
 						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on_end' ),
@@ -228,7 +228,7 @@ sub customer_performance {
 								} )
 				   ) {
 
-					next if openprint::Order::find(
+					next if openprint::Order->find(
 							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on_start' ),
 							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on_end' ),
 							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
@@ -245,9 +245,9 @@ sub customer_performance {
 					} # end if
 				} # end if
 
-				my $Contact = openprint::User::find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'index');
-				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'index') if ! $Contact;
-				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'order'=>'index') if ! $Contact;
+				my $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
+				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'id') if ! $Contact;
+				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'order'=>'id') if ! $Contact;
 				$Contact = new openprint::User() if ! $Contact;
 
 				push @data, ( $CSR->name(),
