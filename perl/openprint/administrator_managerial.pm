@@ -143,13 +143,17 @@ sub currency {
 sub user_profiles {
 
 	my $user_id = $param{'ddmUser'};
+	my $User = new openprint::User( $user_id );
+
 	my $user_role = $param{'ddmUserRole'};
-	if ( ! exists $param{'ddmCustomer'} ) {
-		$param{'ddmCustomer'} = $session{'company_id'};
+	if ( ( ! exists $param{'ddmCustomer'} ) or ( $param{'ddmCustomer'} != $User->company_id() ) ) {
+		if ( $User->id() ) {
+			$param{'ddmCustomer'} = $User->company_id();
+		} else {
+			$param{'ddmCustomer'} = $session{'company_id'};
+		} # end if
 	} # end if
 	my $cust_id = $param{'ddmCustomer'};
-
-	my $User = new openprint::User( $user_id );
 
 	if ( $param{'btnFunction'} eq '<<' ) {
 		$User = $User->Prev( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
