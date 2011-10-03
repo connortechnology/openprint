@@ -79,5 +79,10 @@ sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
 
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+} # end sub can_edit
+
 1;
 __END__

@@ -12,6 +12,7 @@ $serial = 'photos_in_albums_id_seq';
 	'id'		=>	'id',
 	'album_id'	=>	'album_id',
 	'asset_id'	=>	'asset_id',
+	'keywords'	=>	undef,
 );
 
 sub thumbnail_url {
@@ -53,5 +54,11 @@ sub name {
 sub attribution {
 	return $_[0]->Asset()->attribution();
 } # end sub attribution
+
+sub keywords {
+	my $self = shift;
+$openprint::log->debug("keywords @_ ");
+	return $self->Asset()->keywords( @_ );
+} # end sub keywords
 1;
 __END__

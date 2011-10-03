@@ -113,7 +113,7 @@ sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
 	my $Photo = openprint::Photo_in_Album->find_one( 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} );
-	if ( $Photo and ( $Photo->user_id() == $session{'user_id'} ) ) {
+	if ( $Photo and ( $Photo->Album()->can_edit() ) ) {
 		if ( $param{'btnFunction'} eq 'Delete' ) {
 			$variable{'error'} .= $Photo->delete();
 			if ( ! $variable{'error'} ) {
@@ -123,6 +123,7 @@ sub view_photo {
 		} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 			$variable{'error'} .= $Photo->undelete();
 		} elsif ( $param{'btnFunction'} eq 'Save' ) {
+$log->debug("Saving");
 			$variable{'error'} .= $Photo->save( \%param );
 			if ( ! $variable{'error'} ) {
 				$variable{'information'} .= 'Information successfully stored.<br/>';
@@ -130,6 +131,12 @@ sub view_photo {
 		} elsif ( $param{'btnFunction'} eq 'Send' ) {
 			$variable{'information'} .= $Photo->send();
 		} # end if btnfunction
+	} else {
+if ( ! $Photo ) {
+$log->error('Photo not found.');
+} else {
+$log->error("Not woner of photo");
+}
 	} # end if owner of the photo
 	$variable{'Photo'} = $Photo;
 } # end sub view_photo
