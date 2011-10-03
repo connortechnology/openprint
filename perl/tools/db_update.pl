@@ -329,6 +329,9 @@ if ( $data ) {
 	if ( ! exists $$data{'notes'} ) {
 		$dbh->do('alter table users add notes text');
 	} # end if
+	if ( ! exists $$data{'password_changed_on'} ) {
+		$dbh->do('alter table users add password_changed_on');
+	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 	if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
