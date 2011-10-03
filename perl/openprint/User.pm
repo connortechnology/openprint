@@ -36,6 +36,7 @@ my %fields = (
 	'updated_on'		=>	'dtmlastmodified',
 	'type'				=>	'chrtype',
 	'change_password'	=>	'ysnchangepassword',
+	'password_changed_on'	=>	'password_changed_on',
 	'commission'		=>	'dblcommission',
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'strpassword',
@@ -69,6 +70,7 @@ my %defaults = (
 	'commission'		=>	undef,
 	'purchasing_limit'	=>	undef,
 	'purchasing_total_limit'	=>	undef,
+	'password_changed_on'		=>	undef,
 );
 
 sub get {

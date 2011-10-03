@@ -12,7 +12,7 @@
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
 <? echo (
-	my $html;
+	my @html;
 	my $css = $$variable{'uri'};
 	$css =~ s/^\///;
 	$css =~ s/\..+$//;
@@ -21,11 +21,11 @@
 	$css = join('_', @parts ) . '.css';
 		$log->debug("URI: $$variable{uri} $css");
 		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
 		}
 		pop @parts;
 	} # end while
-	return $html;
+	return join("\n", reverse @html );
 ) ?>
 		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
 		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>

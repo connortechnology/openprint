@@ -128,6 +128,9 @@
    					<input type="Password" id="VerifyPassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);"/>
 					<span id="password_alert"></span>
    				</p>
+				<p><label>Password Last Changed:</label>
+				<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
+				</p>
    			</fieldset>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
