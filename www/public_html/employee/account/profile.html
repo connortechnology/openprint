@@ -1,4 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <form name="f1" method="post" action="profile.html">
 	<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 	<fieldset class="filters"><legend>Choose User</legend>
@@ -182,15 +183,17 @@
 	<fieldset><legend>The following information will be used for future logins.</legend>
 		<p> 
 			<label for="email">*E-mail Address:</label>
-			<input type="text" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
+			<input type="email" id="email" name="email" value="<? hecho ( $$variable{'User'}->email() ) ?>" />
 		</p>
 		<p> 
 			<label for="password">*Password:</label>
-			<input type="password" name="password" id="password" value="" />
+			<input type="password" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+			<span id="psContainer"><span id="psStrength"></span></span>
 		</p>
 		<p> 
 			<label for="VerifyPassword">*Verify Password:</label>
-			<input type="password" name="VerifyPassword" id="VerifyPassword" value="" />
+			<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);"/>
+			<span id="password_alert"></span>
 		</p>
 	</fieldset>
 	<fieldset><legend>Email Settings:</legend>

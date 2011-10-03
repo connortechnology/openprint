@@ -427,41 +427,7 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-
-		if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
-			$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-			$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-
-		if ( $openprint::param{'txtNewPassword'} eq '' ) {
-			$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-			$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-		if ( IsBadPassword( $openprint::param{'txtNewPassword'} ) ) {
-			$variable{'error'} = 'The new password you entered was not good enough.<br/>';
-			$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-
-		my $User = new openprint::User( $openprint::session{'user_id'} );
-
-		if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
-			$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-			$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-		
-		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
-			$User->password( $openprint::param{'txtNewPassword'} );
-			$User->change_password( 'N' );
-			$variable{'error'} .= $User->save();
-		} else {
-			$variable{'error'} = 'You entered the wrong old password.<br/>';
-			$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
+	openprint::login::change_password();
 } # sub change_password
 
 sub login {
@@ -506,10 +472,8 @@ sub login {
 } # end sub login
 
 sub logout {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
+	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id','Destination'};
 	#openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
 	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
 	

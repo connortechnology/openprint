@@ -116,11 +116,11 @@
    			   <legend>Login Information</legend>
    				<p>
    					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   					<input type="email" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
    				</p>
    				<p>
    					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="Password" name="password" onkeyup="updateStrength(this.value);"/>
+   					<input type="Password" id="Password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
 					<span id="psContainer"><span id="psStrength"></span></span>
    				</p>
    				<p>

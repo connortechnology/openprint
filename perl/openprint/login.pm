@@ -159,15 +159,11 @@ sub verify_login {
 		$Cookie->expires('+3M');
 		$Cookie->bake( $r );
 	} # end if	
-$openprint::log->debug("Dest: $session{'Destination'}");
 	if ( $changepass eq 'Y' ) {
-		if ( $site eq 'A' ) {
-			$$variable{'Redirect'} = '/administrator/account/change_password.html';
-		} elsif ( $site eq 'E' ) {
-			$$variable{'Redirect'} = '/employee/account/change_password.html';
-		} else {
-			$$variable{'Redirect'} = '/main/account/change_password.html';
+		if ( ! $session{'Destination'} ) {
+			save_destination( $r->uri() );
 		} # end if
+		$$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
      
@@ -248,31 +244,30 @@ sub login_password {
 } # login password
 
 sub change_password {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
-		$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 
 	if ( $openprint::param{'txtNewPassword'} eq '' ) {
-		$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 
 	if ( IsBadPassword( $openprint::param{'txtNewPassword'} ) ) {
-		$$variable{'error'} = 'The new password you entered was not good enough.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'error'} = 'The new password you entered was not good enough.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 
 	my $User = new openprint::User( $openprint::session{'user_id'} );
 
 	if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
-		$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 	
@@ -280,9 +275,13 @@ sub change_password {
 		$User->password( $openprint::param{'txtNewPassword'} );
 		$User->change_password( 'N' );
 		$User->save();
+		if ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
+			$variable{'ExternalRedirect'} = $1.'.html?'.$2;
+			delete $session{'Destination'};
+		} # end if Destination
 	} else {
-		$$variable{'error'} = 'You entered the wrong old password.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'error'} = 'You entered the wrong old password.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 } # sub change_password

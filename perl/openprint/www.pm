@@ -230,8 +230,6 @@ $openprint::log->debug("Getfile");
 				openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'A' );
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
-			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
-			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
 		} elsif ( $first ) {
 #$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";

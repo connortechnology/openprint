@@ -121,12 +121,6 @@ sub logout {
 sub login_confirmation {
 } # end sub login_confirmation
 
-sub change_password {
-} # end sub change_password
-
-sub change_password_confirmation {
-} # end sub change_password_confirmation
-
 sub password_confirmation {
 } # end sub password_confirmation
 
