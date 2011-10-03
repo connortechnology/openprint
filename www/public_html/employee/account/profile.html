@@ -49,17 +49,17 @@
 	<p class="required"> denotes required information.<br/></p>
 	<div class="column">
 		<fieldset><legend>User Information</legend>
-<ul>
-	<? if ( $$variable{'User'}->Company()->notes() ) ?>
-	<li><label>Company Notes:</label>
-	<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
-	</li>
-	<? endif ( $$variable{'User'}->Company()->notes() ) ?>
-	<? if ( $$variable{'User'}->notes() ) ?>
-	<li><label>User Notes:</label>
-	<b><? echo ( $$variable{'User'}->notes() ) ?></b>
-	</li>
-	<? endif ( $$variable{'User'}->notes() ) ?>
+		<ul>
+			<? if ( $$variable{'User'}->Company()->notes() ) ?>
+			<li><label>Company Notes:</label>
+			<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+			</li>
+			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+			<? if ( $$variable{'User'}->notes() ) ?>
+			<li><label>User Notes:</label>
+			<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+			</li>
+			<? endif ( $$variable{'User'}->notes() ) ?>
 			<li> 
 				<label for="title">Title:</label>
 				<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
@@ -110,7 +110,6 @@
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 				<li>
 					<label>Company administrator?</label>
-
 					<input type="radio" id="administratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
 					<label class="radio" for="administratorY">Yes</label>
 					<input type="radio" id="administratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" />
@@ -159,6 +158,9 @@
 					<label for="VerifyPassword">Verify Password:</label>
 					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);"/>
 					<span id="password_alert"></span>
+				</li>
+				<li><label>Password Last Changed:</label>
+					<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -252,13 +254,13 @@
 			<li> 
 				<label>User Category:</label>
 				<select name="marketing_categories" size="4" multiple="multiple">
-	<? echo (
-		my @users_categories;
-		if ( $$variable{'User'}->id() ) {
-			@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
-		} # end if
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
-	) ?>
+				<? echo (
+					my @users_categories;
+					if ( $$variable{'User'}->id() ) {
+						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
+					} # end if
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
+				) ?>
 				</select>
 			</li>
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>

@@ -184,6 +184,12 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 
+		if ( ! $openprint::param{'password'} ) {
+			delete $openprint::param{'password'};
+		} elsif ( $openprint::param{'password'} ne $User->password() ) {
+			$openprint::param{'password_changed_on'} = 'NOW()';
+		} # end if
+
 		# This has to exist, in order to save the no assistants situation
 		$param{'assistant_ids'} = [] if ! exists $param{'assistant_ids'};
 		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};

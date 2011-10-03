@@ -41,6 +41,7 @@ $debug = 1;
 	'updated_on'		=>	'updated_on',
 	'type'				=>	'type',
 	'change_password'	=>	'ysnchangepassword',
+	'password_changed_on'	=>	'password_changed_on',
 	'commission'		=>	'dblcommission',
 	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
@@ -92,6 +93,7 @@ $debug = 1;
 	'deleted'			=>	0,
 	'email_quotes_to_myself'	=>	0,
 	'asset_id'			=>	undef,
+	'password_changed_on'		=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.

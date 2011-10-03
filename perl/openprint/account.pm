@@ -408,7 +408,8 @@ sub user_profile {
             if ( IsBadPassword( $param{'password'} ) ) {
                 return misc::error( $log, $dbh, \%variable, 'Bad Field', 'The new password you entered was not good enough.<br/>' );
             } # end if
-            $param{'change_password'} = 'N' if $param{'password'};
+            $param{'change_password'} = 'N';
+			$param{'password_changed_on'} = 'NOW()';
         } # end if
 
 		$variable{'error'} .= $User->save( \%param );

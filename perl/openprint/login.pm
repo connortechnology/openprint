@@ -261,6 +261,7 @@ sub change_password {
 	if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
 		$User->password( $openprint::param{'txtNewPassword'} );
 		$User->change_password( 'N' );
+		$User->password_changed_on('NOW()');
 		$User->save();
 		if ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
 			$variable{'ExternalRedirect'} = $1.'.html?'.$2;
