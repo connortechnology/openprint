@@ -331,8 +331,8 @@ sub check_password {
 	} # end if
 	if ( $openprint::config{'password_checks_min_score'} ) {
 		my $strength = password_strength( $password );
-		if ( $strength < $openprint::config{'password_checks_min_score'} ) ) {
-		return "Password's strength score ( $strength ) must be at least $openprint::config{'password_checks_min_score'}.";
+		if ( $strength < $openprint::config{'password_checks_min_score'} ) {
+			return "Password's strength score ( $strength ) must be at least $openprint::config{'password_checks_min_score'}.";
 		} # end if
 	} # end if
 } # end sub check_password
