@@ -329,8 +329,11 @@ sub check_password {
 	if ( $openprint::config{'password_checks_punctuation'} eq 'yes' and ! ( $password =~ /[!,@,#,$,%,^,&,*,?,_,~]/ ) ) {
 		return 'Password must contain at least 1 of !,@,#,$,%,^,&,*,?,_,~.';
 	} # end if
-	if ( $openprint::config{'password_checks_min_score'} and ( password_strength( $password ) < $openprint::config{'password_checks_min_score'} ) ) {
-		return "Password's strength score must be at least $openprint::config{'password_checks_min_score'}.";
+	if ( $openprint::config{'password_checks_min_score'} ) {
+		my $strength = password_strength( $password );
+		if ( $strength < $openprint::config{'password_checks_min_score'} ) ) {
+		return "Password's strength score ( $strength ) must be at least $openprint::config{'password_checks_min_score'}.";
+		} # end if
 	} # end if
 } # end sub check_password
 
