@@ -66,6 +66,9 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $openprint::param{'email'} );
 	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
+	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+		$error .= "Password not good enough.  $reason<br/>";
+	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		# Remove spaces, because some people want to put spaces between the characters, etc.
 		$openprint::param{'Captcha'} =~ s/\s//g;
@@ -383,8 +386,8 @@ sub user_profile {
 		my $oldpassword = $User->password();
 		if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
 			# Are changing passwords
-			if ( IsBadPassword( $param{'password'} ) ) {
-				return misc::error( $log, $dbh, \%variable, 'Bad Field', 'The new password you entered was not good enough.<br/>' );
+			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
 			} # end if
 			$param{'change_password'} = 'N' if $param{'password'};
 			$param{'password_changed_on'} = 'NOW()';
