@@ -18,7 +18,7 @@
 			<select name="status" multiple="multiple" size="4" >
 			<? echo (
 					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
-					return ssi::make_select( \@options, $param{'status'} ? $param{'status'} : \@options);
+					return ssi::make_drop_down( \@options, $param{'status'} ? $param{'status'} : \@options);
 					) ?>
 			</select>
 		</li>
@@ -40,7 +40,7 @@
 			<label>Press:</label>
 			<select id="press_id" name="press_id" multiple="multiple">
 				<option value="">All</option>
-				<? echo ( ssi::make_select( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strid)') ], [ split(',', $session{'/employee/reports/job_size.html?press_id'} ) ] ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strid)') ], [ split(',', $session{'/employee/reports/job_size.html?press_id'} ) ] ); ) ?>
 			</select>
 		</li>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
@@ -49,7 +49,7 @@
 			<select name="csr_id" id="csr_id" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/job_size.html?csr_id'} );
 					) ?>
 

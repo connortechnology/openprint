@@ -86,7 +86,7 @@ sub _job_size {
 	my %parameters; 
 	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
 		$parameters{'salesrep_id'} = $session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
+		$parameters{'or'} = "id=(SELECT company_id FROM Users WHERE users.id=$session{'user_id'})";
 	} elsif ( $param{'csr_id'} ) {
 		$parameters{'salesrep_id'} = $param{'csr_id'};
 	} # end if
@@ -107,7 +107,7 @@ sub _job_size {
 									  'status' =>
 									  ( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
 									 ) : () ),
-				'order' => ($param{'order'} ? $param{'order'} : 'Index'),
+				'order' => ($param{'order'} ? $param{'order'} : 'id'),
 				) ) {
 $log->debug("find orders");
 		if ( $session{'/employee/reports/job_size.html?reprint'} ) {
@@ -201,11 +201,11 @@ sub customer_performance {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 		} # end if
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
-			foreach my $Company ( openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+			foreach my $Company ( openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)') ) {
 				my $order_total;
 				my $payment_cycle;
 
