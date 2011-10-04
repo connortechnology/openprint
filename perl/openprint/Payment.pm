@@ -7,7 +7,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms );
 require sql;
 require openprint::PaymentType;
 
-$debug = 1;
+$debug = 0;
 $table = 'payments';
 $serial = 'payments_id_seq';
 

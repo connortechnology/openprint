@@ -1,9 +1,4 @@
-<form id="status_<? echo ( $$variable{'Service'}->service_id() ) ?>" name="status_<? echo ( $$variable{'Service'}->service_id() ) ?>" action="/employee/project/view.html" method="post">
-	<input type="hidden" name="action" value="Change Status"/>
-	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>"/>
-	<input type="hidden" name="service_id" value="<? echo ( $$variable{'Service'}->service_id() ) ?>"/>
-	<select name="status" onchange="$('status_<? echo ( $$variable{'Service'}->service_id() ) ?>').submit();">
+	<select name="status" onchange="window.location='/employee/project/view.html?action=Change%20Status&amp;project_id=<? echo ( $$variable{'Project'}->id() ) ?>&amp;service_id=<? echo ( $$variable{'Service'}->service_id() ) ?>&amp;status='+this.getValue();;">
 		<? echo ( 
 			ssi::make_drop_down( [ map { $_, $_ } ( 'Approved', 'Complete', 'Ordered', 'Waiting For Customer Approval' ) ], $$variable{'Service'}->status() ); ) ?>
 	</select>
-</form>

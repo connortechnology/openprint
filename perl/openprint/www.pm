@@ -238,7 +238,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -297,8 +297,6 @@ $openprint::log->debug("Getfile");
 				openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'A' );
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
-			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
-			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
 		} elsif ( $first ) {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->error( "Eval error of require, Reason: " . $@ ) if $@;

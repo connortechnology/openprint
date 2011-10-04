@@ -27,7 +27,7 @@
 		 <p class="buttons">
 			<? echo ( 
 				my $html;
-				$html .= ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent('Results','_yearly_sales.html', f1.serialize() );", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results','_yearly_sales.html', f1.serialize() );", '', 'Show Results' );
 				$html .= ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='yearly_sales.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' );
 				return $html;
 			) ?>

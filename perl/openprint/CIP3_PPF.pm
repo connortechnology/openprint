@@ -411,7 +411,7 @@ sub send_ppf {
 			} 
 		} 
 	} 
-$log->warn("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ) );
+#$log->warn("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ) );
 	my $error = misc::save_file( $log, sprintf('%s/%d_%sSg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','version','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
