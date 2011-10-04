@@ -3,7 +3,6 @@ package openprint::main_account;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
 use Email::Valid;
-use Data::Password qw(:all);
 
 use strict;
 
