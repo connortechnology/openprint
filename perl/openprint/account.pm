@@ -3,7 +3,6 @@ package openprint::account;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
 use Email::Valid;
-use Data::Password qw(:all);
 
 use strict;
 
@@ -72,6 +71,9 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+		$error .= "Password not good enough.  $reason<br/>";
+	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
@@ -95,11 +97,11 @@ sub registration {
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find('email'=>$param{email} ) ) {
+	if ( openprint::User->find('email lc'=>lc $param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
-	if ( openprint::User->find('email'=>$param{email},'deleted'=>1 ) ) {
+	if ( openprint::User->find('email lc'=>$param{email},'deleted'=>1 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
@@ -405,9 +407,9 @@ sub user_profile {
 		my $oldpassword = $User->password();
         if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
             # Are changing passwords
-            if ( IsBadPassword( $param{'password'} ) ) {
-                return misc::error( $log, $dbh, \%variable, 'Bad Field', 'The new password you entered was not good enough.<br/>' );
-            } # end if
+			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+			} # end if
             $param{'change_password'} = 'N';
 			$param{'password_changed_on'} = 'NOW()';
         } # end if
