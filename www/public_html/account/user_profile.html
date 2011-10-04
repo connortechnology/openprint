@@ -2,20 +2,23 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
-		<div class="Account">
+	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
+		<div class="Account"><div class="UserProfile">
 			<fieldset class="filters">
+				<ul>
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
-				<p>
+				<li>
 					<label for="ddmUser">User Name:</label>
 					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 						<option value="">Select a User</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
 					</select>
-				</p>
+				</li>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+				</ul>
 				<p class="buttons">
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Previous','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);", '', '<<' ); ) ?>
@@ -27,7 +30,6 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
-		<div class="UserProfile">
 			<span class="required"></span> denotes required information.<br/>
 			<div id="ProfilePicture">
 			<? if ( $$variable{'User'}->asset_id() ) ?>

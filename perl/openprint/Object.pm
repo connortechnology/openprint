@@ -531,9 +531,9 @@ sub find {
 	my @values;
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
-	if ( $params{'dbh'} ) {
-		$local_dbh = $params{'dbh'};
-		delete $params{'dbh'};
+	if ( $$params{'dbh'} ) {
+		$local_dbh = $$params{'dbh'};
+		delete $$params{'dbh'};
 	} # end if
 	return () if ! $local_dbh;
 	delete $$params{'dbh'};
