@@ -2,6 +2,7 @@
 <h1>MANAGERIAL</h1>
 <h2>User Profiles</h2>
 </div>
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <script type="text/javascript">
 function keepCompany( form ) {
 	var Company = form.ddmCustomer.selectedIndex;
@@ -322,11 +323,13 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>Password:</label>
-						<input type="text" name="password" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
+						<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
+						<span id="psContainer"><span id="psStrength"></span></span>
 					</li>
-					<li> 
-						<label>Verify Password:</label>
-						<input type="text" name="verifypassword" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
+					<li class="required">
+						<label for="verifypassword">Verify Password:</label>
+						<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>"/>
+						<span id="password_alert"></span>
 					</li>
 					<li><label>Password Last Changed:</label>
 						<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
