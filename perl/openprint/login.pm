@@ -2,7 +2,6 @@ package openprint::login;
 
 use Mail::Sendmail;
 use MIME::QuotedPrint;
-use Data::Password qw(:all);
 use strict;
 
 require sql;
@@ -244,17 +243,18 @@ sub change_password {
 		return;
 	} # end if
 
-	if ( IsBadPassword( $openprint::param{'txtNewPassword'} ) ) {
-		$variable{'error'} = 'The new password you entered was not good enough.<br/>';
-		$variable{'Redirect'} = '/main/account/change_password.html';
-		return;
-	} # end if
 
 	my $User = new openprint::User( $session{'user_id'} );
 
 	if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
 		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
 		$variable{'Redirect'} = '/account/change_password.html';
+		return;
+	} # end if
+
+	if ( my $reason = check_password( $openprint::param{'txtNewPassword'} ) ) {
+		$variable{'error'} = "The new password you entered was not good enough: $reason.<br/>";
+		$variable{'Redirect'} = '/main/account/change_password.html';
 		return;
 	} # end if
 	
@@ -295,6 +295,59 @@ sub verify_user {
 		} # end if
 	} # end if
 } # end sub verify_user
+
+sub check_password {
+	my ( $password ) = @_;
+	if ( $openprint::config{'password_checks_min_length'} and ( length $password < $openprint::config{'password_checks_min_length'} ) ) {
+		return "Too short.  Passwords must be at least $openprint::config{'password_checks_min_length'} characters long.";
+	} # end if
+	if ( $openprint::config{'password_checks_max_length'} and ( length $password < $openprint::config{'password_checks_max_length'} ) ) {
+		return "Too long.  Passwords must be at most $openprint::config{'password_checks_max_length'} characters long.";
+	} # end if
+	if ( $openprint::config{'password_checks_uppercase'} eq 'yes' and ! ( $password =~ /[A-Z]/ ) ) {
+		return "Password must contain at least 1 uppercase character.";
+	} # end if
+	if ( $openprint::config{'password_checks_lowercase'} eq 'yes' and ! ( $password =~ /[a-z]/ ) ) {
+		return "Password must contain at least 1 lowercase character.";
+	} # end if
+	if ( $openprint::config{'password_checks_numbers'} eq 'yes' and ! ( $password =~ /[0-9]/ ) ) {
+		return "Password must contain at least 1 number.";
+	} # end if
+	if ( $openprint::config{'password_checks_punctuation'} eq 'yes' and ! ( $password =~ /[!,@,#,$,%,^,&,*,?,_,~]/ ) ) {
+		return 'Password must contain at least 1 of !,@,#,$,%,^,&,*,?,_,~.';
+	} # end if
+	if ( $openprint::config{'password_checks_min_score'} and ( password_strength( $password ) < $openprint::config{'password_checks_min_score'} ) ) {
+		return "Password's strength score must be at least $openprint::config{'password_checks_min_score'}.";
+	} # end if
+} # end sub check_password
+
+sub password_strength {
+	my ( $password ) = @_;
+
+	my $score = 0;
+	my $length = length $password;
+	if ( $length < 5 ) {
+		$score += 3;
+	} elsif ( $length >= 5 and $length < 8 ) {
+		$score += 6;
+	} elsif ( $length >= 8 and $length < 16 ) {
+		$score += 12;
+	} elsif ( $length >= 16 ) {
+		$score += 18;
+	} # end if
+
+	$score += 1 if $score =~ /[a-z]/;
+	$score += 5 if $score =~ /[A-Z]/;
+	$score += 5 if $score =~ /\d/;
+	$score += 5 if $score =~ /(.*\d.*\d.*\d)/;
+	$score += 5 if $score =~ /.[!,@,#,$,%,^,&,*,?,_,~]/;
+	$score += 5 if $score =~ /(.*[!,@,#,$,%,^,&,*,?,_,~].*[!,@,#,$,%,^,&,*,?,_,~])/;
+	$score += 2 if $score =~ /([a-z].*[A-Z])|([A-Z].*[a-z])/;
+	$score += 2 if ( $score =~ /[a-zA-Z]/ and $score =~ /[0-9]/ );
+	$score += 2 if $score =~ /([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/;
+	return $score;
+
+} # end sub password_strength
 
 1;
 

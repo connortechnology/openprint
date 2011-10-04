@@ -136,6 +136,7 @@ function updateStrength(passwd) {
 
 	var width = (100/45)*intScore;
 	new Effect.Morph('psStrength', {style:'width:'+width+'px', duration:'0.4'}); 
+	$('psStrength').innerHTML = intScore;
 } // end function updateStrength
 
 function check_passwords( password, verify_password ) {

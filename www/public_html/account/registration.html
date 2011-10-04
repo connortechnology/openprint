@@ -201,14 +201,17 @@ function howdidyouhearaboutus_onchange(e) {
 					<label>E-mail:</label>
 					<input type="email" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</li>
+                <p><!--#include virtual="/includes/password_requirements.html"-->
 				<li class="password<? echo ( $$variable{'RequiredFields'}{'password'} ? ' required' : '' ) ?>">
-					<label>Password:</label>
-					<input type="password" name="password" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"  />
-				</li>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>" />
+                    Strength: <span id="psContainer"><span id="psStrength"></span></span>
+                </li>
 				<li class="verifypassword<? echo ( $$variable{'RequiredFields'}{'verifypassword'} ? ' required' : '' ) ?>">
-					<label>Verify Password:</label>
-					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"  />
-				</li>
+                    <label for="verifypassword">Verify Password:</label>
+                    <input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>" />
+                    <span id="password_alert"></span>
+                </li>
 <? echo (
 	my $html;
 	if ( (!$session{'user_id'}) and ($config{'UseCaptchaOnRegistration'} eq 'Y') ) {

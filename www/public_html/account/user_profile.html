@@ -141,6 +141,7 @@
 							<label for="email">E-mail Address:</label>
 							<input type="email" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
 						</li>
+						<li><!--#include virtual="/includes/password_requirements.html"--></li>
 						<li class="required">
 							<label for="password">Password:</label>
 							<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
