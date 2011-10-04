@@ -71,7 +71,7 @@ Please select a RFID Tag to view/edit.<br>
 
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2') );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_rfidtags_results.html', \$('f2') );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'rfidtag_details.html', 'Add New RFID Tag' ),
 				); ) ?>

@@ -39,11 +39,11 @@
 				$html .= '<td colspan="2">';
 				if ( $param{'allocation_details_'.$paper_id} ) {
 					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
-						sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{'Project'}->id(), $paper_id ),
+						sprintf(q`LoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{'Project'}->id(), $paper_id ),
 						'', 'Hide details' ) . '</td>';
 				} else {
 					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
-							sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
+							sprintf(q`LoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
 						'', 'Show details' ) . '</td>';
 				} # end if
 				$html .= sprintf('<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($total), $Paper->units() );
