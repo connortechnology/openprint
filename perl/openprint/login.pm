@@ -352,15 +352,15 @@ sub password_strength {
 		$score += 18;
 	} # end if
 
-	$score += 1 if $score =~ /[a-z]/;
-	$score += 5 if $score =~ /[A-Z]/;
-	$score += 5 if $score =~ /\d/;
-	$score += 5 if $score =~ /(.*\d.*\d.*\d)/;
-	$score += 5 if $score =~ /.[!,@,#,$,%,^,&,*,?,_,~]/;
-	$score += 5 if $score =~ /(.*[!,@,#,$,%,^,&,*,?,_,~].*[!,@,#,$,%,^,&,*,?,_,~])/;
-	$score += 2 if $score =~ /([a-z].*[A-Z])|([A-Z].*[a-z])/;
-	$score += 2 if ( $score =~ /[a-zA-Z]/ and $score =~ /[0-9]/ );
-	$score += 2 if $score =~ /([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/;
+	$score += 1 if $password =~ /[a-z]/;
+	$score += 5 if $password =~ /[A-Z]/;
+	$score += 5 if $password =~ /\d/;
+	$score += 5 if $password =~ /(.*\d.*\d.*\d)/;
+	$score += 5 if $password =~ /.[!,@,#,$,%,^,&,*,?,_,~]/;
+	$score += 5 if $password =~ /(.*[!,@,#,$,%,^,&,*,?,_,~].*[!,@,#,$,%,^,&,*,?,_,~])/;
+	$score += 2 if $password =~ /([a-z].*[A-Z])|([A-Z].*[a-z])/;
+	$score += 2 if ( $password =~ /[a-zA-Z]/ and $password =~ /[0-9]/ );
+	$score += 2 if $password =~ /([a-zA-Z0-9].*[!,@,#,$,%,^,&,*,?,_,~])|([!,@,#,$,%,^,&,*,?,_,~].*[a-zA-Z0-9])/;
 	return $score;
 
 } # end sub password_strength
