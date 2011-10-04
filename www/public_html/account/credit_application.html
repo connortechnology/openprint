@@ -23,42 +23,45 @@ Thank you. Your information has been received. Someone will contact you in the i
 			<fieldset><legend>Application</legend>
 				I/We do hereby authorize <? echo ( $openprint::config{SiteTitle} ) ?> to verify all or part of the above listed confidential disclosures, and to verify the credit status of existing lines of credit as listed on this application. Further, I/We agree to pay according to terms printed on any invoices for any purchase(s) including discounts, net price and late charges.<br/>
 				<br/>
-				<p>
+				<ul>
+				<li>
 					<label for="FirstOrderValue">Value of first order (est):</label>
 					<input type="text" id="FirstOrderValue" name="FirstOrderValue" value="<? hecho ( $param{'FirstOrderValue'} ) ?>"/>
-				</p>
-				<p>
+				</li>
+				<li>
 					<label for="AnnualPurchases">Annual Purchases (est):</label>
 					<input type="text" id="AnnualPurchases" name="AnnualPurchases" value="<? hecho ( $param{'AnnualPurchases'} ) ?>"/>
-				</p>
-				<p>
+				</li>
+				<li>
 					<label for="DesiredCreditLimit">Credit Limit Desired:</label>
 					<input type="text" id="DesiredCreditLimit" name="DesiredCreditLimit" value="<? hecho ( $param{'DesiredCreditLimit'} ) ?>" />
-				</p>
-				<p>
+				</li>
+				<li>
 					<label>Terms Desired:</label>
 					<select id="DesiredTerms" name="DesiredTerms" size="1">
 						<? echo ( ssi::make_drop_down( [ 15,'15 Days', 30, '30 Days', 60, '60 Days', 90, '90 Days' ], $param{'DesiredTerms'} ); ) ?>
 					</select>
-				</p>
-				<p class="required">
+				</li>
+				<li class="required">
 					<label for="AccountsPayableContact">Accounts Payable:</label>
 					<input type="text" id="AccountsPayableContact" name="AccountsPayableContact" value="<? hecho ( $param{'AccountsPayableContact'} ) ?>" />
-				</p>
-				<p>
+				</li>
+				<li>
 					<label for="FinancialStatementAvailable">Financial Statement Available?</label>
 					<input type="radio" name="FinancialStatementAvailable" id="FinancialStatementAvailableY" value="Y" /><label for="FinancialStatementAvailableY" class="radio">Yes</label>
 					<input type="radio" name="FinancialStatementAvailable" id="FinancialStatementAvailableN" value="N" /><label for="FinancialStatementAvailableN" class="radio">No</label>
-				</p>
-				<br/>
+				</li>
+				</ul>
 				<?SiteTitle?> reserves the right to revoke/cancel credit status at their own discretion without prior notification. By submitting this 
 				application, I/We confirm that the above information is correct and I/We are authorized on behalf of the company to disclose the submitted information.
 				<br/>
 				<br/>
-				<p class="required">
+				<ul>
+				<li class="required">
 					<label for="Signature">Name - First/Last:</label>
 					<input type="text" id="Signature" name="Signature" />
-				</p>
+				</li>
+				</ul>
 				<p class="buttons">
 					<? echo ( ssi::writeButton( $log, $dbh, 'Submit1','submit.gif','f1.submit();','','Submit'); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'); ) ?>
