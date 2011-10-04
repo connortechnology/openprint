@@ -1,3 +1,4 @@
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <script type="text/javascript">
 <!--
 function howdidyouhearaboutus_onchange(e) {
@@ -203,11 +204,13 @@ function howdidyouhearaboutus_onchange(e) {
 				</li>
 				<li class="password<? echo ( $$variable{'RequiredFields'}{'password'} ? ' required' : '' ) ?>">
 					<label>Password:</label>
-					<input type="password" name="password" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"  />
+					<input type="password" name="txtNewPassword" onkeyup="updateStrength(this.value);" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"/>
+					<span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="verifypassword<? echo ( $$variable{'RequiredFields'}{'verifypassword'} ? ' required' : '' ) ?>">
 					<label>Verify Password:</label>
-					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"  />
+					<input type="password" name="verifypassword" onkeyup="check_passwords(this.form.txtNewPassword, this);" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"/>
+					<span id="password_alert"></span>
 				</li>
 <? echo (
 	my $html;
