@@ -361,8 +361,8 @@ sub Taxes {
         foreach my $Tax ( openprint::Tax->find(
                     #'period_start_null_or_<='   =>  $$self{'created_on'},
                     #'period_end_null_or_>='     =>  $$self{'created_on'},
-                    'country'   =>  $self->Supplier()->country(),
-                    'state'     =>  $self->Supplier()->state(),
+                    'country'   =>  ( $self->Supplier()->country() ? $self->Supplier()->country() : $$self{'vendor_country'} ),
+                    'state'     =>  ( $self->Supplier()->state() ? $self->Supplier()->state() : $$self{'vendor_state'} ),
                 ) ) {
             my $T = new openprint::PurchaseOrder_Tax();
             $T->set({

@@ -540,6 +540,9 @@ sub _po_select_vendor {
 }
 
 sub _update_taxes {
+	# Save incoming data because we may have changed suppliers
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	$variable{'error'} .= $PO->save( \%param );
 } # end sub _update_taxes
 
 sub _similar_pos {
