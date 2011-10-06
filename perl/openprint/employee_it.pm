@@ -54,7 +54,7 @@ sub hosts {
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
 	} # end if
-	if ( $config{'RADIUS Support'} eq 'yes' ) {
+	if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
@@ -85,7 +85,7 @@ sub _hosts {
 			'ip','hostname','mac',
 			'radius_auth',
 			);
-	if ( $config{'RADIUS Support'} eq 'yes' ) {
+	if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
@@ -195,7 +195,7 @@ sub logs {
 } # end sub logs
 
 sub _radius_mac_line {
-	if ( $config{'RADIUS Support'} ne 'yes' ) {
+	if ( $config{'RADIUS Support'} ne 'Y' ) {
 		$variable{'error'} .= 'RADIUS Support is not enabled.';
 		return;
 	} # end if
@@ -240,7 +240,7 @@ sub radius {
 } # end sub radius
 
 sub _radius {
-	if ( $config{'RADIUS Support'} eq 'yes' and ( ! $openprint::RADIUS_Check::dbh ) ) {
+	if ( $config{'RADIUS Support'} eq 'Y' and ( ! $openprint::RADIUS_Check::dbh ) ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},

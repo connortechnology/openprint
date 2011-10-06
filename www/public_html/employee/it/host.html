@@ -74,7 +74,7 @@
 				</li>
 			</ul>
 	</fieldset>
-<? if ( $config{'RADIUS Support'} ) ?>
+<? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<fieldset><legend>RADIUS Auth</legend>
 		<ul>
 	<? echo ( 
@@ -104,6 +104,8 @@
 	) ?>
 		</ul>
 	</fieldset>
-<? endif ( $config{'RADIUS Support'} ) ?>
+<? else ( $config{'RADIUS Support'} eq 'Y' ) ?>
+No RADIUS Support
+<? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
 </form>
 </div></div>
