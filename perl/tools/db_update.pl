@@ -2033,6 +2033,8 @@ if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Contents.sql' ) ) or die;
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_contents'", 'column_name');
 }
 
 if ( ! sets::isin( 'payments', \@tables ) ) {
