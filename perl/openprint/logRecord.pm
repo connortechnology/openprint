@@ -7,8 +7,8 @@ require openprint::logAction;
 require openprint::Host;
 use strict;
 
-my $debug = 0;
-use vars qw( $log $dbh $table $serial %fields %tansforms %defaults );
+use vars qw( $log $dbh $table $serial %fields %tansforms %defaults $debug );
+$debug = 1;
 $table = 'log';
 $serial = 'log_id_seq';
 %fields = (
@@ -20,6 +20,7 @@ $serial = 'log_id_seq';
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
 	'host_id'		=>	'host_id',
+	'note'			=>	'note',
 );
 %defaults = (
 	'host_id'	=>	undef,
@@ -71,12 +72,21 @@ sub find {
             push @values, $params{'action_type'};
         } # end if
 	} # end if
+	if ( $params{'action_type in'} ) {
+		$sql .= q{ AND action_type IN (}.join(',', map {'?'} @{$params{'action_type in'}} ).')';
+		push @values, @{$params{'action_type in'}};
+	} # end if
 
-				if ( exists $params{'date_time >='} ) {
-					$sql .= " AND $fields{date_time} >= ?";
-					push @values, $params{'date_time >='};
-					delete $params{'date_time >='};
-				} # end if
+	if ( exists $params{'date_time >='} ) {
+		$sql .= " AND $fields{date_time} >= ?";
+		push @values, $params{'date_time >='};
+		delete $params{'date_time >='};
+	} # end if
+	if ( exists $params{'date_time <='} ) {
+		$sql .= " AND $fields{date_time} <= ?";
+		push @values, $params{'date_time <='};
+		delete $params{'date_time <='};
+	} # end if
 	
 	if ( $params{'ip_address'} ) {
         if ( ref $params{'ip_address'} eq 'ARRAY' ) {

@@ -558,6 +558,9 @@ my $master_time = gettimeofday();
 	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( ( ! $$specs{'txtSignatureType'} ) and ! ( $$specs{'txtFinalHeight'} and $$specs{'txtFinalWidth'} ) ) {
+		$$specs{'alert'} .= 'Please enter the finished dimensions.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );

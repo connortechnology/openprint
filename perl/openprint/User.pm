@@ -316,6 +316,7 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::User';
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;

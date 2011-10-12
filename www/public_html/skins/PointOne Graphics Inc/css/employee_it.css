@@ -41,3 +41,7 @@ img.stream {
 .RADIUS .username, .RADIUS .attribute, .RADIUS .value {
 	text-align: left;
 }
+
+table .description {
+	text-align: left;
+}

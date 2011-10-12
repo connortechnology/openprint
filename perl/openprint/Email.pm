@@ -6,12 +6,15 @@ our @ISA = qw( openprint::Object );
 use openprint ();
 require openprint::User;
 require email;
+require misc;
+require ssi;
 
-use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %config );
+use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %config $debug );
 *log = \$openprint::log;
 *session = \%openprint::session;
 *config = \%openprint::config;
 
+$debug = 1;
 $table = 'mailbox';
 
 %fields = (
@@ -28,10 +31,12 @@ $table = 'mailbox';
 
 sub send {
 	my ( $self, %params ) = @_;
-#$log->debug("Sending an email");
-#foreach my $k ( keys %params ) {
-#$log->debug("Params: $k => $params{$k}");
-#} # end 
+if ( $debug ) {
+$log->debug("Sending an email");
+foreach my $k ( keys %params ) {
+$log->debug("Params: $k => $params{$k}");
+} # end 
+}
 
 	my $results;
 	if ( $params{'FROM'} ) {
@@ -49,6 +54,7 @@ sub send {
             SMTP    => ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
+			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
             );
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();

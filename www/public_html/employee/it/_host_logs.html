@@ -1,0 +1,22 @@
+
+<? echo (
+	my $html='';
+	my @Logs = openprint::logRecord::find(
+		'ip_address'=>$$variable{'Host'}->ip(),
+		'action_type in'	=> [ 100, 101, 102 ],
+		ssi::date_filter( '/employee/it/host.html?log_created_on_start', 'date_time >=' ),
+		ssi::date_filter( '/employee/it/host.html?log_created_on_end', 'date_time <=' ),
+	);
+	if ( @Logs ) {
+		$html .= '<table><tr><th class="DateTime">When</th><th class="action_type">Action</th><th class="note">Note</th></tr>';
+		foreach my $Log ( @Logs ) {
+			$html .= sprintf('<tr><td class="DateTime">%s</td><td class="action_type">%s</td><td class="note">%s</td></tr>',
+				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
+				$Log->Action_Type()->name(), $Log->note(),
+				);
+
+		} # end foreach Log
+		$html .= '</table>';
+	} # end if Logs
+	return $html;
+) ?>

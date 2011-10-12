@@ -94,7 +94,11 @@
 		my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
 		
 		foreach my $mac ( @{$$variable{'Host'}->mac()} ) {
-			$mac =~ s/[^a-zA-Z0-9]//g;
+			if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+				$mac = "$1-$2-$3-$4-$5-$6";
+			} # end if
+			$mac = uc $mac;
+
 			$html .= qq`<li id="mac_$mac">`;
 			$$variable{'username'} = $mac;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
@@ -107,5 +111,8 @@
 <? else ( $config{'RADIUS Support'} eq 'Y' ) ?>
 No RADIUS Support
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
+	<fieldset><legend>Logs</legend>
+		<div id="Logs"><!--#include virtual="/employee/it/_host_logs.html"--></div>
+	</fieldset>
 </form>
 </div></div>

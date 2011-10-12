@@ -39,7 +39,7 @@ sub hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
 			'radius_auth',
-			'ip','hostname','mac',
+			'ip','hostname','mac','order',
 			);
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -83,7 +83,7 @@ sub _hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
 			'ip','hostname','mac',
-			'radius_auth',
+			'radius_auth', 'order',
 			);
 	if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
@@ -211,6 +211,11 @@ sub _radius_mac_line {
 		return;
 	} # end if
 	if ( $param{'action'} eq 'add' ) {
+		if ( $param{'username'} =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+			$param{'username'} = "$1-$2-$3-$4-$5-$6";
+		} else {
+			$log->warn("Re didn't match $param{'username'}");
+		} # end if
 		if ( ! $param{'value'} ) {
 			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
 				$param{'value'} = 'password';
@@ -233,6 +238,7 @@ sub _radius_mac_line {
 		$variable{'error'} .= $Check->delete() if $Check->id();
 	} # end if
 	$variable{'username'} = $param{'username'};
+	$variable{'username'} =~ s/[^[[:xdigit:]]]//g;
 } # end sub _radius_mac_line
 
 sub radius {
@@ -262,6 +268,10 @@ sub _radius {
 			'attribute','username'
 			);
 } # end sub _radius
+
+sub _host_logs {
+	$variable{'Host'} = new openprint::Host( $param{'host_id'} );
+} # end sub _host_logs
 
 1;
 __END__
