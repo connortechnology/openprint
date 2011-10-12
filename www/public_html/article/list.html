@@ -42,15 +42,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
-				if ( $$Article{'user_type'} ) {
-					if ( $$Article{'user_type'} eq 'C' and ! $session{'user_type'} ) {
-						next;
-					} elsif ( $$Article{'user_type'} eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-						next;
-					} elsif ( $$Article{'user_type'} eq 'A' and $session{'user_type'} ne 'A' ) {
-						next;
-					} # end if
-				} # end if
+				next if ! $Article->can_view();
 				$html .= $Article->html();
 			} # end foreach Article
 			return $html;
