@@ -20,7 +20,7 @@
 		$$variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	} # end if
 ) ?>
-<div class="Article">
+<div class="Article"><div class="List">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
 	<? echo (
@@ -42,10 +42,19 @@
 		<? echo ( 
 			my $html;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				if ( $$Article{'user_type'} ) {
+					if ( $$Article{'user_type'} eq 'C' and ! $session{'user_type'} ) {
+						next;
+					} elsif ( $$Article{'user_type'} eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+						next;
+					} elsif ( $$Article{'user_type'} eq 'A' and $session{'user_type'} ne 'A' ) {
+						next;
+					} # end if
+				} # end if
 				$html .= $Article->html();
 			} # end foreach Article
 			return $html;
 		) ?>
 <? endif ( @{$$variable{'Articles'}} == 0 ) ?>
 </div>
-</div><!--Article-->
+</div></div><!--Article-->
