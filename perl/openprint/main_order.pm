@@ -108,7 +108,7 @@ sub information {
 		my @errors;
 		# If there are any unspecified quantities, keep looping on the selection page.
 		foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			if ( ! $Project->quantity_index() ) {
+			if ( ( ! $Project->quantity_index() ) and ( $Project->Project()->quantity_indexes() > 1 ) ) {
 				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
 			} # end if
 			if ( ! $Project->description() ) {

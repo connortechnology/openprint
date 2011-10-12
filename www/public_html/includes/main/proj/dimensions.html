@@ -10,10 +10,10 @@
 			</select>
 		</div>
 		<div class="rightColumn">
-			<input type="number" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> x
 			<input type="number" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
 			(<? echo ( ssi::writeTip( 'Finished' ); ) ?> - W x H in inches)<br/>
-			<input type="number" id="txtWidth" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
+			<input type="number" id="txtWidth" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> x
 			<input type="number" id="txtHeight" name="txtHeight" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');dimensions_onChange(this.form);" /> 
 			(<? echo ( ssi::writeTip( 'Flat' ); ) ?> - W x H in inches)
 		</div>

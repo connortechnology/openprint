@@ -146,6 +146,11 @@
 			<label class="radio" for="TypesRoll">Roll</label>
 		</li>
 		<li>
+			<label>Size:</label>
+			<input type="number" name="width" id="width" value="<? echo ( $session{'/administrator/stock/list.html?width'} ) ?>" onclick="calc(this.form.name);" />x
+			<input type="number" name="height" id="height" value="<? echo ( $session{'/administrator/stock/list.html?height'} ) ?>" onclick="calc(this.form.name);" />
+		</li>
+		<li>
 			<label>Recommendations:</label>
 			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
 		</li>
