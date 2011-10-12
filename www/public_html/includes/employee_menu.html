@@ -95,6 +95,12 @@
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+	<li id="MarketingMenu" class="off"><a href="#" onclick="toggleMenu($('MarketingMenu'), 'off', 'on');return false;">Marketing</a>
+		<ul>
+			<li><a href="/employee/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
+			<li><a href="/employee/marketing/surveys.html;NOSSL">Surveys</a></li>
+		</ul>
+	</li>
 	<li id="SupportMenu" class="off"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
 		<ul>
 			<li><a href="/employee/support/helpdesk_search.html;NOSSL">Help Desk</a></li>

@@ -47,6 +47,7 @@ $serial = 'emailcampaign_id_seq';
 	'created_on'	=> q`'NOW()'`,
 	'updated_on'	=> q`'NOW()'`,
 	'timestosend'	=>	undef,
+	'template_id'	=>	undef,
 );
 
 sub delete {
