@@ -192,6 +192,10 @@
 			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $session{'/administrator/stock/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
 		</p>
+		<p><label>Size:</label>
+			<input type="number" name="width" id="width" value="<? echo ( $session{'/administrator/stock/list.html?width'} ) ?>" onclick="calc(this.form.name);" />x
+			<input type="number" name="height" id="height" value="<? echo ( $session{'/administrator/stock/list.html?height'} ) ?>" onclick="calc(this.form.name);" />
+		</p>
 		<p>
 			<label>Recommendations:</label>
 			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>

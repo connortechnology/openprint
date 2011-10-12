@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -361,7 +361,7 @@ sub calc_setup_object {
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
-$openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_direction() . " 2: " . $setup2->grain_direction() );
+#$openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_direction() . " 2: " . $setup2->grain_direction() );
 	# grain_direction is never set.
 	if ( 
 			( ! $grain_direction ) 
@@ -395,12 +395,11 @@ $openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_directi
 			$setup1->stock_height( $$specs{'Cut Off'} );
 		} # end if
 
+		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
 		if ( $$specs{'Maximum Image Area Length'} and ( ( ! $adjusted_paper_height ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
-		} else {
-			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		} # end if
 
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
@@ -421,6 +420,7 @@ $openprint::log->debug("Grains2: $grain_direction: 1: " . $setup1->grain_directi
 		$adjusted_paper_height -= $setup1->cropmark_top();
 		$adjusted_paper_height -= $setup1->cropmark_bottom();
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
+$openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height");
 
 		my $adjusted_paper_width = $paper_width; 
 		$cropmarkspace = $$specs{'CropMarkSpace'};
@@ -682,10 +682,10 @@ sub get_imposition {
 		push @styles, 'Perfecting' if $do_perfecting;
 	} # end if
 	if ( $$project{'Runstyles'} ) {
-	$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
+	#$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{'Runstyles'} ) ) );
 	} # end if
-	$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if $debug;
+	#$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if $debug;
 
 	return add_imposition( $project, $Paper, $versions, $override_grain_direction, $Press, @styles );
 } # end sub

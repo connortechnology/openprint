@@ -712,6 +712,8 @@ sub create_edit_process {
 		$Project->Currency( openprint::Currency::get_current() );
 		openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $Project->id() );
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $Project->id(), undef );
+		$Project->summary(undef);
+		$Project->save();
 	} # end if
 
 	return $Project->id();
