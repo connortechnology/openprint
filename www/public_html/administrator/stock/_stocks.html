@@ -1,6 +1,6 @@
 <? eval (
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
+		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'width','height' );
 	} # end if
 
 	@{$$variable{'Stocks'}} = ();
@@ -16,6 +16,8 @@
 			'material_id'	=> $session{'/administrator/stock/list.html?material_id'}, 
 			'type'		=> [ split(';', $session{'/administrator/stock/list.html?Types'} ) ],
 			'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'}, 
+			( $session{'/administrator/stock/list.html?width'} ? ( 'width'=>$session{'/administrator/stock/list.html?width'} ) : () ),
+			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {

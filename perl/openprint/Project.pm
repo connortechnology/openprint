@@ -490,6 +490,7 @@ sub update_status {
 } # end sub update_project_status
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Project';
 	my %params = @_;
 	my $sql = q{SELECT * FROM Projects WHERE 1>0};
 	my @values;

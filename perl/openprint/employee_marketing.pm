@@ -36,7 +36,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{'campaign_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$Campaign->save( \%param );
+		$variable{'error'} .= $Campaign->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
         $Campaign->save( \%param );
@@ -59,7 +59,7 @@ sub email_campaigns {
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
 	} # end if
 
-	@{$variable{'Campaigns'}} = openprint::EmailCampaign::find( 'order' => 'lower(name)' );
+	@{$variable{'Campaigns'}} = openprint::EmailCampaign->find( 'order' => 'lower(name)' );
 	$variable{'campaign_id'} = $Campaign->id();
 
 } # end sub email_campaigns

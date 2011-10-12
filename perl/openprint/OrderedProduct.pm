@@ -60,6 +60,7 @@ sub Project {
 	} # end if
 $openprint::log->debug("Creating proejct from template: " . $self->Product()->project_id() );
 	my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
+	$Project->predefined(0);
 	$Project->reference( $self->Product()->name() );
 	$Project->user_id( $openprint::session{'user_id'} );
 	$Project->company_id( $openprint::session{'company_id'} );
