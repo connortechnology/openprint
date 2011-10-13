@@ -9,7 +9,7 @@
 		( $session{'/article/history.html?company_id'} ? ( 'company_id'	=> $session{'/article/history.html?company_id'} ) : () ),
 		( $session{'/article/history.html?employee_id'} ? ( 'employee_id' => $session{'/article/history.html?employee_id'} ) : () ), 
 		( $session{'/article/history.html?category_id'} ? ( 'category_id' => $session{'/article/history.html?category_id'} ) : () ),
-		'order'				=> 'published_on',
+		'order'				=> 'published_on DESC',
 		) ) {
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article

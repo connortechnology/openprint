@@ -54,6 +54,12 @@
 					<li><label>Published at:</label>
 						<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?></span>
 					</li>
+					<li><label>Who:</label>
+						<select name="user_type" id="user_type">
+							<option value=""> All </option>
+							<? echo ( ssi::make_drop_down( openprint::User_Type->dropdown(), $$variable{'Article'}->user_type() ); ) ?>
+						</select>
+					</li>
 					<li><label>Source:</label>
 						<input type="text" id="source" name="source" value="<? echo ( $$variable{'Article'}->source() ) ?>" onchange="new Ajax.Updater( 'View', '_view.html', { parameters: f1.serialize() } );" />
 					</li>
