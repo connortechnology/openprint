@@ -43,7 +43,6 @@ sub registration {
 		$log->debug("Registering");
 	} # end if
 
-	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
 	$param{'business_name'} = $param{'company_name'} if ! $param{'business_name'};
 
 	# perform input field validation
@@ -72,6 +71,9 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+		$error .= "Password not good enough.  $reason<br/>";
+	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
@@ -95,11 +97,11 @@ sub registration {
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find('email'=>$param{email} ) ) {
+	if ( openprint::User->find('email lc'=>lc $param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
-	if ( openprint::User->find('email'=>$param{email},'deleted'=>1 ) ) {
+	if ( openprint::User->find('email lc'=>$param{email},'deleted'=>1 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
@@ -121,11 +123,13 @@ sub registration {
 	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my ( $cust_id ) = sql::execute( $log, $dbh, q{SELECT id FROM Companies WHERE lower(name) = lower(?) AND upper(postalcode) = ? AND (deleted=false OR deleted IS NULL)}, @param{'company_name','postalcode'} );
-	if ( ! $cust_id ) {
+	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
+			( exists $param{'postalcode'} ? ( 'postalcode uc'=>uc $param{'postalcode'} ) : () )
+			);
+	if ( ! $Company ) {
 		$param{'name'} = $param{'company_name'};
 
-		my $Company = new openprint::Company();
+		$Company = new openprint::Company();
 		$Company->set( \%param );
 		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
@@ -198,7 +202,10 @@ sub registration {
 			} # end if
 		} # end if
 	} else {
-		my $Company = new openprint::Company( $cust_id );
+		if ( $config{'Require Unique Company'} ) {
+			$variable{'error'} .= $param{'company_name'} . ' is already taken.';
+			return;
+		} # end if
 
 		my $User = new openprint::User();
 		$User->set( \%param );
@@ -271,8 +278,8 @@ sub registration {
 			if ( $config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
-					@session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
-					openprint::logs::insertLogRecord('2','Automatic login after registration.');
+					@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+					(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
 				} # end if
 			} # end if
 		} # end if
@@ -359,10 +366,15 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = '';
-		if ( ( $User->password() eq $param{'password'} ) and ! $param{'verifypassword'} ) {
-			delete $param{'password'};
-		} # end if
-		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+        if ( $param{'password'} ne $User->password() ) {
+            if ( ! $param{'verifypassword'} ) {
+                $variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+                delete $param{'password'};
+            } else {
+                $error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+            } # end if
+        } # end if
+
 		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
 		if ( $config{'UserProfileRequiredFields'} ) {
 			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
@@ -381,7 +393,7 @@ sub user_profile {
 			return;
 		} # end if
 
-		foreach my $U ( openprint::User->find('email_lc'=>lc $param{'email'}) ) {
+		foreach my $U ( openprint::User->find('email lc'=>lc $param{'email'}) ) {
 			if ( $U->id() != $User->id() ) {
 				$variable{'error'} = 'User already exists.';
 				$variable{'information'} = $param{'email'} . ' is already a user.';
@@ -393,7 +405,15 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
-		$param{'change_password'} = 'N' if $param{'password'};
+        if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+            # Are changing passwords
+			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+			} # end if
+            $param{'change_password'} = 'N';
+			$param{'password_changed_on'} = 'NOW()';
+        } # end if
+
 		$variable{'error'} .= $User->save( \%param );
 
 		$User->Profile()->save( \%param );
@@ -431,35 +451,7 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-	if ( $param{'txtNewPassword'} ne $param{'txtConfirmPassword'} ) {
-		$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	if ( $param{'txtNewPassword'} eq '' ) {
-		$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	my $User = new openprint::User( $session{'user_id'} );
-
-	if ( $param{'txtNewPassword'} eq $User->password() ) {
-		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-
-	if ( $User->password() eq $param{'txtOldPassword'} ) {
-		$User->password( $param{'txtNewPassword'} );
-		$User->change_password( 'N' );
-		$variable{'error'} .= $User->save();
-	} else {
-		$variable{'error'} = 'You entered the wrong old password.<br/>';
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
+	openprint::login::change_password();
 } # sub change_password
 
 sub login {
@@ -727,6 +719,28 @@ sub _relationships {
 sub relationships {
 } # end sub relationships
 
+# Assume that user_id2 is session{user_id}
+sub _unapproved_relationships {
+$log->debug("In unapproved");
+	if ( $param{'action'} eq 'delete' ) {
+$log->debug("delete");
+		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
+		if ( $R->user_id2() == $session{'user_id'} ) {
+			$variable{'error'} .= $R->delete();
+		} else {
+			$log->error("Can't delete a relationship that we are not in.");
+			$variable{'error'} .= 'You cannot delete a relationship that you are not a part of.';
+		} # end if
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
+		if ( $R->user_id2() == $session{'user_id'} ) {
+			$variable{'error'} .= $R->save({'approved'=>1});
+		} else {
+			$log->error("Can't approve a relationship that we are not in.");
+			$variable{'error'} .= 'You cannot approve a relationship that you are not a part of.';
+		} # end if
+	} # end if
+} # end sub _unapproved_relationships
 
 1;
 __END__

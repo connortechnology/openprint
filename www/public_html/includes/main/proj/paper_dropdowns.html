@@ -121,7 +121,7 @@
 		push @types, 'Roll';
 	} # end if
 	my %find = (
-			'project_type_id in'	=>	$$variable{'ProjectType'}->id(),
+			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied'			=>	[undef, $$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0],
 			'type'				=>	\@types,
 	);

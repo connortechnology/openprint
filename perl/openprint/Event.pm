@@ -1,6 +1,7 @@
 use strict;
 require openprint::Event_Category;
 require openprint::Comment;
+require openprint::Event_Attendance;
 package openprint::Event;
 our @ISA = qw( openprint::Object );
 
@@ -106,6 +107,36 @@ sub can_edit {
 sub Comments {
 	return openprint::Comment->find({'object_type'=>'openprint::Event','object_id'=>$_[0]{'id'}});
 } # end sub Comments
+
+sub Attendance {
+	if ( ! $_[0]{'Attendance'} ) {
+		@{$_[0]{'Attendance'}} = openprint::Event_Attendance->find('event_id'=>$_[0]{'id'});
+	} # end if
+	return @{$_[0]{'Attendance'}};
+} # end sub Attendance
+
+sub Created_By {
+	return new openprint::User( $_[0]{'created_by'} );
+}
+
+sub html {
+	my $Event = $_[0];
+	my $html = sprintf(q`
+			<div class="Event">
+			<a class="thumbnail" href="/event/view.html?event_id=%1$d"><img alt="" src="%2$s"/></a>
+			<span class="name"><a href="/event/view.html?event_id=%1$d">%3$s</a></span>
+			<span class="when">%4$s</span>
+			`, $Event->id(),
+			$Event->Asset()->thumbnail_url(),
+			ssi::htmlize($Event->name()),
+			( $Event->starting() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
+
+			);
+	my @Comments = $Event->Comments();
+	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	$html .= '</div>';
+	return $html;
+} # end  sub html
 
 1;
 __END__

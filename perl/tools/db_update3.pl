@@ -42,6 +42,10 @@ if ( ! exists $$data{'source_content'} ) {
 if ( ! exists $$data{'category_id'} ) {
 		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
 } # end if
+if ( ! exists $$data{'user_type'} ) {
+	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
+	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
+} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -253,6 +257,10 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
 		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
 	} # end if
+} # end if
+if ( ! sets::isin( 'event_attendance', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
@@ -530,6 +538,10 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('ALTER TABLE likes DROP object_type');
 		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
 	} # end if
+}
+if ( ! sets::isin( 'keywords', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
 }
 
 $dbh->disconnect();

@@ -24,22 +24,22 @@
 	<p>
 		<label>Date:</label>
 		<span class="DateTimeSelector">
-			<select name="StartYear" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartYears?></select>
-			<select name="StartMonth" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartMonths?></select>
-			<select name="StartDay" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartDays?></select>
+			<select name="StartYear" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartYears?></select>
+			<select name="StartMonth" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartMonths?></select>
+			<select name="StartDay" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartDays?></select>
 -
-			<select name="StartHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
-			<select name="StartMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
+			<select name="StartHour" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
+			<select name="StartMinute" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'StartToday', 't.gif', 'set_today( LogForm.StartYear, LogForm.StartMonth, LogForm.StartDay );', '', 'T' ); ) ?>
 			to
 		</span>
 		<span class="DateTimeSelector">
-			<select name="EndYear" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndYears?></select>
-			<select name="EndMonth" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndMonths?></select>
-			<select name="EndDay" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndDays?></select>
+			<select name="EndYear" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndYears?></select>
+			<select name="EndMonth" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndMonths?></select>
+			<select name="EndDay" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndDays?></select>
 -
-			<select name="EndHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
-			<select name="EndMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
+			<select name="EndHour" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
+			<select name="EndMinute" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'EndToday', 't.gif', 'set_today( LogForm.EndYear, LogForm.EndMonth, LogForm.EndDay );', '', 'T' ); ) ?>
 		</span>
 	</p>
@@ -58,10 +58,10 @@
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
 		<p><label>Docket:</label>
-			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
+			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
 		</p>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );", '', 'Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );", '', 'Load' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
 		</p>
 	</fieldset>

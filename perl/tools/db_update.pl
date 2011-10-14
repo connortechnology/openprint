@@ -329,6 +329,9 @@ if ( $data ) {
 	if ( ! exists $$data{'notes'} ) {
 		$dbh->do('alter table users add notes text');
 	} # end if
+	if ( ! exists $$data{'password_changed_on'} ) {
+		$dbh->do('alter table users add password_changed_on');
+	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 	if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
@@ -2030,6 +2033,8 @@ if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Contents.sql' ) ) or die;
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='order_contents'", 'column_name');
 }
 
 if ( ! sets::isin( 'payments', \@tables ) ) {

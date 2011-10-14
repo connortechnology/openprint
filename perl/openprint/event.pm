@@ -14,6 +14,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Event;
 require openprint::Event_Category;
+require openprint::Event_Attendance;
 require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
@@ -204,10 +205,23 @@ sub _view {
 sub _photos {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Photo = new openprint::Photo_in_Album( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
-		$Photo->delete();
+		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$variable{'error'} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
+
+sub _attendance {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( exists $param{'attending'} ) {
+		my $Attending = new openprint::Event_Attendance( {'event_id'=>$param{'event_id'}, 'user_id'=>$session{'user_id'} } );
+$log->debug("Got: " . $Attending->to_string() );
+		$variable{'error'} .= $Attending->save({
+			'event_id'	=>	$param{'event_id'},
+			'user_id'	=>	$session{'user_id'},
+			'attending'	=>	$param{'attending'},
+		});
+	} # end if
+} # end sub _attendance
 
 1;
 __END__

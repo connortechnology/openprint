@@ -13,12 +13,12 @@
 				my $html = '';
 				if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {
 					if ( $$variable{'Album'}->deleted() ) {
-					$html .= ssi::button( 'Undelete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
-					$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
+						$html .= ssi::button( 'Undelete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Undelete';f1.submit();};" } );
+						$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();};" } );
 					} else {
-					$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
+						$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();};" } );
 					} # end if
-					$html .= ssi::button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
+						$html .= ssi::button( 'Edit', { 'href' => '/photo_albums/edit.html?album_id='.$$variable{'Album'}->id() } );
 				} # end if
 				return $html;
 			) ?>
@@ -27,6 +27,7 @@
 				<div class="content">
 					<ul>
 						<li><label>Name:</label><? echo ( $$variable{'Album'}->name() ) ?></li>
+						<li><label>By:</label><? echo ( $$variable{'Album'}->user_id() ? sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{'Album'}->user_id(), $$variable{'Album'}->User()->name() ) : 'no one' ) ?></li>
 					</ul>
 				</div>
 			</fieldset>

@@ -8,6 +8,7 @@ require configuration;
 require sql;
 require openprint::Host;
 require logger;
+require openprint::Email;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -114,6 +115,12 @@ while(1) {
 		if ( $Host->online() != $ping ) {
 			$Host->save({'online'=>$ping});
 			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+			my $results = (new openprint::Email())->send(
+				'TO'	=>	openprint::User->find('usergroup'=>'IT'),
+				'Subject'	=>	'Host has gone ' . $ping . ': ' . $Host->hostname(),
+				'FROM'		=>	$config{'TechSupportEmail'},
+				'BODY'		=>	'Please investigate.',
+			);
 		} # end if
 		if ( $Host->online() ) {
 			if ( $Host->type() eq 'AIC500W' ) {
@@ -134,9 +141,9 @@ while(1) {
 				} # end if
 				if ( ! $response->is_success ) {
 					$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
-				my $headers = $response->headers();
+					my $headers = $response->headers();
 					foreach my $k ( keys %$headers ) {
-$log->debug("Header $k => $$headers{$k}");
+						$log->debug("Header $k => $$headers{$k}");
 					}  # end foreach
 					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 					$log->debug($response->is_success);

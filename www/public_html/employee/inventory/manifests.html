@@ -6,19 +6,19 @@ Please select a Manifest to view/edit.<br>
 		<p>
 			<label for="manifest_id">Manifest ID #</label>
 			<input type="text" id="manifest_name" name="manifest_name" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Go' ); ) ?>
-			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Show' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Go' ); ) ?>
+			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "LoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Show' ); ) ?>
 		</p>
 		<p>
 			<label for="po_id">Purchase Order:</label>
-			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'','Go' ); ) ?>
+			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', q`if(f1.po_id.value){LoadContent('Results','_manifests.html', $('f1').serialize() );};`,'','Go' ); ) ?>
 		</p>
 		<p>
 			<label for="docket">Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'','Go' ); ) ?>
+			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', q`if(f1.docket.value){LoadContent('Results','_manifests.html', $('f1').serialize() );}`,'','Go' ); ) ?>
 		</p>
 	</fieldset>
 </form>
@@ -26,7 +26,7 @@ Please select a Manifest to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-			<select name="supplier_id" onchange="AjaxLoadContent('Results','_manifests.html', $('f2').serialize() );">
+			<select name="supplier_id" onchange="LoadContent('Results','_manifests.html', $('f2').serialize() );">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
 			</select>
@@ -43,7 +43,7 @@ Please select a Manifest to view/edit.<br>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
 				); ) ?>
 		</p>

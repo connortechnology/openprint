@@ -80,9 +80,9 @@ foreach my $db ( @dbs ) {
 			} # end if
 		} # end if
 		if ( $$opts{host} and $$opts{host} ne 'local' ) {
-			system("pg_dump -h $$opts{host} $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2" );
+			system("pg_dump -b -h $$opts{host} $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
 		} else {
-			system("pg_dump $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2" );
+			system("pg_dump -b $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
 		} # end if
 		die "Can't dump $db" if $?;
 		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {
@@ -93,7 +93,7 @@ foreach my $db ( @dbs ) {
 
 		if ( $$opts{'days'} ) {
 			print "Cleaning up backups older than $$opts{'days'}days\n" if $$opts{'debug'};
-			opendir DIRHANDLE, "$$opts{path}/$$opts{host}/$db/" or die 'couldnt open db backup dir';
+			opendir DIRHANDLE, "$path/$db/" or die 'couldnt open db backup dir';
 			my @files = readdir DIRHANDLE;
 			closedir DIRHANDLE;
 			foreach my $file ( @files ) {
@@ -102,17 +102,17 @@ foreach my $db ( @dbs ) {
 					if ( Date::Calc::check_date( $1, $2, $3 ) ) {
 						my $age = Date::Calc::Delta_Days( $1, $2, $3, $year, $mon, $mday );
 						if ( $age > $$opts{'days'} ) {
-							print "deleting $$opts{path}/$$opts{host}/$db/$file\n" if $$opts{'debug'};
-							unlink "$$opts{path}/$$opts{host}/$db/$file";
-							print STDERR "unable to unlink $$opts{path}/$$opts{host}/$db/$file: $!\n" if $!;
+							print "deleting $path/$db/$file\n" if $$opts{'debug'};
+							unlink "$path/$db/$file";
+							print STDERR "unable to unlink $path/$db/$file: $!\n" if $!;
 						} elsif ( $$opts{'debug'} ) {
-							print "Too new $$opts{path}/$$opts{host}/$db/$file: $age days\n";
+							print "Too new $path/$db/$file: $age days\n";
 						} # end if too old
 					} else {
-						print STDERR "Invalid date $$opts{path}/$$opts{host}/$db/$file\n";
+						print STDERR "Invalid date $path/$db/$file\n";
 					} # end if valid date
 				} else {
-					print STDERR "$$opts{path}/$$opts{host}/$db/$file doesn't look like a backup\n";
+					print STDERR "$path/$db/$file doesn't look like a backup\n";
 				} # end if valid filename
 			} # end foreach file
 		} # end if days
