@@ -12,6 +12,8 @@
 		if ( sets::isin( $Field->type(), ['country','state','city'] ) ) {
 			my $Location = new openprint::Location( $value );
 			$html .= $Location->name();
+		} elsif ( $Field->name() eq 'Google+ ID' ) {
+			$html .= qq`<a href="https://plus.google.com/$value/posts" target="_blank">Go to Google</a>`;
 		} else {
 			$html .= $value;
 		} # end if

@@ -275,8 +275,12 @@ sub _assets {
 sub _category_photos {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Asset = new openprint::Photo_in_Album({'album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'}});
-		$variable{'error'} .= $Asset->delete();
+		my $Asset = openprint::Photo_in_Album->find_one('album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'});
+		if ( ! $Asset ) {
+			$variable{'error'} .= 'Asset not found.';
+		} else {
+			$variable{'error'} .= $Asset->delete();
+		} # end if
 	} else {
 		$log->error("article/_category_photos: Uknown function");
 	} # end if

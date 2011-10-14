@@ -32,13 +32,20 @@
 
 				if ( @{$Approved{$$Type{id}}} == 1 ) {
 					my $R = $Approved{$$Type{id}}[0];
-					$html .= sprintf('<li><span class="buttons">%4$s</span>%1$s %2$s %3$s</li>',
+					$html .= sprintf('<li><span class="buttons">%4$s</span>%5$s %1$s %2$s %3$s</li>',
 						( $R->user_id1() == $session{'user_id'} ) ? 'You are ' : sprintf('<a href="/account/view.html?user_id=%d">%s</a> is ', $$R{'user_id1'},$R->User1()->name() ),
 						$Type->name(),
 						( $R->user_id2() == $session{'user_id'} ) ? 'you' : sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$R{'user_id2'},$R->User2()->name() ),
 						join('',
 							( sets::isin( $session{'user_id'}, @$R{'user_id1','user_id2'} ) ?  ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Delete'} ) : () ),
-						)
+						),
+						sprintf('<a href="/account/view.html?user_id=%d" class="thumbnail"><img src="%s"/></a>',
+							( $$variable{'User'}->id() == $R->user_id1() ? 
+							  ( $R->user_id2(), $R->User2()->Asset()->thumbnail_url() ) :
+							  ( $R->user_id1(), $R->User1()->Asset()->thumbnail_url() ) 
+							) 
+							)
+					
 						);
 				} else {
 					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{'User'}->id() == $session{'user_id'} ? 'you' : $$variable{'User'}->firstname() ). '</li>';
@@ -53,8 +60,12 @@
 				foreach my $R ( @{$Unapproved{$$Type{id}}} ) {
 					if ( $R->user_id1() == $session{'user_id'} ) {
 						# You are the person requesting
-						$html .= sprintf('<li><span class="buttons">%3$s</span>You would like to be %2$s %1$s</li>', 
-								sprintf('<a href="/account/view.html?user_id=%s">%s</a>', $R->user_id2(), $R->User2()->firstname() ), $Type->name(),
+						$html .= sprintf('<li><span class="buttons">%5$s</span>
+								<a href="/account/view.html?user_id=$1$d" class="thumbnail"><img src="%3$s"/></a>
+								<span class="relationship">You would like to be %4$s 
+								<a href="/account/view.html?user_id=%1$ds">%2$s</a></span>
+								</li>', 
+								$R->user_id2(), $R->User2()->name(), $R->User2()->Asset()->thumbnail_url(), $Type->name(),
 								join('',
 									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 
 										'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 
@@ -63,8 +74,10 @@
 								);
 					} elsif ( $R->user_id2() == $session{'user_id'} ) {
 						# You are the person confirming
-						$html .= sprintf('<li><span class="buttons">%3$s</span>%1$s claims they are %2$s you</li>',
-								sprintf('<a href="/account/view.html?user_id=%s">%s</a>', $R->user_id1(), $R->User1()->name() ), $R->type(),
+						$html .= sprintf('<li><span class="buttons">%5$s</span>
+								<a href="/account/view.html?user_id=$1$d" class="thumbnail"><img src="%3$s"/></a>
+<span class="relationship"><a href="/account/view.html?user_id=%1$ds">%2$s</a> claims they are %4$s you</span></li>',
+								$R->user_id1(), $R->User1()->name(), $R->User1()->Asset()->thumbnail_url(), $Type->name(),
 								join('',
 									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Deny'} ),
 									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'Approve'} ),
