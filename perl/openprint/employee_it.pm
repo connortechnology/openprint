@@ -218,7 +218,7 @@ sub _radius_mac_line {
 		} # end if
 		if ( ! $param{'value'} ) {
 			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
-				$param{'value'} = 'password';
+				$param{'value'} = $param{'username'};
 			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{'username'});
 				if ( $Host ) {
