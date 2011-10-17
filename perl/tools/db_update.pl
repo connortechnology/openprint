@@ -330,7 +330,7 @@ if ( $data ) {
 		$dbh->do('alter table users add notes text');
 	} # end if
 	if ( ! exists $$data{'password_changed_on'} ) {
-		$dbh->do('alter table users add password_changed_on');
+		$dbh->do('alter table users add password_changed_on TIMESTAMP WITH TIME ZONE');
 	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {

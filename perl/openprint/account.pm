@@ -472,15 +472,17 @@ sub login {
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			my $results = (new openprint::Email())->send(
 					FROM 	=> $config{'AdministratorEmail'},
-					TO	=> $User,
+					TO		=> $User,
 					SUBJECT	=> 'Forgotten Password',
 					ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
-			$variable{'information'} = 'Your password has been mailed to you.';
+			if ( $results ) {
+				$variable{'information'} = 'Your password has been mailed to you.';
+			} else {
+				$variable{'error'} .= 'Your password was not email for some reason. Please contact support.';
+			} # end if
 		} else {
 			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
 		} # end if
