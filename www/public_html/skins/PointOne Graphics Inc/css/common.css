@@ -437,9 +437,9 @@ fieldset.filters p select {
 }
 
 @media print {
-.unprintable {
-display: none;
-}
+	.unprintable {
+		display: none;
+	}
 }
 hr {
         width: 100%;

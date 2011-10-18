@@ -130,6 +130,8 @@ sub host {
 			} # end if
 		} # end if
 	} # end if
+	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
 } # end sub view_host
 
 sub camera {
@@ -271,6 +273,10 @@ sub _radius {
 
 sub _host_logs {
 	$variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	ssi::save_params( '/employee/it/host.html', 
+			( map { 'log_created_on_start_'.$_ } ( 'year', 'month','day','hour','minute' ) ),
+			( map { 'log_created_on_end_'.$_ } ( 'year', 'month','day','hour','minute' ) ),
+	);
 } # end sub _host_logs
 
 1;

@@ -551,12 +551,24 @@ sub date_select_session {
 	return date_select( $prefix, [ @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} ], $options );
 } # end sub date_select_session
 
+sub datetime_select_session {
+	my ( $page, $prefix, $options ) = @_;
+	return datetime_select( $prefix, [ @session{
+			$page.'?'.$prefix.'_year',
+			$page.'?'.$prefix.'_month',
+			$page.'?'.$prefix.'_day',
+			$page.'?'.$prefix.'_hour',
+			$page.'?'.$prefix.'_minute'} ], $options );
+} # end sub date_select_session
+
 sub datetime_select {
 	my ( $prefix, $value, $options ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec);
 	if ( ! defined $value ) {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( time );
+	} elsif ( ref $value eq 'ARRAY' ) {
+		($year,$month,$day, $hour,$min,$sec) = @$value;
 	} elsif ( $value ) {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( Date::Parse::str2time( $value ) );
 		if ( ! $year ) {
@@ -597,8 +609,14 @@ $openprint::log->error("No date from $value");
 ( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
 	make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
 	make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
-);
-	 return $html;
+	);
+	if ( $$options{'with_clear'} ) {
+		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
+	} # end if
+	if ( $$options{'with_today'} ) {
+		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T' } );
+	} # end if
+	return $html;
 } # end sub datetime_select
 
 sub datetime_text {
@@ -677,12 +695,22 @@ sub date_filter {
 #$log->debug("ssi::date_filter: No date specified for $field");
         return ();
     } # end if
-    my ( $year, $month, $day ) = @$hash{$field.'_year',$field.'_month',$field.'_day'};
+    my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
     $month = 1 if ! $month;
     $day = 1 if ! $day;
-#$log->debug("ssi::date_filter: $year $month $day");
+	if ( $field =~ /end$/ ) {
+		$hour = 23 if ( ! defined $hour ) or $hour eq '';
+		$minute = 59 if ( ! defined $minute ) or $minute eq '';
+		$second = 59 if ( ! defined $second ) or $second eq '';
+	} else {
+		$hour = 0 if ( ! defined $hour ) or $hour eq '';
+		$minute = 0 if ( ! defined $minute ) or $minute eq '';
+		$second = 0 if ( ! defined $second ) or $second eq '';
+	} # end if
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day ), ( $field =~ /end$/ ? ( 23,59,59 ) : ( 0, 0, 0 ) ) ) );
+    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
 sub input {

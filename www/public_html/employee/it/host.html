@@ -112,6 +112,22 @@
 No RADIUS Support
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<fieldset><legend>Logs</legend>
+		<ul>
+			<li><label>Date:</label>
+				<span class="DateSelectorCT"><? echo (
+						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_start', {
+							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							'with_today'=>1,
+							'with_clear'=>1,
+							} ); ) ?></span> to
+				<span class="DateSelectorCT"><? echo (
+						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_end', {
+							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,
+							'with_today'=>1,
+							'with_clear'=>1,
+							} ); ) ?></span>
+			</li>
+		</ul>
 		<div id="Logs"><!--#include virtual="/employee/it/_host_logs.html"--></div>
 	</fieldset>
 </form>

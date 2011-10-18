@@ -7,7 +7,7 @@ require openprint::logAction;
 require openprint::Host;
 use strict;
 
-use vars qw( $log $dbh $table $serial %fields %tansforms %defaults $debug );
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults $debug );
 $debug = 1;
 $table = 'log';
 $serial = 'log_id_seq';
@@ -23,20 +23,12 @@ $serial = 'log_id_seq';
 	'note'			=>	'note',
 );
 %defaults = (
-	'host_id'	=>	undef,
+	'user_id'		=>	undef,
+	'company_id'	=>	undef,
+	'host_id'		=>	undef,
+	'date_time'		=>	'NOW()',
 );
 
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM log WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error('Error loading Log: reason:'.$openprint::dbh->errstr());
-		} # end if
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub find {
 	my %params = @_;

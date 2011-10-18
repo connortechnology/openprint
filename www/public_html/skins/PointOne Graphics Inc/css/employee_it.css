@@ -45,3 +45,6 @@ img.stream {
 table .description {
 	text-align: left;
 }
+table .action_type, table .note {
+	text-align: left;
+}

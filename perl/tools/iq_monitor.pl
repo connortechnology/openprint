@@ -84,7 +84,7 @@ if ( $CFG::Config{'pid_file'} ) {
 } # end if
 
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp');
+my $p = Net::Ping->new('icmp',2);
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -117,7 +117,7 @@ while(1) {
 		if ( $Host->online() != $ping ) {
 			$Host->save({'online'=>$ping});
 
-			(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>$$Host{'id'}});
+			(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 			my @To = openprint::User->find('usergroup'=>'IT');
 			if ( @To < 10 ) {
@@ -156,7 +156,7 @@ while(1) {
 					}  # end foreach
 					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 					$log->debug($response->is_success);
-					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>"Camera $$Host{'id'} was rebooted"});
+					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
 					my @To = openprint::User->find('usergroup'=>'IT');
 					if ( @To < 10 ) {
 						$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );

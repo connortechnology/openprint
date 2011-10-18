@@ -240,6 +240,13 @@ sub user_profiles {
 			$User = $Users[0] if @Users;
 		} # end if
     } # end if
+	if ( $User->id() ) {
+		if ( $User->deleted() ) {
+			unshift @Users, $User;
+		} elsif ( ! sets::isin( $User->id(), [ map { $_->id() } @Users ] ) ) {
+			unshift @Users, $User;
+		} # end if
+    } # end if
 
 	# load user fields
 
