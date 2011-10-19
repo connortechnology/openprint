@@ -543,6 +543,10 @@ if ( ! sets::isin( 'keywords', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'privacy', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
 $dbh->disconnect();
 1;

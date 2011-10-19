@@ -146,14 +146,14 @@ sub user_profiles {
 	my $User = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
-	if ( ( ! exists $param{'ddmCustomer'} ) or ( $param{'ddmCustomer'} != $User->company_id() ) ) {
-		if ( $User->id() ) {
-			$param{'ddmCustomer'} = $User->company_id();
-		} else {
-			$param{'ddmCustomer'} = $session{'company_id'};
-		} # end if
+
+	# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
+	# selected company
+	if ( ( ! exists $param{'ddmCustomer'} ) or ( $User->id() and ( $param{'ddmCustomer'} != $User->company_id() ) ) ) {
+		$param{'ddmCustomer'} = $User->company_id();
 	} # end if
 	my $cust_id = $param{'ddmCustomer'};
+	$cust_id = $session{'company_id'} if ! $cust_id;
 
 	if ( $param{'btnFunction'} eq '<<' ) {
 		$User = $User->Prev( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
@@ -343,7 +343,6 @@ sub user_profiles {
 
 
 sub company_profiles {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 # form field to db field mappings
 	my %shipping_fields = (
@@ -472,12 +471,12 @@ sub company_profiles {
 	my $payments;
 	if ( $index ) {
 		foreach ( 1 .. 3 ) {
-			$Company->laod_tradereferences( $_, $variable );
+			$Company->laod_tradereferences( $_, \%variable );
 		} 
 		my $shipping_address = $Company->get_shipping_address();
-		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		my $customer_credit = new openprint::customer_credit( $index );
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";

@@ -1,6 +1,7 @@
 use strict;
 use Digest::MD5;
 require openprint::Asset;
+require openprint::Privacy;
 require openprint::Photo_in_Album;
 # A collection of Assets
 package openprint::Photo_Album;
@@ -83,6 +84,16 @@ sub can_edit {
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
 } # end sub can_edit
+
+sub Privacy {
+	if ( ! exists $_[0]{'Privacy'} ) {
+		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>'Privacy', 'object_id'=>$_[0]{'id'} );
+		if ( ! $_[0]{'Privacy'} ) {
+			$_[0]{'Privacy'} = new openprint::Privacy();
+		} # end if
+	} # end if
+	return $_[0]{'Privacy'};	
+} # end sub Privacy
 
 1;
 __END__

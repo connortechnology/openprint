@@ -12,7 +12,7 @@ require openprint::Asset;
 require openprint::User_Profile;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -419,7 +419,28 @@ sub last_logged_in {
 	return $_[0]{'last_logged_on'};
 } # end sub last_logged_in
 
+sub AUTOLOAD {
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+	if ( $fields{$name} ) {
+		if ( @_ > 1 ) {
+#$openprint::log->debug("Autoload $type $name $_[0]");
+			return $_[0]{$name} = $_[1];
+		} else {
+			return $_[0]{$name};
+		} # end if
+	} else {
+		my $Profile = $_[0]->Profile();
+		if ( exists $$Profile{'fields'}{$name} ) {
+			if ( @_ > 1 ) {
+				$$Profile{'fields'}{$name} = $_[1];
+			} # end if
+			return $$Profile{'fields'}{$name};
+		} else {
+			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		} # end if
+	} # end if
+} # end sub AUTOLOAD
+
 1;
-
 __END__
-

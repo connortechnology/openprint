@@ -57,6 +57,7 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
 	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
 	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
+	$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
 	if ( $required_fields{'postalcode'} ) {
 		$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
 		$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
@@ -165,6 +166,7 @@ sub registration {
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'error'} .= $User->Profile()->save(\%param);
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
