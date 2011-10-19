@@ -84,7 +84,7 @@ if ( $CFG::Config{'pid_file'} ) {
 } # end if
 
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',2);
+my $p = Net::Ping->new('icmp',10);
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -109,10 +109,15 @@ while(1) {
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
-		my $ping = $p->ping($Host->ip());
-		if ( ! defined $ping ) {
+		my @ping = $p->ping($Host->ip());
+		my $ping = $ping[0];
+$openprint::log->debug("@ping");
+		if ( ! @ping ) {
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
+		} elsif ( $ping and ( $ping[1] > 1 ) ) {
+(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+
 		} # end if
 		if ( $Host->online() != $ping ) {
 			$Host->save({'online'=>$ping});
