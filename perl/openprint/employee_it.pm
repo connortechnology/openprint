@@ -48,7 +48,7 @@ sub hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
 			'radius_auth',
-			'ip','hostname','mac',
+			'ip','hostname','mac','order',
 			);
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
@@ -63,7 +63,7 @@ sub hosts {
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
 	} # end if
-	if ( $config{'RADIUS Support'} eq 'yes' ) {
+	if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
@@ -92,9 +92,9 @@ sub _hosts {
 			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
 			'has_hostname', 'monitored','whitelisted','blacklisted','online',
 			'ip','hostname','mac',
-			'radius_auth',
+			'radius_auth', 'order',
 			);
-	if ( $config{'RADIUS Support'} eq 'yes' ) {
+	if ( $config{'RADIUS Support'} eq 'Y' ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
@@ -139,6 +139,8 @@ sub host {
 			} # end if
 		} # end if
 	} # end if
+	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/host.html', 'log_created_on_end', '' );
 } # end sub view_host
 
 sub camera {
@@ -204,7 +206,7 @@ sub logs {
 } # end sub logs
 
 sub _radius_mac_line {
-	if ( $config{'RADIUS Support'} ne 'yes' ) {
+	if ( $config{'RADIUS Support'} ne 'Y' ) {
 		$variable{'error'} .= 'RADIUS Support is not enabled.';
 		return;
 	} # end if
@@ -220,9 +222,14 @@ sub _radius_mac_line {
 		return;
 	} # end if
 	if ( $param{'action'} eq 'add' ) {
+		if ( $param{'username'} =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+			$param{'username'} = "$1-$2-$3-$4-$5-$6";
+		} else {
+			$log->warn("Re didn't match $param{'username'}");
+		} # end if
 		if ( ! $param{'value'} ) {
 			if ( $param{'attribute'} eq 'Cleartext-Password' ) {
-				$param{'value'} = 'password';
+				$param{'value'} = $param{'username'};
 			} elsif ( $param{'attribute'} eq 'Framed-IP-Address' ) {
 				my $Host = openprint::Host->find_one('mac any'=>$param{'username'});
 				if ( $Host ) {
@@ -242,6 +249,7 @@ sub _radius_mac_line {
 		$variable{'error'} .= $Check->delete() if $Check->id();
 	} # end if
 	$variable{'username'} = $param{'username'};
+	$variable{'username'} =~ s/[^[[:xdigit:]]]//g;
 } # end sub _radius_mac_line
 
 sub radius {
@@ -249,7 +257,7 @@ sub radius {
 } # end sub radius
 
 sub _radius {
-	if ( $config{'RADIUS Support'} eq 'yes' and ( ! $openprint::RADIUS_Check::dbh ) ) {
+	if ( $config{'RADIUS Support'} eq 'Y' and ( ! $openprint::RADIUS_Check::dbh ) ) {
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
 				'database'  => $config{'RADIUS DB Name'},
 				'driver'    => $config{'RADIUS DB Driver'},
@@ -271,6 +279,14 @@ sub _radius {
 			'attribute','username'
 			);
 } # end sub _radius
+
+sub _host_logs {
+	$variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	ssi::save_params( '/employee/it/host.html', 
+			( map { 'log_created_on_start_'.$_ } ( 'year', 'month','day','hour','minute' ) ),
+			( map { 'log_created_on_end_'.$_ } ( 'year', 'month','day','hour','minute' ) ),
+	);
+} # end sub _host_logs
 
 1;
 __END__
