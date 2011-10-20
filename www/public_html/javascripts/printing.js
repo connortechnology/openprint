@@ -437,9 +437,14 @@ function cbStockFillResults( results ) {
 		options[0] = create_option( '', 'select one' );
 
 		if ( key == 'SheetSize' ) {
-			for ( var ddm_index = 0, ddm_len = value.length; ddm_index < ddm_len; ++ddm_index ) {
-				var size = value[ddm_index].split('x');
-				options[options.length] = create_option( value[ddm_index], size.each(function(item){return item+"&quot;";}).join( ' x ' ) );
+			for ( var val_index = 0, val_len = value.length; val_index < val_len; ++val_index ) {
+				var size = value[val_index].split('x');
+				if ( size.length == 1 ) {
+					//Roll
+					options[options.length] = create_option( value[ddm_index], size[0]+" Roll" );
+				} else {
+					options[options.length] = create_option( value[ddm_index], size.each(function(item){return (item+"&quot;");}).join( ' x ' ) );
+				} // end if
 			} // end for
 			for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
 				var ddm = form.elements['ddmStock'+key+suffix_index];

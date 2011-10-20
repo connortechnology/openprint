@@ -40,43 +40,78 @@
 <? endif ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <p>
 	<label><? echo ( ssi::writeTip( 'Stock size' ); ) ?>:</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';ddmStockSheetSize_onchange();">
-			<option value="">Please select one</option>
-		 <? echo (
-if ( 0 ) {
-					ssi::make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
-							'ddmStockBrand'.$$variable{'Signature'},
-							'ddmStockFinish'.$$variable{'Signature'},
-							'ddmStockColour'.$$variable{'Signature'},
-							'ddmStockWeight'.$$variable{'Signature'},
-} ) ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} );
-}
-					) ?>
-		</select>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<? echo ( ssi::write_override( 'chkOverrideSheetSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}},"\$('OverrideStockSize$$variable{QTYIndex}').show();", "f1.OverrideStockWidth$$variable{QTYIndex}.value='';f1.OverrideStockHeight$$variable{QTYIndex}.value='';\$('OverrideStockSize$$variable{QTYIndex}').hide();calc('f1');" ); ) ?>
-		<br/>
-		<span id="OverrideStockSize<?QTYIndex?>" <? echo ( 'style="display:none;"' if $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} ne 'Y' ) ?> >
-		<input type="text" name="OverrideStockWidth<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockWidth'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.form.ddmStockSheetSize<?QTYIndex?>.selectedIndex=0;calc(this.form.name);" size="7"/> x
-		<input type="text" name="OverrideStockHeight<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockHeight'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.form.ddmStockSheetSize<?QTYIndex?>.selectedIndex=0;calc(this.form.name);" size="7" />
-		</span>
-<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="hidden" name="chkOverrideSheetSize<?QTYIndex?>" value="<? echo ( $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" name="OverrideStockWidth<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockWidth'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" name="OverrideStockHeight<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockHeight'.$$variable{'QTYIndex'}} ) ?>" />
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<? echo (
+	my @options = misc::trim( split(',', $config{$$variable{'Project'}->Type()->name().'StockOptions'} ));
+    @options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
+    @options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
+
+    my %find = (
+        'width is null'			=>	0,
+        'project_type_id any'   =>	$$variable{Project}->type_id(),
+        ( $variable{'Supplied'} ? ( 'supplied'          =>  [ undef, $variable{'Supplied'} ] ) : () ),
+        );
+	foreach ( @options ) {
+		if ( $$variable{'ddmStock'.$_} ) {
+			$find{lc $_} = $$variable{'ddmStock'.$_};
+		} # end if
+	} # end foreach
+	my @Stocks = openprint::Paper->find( %find );
+	my @sizes = sort {
+			my ( $a_w, $a_h ) = $a =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			my ( $b_w, $b_h ) = $b =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
+			if ( $a_w != $b_w ) {
+			return $a_w <=> $b_w;
+			}
+			if ( $a_h != $b_h ) {
+			return $a_w <=> $b_w;
+			}
+			return $a <=> $b;
+ } sets::union( map { $_->width().( $_->height() ? 'x'.$_->height() : '' ) } @Stocks );
+
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(q`
+			<span class="%1$sColumns">
+				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d>.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
+				`, $$variable{'Columns'}, $qty_index, ssi::make_drop_down( [ 
+					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} ),
+			);
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= ssi::write_override( 'chkOverrideSheetSize'.$qty_index, 
+					$$variable{'chkOverrideSheetSize'.$qty_index},
+					"\$('OverrideStockSize$qty_index').show();", 
+					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
+			$html .= sprintf(q`
+				<br/>
+				<span id="OverrideStockSize%1$d"%2$s>
+				<input type="number" name="OverrideStockWidth%1$d" value="%3$s" onkeyup="this.form.ddmStockSheetSize%1$d.selectedIndex=0;calc(this.form.name);" /> x
+				<input type="number" name="OverrideStockHeight%1$d" value="%4$s" onkeyup="this.form.ddmStockSheetSize%1$d.selectedIndex=0;calc(this.form.name);" />
+				</span>
+				`, $qty_index, 
+				( $$variable{'chkOverrideSheetSize'.$qty_index} ne 'Y' ? '' : ' style="display:none;"' ),
+				$$variable{'OverrideStockWidth'.$qty_index},
+				$$variable{'OverrideStockHeight'.$qty_index},
+			);
+		} else {
+			$html .= sprintf(q`
+				<input type="hidden" name="chkOverrideSheetSize%1$d" value="%2$s" />
+				<input type="hidden" name="OverrideStockWidth%1$d" value="%3$s" />
+				<input type="hidden" name="OverrideStockHeight%1$d" value="%4$s" />
+			`, $qty_index, 
+				$$variable{'chkOverrideSheetSize'.$qty_index},
+				$$variable{'OverrideStockWidth'.$qty_index},
+				$$variable{'OverrideStockHeight'.$qty_index},
+			);
+	} # end if A or E
+	$html .= sprintf('
 	</span>
-<input type="hidden" name="hdnSuppliedStockWidth<?QTYIndex?>" />
-<input type="hidden" name="hdnSuppliedStockHeight<?QTYIndex?>" />
-<input type="hidden" name="StockWidth<?QTYIndex?>" />
-<input type="hidden" name="StockHeight<?QTYIndex?>" />
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<input type="hidden" name="hdnSuppliedStockWidth%1$d" />
+<input type="hidden" name="hdnSuppliedStockHeight%1$d" />
+<input type="hidden" name="StockWidth%1$d" />
+<input type="hidden" name="StockHeight%1$d" />', $qty_index );
+	} # end foreach qty_index
+	return $html;
+) ?>
 </p>
 <p><label>Minimum Stock Size:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>

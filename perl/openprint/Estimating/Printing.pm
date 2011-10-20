@@ -1130,7 +1130,6 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 				my $P = $Paper->clone();
 				my @i;
 
-				
 				if ( @cut_offs ) {
 					# We need to do some initial filtering here.  
 					my %paper_impositions;
@@ -1138,16 +1137,17 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 						$$project{'Cut Off'} = $cut_off;
 						foreach my $i ( openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P, $Press ) ) {
 #$i->display('doig');
-							if ( ! $paper_impositions{$$i{'imposition'}} ) {
-								push @{$paper_impositions{$$i{'imposition'}}}, $i;
+							my $key = $$i{'imposition'}.$$i{'runstyle'};
+							if ( ! $paper_impositions{$$i{'imposition'}.$$i{'runstyle'}} ) {
+								push @{$paper_impositions{$key}}, $i;
 							} else {
 								my $add = 1;
-								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$$i{'imposition'}}}; $imp_index += 1 ) {
-									my $j = $paper_impositions{$$i{'imposition'}}[$imp_index];
+								for ( my $imp_index = 0; $imp_index < @{$paper_impositions{$key}}; $imp_index += 1 ) {
+									my $j = $paper_impositions{$key}[$imp_index];
 									if ( $i->Paper()->area() < $j->Paper()->area() ) {
 #$j->display('1 dumping');
 #$i->display('1 for');
-										splice @{$paper_impositions{$$i{'imposition'}}}, $imp_index, 1;
+										splice @{$paper_impositions{$key}}, $imp_index, 1;
 										$imp_index -= 1;
 #$i->display('1 for');
 									} elsif ( $j->Paper()->area() < $i->Paper()->area() ) {
@@ -1158,7 +1158,7 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 									} # end if
 								} # end for
 								if ( $add ) {
-									push @{$paper_impositions{$$i{'imposition'}}}, $i;
+									push @{$paper_impositions{$key}}, $i;
 								} # end if
 							} #end if	
 						} # end foreach i
