@@ -530,6 +530,10 @@ sub history_details {
 	openprint::order::display_order( $order_id );
 } # end sub history_details
 
+sub _Shipping {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{'Order'} = new openprint::Order( $variable{'Project'}->order_id() );
+} # end sub _Shipping
 sub _CustomerPickUp {
 } # end sub _CustoemrPickUp
 sub _view_log {
