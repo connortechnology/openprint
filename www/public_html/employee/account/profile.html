@@ -206,6 +206,7 @@
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
     <? echo ( 
+		require openprint::RADIUS_Check;
         $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
             'database'  => $config{'RADIUS DB Name'},
             'driver'    => $config{'RADIUS DB Driver'},

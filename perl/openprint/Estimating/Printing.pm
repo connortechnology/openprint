@@ -1767,6 +1767,11 @@ sub calc {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
+	if ( ( ! $$specs{'txtSignatureType'} ) and ! ( $$specs{'txtFinalHeight'} and $$specs{'txtFinalWidth'} ) ) {
+		$$specs{'alert'} .= 'Please enter the finished dimensions.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
 	my %inkCoverage = get_inkcoverage( $specs );

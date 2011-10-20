@@ -9,11 +9,12 @@ require sql;
 require openprint::Host;
 require logger;
 require openprint::Email;
+require openprint::logRecord;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-#*config = \%openprint::config;
+*config = \%openprint::config;
 $log = logger->new();
 $log->{level} = 'debug';
 
@@ -83,7 +84,7 @@ if ( $CFG::Config{'pid_file'} ) {
 } # end if
 
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp');
+my $p = Net::Ping->new('icmp',10);
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
@@ -100,6 +101,7 @@ while(1) {
 			sleep 5;
 			next;
 		} # end if ! dbh
+		configuration::init_cache( $log, $dbh );
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
@@ -107,23 +109,35 @@ while(1) {
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
-		my $ping = $p->ping($Host->ip());
-		if ( ! defined $ping ) {
+		my @ping = $p->ping($Host->ip());
+		my $ping = $ping[0];
+$openprint::log->debug("@ping");
+		if ( ! @ping ) {
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
+		} elsif ( $ping and ( $ping[1] > 1 ) ) {
+(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+
 		} # end if
 		if ( $Host->online() != $ping ) {
 			$Host->save({'online'=>$ping});
+
+			(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
-			my $results = (new openprint::Email())->send(
-				'TO'	=>	openprint::User->find('usergroup'=>'IT'),
-				'Subject'	=>	'Host has gone ' . $ping . ': ' . $Host->hostname(),
-				'FROM'		=>	$config{'TechSupportEmail'},
-				'BODY'		=>	'Please investigate.',
-			);
+			my @To = openprint::User->find('usergroup'=>'IT');
+			if ( @To < 10 ) {
+				my $results = (new openprint::Email())->send(
+						'TO'	=>	\@To,
+						'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+						'FROM'		=>	$config{'TechSupportEmail'},
+						'BODY'		=>	'Please investigate.',
+						);
+			} else {
+				$log->error("Too many email destinations");
+			} # end if
 		} # end if
 		if ( $Host->online() ) {
-			if ( $Host->type() eq 'AIC500W' ) {
+			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 				my $browser = LWP::UserAgent->new();
 				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
 
@@ -147,6 +161,19 @@ while(1) {
 					}  # end foreach
 					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 					$log->debug($response->is_success);
+					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+					my @To = openprint::User->find('usergroup'=>'IT');
+					if ( @To < 10 ) {
+						$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+						my $results = (new openprint::Email())->send(
+								'TO'	=>	\@To,
+								'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
+								'FROM'		=>	$config{'TechSupportEmail'},
+								'BODY'		=>	'',
+								);
+					} else {
+						$log->error("Too many email destinations");
+					} # end if
 				} else {
 					$log->debug("Got content from host. Size: " . $response->content_type );
 				} # end if

@@ -267,6 +267,7 @@ sub assistant_ids {
 	} # end if
 	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
 } # end sub
+
 sub csr_ids {
 	my $self = shift;
 	if ( @_ ) {
@@ -286,6 +287,7 @@ sub Groups {
 
     return openprint::UserGroup->find('user_id in'=>$$self{id} );
 } # end sub Groups
+
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
 	
