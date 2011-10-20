@@ -37,5 +37,8 @@ sub _likes {
 	} # end if
 } # end sub _likes
 
+sub _captcha {
+} # end sub _captcha
+
 1;
 __END__

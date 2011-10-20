@@ -15,7 +15,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *config = \%openprint::config;
 
 my $debug = 0;
-my $debug_all = 0;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -114,10 +114,10 @@ sub load {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
- if ( $d->errstr ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
-			Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
-} # end if
+			if ( $d->errstr ) {
+				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+			} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
@@ -253,8 +253,11 @@ $log->debug("No serial") if $debug;
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
+$log->debug("Got here");
 	delete $openprint::Object::cache{$type}{$$self{id}};
+$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+$log->debug("after clear cache");
 	return;
 } # end sub save
 

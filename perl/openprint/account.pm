@@ -72,7 +72,7 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
-	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+	if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
 		$error .= "Password not good enough.  $reason<br/>";
 	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
@@ -120,12 +120,14 @@ sub registration {
 	$info{'CustomerServiceEmail'} = $config{'CustomerServiceEmail'};
 
 	# CLean up the postal code
-	$param{'postalcode'} =~ s/[^\w]//g;
-	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
+	if ( exists $param{'postalcode'} ) {
+		$param{'postalcode'} =~ s/[^[[:alnum:]]]//g;
+		$param{'postalcode'} = uc $param{'postalcode'};
+	} # end if
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
 	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
-			( exists $param{'postalcode'} ? ( 'postalcode uc'=>uc $param{'postalcode'} ) : () )
+			( exists $param{'postalcode'} ? ( 'postalcode uc'=>$param{'postalcode'} ) : () )
 			);
 	if ( ! $Company ) {
 		$param{'name'} = $param{'company_name'};
@@ -221,6 +223,7 @@ sub registration {
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'error'} .= $User->Profile()->save(\%param);
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
