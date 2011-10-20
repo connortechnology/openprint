@@ -193,6 +193,9 @@ span.SpotColour label, span.Coverages label {
 	margin: 0px;
 	padding: 0px 0px 0px 2px;
 }
+.Coverages input[type="text"] {
+	width: 40px;
+}
 
 .checkOption {
 	float: left;

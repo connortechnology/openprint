@@ -80,7 +80,7 @@ sub find {
 		delete $params{'date_time <='};
 	} # end if
 	
-	if ( $params{'ip_address'} ) {
+	if ( exists $params{'ip_address'} ) {
         if ( ref $params{'ip_address'} eq 'ARRAY' ) {
             $sql .= q{ AND ip_address IN (}.join(',', map {'?'} @{$params{'ip_address'}} ).')';
             push @values, @{$params{'ip_address'}};
