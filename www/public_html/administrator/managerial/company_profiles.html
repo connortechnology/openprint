@@ -35,7 +35,7 @@
 				<option value=""> select </option>
 				<? echo ( 
 					my %params = (
-							'salesrep_id'=>$param{'search_salesrep_id'},
+							( $param{'search_salesrep_id'} ? ( 'salesrep_id'=>$param{'search_salesrep_id'} ) : () ),
 							'order'=>'lower(name)',
 					);
 					if ( $param{'search_type'} eq 'Suppliers' ) {
