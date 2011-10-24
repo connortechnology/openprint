@@ -1,5 +1,7 @@
 <script type="text/javascript">
 function load_host( form, options ) {
+	var div = $('Results');
+	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
 		p.order = options.order;

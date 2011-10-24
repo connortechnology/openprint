@@ -12,6 +12,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 require openprint::Host;
 require openprint::Blacklist;
 require openprint::RADIUS_Check;
+require openprint::User_Type;
 
 use strict;
 
@@ -279,5 +280,22 @@ sub _host_logs {
 	);
 } # end sub _host_logs
 
+sub sessions {
+	_sessions();
+	$session{'/employee/it/sessions.html?company_id'} = $session{'company_id'} if ! exists $session{'/employee/it/sessions.html?company_id'};
+} # end sub sessions
+
+sub _sessions {
+	ssi::save_params( '/employee/it/sessions.html', 
+			'created_on_start_year', 'created_on_start_month','created_on_start_day',
+			'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
+			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
+			'company_id','user_type','user_id',
+	);
+} # end sub _sessions
+
+sub session {
+} # end sub session
 1;
 __END__

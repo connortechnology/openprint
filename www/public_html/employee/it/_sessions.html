@@ -1,0 +1,63 @@
+<? echo (
+	my $html = '';
+	$session{'/employee/it/sessions.html?order'} = 'lower(sessionname)' if ! $session{'/employee/it/sessions.html?order'};
+
+	my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
+	$html .= @session_ids . ' total sessions stored.<br/>';
+
+	$html .= q`<table class="List">
+			<thead>
+				<tr>
+					<th class="checkbox">&nbsp;</th>
+					<th class="session_id">ID</th>
+					<th class="ip" onclick="load_session(f1, {order:'ip'});">IP</th>
+					<th class="Company" onclick="load_session(f1, {order:'Company'});">Company</th>
+					<th class="UserType" onclick="load_session(f1, {order:'UserType'});">UserType</th>
+					<th class="User" onclick="load_session(f1, {order:'User'});">User</th>
+					<th class="Age">Age</th>
+				</tr>
+			</thead>
+			<tbody>`;
+	my $rowclass;
+
+	foreach my $session_id ( @session_ids ) {
+		$session_id =~ s/\s//g;
+		my %s;
+		if ( ! eval q`tie %s, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+			$log->warn("Error fetching Session: $session_id: $@");
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?company_id'} and $s{'company_id'} != $session{'/employee/it/sessions.html?company_id'} ) {
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?user_type'} and $s{'user_type'} ne $session{'/employee/it/sessions.html?user_type'} ) {
+			next;
+		} # end if
+		if ( $session{'/employee/it/sessions.html?user_id'} and $s{'user_id'} != $session{'/employee/it/sessions.html?user_id'} ) {
+			next;
+		} # end if
+
+		$html .= sprintf('
+			<tr%8$s>
+				<td><input type="checkbox" id="session_id" name="session_id" value="%1$s"/></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%2$s</a></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%3$s</a></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%4$s</a></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%5$s</a></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%6$s</a></td>
+				<td><a href="/employee/it/session.html?session_id=%1$s">%7$s</a></td>
+			</tr>
+			', $s{'_session_id'}, $s{'_session_id'}, '', new openprint::Company( $s{'company_id'} )->name(),
+			$s{'user_type'}, new openprint::User( $s{'user_id'} )->name(), misc::seconds_to_pretty_interval( time - $s{'lastupdated'} ),
+			$rowclass,
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Session
+	return $html;
+) ?>
+		<tr>
+	</tbody>
+</table>
+<p class="buttons">
+<? echo ( ssi::button( 'delete', { 'onclick'=> "new Ajax.Updater( 'Results','/employee/it/_sessions.html?action=Delete', { parameters: { session_id: \$F('session_id') } } );", 'text'=>'Delete Checked' } ); ) ?>
+</p>
