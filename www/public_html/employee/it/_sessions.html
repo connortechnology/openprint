@@ -47,7 +47,7 @@
 				<td><a href="/employee/it/session.html?session_id=%1$s">%6$s</a></td>
 				<td><a href="/employee/it/session.html?session_id=%1$s">%7$s</a></td>
 			</tr>
-			', $s{'_session_id'}, $s{'_session_id'}, '', new openprint::Company( $s{'company_id'} )->name(),
+			', $s{'_session_id'}, $s{'_session_id'}, $_{'ip'}, new openprint::Company( $s{'company_id'} )->name(),
 			$s{'user_type'}, new openprint::User( $s{'user_id'} )->name(), misc::seconds_to_pretty_interval( time - $s{'lastupdated'} ),
 			$rowclass,
 			);
