@@ -19,7 +19,7 @@
 						<? echo ( $$variable{'Project'}->reference(); ) ?>
 						<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 					</li>
-					<li class="project_id"><label>Project Number:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
+					<li class="project_id"><label>Project Number:</label><? echo ( sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d">%1$d</a>', $$variable{'Project'}->id() ); ) ?></li>
 <? if ( $$variable{'Project'}->ordered_quantity() ) ?>
 					<li><label>Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
 <? endif ( $$variable{'Project'}->ordered_quantity() ) ?>
