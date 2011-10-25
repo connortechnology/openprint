@@ -885,9 +885,13 @@ sub get_impositions {
 	my ( $Project, $specs, $project, $side_one_colours, $side_two_colours, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 	my $services = $Project->services();
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @$side_one_colours, @$side_two_colours ] );
-	my @side_one_colours = sets::exclude( [ 'Aqueous Gloss Spot', 'Aqueous Gloss Overall', 'Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot' ], $side_one_colours );
-	my @side_two_colours = sets::exclude( [ 'Aqueous Gloss Spot', 'Aqueous Gloss Overall', 'Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot' ], $side_two_colours );
+
+	my $CoatingsCategory = openprint::ServiceCategory::find_one( 'name' => 'Coating' );
+    my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+
+	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour', @Coatings], [ @$side_one_colours, @$side_two_colours ] );
+	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
+	my @side_two_colours = sets::exclude( \@Coatings, $side_two_colours );
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
 		$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
@@ -1822,7 +1826,7 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
             $I->load( $sig_specs, $qty_index );
             push @other_impositions, $I;
         } # end foreach sig_id
-$openprint::log->debug("Other impositions: " . @other_impositions );
+$openprint::log->debug("Other impositions: from other signatures" . @other_impositions );
 
 		%stitching_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
