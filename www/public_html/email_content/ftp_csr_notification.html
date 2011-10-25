@@ -25,6 +25,10 @@
 		<div class="rightColumn" style="float: left; width: 50%;">
 			<div class="fieldContainer">
 				<p>
+					<label>CSR:</label>
+					<? echo ( $$variable{'Company'}->CSR()->name() ) ?>
+				</p>
+				<p>
 					<label>Contact Name:</label>
 					<? echo ( $$variable{'User'}->name() ) ?>
 				</p>
