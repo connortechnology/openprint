@@ -40,21 +40,27 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 
-	my %Price = openprint::service::get_price_object( $ProjectType->name().'Turnaround', $$specs{'TurnaroundDays'} );
+	my ( $min, $max ) = split('-', $$specs{'TurnaroundDays'} );
+$log->debug("Min: $min Max: $max");
+
+$log->debug("Looking up basic pricing for $min for " . $ProjectType->name() );
+	my %Price = openprint::service::get_price_object( 'Turnaround'.$ProjectType->name(), $min );
 	if ( ! %Price ) {
-		%Price = openprint::service::get_price_object( 'Turnaround', $$specs{'TurnaroundDays'} );
+$log->debug("Looking up basic pricing for $min");
+		%Price = openprint::service::get_price_object( 'Turnaround', $min );
 	} # end if
 	
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $Price{'units'} eq 'Percent' ) {
 			my ( $price ) = misc::sum( sql::execute( $log, $dbh, qq{SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex != ? and strName='txtPrice$qty_index'}, $project_index, $service_index ) );
 			$$specs{"txtPrice$qty_index"} = $price * $Price{'Price'}/100;
+$log->debug("Price: $price * $Price{Price}/100 = " . $$specs{"txtPrice$qty_index"} );
 		} else {
 			$$specs{"txtPrice$qty_index"} = $Price{'Price'};
 		} # end if
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 	} # end foreach
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc_prepress
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
@@ -62,11 +68,11 @@ sub summary {
 	if ( $qty_index ) {
 		return '';
 	} # end if
-	return sprintf('%d days.',$$specs{'TurnaroundDays'});
+	return sprintf('%s day%s.',$$specs{'TurnaroundDays'}, $$specs{'TurnaroundDays'} == 1 ? '' : 's' );
 } # end sub summary
 sub project_summary {
 	my ( $Project, $service_id, $specs ) = @_;
-	return sprintf(' in %d days.',$$specs{'TurnaroundDays'});
+	return sprintf(' in %s day%s.',$$specs{'TurnaroundDays'}, $$specs{'TurnaroundDays'} == 1 ? '' : 's' );
 } # end sub project_summary
 1;
 __END__

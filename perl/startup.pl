@@ -1,4 +1,5 @@
 #!/usr/bin/perl 
+use 5.12.0;
 
 BEGIN {
 	use utf8;
@@ -31,7 +32,7 @@ BEGIN {
 	use JSON;
 	use JSON::XS;
 
-	use Carp (cluck);
+	use Carp qw(cluck);
 
 	use CGI;
 	use sql;

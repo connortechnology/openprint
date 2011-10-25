@@ -1,6 +1,6 @@
-package openprint::Service;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Service;
+our @ISA = qw( openprint::Object );
 use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field );
 
 require sql;
