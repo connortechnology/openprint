@@ -82,7 +82,19 @@ sub prices {
 	return openprint::ServicePrice::find( 'service_id'=>$$self{id} );
 } # end sub prices
 
+sub find_one {
+	shift @_ if $_[0] eq 'openprint::Service';
+    my @results = find( @_, 'limit', 1 );
+    if ( @results > 1 ) {
+        $openprint::log->error('Service::find_one more than 1 result!');
+    } elsif ( @results ) {
+        return $results[0];
+    } # end if
+    return;
+} # end sub find_one
+
 sub find {
+	shift @_ if $_[0] eq 'openprint::Service';
 	my %params = @_;
 	my $sql = 'SELECT * FROM Services WHERE 1>0';
 	my @values;
