@@ -41,9 +41,11 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 
-	my %Price = openprint::service::get_price_object( $ProjectType->name().'Turnaround', $$specs{'TurnaroundDays'} );
+	my ( $min, $max ) = split('-', $$specs{'TurnaroundDays'} );
+
+	my %Price = openprint::service::get_price_object( $ProjectType->name().'Turnaround', $min );
 	if ( ! %Price ) {
-		%Price = openprint::service::get_price_object( 'Turnaround', $$specs{'TurnaroundDays'} );
+		%Price = openprint::service::get_price_object( 'Turnaround', $min );
 	} # end if
 	
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
