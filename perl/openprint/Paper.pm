@@ -1371,13 +1371,13 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 	} # end if
 
 	$Paper = $Paper->clone();
-$openprint::log->debug($Paper->to_string() );
+#$openprint::log->debug($Paper->to_string() );
 	if ( $qty_index ) {
 		if ( ( $Paper->width() != $$specs{'StockWidth'.$qty_index} ) or ($Paper->type() eq 'Sheet' and $Paper->height() != $$specs{'StockHeight'.$qty_index} ) ) {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
-$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+#$openprint::log->debug("Custom size $$Paper{width}x$$Paper{height} => $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			if ( ! $Paper->start_width() ) {
-$openprint::log->debug("Setting start with");
+#$openprint::log->debug("Setting start with");
 				$Paper->start_width( $Paper->width() );
 				$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			} elsif ( $Paper->width() >= $$specs{'StockWidth'.$qty_index} ) {
@@ -1389,7 +1389,7 @@ $openprint::log->debug("Setting start with");
 
 			if ( $Paper->type() ne 'Roll' ) {
 				if ( ! $Paper->start_height() ) {
-$openprint::log->debug("Setting start height");
+#$openprint::log->debug("Setting start height");
 					$Paper->start_height( $$specs{'StockHeight'.$qty_index} );
 					$Paper->height( $$specs{'StockHeight'.$qty_index} );
 				} elsif ( $Paper->height() >= $$specs{'StockHeight'.$qty_index} ) {
@@ -1403,7 +1403,7 @@ $openprint::log->debug("Setting start height");
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug($Paper->to_string() );
+#$openprint::log->debug($Paper->to_string() );
 	return $Paper;
 
 } # end sub load_from_signature
