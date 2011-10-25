@@ -13,7 +13,7 @@
 <form name="f1" id="f1" action="category.html" method="post" enctype="multipart/form-data">
 	<fieldset class="filters">
 		<ul>
-			<li><label>Category:</label>
+			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="f1.btnFunction='';f1.submit();">
 					<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{'Category'}->id() ); ) ?>
@@ -29,19 +29,19 @@
 		<div class="leftColumn">
 			<div class="content">
 				<ul>
-					<li><label>ID:</label><? echo ( $$variable{'Category'}->id() ) ?></li>
-					<li><label>Name:</label>
+					<li><label>ID</label><? echo ( $$variable{'Category'}->id() ) ?></li>
+					<li><label>Name</label>
 						<input type="text" id="name" name="name" value="<? echo ( $$variable{'Category'}->name() ) ?>" />
 					</li>
-					<li><label>Position:</label>
+					<li><label>Position</label>
 						<input type="text" id="position" name="position" value="<? echo ( $$variable{'Category'}->position() ) ?>" />
 					</li>
 					<li>
-						<label for="description">Description:</label>
+						<label for="description">Description</label>
 						<textarea id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
 					</li>
 					<li>
-						<label for="summary">Summary:</label>
+						<label for="summary">Summary</label>
 						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines($$variable{'Category'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->summary() ) ?></textarea>
 					</li>
 				</ul>
@@ -54,18 +54,18 @@
 				<fieldset><legend>Upload Asset</legend>
 					<div class="content">
 						<ul>
-							<li><label>Select file:</label><input type="file" name="filename"/>
+							<li><label>Select file</label><input type="file" name="filename"/>
 							</li>
-							<li><label>Name:</label>
+							<li><label>Name</label>
 								<input type="text" name="asset_name" id="asset_name" />
 							</li>
-							<li><label>Description:</label>
+							<li><label>Description</label>
 								<textarea name="asset_description" id="asset_description"></textarea>
 							</li>
-							<li><label>Attribution:</label>
+							<li><label>Attribution</label>
 								<input type="text" name="asset_attribution" id="asset_attribution"/>
 							</li>
-							<li><label>License:</label>
+							<li><label>License</label>
 								<textarea name="asset_license" id="asset_license"></textarea>
 							</li>
 						</ul>
