@@ -49,6 +49,7 @@ $serial = 'payments_id_seq';
 );
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Payment';
 	my %params = @_;
 
 	my $sql = q{SELECT * FROM Payments WHERE 1>0};
