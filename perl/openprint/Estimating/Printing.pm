@@ -884,10 +884,25 @@ sub get_impositions {
 	my ( $Project, $specs, $project, $side_one_colours, $side_two_colours, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 	my $services = $Project->services();
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @$side_one_colours, @$side_two_colours ] );
+
+	my $CoatingsCategory = openprint::ServiceCategory::find_one( 'name' => 'Coating' );
+    my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+
+	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour', @Coatings], [ @$side_one_colours, @$side_two_colours ] );
+	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
+	my @side_two_colours = sets::exclude( \@Coatings, $side_two_colours );
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
 		$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
+		if ( $Press->specification('ProcessOnly') eq '4/4' ) {
+			if ( 
+				( sets::intersection('Cyan','Magenta','Yellow','Black', @side_one_colours) != 4 )
+				or ( sets::intersection('Cyan','Magenta','Yellow','Black', @side_two_colours) != 4 )
+			   ) {
+				
+				next;
+			} # end if
+		} # end if
 		if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 			if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
 				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
@@ -920,7 +935,7 @@ sub get_impositions {
 		if ( ! sets::isin('Perfecting', split(',',$Press->specification('Runstyles') ) ) ) {
 			$openprint::log->debug("** This Press Can't Perfect - Missing \'Perfecting Press\' = Y equipment spec ***") if $debug;
 			$do_perfecting = 0;
-		} elsif ( @$side_one_colours > int($Press->specification('Number of Colours')/2) or @$side_two_colours > int($Press->specification('Number of Colours')/2) ) {
+		} elsif ( @side_one_colours > int($Press->specification('Number of Colours')/2) or @side_two_colours > int($Press->specification('Number of Colours')/2) ) {
 			$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 			$do_perfecting = 0;
 		} elsif ( $$project{print_sides} == 1 ) {
@@ -933,6 +948,7 @@ sub get_impositions {
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
+# Actually AQ can be done in the same pass?
 			my $CoatingsCategory = openprint::ServiceCategory::find_one( 'name' => 'Coating' );
 			my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 			if ( ! $$Papers[0]->doublesided() ) {
@@ -1818,7 +1834,7 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
             $I->load( $sig_specs, $qty_index );
             push @other_impositions, $I;
         } # end foreach sig_id
-$openprint::log->debug("Other impositions: " . @other_impositions );
+$openprint::log->debug("Other impositions: from other signatures" . @other_impositions );
 
 		%stitching_cache = ();
 		my @versions = get_versions( $specs, $qty_index );

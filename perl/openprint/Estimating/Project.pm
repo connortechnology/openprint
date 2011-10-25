@@ -795,7 +795,7 @@ $openprint::log->debug('Deleting Folding');
 			foreach my $service_index ( @{$$services{$service_name}} ) {
 				my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
 				$$specs{'txtPrice1'} += $$service_specs{'txtPrice1'};	
-				$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
+				#$log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 			} # end foreach service_index
 		} # end foreach service_name
 	} else {
