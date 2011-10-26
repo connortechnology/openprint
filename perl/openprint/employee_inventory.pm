@@ -175,7 +175,7 @@ sub inventory_report {
 
 if ( 0 ) {
 	my @papers = openprint::Paper::find(
-			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
+			( defined $param{'Owner'} ? ( 'owner_id'	=> $param{'Owner'} ) : () ),
 			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
 			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
 			'finish_id' =>	( defined $param{'Finish'} ? $param{'Finish'} : undef ),
@@ -249,8 +249,8 @@ if ( 0 ) {
 	my $count = 0;
 	my $total_weight = 0;
 foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
-	next if ! $Skid->rfidtag_id();
-	next if ! $Skid->RFIDTag()->id();
+	#next if ! $Skid->rfidtag_id();
+	#next if ! $Skid->RFIDTag()->id();
 	foreach my $C ( $Skid->Contents() ) {
 		next if ! $C;
 		my $Paper = $C->Paper();
