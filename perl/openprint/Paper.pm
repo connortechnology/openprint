@@ -315,6 +315,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'to_string'} = $_[0];
+	} # end if
 	if ( ! $$self{'to_string'} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {

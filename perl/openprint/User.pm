@@ -283,9 +283,10 @@ sub csr_ids {
 } # end sub
 
 sub Groups {
-	my ( $self ) = @_;
-
-    return openprint::UserGroup->find('user_id in'=>$$self{id} );
+	if ( $_[0]{'id'} ) {
+    return openprint::UserGroup->find('user_id in'=>$_[0]{id} );
+	} # end if
+	return ();
 } # end sub Groups
 
 sub notifications {

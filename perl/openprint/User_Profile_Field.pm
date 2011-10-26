@@ -93,6 +93,7 @@ $openprint::log->debug("Done");
 			ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>['state','province']), $value ),
 			);
 		} # end if
+	} elsif ( $Field->type() eq 'city' ) {
 		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
 		 or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
 `, $Field->id(),
