@@ -113,9 +113,9 @@ sub calc {
         foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
+$openprint::log->debug("Got Press Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Paper->to_string() );
 			my $Supplied = $Paper->Supplied();
-$openprint::log->debug("Got paper for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
+$openprint::log->debug("Got Stock Sheet for sig $$sig_specs{'SignatureIndex'} qty $qty_index " . $Supplied->to_string() );
             $papers{$Supplied->to_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
@@ -140,7 +140,9 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
 
 			my $stock_index = $indexes{$paper_string};
 			if ( ! $stock_index ) {
-$openprint::log->error("No stock index for $paper_string");
+$openprint::log->error("Estimating::Paper No stock index for $paper_string");
+$openprint::log->debug("Press sheet: " . $PressSheet->to_string() );
+$openprint::log->debug("Supplied: " . $SuppliedStock->to_string() );
 			} # end if
 
 			if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
@@ -250,7 +252,12 @@ $openprint::log->error("2No stock index for $paper_id");
 		$$specs{"txtPrice$qty_index"} = 0;
 		foreach my $paper_id ( sort keys %papers ) {
 			my $Paper = $papers{$paper_id};
-$openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"} ) if $debug;
+$openprint::log->debug($paper_id . ' => totals: ' . $totals{$paper_id}{"qty_$qty_index"} ) if $debug;
+if ( ! $totals{$paper_id}{"qty_$qty_index"} ) {
+foreach my $k ( keys %totals ) {
+	$openprint::log->debug("Totals: $k => ".$totals{$k}{"qty_$qty_index"} );
+}
+}
 			if ( $Paper->type() eq 'Sheet' ) {
 				$$specs{"qty-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
 				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};

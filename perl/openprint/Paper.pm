@@ -315,6 +315,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'to_string'} = $_[0];
+	} # end if
 	if ( ! $$self{'to_string'} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
@@ -1376,6 +1379,7 @@ sub Supplied {
 	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
 	delete $$Supplied{'to_string'};
 	$Supplied->mweight(0); # force recalc
+	$Supplied->to_string(undef) if $$Supplied{'to_string'};
 	return $Supplied;
 } # end sub Supplied
 
