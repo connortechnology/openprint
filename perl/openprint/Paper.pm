@@ -505,6 +505,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'to_string'} = $_[0];
+	} # end if
 	if ( ! $$self{'to_string'} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
@@ -1538,6 +1541,7 @@ sub Supplied {
 	$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
 	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
 	$Supplied->mweight(0); # force recalc
+	$Supplied->to_string(undef) if $$Supplied{'to_string'};
 	return $Supplied;
 } # end sub Supplied
 sub long {
