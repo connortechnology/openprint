@@ -1099,6 +1099,7 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 		my @feeds = split(',',$Press->specification('Feed') );
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width');
 		my $maximum_sheet_length = $Press->specification('Maximum Sheet Length');
+		my $printing_type = $Press->specification('Printing Type');
 
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different calliperso# Is this needed anymore
@@ -1190,7 +1191,7 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 			} else { # Sheet Fed
 				next if ! sets::isin( 'Sheet', \@feeds );
 				next if ! ( $Paper->width() and $Paper->height() );
-				next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+				next if $printing_type eq 'Digital' and ! $Paper->digital();
 				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesSheet') ) ) {
 					$$project{'Runstyles'} = $Press->specification('Runstyles');
 				} # end if
@@ -1209,10 +1210,7 @@ $openprint::log->debug("Cut Offs for Press $$Press{strid} @cut_offs");
 							and
 							( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 						  ) {
-						last if ! ( 
-								( $P->width() > $$specs{'txtWidth'} and $P->height() > $$specs{'txtHeight'} ) or ( $P->height() > $$specs{'txtHeight'} and $P->width() > $$specs{'txtWidth'} ) );
 						$P->cut();
-						#$Papers{$P->to_string()} = $P->clone() if ! $Papers{$P->to_string()};
 					} # end while
 				} # end if
 
