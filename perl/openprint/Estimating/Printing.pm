@@ -1015,6 +1015,7 @@ sub get_impositions {
 		my @feeds = split(',',$Press->specification('Feed') );
 		my $maximum_sheet_width = $Press->specification('Maximum Sheet Width');
 		my $maximum_sheet_length = $Press->specification('Maximum Sheet Length');
+		my $printing_type = $Press->specification('Printing Type');
 
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different callipers
@@ -1119,7 +1120,7 @@ sub get_impositions {
 				next if ! sets::isin( 'Sheet', \@feeds );
 
 				next if ! ( $Paper->width() and $Paper->height() );
-				next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+				next if $printing_type eq 'Digital' and ! $Paper->digital();
 
 				my $P = $Paper->clone();
 
@@ -1135,10 +1136,7 @@ sub get_impositions {
 							and
 							( $P->width() > $maximum_sheet_length or $P->height() > $maximum_sheet_width )
 						  ) {
-						last if ! ( 
-								( $P->width() > $$specs{'txtWidth'} and $P->height() > $$specs{'txtHeight'} ) or ( $P->height() > $$specs{'txtHeight'} and $P->width() > $$specs{'txtWidth'} ) );
 						$P->cut();
-						#$Papers{$P->to_string()} = $P->clone() if ! $Papers{$P->to_string()};
 					} # end while
 				} # end if
 
@@ -1156,7 +1154,7 @@ sub get_impositions {
 #$openprint::log->debug("Next paper because it's too small for the item" . $P->width() . 'x' . $P->height() . ' => ' . $$specs{'txtWidth'} . 'x' . $$specs{'txtHeight'} ) if $debug;
 						last;
 					} # end if
-
+#$openprint::log->debug("Getting impos for $$Press{strid} " . $P->to_string() );
 					my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 							undef, 
 							undef, 
