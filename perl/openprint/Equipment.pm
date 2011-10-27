@@ -117,20 +117,17 @@ sub fits {
 } # end sub fits
 
 sub Folds {
-	my $self = shift;
-
-	if ( ! $$self{'Folds'} ) {
-		%{$$self{'Folds'}} = ();
-		foreach my $F ( openprint::Fold->find( 'Equipment'=>$self, 'order'=>'pages,page_columns' ) ) {
-			push @{$$self{'Folds'}{$F->pages()}}, $F;
+	if ( ! $_[0]{'Folds'} ) {
+		%{$_[0]{'Folds'}} = ();
+		foreach my $F ( openprint::Fold->find( 'equipment_id'=>$_[0]{'id'}, 'order'=>'pages,page_columns' ) ) {
+			push @{$_[0]{'Folds'}{$F->pages()}}, $F;
 		} # end foreach;
 	} # end if
-	return %{$$self{'Folds'}};
+	return %{$_[0]{'Folds'}};
 } # end sub Folds
 
 sub Fold {
-	my $self = shift;
-	my $params = shift;
+	my ( $self, $params ) = @_;
 
 	$self->Folds() if ! $$self{'Folds'};
 #$openprint::log->debug("Param" . ref $params );
@@ -218,12 +215,12 @@ sub Fold {
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
 
-		if ( $$params{'printing_type'} and $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, split(',', $$Fold{'printing_type'}) ) ) {
+		if ( $$params{'printing_type'} and $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, [ split(',', $$Fold{'printing_type'}) ] ) ) {
             $openprint::log->debug("Fold no good due to PrintingType ($$params{'printing_type'}) != " . $$Fold{'printing_type'} ) if $debug;
             next;
         } # end if
 		if ( exists $$params{'gsm'} ) {
-			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
+			#$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
 			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
 $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;

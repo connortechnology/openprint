@@ -2,8 +2,10 @@
 	my $html;
 	my $services = $$variable{'Project'}->services();
 	my @ShippingTypes = openprint::ServiceType->find('category'=>'Shipping','order'=>'lower(name)');
+	
 
 	if ( $$variable{'Order'}->status() eq 'Incomplete' ) {
+		$html .= sprintf('<input type="hidden" name="OrderedQuantity%d" value="%d"/>', $$variable{'Project'}->id(), $$variable{'Project'}->ordered_quantity() );
 		$html .= qq`<div class="ShippingInformation">
 		<fieldset><legend>Shipping Information</legend>
 			<div class="content">

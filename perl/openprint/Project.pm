@@ -978,8 +978,7 @@ sub Price {
 } # end sub price
 
 sub Order {
-	my $self = shift;
-	return new openprint::Order( $$self{'order_id'} );
+	return new openprint::Order( $_[0]{'order_id'} );
 }
 
 sub signatures {
