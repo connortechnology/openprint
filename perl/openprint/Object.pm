@@ -253,11 +253,11 @@ $log->debug("No serial") if $debug;
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
-$log->debug("Got here");
+#$log->debug("Got here");
 	delete $openprint::Object::cache{$type}{$$self{id}};
-$log->debug("after delete");
+#$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
-$log->debug("after clear cache");
+#$log->debug("after clear cache");
 	return;
 } # end sub save
 
