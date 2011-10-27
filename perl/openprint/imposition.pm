@@ -397,7 +397,7 @@ sub calc_setup_object {
 
 		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
-		if ( $$specs{'Maximum Image Area Length'} and ( ( ! $adjusted_paper_height ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
+		if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
 		} # end if
@@ -420,7 +420,7 @@ sub calc_setup_object {
 		$adjusted_paper_height -= $setup1->cropmark_top();
 		$adjusted_paper_height -= $setup1->cropmark_bottom();
 		$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
-$openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height");
+#$openprint::log->debug("Height: $paper_height - CB $$specs{'colour_bar_size'} - Grip $$specs{'Grip Size'} CropTOp: $$setup1{cropmark_top} - CropBottom: $$setup1{cropmark_bottom} = $adjusted_paper_height");
 
 		my $adjusted_paper_width = $paper_width; 
 		$cropmarkspace = $$specs{'CropMarkSpace'};
@@ -492,7 +492,6 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 			$openprint::log->debug( sprintf('CHECK 1 Work&TumbleUsing Paper %sx%s -> %sx%s Image: %s x %s Imposition: %dout:%dx%d ',$paper_width, $paper_height, $adjusted_paper_width, $adjusted_paper_height/2, $setup1->image_width(), $setup1->image_height(), $setup1->imposition(), $setup1->columns(), $setup1->rows() ) ) if $debug;
 			if ( $setup1->imposition() ) {
 
-
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} or ( $$specs{'dutch'} eq 'N' ) ) ) {
 					foreach my $imp ( calc_dutch( $setup1, $adjusted_paper_width, $adjusted_paper_height/2, $specs ) ) {
 						$imp->rows( $imp->rows() * 2 );
@@ -553,12 +552,14 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 			$setup2->paper()->height( $$specs{'Cut Off'} );
 			$setup2->stock_height( $$specs{'Cut Off'} );
 		} # end if
-		if ( (!$adjusted_paper_height) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+
+		$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
+
+		if ( ($adjusted_paper_height<=0) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length2: $adjusted_paper_height ***") if $debug;
-		} else {
-			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		} # end if
+
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if

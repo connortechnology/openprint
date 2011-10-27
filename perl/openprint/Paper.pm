@@ -1540,8 +1540,8 @@ sub Supplied {
 	my $Supplied = $self->clone();
 	$$Supplied{'width'} = $$self{'start_width'} if $$self{'start_width'};
 	$$Supplied{'height'} = $$self{'start_height'} if $$self{'start_height'};
+	delete $$Supplied{'to_string'};
 	$Supplied->mweight(0); # force recalc
-	$Supplied->to_string(undef) if $$Supplied{'to_string'};
 	return $Supplied;
 } # end sub Supplied
 sub long {
