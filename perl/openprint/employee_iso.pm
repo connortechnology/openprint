@@ -65,10 +65,7 @@ sub cars {
 		
 		misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
 	} # end if
-	ssi::save_params( '/employee/iso/cars.html', ( 
-				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
-				'issued_on_end_year','issued_on_end_month','issued_on_end_day',
-				'status','docket' ) );
+	_car_results();
 	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_start', -30 );
 	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_end', '' );
 	$session{'/employee/iso/cars.html?status'} = 'Open' if ! exists $session{'/employee/iso/cars.html?status'};

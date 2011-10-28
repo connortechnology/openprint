@@ -1,10 +1,15 @@
 <? eval (
 	my @Hosts;
+	if ( $session{'/employee/it/hosts.html?mac'} and ! $session{'/employee/it/hosts.html?mac'} =~ /\%/ ) {
+		@Hosts = openprint::Host->find(
+			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+			'mac_any'=> $session{'/employee/it/hosts.html?mac'},
+		);
+	} else {
 	$session{'/employee/it/hosts.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/hosts.html?order'};
 		@Hosts = openprint::Host->find(
 			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
 			( $session{'/employee/it/hosts.html?ip'} ? ( ( $session{'/employee/it/hosts.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/hosts.html?ip'} ) : ( 'ip'=> $session{'/employee/it/hosts.html?ip'} ) ) : () ),
-			( $session{'/employee/it/hosts.html?mac'} ? ( 'mac_any'=> $session{'/employee/it/hosts.html?mac'} ) : () ),
 			( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
 			( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( 'blacklist'=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
 			( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( 'whitelist'=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
@@ -16,10 +21,30 @@
 			ssi::date_filter( 'updated_on_start', 'updated_on >=' ),
 			ssi::date_filter( 'updated_on_end', 'updated_on <=' ),
 			);
+	} # end if
 
+	my $mac_search;
+	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
+		$mac_search = $session{'/employee/it/hosts.html?mac'};
+		$mac_search =~ s/%/\.\*/g;
+	} # end $mac_search
 
 	@{$$variable{'Hosts'}} = ();
 	foreach my $Host ( @Hosts ) {
+		
+		
+		if ( $mac_search ) {
+			next if ! $Host->mac();
+			my $next = 1;
+			
+			foreach my $mac ( @{$Host->mac()} ) {
+				if ( $mac =~ /$mac_search/ ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach mac
+			next if $next;
+		} # end if
 
 		if ( $session{'/employee/it/hosts.html?radius_auth'} ne '' ) {
 			if ( $session{'/employee/it/hosts.html?radius_auth'} eq '1' ) {

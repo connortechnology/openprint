@@ -1,0 +1,11 @@
+<div class="row">
+	<span class="label">Run style &amp; Press:</span>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="value">' . $$variable{'ddmRunStyle'.$qty_index} . ' on ' . $$variable{'ddmPress'.$qty_index}.'</span>';
+		
+	} # end foreach
+	return $html;
+) ?>
+</div>

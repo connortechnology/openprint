@@ -4,8 +4,8 @@
 </div>
 <style type="text/css">
 <? eval ( 
-	$$variable{'QTYS'} = $$variable{'Project'}->quantity_indexes();
-    if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'QTYS'} = $$variable{'Project'}->ordered_quantity() ? 1 : scalar  $$variable{'Project'}->quantity_indexes();
+    if ( $$variable{'QTYS'} == 3 ) {
 		$$variable{'Columns'} = 'Three';
     } else {
 		$$variable{'Columns'} = 'Two';
@@ -15,13 +15,13 @@
 div.ProjectSummary p span.value {
 	float: left;
 <? if ( $$variable{'QTYS'} == 1 ) ?>
-    width: 57%;
+    width: 60%;
 <? endif ( $$variable{'QTYS'} == 1 ) ?>
 <? if ( $$variable{'QTYS'} == 2 ) ?>
-    width: 33%;
+    width: 30%;
 <? endif ( $$variable{'QTYS'} == 2 ) ?>
 <? if ( $$variable{'QTYS'} == 3 ) ?>
-    width: 18%;
+    width: 20%;
 <? endif ( $$variable{'QTYS'} == 3 ) ?>
 }
 </style>
@@ -50,7 +50,7 @@ There is no current project.
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
-			<!--#include virtual="/main/summ/<?prod_url?>"--><br/>
+			<!--#include virtual="/main/summ/<?prod_url?>"-->
 			<? else ( $$variable{'prod_url'} ) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>
 		</fieldset>

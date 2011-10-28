@@ -426,6 +426,9 @@ sub find_operators {
 	if ( exists $$params{$k.' is null or ='} ) {
 		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
 	} # end if
+	if ( exists $$params{$k.' exists'} ) {
+		push @{$results{' exists'}}, ( $$params{$k.' exists'} ? ' EXISTS' : ' NOT EXISTS ' ) . $f;
+	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
 	} # end if
