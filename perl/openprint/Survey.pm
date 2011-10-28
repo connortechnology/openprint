@@ -1,11 +1,12 @@
-package openprint::Survey;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Survey;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::SurveyQuestion;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'Surveys';
 $serial = 'survey_id_seq';
 

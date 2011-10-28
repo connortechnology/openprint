@@ -768,7 +768,7 @@ sub to_string {
 
 sub dropdown {
 	my $type = shift;
-	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+	return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub sort_value {
