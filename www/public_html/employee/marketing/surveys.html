@@ -1,4 +1,4 @@
-<form name="f1" method="post" action="surveys.html">
+<form id="f1" name="f1" method="post" action="surveys.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Select Survey</legend>
 		<p>
@@ -6,7 +6,7 @@
 			<select name="survey_id" onchange="f1.submit();">
 				<option value=""> select </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey->find( 'order'=>'lower(name)' ) ], $$variable{'Survey'}->id() );
+				ssi::make_drop_down( openprint::Survey->dropdown( 'order'=>'lower(name)' ), $$variable{'Survey'}->id() );
 			) ?>
 			</select>
 		</p>
@@ -52,16 +52,16 @@
 		my $html;
 		my @responses;
 		if ( $param{'CSR'} == -1 ) {
-			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson IS NULL) }, $$variable{'Survey'}->id() );
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.id AND survey_id=? AND company_id IN (SELECT id FROM Companies WHERE lngSalesPerson IS NULL) }, $$variable{'Survey'}->id() );
 		} elsif ( $param{'CSR'} ) {
-			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.index AND survey_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?) }, $$variable{'Survey'}->id(), $param{'CSR'} );
+			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses, Users WHERE user_id=users.id AND survey_id=? AND company_id IN (SELECT id FROM Companies WHERE lngSalesPerson=?) }, $$variable{'Survey'}->id(), $param{'CSR'} );
 		} else {
-			@responses = sql::execute( $log, $dbh, q{SELECT DISTINCT user_id FROM survey_responses WHERE survey_id=?}, $$variable{'Survey'}->id() );
+			@responses = sets::union( map { $_->user_id() } openprint::Survey_Response->find('survey_id'=>$$variable{'Sirevey'}->id() ) );
 		} # end if
 		if ( @responses ) {
-			$html .= '<span style="float:right;">';
-			$html .= ssi::writeButton( $log, $dbh, 'Responses', '', '', 'survey_responses.html?survey_id='.$$variable{'Survey'}->id(), 'View Responses' );
-			$html .= '</span>';
+			$html .= '<p class="buttons">';
+			$html .= ssi::button( 'Responses', { 'href'=>'survey_responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'View Responses' } );
+			$html .= '</p>';
 			if ( @responses == 1 ) {
 				$html .= "There is 1 response.";
 			} else {
@@ -97,12 +97,7 @@
 				if ( $type eq 'radio' ) {
 					my @available_answers = sql::execute( $log, $dbh, q{SELECT answer_id FROM Survey_Question_Available_Answers WHERE question_id=? ORDER BY sorting}, $id );
 
-					my @answers;
-					if ( $r->param('CSR') ) {
-					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=? AND company_id IN (SELECT Index FROM Company WHERE lngSalesPerson=?)}, $$variable{'Survey'}->id(), $id, $r->param('CSR') );
-					} else {
-					@answers = sql::execute( $log, $dbh, q{SELECT answer FROM Survey_Responses WHERE survey_id=? AND question_id=?}, $$variable{'Survey'}->id(), $id );
-					} # end if
+					my @answers = map { $_->answer() } openprint::Survey_Response->find('survey_id'=>$$variable{'Survey'}->id(), 'question_id'=>$id, ( $param{'CSR'} ? ( 'salesrep_id'=>$param{'CSR'} ) : () );
 					my %counts;
 					foreach my $answer ( @answers ) {
 						$counts{$answer} += 1;

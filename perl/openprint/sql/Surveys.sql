@@ -18,6 +18,7 @@ CREATE SEQUENCE survey_id_seq;
 CREATE TABLE Surveys (
 	id	INTEGER NOT NULL default nextval('survey_id_seq'),
 	name	TEXT,
+	description	TEXT,
 	PRIMARY KEY (id)
 );
 
@@ -39,11 +40,15 @@ CREATE TABLE Survey_Questions (
 );
 
 CREATE TABLE Survey_Responses (
+	id			SERIAL,
 	survey_id	INTEGER NOT NULL, FOREIGN KEY (survey_id) REFERENCES Surveys (id),
 	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
-	answer		TEXT NOT NULL
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	answer		TEXT NOT NULL,
+	PRIMARY KEY (id)
 );
+CREATE INDEX Survey_Responses_idx on Survey_Responses (survey_id,question_id,company_id,user_id);
 
 CREATE SEQUENCE Survey_Answer_ID_seq;
 CREATE TABLE Survey_Answers (
