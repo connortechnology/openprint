@@ -1,5 +1,5 @@
 use strict;
-package openprint::SurveyQuestion;
+package openprint::Survey_Question;
 our @ISA = qw( openprint::Object );
 
 require openprint::SurveyQuestionAvailableAnswer;
@@ -10,10 +10,10 @@ $table = 'survey_questions';
 $serial = 'survey_questions_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'text'			=>	'text',
-	'type'			=>	'type',
-	'survey_id'		=>	'survey_id',
+	'id'		=>	'id',
+	'text'		=>	'text',
+	'type'		=>	'type',
+	'survey_id'	=>	'survey_id',
 	'category_id'	=>	'category_id',
 );
 

@@ -43,6 +43,18 @@
 		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_end', {onchange=>'load_surveys(this.form);','with_today'=>1,'with_clear'=>1} ); ) ?>
 						</span>
 					</li>
+<? echo (
+	my @Surveys = openprint::Survey->find('order'=>'lower(name)');
+	if ( @Surveys > 1 ) {
+		my $html = '';
+		$html .= '<li><select name="survey_id" id="survey_id">';
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } ], $param{'survey_id'} );
+		$html .= '</select></li>';
+		return $html;
+	} elsif ( 
+		return '<input type="hidden" name="survey_id" value="'.$Surveys[0]->id().'"/>';
+	} # end if
+) ?>
 				</ul>
 			</div>
 <? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
