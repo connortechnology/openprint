@@ -5,7 +5,7 @@
 			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
 			( $session{'/employee/it/hosts.html?ip'} ? ( ( $session{'/employee/it/hosts.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/hosts.html?ip'} ) : ( 'ip'=> $session{'/employee/it/hosts.html?ip'} ) ) : () ),
 			( $session{'/employee/it/hosts.html?mac'} ? ( 'mac_any'=> $session{'/employee/it/hosts.html?mac'} ) : () ),
-			( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname_ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
+			( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
 			( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( 'blacklist'=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
 			( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( 'whitelist'=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
 			( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( 'monitored'=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
