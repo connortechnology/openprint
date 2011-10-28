@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 use Digest::MD5;
@@ -28,7 +28,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $r;
-$log = logger->new('warn');
+$log = logger->new('debug');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -116,8 +116,6 @@ if ( 1 ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
-				next;
-			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
 				$log->error('WTF! Was supposed to be Unordered' . $Project->id());
 				next;
