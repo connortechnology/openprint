@@ -130,7 +130,11 @@ $openprint::log->debug("@ping");
 						'TO'	=>	\@To,
 						'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
 						'FROM'		=>	$config{'TechSupportEmail'},
-						'BODY'		=>	'Please investigate.',
+						'BODY'		=>	"
+IP: $$Host{ip}
+Description: $$Host{'description'}
+
+Please investigate.",
 						);
 			} else {
 				$log->error("Too many email destinations");
@@ -169,7 +173,10 @@ $openprint::log->debug("@ping");
 								'TO'	=>	\@To,
 								'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
 								'FROM'		=>	$config{'TechSupportEmail'},
-								'BODY'		=>	'',
+								'BODY'		=>	"
+IP: $$Host{ip}
+Description: $$Host{'description'}
+",
 								);
 					} else {
 						$log->error("Too many email destinations");

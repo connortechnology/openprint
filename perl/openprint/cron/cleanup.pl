@@ -78,7 +78,8 @@ if ( 1 ) {
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'limit'		=>	100,
+			'quote_id exists'	=>	0,
+			'limit'		=>	1000,
 			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -88,12 +89,14 @@ if ( 1 ) {
 				$log->error('WTF! status was supposed to be uncalculated');
 				next;
 			} # end if
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
-				#$log->error('Quoted!' . $Project->id());
+			if ( $Project->order_id() ) {
+				$log->error("WTF! $$Project{id} is uncalculated but has order_id");
 				next;
 			} # end if
-			next if $Project->order_id();
-			next if $Project->docket();
+			if ( $Project->docket() ) {
+				$log->error("WTF! $$Project{id} is uncalculated but has docket");
+				next;
+			} # end if
 			$Project->delete();
 			last if $dbh->errstr();
 		} # end foreach
@@ -106,14 +109,13 @@ if ( 1 ) {
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'limit'		=>	100,
+			'limit'		=>	1000,
+			'quote_id exists'	=>	0,
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
-				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
@@ -138,7 +140,8 @@ if ( 1 ) {
 			'status'=>'Deleted','order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'limit'		=>	100,
+			'limit'		=>	1000,
+			'quote_id exists'	=>	0,
 			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -149,10 +152,6 @@ if ( 1 ) {
 				next;
 			} # end if
 			next if $Project->docket();
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
-				#$log->debug('Quoted!' . $Project->id());
-				next;
-			} # end if
 			$Project->destroy();
 			last if $dbh->errstr();
 		} # end foreach
@@ -161,7 +160,7 @@ if ( 1 ) {
 } # end if 1
 if ( 1 ) {
 	# THis sucks RAM like a MOFO
-		my @CIPS = openprint::CIP3_PPF->find('data is null'=>0,'limit'=>100);
+		my @CIPS = openprint::CIP3_PPF->find('data is null'=>0,'limit'=>100,'order'=>'id DESC');
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
 			my @Projects = openprint::Project->find('docket'=>$CIP->docket());
@@ -280,6 +279,7 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	} # end foreach H
 	my @old_unassigned_tags = openprint::RFIDTag->find(
 			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ),
+			'skid_id exists'=>	0,
 			'type'			=>	'Skid',
 			);
 	$log->warn( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
@@ -303,6 +303,7 @@ $openprint::log->debug("Updating wpsi for " . $Paper->to_string() );
 		last if $dbh->errstr();
 	} # end if
 } # end foreach my Paper
+
 my $log_count = 0;
 foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
 	$Log->delete();
@@ -311,13 +312,13 @@ foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d',
 $log->warn("Deleted $log_count log entries");
 
 if ( $config{'AssetPath'} ) {
-foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
-	my $data = misc::load_file( $log, $Asset->on_disk_path() );
-	if ( $data ) {
-		$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
-		last if $_;
-	} # end if
-} # end foreach Asset
+	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
+		my $data = misc::load_file( $log, $Asset->on_disk_path() );
+		if ( $data ) {
+			$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
+			last if $_;
+		} # end if
+	} # end foreach Asset
 } 
 $dbh->disconnect();
 1;

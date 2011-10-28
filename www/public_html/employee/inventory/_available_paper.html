@@ -115,11 +115,11 @@ $log->debug("Next for " . $Paper->to_string() );
 
 				if ( $Paper->type() eq 'Roll' ) {
 					$total_weight += $Paper->in_stock();
-					$total_rolls += 1;
+					$total_rolls += @Skids;
 					$available_weight += $Paper->available();
 				} else {
 					$total_sheets += $Paper->in_stock();
-					$total_skids += 1;
+					$total_skids += @Skids;
 					$available_sheets += $Paper->available();
 				} # end if
 				
