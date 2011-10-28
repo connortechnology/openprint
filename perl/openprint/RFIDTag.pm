@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw($debug $log $dbh %fields %transforms %defaults $table $serial );
+use vars qw($debug $log $dbh %find_fields %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -23,6 +23,9 @@ $serial = 'rfidtags_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'valid'			=>	'valid',
+);
+%find_fields = (
+	'skid_id'	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
 );
 
 %transforms = (
@@ -95,6 +98,13 @@ sub find {
 	} elsif ( $params{'updated_on_end'} ) {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( exists $params{'skid_id exists'} ) {
+	if ( $params{'skid_id exists'} ) {
+		$sql .= ' AND EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
+	} else {
+		$sql .= ' AND NOT EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
+	} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};

@@ -518,6 +518,13 @@ sub find {
 			push @values, $params{'predefined'};
 		} # end if
 	} # end if
+	if ( exists $params{'quote_id exists'} ) {
+		if ( $params{'quote_id exists'} ) {
+		$sql .= ' AND EXISTS (SELECT quoteindex FROM tbl_quote_details where ProjectIndex=tbl_projects.index)';
+		} else {
+		$sql .= ' AND NOT EXISTS (SELECT quoteindex FROM tbl_quote_details where ProjectIndex=tbl_projects.index)';
+		} # end if
+	} # end if
 
 	if ( $params{'reference'} ) {
 		$sql .= q{ AND strprojectreference LIKE ?};
