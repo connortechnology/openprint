@@ -3,7 +3,7 @@ package openprint::Survey;
 our @ISA = qw( openprint::Object );
 
 require sql;
-require openprint::SurveyQuestion;
+require openprint::Survey_Question;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -16,6 +16,8 @@ $serial = 'survey_id_seq';
 	'description',	'description',
 );
 %transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'description' => [ 's/^\s+//m', 's/\s+$//m', 's/\s\s+/ /mg' ],
 );
 %defaults = (
 	'id'		=>	undef,
@@ -49,7 +51,7 @@ sub previous {
 sub Questions {
     my $self = shift;
     if ( ! $$self{Questions} ) {
-        @{$$self{Questions}} = openprint::SurveyQuestion->find('survey_id'=>$$self{id});
+        @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id});
     } # end if
     return @{$$self{Questions}};
 } # end sub questions
@@ -65,7 +67,7 @@ sub copy {
         $Q2->survey_id($new->id());
 		$Q2->save();
         push @{$$new{Questions}}, $Q2;
-		foreach my $Available_Answer ( $Q->AvailableAnswers() ) {
+		foreach my $Available_Answer ( $Q->Available_Answers() ) {
 			my $new_Available_Answer = $Available_Answer->copy();
 			$new_Available_Answer->question_id( $Q2->id() );
 			$new_Available_Answer->save({'question_id'=>$Q2->id()});

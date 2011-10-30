@@ -14,15 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+use strict;
 package openprint::survey;
 
 require openprint::Survey;
-use openprint::EmailCampaign;
-use openprint::MarketingCategory;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Email::Valid;
-use strict;
+require openprint::Survey_Question;
+require openprint::Survey_Answer;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -34,6 +31,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub view {
+	$param{'survey_id'} =~ s/\D//g;
     $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
         $variable{'error'} = $variable{'Survey'}->save( \%param );
@@ -43,10 +41,19 @@ sub view {
 } # end sub history
 
 sub edit {
-    $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
-    if ( $param{'btnFunction'} eq 'Copy' ) {
-        $variable{'Survey'} = $variable{'Survey'}->copy();
-        $variable{'error'} = $variable{'Survey'}->save( );
+	$param{'survey_id'} =~ s/\D//g;
+	my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+	if ( $param{'btnFunction'} eq 'Copy' ) {
+		$variable{'Survey'} = $variable{'Survey'}->copy();
+		$variable{'error'} = $variable{'Survey'}->save( );
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} = $variable{'Survey'}->save( \%param );
+		foreach my $Question ( $Survey->Questions() ) {
+			$variable{'error'} .= $Question->save({
+					'text'=>$param{'text-'.$Question->id()},
+					'type'=>$param{'type-'.$Question->id()},
+					});
+		} # end foreach Question
 	} # end if
 } # end sub edit
 
@@ -75,7 +82,44 @@ sub _history {
 sub view {
 } # end sub view
 
+sub _questions_edit {
+	$param{'survey_id'} =~ s/\D//g;
+	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+	if ( $param{'action'} eq 'new' ) {
+		my $Question = new openprint::Survey_Question();
+		$variable{'error'} .= $Question->save({
+			'survey_id'	=>	$param{'survey_id'},	
+			});
+	} # end if
+} # end sub _questions_edit
+
+sub _answers_edit {
+	$param{'question_id'} =~ s/\D//g;
+	my $Question = $variable{'Question'} = new openprint::Survey_Question( $param{'question_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		$param{'answer_id'} =~ s/\D//g;
+		my $Answer = openprint::Survey_Question_Available_Answer->find_one('answer_id'=>$param{'answer_id'}, 'question_id'=>$$Question{'id'});
+		if ( $Answer ) {
+		$variable{'error'} .= $Answer->delete();
+		} else {
+		$variable{'error'} .= 'Answer not found.';
+		} # end if
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $Answer = openprint::Survey_Answer->find_one('text'=>openprint::Survey_Answer->transform('text', $param{'text'} ) );
+		if ( ! $Answer ) {
+			$Answer = new openprint::Survey_Answer();
+			$variable{'error'} .= $Answer->save({
+					'question_id'	=>	$param{'question_id'},
+					'text'			=>	$param{'text'},
+					});
+		} # end if
+		my $AA = new openprint::Survey_Question_Available_Answer();
+			$variable{'error'} .= $AA->save({
+					'question_id'	=>	$param{'question_id'},
+					'answer_id'		=>	$$Answer{'id'},
+					});
+	} # end if
+} # end sub _answers_edit
+
 1;
-
 __END__
-

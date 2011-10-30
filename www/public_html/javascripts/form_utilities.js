@@ -1358,3 +1358,12 @@ function toggletinymce(textarea_id, toggle ) {
 		tinyMCE.execCommand('mceRemoveControl', false, textarea_id);
 	} // end if
 } // end function toggletinymce
+
+function changed( e, div ) {
+	if ( ! div ) div = e;
+	if(e.value!=e.defaultValue){
+		e.addClassName('changed');
+	} else {
+		e.removeClassName('changed');
+	} // end if
+} // end function changed

@@ -2,7 +2,7 @@ use strict;
 package openprint::Survey_Question;
 our @ISA = qw( openprint::Object );
 
-require openprint::SurveyQuestionAvailableAnswer;
+require openprint::Survey_Question_Available_Answer;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -17,9 +17,13 @@ $serial = 'survey_questions_id_seq';
 	'category_id'	=>	'category_id',
 );
 
-sub AvailableAnswers {
-	return openprint::SurveyQuestionAvailableAnswer->find('question_id'=>$_[0]{'id'});
-} # end sub AvailableAnswers
+%transforms = (
+    'text' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+
+sub Available_Answers {
+	return openprint::Survey_Question_Available_Answer->find('question_id'=>$_[0]{'id'});
+} # end sub Available_Answers
 
 1;
 __END__
