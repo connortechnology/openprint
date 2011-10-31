@@ -120,25 +120,31 @@ $openprint::log->debug("@ping");
 
 		} # end if
 		if ( $Host->online() != $ping ) {
-			$Host->save({'online'=>$ping});
+			# Make sure
+			my @ping2 = $p->ping($Host->ip());
+			my $ping2 = $ping[0];
+			if ( $ping2 == $ping ) {
 
-			(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
-			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
-			my @To = openprint::User->find('usergroup'=>'IT');
-			if ( @To < 10 ) {
-				my $results = (new openprint::Email())->send(
-						'TO'	=>	\@To,
-						'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
-						'FROM'		=>	$config{'TechSupportEmail'},
-						'BODY'		=>	"
-IP: $$Host{ip}
-Description: $$Host{'description'}
+				$Host->save({'online'=>$ping});
 
-Please investigate.",
-						);
-			} else {
-				$log->error("Too many email destinations");
-			} # end if
+				(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+				my @To = openprint::User->find('usergroup'=>'IT');
+				if ( @To < 10 ) {
+					my $results = (new openprint::Email())->send(
+							'TO'	=>	\@To,
+							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+							'FROM'		=>	$config{'TechSupportEmail'},
+							'BODY'		=>	"
+	IP: $$Host{ip}
+	Description: $$Host{'description'}
+
+	Please investigate.",
+							);
+				} else {
+					$log->error("Too many email destinations");
+				} # end if @To > 10
+			} # end if 2nd ping is same as first
 		} # end if
 		if ( $Host->online() ) {
 			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
