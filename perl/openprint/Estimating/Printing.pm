@@ -4319,31 +4319,35 @@ sub press_setup_cost {
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle().$Imposition->sides().'Sided', undef, $Press );
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press ) if ! %PlateSetupPrice;
-	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
-	if ( %PlateSetupPrice ) {
-		my $plates = $setup_count;
-		$plates *= $plate_runs if $plate_runs;
-		$plates += $plate_change_qty;
-		$Price{'Plate Count'} = $plates;
-		if ( lc $PlateSetupPrice{'units'} eq 'per hour' ) {
-			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
-			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
-		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
-			%PlateSetupPrice = openprint::service::get_price_object( $PlateSetupPrice{'ServiceName'}, $plates, $Press );
-			if ( ! %PlateSetupPrice ) {
-				$openprint::log->error("Error getting PlateMakeReady for $$Press{strid} for $plates plates runs: $plate_runs setup count: $setup_count change: $plate_change_qty");
+	if ( $setup_count ) {
+		# If only an AQ run, no colours, then no plates, don't look this up.  Minor performance improvement I guess, really it's to remove the error logs
+		my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle().$Imposition->sides().'Sided', undef, $Press );
+		%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press ) if ! %PlateSetupPrice;
+		%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
+		if ( %PlateSetupPrice ) {
+			my $plates = $setup_count;
+			$plates *= $plate_runs if $plate_runs;
+			$plates += $plate_change_qty;
+			$Price{'Plate Count'} = $plates;
+			if ( lc $PlateSetupPrice{'units'} eq 'per hour' ) {
+				my $time = $Press->specification('Plate Setup Time') * $plates / 60;
+				$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
+			} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
+				%PlateSetupPrice = openprint::service::get_price_object( $PlateSetupPrice{'ServiceName'}, $plates, $Press );
+				if ( ! %PlateSetupPrice ) {
+					$openprint::log->error("Error getting PlateMakeReady for $$Press{strid} for $plates plates runs: $plate_runs setup count: $setup_count change: $plate_change_qty");
+				} # end if
+				$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
+			} else {
+				$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 			} # end if
-			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
-		} else {
-			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
-		} # end if
-		$Price{'Plate Units'} = $PlateSetupPrice{'units'};
-		$Price{'Plate Price'} = $PlateSetupPrice{'Price'};
-	#} else{
-		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
-	} # end if
+			$Price{'Plate Units'} = $PlateSetupPrice{'units'};
+			$Price{'Plate Price'} = $PlateSetupPrice{'Price'};
+
+#} else{
+#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
+} # end if has a platesetupprice
+	} # end if setup_count
 
 	$Price{'Unit Count'} = $setup_count;
 	return \%Price;
