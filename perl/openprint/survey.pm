@@ -20,6 +20,7 @@ package openprint::survey;
 require openprint::Survey;
 require openprint::Survey_Question;
 require openprint::Survey_Answer;
+require openprint::Survey_Response;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -120,6 +121,9 @@ sub _answers_edit {
 					});
 	} # end if
 } # end sub _answers_edit
+
+sub questions {
+} # end sub questions
 
 1;
 __END__

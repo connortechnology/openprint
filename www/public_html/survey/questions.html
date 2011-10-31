@@ -5,16 +5,18 @@
 			my $html = '';
 			my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('user_id'=>$session{'user_id'} );
 
-			foreach my $Question ( openprint::Survey_Question->find( ) ) {
+			foreach my $Question ( openprint::Survey_Question->find( 'order'=>'sorting' ) ) {
 				$html .= sprintf('<div class="Question"><span class="text">%s</span>', $Question->text() );
 				my $Response = $Responses{$Question->id()};
 				$Response = new openprint::Survey_Response() if ! $Response;
 
-				foreach my $Answer ( $Question->Available_Answers() ) {
-					$html .= ssi::radio( 'answer-'.$Question-id(), [ map { $_->answer_id(), $_->Answer()->text() } ], $Response->value() );
-				} # end foreach Available
+				$html .= ssi::radio( 'answer-'.$Question-id(), 
+					[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+					( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+					);
 				$html .= '</div>';
 			} # end foreach Question
+			return $html;
 		) ?>
 		<br/>
 		<p class="buttons">

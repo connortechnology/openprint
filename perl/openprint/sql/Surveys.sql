@@ -34,29 +34,29 @@ CREATE TABLE survey_questions (
 	category_id	INTEGER, FOREIGN KEY (category_id) REFERENCES Survey_Question_Categories (id),
 	text		TEXT,
 	type		TEXT,
+	sorting		INTEGER,
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE Survey_Responses (
-	id			SERIAL,
-	survey_id	INTEGER NOT NULL, FOREIGN KEY (survey_id) REFERENCES Surveys (id),
-	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
-	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
-	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
-	answer_id	INTEGER, FOREIGN KEY (answer_id) REFERENCES Answers (id),
-	answer		TEXT,
-	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	PRIMARY KEY (id)
-);
-CREATE INDEX Survey_Responses_idx on Survey_Responses (survey_id,question_id,company_id,user_id);
-
-CREATE SEQUENCE Survey_Answer_ID_seq;
 CREATE TABLE Survey_Answers (
 	id			SERIAL,
 	text		text,
 	sorting		INTEGER,
 	PRIMARY KEY (id)
 );
+
+CREATE TABLE survey_responses (
+	survey_id	INTEGER NOT NULL, FOREIGN KEY (survey_id) REFERENCES Surveys (id),
+	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
+	answer_id	INTEGER, FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
+	answer		TEXT,
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	PRIMARY KEY (id)
+);
+CREATE INDEX Survey_Responses_idx on Survey_Responses (question_id,user_id);
+
 
 CREATE TABLE Survey_Question_Available_Answers (
 	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
