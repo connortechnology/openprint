@@ -67,7 +67,7 @@ sub thumbnail_url {
 
 	my $filename = $_[0]->on_disk_filename();
 
-    my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
@@ -136,6 +136,29 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
 } # end sub destroy
 
+# What gets passed in the form element name
+sub upload {
+	my $upload = $openprint::r->upload($_[0]);
+	if ( ! $upload ) {
+		return "There was no upload for $_[0]<br/>";
+	} # end if
+	my $data;
+	$upload->slurp( $data );
+	my $md5 = Digest::MD5::md5_base64( $data );
+	my $Asset = openprint::Asset->find_one('md5'=>$md5) if $md5;
+	if ( ! $Asset ) {
+		$Asset = new openprint::Asset();
+		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
+		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
+		} # end if
+		if ( $_[1] ) {
+			# Should be a hash of more attribute
+			$Asset->save($_[1]);
+		} # end if
+	} # end if
+	return $Asset;
+} # end sub upload
 
 1;
 __END__

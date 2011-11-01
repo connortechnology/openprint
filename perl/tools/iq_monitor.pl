@@ -129,8 +129,8 @@ $openprint::log->debug("@ping");
 
 				(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
-				my @To = openprint::User->find('usergroup'=>'IT');
-				if ( @To < 10 ) {
+				my @To = map { $_->User() } $Host->Notifications();
+				if ( @To and ( @To < 10 ) ) {
 					my $results = (new openprint::Email())->send(
 							'TO'	=>	\@To,
 							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
@@ -141,8 +141,6 @@ $openprint::log->debug("@ping");
 
 	Please investigate.",
 							);
-				} else {
-					$log->error("Too many email destinations");
 				} # end if @To > 10
 			} # end if 2nd ping is same as first
 		} # end if
@@ -172,8 +170,8 @@ $openprint::log->debug("@ping");
 					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 					$log->debug($response->is_success);
 					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-					my @To = openprint::User->find('usergroup'=>'IT');
-					if ( @To < 10 ) {
+					my @To = map { $_->User() } $Host->Notifications();
+					if ( @To and ( @To < 10 ) ) {
 						$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
 						my $results = (new openprint::Email())->send(
 								'TO'	=>	\@To,
@@ -184,8 +182,6 @@ IP: $$Host{ip}
 Description: $$Host{'description'}
 ",
 								);
-					} else {
-						$log->error("Too many email destinations");
 					} # end if
 				} else {
 					$log->debug("Got content from host. Size: " . $response->content_type );
