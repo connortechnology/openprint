@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 use utf8;
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/point-one/perl';
 use strict;
 use LWP;
 
