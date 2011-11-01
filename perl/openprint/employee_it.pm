@@ -31,6 +31,7 @@ sub hosts {
 			my $Host = new openprint::Host( $host_id );
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
+		%param = ();
 	} elsif ( $param{'action'} eq 'Save' ) {
 		my $Host = new openprint::Host( $param{'host_id'} );
 		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
@@ -42,15 +43,7 @@ sub hosts {
 		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
-	ssi::save_params( '/employee/it/hosts.html', 
-			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month', 'created_on_end_day', 
-			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
-			'updated_on_end_year', 'updated_on_end_month', 'updated_on_end_day', 
-			'has_hostname', 'monitored', 'whitelisted','blacklisted','online',
-			'radius_auth',
-			'ip','hostname','mac','order',
-			);
+	_hosts();
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_start', '' );
@@ -64,19 +57,6 @@ sub hosts {
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
 	} # end if
-	if ( $config{'RADIUS Support'} eq 'Y' ) {
-		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-				'database'  => $config{'RADIUS DB Name'},
-				'driver'    => $config{'RADIUS DB Driver'},
-				'host'      => $config{'RADIUS DB Server'},
-				'login'     => $config{'RADIUS DB Username'},
-				'password'  => $config{'RADIUS DB Password'},
-				);
-		if ( ! $openprint::RADIUS_Check::dbh ) {
-			$variable{'error'} .= 'Unable to connect to RADIUS DB server.';
-		} # end if
-	} # end if
-
 } # end sub hosts
 
 sub _hosts {
@@ -126,6 +106,29 @@ sub host {
 		} else {
 			$variable{'information'} .= 'Host did not respond to ping.';
 		} # end if	
+	} elsif ( $param{'action'} eq 'Upload' ) {
+        # Save any changes made to Article
+		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
+		if ( $param{'type_id'} ) {
+			delete $param{'type'};
+		} else {
+			delete $param{'type_id'};
+		} # end if
+        $variable{'error'} .= $Host->save(\%param);
+        my $Asset = openprint::Asset::upload( 'filename' );
+        if ( ref $Asset ne 'openprint::Asset' ) {
+            $variable{'error'} .= $Asset;
+        } else {
+            my $Object_Asset = new openprint::Object_Asset();
+            $variable{'error'} .= $Object_Asset->save({
+					'asset_id'		=>	$Asset->id(),
+					'object_id'		=>	$Host->id(),
+					'object_type'	=>	'openprint::Host',
+					});
+            if ( $param{'asset_name'} and ! $Asset->name() ) {
+                $Asset->save({'name'=>$param{'asset_name'}});
+            } # end if
+        } # end if
 	} # end if
 	if ( ( ! $Host->id() ) and ( $param{'ip'} or $param{'mac'} or $param{'hostname'} ) ) {
 		$Host->ip( $param{'ip'} );
@@ -306,5 +309,29 @@ sub _sessions {
 
 sub session {
 } # end sub session
+
+sub _notifications {
+	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
+
+	if ( $param{'action'} eq 'add' ) {
+		my $Notification = new openprint::Host_Notification();
+		$variable{'error'} .= $Notification->save({
+			'user_id'	=>	$param{'user_id'},
+			'host_id'	=>	$$Host{'id'},
+		});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Notification = openprint::Host_Notification->find_one(
+			'user_id'	=>	$param{'user_id'},
+			'host_id'	=>	$$Host{'id'},
+			);
+		if ( ! $Notification ) {
+			$variable{'error'} .= 'Notification not found.';
+		} else {
+			$variable{'error'} .= $Notification->delete();
+			delete $$Host{'Notifications'};
+		} # end if
+	} # end if
+} # end sub _notifications
+
 1;
 __END__

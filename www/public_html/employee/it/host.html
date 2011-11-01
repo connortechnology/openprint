@@ -4,11 +4,11 @@
 	} //  end function check_inputs
 </script>
 <div class="Host"><div class="Edit">
-<form id="f1" name="f1" method="post" action="/employee/it/hosts.html">
+<form id="f1" name="f1" method="post" action="/employee/it/hosts.html" enctype="multipart/form-data">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
 	<input type="hidden" id="action" name="action" />
 	<fieldset><legend>Host <? echo ( $$variable{'Host'}->id() ) ?></legend>
-		<div class="content">
+		<div class="content leftColumn">
 			<ul>
 				<li>
 					<label>Hostname:</label>
@@ -73,6 +73,22 @@
 					) ?>
 				</li>
 			</ul>
+		</div>
+		<div class="content rightColumn">
+			<fieldset><legend>Photos</legend>
+				<div id="assets"><!--#include virtual="_assets.html"--></div>
+			</fieldset>
+			<fieldset><legend>Upload a new Asset</legend>
+				<input type="file" name="filename" />
+				<input type="text" name="asset_name" placeholder="Name"/>
+				<p class="buttons">
+					<? echo ( ssi::button( 'Upload', { 'onclick'=>qq`var form = \$('f1');form.action='/employee/it/host.html';form.elements['action'].value='Upload';form.submit();`} ); ) ?>
+				</p>
+			</fieldset>
+			<fieldset><legend>Notifications</legend>
+				<div id="notifications"><!--#include virtual="_notifications.html"--></div>
+			</fieldset>
+		</div>
 	</fieldset>
 <? if ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<fieldset><legend>RADIUS Auth</legend>
@@ -80,12 +96,12 @@
 	<? echo ( 
 		return if ! $$variable{'Host'}->mac();
 		$openprint::RADIUS_Check::dbh = sql::open_sql( $log,
-            'database'  => $config{'RADIUS DB Name'},
-            'driver'    => $config{'RADIUS DB Driver'},
-            'host'      => $config{'RADIUS DB Server'},
-            'login'     => $config{'RADIUS DB Username'},
-            'password'  => $config{'RADIUS DB Password'},
-            );
+			'database'  => $config{'RADIUS DB Name'},
+			'driver'	=> $config{'RADIUS DB Driver'},
+			'host'	  => $config{'RADIUS DB Server'},
+			'login'	 => $config{'RADIUS DB Username'},
+			'password'  => $config{'RADIUS DB Password'},
+			);
 		if ( ! $openprint::RADIUS_Check::dbh ) {
 			return 'Unable to connect to RADIUS DB server.';	
 		} # end if

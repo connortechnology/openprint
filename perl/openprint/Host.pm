@@ -1,8 +1,21 @@
 use strict;
 require openprint::Object;
+require openprint::Object_Asset;
 use Net::ARP;
 use Net::Ping;
 use IO::Interface::Simple;
+
+package openprint::Host_Notification;
+our @ISA = qw( openprint::Object );
+use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+$debug = 1;
+$table = 'host_notifications';
+@identified_by = ( 'host_id','user_id' );
+
+%fields = (
+	'host_id'			=>	'host_id',
+	'user_id'			=>	'user_id',
+);
 
 package openprint::Host_Type;
 our @ISA = qw( openprint::Object );
@@ -127,6 +140,35 @@ sub type {
 	}
 	return new openprint::Host_Type( $_[0]{'type_id'} )->name();
 } # end sub type
+
+sub Assets {
+    if ( $_[1] ) {
+        $_[1]{'object_id'} = $_[0]{'id'};
+        $_[1]{'object_type'} = 'openprint::Host';
+        $_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+
+        return openprint::Object_Asset->find(%{$_[1]});
+    } # end if
+
+    if ( ! defined $_[0]{'Assets'} ) {
+        @{$_[0]{'Assets'}} = openprint::Object_Asset->find(
+				'object_type'	=>	'openprint::Host',
+				'object_id'		=>	$_[0]{'id'}, 
+				'order'			=>	'created_on'
+				);
+    } # end if
+    return @{$_[0]{'Assets'}};
+} # end sub Assets
+
+sub Notifications {
+	if ( ! $_[0]{'Notifications'} ) {
+		@{$_[0]{'Notifications'}} = openprint::Host_Notification->find(
+				'host_id'	=>	$_[0]{'id'},
+				);
+				#'order' => 'lower(strfirstName),lower(strlastname)' );
+	} # end if
+	return @{$_[0]{'Notifications'}};
+} # end sub Notifications
 
 1;
 __END__

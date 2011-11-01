@@ -121,9 +121,9 @@
 						( ( defined $Host->online() and ! $Host->online() ) ? 'offline' : () ),
 					) ),
 					$Host->description(),
-$rowclass,
- );
-$rowclass = $rowclass ? '' : ' class="colRow"';
+					$rowclass,
+					);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
 			return $html;
 		) ?>
