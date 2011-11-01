@@ -664,13 +664,7 @@ sub view {
 } # end sub view
 
 sub search {
-	ssi::save_params( '/account/search.html', ( 
-				'created_on_start_year', 'created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'last_online_start_year', 'last_online_start_month','last_online_start_day',
-				'last_online_end_year','last_online_end_month','last_online_end_day',
-				map { 'field-'.$_->id() } openprint::User_Profile_Field->find('order'=>'sort,name') 
-				) );
+	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
