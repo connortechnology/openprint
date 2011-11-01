@@ -1,9 +1,10 @@
 <? eval (
 	my @Hosts;
-	if ( $session{'/employee/it/hosts.html?mac'} and ! $session{'/employee/it/hosts.html?mac'} =~ /\%/ ) {
+	if ( $session{'/employee/it/hosts.html?mac'} and ( $session{'/employee/it/hosts.html?mac'} !~ /%/ ) ) {
 		@Hosts = openprint::Host->find(
 			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
 			'mac_any'=> $session{'/employee/it/hosts.html?mac'},
+			'limit'=>10,
 		);
 	} else {
 	$session{'/employee/it/hosts.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/hosts.html?order'};
@@ -20,6 +21,7 @@
 			ssi::date_filter( 'created_on_end', 'created_on <=' ),
 			ssi::date_filter( 'updated_on_start', 'updated_on >=' ),
 			ssi::date_filter( 'updated_on_end', 'updated_on <=' ),
+			'limit'=>1000,
 			);
 	} # end if
 

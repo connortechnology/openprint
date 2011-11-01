@@ -369,6 +369,7 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
 }
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
@@ -545,6 +546,10 @@ if ( ! sets::isin( 'keywords', \@tables ) ) {
 }
 if ( ! sets::isin( 'privacy', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'object_assets', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Assets.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
 
