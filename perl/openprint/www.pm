@@ -266,7 +266,7 @@ sub parse_page {
 	my ( $status );
 
 	# This deals with things like /account/login.html//balhblahblah.php
-	my ($real_uri) = $uri =~ /^([^\.]+\.html)/i;
+	my ($real_uri) = $uri =~ /^([^\.]+\.[^\.]+)/i;
 $openprint::log->debug("URI: $real_uri");
 	my @thing = split( '/', $real_uri );
 	my $filename = pop @thing;
