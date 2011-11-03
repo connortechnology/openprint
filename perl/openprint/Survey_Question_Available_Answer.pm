@@ -24,7 +24,7 @@ $table = 'survey_question_available_answers';
 );
 
 sub Answer {
-return new openprint::Survey_Answer( $_[0]{answer_id} );
+	return new openprint::Survey_Answer( $_[0]{answer_id} );
 } # end sub Answer
 
 1;
