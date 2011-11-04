@@ -30,6 +30,46 @@
 				return sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
 			) ?>
 		</div><!--ProfilePicture-->
+		<div id="Albums">
+			<fieldset><legend>Photo Albums</legend>
+				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<? echo (
+					my $html = '';
+					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
+					return 'no albums' if ! @Albums;
+					foreach my $Album ( @Albums ) {
+						
+						my $Photo = $Album->Thumbnail();
+						if ( $Photo->asset_id() ) {
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
+					
+						} # end if Thumbnail
+					} # end foreach Album
+					return $html;
+				) ?>
+			</fieldset>
+			<fieldset><legend>Video Albums</legend>
+				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<span class="buttons"><? echo ( ssi::button( 'AddVideoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
+				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<? echo (
+					my $html = '';
+					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
+					return 'no albums' if ! @Albums;
+					foreach my $Album ( @Albums ) {
+						
+						my $Video = $Album->Thumbnail();
+						if ( $Video->asset_id() ) {
+							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
+					
+						} # end if Thumbnail
+					} # end foreach Album
+					return $html;
+				) ?>
+			</fieldset>
+		</div><!--Albums-->
 		<div id="UserInformation">
 			<fieldset><legend>User Information</legend>
 				<div class="content">
@@ -52,85 +92,43 @@
 		</div>
 		<!--#include virtual="_user_profile_view.html"-->
 		</div>
-		<div class="rightColumn">
 				
-		<div id="Albums">
-			<fieldset><legend>Photo Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<? echo (
-					my $html = '';
-					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
-					return $variable{'User'}->firstname() . ' has no albums' if ! @Albums;
-					foreach my $Album ( @Albums ) {
-						
-						my $Photo = $Album->Thumbnail();
-						if ( $Photo->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-			<fieldset><legend>Video Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<span class="buttons"><? echo ( button( 'AddPhotoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<? echo (
-					my $html = '';
-					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
-					return $variable{'User'}->firstname() . ' has no albums' if ! @Albums;
-					foreach my $Album ( @Albums ) {
-						
-						my $Video = $Album->Thumbnail();
-						if ( $Video->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-		</div><!--Albums-->
-		<div class="Relationships">
-			<fieldset><legend>Relationships</legend>
-				<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
-			</fieldset>
-		</div>
-		<div id="Events">
-			<fieldset><legend>Events</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<span class="buttons">
-					<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'Add' } ); ) ?>
-				</span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<div class="content">
-					<ul>
-						<? echo (
-							my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
-							if ( ! @Events ) {
-								return '<li>No upcoming events</li>';
-							} # end if
-							my $html;
-							foreach my $Event ( @Events ) {
-								$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
-									$Event->id(), $Event->name(), 
-									Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
-									$Event->Asset()->thumbnail_url(),
-);
-							} # end foreach Event
-							return $html;
-						) ?>
-					</ul>
-				</div>
-			</fieldset>
+		<div class="rightColumn">
+			<div id="Events">
+				<fieldset><legend>Events</legend>
+					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+					<span class="buttons">
+						<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'Add' } ); ) ?>
+					</span>
+					<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+					<div class="content">
+						<ul>
+							<? echo (
+								my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
+								if ( ! @Events ) {
+									return '<li>No upcoming events</li>';
+								} # end if
+								my $html;
+								foreach my $Event ( @Events ) {
+									$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+										$Event->id(), $Event->name(), 
+										Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+										$Event->Asset()->thumbnail_url(),
+	);
+								} # end foreach Event
+								return $html;
+							) ?>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+			<div class="Relationships">
+				<fieldset><legend>Relationships</legend>
+					<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
+				</fieldset>
+			</div>
 		</div>
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
-		</div>
-		
-
 	</div><!--UserProfile-->
 <? else ( $session{'user_id'} ) ?>
 You must be logged in to view user profiles.<br/>

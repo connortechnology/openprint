@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 1;
+my $debug = 0;
 
 # The various way we can group spreads
 use vars qw( %blocks );
@@ -413,7 +413,7 @@ sub calc_setup_object {
 	# Becomes Printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 # On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
-	if ( $$specs{'Maximum Image Area Length'} and ( ( ! $adjusted_paper_height ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
+	if ( $$specs{'Maximum Image Area Length'} and ( ( $adjusted_paper_height <= 0 ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 		$openprint::log->debug("*** Using Max Image Length1: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if $debug;
 		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 	} # end if
@@ -564,7 +564,7 @@ sub calc_setup_object {
 	# Becomes printable area
 	$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 
-	if ( (!$adjusted_paper_height) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+	if ( ($adjusted_paper_height<=0) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
 		$openprint::log->debug("*** Using Max Image Length2: Before: $adjusted_paper_height After: $$specs{'Maximum Image Area Length'}***") if $debug;
 		$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 	} # end if

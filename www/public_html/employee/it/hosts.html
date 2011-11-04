@@ -1,5 +1,7 @@
 <script type="text/javascript">
 function load_host( form, options ) {
+	var div = $('Results');
+	div.innerHTML = 'Loading... Please wait.';
 	var p = form.serialize(true);
 	if ( options && options.order )
 		p.order = options.order;
@@ -79,12 +81,12 @@ Please select a host to view/edit.<br/>
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { 'onclick'=>"LoadContent( 'Results', '/employee/it/_hosts.html', \$('f1').serialize() );", 'text'=>'Show Results' } ),
+				ssi::button( 'ShowResults', { 'onclick'=>"load_host( \$('f1') );", 'text'=>'Show Results' } ),
 				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
 				ssi::button( 'Add', { 'onclick'=>q`window.location='host.html?'+$('f1').serialize();`, 'text'=>'Add New Host' } ),
 				); ) ?>
 		</p>
 	</fieldset>
-<div id="Results">Choose criteria and click Show Results</div>
+	<div id="Results">Choose criteria and click Show Results</div>
 </form>
 <script type="text/javascript">document.f1.ip.focus();</script>

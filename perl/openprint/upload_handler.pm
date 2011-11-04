@@ -229,7 +229,7 @@ sub get_destdir {
 		} # end if
 	} # end if
 	return $destdir;
-} # end sub get_Destdir
+} # end sub get_destdir
 
 sub upload_files {
 	my ( $r, $log, $dbh, $variable ) = @_;

@@ -1,7 +1,7 @@
-package openprint::UserGroup;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::UserGroup;
+our @ISA = qw(openprint::Object);
+
 require openprint::User;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );

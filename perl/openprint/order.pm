@@ -339,8 +339,8 @@ sub save_project_information {
 	my ( $order_id, $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	my $error;
 
-	my %sql;
 	if ( $param{"rdbQuantity$project_index"} ) {
 		$Project->ordered_quantity_index( $param{"rdbQuantity$project_index"} );
 	} elsif ( ! $Project->ordered_quantity_index() ) {
@@ -363,6 +363,8 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
+		my $quantity_shipped = $Project->ordered_quantity();
+
 		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
@@ -381,39 +383,55 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 				delete $$services{$ShippingType->name()};
 			} # end if
 
-			if ( $$services{$ShippingType->name()} and ! sets::isin( $ShippingType->name(), ['CustomerPickUp'] ) ) {
-				my @shipping_fields = (
-						'txtQuantity'.$Project->ordered_quantity_index(),
-						'ToCompanyName',
-						'ToSalutation',
-						'ToFirstName',
-						'ToLastName',
-						'ToAddress1',
-						'ToAddress2',
-						'ToCity',
-						'ToStateProvince',
-						'ToCountry',
-						'ToPostalCode',
-						'ToPhone',
-						'ToFax',
-						'ToEmail',
-						);
-				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
-					foreach my $spec ( @shipping_fields ) {
-$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
-						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $param{"$spec-$project_index-$service_id"} ) if exists $param{"$spec-$project_index-$service_id"};
-					} # end foreach field
-					my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
-$log->warn($$specs{'alert'}) if $$specs{'alert'};
-				} # end foreach service_id
-			} # end if exists service
+			next if ! $$services{$ShippingType->name()};
+
+			my @shipping_fields = (
+					'txtQuantity'.$Project->ordered_quantity_index(),
+					( ! sets::isin( $ShippingType->name(), ['CustomerPickUp'] ) ? 
+					  (
+					   'ToCompanyName',
+					   'ToSalutation',
+					   'ToFirstName',
+					   'ToLastName',
+					   'ToAddress1',
+					   'ToAddress2',
+					   'ToCity',
+					   'ToStateProvince',
+					   'ToCountry',
+					   'ToPostalCode',
+					   'ToPhone',
+					   'ToFax',
+					   'ToEmail', ) : () ),
+					);
+			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+				foreach my $spec ( @shipping_fields ) {
+					$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
+					openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $param{"$spec-$project_index-$service_id"} ) if exists $param{"$spec-$project_index-$service_id"};
+				} # end foreach field
+			} # end foreach service_id
+		} # end foreach ShippingType
+		foreach my $ShippingType ( @ServiceTypes ) {
+			next if ! $$services{$ShippingType->name()};
+			foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
+
+				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
+				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
+				$log->warn($$specs{'alert'}) if $$specs{'alert'};
+			} # end foreach service_id
 		} # end foreach ShippingType
 		$Project->shippingtype( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
+
+		if ( $quantity_shipped > 0 ) {
+			$error .= $quantity_shipped . ' more items need to be shipped or picked up.';	
+		} elsif ( $quantity_shipped < 0 ) {
+			$error .= $quantity_shipped . ' more items are being shipped or picked up than are being ordered.';	
+		} # end if
 	} # end if
 
 	$Project->reference( $param{"Reference$project_index"} ) if $param{"Reference$project_index"};
 	$Project->price( $Project->ordered_quantity_index(), undef );
-	$Project->save();
+	$error .= $Project->save();
+	return $error;
 
 } # end foreach save_project_information
 

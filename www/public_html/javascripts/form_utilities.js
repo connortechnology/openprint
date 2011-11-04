@@ -728,7 +728,7 @@ function Country_onchange( country_ddm, state ) {
 function Location_onchange( parent_element, child_element, type ) {
 	if ( parent_element.getValue() ) {
 		// only do anything if we have selected something	
-		new Ajax.Request( '_location_ddm.json', { 
+		new Ajax.Request( '/account/_location_ddm.json', { 
 			parameters: { 
 					type: type,
 					parent_element: parent_element.id,
@@ -1358,3 +1358,12 @@ function toggletinymce(textarea_id, toggle ) {
 		tinyMCE.execCommand('mceRemoveControl', false, textarea_id);
 	} // end if
 } // end function toggletinymce
+
+function changed( e, div ) {
+	if ( ! div ) div = e;
+	if(e.value!=e.defaultValue){
+		e.addClassName('changed');
+	} else {
+		e.removeClassName('changed');
+	} // end if
+} // end function changed

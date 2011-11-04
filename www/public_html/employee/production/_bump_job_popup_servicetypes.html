@@ -4,7 +4,7 @@
 	foreach my $ServiceType ( $$variable{'Equipment'}->ServiceTypes() ) {
 		next if $ServiceType->name() eq 'NoBindery';
 		next if $ServiceType->id() == $$variable{'Job'}->servicetype_id();
-		next if $ServiceType->name() eq 'AdditionalSignature' and ! $$variable{'Job'}->servicetype_id();
+		next if $ServiceType->name() eq 'Signature' and ! $$variable{'Job'}->servicetype_id();
 		push @AdditionalServiceTypes, $ServiceType;
 	} # end foreach ServiceType
 	if ( @AdditionalServiceTypes ) {

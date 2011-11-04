@@ -1,0 +1,27 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo (
+	my $html = '';
+	my $answers_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/survey/_answers_edit.html' );
+	foreach my $Question ( $$variable{'Survey'}->Questions() ) {
+		$html .= sprintf(q`
+<div class="Question" id="question-%1$d">
+	<textarea name="text-%1$d" onkeyup="changed(this,$('question-%1$d'));" placeholder="Question Text">%2$s</textarea>
+	<select name="type-%1$d" id="type-%1$d"><option value="">select</option>%3$s</select><div class="Answers" id="answers-%1$d">`, 
+		$Question->id(), ssi::html_escape($Question->text()),
+		ssi::make_drop_down( [ map { $_, $_ } ( 'checkbox','radio','text', 'textarea' ) ], $$Question{'type'} ),
+	);
+		if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio' ] ) ) {
+			$html .= ssi::variable_substitution( \$answers_html, { 'Question'=>$Question }  ); 
+		} # end if
+		$html .= '</div></div>';
+	} # end foreach Question
+	$html .= '<p class="buttons">';
+	$html .= ssi::button( 'AddQuestion', { 'onclick'=>qq`new Ajax.Updater('Questions', '_questions_edit.html', {
+		parameters: {
+			survey_id: $$variable{'Survey'}{'id'},
+			action: 'new',
+			}
+		} );`, 'text'=>'Add' } );
+	$html .= '</p>';
+	return $html;
+) ?>

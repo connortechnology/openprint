@@ -87,7 +87,7 @@ sub thumbnail_url {
 	my $filename = $_[0]->on_disk_filename();
 #$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
-    my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {

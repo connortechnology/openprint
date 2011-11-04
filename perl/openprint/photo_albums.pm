@@ -82,6 +82,8 @@ sub edit {
 			$variable{'error'} .= $Album->upload( 'filename' );
 			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
         } # end if
+		my $Privacy = $Album->Privacy();
+		$variable{'error'} .= $Privacy->save({'value'=>join(',', $param{'privacy'} ),'object_id'=>$$Album{'id'},'object_type'=>'Photo_Album'});
 	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );

@@ -213,28 +213,8 @@ function howdidyouhearaboutus_onchange(e) {
 					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>" />
 					<span id="password_alert"></span>
 				</li>
-<? echo (
-	my $html;
-	if ( (!$session{'user_id'}) and ($config{'UseCaptchaOnRegistration'} eq 'Y') ) {
-		use Authen::Captcha;
-		my $Captcha = new Authen::Captcha(
-			'data_folder'   =>  '/tmp',
-			'output_folder' =>  $config{'SkinPath'}.'/images/captcha',
-		);
-		my $md5sum = $Captcha->generate_code( $config{'RegistrationCaptchaLength'} );
-		if ( -f $config{'SkinPath'}.'/images/captcha/'.$md5sum.'.png' ) {
-			$html .= '<li class="captcha required">
-			<label>Enter the code:</label><input type="text" name="Captcha" />
-';
-			$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
-			$html .= qq{<img src="/images/captcha/$md5sum.png"/></li>};
-		} else{
-			$log->error('Unable to create captcha image.');
-		} # end if
-	} # end if
-	return $html;
-) ?>
 			</ul>
+			<div id="Captcha"><!--#include virtual="/includes/_captcha.html"--></div>
 			</div>
 <? if ( $config{'RegistrationDisclaimer'} ) ?>
 				<p><? echo ( $config{'RegistrationDisclaimer'} ) ?></p>

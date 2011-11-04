@@ -928,7 +928,7 @@ sub _status {
 		if ( $_ ) {
 			$variable{'error'} .= 'Error adding to press schedule: ' . $_;
 		} else {
-			if ( sets::isin( $variable{'name'}, 'Printing','AdditionalSignature' ) ) {
+			if ( sets::isin( $variable{'name'}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
 				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending schedule." );
 			} else {

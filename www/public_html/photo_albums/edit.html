@@ -18,6 +18,9 @@
 				<div class="content">
 					<ul>
 						<li><label>Album Name:</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
+						<li><label>Privacy:</label><select name="privacy" id="privacy" multiple="multiple">
+							<? echo ( ssi::make_drop_down( [ 'owner', 'Only You', 'everyone', 'Everyone', 'registered', 'Registered User', map { $_->id(), $_->name() } openprint::User_Relationship_Type->find() ], $$variable{'Album'}->Privacy()->value() ); ) ?>
+						</select></li>
 					</ul>
 				</div>
 			</fieldset>

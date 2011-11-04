@@ -369,6 +369,7 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
 }
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
@@ -543,7 +544,33 @@ if ( ! sets::isin( 'keywords', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'privacy', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'object_assets', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Assets.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
+if ( ! sets::isin( 'survey_questions', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Questions.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_questions'", 'column_name');
+	if ( ! $$data{'type'} ) { 
+		$dbh->do('ALTER TABLE survey_questions add type TEXT');
+	} # end if
+} # end if
+if ( ! sets::isin( 'survey_responses', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Responses.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_responses'", 'column_name');
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE survey_responses add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

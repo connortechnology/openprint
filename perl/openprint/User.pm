@@ -12,7 +12,7 @@ require openprint::Asset;
 require openprint::User_Profile;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -267,6 +267,7 @@ sub assistant_ids {
 	} # end if
 	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
 } # end sub
+
 sub csr_ids {
 	my $self = shift;
 	if ( @_ ) {
@@ -282,10 +283,12 @@ sub csr_ids {
 } # end sub
 
 sub Groups {
-	my ( $self ) = @_;
-
-    return openprint::UserGroup->find('user_id in'=>$$self{id} );
+	if ( $_[0]{'id'} ) {
+    return openprint::UserGroup->find('user_id in'=>$_[0]{id} );
+	} # end if
+	return ();
 } # end sub Groups
+
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
 	
@@ -419,7 +422,28 @@ sub last_logged_in {
 	return $_[0]{'last_logged_on'};
 } # end sub last_logged_in
 
+sub AUTOLOAD {
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+	if ( $fields{$name} ) {
+		if ( @_ > 1 ) {
+#$openprint::log->debug("Autoload $type $name $_[0]");
+			return $_[0]{$name} = $_[1];
+		} else {
+			return $_[0]{$name};
+		} # end if
+	} else {
+		my $Profile = $_[0]->Profile();
+		if ( exists $$Profile{'fields'}{$name} ) {
+			if ( @_ > 1 ) {
+				$$Profile{'fields'}{$name} = $_[1];
+			} # end if
+			return $$Profile{'fields'}{$name};
+		} else {
+			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		} # end if
+	} # end if
+} # end sub AUTOLOAD
+
 1;
-
 __END__
-

@@ -1,0 +1,19 @@
+<? echo ( 
+	my $html = '';
+	foreach my $A ( $$variable{'Question'}->Available_Answers() ) {
+		#$html .= sprintf('<input type="text" name="text-%d-%d" value="%s"/>',
+			#$$variable{'Question'}->id(), $A->answer_id(), $A->Answer()->text() );
+		$html .= $A->Answer()->text();
+		$html .= ssi::button('DelAnswer-'.$$variable{'Question'}->id(), {
+			'onclick'=>sprintf(q`new Ajax.Updater('answers-%1$d', '_answers_edit.html', { parameters: { action: 'delete', question_id: %1$d, answer_id: %2$d } } );`, $$variable{'Question'}->id(), $A->answer_id() ),
+			'text'	=>	'-',
+			} );
+		$html .= '<br/>';
+	} # end foreach A
+	$html .= sprintf('<input type="text" id="text-%1$d-new" name="text-%1$d-new" placeholder="new answer"/>', $$variable{'Question'}->id() );
+	$html .= ssi::button('AddAnswer-'.$$variable{'Question'}->id(), {
+				'onclick'=>sprintf(q`new Ajax.Updater('answers-%1$d', '_answers_edit.html', { parameters: { action: 'add', question_id: %1$d, text: $('text-%1$d-new').value } } );`, $$variable{'Question'}->id() ),
+				'text'	=>	'+',
+	} );
+	return $html;
+) ?>

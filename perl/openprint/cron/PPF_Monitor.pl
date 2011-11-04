@@ -322,7 +322,7 @@ sub store_PPF {
 			my $found = 0;
 			foreach my $ss_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-				if ( $$services{'AdditionalSignature'} ) {
+				if ( $$services{'Signature'} ) {
 					if ( $sig == $$sig_specs{'SignatureIndex'} ) {
 						$found = 1;
 						last;
@@ -336,8 +336,8 @@ sub store_PPF {
 				print "Adding new signature for $docket $sig $side\n";
 				$Project->add_signature( $sig, 'Ordered', { 
 						'txtPrice'.$Project->ordered_quantity_index()	=> 0,
-						'txtSignatureType'		=>	'Interior Spreads',
-						'txtServiceDescription'	=>	'Interior Spreads',
+						'txtSignatureType'		=>	'Interior Pages',
+						'txtServiceDescription'	=>	'Interior Pages',
 						'ddmRunStyleUsed'		=>	$PPF->runstyle(),
 						} );
 				$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );

@@ -30,6 +30,8 @@ sub session_init {
 		if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
 			$log->debug("Error creating Session: ");
 		} # end if
+		# Store this, will be useful
+		$session{'ip'} = $ENV{'REMOTE_ADDR'};
 	} # end if
 
 	if ( $cookie ne $session{_session_id} ) {

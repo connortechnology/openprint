@@ -114,10 +114,10 @@ sub load {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
- if ( $d->errstr ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
-			Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
-} # end if
+			if ( $d->errstr ) {
+				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
+			} # end if
 		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
@@ -253,8 +253,11 @@ $log->debug("No serial") if $debug;
 	} # end if
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
+#$log->debug("Got here");
 	delete $openprint::Object::cache{$type}{$$self{id}};
+#$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+#$log->debug("after clear cache");
 	return;
 } # end sub save
 
@@ -422,6 +425,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.' is null or ='} ) {
 		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
+	} # end if
+	if ( exists $$params{$k.' exists'} ) {
+		push @{$results{' exists'}}, ( $$params{$k.' exists'} ? ' EXISTS' : ' NOT EXISTS ' ) . $f;
 	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
@@ -765,7 +771,7 @@ sub to_string {
 
 sub dropdown {
 	my $type = shift;
-	return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+	return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub sort_value {

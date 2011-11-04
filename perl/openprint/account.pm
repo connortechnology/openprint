@@ -57,6 +57,7 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
 	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
 	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
+	$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
 	if ( $required_fields{'postalcode'} ) {
 		$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
 		$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
@@ -71,7 +72,7 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
-	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+	if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
 		$error .= "Password not good enough.  $reason<br/>";
 	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
@@ -119,12 +120,14 @@ sub registration {
 	$info{'CustomerServiceEmail'} = $config{'CustomerServiceEmail'};
 
 	# CLean up the postal code
-	$param{'postalcode'} =~ s/[^\w]//g;
-	$param{'postalcode'} =~ tr/[a-z]/[A-Z]/;
+	if ( exists $param{'postalcode'} ) {
+		$param{'postalcode'} =~ s/[^[[:alnum:]]]//g;
+		$param{'postalcode'} = uc $param{'postalcode'};
+	} # end if
 
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
 	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
-			( exists $param{'postalcode'} ? ( 'postalcode uc'=>uc $param{'postalcode'} ) : () )
+			( exists $param{'postalcode'} ? ( 'postalcode uc'=>$param{'postalcode'} ) : () )
 			);
 	if ( ! $Company ) {
 		$param{'name'} = $param{'company_name'};
@@ -165,6 +168,7 @@ sub registration {
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'error'} .= $User->Profile()->save(\%param);
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
@@ -219,6 +223,7 @@ sub registration {
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'error'} .= $User->Profile()->save(\%param);
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
@@ -472,15 +477,17 @@ sub login {
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
+			my $results = (new openprint::Email())->send(
 					FROM 	=> $config{'AdministratorEmail'},
-					TO	=> $User,
+					TO		=> $User,
 					SUBJECT	=> 'Forgotten Password',
 					ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
-			$variable{'information'} = 'Your password has been mailed to you.';
+			if ( $results ) {
+				$variable{'information'} = 'Your password has been mailed to you.';
+			} else {
+				$variable{'error'} .= 'Your password was not email for some reason. Please contact support.';
+			} # end if
 		} else {
 			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
 		} # end if
@@ -657,13 +664,7 @@ sub view {
 } # end sub view
 
 sub search {
-	ssi::save_params( '/account/search.html', ( 
-				'created_on_start_year', 'created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'last_online_start_year', 'last_online_start_month','last_online_start_day',
-				'last_online_end_year','last_online_end_month','last_online_end_day',
-				map { 'field-'.$_->id() } openprint::User_Profile_Field->find('order'=>'sort,name') 
-				) );
+	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );

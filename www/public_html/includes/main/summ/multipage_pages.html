@@ -10,12 +10,12 @@
 ) ?>
 </p>
 <p> 
-	<label>Total page quantity:</label>
+	<label>Total pages/spreads:</label>
 <? echo (
 	my $html;
 	foreach my $qty ( $$variable{'Project'}->quantities() ) {
 		next if ! $qty;
-		$html .= qq{<span class="value">$$variable{'txtTotalPageQuantity'}</span>};
+		$html .= qq{<span class="value">$$variable{'txtTotalPageQuantity'} pages / $$variable{'txtTotalSpreadQuantity'} spreads</span>};
 	} # end foreach
 	return $html;
 ) ?>
