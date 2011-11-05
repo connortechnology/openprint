@@ -3,7 +3,7 @@ package openprint::User_Profile;
 require openprint::User_Profile_Entry;
 
 use vars qw( $debug $AUTOLOAD );
-$debug = 1;
+$debug = 0;
 
 # Not backed by db, this is an abstract object providing a convenient interface to User_Profile_Fields and Values
 
@@ -118,7 +118,7 @@ $openprint::log->debug("Saving profile");
                         'field-'.$Field->id().'_year',
                         'field-'.$Field->id().'_month',
                         'field-'.$Field->id().'_day'} ) );
-			if ( $param{'field-'.$Field->id().'_year'} or $param{'field-'.$Field->id().'_month'} or $param{'field-'.$Field->id().'_day'} ) {
+			if ( $$param{'field-'.$Field->id().'_year'} or $$param{'field-'.$Field->id().'_month'} or $$param{'field-'.$Field->id().'_day'} ) {
 				$self->value( $Field, join('-', @$param{
 							'field-'.$Field->id().'_year',
 							'field-'.$Field->id().'_month',

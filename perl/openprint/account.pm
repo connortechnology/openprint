@@ -22,7 +22,6 @@ require openprint::Video_Album;
 require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
-require openprint::Promo_Code;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -197,9 +196,10 @@ sub registration {
 
 		# Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
 		if ( $param{'promo_code'} ) {
+			require openprint::Promo_Code;
 			if ( my $Promo = openprint::Promo_Code->find_one('code'=>$param{'promo_code'}) ) {
-				$log->debug("Found promo code");
-				eval '$Promo->effect()';
+				$log->debug("Found promo code $$Promo{effect}");
+				eval $$Promo{'effect'};
 				$log->error( "Eval error of promo code $param{'promo_code'}, Reason: " . $@ ) if $@;
 			} else {
 				$variable{'information'} .= 'Promo code not found.';
@@ -232,7 +232,7 @@ sub registration {
 						ATTACHMENTS	=>	[ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
-			if ( $config{'NewFirstUserAccountActivation'} eq 'Y' and $config{'NewCustomerAccountActivation'} eq 'Y') {
+			if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
 				# auto log in.
 				@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
 			} # end if
@@ -304,7 +304,6 @@ sub registration {
 		} # end if
 
 	} # end if
-	delete %param;
 
 } # end sub registration
 
