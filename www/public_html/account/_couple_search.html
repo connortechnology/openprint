@@ -1,0 +1,90 @@
+<? echo (
+	my @Companies;
+
+	if ( $param{'company_name'} ) {
+		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
+			$param{'company_name'} .= '%';
+		} # end if
+		@Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
+	} else {
+		foreach my $Company ( openprint::Company->find(
+			ssi::date_filter( '/account/couple_search.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/account/couple_search.html?created_on_end', 'created_on_end' ),
+			ssi::date_filter( '/account/couple_search.html?last_online_start', 'last_online_null_or_>=' ),
+			ssi::date_filter( '/account/couple_search.html?last_online_end', 'last_online_null_or_<=' ),
+			'order'	=>	'lower(firstname),lower(lastname)',
+			) ) {
+			my $filtered = 0;
+			my $Profile = $Company->Profile();
+			foreach my $Field ( openprint::Company_Profile_Field->find('order'=>'sort,name') ) {
+				my $value = $Profile->value( $Field->name() );
+#$log->debug("Field $$Field{name} $value");
+				if ( $session{'/account/couple_search.html?field-'.$Field->id()} ) {
+					if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+						if ( ! sets::intersection( split(',',$session{'/account/couple_search.html?field-'.$Field->id()} ), $value ) ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/couple_search.html?field-'.$Field->id()} );
+							$filtered = 1; 
+						} # endif 
+					} elsif ( $Field->type() eq 'date' ) {
+					} elsif ( sets::isin( $Field->type(), [ 'country', 'state', ] ) ) {
+						if ( $value != $session{'/account/couple_search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/couple_search.html?field-'.$Field->id()} );
+							$filtered = 1; 
+						} # endif 
+					} else {
+						if ( $value != $session{'/account/couple_search.html?field-'.$Field->id()} ) {
+$log->debug( "Filtered becase $value not in " . $session{'/account/couple_search.html?field-'.$Field->id()} );
+							$filtered = 1;
+							last;
+						} # end if
+					} # end if
+} else {
+#$log->debug("Not in session");
+				} # end if
+			} # end foreach Field
+			push @Companies, $Company if ! $filtered;
+		} # end foreach Companies
+	} # end if
+	if ( ! @Companies ) {
+		return 'No results found.';
+	} elsif ( @Companies == 1 and $Companies[0]{'id'} == $session{'company_id'} ) {
+		return 'No results found, other than your account.';
+	} # end if
+
+	my $html;
+	foreach my $Company ( @Companies ) {
+		next if $Company->id() == $session{'user_id'};
+		my $Profile = $Company->Profile();
+		$html .= '<div class="Result">';
+		$html .= sprintf(q`<div class="Info">
+								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
+								<div class="Address">%3$s</div>
+							</div>`, $Company->id(), $Company->name(), new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
+if ( 1 ) {
+		my $age = 0;
+		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
+			my @Birthday = split('-', $Profile->Birthday() );
+			#$log->debug("Birthday (@Birthday) " . $Profile->Birthday() );
+			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+			#$log->debug("Birthday $age years @Birthday");
+		} 
+			#$log->debug($Company->to_string() );
+		$html .= sprintf(q`
+				<div class="Company">
+					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>
+					<div class="Age"><label>Age:</label>%4$s</div>
+					<div class="Gender"><label>Gender:</label>%5$s</div>
+					<div class="Joined"><label>Joined:</label>%6$s</div>
+				</div>`,
+				$Company->id(),
+				$Company->Asset()->thumbnail_url(), '',
+				$age ? $age : 'old!',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
+				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Company->created_on() ) ),
+			);
+$log->debug($html);
+}
+		$html .= '</div>';
+	} # end foreach Company
+	return $html;
+) ?>
