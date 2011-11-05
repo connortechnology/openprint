@@ -57,16 +57,18 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
 	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
 	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
-	$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
-	if ( $required_fields{'postalcode'} ) {
-		$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
-		$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
-	} # en dif
-	$error .= 'Missing Phone Number.<br/>' if $required_fields{'phone'} and ! $param{'phone'};
-	if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
-		$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
-		$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
-		$error .= 'Please tell us which csr referred you.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'CSR' ) and ! ( $param{'howdidyouhearaboutusother'} or $param{'salesrep_id'} );
+	if ( ! $session{'user_id'} ) {
+		$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
+		if ( $required_fields{'postalcode'} ) {
+			$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
+			$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
+		} # en dif
+		$error .= 'Missing Phone Number.<br/>' if $required_fields{'phone'} and ! $param{'phone'};
+		if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
+			$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
+			$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
+			$error .= 'Please tell us which csr referred you.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'CSR' ) and ! ( $param{'howdidyouhearaboutusother'} or $param{'salesrep_id'} );
+		} # end if
 	} # end if
 	$error .= 'Missing E-mail Address.<br/>' if ! $param{'email'};
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
@@ -125,58 +127,74 @@ sub registration {
 		$param{'postalcode'} = uc $param{'postalcode'};
 	} # end if
 
+	my @Users;
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
+	my $Company;
+	if ( $param{'company_name'} ) {
+		$Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
 			( exists $param{'postalcode'} ? ( 'postalcode uc'=>$param{'postalcode'} ) : () )
 			);
-	if ( ! $Company ) {
-		$param{'name'} = $param{'company_name'};
 
-		$Company = new openprint::Company();
-		$Company->set( \%param );
-		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
-		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
-		$Company->activation( $config{'NewCustomerAccountActivation'} );
-		if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) and ! $Company->salesrep_id() ) {
-			$Company->salesrep_id( $session{'user_id'} );
+		if ( ! $Company ) {
+			$param{'name'} = $param{'company_name'};
+
+			$Company = new openprint::Company();
+			$Company->set( \%param );
+			$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
+			$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
+			$Company->activation( $config{'NewCustomerAccountActivation'} );
+			if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) and ! $Company->salesrep_id() ) {
+				$Company->salesrep_id( $session{'user_id'} );
+			} # end if
+			if ( my $error = $Company->save() ) {
+				$variable{'error'} .= $error;
+				return;
+			} # end if
+
+			# Setup default Credit
+			my $customer_credit = new openprint::customer_credit( $Company->id() );
+			my %params = (
+					'WarnDays'	=>	1*$config{'DefaultWarnDays'},
+					'DenyDays'	=>	1*$config{'DefaultDenyDays'},
+					'Limit'	=>	1*$config{'DefaultCreditLimit'},
+					'Hold'	=>	$config{'DefaultCreditHold'},
+					'Downpayment'	=>	1*$config{'DefaultDownpayment'},
+					);
+			$customer_credit->set( \%params );
+		} else {
+			if ( $config{'Require Unique Company'} ) {
+				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
+				return;
+			} # end if
 		} # end if
-		if ( my $error = $Company->save() ) {
-			$variable{'error'} .= $error;
-			return;
-		} # end if
+	} elsif ( $session{'company_id'} ) {
+		$Company = new openprint::Company( $session{'company_id'} );
+		@Users = openprint::User->find('company_id'=>$Company->id());
+	} # end if
 
-		# Setup default Credit
-		my $customer_credit = new openprint::customer_credit( $Company->id() );
-		my %params = (
-				'WarnDays'	=>	1*$config{'DefaultWarnDays'},
-				'DenyDays'	=>	1*$config{'DefaultDenyDays'},
-				'Limit'	=>	1*$config{'DefaultCreditLimit'},
-				'Hold'	=>	$config{'DefaultCreditHold'},
-				'Downpayment'	=>	1*$config{'DefaultDownpayment'},
-				);
-		$customer_credit->set( \%params );
+	my $User = new openprint::User();
+	$User->set( \%param );
+	$User->company_id( $Company->id() );
+	$User->ftp_active( 'Y' );
+	$User->type( 'C' );
+	$User->change_password( 'N' );
+	$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
+	$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
+	$info{'Company'} = $Company;
+	$info{'User'} = $User;
 
-		my $User = new openprint::User();
-		$User->set( \%param );
-		$User->company_id( $Company->id() );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+	if ( ! @Users ) {
 		$User->web_active( $config{'NewFirstUserAccountActivation'} );
-		$User->ftp_active( 'Y' );
 		$User->administrator( 'Y' );
-		$User->type( 'C' );
-		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
 		$variable{'error'} .= $User->Profile()->save(\%param);
 
-		$info{'Company'} = $Company;
-		$info{'User'} = $User;
 
 		# Send confirmation
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		new openprint::Email()->send(
 				FROM	=> $agent,
 				TO	=> $User,
@@ -206,29 +224,12 @@ sub registration {
 			} # end if
 		} # end if
 	} else {
-		if ( $config{'Require Unique Company'} ) {
-			$variable{'error'} .= $param{'company_name'} . ' is already taken.';
-			return;
-		} # end if
-
-		my $User = new openprint::User();
-		$User->set( \%param );
-		$User->company_id( $Company->id() );
 		$User->web_active( $config{'NewNonFirstUserAccountActivation'} );
-		$User->ftp_active( 'Y' );
 		$User->administrator( 'N' );
-		$User->type( 'C' );
-		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
 		$variable{'error'} .= $User->Profile()->save(\%param);
 
-		$info{'Company'} = $Company;
-		$info{'User'} = $User;
-
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
 		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
 			# send notifications
@@ -289,6 +290,10 @@ sub registration {
 			} # end if
 		} # end if
 
+	} # end if
+
+	if ( $param{'additional_user'} ) {
+		$variable{'ExternalRedirect'} = '/account/registration.html';
 	} # end if
 
 } # end sub registration
