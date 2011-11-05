@@ -53,6 +53,7 @@ CREATE TABLE survey_responses (
 	answer_id	INTEGER, FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
 	answer		TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	public		BOOLEAN,
 	PRIMARY KEY (id)
 );
 CREATE INDEX Survey_Responses_idx on Survey_Responses (question_id,user_id);

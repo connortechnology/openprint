@@ -118,10 +118,12 @@ $openprint::log->debug("Saving profile");
                         'field-'.$Field->id().'_year',
                         'field-'.$Field->id().'_month',
                         'field-'.$Field->id().'_day'} ) );
-			$self->value( $Field, join('-', @$param{
-						'field-'.$Field->id().'_year',
-						'field-'.$Field->id().'_month',
-						'field-'.$Field->id().'_day'} ) );
+			if ( $param{'field-'.$Field->id().'_year'} or $param{'field-'.$Field->id().'_month'} or $param{'field-'.$Field->id().'_day'} ) {
+				$self->value( $Field, join('-', @$param{
+							'field-'.$Field->id().'_year',
+							'field-'.$Field->id().'_month',
+							'field-'.$Field->id().'_day'} ) );
+			} # end if
 		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
 			if ( $$param{'field-'.$$Field{'id'}.'_name'} ) {
 				my $parent_id = $self->value( $Field, openprint::Location->parent_type( $Field->type() ) );

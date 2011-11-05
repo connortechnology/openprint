@@ -23,6 +23,7 @@ require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
 require openprint::User_Profile_Field;
+require openprint::Company_Profile_Field;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -831,6 +832,35 @@ sub upload_log {
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
+
+sub promo_codes {
+	require openprint::Promo_Code;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $PC ( openprint::Promo_Code->find() ) {
+			if ( ! $param{'code-'.$PC->code()}  ) {
+				$PC->delete();
+			} elsif ( 
+					( $PC->code() ne $param{'code-'.$PC->code()} ) or 
+					( $PC->name() ne $param{'name-'.$PC->id()} ) or 
+					( $PC->effect() ne $param{'effect-'.$PC->id()} )
+				) {
+				$variable{'error'} .= $PC->save({
+						'code'=>$param{'code-'.$$PC{code}},
+						'name'=>$param{'name-'.$$PC{code}},
+						'effect'=>$param{'effect-'.$$PC{code}},
+						});
+			} # end if need to save
+		} # end foreach PC
+		if ( $param{'code-new'} ) {
+			my $PC = new openprint::Promo_Code();
+			$variable{'error'} .= $PC->save({
+					'code'=>$param{'code-new'},
+					'name'=>$param{'name-new'},
+					'effect'=>$param{'effect-new'},
+					});
+		} # end if
+	} # end if
+} # end sub promo_codes
 
 1;
 __END__

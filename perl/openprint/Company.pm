@@ -67,7 +67,7 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		);
 %find_fields = (
-	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE company_id=companies.id)',
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 );
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],

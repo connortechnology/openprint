@@ -186,6 +186,14 @@ if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profile_Fields.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_profile_fields'", 'column_name');
+	if ( ! $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add deleted BOOLEAN not null default false');
+	} # end if
+	if ( ! $$data{'searchable'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add searchable BOOLEAN not null default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
@@ -570,7 +578,14 @@ if ( ! sets::isin( 'survey_responses', \@tables ) ) {
 	if ( ! $$data{'created_on'} ) { 
 		$dbh->do('ALTER TABLE survey_responses add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! $$data{'public'} ) { 
+		$dbh->do('ALTER TABLE survey_responses ADD public BOOLEAN');
+	} # end if
 } # end if
+if ( ! sets::isin( 'promo_codes', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Promo_Codes.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 1;
 __END__

@@ -7,5 +7,6 @@ CREATE TABLE Company_Profile_Fields (
 	type		TEXT,
 	values		TEXT[],
 	sort		INTEGER,
+	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );

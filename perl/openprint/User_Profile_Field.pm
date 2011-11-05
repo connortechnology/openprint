@@ -10,11 +10,11 @@ $serial = 'user_profile_fields_id_seq';
 	'id'	=>	'id',
 	'name'	=>	'name',
 	'required'	=>	'required',
-	'searchable'	=>	'searchable',
 	'description'	=>	'description',
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
 	'values'		=>	'values',
+	'searchable'	=>	'searchable',
 	'deleted'		=>	'deleted',
 );
 %transforms = (

@@ -13,12 +13,16 @@ require misc;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
+require openprint::User;
 require openprint::User_Profile_Field;
+require openprint::Company;
+require openprint::Company_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Video_Album;
 require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
+require openprint::Promo_Code;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -100,11 +104,11 @@ sub registration {
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find('email lc'=>lc $param{email} ) ) {
+	if ( openprint::User->find_one('email lc'=>lc $param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
-	if ( openprint::User->find('email lc'=>$param{email},'deleted'=>1 ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email},'deleted'=>1 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
@@ -143,7 +147,7 @@ sub registration {
 			$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
 			$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
 			$Company->activation( $config{'NewCustomerAccountActivation'} );
-			if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) and ! $Company->salesrep_id() ) {
+			if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ! $Company->salesrep_id() ) {
 				$Company->salesrep_id( $session{'user_id'} );
 			} # end if
 			if ( my $error = $Company->save() ) {
@@ -162,7 +166,7 @@ sub registration {
 					);
 			$customer_credit->set( \%params );
 		} else {
-			if ( $config{'Require Unique Company'} ) {
+			if ( $config{'Require Unique Company'} eq 'Y' ) {
 				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
 				return;
 			} # end if
@@ -191,6 +195,16 @@ sub registration {
 		return if $variable{'error'};
 		$variable{'error'} .= $User->Profile()->save(\%param);
 
+		# Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
+		if ( $param{'promo_code'} ) {
+			if ( my $Promo = openprint::Promo_Code->find_one('code'=>$param{'promo_code'}) ) {
+				$log->debug("Found promo code");
+				eval '$Promo->effect()';
+				$log->error( "Eval error of promo code $param{'promo_code'}, Reason: " . $@ ) if $@;
+			} else {
+				$variable{'information'} .= 'Promo code not found.';
+			} # end if
+		} # end if
 
 		# Send confirmation
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
@@ -224,28 +238,39 @@ sub registration {
 			} # end if
 		} # end if
 	} else {
-		$User->web_active( $config{'NewNonFirstUserAccountActivation'} );
+
+		$User->web_active( $session{'company_id'} ? 'Y' : $config{'NewNonFirstUserAccountActivation'} );
 		$User->administrator( 'N' );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
 		$variable{'error'} .= $User->Profile()->save(\%param);
 
 
-		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
+		if ( $User->web_active ne 'Y') {
 			# send notifications
-			foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'type'=>'Y' ) ) {
+			foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'administrator'=>'Y' ) ) {
 				@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_company_admin.html' );
 				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-				new openprint::Email()->send(
+				(new openprint::Email())->send(
 						FROM	=> $agent,
-						TO	=> $Notification,
+						TO		=> $Notification,
 						SUBJECT => 'New Login Application',
 						ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
-		} # end if
+
+			# Send confirmation to the newly added user
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			(new openprint::Email())->send(
+					FROM	=> $agent,
+					TO		=> $User,
+					SUBJECT => 'New Login Application',
+					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+					);
+		} # end if User not activated
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_site_admin.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -259,18 +284,6 @@ sub registration {
 					);
 		} # end foreach
 
-		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
-			# Send confirmation
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			new openprint::Email()->send(
-					FROM	=> $agent,
-					TO	=> $User,
-					SUBJECT => 'New Login Application',
-					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
-					);
-		} # end if
-
 		if ( $param{'rdbReasonForPurchase'} eq 'Reseller' ) {
 			if ( $Company->reseller() ne 'Y' ) {
 				$variable{'Redirect'} = '/account/reseller_application.html';
@@ -281,7 +294,7 @@ sub registration {
 			# If I'm a salesrep, then only change my company, not the user.
 			$session{'company_id'} = $Company->id();
 		} else { 
-			if ( $config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
+			if ( $User->web_active() eq 'Y' ) {
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
 					@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
@@ -291,12 +304,12 @@ sub registration {
 		} # end if
 
 	} # end if
-
-	if ( $param{'additional_user'} ) {
-		$variable{'ExternalRedirect'} = '/account/registration.html';
-	} # end if
+	delete %param;
 
 } # end sub registration
+
+sub _check_company_name {
+} # end sub _check_company_name
 
 sub login_password {
 	$_ = $config{'customerlogin'};
@@ -668,6 +681,23 @@ sub view {
 	} # end if
 } # end sub view
 
+sub couple_search {
+	_couple_search();
+	ssi::setup_date_select( '/account/couple_search.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
+} # end sub search
+
+sub _couple_search {
+	ssi::save_params( '/account/couple_search.html', ( 
+				'created_on_start_year', 'created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'last_online_start_year', 'last_online_start_month','last_online_start_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day',
+				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
+				) );
+} # end sub _search
 sub search {
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
