@@ -36,11 +36,15 @@
 					<li>
 						<label>Created</label>
 						<span class="DateSelectorCT">
-		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_start', {onchange=>'load_surveys(this.form);','with_today'=>1,'with_clear'=>1} ); ) ?>
+		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_start', {
+onchange=>q`load_surveys($('f1'));`,
+'with_today'=>1,'with_clear'=>1} ); ) ?>
 						</span>
 							to 
 						<span class="DateSelectorCT">
-		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_end', {onchange=>'load_surveys(this.form);','with_today'=>1,'with_clear'=>1} ); ) ?>
+		<? echo ( ssi::date_select_session( '/survey/history.html', 'created_on_end', {
+onchange=>q`load_surveys($('f1'));`,
+'with_today'=>1,'with_clear'=>1} ); ) ?>
 						</span>
 					</li>
 <? echo (
@@ -48,10 +52,10 @@
 	if ( @Surveys > 1 ) {
 		my $html = '';
 		$html .= '<li><select name="survey_id" id="survey_id">';
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } ], $param{'survey_id'} );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Surveys ], $param{'survey_id'} );
 		$html .= '</select></li>';
 		return $html;
-	} elsif ( 
+	} elsif ( @Surveys == 1 ) {
 		return '<input type="hidden" name="survey_id" value="'.$Surveys[0]->id().'"/>';
 	} # end if
 ) ?>

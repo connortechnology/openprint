@@ -11,9 +11,11 @@ $table = 'Surveys';
 $serial = 'survey_id_seq';
 
 %fields = (
-	'id',			'id',
-	'name',			'name',
-	'description',	'description',
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'description'	=>	'description',
+	'created_on'	=>	'created_on',
+	'created_by'	=>	'created_by',
 );
 %transforms = (
     'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -21,6 +23,8 @@ $serial = 'survey_id_seq';
 );
 %defaults = (
 	'id'		=>	undef,
+	'created_on'	=>	q`undef`,
+	'created_by'	=>	q`$session{user_id}`,
 );
 
 sub delete {

@@ -881,5 +881,12 @@ $log->debug("Object: Object_Type: No id, looking up by name" . ref $_[0] );
 	return $_[0]{'Object_Type'};
 } # end sub Object_Type
 
+sub date_format {
+	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+} # end sub date_format 
+sub datetime_format {
+	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+} # end sub datetime_format 
+
 1;
 __END__

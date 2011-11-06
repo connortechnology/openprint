@@ -33,21 +33,21 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub view {
 	$param{'survey_id'} =~ s/\D//g;
-    $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+    my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
-        $variable{'error'} = $variable{'Survey'}->save( \%param );
+        $variable{'error'} = $Survey->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Delete' ) {
-        $variable{'error'} = $variable{'Survey'}->delete( );
+        $variable{'error'} = $Survey->delete( );
     } # end if
-} # end sub history
+} # end sub view
 
 sub edit {
 	$param{'survey_id'} =~ s/\D//g;
 	my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
-	if ( $param{'btnFunction'} eq 'Copy' ) {
+	if ( $param{'action'} eq 'Copy' ) {
 		$variable{'Survey'} = $variable{'Survey'}->copy();
 		$variable{'error'} = $variable{'Survey'}->save( );
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{'action'} eq 'Save' ) {
 		$variable{'error'} = $variable{'Survey'}->save( \%param );
 		foreach my $Question ( $Survey->Questions() ) {
 			$variable{'error'} .= $Question->save({

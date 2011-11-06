@@ -561,6 +561,20 @@ if ( ! sets::isin( 'object_assets', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 }
 
+if ( ! sets::isin( 'surveys', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Surveys.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='surveys'", 'column_name');
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE surveys add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE surveys ADD created_by INTEGER');
+		$dbh->do('ALTER TABLE surveys ADD FOREIGN KEY (created_by) REFERENCES Users (id)');
+	} # end if
+} # end if
+
 if ( ! sets::isin( 'survey_questions', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Questions.sql' ) );
     die $dbh->errstr() if $dbh->errstr();

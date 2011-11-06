@@ -75,6 +75,9 @@ BEGIN {
 	use openprint::Host;
 	use openprint::Log;
 	use openprint::Like;
+	use openprint::Page_Setting;
+	use openprint::Survey;
+	use openprint::Event;
 
 #use MapImage;
 

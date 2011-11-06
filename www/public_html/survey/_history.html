@@ -18,26 +18,33 @@
 	</div>
 	<table class="List">
 		<tr> 
-			<th class="Author">Author</th>
-			<th class="DateTime">Created On</th>
 			<th class="Title">Title</th>
 			<th class="Title">Description</th>
+			<th class="Author">Author</th>
+			<th class="DateTime">Created On</th>
+			<th class="questions"># of Questions</th>
+			<th class="responses"># of Responses</th>
 		</tr>
 		<? echo ( 
 			my $html;
 			my $rowclass;
 			foreach my $Survey ( @{$$variable{'Surveys'}} ) {
 				$html .= sprintf(q` 
-				<tr%6$s> 
-					<td class="Author"><a href="/survey/edit.html?survey_id=%1$d">%2$s</a></td>
-					<td class="DateTime"><a href="/survey/edit.html?survey_id=%1$d">%3$s</a></td>
-					<td class="Title"><a href="/survey/edit.html?survey_id=%1$d">%4$s</a></td>
-					<td class="Description"><a href="/survey/edit.html?survey_id=%1$d">%5$s</a></td>
+				<tr%8$s> 
+					<td class="Title"><a href="/survey/view.html?survey_id=%1$d">%4$s</a></td>
+					<td class="Description"><a href="/survey/view.html?survey_id=%1$d">%5$s</a></td>
+					<td class="Author"><a href="/survey/view.html?survey_id=%1$d">%2$s</a></td>
+					<td class="DateTime"><a href="/survey/view.html?survey_id=%1$d">%3$s</a></td>
+					<td class="questions"><a href="/survey/view.html?survey_id=%1$d">%6$s</a></td>
+					<td class="responses"><a href="/survey/view.html?survey_id=%1$d">%7$s</a></td>
+					
 				</tr>
-				`, $Survey->id(), '',
+				`, $Survey->id(), new openprint::User( $Survey->created_by() )->name(),
 				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Survey->created_on() ) ),
 				ssi::html_escape($Survey->name()),
 				ssi::html_escape($Survey->description()),
+				scalar $Survey->Questions(),
+				scalar $Survey->Responses(),
 				$rowclass,
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';

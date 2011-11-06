@@ -1,113 +1,52 @@
-<? if ( $param{'btnFunction'} eq 'Submit' ) ?>
-	<? eval ( 
-		$$variable{'Complete'} = 1;
+<div class="Survey">
+	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
+	<? echo ( $$variable{'Survey'}->description() ) ?>
 
-		my $Response = openprint::Survey_Response->find_one( 'survey_id'=>$param{'survey_id'}, 'user_id'=>$session{'user_id'} );
-		$Response->delete() if $Response;
-		
-		@{$$variable{'Questions'}} = openprint::SurveyQuestion->find('survey_id'=>$param{'survey_id'});
-		foreach my $Question ( @{$$variable{'Questions'}} ) {
-			my $question_id = $Question->id();
-			if ( ! $param{"Answer$question_id"} ) {
-				$$variable{'Complete'} = 0;
-$log->debug("No answer to question $$Question{text}");
-				last;
-			} # end if
-			sql::insert( $log, $dbh, 'Survey_Responses', 'company_id', $session{'company_id'}, 'user_id', $session{'user_id'}, 'survey_id', $param{'survey_id'}, 'question_id', $question_id, 'answer', $param{'Answer'.$question_id} );
-		} # end foreach
-		if ( $$variable{'Complete'} ) {
-			sql::update( undef, undef, 'Users', ['index=?', $session{'user_id'}], 'strcustomgreeting','' );
-		} # end if
-	) ?>
+	
+	<form id="f1" name="f1" method="post" action="questions.html">
+		<input type="hidden" name="btnFunction" value="Submit"/>
+		<? echo (
+			my $html = '';
+			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
+			my %my_Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('user_id'=>$session{'user_id'} );
+			my %Responses 
 
-	<? if ( $$variable{'Complete'} ) ?>
-		Thank you for filling out the survey!
-	<? else ( $$variable{'Complete'} ) ?>
-		You have submitted the Survey without answering each item.
-		Please answer each item before submitting.  Thank you.
-		<? eval ( sql::execute( $log, $dbh, q{DELETE FROM Survey_Responses WHERE user_id=? AND survey_id=?}, $session{'user_id'}, $param{'survey_id'} ); ) ?>
-	<? endif ( $$variable{'Complete'} ) ?>
-<? endif ( $param{'btnFunction'} eq 'Submit' ) ?>
+			foreach my $Question ( @Questions ) {
+				$html .= sprintf('<div class="Question"><div class="text">%s</div>', $Question->text() );
+				my $Response = $my_Responses{$Question->id()};
+				if ( $Response ) {
+					# Responded, just show totals, and what we chose.  There can be a button for editing
+					my %Responses;
+					my @Responses = openprint::Survey_Response('question_id'=>$Question->id());
+					foreach my $Response ( @Responses  ) {
+						push @{$Responses{$Response->answer_id()}}, $Response;
+					} # end foreach Response
 
-<? if ( ! $$variable{'Complete'} ) ?>
-<form id="f1" name="f1" method="post" action="survey.html">
-	<input type="hidden" name="btnFunction" value="Submit"/>
-<? eval ( 
-	if ( $param{'survey_id'} ) {
-		$$variable{'survey_id'} = $param{'survey_id'} if ! sets::isin( $param{'survey_id'}, sql::execute( $log, $dbh, q{SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?}, $$variable{'user_id'} ) );
-	} else {
-		@$variable{'survey_id'} = sql::execute( $log, $dbh, q{SELECT MIN(id) FROM Surveys WHERE id NOT IN (SELECT DISTINCT survey_id FROM Survey_Responses WHERE user_id=?)}, $session{'user_id'} );
-	} # end if
-	) ?>
-<? if ( $$variable{'survey_id'} ) ?>
-	<input type="hidden" name="survey_id" value="<?survey_id?>"/>
-	<p class="buttons">
-	<? echo ( join(',',
-		
-			button('Submit1', { 'onclick'=>'f1.submit();', 'text'=>'Submit' } ),
-			button('Reset1', { 'onclick'=>'f1.reset();', 'text'=>'Reset' } ),
-	 ); ) ?>
-	</p>
-	<br class="spacer"/>
-	<br/>
-	<table>
-		<tr>
-			<td>&nbsp;</td>
-			<td colspan="7"><img width="235" height="118" src="/images/misc/Survey Ratings.gif"/></td>
-		</tr>
-<? eval ( @{$$variable{'Categories'}} = sql::execute( $log, $dbh, "SELECT id, name FROM Survey_Question_Categories WHERE id IN ( SELECT DISTINCT category_id FROM Survey_Questions WHERE survey_id=$$variable{'survey_id'}) ORDER BY sorting" ) ) ?>
-<? while ( @$variable{'cat_id','cat_name'} = splice @{$$variable{'Categories'}}, 0, 2; ) ?>
-	<? if ( $$variable{'cat_name'} ne '' ) ?>
-		<tr>
-			<th align="left"><?cat_name?></th>
-			<th style="background-color:#FFFF00;" width="21">&nbsp;</th>
-			<th style="background-color:#FF8000;" width="21">&nbsp;</th>
-			<th style="background-color:#FF0000;" width="22">&nbsp;</th>
-			<th style="background-color:#FF00FF;" width="22">&nbsp;</th>
-			<th style="background-color:#00baFF;" width="21">&nbsp;</th>
-			<th style="background-color:#00FF00;" width="20">&nbsp;</th>
-			<th>&nbsp;</th>
-		</tr>
-	<? endif ( $$variable{'cat_name'} ne '' ) ?>
-		<tr>
-			<td colspan="8"><hr/></td>
-		</tr>
-	<? eval ( @{$$variable{'Questions'}} = sql::execute( $log, $dbh, "SELECT id, text, type FROM Survey_Questions WHERE category_id=$$variable{'cat_id'} AND survey_id=$$variable{'survey_id'}" ) ) ?>
-	<? while ( @$variable{'question_id','text','type'} = splice @{$$variable{'Questions'}}, 0, 3 ) ?>
-	<? eval ( $$variable{'colRow'} = $$variable{'colRow'} eq 'colRow' ? '' : 'colRow' ) ?>
-		<tr class="<?colRow?>">
-<? if ( $$variable{'type'} eq 'radio' ) ?>
-			<td><?text?></td>
-			<td style="background-color:#FFFF00;"><input type="radio" name="Answer<?question_id?>" value="1" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 1 ) ?> /></td>
-			<td style="background-color:#FF8000;"><input type="radio" name="Answer<?question_id?>" value="2" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 2 ) ?> /></td>
-			<td style="background-color:#FF0000;"><input type="radio" name="Answer<?question_id?>" value="3" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 3 ) ?> /></td>
-			<td style="background-color:#FF00FF;"><input type="radio" name="Answer<?question_id?>" value="4" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 4 ) ?> /></td>
-			<td style="background-color:#00baFF;"><input type="radio" name="Answer<?question_id?>" value="5" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 5 ) ?> /></td>
-			<td style="background-color:#00FF00;"><input type="radio" name="Answer<?question_id?>" value="6" <? echo ( 'checked="checked"' if $r->param("Answer$$variable{'question_id'}") == 6 ) ?> /></td>
-			<td>&nbsp;</td>
-<? endif ( $$variable{'type'} eq 'radio' ) ?>
-<? if ( $$variable{'type'} eq 'text' ) ?>
-			<td><?text?></td>
-			<td colspan="7"><textarea name="Answer<?question_id?>" rows="5" style="width: 100%;"><? echo ( $r->param("Answer$$variable{'question_id'}") ) ?></textarea>
-			</td>
-<? endif ( $$variable{'type'} eq 'text' ) ?>
-		</tr>
-	<? endwhile ( @$variable{'question_id','text','type'} = splice @{$$variable{'Questions'}}, 0, 3 ) ?>
-		<tr>
-			<td colspan="8"><hr/></td>
-		</tr>
-<? endwhile ( @$variable{'cat_id','cat_name'} = splice @{$$variable{'Categories'}}, 0, 2; ) ?>
-	</table>
-	<br/>
-<div style="float: right;">
-	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Submit2', 'submit.gif', "f1.submit();", '', 'Submit' ),
-		ssi::writeButton( $log, $dbh, 'Reset2', 'reset.gif', "f1.reset();", '', 'Reset' ),
-	); ) ?>
-	<br class="spacer"/>
+					$html .= '<ul>';
+					foreach my $AA ( $Question->Available_Answers() ) {
+						$html .= sprintf( '<li><label>%s</label>%.1f', $AA->text(), scalar(@{$Responses{$AA->answer_id()}})/@Responses );
+					} # end foreach
+					$html .= '</ul>';
+				} else {
+					# Did not respond
+					$Response = new openprint::Survey_Response() if ! $Response;
+					$html .= '<div class="answers">';
+					$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+						[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+						( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+						);
+					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
+					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
+					</div>', $Question->id() );;
+			} # end foreach Question
+			return $html;
+		) ?>
+		<br/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Submit2', 'submit.gif', "f1.submit();", '', 'Submit' ),
+				ssi::writeButton( $log, $dbh, 'Reset2', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			); ) ?>
+		</p>
+	</form>
 </div>
-<? else ( $$variable{'survey_id'} ) ?>
-	There are no more surveys for you to fill out. Thank-you.
-<? endif ( $$variable{'survey_id'} ) ?>
-</form>
-<? endif ( ! $$variable{'Complete'} ) ?>

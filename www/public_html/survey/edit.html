@@ -1,42 +1,37 @@
 <form id="f1" name="f1" method="post" action="/survey/edit.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
-	<input type="hidden" name="btnFunction"/>
-<!--
-	<fieldset class="filters"><legend>Select Survey</legend>
+	<input type="hidden" name="action"/>
+	<fieldset><legend>Survey <? echo ( $$variable{'Survey'}->id() ) ?></legend>
 		<ul>
-		<li>
-			<label>Survey:</label>
-			<select name="survey_id" onchange="f1.submit();">
-				<option value=""> select </option>
-			<? echo ( 
-				ssi::make_drop_down( openprint::Survey->dropdown( 'order'=>'lower(name)' ), $$variable{'Survey'}->id() );
-			) ?>
-			</select>
-		</li>
+			<li>
+				<label>Name:</label>
+				<input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
+			</li>
+			<li>
+				<label>Description:</label>
+				<textarea name="description"><? echo ( $$variable{'Survey'}->description() ) ?></textarea>
+			</li>
+			<li>
+				<label>Created On:</label>
+				<? echo ( $$variable{'Survey'}->datetime_format( 'created_on' ); ) ?>
+			</li>
+			<li><label>Created By:</label>
+				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+					<select name="created_by" id="created_by">
+						<option value="">no one</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A','P'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Survey'}->created_by() ); ) ?>
+					</select>
+				<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+					<? echo ( new openprint::User( $$variable{'Survey'}->created_by() )->name() ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			</li>
 		</ul>
-	</fieldset>
--->
-	<fieldset>
-		<ul>
-        <li>
-            <label>ID:</label>
-            <? echo ( $$variable{'Survey'}->id() ) ?>
-        </li>
-        <li>
-            <label>Name:</label>
-            <input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
-        </li>
-        <li>
-            <label>Description:</label>
-            <textarea name="description"><? echo ( $$variable{'Survey'}->description() ) ?></textarea>
-        </li>
-	</ul>
 	<fieldset><legend>Questions:</legend><div id="Questions"><!--#include virtual="_questions_edit.html"--></div></fieldset>
         <p class="buttons">
             <? echo ( join('',
-                ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-                ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
-                ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' ),
-                ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
+                ssi::button( 'Save',{ 'onclick'=>"f1.elements['action'].value='Save';f1.submit();" } ),
+                ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } ),
+                ssi::button( 'Copy', { 'onclick'=>"f1.elements['action'].value='Copy';f1.submit();" } ),
+                ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } ),
                 ); ) ?>
         </p>
     </fieldset>
