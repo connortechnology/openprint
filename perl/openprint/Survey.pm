@@ -80,6 +80,13 @@ sub copy {
     return $new;
 } # end sub copy
 
+sub can_edit {
+	return 0 if ! $openprint::session{'user_id'};
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( $openprint::session{'user_id'} == $_[0]{'created_by'} );
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

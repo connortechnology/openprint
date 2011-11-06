@@ -32,6 +32,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub view {
+$log->debug("In survey view");
 	$param{'survey_id'} =~ s/\D//g;
     my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
@@ -80,9 +81,6 @@ sub _history {
 		) );
 } # end sub _history
 
-sub view {
-} # end sub view
-
 sub _questions_edit {
 	$param{'survey_id'} =~ s/\D//g;
 	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
@@ -91,6 +89,13 @@ sub _questions_edit {
 		$variable{'error'} .= $Question->save({
 			'survey_id'	=>	$param{'survey_id'},	
 			});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Question = openprint::Survey_Question->find_one('id'=>$param{'question_id'} );
+		if ( $Question ) {
+			$variable{'error'} .= $Question->delete();
+		} else {
+			$log->error("attempt to delete unfound question $param{question_id}");
+		} # end if
 	} # end if
 } # end sub _questions_edit
 

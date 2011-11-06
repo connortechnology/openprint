@@ -1,30 +1,30 @@
 <div class="Survey">
 	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
 	<? echo ( $$variable{'Survey'}->description() ) ?>
-
 	
 	<form id="f1" name="f1" method="post" action="questions.html">
 		<input type="hidden" name="btnFunction" value="Submit"/>
 		<? echo (
 			my $html = '';
 			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
-			my %my_Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('user_id'=>$session{'user_id'} );
-			my %Responses 
 
+			$html .= '<ol class="Questions">';
 			foreach my $Question ( @Questions ) {
-				$html .= sprintf('<div class="Question"><div class="text">%s</div>', $Question->text() );
-				my $Response = $my_Responses{$Question->id()};
+				$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
+				my $Response = undef;
+				my %Responses;
+				my @Responses = openprint::Survey_Response->find('question_id'=>$Question->id());
+				foreach ( @Responses ) {
+					push @{$Responses{$_->answer_id()}}, $_;
+					$Response = $_ if $_->user_id() == $session{'user_id'};
+				} # end foreach Response
+
 				if ( $Response ) {
 					# Responded, just show totals, and what we chose.  There can be a button for editing
-					my %Responses;
-					my @Responses = openprint::Survey_Response('question_id'=>$Question->id());
-					foreach my $Response ( @Responses  ) {
-						push @{$Responses{$Response->answer_id()}}, $Response;
-					} # end foreach Response
 
 					$html .= '<ul>';
 					foreach my $AA ( $Question->Available_Answers() ) {
-						$html .= sprintf( '<li><label>%s</label>%.1f', $AA->text(), scalar(@{$Responses{$AA->answer_id()}})/@Responses );
+						$html .= sprintf( '<li><label>%s</label>%.1f\%</li>', $AA->text(), scalar(@{$Responses{$AA->answer_id()}})/@Responses );
 					} # end foreach
 					$html .= '</ul>';
 				} else {
@@ -37,8 +37,10 @@
 						);
 					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
 					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
-					</div>', $Question->id() );;
+					</li>', $Question->id() );
+				} # end if Response
 			} # end foreach Question
+			$html .= '</ol>';
 			return $html;
 		) ?>
 		<br/>
