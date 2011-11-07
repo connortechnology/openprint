@@ -17,7 +17,7 @@
 					</tr>`,
 					$PS->id(), $PS->url(), 
 					ssi::make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
-					ssi::make_drop_down( [ '', 'all', 'C', 'Regular User', 'E', 'Employee', 'A', 'Administrator' ], $PS->user_level() ),
+					ssi::make_drop_down( [ '', 'all', map { $_->id(), $_->name() } openprint::User_Type->find() ], $PS->user_level() ),
 				);
 			} # end foreach
 			return $html;
