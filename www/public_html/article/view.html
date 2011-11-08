@@ -9,15 +9,17 @@
 	</p>
 <? endif ( $$variable{'Article'}->can_edit() ) ?>
 <? if ( $$variable{'Article'}->can_view() ) ?>
+	<h1><? hecho ( $$variable{'Article'}->title() ) ?></h1>
+Posted on <? echo ( $$variable{'Article'}->datetime_format( 'published_on' ) ) ?> by <a href="/account/view.html?user_id=<? echo ( $$variable{'Article'}->created_by() ) ?>"><? hecho ( new openprint::User( $$variable{'Article'}->created_by() )->name() ) ?></a><br/>
 	<? if ( $$variable{'Article'}->source() ) ?>
-	<? echo ( $$variable{'Article'}->source_content() ) ?>
-	<a href="<? echo ( $$variable{'Article'}->source() ) ?>" target="_blank">View Original Article</a><br/>
+		<? echo ( $$variable{'Article'}->source_content() ) ?>
+		<a href="<? echo ( $$variable{'Article'}->source() ) ?>" target="_blank">View Original Article</a><br/>
 	<? endif ( $$variable{'Article'}->source() ) ?>
 
 	<? echo ( $$variable{'Article'}->body() ) ?>
 	<? if ( $session{'user_id'} ) ?>
-	<div id="Likes"><? echo ( $$variable{'Article'}->likes() ) ?></div>
-	<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><!--#include virtual="_comments.html"--></div>
+		<div id="Likes"><? echo ( $$variable{'Article'}->likes() ) ?></div>
+		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><!--#include virtual="_comments.html"--></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? else ( $$variable{'Article'}->can_view() ) ?>
 	You cannot view this article.

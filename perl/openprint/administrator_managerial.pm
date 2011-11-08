@@ -715,14 +715,25 @@ sub user_profile_fields {
 	} # end if
 } # end sub user_profile_fields
 sub _field_tr {
-	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
+	my $object_name;
+	if ( $ENV{'HTTP_REFERER'} =~ /user_profile_fields/ ) {
+		$object_name = 'openprint::User_Profile_Field';
+	} elsif ( $ENV{'HTTP_REFERER'} =~ /company_profile_fields/ ) {
+		$object_name = 'openprint::Company_Profile_Field';
+	} # end if
+	if ( ! $object_name ) {
+		$log->error("Unknown referrer: $ENV{'HTTP_REFERER'}");
+		return;
+	} # end if
+	
+	$variable{'Field'} = $object_name->new( $param{'field_id'} );
 	if ( $param{'action'} eq 'Add' ) {
 		$variable{'error'} .= $variable{'Field'}->save({
 			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $variable{'Field'}->delete();
-		$variable{'Field'} = new openprint::User_Profile_Field() if ! $variable{'error'};
+		$variable{'Field'} = $object_name->new() if ! $variable{'error'};
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Field'} = $variable{'Field'}->copy();
 		$variable{'error'} .= $variable{'Field'}->save( \%param );
@@ -757,6 +768,22 @@ sub _user_fields_tbody {
 		} # end foreach $feild_id
 	} # end if
 } # end sub _user_fields_tbody
+
+sub company_profile_fields {
+$openprint::log->debug("Hello");
+	if ( $param{'action'} eq 'Save' ) {
+		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+			$variable{'error'} .= $Field->save({
+				'name'	=>	$param{'name-'.$Field->id()},
+				'description'	=>	$param{'description-'.$Field->id()},
+				'type'	=>	$param{'type-'.$Field->id()},
+				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'required'	=>	$param{'required-'.$Field->id()},
+				'searchable'	=>	$param{'searchable-'.$Field->id()},
+			});
+		} # end foreach Field
+	} # end if
+} # end sub company_profile_fields
 
 sub _company_fields_tbody {
 	if ( $param{'action'} eq 'up' ) {

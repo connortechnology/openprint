@@ -305,6 +305,9 @@ sub registration {
 
 	} # end if
 
+	$variable{'additional_user'} = $param{'additional_user'} if exists $param{'additional_user'};
+	%param = ();
+
 } # end sub registration
 
 sub _check_company_name {
