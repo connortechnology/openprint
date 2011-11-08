@@ -356,6 +356,13 @@ sub Asset {
 				$openprint::log->debug("Loading by default");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
+			my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
+			foreach my $Album ( @Albums ) {
+				my @Photos = $Album->Photos();
+				if ( @Photos ) {
+					$_[0]{'Asset'} = $Photos[0]->Asset();
+				} # end if
+			} # end foreach Album
 			if ( ! $_[0]{'Asset'} ) {
 				$_[0]{'Asset'} = new openprint::Asset( );
 			} # end if
@@ -444,6 +451,14 @@ sub AUTOLOAD {
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
+
+sub can_edit {
+	return 1 if $openprint::session{'user_id'} == $_[0]{id};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( new openprint::User( $openprint::session{'user_id'} )->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	return 1 if new openprint::Company( $_[0]{'company_id'} )->salesrep_id() == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

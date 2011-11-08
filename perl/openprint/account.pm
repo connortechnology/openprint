@@ -356,27 +356,20 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = $variable{'Me'} = new openprint::User( $session{'user_id'} );
+	my $User;
+# IF it's empty, then we are adding a new user! Otherwise editing one
+	if ( exists $param{'ddmUser'} ) {
+		$User = openprint::User->find_one('user_id'=>$param{'ddmUser'} );
+	} elsif ( $session{'company_id'} != $Me->company_id() ) {
+		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+	} # end if 
+	if ( ! $User ) {
+		$User = $Me;
+	} # end if
 
-	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
-		# IF it's empty, then we are adding a new user! Otherwise editing one
-		if ( exists $param{'ddmUser'} ) {
-			$User = new openprint::User( $param{'ddmUser'} );
-		} elsif ( $session{'company_id'} != $Me->company_id() ) {
-			my @Users = openprint::User->find('company_id'=>$session{'company_id'} );
-			if ( @Users == 1 ) {
-				$User = $Users[0];
-			} # end if
-		} # end if
-		if ( $param{'ddmUser'} ) {
-# Enforce that we can only edit users from our company
-			if ( $User->company_id() != $session{'company_id'} ) {
-				$User = new openprint::User( $session{'user_id'} );
-			} # end if
-		} # end if
-
+	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
 			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
 		} elsif ( $param{'btnFunction'} eq '>>' ) {
@@ -384,92 +377,84 @@ sub user_profile {
 		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$User->delete();
 			$User = $User->Next( 'company_id'=>$session{'company_id'} );
-		} # end if
-	} # end if Company Admin
+		} elsif ( $param{'btnFunction'} eq 'Save' ) {
+			my $error = '';
+			if ( $param{'password'} ne $User->password() ) {
+				if ( ! $param{'verifypassword'} ) {
+					$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+					delete $param{'password'};
+				} else {
+					$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+				} # end if
+			} # end if
 
-# options available to non-company administrators
-	if ( $param{'btnFunction'} eq 'Save' ) {
+			$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
+			if ( $config{'UserProfileRequiredFields'} ) {
+				foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
+					$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
+				} # end foreach required field
+			} else {
+				$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
+				$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
+				$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
+				$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
+			} # end if
+			if ( $error ne '' ) {
+				$variable{'error'} = 'Bad Field';
+				$variable{'information'} = $error;
+				$variable{'User'} = $User;
+				return;
+			} # end if
 
-		my $error = '';
-        if ( $param{'password'} ne $User->password() ) {
-            if ( ! $param{'verifypassword'} ) {
-                $variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
-                delete $param{'password'};
-            } else {
-                $error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
-            } # end if
-        } # end if
-
-		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
-		if ( $config{'UserProfileRequiredFields'} ) {
-			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
-				$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
-			} # end foreach required field
-		} else {
-			$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-			$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-			$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-			$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
-		} # end if
-		if ( $error ne '' ) {
-			$variable{'error'} = 'Bad Field';
-			$variable{'information'} = $error;
-			$variable{'User'} = $User;
-			return;
-		} # end if
-
-		foreach my $U ( openprint::User->find('email lc'=>lc $param{'email'}) ) {
-			if ( $U->id() != $User->id() ) {
+			if ( openprint::User->find_one( 'email lc'=>lc $param{'email'}, 'id !='=>$User->id() ) ) {
 				$variable{'error'} = 'User already exists.';
 				$variable{'information'} = $param{'email'} . ' is already a user.';
 				$variable{'User'} = $User;
 				return;
+			} # end foreach
+
+			if ( ! $param{'ddmUser'} ) { # add
+				$User->company_id( $session{company_id} ) if ! $User->company_id();
 			} # end if
-		} # end foreach
-		if ( ! $param{'ddmUser'} ) { # add
-			$User->company_id( $session{company_id} ) if ! $User->company_id();
-		} # end if
-		my $oldpassword = $User->password();
-        if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
-            # Are changing passwords
-			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
-				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+
+			my $oldpassword = $User->password();
+			if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+				# Are changing passwords
+				if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+					return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+				} # end if
+				$param{'change_password'} = 'N';
+				$param{'password_changed_on'} = 'NOW()';
 			} # end if
-            $param{'change_password'} = 'N';
-			$param{'password_changed_on'} = 'NOW()';
-        } # end if
 
-		$variable{'error'} .= $User->save( \%param );
+			$variable{'error'} .= $User->save( \%param );
 
-		$User->Profile()->save( \%param );
+			$User->Profile()->save( \%param );
 
-		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+			if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
 # Send password change email
-			if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				my %info = (
-						'User' =>$User,
-					   );
+				if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
+					my %info = (
+							'User' =>$User,
+						   );
 
-				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
-				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
+					$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-				new openprint::Email()->send(
-						FROM    => $config{'AdministratorEmail'},
-						TO      => $User,
-						SUBJECT => 'Password Changed',
-						ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-						);
-				$variable{'information'} = 'The user has been notified by email of the password change.';
-			} else {
-				$variable{'error'} = 'We were unable to email the new password. Please contact support.';
-			} # end if
-		} # end if to send changed password notification
+					new openprint::Email()->send(
+							FROM    => $config{'AdministratorEmail'},
+							TO      => $User,
+							SUBJECT => 'Password Changed',
+							ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+							);
+					$variable{'information'} = 'The user has been notified by email of the password change.';
+				} else {
+					$variable{'error'} = 'We were unable to email the new password. Please contact support.';
+				} # end if
+			} # end if to send changed password notification
+		} # end if btnFunction
+	} # end if can_edit
 
-	} # end if
-
-	if ( $User->company_id() != $session{'company_id'} ) {
-		$User = new openprint::User();
-	} # end if
 	$variable{'User'} = $User;
 } # end sub user_profile
 
