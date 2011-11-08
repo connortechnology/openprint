@@ -136,24 +136,23 @@ sub summary {
 } # end sub summary
 
 sub can_view {
-$openprint::log->debug($_[0]->to_string());
 	return 1 if ! $_[0]{'id'};
 	return 1 if $session{'user_type'} eq 'A';
 	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
 	if ( $_[0]{'published'} ) {
-$openprint::log->debug("Is published");
+#$openprint::log->debug("Is published");
 		if ( ! $_[0]{'user_type'} ) {
-$openprint::log->debug("no usertype");
+#$openprint::log->debug("no usertype");
 			# Anyone can see it
 			return 1;
 		} else {
-$openprint::log->debug("usertype is ($_[0]{user_type})");
+#$openprint::log->debug("usertype is ($_[0]{user_type})");
 			# Don't have to test for admin, cuz we did it above
 			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $session{'user_type'}, ['E','C'] );
 			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $session{'user_type'}, ['E'] );
 		} # end if
-	} else {
-$openprint::log->debug("not published");
+	#} else {
+#$openprint::log->debug("not published");
 	} # end if
 	return 0;
 } # end sub can_view
