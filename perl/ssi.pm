@@ -612,27 +612,31 @@ $openprint::log->error("No date from $value");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
 	my $html = '';
-	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
+	$html .= sprintf(q`<span id="%1$s_date"><select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.elements['%1$s_month'].value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">
+`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
-	$html .= '</select>';
+	$html .= '</select>
+';
 	$html .= sprintf(q`<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.elements['%1$s_year'].value,this.value,this.form.elements['%1$s_day'],this.form.elements['%1$s_day'].value);%2$s">`, $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
-	$html .= '</select>';
+	$html .= '</select>
+';
 	$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
-	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
+	$html .= '</select></span>
+';
+	$html .= sprintf('<span id="%1$s_time" class="time"%3$s>
+<select id="%1$s_hour" name="%1$s_hour" onchange="%2$s"><option value=""></option>%4$s</select> :
 	<select id="%1$s_minute" name="%1$s_minute" onchange="%2$s">
 	<option value=""> </option>%5$s
-	</select></span>
-', $prefix, $$options{'onchange'}, 
-( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
-	make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
-	make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
-);
+	</select></span>', $prefix, $$options{'onchange'}, 
+		( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
+		make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
+		make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
+	);
 	if ( $$options{'with_clear'} ) {
 		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
 	} # end if

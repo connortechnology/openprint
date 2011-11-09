@@ -138,5 +138,9 @@ sub html {
 	return $html;
 } # end  sub html
 
+sub Location {
+	return new openprint::Location( $_[0]{'location_id'} );
+} # end sub Location
+
 1;
 __END__

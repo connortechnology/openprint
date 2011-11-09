@@ -19,7 +19,7 @@ $table = 'survey_responses';
 );
 
 %defaults = (
-	'created_on'	=>	q`NOW()`,
+	'created_on'	=>	q`'NOW()'`,
 	'answer_id'		=>	q`undef`,
 	'company_id'	=>	q`undef`,
 	'survey_id'		=>	q`undef`,

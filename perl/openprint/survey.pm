@@ -39,8 +39,33 @@ $log->debug("In survey view");
         $variable{'error'} = $Survey->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Delete' ) {
         $variable{'error'} = $Survey->delete( );
+    } elsif ( $param{'action'} eq 'submit' ) {
+		my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('survey_id'=>$Survey->id(),'user_id'=>$session{'user_id'});
+		foreach my $Question ( $Survey->Questions() ) {
+			my $Response = $Responses{$$Question{id}};
+			$Response = new openprint::Survey_Response() if ! $Response;
+			if ( 
+					( $Response->answer_id() != $param{'answer_id-'.$$Question{'id'}} ) or
+					( $Response->answer() ne $param{'answer-'.$$Question{'id'}} ) 
+			   ) {
+
+				$variable{'error'} .= $Response->save({
+						'company_id'	=>	$session{'company_id'},
+						'user_id'		=>	$session{'user_id'},
+						'survey_id'		=>	$$Survey{'id'},
+						'question_id'	=>	$$Question{'id'},
+						'answer_id'=>$param{'answer_id-'.$Question->id()},
+						'answer'=>$param{'answer-'.$Question->id()},
+						});
+			} # end nif answer has changed
+		} # end foreach Question
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			%param = ();
+		} # end if
     } # end if
 } # end sub view
+
 
 sub edit {
 	$param{'survey_id'} =~ s/\D//g;
@@ -56,6 +81,13 @@ sub edit {
 					'type'=>$param{'type-'.$Question->id()},
 					});
 		} # end foreach Question
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Survey->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			$variable{'information'} .= 'Survey successfully deleted.';
+			%param = ();
+		} # end if
 	} # end if
 } # end sub edit
 

@@ -1,5 +1,8 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
+	if ( ! $$variable{'Survey'}->id() ) {
+		return 'Please save the survey before adding questions.';
+	} # end if
 	my $html = '';
 	my $answers_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/survey/_answers_edit.html' );
 	$html .= '<ol class="Questions">';

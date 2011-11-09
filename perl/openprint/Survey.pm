@@ -4,6 +4,7 @@ our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Survey_Question;
+require openprint::Survey_Response;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -23,7 +24,7 @@ $serial = 'survey_id_seq';
 );
 %defaults = (
 	'id'		=>	undef,
-	'created_on'	=>	q`undef`,
+	'created_on'	=>	q`'NOW()'`,
 	'created_by'	=>	q`$session{user_id}`,
 );
 
@@ -31,9 +32,8 @@ sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {
-		foreach my $A ( $Q->AvailableAnswers() ) {
+		foreach my $A ( $Q->Available_Answers() ) {
 			$A->delete();
 		} # end foreach
 		$Q->delete();
@@ -58,7 +58,15 @@ sub Questions {
         @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id});
     } # end if
     return @{$$self{Questions}};
-} # end sub questions
+} # end sub Questions
+
+sub Responses {
+    my $self = shift;
+    if ( ! $$self{Responses} ) {
+        @{$$self{Responses}} = openprint::Survey_Response->find('survey_id'=>$$self{id});
+    } # end if
+    return @{$$self{Responses}};
+} # end sub Responses
 
 sub copy {
     my $self = shift;

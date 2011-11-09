@@ -4,14 +4,10 @@
 			<ul>
 <? echo ( 
 	my $html;
-$log->debug("Getting profile");
 	my $Profile = $$variable{'User'}->Profile();
-$log->debug("Getting profile" . $Profile->to_string() );
 	
 	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,description') ) {
-$log->debug("Entry for $$Field{name} : " . $Field->to_string() );
 		my $Entry = $Profile->Field( $Field->name() );
-$log->debug("Entry for $$Field{name} : " . $Entry->to_string() );
 		$html .= $Entry->html();
 	} # end foreach Field
 	return $html;

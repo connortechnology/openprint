@@ -1,9 +1,10 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <div class="Survey">
 	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
 	<? echo ( $$variable{'Survey'}->description() ) ?>
 	
-	<form id="f1" name="f1" method="post" action="questions.html">
-		<input type="hidden" name="btnFunction" value="Submit"/>
+	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
+		<input type="hidden" name="action" />
 		<? echo (
 			my $html = '';
 			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
@@ -14,9 +15,9 @@
 				my $Response = undef;
 				my %Responses;
 				my @Responses = openprint::Survey_Response->find('question_id'=>$Question->id());
-				foreach ( @Responses ) {
-					push @{$Responses{$_->answer_id()}}, $_;
-					$Response = $_ if $_->user_id() == $session{'user_id'};
+				foreach my $R ( @Responses ) {
+					push @{$Responses{$R->answer_id()}}, $R;
+					$Response = $R if $R->user_id() == $session{'user_id'};
 				} # end foreach Response
 
 				if ( $Response ) {
@@ -24,17 +25,28 @@
 
 					$html .= '<ul>';
 					foreach my $AA ( $Question->Available_Answers() ) {
-						$html .= sprintf( '<li><label>%s</label>%.1f\%</li>', $AA->text(), scalar(@{$Responses{$AA->answer_id()}})/@Responses );
+						@{$Responses{$AA->answer_id()}} = () if ! $Responses{$AA->answer_id()};
+						$html .= sprintf( '<li><label>%s</label>%.1f\%</li>', $AA->Answer()->text(), 100*( @Responses ? scalar(@{$Responses{$AA->answer_id()}})/@Responses : 0 ) );
 					} # end foreach
 					$html .= '</ul>';
 				} else {
 					# Did not respond
 					$Response = new openprint::Survey_Response() if ! $Response;
 					$html .= '<div class="answers">';
-					$html .= ssi::radio( 'answer_id-'.$Question->id(), 
-						[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
-						( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
-						);
+					if ( $Question->type() eq 'radio' ) {
+						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+								);
+					} elsif ( $Question->type() eq 'checkbox' ) {
+						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+								);
+					} elsif ( $Question->type() eq 'select-one' ) {
+						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
+								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_id() ) );
+					} # end if
 					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
 					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
 					</li>', $Question->id() );
@@ -46,8 +58,7 @@
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Submit2', 'submit.gif', "f1.submit();", '', 'Submit' ),
-				ssi::writeButton( $log, $dbh, 'Reset2', 'reset.gif', "f1.reset();", '', 'Reset' ),
+				ssi::button( 'Submit', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
 			); ) ?>
 		</p>
 	</form>
