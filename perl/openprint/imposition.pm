@@ -122,7 +122,8 @@ sub check_setup {
 	} elsif ( $setup->runstyle() eq 'Perfecting' and ! $$specs{'ComboItems'} ) {
 		#$openprint::log->debug("*** Runstyle is: Perfecting Items: $$specs{'ComboItems'} Imposition is : $$setup{'Imposition'} ***" . $setup->Paper()->perfecting() );
 
-		if ( ! $setup->Paper()->perfecting() ) {
+		if ( (! $setup->Paper()->perfecting() ) and ( $$specs{'Perfecting Double Gutter Size'} or $$specs{'Perfecting Single Gutter Size'} ) ) {
+$openprint::log->debug("Checking for roller space");
 			# check to make sure that the gutter space is actually where it needs to be.
 			if ( $setup->columns() == 1 ) {
 				$setup->rows(0);
@@ -157,7 +158,7 @@ sub check_setup {
 					return 0;
 				} # end if
 			} # end if
-		} # end if
+		} # end if paper not perfecting and have gutter sizes
 	} # end if
 	return 1;
 } # end sub check_setup
@@ -726,11 +727,13 @@ sub add_imposition {
 			} elsif ( $versions > $i->imposition() ) {
 				next;
 			} # end if
-			if ( $run_style eq 'Perfecting' ) {
+
+# This is checked for in check_setup
+			#if ( $run_style eq 'Perfecting' ) {
 # make sure that we do not get any 1up perfecting!
 # Can only do 1 up perfecting if we are using perfecting paper, which doesn't need rollers
-				next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
-			} # end if
+				#next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
+			#} # end if
 			push @impositions, $i;
 		} # end foreach
 	} # end foreach runstyle
