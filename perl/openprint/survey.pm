@@ -15,6 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
+use openprint ();
 package openprint::survey;
 
 require openprint::Survey;
@@ -116,12 +117,7 @@ sub _history {
 sub _questions_edit {
 	$param{'survey_id'} =~ s/\D//g;
 	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
-	if ( $param{'action'} eq 'new' ) {
-		my $Question = new openprint::Survey_Question();
-		$variable{'error'} .= $Question->save({
-			'survey_id'	=>	$param{'survey_id'},	
-			});
-	} elsif ( $param{'action'} eq 'delete' ) {
+	if ( $param{'action'} eq 'delete' ) {
 		my $Question = openprint::Survey_Question->find_one('id'=>$param{'question_id'} );
 		if ( $Question ) {
 			$variable{'error'} .= $Question->delete();
@@ -130,6 +126,17 @@ sub _questions_edit {
 		} # end if
 	} # end if
 } # end sub _questions_edit
+
+sub _question_edit_line {
+	$param{'survey_id'} =~ s/\D//g;
+	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+	if ( $param{'action'} eq 'new' ) {
+		my $Question = $variable{'Question'} = new openprint::Survey_Question();
+		$variable{'error'} .= $Question->save({
+			'survey_id'	=>	$param{'survey_id'},	
+			});
+	} # en dif
+} # end sub _question_edit_line
 
 sub _answers_edit {
 	$param{'question_id'} =~ s/\D//g;
