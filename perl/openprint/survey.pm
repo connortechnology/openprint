@@ -38,8 +38,12 @@ $log->debug("In survey view");
     my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
         $variable{'error'} = $Survey->save( \%param );
-    } elsif ( $param{'btnFunction'} eq 'Delete' ) {
+    } elsif ( $param{'action'} eq 'delete' ) {
         $variable{'error'} = $Survey->delete( );
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			%param = ();
+		} # end if
     } elsif ( $param{'action'} eq 'submit' ) {
 		my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('survey_id'=>$Survey->id(),'user_id'=>$session{'user_id'});
 		foreach my $Question ( $Survey->Questions() ) {
