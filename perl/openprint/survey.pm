@@ -167,6 +167,16 @@ sub _answers_edit {
 					'question_id'	=>	$param{'question_id'},
 					'answer_id'		=>	$$Answer{'id'},
 					});
+	} elsif ( $param{'action'} eq 'sort' ) {
+		my $order = $param{'order'};
+		$order =~ s/answers-(\d+)\[\]=//g;
+		my $question_id = $1;
+		my @Order = split '&', $order;
+		foreach my $i ( 0 .. @Order ) {
+			my $A = openprint::Survey_Question_Available_Answer->find_one('question_id'=>$question_id, 'answer_id'=>$Order[$i]);
+			$variable{'error'} .= $A->save({'sorting'=>$i}) if $A;
+		} # end foreach
+		my $Question = $variable{'Question'} = new openprint::Survey_Question( $question_id );
 	} # end if
 } # end sub _answers_edit
 

@@ -26,7 +26,7 @@
 					$html .= '<ul>';
 					foreach my $AA ( $Question->Available_Answers() ) {
 						@{$Responses{$AA->answer_id()}} = () if ! $Responses{$AA->answer_id()};
-						$html .= sprintf( '<li><label>%s</label>%.1f\%</li>', $AA->Answer()->text(), 100*( @Responses ? scalar(@{$Responses{$AA->answer_id()}})/@Responses : 0 ) );
+						$html .= sprintf( '<li><label>%s</label><span class="percent">%.1f%</span></li>', $AA->Answer()->text(), 100*( @Responses ? scalar(@{$Responses{$AA->answer_id()}})/@Responses : 0 ) );
 					} # end foreach
 					$html .= '</ul>';
 				} else {

@@ -1,22 +1,29 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript">
+	var answer_drop = function(el){
+        new Ajax.Updater( el, '_answers_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }, onSuccess:function(){
+                eval("Sortable.create('"+el+"', { onUpdate:answer_drop });");
+ } } );
+    } // end function dropfunction
+</script>
 <? if ( $$variable{'Survey'}->can_edit() ) ?>
 <form id="f1" name="f1" method="post" action="/survey/edit.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
 	<input type="hidden" name="action"/>
 	<fieldset><legend>Survey <? echo ( $$variable{'Survey'}->id() ) ?></legend>
 		<ul>
 			<li>
-				<label>Name:</label>
+				<label>Name</label>
 				<input type="text" name="name" value="<? echo ( $$variable{'Survey'}->name() ) ?>" />
 			</li>
 			<li>
-				<label>Description:</label>
+				<label>Description</label>
 				<textarea name="description"><? echo ( $$variable{'Survey'}->description() ) ?></textarea>
 			</li>
 			<li>
-				<label>Created On:</label>
+				<label>Created On</label>
 				<? echo ( $$variable{'Survey'}->datetime_format( 'created_on' ); ) ?>
 			</li>
-			<li><label>Created By:</label>
+			<li><label>Created By</label>
 				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 					<select name="created_by" id="created_by">
 						<option value="">no one</option>
@@ -27,7 +34,7 @@
 				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			</li>
 		</ul>
-		<fieldset><legend>Questions:</legend><!--#include virtual="_questions_edit.html"-->
+		<fieldset><legend>Questions</legend><!--#include virtual="_questions_edit.html"-->
 	<p class="buttons">
 	<? echo (
 	ssi::button( 'AddQuestion', { 'onclick'=>qq`new Ajax.Updater('Questions', '_question_edit_line.html', {

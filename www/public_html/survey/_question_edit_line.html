@@ -21,6 +21,13 @@
 	if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio' ] ) ) {
 		$html .= ssi::variable_substitution( \$answers_html, { 'Question'=>$Question }  ); 
 	} # end if
-	$html .= '</ul></li>';
+	$html .= '</ul>';
+	$html .= sprintf('<input type="text" id="text-%1$d-new" name="text-%1$d-new" placeholder="new answer"/>', $$variable{'Question'}->id() );
+	$html .= ssi::button('AddAnswer-'.$Question->id(), {
+				'onclick'=>sprintf(q`new Ajax.Updater('answers-%1$d', '_answers_edit.html', { parameters: { action: 'add', question_id: %1$d, text: $('text-%1$d-new').value } } );`, $Question->id() ),
+				'text'	=>	'+',
+	} );
+	$html .= '</li>';
+	$html .= sprintf(q`<script type="text/javascript">Sortable.create('answers-%1$d', { onUpdate:answer_drop });</script>`, $Question->id() );
 	return $html;
 ) ?>
