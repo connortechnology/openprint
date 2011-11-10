@@ -24,7 +24,7 @@ $serial = 'events_id_seq';
 	'time_associated'	=>	'time_associated',
 	'category_id'	=>	'category_id',
 	'category'		=>	undef,
-	'asset_id'		=>	'asset_id',
+	#'asset_id'		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
 	'album_id'		=>	'album_id', 
 );
@@ -35,7 +35,7 @@ $serial = 'events_id_seq';
 	'starting_on'	=>	undef,
 	'ending_on'		=>	undef,
 	'location_id'	=>	undef,
-	'asset_id'		=>	undef,
+	#'asset_id'		=>	undef,
 	'time_associated'	=> 0,
 	'created_by'		=> q`$openprint::session{'user_id'}`,
 	'deleted'			=> 0,
@@ -62,15 +62,17 @@ sub where {
 } # end sub where
 
 sub Asset {
-	if ( ! $_[0]{'asset_id'} ) {
+	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
-		if ( $$Album{'asset_id'} ) {
-			return new openprint::Asset( $$Album{'asset_id'} );
-		} elsif ( my @Photos = $_[0]->Photos() ) {
-			return $Photos[0];
+		if ( $$Album{'thumbnail_id'} ) {
+			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+		} elsif ( my @Photos = $Album->Photos() ) {
+			$_[0]{'Asset'} = $Photos[0];
+		} else {
+			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
 	} # end if
-	return new openprint::Asset( $_[0]{'asset_id'} );
+	return $_[0]{'Asset'};
 } # end sub Asset
 
 sub location {

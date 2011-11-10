@@ -27,6 +27,7 @@ sub history {
 		$variable{'error'} .= $Album->destroy();
 		%param = ();
 	} # end if
+	_history();
 	if ( ( ! $session{'/photo_albums/history.html?lastupdated'} ) or ( time - $session{'/photo_albums/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/photo_albums/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/photo_albums/history.html', 'created_on_end', '' );
@@ -35,10 +36,6 @@ sub history {
 		$session{'/photo_albums/history.html?deleted'} = 0;
 		$session{'/photo_albums/history.html?company_id'} = $session{'company_id'} if ! $session{'/photo_albums/history.html?company_id'};
 	} # end if
-	ssi::save_params( '/photo_albums/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'company_id', 'user_id', 'deleted' ) );
 } # end sub history
 sub _history {
 	ssi::save_params( '/photo_albums/history.html', ( 
@@ -61,16 +58,18 @@ sub list {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Album->delete();
 	} # end if
-	ssi::save_params( '/photo_albums/list.html', ( 'user_id' ) );
+	_list();
 	$session{'/photo_albums/list.html?user_id'} = $session{'user_id'} if ! exists $session{'/photo_albums/list.html?user_id'};
 } # end sub list
+
 sub _list {
 	ssi::save_params( '/photo_albums/list.html', ( 'user_id' ) );
-
 } # end sub _list
+
 sub view {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 } # end sub view
+
 sub edit {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
@@ -104,10 +103,12 @@ sub _photos {
 		$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $Asset = new openprint::Asset( $param{'asset_id'} );
-		foreach my $Photo ( openprint::Photo_in_Album->find( 'asset_id' => $Asset->id() ) ) {
+		foreach my $Photo ( openprint::Photo_in_Album->find( 'album_id'=>$$Album{'id'}, 'asset_id' => $Asset->id() ) ) {
 			$variable{'error'} .= $Photo->delete();
 		} # end foreach Photo
-		$variable{'error'} .= $Asset->delete();
+
+		# Why am I deleting the asset?
+		#$variable{'error'} .= $Asset->delete();
 	} # end if
 } # end sub photos
 
@@ -115,13 +116,18 @@ sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
 	my $Photo = openprint::Photo_in_Album->find_one( 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} );
-	if ( $Photo and ( $Photo->Album()->can_edit() ) ) {
-		if ( $param{'btnFunction'} eq 'Delete' ) {
+	my $Album = $Photo->Album();
+
+	if ( $Photo and ( $Album->can_edit() ) ) {
+
+		if ( $param{'action'} eq 'set as thumbnail' ) {
+			$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$variable{'error'} .= $Photo->delete();
 			if ( ! $variable{'error'} ) {
-				$variable{'Redirect'} = '/photo_album/view.html';
-				%param = ( 'album_id' => $param{'album_id'} );
+				$variable{'ExternalRedirect'} = '/photo_album/view.html?album_id='.$param{'album_id'};
 			} # end if
+
 		} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
 			$variable{'error'} .= $Photo->undelete();
 		} elsif ( $param{'btnFunction'} eq 'Save' ) {

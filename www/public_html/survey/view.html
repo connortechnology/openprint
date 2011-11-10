@@ -59,6 +59,10 @@
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::button( 'Submit', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
+( $$variable{'Survey'}->can_edit() ? (
+	ssi::button( 'Edit', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'Delete', { 'href'=>'/survey/history.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id() } ),
+) : () ),
 			); ) ?>
 		</p>
 	</form>
