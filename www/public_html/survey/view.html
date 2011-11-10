@@ -35,12 +35,12 @@
 					$html .= '<div class="answers">';
 					if ( $Question->type() eq 'radio' ) {
 						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
-								[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
 								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
 								);
 					} elsif ( $Question->type() eq 'checkbox' ) {
 						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
-								[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
 								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
 								);
 					} elsif ( $Question->type() eq 'select-one' ) {

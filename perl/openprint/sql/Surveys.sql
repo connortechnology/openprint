@@ -37,6 +37,7 @@ CREATE TABLE survey_questions (
 	text		TEXT,
 	type		TEXT,
 	sorting		INTEGER,
+	alignment	BOOLEAN,
 	PRIMARY KEY (id)
 );
 

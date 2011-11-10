@@ -4,7 +4,14 @@
         new Ajax.Updater( el, '_answers_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }, onSuccess:function(){
                 eval("Sortable.create('"+el+"', { onUpdate:answer_drop });");
  } } );
-    } // end function dropfunction
+    } // end function answer_drop
+	var question_drop = function(el){
+        new Ajax.Request( '_questions_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }
+ //onSuccess:function(){
+                //eval("Sortable.create('"+el+"', { onUpdate:answer_drop });");
+ //}
+ } );
+	} // end function question_drop
 </script>
 <? if ( $$variable{'Survey'}->can_edit() ) ?>
 <form id="f1" name="f1" method="post" action="/survey/edit.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
@@ -35,6 +42,7 @@
 			</li>
 		</ul>
 		<fieldset><legend>Questions</legend><!--#include virtual="_questions_edit.html"-->
+		<script type="text/javascript">Sortable.create('Questions', { onUpdate:question_drop });</script>
 	<p class="buttons">
 	<? echo (
 	ssi::button( 'AddQuestion', { 'onclick'=>qq`new Ajax.Updater('Questions', '_question_edit_line.html', {

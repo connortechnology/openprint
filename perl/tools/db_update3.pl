@@ -583,6 +583,9 @@ if ( ! sets::isin( 'survey_questions', \@tables ) ) {
 	if ( ! $$data{'type'} ) { 
 		$dbh->do('ALTER TABLE survey_questions add type TEXT');
 	} # end if
+	if ( ! $$data{'alignment'} ) { 
+		$dbh->do('ALTER TABLE survey_questions ADD alignment BOOLEAN');
+	} # end if
 } # end if
 if ( ! sets::isin( 'survey_responses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Responses.sql' ) );

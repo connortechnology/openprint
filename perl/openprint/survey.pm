@@ -139,6 +139,14 @@ sub _question_edit_line {
 		$variable{'error'} .= $Question->save({
 			'survey_id'	=>	$param{'survey_id'},	
 			});
+	} elsif ( $param{'action'} eq 'sort' ) {
+		my $order = $param{'order'};
+		$order =~ s/Questions\[\]=//g;
+		my @Order = split '&', $order;
+		foreach my $i ( 0 .. @Order ) {
+			my $Q = openprint::Survey_Question->find_one('question_id'=>$Order[$i]);
+			$variable{'error'} .= $Q->save({'sorting'=>$i}) if $Q;
+		} # end foreach
 	} # en dif
 } # end sub _question_edit_line
 

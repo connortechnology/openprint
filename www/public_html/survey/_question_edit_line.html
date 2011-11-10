@@ -7,7 +7,7 @@
 		<textarea name="text-%1$d" onkeyup="changed(this,$('question-%1$d'));" placeholder="Question Text">%2$s</textarea>
 		<select name="type-%1$d" id="type-%1$d"><option value="">select</option>%3$s</select><ul class="Answers" id="answers-%1$d">`, 
 		$Question->id(), ssi::html_escape($Question->text()),
-		ssi::make_drop_down( [ map { $_, $_ } ( 'checkbox','radio','text', 'textarea' ) ], $$Question{'type'} ),
+		ssi::make_drop_down( [ map { $_, $_ } ( 'checkbox','radio','select', 'text', 'textarea' ) ], $$Question{'type'} ),
 		ssi::button( 'DelQuestion', { 'onclick'=>qq`new Ajax.Request( '_questions_edit.html', {
 			parameters: {
 				survey_id: $$variable{'Survey'}{'id'},
@@ -19,6 +19,9 @@
 			} );`, 'text'=>'X' } ),
 		);
 	if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio' ] ) ) {
+		$html .= '<li><label>Alignment</label>'.ssi::radio('alignment-'.$Question->id(), [0,'Horizontal',1,'Vertical'], $Question->alignment() ).'</li>';
+	} # end if
+	if ( sets::isin( $$Question{'type'}, [ 'checkbox','radio','select' ] ) ) {
 		$html .= ssi::variable_substitution( \$answers_html, { 'Question'=>$Question }  ); 
 	} # end if
 	$html .= '</ul>';

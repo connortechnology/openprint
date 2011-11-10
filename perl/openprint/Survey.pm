@@ -55,7 +55,7 @@ sub previous {
 sub Questions {
     my $self = shift;
     if ( ! $$self{Questions} ) {
-        @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id});
+        @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id},'order'=>'sorting,id');
     } # end if
     return @{$$self{Questions}};
 } # end sub Questions
