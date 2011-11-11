@@ -32,16 +32,13 @@
 			</fieldset>
 			<span class="required"></span> denotes required information.<br/>
 			<div id="ProfilePicture">
-			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<? if ( $$variable{'User'}->Asset()->id() ) ?>
 			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
-			<? else ( $$variable{'User'}->asset_id() ) ?>
+			<? else ( $$variable{'User'}->Asset()->id() ) ?>
 			No profile picture set.
-			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			<? endif ( $$variable{'User'}->Asset()->id() ) ?>
 			</div>
-			<div id="Statistics">
-   			<fieldset><legend>Statistics:</legend>
-			</fieldset>
-			</div>
+		<!--#include virtual="_statistics.html"-->
 			<div id="UserInformation">
    			<fieldset><legend>User Information:</legend>
 				<div class="content">

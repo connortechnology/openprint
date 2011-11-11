@@ -27,6 +27,7 @@ $serial = 'locations_id_seq';
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
+	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
@@ -92,15 +93,18 @@ sub type {
 			$Type = new openprint::Location_Type();
 			$Type->save({'name'=>$_[1]});
 		} # end if
+$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
+$openprint::log->debug("Location: " . $_[0]->to_string() );
 	return $_[0]{'type'};
 } # end sub type
 
 # find an ancestor that fits some criteria, so if we wanted to find the city that something is located in, we could call this with a tpye of city
+# It's recursive of course
 sub ancestor {
 	my $self = shift;
 	return if ! @_;
@@ -116,6 +120,7 @@ sub ancestor {
 	return;
 } # end sub ancestor
 
+# Figures out a given type's parent type should be, so city->state, etc.
 sub parent_type {
 	my $type;
 	if ( $_[0] eq 'openprint::Location' ) {
