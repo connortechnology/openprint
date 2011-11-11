@@ -332,5 +332,9 @@ sub load_shipping {
 sub Profile {
 	return new openprint::Company_Profile( $_[0]{'id'} );
 }
+
+sub location {
+	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
+} # end sub location
 1;
 __END__

@@ -360,12 +360,9 @@ sub user_profile {
 	my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
 	if ( exists $param{'ddmUser'} ) {
-		$User = openprint::User->find_one('user_id'=>$param{'ddmUser'} );
-	} elsif ( $session{'company_id'} != $Me->company_id() ) {
-		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
-	} # end if 
-	if ( ! $User ) {
-		$User = $Me;
+		$User = openprint::User->find_one('id'=>$param{'ddmUser'} );
+	} else {
+		$User = new openprint::User();
 	} # end if
 
 
@@ -430,8 +427,10 @@ sub user_profile {
 			$variable{'error'} .= $User->save( \%param );
 
 			$User->Profile()->save( \%param );
+$log->debug("Back from profile sae");
 
 			if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+$log->debug("Sending password change");
 # Send password change email
 				if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
 					my %info = (
@@ -441,7 +440,7 @@ sub user_profile {
 					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
 					$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-					new openprint::Email()->send(
+					(new openprint::Email())->send(
 							FROM    => $config{'AdministratorEmail'},
 							TO      => $User,
 							SUBJECT => 'Password Changed',
@@ -455,6 +454,12 @@ sub user_profile {
 		} # end if btnFunction
 	} # end if can_edit
 
+	if ( (!$User->id()) and ( $session{'company_id'} != $Me->company_id() ) ) {
+		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+	} # end if 
+	if ( ! ($User and $User->id()) ) {
+		$User = $Me;
+	} # end if
 	$variable{'User'} = $User;
 } # end sub user_profile
 

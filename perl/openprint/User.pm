@@ -386,7 +386,7 @@ sub html {
 	} # end if
 
 	my $Asset = $User->Asset();
-	$openprint::log->error($Asset->to_string() );
+	my $thumbnail_url = $Asset->thumbnail_url();
 
 	return sprintf(q`
 				<div class="User">
@@ -396,10 +396,10 @@ sub html {
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
-				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
 				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
-);
+			);
 	return sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>

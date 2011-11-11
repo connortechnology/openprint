@@ -53,10 +53,11 @@
 
 	my $html;
 	foreach my $Company ( @Companies ) {
-		next if $Company->id() == $session{'user_id'};
+		next if $Company->id() == $session{'company_id'};
 		my $Profile = $Company->Profile();
 		$html .= '<div class="Result">';
-		$html .= '<h1>'.$Company->name().'</h1>';
+		$html .= '<a class="company_info"><span class="name">'.$Company->name().'</span>';
+		$html .= '<span class="location">'.$Company->location().'</span></a>';
 		my @Users = openprint::User->find('company_id'=>$Company->id());
 		foreach my $User ( @Users ) {
 			$html .= $User->html();
