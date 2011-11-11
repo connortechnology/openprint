@@ -87,15 +87,14 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Location_Type->find_one('name_lc'=>lc $_[1]);
+		my $Type = openprint::Location_Type->find_one('name_lc'=>lc openprint::Location_Type->transform('name',$_[1]));
 		if ( ! $Type ) {
 			$Type = new openprint::Location_Type();
 			$Type->save({'name'=>$_[1]});
 		} # end if
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
-	} # end if
-	if ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
+	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
 	return $_[0]{'type'};

@@ -1,6 +1,7 @@
 use strict;
 package openprint::User_Profile;
 require openprint::User_Profile_Entry;
+require openprint::Location;
 
 use vars qw( $debug $AUTOLOAD );
 $debug = 0;
@@ -72,7 +73,7 @@ sub value {
 			$_ = $Entry->save( { 'value' => $_[2] } );
 			$openprint::log->warn("Saving " . $Entry->field() . ': value=' . $_[2] . " error: $_ " );
 		} else {
-			$openprint::log->debug("Not saving: $$Entry{'value'} == $_[2]");
+			$openprint::log->debug("Not saving: $$Entry{'field'} value: $$Entry{'value'} == $_[2]");
 		} # end if
 	} # end if 
 		
@@ -111,6 +112,7 @@ sub Field {
 
 sub save {
 	my ( $self, $param ) = @_;
+	my $error;
 $openprint::log->debug("Saving profile");
 	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort') ) {
 		if ( $Field->type() eq 'date' ) {
@@ -129,10 +131,11 @@ $openprint::log->debug("Saving profile");
 				my $parent_id = $self->value( $Field, openprint::Location->parent_type( $Field->type() ) );
 				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id );
 				if ( ! $Location ) {
+$openprint::log->debug("DIdn't find location, so adding it");
 					$Location = new openprint::Location();
-					$Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id});
+					$error .= $Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id});
 				} # end if
-				$self->value( $Field, $Location->id() );
+				$self->value( $Field, $Location->id() ) if $Location->id();
 			} else {
 				$self->value( $Field, $$param{'field-'.$Field->id()} );
 			} # end if
@@ -140,6 +143,7 @@ $openprint::log->debug("Saving profile");
 			$self->value( $Field, $$param{'field-'.$Field->id()} );
 		} # end if
 	} # end foreach $Field
+	return $error;
 } # end sub save
 
 1;
