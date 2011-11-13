@@ -716,6 +716,11 @@ sub _wall {
 			'author_id'	=>	$session{'user_id'},
 			'message'	=>	$param{'message'},
 			});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Wall = openprint::Wall->find_one('id'=>$param{'wall_id'});
+		if ( $Wall and $Wall->can_edit() ) {
+			$Wall->delete();
+		} # end if
 	} # end if
 } # end sub _wall
 
