@@ -82,8 +82,9 @@ sub edit {
 		$variable{'error'} = $variable{'Survey'}->save( \%param );
 		foreach my $Question ( $Survey->Questions() ) {
 			$variable{'error'} .= $Question->save({
-					'text'=>$param{'text-'.$Question->id()},
-					'type'=>$param{'type-'.$Question->id()},
+					'text'		=>	$param{'text-'.$Question->id()},
+					'type'		=>	$param{'type-'.$Question->id()},
+					'alignment'	=>	$param{'alignment-'.$Question->id()},
 					});
 		} # end foreach Question
 	} elsif ( $param{'action'} eq 'Delete' ) {
