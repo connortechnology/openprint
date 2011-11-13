@@ -21,6 +21,15 @@
 						</tr>
 						`, $R->id(), $R->name(), $R->text1(), $R->text2(), $R->text3() );
 				} # end foreach R
+				$html .= q`
+					<tr>
+						<td>new</td>
+						<td><input type="text" name="name-new" id="name-new" /></td>
+						<td><input type="text" name="text1-new" id="text1-new" /></td>
+						<td><input type="text" name="text2-new" id="text2-new" /></td>
+						<td><input type="text" name="text3-new" id="text3-new" /></td>
+					</tr>
+					`;
 				return $html;
 			) ?>
 		</table>

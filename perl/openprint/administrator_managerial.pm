@@ -847,6 +847,15 @@ sub user_relationships {
 				'text3'	=>	$param{'text3-'.$URT->id()},
 			});
 		} # end foreach URT
+		if ( $param{'name-new'} ) {
+			my $URT = new openprint::User_Relationship_Type();
+			$variable{'error'} .= $URT->save({
+				'name'	=>	$param{'name-new'},
+				'text1'	=>	$param{'text1-new'},
+				'text2'	=>	$param{'text2-new'},
+				'text3'	=>	$param{'text3-new'},
+			});
+		} # end if
 	} # end if
 } # end sub user_relationships
 sub upload_log {
