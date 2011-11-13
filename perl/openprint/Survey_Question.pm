@@ -22,7 +22,7 @@ $serial = 'survey_questions_id_seq';
     'text' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'alignment'	=>	0,
+	'alignment'	=>	1,
 );
 
 sub Available_Answers {
