@@ -11,7 +11,8 @@
 		my @Types = openprint::User_Relationship_Type->find('id'=>[sets::union( map { $_->type_id() } @Relationships )], 'order'=>'lower(name)' );
 
 		my %Approved;
-		my %Unapproved;
+		my %My_Requests;
+		my %Other_Requests;
 		
 		foreach my $Type ( @Types ) {
 			# First, show approved
@@ -19,8 +20,10 @@
 				next if $R->type_id() != $Type->id();
 				if ( $R->approved() ) {
 					push @{$Approved{$$Type{id}}}, $R;
+				} elsif ( $R->user_id1() == $session{'user_id'} ) {
+					push @{$My_Requests{$$Type{id}}}, $R;
 				} else {
-					push @{$Unapproved{$$Type{id}}}, $R;
+					push @{$Other_Requests{$$Type{id}}}, $R;
 				} # end if
 			} # end foreach Relationship
 		} # end foreach Type
@@ -30,9 +33,13 @@
 			foreach my $Type ( @Types ) {
 				next if ! ( $Approved{$$Type{id}} and @{$Approved{$$Type{id}}} );
 				$html .= "<h2>$$Type{name}</h2><ul>";
+				if ( @{$Approved{$$Type{id}}} > 10 ) {
+					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{'User'}->id() == $session{'user_id'} ? 'you' : $$variable{'User'}->firstname() ). '</li>';
+				} # end if
+				for ( my $i = 0; $i < @{$Approved{$$Type{id}}} and $i < 10; $i += 1 ) {
+				
 
-				if ( @{$Approved{$$Type{id}}} == 1 ) {
-					my $R = $Approved{$$Type{id}}[0];
+					my $R = $Approved{$$Type{id}}[$i];
 					$html .= sprintf('<li><span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a></li>',
 							( $$variable{'User'}->id() == $R->user_id1() ? 
 							  ( $R->user_id2(), $R->User2()->Asset()->thumbnail_url(), $R->User2()->name() ) :
@@ -41,50 +48,54 @@
 							( sets::isin( $session{'user_id'}, @$R{'user_id1','user_id2'} ) ?  ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X'} ) : () ),
 					
 						);
-				} else {
-					$html .= '<li>'.@{$Approved{$$Type{id}}} . ' people are ' . $Type->name() .' '. ( $$variable{'User'}->id() == $session{'user_id'} ? 'you' : $$variable{'User'}->firstname() ). '</li>';
-				} # end if
+				} # end for
 				$html .= '</ul>';
 			} # end foreach $Type
 			$html .= '</div>';
 		} # end if %Approved
 
-		if ( %Unapproved ) {
+		if ( $session{'user_id'} == $$variable{'User'}->id() ) {
 			$html .= '<div id="Unapproved">';
-			foreach my $Type ( @Types ) {
-				next if ! ( $Unapproved{$$Type{id}} and @{$Unapproved{$$Type{id}}} );
-				$html .= "<h2>Request to be $$Type{name}</h2><ul>";
-				
-				foreach my $R ( @{$Unapproved{$$Type{id}}} ) {
-$log->debug($R->to_string() );
-					if ( $R->user_id1() == $session{'user_id'} ) {
-						# You are the person requesting
-						$html .= sprintf('<li><span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%3$s" alt="%2$s" title="%2$s" /></a></li>', 
-								$R->user_id1(), $R->User1()->name(), $R->User1()->Asset()->thumbnail_url(),
-								join('',
-									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 
-										'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 
-										'text'=>'X'} ),
-									)
-								);
-					} elsif ( $R->user_id2() == $session{'user_id'} ) {
+			if ( %Other_Requests ) {
+				foreach my $Type ( @Types ) {
+					next if ! ( $Other_Requests{$$Type{id}} and @{$Other_Requests{$$Type{id}}} );
+					$html .= "<h2>Requests to be $$Type{name} you</h2><ul>";
+					
+					foreach my $R ( @{$Other_Requests{$$Type{id}}} ) {
 						# You are the person confirming
 						$html .= sprintf('<li><span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%3$s" alt="%2$s" title="%2$s" /></a></li>',
 								$R->user_id1(), $R->User1()->name(), $R->User1()->Asset()->thumbnail_url(),
 								join('',
-									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'OK'} ),
-									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X'} ),
+									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'OK'} ),
+									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X'} ),
 									)
 								);
-					} # end if
-				} # end foreach Relationship
-				$html .= '</ul>';
-				
-			} # end foreach $Type
+					} # end foreach Relationship
+					$html .= '</ul>';
+					
+				} # end foreach $Type
+			} # end if %other_requests
+			if ( %My_Requests ) {
+				foreach my $Type ( @Types ) {
+					next if ! ( $My_Requests{$$Type{id}} and @{$My_Requests{$$Type{id}}} );
+					$html .= "<h2>Your request to be $$Type{name}</h2><ul>";
+					
+					foreach my $R ( @{$My_Requests{$$Type{id}}} ) {
+						$html .= sprintf('<li><span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%3$s" alt="%2$s" title="%2$s" /></a></li>', 
+								$R->user_id2(), $R->User2()->name(), $R->User2()->Asset()->thumbnail_url(),
+								join('',
+									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 
+										'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 
+										'text'=>'X'} ),
+									)
+								);
+					} # end foreach Relationship
+					$html .= '</ul>';
+					
+				} # end foreach $Type
+			} # end if %My_Requests
 			$html .= '</div>';
-		} # end if %UNapproved
-		
-		if ( $session{'user_id'} != $$variable{'User'}->id() ) {
+		} else { # if ( $session{'user_id'} != $$variable{'User'}->id() ) {
 			@Relationships = map { sets::isin( $session{'user_id'}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
 			$html .= sprintf(q`<div class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%3$s</select>%4$s<p class="buttons">%5$s</p></div>`,
 				$session{'user_id'}, $$variable{'User'}->id(), 
@@ -92,7 +103,7 @@ $log->debug($R->to_string() );
 				$$variable{'User'}->name(),
 				ssi::button( 'AddRelationship', { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: '$$variable{User}{id}', user_id1: '$session{user_id}', user_id2: '$$variable{User}{id}', type_id: \$('relationship_type_id').getValue(), action: 'add' } } );`, 'text' => 'Add' } ),
 				);
-		} # end if
+		} # end if viewing me or not
 		return $html;
 	) ?>
 </form>
