@@ -9,7 +9,7 @@ require email;
 require misc;
 require ssi;
 
-use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %config $debug );
+use vars qw( $table $serial %fields %transforms %defaults $log %session %config $debug );
 *log = \$openprint::log;
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -48,14 +48,16 @@ $log->debug("Params: $k => $params{$k}");
 		} # end if
 	} # end if
 
-    my %mail = (
+	my %mail = (
+			CC	=>	$params{'CC'},
+			BCC	=>	$params{'BCC'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
-            SMTP    => ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
-            FROM    => $$self{'from'},
-            SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
+			SMTP	=> ( $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'} ),
+			FROM	=> $$self{'from'},
+			SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
 			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
-            );
+			);
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
 	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
@@ -76,7 +78,7 @@ $log->debug("Params: $k => $params{$k}");
 		
 		if ( ref $recipient eq 'openprint::User' ) {
 			my @to;
-			foreach my $email ( split (',',  $recipient->email() ) ) {
+			foreach my $email ( split (',',	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
 #$log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {
@@ -106,8 +108,14 @@ $log->debug("Params: $k => $params{$k}");
 			} # end if
 		} # end if
 #$log->debug("Email: Tos mail{'TO'}");
+if ( $debug ) {
+$log->debug("Sending an email");
+foreach my $k ( keys %mail ) {
+$log->debug("Mail hash: $k => $mail{$k}");
+} # end 
+}
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		$results .= 'Sent to: ' . ssi::htmlize( $mail{'TO'} ) . '<br/>';
 
 	} # end foreach recipient
 	return $results;
@@ -125,9 +133,9 @@ sub find {
 		push @values, $params{'active'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$log->debug("openprint::Email::find($sql)" . $dbh->errstr);
+		$log->debug("openprint::Email::find($sql)" . $openprint::dbh->errstr);
 	} else {
 		return map { new openprint::Email( $_->{username}, $_ ); } @$data;
 	} # end if
