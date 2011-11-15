@@ -598,6 +598,13 @@ if ( ! sets::isin( 'survey_responses', \@tables ) ) {
 	if ( ! $$data{'public'} ) { 
 		$dbh->do('ALTER TABLE survey_responses ADD public BOOLEAN');
 	} # end if
+	if ( ! $$data{'answer_ids'} ) {
+		$dbh->do('ALTER TABLE survey_responses ADD answer_ids INTEGER[]');
+		if ( $$data{'answer_id'} ) {
+			$dbh->do('UPDATE survey_responses set answer_ids = ARRAY[answer_id]');
+			$dbh->do('ALTER TABLE survey_responses DROP answer_id');
+		} # end if
+	} # end if
 } # end if
 if ( ! sets::isin( 'promo_codes', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Promo_Codes.sql' ) );

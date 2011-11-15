@@ -53,7 +53,9 @@ CREATE TABLE survey_responses (
 	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
-	answer_id	INTEGER, FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
+	answer_id	INTEGER[],
+/* FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
+*/
 	answer		TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	public		BOOLEAN,

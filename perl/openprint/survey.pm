@@ -60,7 +60,7 @@ $log->debug("In survey view");
 						'user_id'		=>	$session{'user_id'},
 						'survey_id'		=>	$$Survey{'id'},
 						'question_id'	=>	$$Question{'id'},
-						'answer_id'		=>	(ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ? join(',',@{$param{'answer_id-'.$Question->id()}}) : $param{'answer_id-'.$Question->id()}),
+						'answer_ids'	=>	(ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ? $param{'answer_id-'.$Question->id()} : [ $param{'answer_id-'.$Question->id()} ] ),
 						'answer'		=>	$param{'answer-'.$Question->id()},
 						});
 			} # end nif answer has changed

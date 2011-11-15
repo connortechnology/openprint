@@ -16,7 +16,9 @@
 				my %Responses;
 				my @Responses = openprint::Survey_Response->find('question_id'=>$Question->id());
 				foreach my $R ( @Responses ) {
-					push @{$Responses{$R->answer_id()}}, $R;
+					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
+					push @{$Responses{$answer_id}}, $R;
+					} # end foreach
 					$Response = $R if $R->user_id() == $session{'user_id'};
 				} # end foreach Response
 
@@ -36,16 +38,16 @@
 					if ( $Question->type() eq 'radio' ) {
 						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
 								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
-								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+								$Response->answer_ids(),
 								);
 					} elsif ( $Question->type() eq 'checkbox' ) {
 						$html .= ssi::checkboxes( 'answer_id-'.$Question->id(), 
 								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
-								( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
+								$Response->answer_ids(),
 								);
 					} elsif ( $Question->type() eq 'select-one' ) {
 						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
-								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_id() ) );
+								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
 					} # end if
 					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
 					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response

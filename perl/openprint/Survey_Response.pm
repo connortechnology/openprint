@@ -14,13 +14,13 @@ $table = 'survey_responses';
 		'user_id'		=>	'user_id',
 		'question_id'	=>	'question_id',
 		'answer'		=>	'answer',
-		'answer_id'		=>	'answer_id',
+		'answer_ids'		=>	'answer_ids',
 		'created_on'	=>	'created_on',
 );
 
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
-	'answer_id'		=>	q`undef`,
+	'answer_ids'	=>	q`undef`,
 	'company_id'	=>	q`undef`,
 	'survey_id'		=>	q`undef`,
 	'answer'		=>	q`undef`,
