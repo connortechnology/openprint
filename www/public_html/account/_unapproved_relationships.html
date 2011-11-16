@@ -27,8 +27,8 @@
 				$html .= sprintf('<li><span class="buttons">%3$s</span>%1$s claims they are %2$s you</li>',
 						sprintf('<a href="/account/view.html?user_id=%s">%s</a>', $R->user_id1(), $R->User1()->name() ), $R->type(),
 						join('',
-							ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id2: $session{user_id}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Deny'} ),
-							ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id2: $session{user_id}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'Approve'} ),
+							ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'Deny'} ),
+							ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_unapproved_relationships.html', { parameters: { user_id1: $$R{user_id1}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'Approve'} ),
 							)
 						);
 			} # end foreach Relationship

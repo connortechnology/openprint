@@ -743,10 +743,15 @@ sub _relationships {
 		} # end if
 	} elsif ( $param{'action'} eq 'approve' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
-		if ( $R->approved() ) {
-			$log->warn('Relationship already approved.');
+		if ( $R->user_id2() != $session{'user_id'} ) {
+			$variable{'error'} .= 'You cannot approve that relationship.';
+			$log->error("Invalid attempt to approve relationship");
 		} else {
-		$variable{'error'} .= $R->save({'approved'=>1});
+			if ( $R->approved() ) {
+				$log->warn('Relationship already approved.');
+			} else {
+				$variable{'error'} .= $R->save({'approved'=>1});
+			} # end if
 		} # end if
 	} elsif ( $param{'action'} eq 'add' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
