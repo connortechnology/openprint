@@ -20,13 +20,15 @@ sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'btnFunction'} = '';
 		if ( (! $param{'product_id'}) and openprint::Product->find( 'name' => $param{'name'} ) ) {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 			
 		$variable{'error'} = $Product->save( \%param );
+		# Save the prices
+		_prices() if $param{'product_id'};
+		$param{'btnFunction'} = '';
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
@@ -179,6 +181,26 @@ sub _prices {
 	} # end if
 } # end sub _prices
 
-1;
+sub _specifications {
+	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
+	if ( $param{'btnFunction'} eq 'SaveSpecifications' ) {
+		foreach my $spec ( keys %{$Product->specifications()} ) {
+			if ( $param{'Name'.$spec} ) {
+				if ( $param{'Name'.$spec} ne $spec ) {
+					$Product->del_specification( $spec );
+				} # end if
+				$Product->add_specification( @param{'Name'.$spec, 'Value'.$spec} );
+			} else {
+				$Product->del_specification( $spec );
+            } # end if
+        } # end foreach spec
+        if ( $param{'NameNew'} ) {
+            $Product->add_specification( @param{'NameNew', 'ValueNew'} );
+        } # end if
+        $variable{'error'} .= $Product->save();
+    } # end if
 
+} # end sub _specifications
+
+1;
 __END__

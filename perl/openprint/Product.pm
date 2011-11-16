@@ -44,7 +44,7 @@ $serial = 'products_id_seq';
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $dbh );
-	foreach my $Price ( openprint::ProductPrice->find( 'Product' => $self ) ) {
+	foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $$self{'id'} ) ) {
 		$Price->delete();
 	} # end foreach
 
