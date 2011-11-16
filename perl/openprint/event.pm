@@ -28,18 +28,13 @@ sub history {
 		$variable{'error'} .= $Event->destroy();
 	} # end if
 
+	_history();
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/event/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/event/history.html', 'created_on_end', '' );
 		ssi::setup_date_select( '/event/history.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
 	} # end if
-	ssi::save_params( '/event/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'company_id', 'category_id' ) );
 } # end sub history
 
 sub _history {
@@ -54,12 +49,7 @@ sub _history {
 } # end sub _history
 
 sub search {
-	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/event/search.html', ( 
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'user_id', 'category_id' ) );
-	} # end if
+	_search();
 	if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
@@ -205,8 +195,8 @@ sub _view {
 sub _photos {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Photo = new openprint::Photo_in_Album( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
-		$Photo->delete();
+		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$variable{'error'} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
 

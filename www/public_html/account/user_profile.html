@@ -2,20 +2,23 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
-		<div class="Account">
+	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
+		<div class="Account"><div class="UserProfile">
 			<fieldset class="filters">
+				<ul>
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
-				<p>
+				<li>
 					<label for="ddmUser">User Name:</label>
-					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 						<option value="">Select a User</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$$variable{'User'}->company_id(), 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
 					</select>
-				</p>
+				</li>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+				</ul>
 				<p class="buttons">
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Previous','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);", '', '<<' ); ) ?>
@@ -27,19 +30,15 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
-		<div class="UserProfile">
 			<span class="required"></span> denotes required information.<br/>
 			<div id="ProfilePicture">
-			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<? if ( $$variable{'User'}->Asset()->id() ) ?>
 			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
-			<? else ( $$variable{'User'}->asset_id() ) ?>
+			<? else ( $$variable{'User'}->Asset()->id() ) ?>
 			No profile picture set.
-			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			<? endif ( $$variable{'User'}->Asset()->id() ) ?>
 			</div>
-			<div id="Statistics">
-   			<fieldset><legend>Statistics:</legend>
-			</fieldset>
-			</div>
+		<!--#include virtual="_statistics.html"-->
 			<div id="UserInformation">
    			<fieldset><legend>User Information:</legend>
 				<div class="content">
@@ -137,15 +136,21 @@
 					<ul>
 						<li class="required">
 							<label for="email">E-mail Address:</label>
-							<input type="text" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+							<input type="email" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
 						</li>
+						<li><!--#include virtual="/includes/password_requirements.html"--></li>
 						<li class="required">
 							<label for="password">Password:</label>
-							<input type="password" id="password" name="password" />
+							<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+							<span id="psContainer"><span id="psStrength"></span></span>
 						</li>
 						<li class="required">
 							<label for="verifypassword">Verify Password:</label>
-							<input type="password" id="verifypassword" name="verifypassword" />
+							<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);"/>
+							<span id="password_alert"></span>
+						</li>
+						<li><label>Password Last Changed:</label>
+						<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 						</li>
 					</ul>
 				</div>

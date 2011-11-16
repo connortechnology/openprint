@@ -1,0 +1,14 @@
+<fieldset><legend>Session:</legend>
+<? echo ( 
+	my $html;
+	my %s;
+	if ( ! eval q`tie %s, 'Apache::Session::Postgres', $param{session_id}, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+		$log->warn("Error fetching Session: $param{session_id}: $@");
+	} # end if
+
+	foreach my $k ( sort keys %s ) {
+		$html .= "$k = $s{$k}<br/>\n";
+	}
+	return $html;
+) ?>
+</fieldset>

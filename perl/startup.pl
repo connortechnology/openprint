@@ -1,4 +1,5 @@
 #!/usr/bin/perl 
+use 5.10.0;
 
 BEGIN {
 	use utf8;
@@ -31,7 +32,7 @@ BEGIN {
 	use JSON;
 	use JSON::XS;
 
-	use Carp (cluck);
+	use Carp qw(cluck);
 
 	use CGI;
 	use sql;
@@ -52,6 +53,7 @@ BEGIN {
 	use openprint::Object;
 	use openprint::Company;
 	use openprint::User;
+	use openprint::User_Type;
 	use openprint::User_Notification;
 	use openprint::Service;
 	use openprint::Paper;
@@ -73,6 +75,9 @@ BEGIN {
 	use openprint::Host;
 	use openprint::Log;
 	use openprint::Like;
+	use openprint::Page_Setting;
+	use openprint::Survey;
+	use openprint::Event;
 
 #use MapImage;
 

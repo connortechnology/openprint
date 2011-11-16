@@ -1,6 +1,7 @@
 use strict;
 use openprint;
 require Digest::MD5;
+require openprint::Keyword;
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -35,6 +36,7 @@ $debug = 1;
 	'md5'			=>	'md5',
 	'attribution'	=>	'attribution',
 	'license'		=>	'license',
+	'keywords'		=>	undef,
 );
 %defaults = (
 	'data'		=>	undef,
@@ -85,7 +87,7 @@ sub thumbnail_url {
 	my $filename = $_[0]->on_disk_filename();
 #$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
-    my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
@@ -131,6 +133,11 @@ sub md5 {
 	} # end if
 	return $_[0]{'md5'};	
 } # end sub md5
+
+sub can_edit {
+	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_edit
 
 sub can_delete {
 	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
@@ -191,6 +198,37 @@ sub upload {
 	} # end if
 	return $Asset;
 } # end sub upload
+
+sub Keywords {
+	if ( ! $_[0]{'Keywords'} ) {
+		@{$_[0]{'Keywords'}} = openprint::Object_Keyword->find( 'object_type'=>'Asset', 'object_id'=>$_[0]->id() );
+	} # end if
+	return @{$_[0]{'Keywords'}};
+} # end sub Keywords
+
+sub keywords {
+	if ( @_ > 1 and ( $_[1] ne $_[0]->keywords() ) ) {
+		foreach my $word ( split( ' ', $_[1] ) ) {
+			my $Keyword = openprint::Keyword->find_one('word lc'=>lc openprint::Keyword->transform('word', $word));
+			if ( ! $Keyword ) {
+				$Keyword = new openprint::Keyword();
+				$Keyword->save({ 'word'=>$word });
+			} # end if ! Keyword
+
+			my $OK = openprint::Object_Keyword->find_one( 'keyword_id'=>$Keyword->id(), 'object_type'=>'Asset', 'object_id'=>$_[0]{'id'} );
+			if ( ! $OK ) {
+				$OK = new openprint::Object_Keyword();
+				$OK->save({'keyword_id'=>$Keyword->id(), 'object_type'=>'Asset', 'object_id'=>$_[0]{'id'} });
+			} # end if
+		} # end foreach
+		@{$_[0]{'Keywords'}} = openprint::Object_Keyword->find( 'object_type'=>'Asset', 'object_id'=>$_[0]->id() );
+		$_[0]{'keywords'} = undef;
+	} # end if
+	if ( ! $_[0]{'keywords'} ) {
+		$_[0]{'keywords'} = join(' ', map { $_->word() } $_[0]->Keywords() );
+	} # end if
+	return $_[0]{'keywords'};
+} # end sub keywords
 
 1;
 __END__

@@ -20,6 +20,7 @@ require Math::Units;
 require sql;
 require openprint::JDF;
 require openprint::OrderedProduct;
+require openprint::OrderedProject;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
 require openprint::Todo;
@@ -88,6 +89,7 @@ $serial = 'lngProjectIndex_seq';
 	'used_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
 	'estimated_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
 	'operator_id'		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
+	'quote_id'			=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
 );
 
 sub delete {
@@ -518,11 +520,11 @@ sub update_status {
 				if ( openprint::service::status( $$self{'id'}, $services{'CustomerPickUp'}[0] ) eq 'Complete' ) {
 					$new_status = 'Picked Up';
 				} # end if
-			} elsif ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
+			} elsif ( $self->shippingtype() eq 'CustomerPickup' ) {
 				if ( $$self{'status'} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
-			} elsif ( $$self{'shippingtype'} eq 'Delivery' ) {
+			} elsif ( $self->shippingtype() eq 'Delivery' ) {
 				$new_status = 'Shipped';
 			} else {
 				if ( ! sets::isin( $$self{'status'}, [ 'Shipped', 'Picked Up' ] ) ) {
@@ -576,12 +578,12 @@ sub save {
 
 	# I'm not sure we should be doing this.
 	if ( (!$rc) and $$self{'order_id'} ) {
-		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', @$self{'order_id','id'} ], {
-			'shippingtype'		=>	$$self{'shippingtype'},
-			'daterequired'		=>	$$self{'requested_date'},
-			'intquantityindex'	=>	$$self{'ordered_quantity_index'},
-			'cursalesprice'		=>	$$self{'ordered_price'},
-			} );
+		my $OP = $self->Ordered_Project();
+		if ( ! $OP ) {
+			$log->error("Project $$self{id} has order_id $$self{order_id} but no OrderedProject");
+		} else {
+			$OP->save();
+		} # end if
 	} # end if
 	return $rc;
 } # eend sub save
@@ -702,22 +704,6 @@ sub copy {
 
 	return $new;
 } # end sub copy
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM Projects WHERE id=?}, {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
-		} # end if
-	} # endif
-	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason markup/} =
-		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason markup/};
-	if ( $$self{'order_id'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
-	} # end if
-	return;
-} # end sub load
 
 sub type {
 	my $self = shift;
@@ -889,56 +875,60 @@ sub Company {
 } # end sub company
 
 sub requested_date {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'requested_date'} = $_[0];
+	my $OP = $_[0]->Ordered_Project();
+	if ( @_ > 1 ) {
+		$$OP{'requested_for'} = $_[1];
 	} # end if
-	return $$self{'requested_date'};
+	return $$OP{'requested_for'};
 } # end sub requested_date
 
 sub shippingtype {
-	my ( $self, $new ) = @_;
-	if ( $new ) {
-		$$self{'shippingtype'} = $new;
+	my $OP = $_[0]->Ordered_Project();
+	
+	if ( @_ > 1 ) {
+		$$OP{'shipping_type'} = $_[1];
 	} # end if
-	if ( ! $$self{'shippingtype'} ) {
-		my $services = $self->services();
-		$$self{'shippingtype'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$$self{'id'},'category'=>'Shipping') );
+	if ( ! $$OP{'shipping_type'} ) {
+		my $services = $_[0]->services();
+		$$OP{'shipping_type'} = join(',', map { $_->ServiceType()->name() } openprint::Project_Service->find('project_id'=>$_[0]{'id'},'category'=>'Shipping') );
 	} # end if
-	return $$self{'shippingtype'};
+	return $$OP{'shipping_type'};
 } # end sub shippingtype
 
 sub ordered_quantity {
-	my $self = shift;
-	return $$self{'quantity'.$self->ordered_quantity_index()};
+	return $_[0]{'quantity'.$_[0]->ordered_quantity_index()};
 } # end sub ordered_quantity
 
 sub ordered_quantity_index {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{ordered_quantity_index} = $_[1];
+	my $OP = $_[0]->Ordered_Project();
+	if ( @_ > 1 ) {
+		$$OP{'qty_index'} = $_[1];
 	} # end if
-	if ( ! $$self{ordered_quantity_index} ) {
-		my @qtys = $self->quantity_indexes();
+
+	if ( ! $$OP{'qty_index'} ) {
+		my @qtys = $_[0]->quantity_indexes();
 #$openprint::log->debug("Project ordered_qty_index @qtys ");
 		if ( 1 == @qtys ) {
-			$$self{ordered_quantity_index} = $qtys[0];
+			$$OP{'qty_index'} = $qtys[0];
 		} # end if
 	} # end if
-	return $$self{ordered_quantity_index};
+	return $$OP{'qty_index'};
 } # end sub ordered_quantity_index
 
 sub ordered_price {
-	my $self = shift;
-	return $$self{'ordered_price'} if $$self{'ordered_price'};
-$openprint::log->debug("Ordered price: ($$self{'ordered_price'}) " . $$self{'price'.$self->ordered_quantity_index()});
-	return $$self{'price'.$self->ordered_quantity_index()};
+	my $OP = $_[0]->Ordered_Project();
+	if ( ! $OP ) {
+		$openprint::log->error("No OP in ordered_price");
+	} else {
+		return $$OP{'price'} if $$OP{'price'};
+		return $_[0]{'price'.$$OP{'qty_index'}};
+	} # end if
+	return 0;
 } # end sub ordered_price
 
 sub ordered_Price {
-	my ( $self ) = @_;
-	my $price = $self->ordered_price();
-	return { 'Cost'=>$price, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$price };
+	my $price = $_[0]->ordered_price();
+	return { 'Cost'=>$price, 'currency_id'=>$_[0]{'currency_id'}, 'Price'=>$price };
 } # end sub ordered_Price
 
 sub prices {
@@ -989,8 +979,7 @@ sub Price {
 } # end sub price
 
 sub Order {
-	my $self = shift;
-	return new openprint::Order( $$self{'order_id'} );
+	return new openprint::Order( $_[0]{'order_id'} );
 }
 
 sub signatures {
@@ -1160,6 +1149,21 @@ sub Ordered_Product {
 	} # end if
 	return $$self{'Ordered_Product'};
 } # end sub Ordered_Product
+
+sub Ordered_Project {
+	if ( ! exists $_[0]{'Ordered_Project'} ) {
+		$_[0]{'Ordered_Project'} = openprint::OrderedProject->find_one('order_id'=>$_[0]{'order_id'}, 'project_id'=>$_[0]{'id'} );
+	} # end if
+
+	if ( ! $_[0]{'Ordered_Project'} ) {
+		$openprint::log->error(" No OrderedProject");
+		$_[0]{'Ordered_Project'} = new openprint::OrderedProject();
+		$_[0]{'Ordered_Project'}->project_id( $_[0]{'id'} );
+		$_[0]{'Ordered_Project'} = $_[0]{'Ordered_Project'};
+	} # end if
+
+	return $_[0]{'Ordered_Project'};
+} # end sub Ordered_Project
 
 sub add_service {
 	my ( $self, $type ) = @_;

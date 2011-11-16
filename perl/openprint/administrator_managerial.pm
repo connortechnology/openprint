@@ -23,6 +23,7 @@ require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
 require openprint::User_Profile_Field;
+require openprint::Company_Profile_Field;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -143,13 +144,17 @@ sub currency {
 sub user_profiles {
 
 	my $user_id = $param{'ddmUser'};
+	my $User = new openprint::User( $user_id );
+
 	my $user_role = $param{'ddmUserRole'};
-	if ( ! exists $param{'ddmCustomer'} ) {
-		$param{'ddmCustomer'} = $session{'company_id'};
+
+	# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
+	# selected company
+	if ( ( ! exists $param{'ddmCustomer'} ) or ( $User->id() and ( $param{'ddmCustomer'} != $User->company_id() ) ) ) {
+		$param{'ddmCustomer'} = $User->company_id();
 	} # end if
 	my $cust_id = $param{'ddmCustomer'};
-
-	my $User = new openprint::User( $user_id );
+	$cust_id = $session{'company_id'} if ! $cust_id;
 
 	if ( $param{'btnFunction'} eq '<<' ) {
 		$User = $User->Prev( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
@@ -182,6 +187,12 @@ sub user_profiles {
 				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
 			} # end foreach U
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
+		} # end if
+
+		if ( ! $openprint::param{'password'} ) {
+			delete $openprint::param{'password'};
+		} elsif ( $openprint::param{'password'} ne $User->password() ) {
+			$openprint::param{'password_changed_on'} = 'NOW()';
 		} # end if
 
 		# This has to exist, in order to save the no assistants situation
@@ -288,7 +299,14 @@ sub user_profiles {
 		} else {
 			$User = $Users[0] if @Users;
 		} # end if
-	} # end if
+    } # end if
+	if ( $User->id() ) {
+		if ( $User->deleted() ) {
+			unshift @Users, $User;
+		} elsif ( ! sets::isin( $User->id(), [ map { $_->id() } @Users ] ) ) {
+			unshift @Users, $User;
+		} # end if
+    } # end if
 
 	# load user fields
 
@@ -333,7 +351,6 @@ sub user_profiles {
 
 
 sub company_profiles {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 # form field to db field mappings
 	my %shipping_fields = (
@@ -375,30 +392,34 @@ sub company_profiles {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'}); 
 		} # end if 
 	} elsif ( $param{'btnFunction'} eq 'merge' ) {
-		my $Company = new openprint::Company( $index );
-		foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
-			eval q`
-				foreach ( openprint::`.$type.q`->find('company_id'=>$param{'merge_company_id'}) ) {
+		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
+			$variable{'error'} .= 'Choose a different company to merge into.';
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			my $Company = new openprint::Company( $index );
+			foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
+				foreach ( "openprint::$type"->find('company_id'=>$param{'merge_company_id'}) ) {
 					$_->save({'company_id'=>$Company->id()});
 				} # end foreach
-			`;
-		} # end foreach type
-		foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
-			$Timetrack->save({'owner_id'=>$Company->id()});
-		} # end foreach Timetrack
-		foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
-			$_->save({'invoicer_id'=>$Company->id()});
-		} # end foreach 
-		foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
-			$_->save({'invoicee_id'=>$Company->id()});
-		} # end foreach 
-		foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
-			$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
-		} # end foreach  Payment
-		foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
-			$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
-		} # end foreach  Payment
-		new openprint::Company( $param{'merge_company_id'} )->delete();
+			} # end foreach type
+			foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
+				$Timetrack->save({'owner_id'=>$Company->id()});
+			} # end foreach Timetrack
+			foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
+				$_->save({'invoicer_id'=>$Company->id()});
+			} # end foreach 
+			foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
+				$_->save({'invoicee_id'=>$Company->id()});
+			} # end foreach 
+			foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
+				$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
+			} # end foreach  Payment
+			foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
+				$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
+			} # end foreach  Payment
+			new openprint::Company( $param{'merge_company_id'} )->delete();
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
 		$index = $param{'company_id'};
@@ -458,12 +479,12 @@ sub company_profiles {
 	my $payments;
 	if ( $index ) {
 		foreach ( 1 .. 3 ) {
-			$Company->laod_tradereferences( $_, $variable );
+			$Company->laod_tradereferences( $_, \%variable );
 		} 
 		my $shipping_address = $Company->get_shipping_address();
-		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		my $customer_credit = new openprint::customer_credit( $index );
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
@@ -694,14 +715,25 @@ sub user_profile_fields {
 	} # end if
 } # end sub user_profile_fields
 sub _field_tr {
-	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
+	my $object_name;
+	if ( $ENV{'HTTP_REFERER'} =~ /user_profile_fields/ ) {
+		$object_name = 'openprint::User_Profile_Field';
+	} elsif ( $ENV{'HTTP_REFERER'} =~ /company_profile_fields/ ) {
+		$object_name = 'openprint::Company_Profile_Field';
+	} # end if
+	if ( ! $object_name ) {
+		$log->error("Unknown referrer: $ENV{'HTTP_REFERER'}");
+		return;
+	} # end if
+	
+	$variable{'Field'} = $object_name->new( $param{'field_id'} );
 	if ( $param{'action'} eq 'Add' ) {
 		$variable{'error'} .= $variable{'Field'}->save({
 			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $variable{'Field'}->delete();
-		$variable{'Field'} = new openprint::User_Profile_Field() if ! $variable{'error'};
+		$variable{'Field'} = $object_name->new() if ! $variable{'error'};
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Field'} = $variable{'Field'}->copy();
 		$variable{'error'} .= $variable{'Field'}->save( \%param );
@@ -736,6 +768,22 @@ sub _user_fields_tbody {
 		} # end foreach $feild_id
 	} # end if
 } # end sub _user_fields_tbody
+
+sub company_profile_fields {
+$openprint::log->debug("Hello");
+	if ( $param{'action'} eq 'Save' ) {
+		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+			$variable{'error'} .= $Field->save({
+				'name'	=>	$param{'name-'.$Field->id()},
+				'description'	=>	$param{'description-'.$Field->id()},
+				'type'	=>	$param{'type-'.$Field->id()},
+				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'required'	=>	$param{'required-'.$Field->id()},
+				'searchable'	=>	$param{'searchable-'.$Field->id()},
+			});
+		} # end foreach Field
+	} # end if
+} # end sub company_profile_fields
 
 sub _company_fields_tbody {
 	if ( $param{'action'} eq 'up' ) {
@@ -799,6 +847,15 @@ sub user_relationships {
 				'text3'	=>	$param{'text3-'.$URT->id()},
 			});
 		} # end foreach URT
+		if ( $param{'name-new'} ) {
+			my $URT = new openprint::User_Relationship_Type();
+			$variable{'error'} .= $URT->save({
+				'name'	=>	$param{'name-new'},
+				'text1'	=>	$param{'text1-new'},
+				'text2'	=>	$param{'text2-new'},
+				'text3'	=>	$param{'text3-new'},
+			});
+		} # end if
 	} # end if
 } # end sub user_relationships
 sub upload_log {
@@ -811,6 +868,35 @@ sub upload_log {
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
+
+sub promo_codes {
+	require openprint::Promo_Code;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $PC ( openprint::Promo_Code->find() ) {
+			if ( ! $param{'code-'.$PC->code()}  ) {
+				$PC->delete();
+			} elsif ( 
+					( $PC->code() ne $param{'code-'.$PC->code()} ) or 
+					( $PC->name() ne $param{'name-'.$PC->id()} ) or 
+					( $PC->effect() ne $param{'effect-'.$PC->id()} )
+				) {
+				$variable{'error'} .= $PC->save({
+						'code'=>$param{'code-'.$$PC{code}},
+						'name'=>$param{'name-'.$$PC{code}},
+						'effect'=>$param{'effect-'.$$PC{code}},
+						});
+			} # end if need to save
+		} # end foreach PC
+		if ( $param{'code-new'} ) {
+			my $PC = new openprint::Promo_Code();
+			$variable{'error'} .= $PC->save({
+					'code'=>$param{'code-new'},
+					'name'=>$param{'name-new'},
+					'effect'=>$param{'effect-new'},
+					});
+		} # end if
+	} # end if
+} # end sub promo_codes
 
 1;
 __END__

@@ -19,7 +19,6 @@ package openprint::Estimating::CustomService;
 use strict;
 
 require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (
@@ -46,9 +45,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
-
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $price;
 		if ( $$specs{'Units'} eq 'Per Item' ) {
 			$price = $$specs{'Price'.$qty_index} * $Project->quantity($qty_index);
@@ -70,6 +67,12 @@ sub display {
 } # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id );
+	if ( ! $qty_index ) {
+		return $$specs{'ServiceName'};
+	} # end if
+	return '';
 }
 
 1;

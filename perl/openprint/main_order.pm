@@ -108,7 +108,7 @@ sub information {
 		my @errors;
 		# If there are any unspecified quantities, keep looping on the selection page.
 		foreach my $Project ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
-			if ( ! $Project->quantity_index() ) {
+			if ( ( ! $Project->quantity_index() ) and ( $Project->Project()->quantity_indexes() > 1 ) ) {
 				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
 			} # end if
 			if ( ! $Project->description() ) {
@@ -200,6 +200,7 @@ $openprint::log->debug("Got product.");
 sub submit {
 		
 	my $order_id = $param{'OrderID'};
+	$order_id =~ s/\D//g;
 	$order_id = openprint::order::get_unfinished_order(  ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
 	$session{'OrderID'} = $order_id;
@@ -530,7 +531,13 @@ sub history_details {
 	openprint::order::display_order( $order_id );
 } # end sub history_details
 
+sub _Shipping {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{'Order'} = $variable{'Project'}->Order();
+} # end sub _Shipping
 sub _CustomerPickUp {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{'Order'} = $variable{'Project'}->Order();
 } # end sub _CustoemrPickUp
 sub _view_log {
 } # end sub _view_log

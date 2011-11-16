@@ -134,10 +134,10 @@ sub add_project_to_press_schedule {
 
 	my @sigs = $service_id ? ( $service_id ) : $Project->signatures();
 
-	my $ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
+	my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 
 	foreach my $s_s_id ( @sigs ) {
-		next if openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
+		next if openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$s_s_id );
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
@@ -157,11 +157,11 @@ sub add_project_to_press_schedule {
 			} # end if
 		} # end foreach
 
-		if ( my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'}) ) {
+		if ( my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'}) ) {
 			my $Job = new openprint::ScheduledJob();
 			$_ = $Job->save({
 				'project_id'	=>	$Project->id(),
-				'equipment_id'	=>	$Equipment[0]->id(),
+				'equipment_id'	=>	$Equipment->id(),
 				'starttime'		=>	undef,
 				'service_id'	=>	\@service_ids,
 				'servicetype_id'	=>	$ServiceType->id(),

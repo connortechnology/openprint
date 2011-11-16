@@ -2,34 +2,47 @@
 <div class="Photo">
 	<div class="View">
 		<form id="f1" name="f1" action="view_photo.html" method="post">
-			<input type="hidden" name="btnFunction" />
-			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->id() ) ?>" />
+			<input type="hidden" name="action" />
+			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>" />
+			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Photo'}->album_id() ) ?>" />
 			<? echo ( 
 				my $html = '';
-				if ( $$variable{'Photo'}->can_edit() ) {
-					#$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Photo'}->id(), 'Edit' );
-					if ( $$variable{'Photo'}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.btnFunction.value='Undelete';f1.submit();` } );
+				my $Photo = $$variable{'Photo'};
+				my $Album = $Photo->Album();
+
+				if ( $Photo->can_edit() ) {
+					if ( $Photo->deleted() ) {
+						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.elements['action'].value='Undelete';f1.submit();` } );
 					} else {
-						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}` } );
+						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
 					} # end if
+					if ( $Photo->asset_id() != $Album->thumbnail_id() ) {
+						$html .= ssi::button( 'SAT', { 'onclick' => q`f1.elements['action'].value='set as thumbnail';f1.submit();`,
+						'text'=>'Set as album thumbnail' } );
+					} # end if isn't thumbnail
 				} # end if can edit
-				my @Photos = $$variable{'Photo'}->Album()->Photos();
+				my @Photos = $Album->Photos();
 				my $index = 0;
-				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $$variable{'Photo'}->id(); $index += 1 ) {};
-				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]&amp;album_id=$$variable{'Photo'}{'album_id'}" } ) if $index;
-				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]&amp;album_id=$$variable{'Photo'}{'album_id'}" } ) if ( $index + 1 ) < @Photos;
+				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $Photo->id(); $index += 1 ) {};
+				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]&amp;album_id=$$Photo{'album_id'}" } ) if $index;
+				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]&amp;album_id=$$Photo{'album_id'}" } ) if ( $index + 1 ) < @Photos;
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $$variable{'Photo'}->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
-					$html .= sprintf('<img src="%s" id="asset-%d" />', $$variable{'Photo'}->url(), $$variable{'Photo'}->asset_id() );
-					if ( $$variable{'Photo'}->can_edit() ) {
+				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
+					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
+					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
-						$html .= ssi::button( 'CCW', { 'text'=>'Rotate CCW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$variable{Photo}{asset_id} } } );` } );
-						$html .= ssi::button( 'CW', { 'text'=>'Rotate CW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$variable{Photo}{asset_id} } } );` } );
+						$html .= ssi::button( 'CCW', { 'text'=>'Rotate CCW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$Photo{asset_id} } } );` } );
+						$html .= ssi::button( 'CW', { 'text'=>'Rotate CW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$Photo{asset_id} } } );` } );
+						$html .= sprintf('<input type="text" name="keywords" value="%s"/>', $Photo->keywords() );
+						$html .= ssi::button( 'SaveKeywords', { 'onclick'=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
+
+
 						$html .= '</fieldset>';	
+					} else {
+						$html .= '<label>Keywords:</label>' . $Photo->keywords() . '<br/>';
 					} # end if
 				} else {
-					$log->error("Not a photo at view_photo : " . $$variable{'Photo'}->url() );
+					$log->error("Not a photo at view_photo : " . $Photo->url() );
 				} # end if
 				return $html;
 			) ?>

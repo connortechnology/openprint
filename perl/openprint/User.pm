@@ -12,7 +12,7 @@ require openprint::Asset;
 require openprint::User_Profile;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -41,6 +41,7 @@ $debug = 1;
 	'updated_on'		=>	'updated_on',
 	'type'				=>	'type',
 	'change_password'	=>	'ysnchangepassword',
+	'password_changed_on'	=>	'password_changed_on',
 	'commission'		=>	'dblcommission',
 	'wage'				=>	'wage',
 	'administrator'		=>	'ysnadministrator',
@@ -92,6 +93,7 @@ $debug = 1;
 	'deleted'			=>	0,
 	'email_quotes_to_myself'	=>	0,
 	'asset_id'			=>	undef,
+	'password_changed_on'		=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -265,6 +267,7 @@ sub assistant_ids {
 	} # end if
 	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
 } # end sub
+
 sub csr_ids {
 	my $self = shift;
 	if ( @_ ) {
@@ -280,10 +283,12 @@ sub csr_ids {
 } # end sub
 
 sub Groups {
-	my ( $self ) = @_;
-
-    return openprint::UserGroup->find('user_id in'=>$$self{id} );
+	if ( $_[0]{'id'} ) {
+    return openprint::UserGroup->find('user_id in'=>$_[0]{id} );
+	} # end if
+	return ();
 } # end sub Groups
+
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
 	
@@ -351,6 +356,13 @@ sub Asset {
 				$openprint::log->debug("Loading by default");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
+			my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
+			foreach my $Album ( @Albums ) {
+				my @Photos = $Album->Photos();
+				if ( @Photos ) {
+					$_[0]{'Asset'} = $Photos[0]->Asset();
+				} # end if
+			} # end foreach Album
 			if ( ! $_[0]{'Asset'} ) {
 				$_[0]{'Asset'} = new openprint::Asset( );
 			} # end if
@@ -374,7 +386,7 @@ sub html {
 	} # end if
 
 	my $Asset = $User->Asset();
-	$openprint::log->error($Asset->to_string() );
+	my $thumbnail_url = $Asset->thumbnail_url();
 
 	return sprintf(q`
 				<div class="User">
@@ -384,10 +396,10 @@ sub html {
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
-				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
 				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
-);
+			);
 	return sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>
@@ -417,7 +429,36 @@ sub last_logged_in {
 	return $_[0]{'last_logged_on'};
 } # end sub last_logged_in
 
+sub AUTOLOAD {
+	my $name = $AUTOLOAD;
+	$name =~ s/.*://;
+	if ( $fields{$name} ) {
+		if ( @_ > 1 ) {
+#$openprint::log->debug("Autoload $type $name $_[0]");
+			return $_[0]{$name} = $_[1];
+		} else {
+			return $_[0]{$name};
+		} # end if
+	} else {
+		my $Profile = $_[0]->Profile();
+		if ( exists $$Profile{'fields'}{$name} ) {
+			if ( @_ > 1 ) {
+				$$Profile{'fields'}{$name} = $_[1];
+			} # end if
+			return $$Profile{'fields'}{$name};
+		} else {
+			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		} # end if
+	} # end if
+} # end sub AUTOLOAD
+
+sub can_edit {
+	return 1 if $openprint::session{'user_id'} == $_[0]{id};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( new openprint::User( $openprint::session{'user_id'} )->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	return 1 if new openprint::Company( $_[0]{'company_id'} )->salesrep_id() == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_edit
+
 1;
-
 __END__
-

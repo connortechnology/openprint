@@ -23,13 +23,13 @@
 			<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>" />
 			<div class="content leftColumn">
 				<ul>
-					<li><label for="company_id">Company:</label>
+					<li><label for="company_id">Company</label>
 						<select id="company_id" name="company_id">
 							<option value=""> select </option>
 							<? echo ( openprint::Company::get_dropdown( $$variable{'Article'}->company_id() ? $$variable{'Article'}->company_id() : $session{'company_id'} ); ) ?>
 						</select>
 					</li>
-					<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+					<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
 						<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 						<select name="category_id" id="category_id" onchange="$('category').value='';">
 							<option value="">select</option>
@@ -38,34 +38,40 @@
 							) ?>
 						</select>
 					</li>
-					<li><label for="created_by">Author:</label>
+					<li><label for="created_by">Author</label>
 						<select id="created_by" name="created_by">
 							<option value=""> select </option>
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->created_by() : $session{'user_id'} ); ) ?>
 						</select>
 					</li>
 					<li>
-						<label>Published:</label>
+						<label>Published</label>
 						<input type="radio" name="published" value="1" id="published1" <? echo ( ssi::checked( sets::isin( $$variable{'Article'}->published(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
 						<label class="radio" for="published1">Yes</label>
 						<input type="radio" name="published" value="0" id="published0" <? echo ( ssi::checked( $$variable{'Article'}->published() eq '0' ); ) ?> onclick="if(!this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
 						<label class="radio" for="published0">No</label>
 					</li>
-					<li><label>Published at:</label>
+					<li><label>Published at</label>
 						<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?></span>
 					</li>
-					<li><label>Source:</label>
+					<li><label>Who</label>
+						<select name="user_type" id="user_type">
+							<option value=""> All </option>
+							<? echo ( ssi::make_drop_down( openprint::User_Type->dropdown(), $$variable{'Article'}->user_type() ); ) ?>
+						</select>
+					</li>
+					<li><label>Source</label>
 						<input type="text" id="source" name="source" value="<? echo ( $$variable{'Article'}->source() ) ?>" onchange="new Ajax.Updater( 'View', '_view.html', { parameters: f1.serialize() } );" />
 					</li>
-					<li><label>Title:</label>
+					<li><label>Title</label>
 						<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
 					</li>
 					<li>
-						<label for="summary">Summary:</label>
+						<label for="summary">Summary</label>
 						<textarea cols="" id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{'Article'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->summary() ); ) ?></textarea>
 					</li>
 					<li>
-						<label for="body">Body:</label>
+						<label for="body">Body</label>
 						<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Article'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->body() ) ) ?></textarea>
 					</li>
 				</ul>
@@ -94,7 +100,7 @@
 				</fieldset>
 				<fieldset><legend>Search for Assets</legend>
 				<ul id="asset_search">
-					<li><label>Name:</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '_asset_search_results.html', { parameters: { asset_name: this.value } } ); };"/></li>
+					<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '_asset_search_results.html', { parameters: { asset_name: this.value } } ); };"/></li>
 				</ul>
 				<ul id="asset_search_results"><!--#include virtual="/article/_asset_search_results.html"--></ul>
 				</fieldset>

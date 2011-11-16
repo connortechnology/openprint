@@ -11,14 +11,14 @@
 				To search profiles, complete one or more of the fields below.
 				<div class="content leftColumn">
 					<ul>
-						<li><label>Nickname:</label>
+						<li><label>Nickname</label>
 							<input type="text" name="company_name" id="company_name" onkeyup="$('name').value='';if(this.value.length > 2){load_results();};" />
 						</li>
-						<li><label>Real Name:</label>
+						<li><label>Real Name</label>
 							<input type="text" name="name" id="name" onkeyup="$('company_name').value='';if(this.value.length > 2){load_results();};" />
 						</li>
 <!--
-						<li><label>Distance:</label>
+						<li><label>Distance</label>
 							<select name="distance" id="distance">
 								<option value="">select</option>
 								<? echo ( ssi::make_drop_down( [ map { $_, $_.'km' } ( 5, 10, 50, 100 ) ], $session{'/account/search.html?distance'} ); ) ?>
@@ -27,7 +27,7 @@
 -->
 <!--
 						<li>
-							<label>Registered:</label>
+							<label>Registered</label>
 							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
@@ -38,7 +38,7 @@
 						</li>
 -->
 						<li>
-							<label>Last Online:</label>
+							<label>Last Online</label>
 							<span class="DateSelectorCT">
 							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 							</span>
@@ -55,7 +55,7 @@
 	my $html = '';
 	
 	foreach my $Field ( openprint::User_Profile_Field->find('searchable'=>1,'order'=>'sort,name') ) {
-		$html .= '<li><label>'.$Field->name().':</label><span id="field-'.$Field->id().'_container">';
+		$html .= '<li><label>'.$Field->name().'</label><span id="field-'.$Field->id().'_container">';
 		my $value = $session{'/account/search.html?field-'.$Field->id()};
 
 		if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {

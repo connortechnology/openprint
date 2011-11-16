@@ -13,8 +13,9 @@ require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
 require openprint::address;
+require openprint::Company_Profile;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -67,7 +68,7 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		);
 %find_fields = (
-	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE company_id=companies.id)',
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 );
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
@@ -331,5 +332,9 @@ sub load_shipping {
 sub Profile {
 	return new openprint::Company_Profile( $_[0]{'id'} );
 }
+
+sub location {
+	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
+} # end sub location
 1;
 __END__

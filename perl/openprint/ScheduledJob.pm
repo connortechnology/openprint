@@ -192,7 +192,7 @@ sub stock {
 	if ( @_ == 2 ) {
 		$$self{'stock'} = $stock;
 	} # end if
-	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} and ( $self->ServiceType()->name() eq 'AdditionalSignature' ) ) {
+	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} and ( $self->ServiceType()->name() eq 'Signature' ) ) {
 		$$self{'stock'} = 'Stock: ';
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
@@ -306,7 +306,7 @@ sub get_li {
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-			if ( sets::isin( $self->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
+			if ( sets::isin( $self->ServiceType()->name(), [ '', 'Signature' ] ) ) {
 				$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			} # end if
 			if ( $Equipment->smartscheduling() ) {
@@ -348,7 +348,7 @@ sub get_li {
 			} elsif ( @{$$self{'service_id'}} > 2 ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
 			} # end if
-			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
+			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 			} else {
 				$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
@@ -381,7 +381,7 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
+			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
 			} # end if
 		} # end if
@@ -813,7 +813,7 @@ sub equipment_id {
 			my $Service = $Project->Service( $_[0]{'service_id'}[0] );
 			my $specs = $Service->specs();
 
-			if ( sets::isin( $Service->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
+			if ( sets::isin( $Service->ServiceType()->name(), [ '', 'Signature' ] ) ) {
 				my $press = $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()};
 				if ( $press ) {
 					my $Equipment = openprint::Equipment->find_one( 'strid' => ( $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} ) );

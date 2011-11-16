@@ -44,9 +44,11 @@ $serial = 'articles_id_seq';
 	'source'			=>	'source',
 	'source_content'	=>	'source_content',
 	'summary'			=>	'summary',
+	'user_type'			=>	'user_type',
 );
 
 %transforms = (
+	'user_type'	=>	[ 's/\s//g' ],
 );
 %defaults = (
 	'created_on'	=> q`'NOW()'`,
@@ -54,6 +56,7 @@ $serial = 'articles_id_seq';
 	'published_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 	'category_id'	=>	undef,
+	'user_type'		=>	undef,
 );
 
 sub name {
@@ -132,6 +135,27 @@ sub summary {
 	return $_[0]{'summary'};
 } # end sub summary
 
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	return 1 if $session{'user_type'} eq 'A';
+	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
+	if ( $_[0]{'published'} ) {
+#$openprint::log->debug("Is published");
+		if ( ! $_[0]{'user_type'} ) {
+#$openprint::log->debug("no usertype");
+			# Anyone can see it
+			return 1;
+		} else {
+#$openprint::log->debug("usertype is ($_[0]{user_type})");
+			# Don't have to test for admin, cuz we did it above
+			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $session{'user_type'}, ['E','C'] );
+			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $session{'user_type'}, ['E'] );
+		} # end if
+	#} else {
+#$openprint::log->debug("not published");
+	} # end if
+	return 0;
+} # end sub can_view
 sub can_edit {
 	return 0 if ! $session{'user_id'};
 	return 1 if ! $_[0]{'id'};

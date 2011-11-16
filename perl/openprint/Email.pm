@@ -6,6 +6,8 @@ our @ISA = qw( openprint::Object );
 use openprint ();
 require openprint::User;
 require email;
+require misc;
+require ssi;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
@@ -34,9 +36,11 @@ sub send {
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
+			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
             );
-#$openprint::log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
-	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
+#$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
+	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
+	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
 
 #$openprint::log->debug("Email: Attachments @attachments");
 	my @recipients = $self->to();

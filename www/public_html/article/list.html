@@ -20,7 +20,7 @@
 		$$variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	} # end if
 ) ?>
-<div class="Article">
+<div class="Article"><div class="List">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
 	<? echo (
@@ -42,10 +42,11 @@
 		<? echo ( 
 			my $html;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				next if ! $Article->can_view();
 				$html .= $Article->html();
 			} # end foreach Article
 			return $html;
 		) ?>
 <? endif ( @{$$variable{'Articles'}} == 0 ) ?>
 </div>
-</div><!--Article-->
+</div></div><!--Article-->

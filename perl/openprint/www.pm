@@ -156,8 +156,7 @@ $log->debug("No good, need login");
 		} # end if
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-			eval sprintf('openprint::%s->init_cache();', $o );
-			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
+			('openprint::'.$o)->init_cache();
 		} # end foreach
 
 		$openprint::log->debug("Page: $page");
@@ -238,7 +237,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -266,7 +265,10 @@ sub parse_page {
 	my $uri = shift;
 	my ( $status );
 
-	my @thing = split( '/', $uri );
+	# This deals with things like /account/login.html//balhblahblah.php
+	my ($real_uri) = $uri =~ /^([^\.]+\.[^\.]+)/i;
+$openprint::log->debug("URI: $real_uri");
+	my @thing = split( '/', $real_uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
 	my @path = @thing;
@@ -297,8 +299,6 @@ $openprint::log->debug("Getfile");
 				openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'A' );
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
-			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
-			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
 		} elsif ( $first ) {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->error( "Eval error of require, Reason: " . $@ ) if $@;
@@ -397,10 +397,13 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'account' ) {
 		eval( 'require openprint::'.join('_', @path ) );
-		$log->error( "Eval error of require, Reason: " . $@ ) if $@;
+		if ( $@ ) {
+		$log->error( "www.pm[397] Eval error of require, Reason: " . $@ );
+		$log->error( "Of: " . 'require openprint::'.join('_', @path ) );
+		} # end if
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'();' );
+		$log->error( "www.pm[400] Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::main_project;

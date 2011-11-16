@@ -79,11 +79,21 @@ sub view {
 
 	if ( $param{'action'} eq 'Change Status' ) {
 		my $Service = $Project->Service( $param{'service_id'} );
-		my $specs = $Service->specs();
-		$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
-		$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
-		if ( ! $variable{'error'} ) {
-			$Project->update_status();
+		if ( ! $Service->service_id() ) {
+			$variable{'error'} .= 'Service not found.';
+		} else {
+			if ( $Service->status() eq $param{'status'} ) {
+				$variable{'information'} .= 'Status not changed.';
+			} else {
+				my $specs = $Service->specs();
+				$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
+				$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
+				if ( ! $variable{'error'} ) {
+					$Project->update_status();
+				} else {
+					$variable{'information'} .= 'Status changed.';
+				} # end if
+			} # end if
 		} # end if
 	} elsif ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
 		$Project->rush( 1 );
@@ -918,7 +928,7 @@ sub _status {
 		if ( $_ ) {
 			$variable{'error'} .= 'Error adding to press schedule: ' . $_;
 		} else {
-			if ( sets::isin( $variable{'name'}, 'Printing','AdditionalSignature' ) ) {
+			if ( sets::isin( $variable{'name'}, 'Printing','Signature' ) ) {
 				my $sig_specs = $Service->specs();
 				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending schedule." );
 			} else {

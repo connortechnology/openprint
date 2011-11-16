@@ -24,7 +24,7 @@ $serial = 'events_id_seq';
 	'time_associated'	=>	'time_associated',
 	'category_id'	=>	'category_id',
 	'category'		=>	undef,
-	'asset_id'		=>	'asset_id',
+	#'asset_id'		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
 	'album_id'		=>	'album_id', 
 );
@@ -35,7 +35,7 @@ $serial = 'events_id_seq';
 	'starting_on'	=>	undef,
 	'ending_on'		=>	undef,
 	'location_id'	=>	undef,
-	'asset_id'		=>	undef,
+	#'asset_id'		=>	undef,
 	'time_associated'	=> 0,
 	'created_by'		=> q`$openprint::session{'user_id'}`,
 	'deleted'			=> 0,
@@ -62,15 +62,17 @@ sub where {
 } # end sub where
 
 sub Asset {
-	if ( ! $_[0]{'asset_id'} ) {
+	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
-		if ( $$Album{'asset_id'} ) {
-			return new openprint::Asset( $$Album{'asset_id'} );
-		} elsif ( my @Photos = $_[0]->Photos() ) {
-			return $Photos[0];
+		if ( $$Album{'thumbnail_id'} ) {
+			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+		} elsif ( my @Photos = $Album->Photos() ) {
+			$_[0]{'Asset'} = $Photos[0];
+		} else {
+			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
 	} # end if
-	return new openprint::Asset( $_[0]{'asset_id'} );
+	return $_[0]{'Asset'};
 } # end sub Asset
 
 sub location {
@@ -114,6 +116,33 @@ sub Attendance {
 	} # end if
 	return @{$_[0]{'Attendance'}};
 } # end sub Attendance
+
+sub Created_By {
+	return new openprint::User( $_[0]{'created_by'} );
+}
+
+sub html {
+	my $Event = $_[0];
+	my $html = sprintf(q`
+			<div class="Event">
+			<a class="thumbnail" href="/event/view.html?event_id=%1$d"><img alt="" src="%2$s"/></a>
+			<span class="name"><a href="/event/view.html?event_id=%1$d">%3$s</a></span>
+			<span class="when">%4$s</span>
+			`, $Event->id(),
+			$Event->Asset()->thumbnail_url(),
+			ssi::htmlize($Event->name()),
+			( $Event->starting() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
+
+			);
+	my @Comments = $Event->Comments();
+	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	$html .= '</div>';
+	return $html;
+} # end  sub html
+
+sub Location {
+	return new openprint::Location( $_[0]{'location_id'} );
+} # end sub Location
 
 1;
 __END__

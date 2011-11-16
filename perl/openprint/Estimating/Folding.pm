@@ -755,7 +755,7 @@ $Imposition->display("Folding on press");
 						} # end if
 						$complete = 0;
 					} else { # No template, might be a book
-						$Imposition->display("Trying: $$Equipment{name}") if $debug;
+						#$Imposition->display("Trying: $$Equipment{name}") if $debug;
 						#$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits

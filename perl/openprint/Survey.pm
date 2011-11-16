@@ -1,32 +1,39 @@
-package openprint::Survey;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Survey;
+our @ISA = qw( openprint::Object );
 
 require sql;
-require openprint::SurveyQuestion;
+require openprint::Survey_Question;
+require openprint::Survey_Response;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'Surveys';
 $serial = 'survey_id_seq';
 
 %fields = (
-	'id',			'id',
-	'name',			'name',
-	'description',	'description',
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'description'	=>	'description',
+	'created_on'	=>	'created_on',
+	'created_by'	=>	'created_by',
 );
 %transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'description' => [ 's/^\s+//m', 's/\s+$//m', 's/\s\s+/ /mg' ],
 );
 %defaults = (
 	'id'		=>	undef,
+	'created_on'	=>	q`'NOW()'`,
+	'created_by'	=>	q`$session{user_id}`,
 );
 
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
 	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {
-		foreach my $A ( $Q->AvailableAnswers() ) {
+		foreach my $A ( $Q->Available_Answers() ) {
 			$A->delete();
 		} # end foreach
 		$Q->delete();
@@ -48,10 +55,18 @@ sub previous {
 sub Questions {
     my $self = shift;
     if ( ! $$self{Questions} ) {
-        @{$$self{Questions}} = openprint::SurveyQuestion->find('survey_id'=>$$self{id});
+        @{$$self{Questions}} = openprint::Survey_Question->find('survey_id'=>$$self{id},'order'=>'sorting,id');
     } # end if
     return @{$$self{Questions}};
-} # end sub questions
+} # end sub Questions
+
+sub Responses {
+    my $self = shift;
+    if ( ! $$self{Responses} ) {
+        @{$$self{Responses}} = openprint::Survey_Response->find('survey_id'=>$$self{id});
+    } # end if
+    return @{$$self{Responses}};
+} # end sub Responses
 
 sub copy {
     my $self = shift;
@@ -64,7 +79,7 @@ sub copy {
         $Q2->survey_id($new->id());
 		$Q2->save();
         push @{$$new{Questions}}, $Q2;
-		foreach my $Available_Answer ( $Q->AvailableAnswers() ) {
+		foreach my $Available_Answer ( $Q->Available_Answers() ) {
 			my $new_Available_Answer = $Available_Answer->copy();
 			$new_Available_Answer->question_id( $Q2->id() );
 			$new_Available_Answer->save({'question_id'=>$Q2->id()});
@@ -73,6 +88,13 @@ sub copy {
     return $new;
 } # end sub copy
 
+sub can_edit {
+	return 0 if ! $openprint::session{'user_id'};
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( $openprint::session{'user_id'} == $_[0]{'created_by'} );
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

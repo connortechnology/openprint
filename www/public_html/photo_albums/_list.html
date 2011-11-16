@@ -12,7 +12,7 @@
 	foreach my $Album ( @Albums ) {
 		my @Photos = $Album->Photos();
 		my $num_photos = scalar @Photos;
-		$html .= sprintf( q`<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/edit.html?album_id=%1$d"><img src="%2$s" alt="%3$s" /></a><a href="/photo_albums/edit.html?album_id=%1$d"><span class="name">%3$s</span><span class="description">%4$s</span><span class="statistics">%5$s</a></div>`, 
+		$html .= sprintf( q`<div class="PhotoAlbum"><a class="thumbnail" href="/photo_albums/view.html?album_id=%1$d"><img src="%2$s" alt="%3$s" /></a><a href="/photo_albums/view.html?album_id=%1$d"><span class="name">%3$s</span><span class="description">%4$s</span><span class="statistics">%5$s</a></div>`, 
 			$$Album{'id'}, $Album->thumbnail_url(), $Album->name(), $Album->description(),
 			( $num_photos . ' photo' . ($num_photos != 1 ? 's' : '') ),
 			);

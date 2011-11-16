@@ -315,6 +315,9 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'to_string'} = $_[0];
+	} # end if
 	if ( ! $$self{'to_string'} ) {
 		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
 		if ( $self->type() eq 'Roll' ) {
@@ -888,7 +891,7 @@ sub get_price {
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'})") if $debug;
+#$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'})") if $debug;
 	return $price;
 } # end sub get_price
 

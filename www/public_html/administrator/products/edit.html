@@ -4,7 +4,8 @@
 	<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 		Please select a product to view/edit. 
 		<fieldset class="filters"><legend>Search Information</legend>
-			<p> 
+			<ul>
+			<li> 
 				<label>Category:</label>
 				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value="">All</option>
@@ -12,8 +13,8 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} );
 							) ?>
 				</select>
-			</p>
-			<p> 
+			</li>
+			<li> 
 				<label>Product:</label>
 				<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
 					<option value="">select</option>
@@ -23,12 +24,12 @@
 									'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
 					) ?>
 				</select>
-			</p>
-			<hr/>
+			</li>
+			</ul>
 			<p class="buttons">
 				<? echo ( join( '', 
-						ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
-						ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
+						ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','&lt;&lt;'),
+						ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','&gt;&gt;'),
 						ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
 						ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 						ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
@@ -50,34 +51,40 @@
 		<br class="spacer"/><hr/><br class="spacer"/>
 		<div class="leftColumn">
 		<fieldset><legend>Product Information</legend>
-			<p> 
-				<label>Product Name:</label>
-				<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
-			</p>
-			<p> 
-				<label>Category:</label>
-				<select name="category_id">
-					<option value="">Select a category</option>
-					<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
-					) ?>
-				</select>
-			</p>
-			<p> 
-				<label>Description:</label>
-				<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
-			</p>
-			<p>
-				<label>Sort:</label>
-				<input type="text" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
-			</p>
-			<p>
-				<label>Template:</label>
-				<select name="project_id" id="project_id">
-					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
-				</select>
-			</p>
+			<ul>
+				<li> 
+					<label>Product ID:</label>
+					<? echo ( $$variable{'Product'}->id(); ) ?>
+				</li>
+				<li> 
+					<label>Product Name:</label>
+					<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
+				</li>
+				<li> 
+					<label>Category:</label>
+					<select name="category_id">
+						<option value="">Select a category</option>
+						<? echo (
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
+						) ?>
+					</select>
+				</li>
+				<li> 
+					<label>Description:</label>
+					<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
+				</li>
+				<li>
+					<label>Sort:</label>
+					<input type="number" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
+				</li>
+				<li>
+					<label>Template:</label>
+					<select name="project_id" id="project_id">
+						<option value="">select</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+					</select>
+				</li>
+			</ul>
 		</fieldset>
 	<!--
 		<fieldset><legend> Purchasing Information</legend>

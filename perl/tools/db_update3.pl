@@ -42,6 +42,10 @@ if ( ! exists $$data{'source_content'} ) {
 if ( ! exists $$data{'category_id'} ) {
 		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
 } # end if
+if ( ! exists $$data{'user_type'} ) {
+	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
+	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
+} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -182,6 +186,14 @@ if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profile_Fields.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_profile_fields'", 'column_name');
+	if ( ! $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add deleted BOOLEAN not null default false');
+	} # end if
+	if ( ! $$data{'searchable'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add searchable BOOLEAN not null default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
@@ -365,6 +377,7 @@ if ( ! sets::isin( 'object_types', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
 	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
 }
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
@@ -535,7 +548,68 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
 	} # end if
 }
+if ( ! sets::isin( 'keywords', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'privacy', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'object_assets', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Assets.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 
+if ( ! sets::isin( 'surveys', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Surveys.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='surveys'", 'column_name');
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE surveys add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE surveys ADD created_by INTEGER');
+		$dbh->do('ALTER TABLE surveys ADD FOREIGN KEY (created_by) REFERENCES Users (id)');
+	} # end if
+} # end if
+
+if ( ! sets::isin( 'survey_questions', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Questions.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_questions'", 'column_name');
+	if ( ! $$data{'type'} ) { 
+		$dbh->do('ALTER TABLE survey_questions add type TEXT');
+	} # end if
+	if ( ! $$data{'alignment'} ) { 
+		$dbh->do('ALTER TABLE survey_questions ADD alignment BOOLEAN');
+	} # end if
+} # end if
+if ( ! sets::isin( 'survey_responses', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Responses.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_responses'", 'column_name');
+	if ( ! $$data{'created_on'} ) { 
+		$dbh->do('ALTER TABLE survey_responses add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( ! $$data{'public'} ) { 
+		$dbh->do('ALTER TABLE survey_responses ADD public BOOLEAN');
+	} # end if
+	if ( ! $$data{'answer_ids'} ) {
+		$dbh->do('ALTER TABLE survey_responses ADD answer_ids INTEGER[]');
+		if ( $$data{'answer_id'} ) {
+			$dbh->do('UPDATE survey_responses set answer_ids = ARRAY[answer_id]');
+			$dbh->do('ALTER TABLE survey_responses DROP answer_id');
+		} # end if
+	} # end if
+} # end if
+if ( ! sets::isin( 'promo_codes', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Promo_Codes.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 1;
 __END__

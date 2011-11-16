@@ -5,6 +5,7 @@ our @ISA=qw(openprint::Object);
 require openprint::Project;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
+
 $debug = 1;
 $table = 'order_contents';
 @identified_by = ( 'project_id', 'order_id' );
@@ -16,8 +17,14 @@ $table = 'order_contents';
 	'quantity'		=>	'intquantity',
 	'qty_index'		=>	'intquantityindex',
 	'price'			=>	'cursalesprice',
-	'shipping_type'	=>	'shipping_type',
-	'requested_for'	=>	'requested_for',
+	'shipping_type'	=>	'shippingtype',
+	'requested_for'	=>	'daterequired',
+	'duedate'   	=>  'duedate',
+	'gst'       	=>  'dbltax1',
+	'hst'       	=>  'dbltax2',
+	'pst'       	=>  'dbltax3',
+	'description'   =>  'strdescription',
+
 );
 
 sub Project {

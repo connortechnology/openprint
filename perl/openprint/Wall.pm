@@ -25,5 +25,11 @@ sub Author {
 	return new openprint::User( $_[0]{'author_id'} );
 } # end sub Author
 
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $openprint::session{'user_id'} == $_[0]{'author_id'};
+	return 0;
+} # end sub can_edit
+
 1;
 __END__

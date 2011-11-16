@@ -1,4 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <div class="UserProfile">
 	<form name="f1" method="post" action="profile.html">
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
@@ -48,17 +49,17 @@
 	<p class="required"> denotes required information.<br/></p>
 	<div class="column">
 		<fieldset><legend>User Information</legend>
-<ul>
-	<? if ( $$variable{'User'}->Company()->notes() ) ?>
-	<li><label>Company Notes:</label>
-	<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
-	</li>
-	<? endif ( $$variable{'User'}->Company()->notes() ) ?>
-	<? if ( $$variable{'User'}->notes() ) ?>
-	<li><label>User Notes:</label>
-	<b><? echo ( $$variable{'User'}->notes() ) ?></b>
-	</li>
-	<? endif ( $$variable{'User'}->notes() ) ?>
+		<ul>
+			<? if ( $$variable{'User'}->Company()->notes() ) ?>
+			<li><label>Company Notes:</label>
+			<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
+			</li>
+			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
+			<? if ( $$variable{'User'}->notes() ) ?>
+			<li><label>User Notes:</label>
+			<b><? echo ( $$variable{'User'}->notes() ) ?></b>
+			</li>
+			<? endif ( $$variable{'User'}->notes() ) ?>
 			<li> 
 				<label for="title">Title:</label>
 				<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
@@ -109,7 +110,6 @@
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 				<li>
 					<label>Company administrator?</label>
-
 					<input type="radio" id="administratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
 					<label class="radio" for="administratorY">Yes</label>
 					<input type="radio" id="administratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" />
@@ -147,15 +147,23 @@
 			<ul>
 				<li class="required"> 
 					<label for="email">E-mail Address:</label>
-					<input type="text" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
+					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
+				</li>
+				<li>
+					<!--#include virtual="/includes/password_requirements.html"-->
 				</li>
 				<li class="required"> 
 					<label for="password">Password:</label>
-					<input type="password" name="password" id="password" value="" />
+					<input type="password" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+					<span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="required"> 
 					<label for="VerifyPassword">Verify Password:</label>
-					<input type="password" name="VerifyPassword" id="VerifyPassword" value="" />
+					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);"/>
+					<span id="password_alert"></span>
+				</li>
+				<li><label>Password Last Changed:</label>
+					<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -194,6 +202,33 @@
 				</li>
 			</ul>
 		</fieldset>
+<? if ( $config{'RADIUS Support'} ) ?>
+    <fieldset><legend>RADIUS Auth</legend>
+        <ul>
+    <? echo ( 
+		require openprint::RADIUS_Check;
+        $openprint::RADIUS_Check::dbh = sql::open_sql( $log,
+            'database'  => $config{'RADIUS DB Name'},
+            'driver'    => $config{'RADIUS DB Driver'},
+            'host'      => $config{'RADIUS DB Server'},
+            'login'     => $config{'RADIUS DB Username'},
+            'password'  => $config{'RADIUS DB Password'},
+            );
+        if ( ! $openprint::RADIUS_Check::dbh ) {
+            return 'Unable to connect to RADIUS DB server.';
+        } # end if
+
+        my $html = '';
+        my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
+		$$variable{'username'} = $$variable{'User'}->email();
+		$html .= qq`<li id="mac_$$variable{username}">`;
+		$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
+		$html .= '</li>';
+        return $html;
+    ) ?>
+        </ul>
+    </fieldset>
+<? endif ( $config{'RADIUS Support'} ) ?>
 
 		</div>
 	<br class="spacer"/>
@@ -223,13 +258,13 @@
 			<li> 
 				<label>User Category:</label>
 				<select name="marketing_categories" size="4" multiple="multiple">
-	<? echo (
-		my @users_categories;
-		if ( $$variable{'User'}->id() ) {
-			@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
-		} # end if
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
-	) ?>
+				<? echo (
+					my @users_categories;
+					if ( $$variable{'User'}->id() ) {
+						@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
+					} # end if
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
+				) ?>
 				</select>
 			</li>
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>

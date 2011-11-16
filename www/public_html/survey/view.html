@@ -1,0 +1,71 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Survey">
+	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
+	<? echo ( $$variable{'Survey'}->description() ) ?>
+	
+	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
+		<input type="hidden" name="action" />
+		<? echo (
+			my $html = '';
+			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
+
+			$html .= '<ol class="Questions">';
+			foreach my $Question ( @Questions ) {
+				$html .= sprintf('<li class="Question"><div class="text">%s</div>', $Question->text() );
+				my $Response = undef;
+				my %Responses;
+				my @Responses = openprint::Survey_Response->find('question_id'=>$Question->id());
+				foreach my $R ( @Responses ) {
+					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
+					push @{$Responses{$answer_id}}, $R;
+					} # end foreach
+					$Response = $R if $R->user_id() == $session{'user_id'};
+				} # end foreach Response
+
+				if ( $Response ) {
+					# Responded, just show totals, and what we chose.  There can be a button for editing
+
+					$html .= '<ul>';
+					foreach my $AA ( $Question->Available_Answers() ) {
+						@{$Responses{$AA->answer_id()}} = () if ! $Responses{$AA->answer_id()};
+						$html .= sprintf( '<li><label>%s</label><span class="percent">%.1f%</span></li>', $AA->Answer()->text(), 100*( @Responses ? scalar(@{$Responses{$AA->answer_id()}})/@Responses : 0 ) );
+					} # end foreach
+					$html .= '</ul>';
+				} else {
+					# Did not respond
+					$Response = new openprint::Survey_Response() if ! $Response;
+					$html .= '<div class="answers">';
+					if ( $Question->type() eq 'radio' ) {
+						$html .= ssi::radio( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
+								$Response->answer_ids(),
+								);
+					} elsif ( $Question->type() eq 'checkbox' ) {
+						$html .= ssi::checkboxes( 'answer_id-'.$Question->id(), 
+								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
+								$Response->answer_ids(),
+								);
+					} elsif ( $Question->type() eq 'select-one' ) {
+						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
+								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
+					} # end if
+					$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
+					<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
+					</li>', $Question->id() );
+				} # end if Response
+			} # end foreach Question
+			$html .= '</ol>';
+			return $html;
+		) ?>
+		<br/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button( 'Submit', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
+( $$variable{'Survey'}->can_edit() ? (
+	ssi::button( 'Edit', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'Delete', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id() } ),
+) : () ),
+			); ) ?>
+		</p>
+	</form>
+</div>

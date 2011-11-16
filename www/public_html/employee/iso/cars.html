@@ -35,7 +35,7 @@ Please select a CAR to view/edit.<br>
 	<fieldset class="filters"><legend>Choose CAR</legend>
 		<p>
 			<label for="car_id">CAR ID #</label>
-			<input type="text" id="car_id" name="car_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<input type="number" id="car_id" name="car_id" onkeypress="return input_handler( this, event);"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -62,7 +62,7 @@ Please select a CAR to view/edit.<br>
 		</p>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="docket" size="6" value="<? echo ( $session{'/employee/iso/cars.html?docket'} ) ?>"  />
+			<input type="number" name="docket" value="<? echo ( $session{'/employee/iso/cars.html?docket'} ) ?>" onkeydown="if(event.keyCode == 13){load_cars( $('f1') );}" />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
