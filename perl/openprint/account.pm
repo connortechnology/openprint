@@ -103,7 +103,7 @@ sub registration {
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find_one('email lc'=>lc $param{email} ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
@@ -134,7 +134,7 @@ sub registration {
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
 	my $Company;
 	if ( $param{'company_name'} ) {
-		$Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
+		$Company = openprint::Company->find_one( 'name lc'=>lc openprint::Company->transform('name',$param{'company_name'}),
 			( exists $param{'postalcode'} ? ( 'postalcode uc'=>$param{'postalcode'} ) : () )
 			);
 
@@ -192,6 +192,7 @@ sub registration {
 		$User->administrator( 'Y' );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'information'} .= 'Registration was successful.<br/><br/>';
 		$variable{'error'} .= $User->Profile()->save(\%param);
 
 		# Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
@@ -211,15 +212,12 @@ sub registration {
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		new openprint::Email()->send(
 				FROM	=> $agent,
-				TO	=> $User,
+				TO		=> $User,
 				SUBJECT => 'New Login Application',
 				ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 				);
 
-		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			# If I'm a salesrep, then only change my company, not the user.
-			$session{'company_id'} = $Company->id();
-		} else { 
+		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 # send notification
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -232,10 +230,13 @@ sub registration {
 						ATTACHMENTS	=>	[ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
-			if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
-				# auto log in.
-				@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
-			} # end if
+		} # end if
+
+		# Can only do the additional user thing if it's the initial couple creation
+		if ( exists $param{'additional_user'} ) {
+			$variable{'additional_user'} = $param{'additional_user'};
+			$session{'company_id'} = $Company->id();
+			%param = ();
 		} # end if
 	} else {
 
@@ -243,8 +244,8 @@ sub registration {
 		$User->administrator( 'N' );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'information'} .= 'Registration was successful.<br/><br/>';
 		$variable{'error'} .= $User->Profile()->save(\%param);
-
 
 		if ( $User->web_active ne 'Y') {
 			# send notifications
@@ -289,24 +290,25 @@ sub registration {
 				$variable{'Redirect'} = '/account/reseller_application.html';
 			} # end if
 		} # end if
+	} # end if Company has users or not
 
-		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			# If I'm a salesrep, then only change my company, not the user.
-			$session{'company_id'} = $Company->id();
-		} else { 
-			if ( $User->web_active() eq 'Y' ) {
-				# auto log in.
-				if ( $Company->activation() eq 'Y' ) {
-					@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
-					(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
-				} # end if
-			} # end if
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+		# If I'm a salesrep, then only change my company, not the user.
+		$session{'company_id'} = $Company->id();
+		$variable{'information'} .= 'You are now representing '.$Company->name().'<br/>';
+	} else { 
+		# auto log in.
+		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
+			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+			(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
+			$variable{'information'} .= '<p>Your account has been activated and you have been automatically logged in.</p>';
+		} else {
+			        $variable{'information'} .= 'At this time your login remains inactive.<br/>
+        <br/>
+        You will be notified via email when your account is activated.<br/>';
+
 		} # end if
-
 	} # end if
-
-	$variable{'additional_user'} = $param{'additional_user'} if exists $param{'additional_user'};
-	%param = ();
 
 } # end sub registration
 
