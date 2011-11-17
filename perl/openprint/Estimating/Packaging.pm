@@ -132,6 +132,9 @@ sub calc {
 			} # end if
 		} # end if
 		if ( my @Materials = openprint::Material::find('category'=>$ServiceType->name()) ) {
+			if ( scalar @Materials == 1 ) {
+				$$specs{'type_id'} = $Materials[0]->id();
+			} # end if
 			if ( ! $$specs{'type_id'} ) {
 				$$specs{'alert'} .= 'Please select the type of ' . $ServiceType->name() . '<br/>';
 				$status = 'uncalculated';
@@ -140,7 +143,8 @@ sub calc {
 				my %MaterialPrice = $Material->get_price( $package_qty );
 
 				my $material_qty = $package_qty;
-				$material_qty *= $$specs{'bands_per_package'} if $$specs{'bands_per_package'};
+				$material_qty *= $$specs{'bands_per_package'};
+# if $$specs{'bands_per_package'};
 				if ( lc $MaterialPrice{units} eq 'per m' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty / 1000;
 				} elsif ( lc $MaterialPrice{units} eq 'each' ) {
