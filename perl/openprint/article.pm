@@ -189,6 +189,7 @@ sub edit {
 } # end sub edit
 
 sub list {
+	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 } # end sub list
 
 sub category {
