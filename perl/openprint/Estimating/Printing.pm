@@ -1246,12 +1246,13 @@ sub get_impositions {
 		push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( $debug or 1 ) {
-			$openprint::log->warn('Impositions after filtering for '. $Press->strid() . ': ' . @impositions );
+		if ( $debug or 0 ) {
+			$openprint::log->warn('Impositions after initial filtering for '. $Press->strid() . ': ' . @impositions );
 			foreach my $I ( @impositions ) {
 				$I->display();
 			} # end foreach
 		} # end if
+
 		if ( ! @impositions ) {
 			$openprint::log->debug("No impositions for press " . $Press->strid() . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if $debug;
 			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {
@@ -3675,7 +3676,6 @@ $openprint::log->debug("Using cached folding");
 		$setup_overs = int( $setup_rate * $plate_setup{'Plate Count'} );
  	} else {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
-$log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
