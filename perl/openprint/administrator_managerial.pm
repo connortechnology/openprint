@@ -770,7 +770,6 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-$openprint::log->debug("Hello");
 	if ( $param{'action'} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
@@ -897,6 +896,9 @@ sub promo_codes {
 		} # end if
 	} # end if
 } # end sub promo_codes
+
+sub logs {
+} # end sub logs
 
 1;
 __END__
