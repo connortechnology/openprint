@@ -68,8 +68,13 @@ sub find {
 
 	if ( exists $params{'deleted'} ) {
 		if ( $params{'deleted'} ) {
-			$sql .= ' AND (deleted=? OR deleted IS NULL)';
-			push @values, $params{'deleted'};
+			if ( ref $params{'deleted'} eq 'ARRAY' ) {
+				$sql .= ' AND (deleted IN ('.join(',', map { '?' } @{$params{'deleted'}} ).') )';
+				push @values, @{$params{'deleted'}};
+			} else {
+				$sql .= ' AND (deleted=? OR deleted IS NULL)';
+				push @values, $params{'deleted'};
+			} # end if
 		} else {
 			$sql .= ' AND deleted=?';
 			push @values, $params{'deleted'};
