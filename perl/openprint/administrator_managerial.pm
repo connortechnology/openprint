@@ -899,6 +899,12 @@ sub promo_codes {
 
 sub logs {
 } # end sub logs
+sub _logs {
+	if ( $param{'action'} eq 'delete' ) {
+		my $Log = new openprint::Log( $param{'log_id'} );
+		$Log->delete();
+	} # end if
+} # end sub _logs
 
 1;
 __END__
