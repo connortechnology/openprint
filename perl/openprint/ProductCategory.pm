@@ -70,20 +70,38 @@ sub find {
     return map { new openprint::ProductCategory( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub destroy {
+sub delete {
 	my $self = shift;
 	return if ! $$self{'id'};
+	my $error = '';
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Product ( openprint::Product::find( 'category_id' => $$self{'id'} ) ) {
-		$Product->category_id( '' );
-		$Product->save();
+	foreach my $Product ( openprint::Product::find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
+		
+		$error .= $Product->save({'category_id'=>undef});
 	} # end foreach
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Product_Categories WHERE id=?}, $$self{'id'} );
+	$error .= $self->SUPER::destroy() ;
 	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product Category".
 	openprint::logs::insertLogRecord('16', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
+	return $error;
 } # end sub delete
+
+sub destroy {
+	my $self = shift;
+	return if ! $$self{'id'};
+	my $error = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach my $Product ( openprint::Product::find( 'category_id' => $$self{'id'},'deleted'=>[0,1] ) ) {
+		$error .= $Product->save({'category_id'=>undef});
+	} # end foreach
+	$error .= $self->SUPER::destroy() ;
+	sql::end_transaction( $openprint::dbh, $ac );
+	
+	# Add record to audit log - action "Delete Product Category".
+	openprint::logs::insertLogRecord('16', "Product Category ID: " . $$self{'id'} . " Name: " . $$self{'name'},);
+	return $error;
+} # end sub destroy
 
 sub products {
 	my $self = shift;

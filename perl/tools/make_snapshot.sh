@@ -20,9 +20,9 @@ CP=/bin/cp;
 TOUCH=/bin/touch;
 RSYNC=/usr/bin/rsync;
 
-USAGE="Usage: `basename $0` [-hv] [-c arg] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] args"
 
-while getopts hvo: OPT; do
+while getopts hvc: OPT; do
     case "$OPT" in
         h)
             echo $USAGE
@@ -43,9 +43,10 @@ while getopts hvo: OPT; do
     esac
 done
 
-if [ CHECK_FILE ] ; then
-	if [ ! -e CHECK_FILE ] ; then
+if [ $CHECK_FILE ] ; then
+	if [ ! -e "$CHECK_FILE" ] ; then
 		echo "Check file missing"
+		exit 1
 	fi;
 fi;	
 
