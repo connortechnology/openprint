@@ -1412,6 +1412,7 @@ $openprint::log->debug('Doing nothing, keeping all') if $$imp{'imposition'} == 1
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'} );
 			} # end foreach
 		} # end if
+
 		if ( ! @impositions ) {
 			$openprint::log->debug("No impositions for press " . $Press->strid() . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if $debug;
 			if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {
@@ -3909,7 +3910,6 @@ $openprint::log->debug("Using cached folding");
 		$setup_overs = int( $setup_rate * $plate_setup{'Plate Count'} );
  	} else {
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
-$log->debug("Overs rate " . $Paper->material() . " $setup_overs");
 		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
@@ -4572,15 +4572,13 @@ sub press_setup_cost {
 			if ( ! %PlateSetupPrice ) {
 				$openprint::log->error("Error getting PlateMakeReady for $$Press{strid} for $plates plates runs: $plate_runs setup count: $setup_count change: $plate_change_qty");
 			} # end if
-			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
-		} else {
-			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
-		} # end if
-		$Price{'Plate Units'} = $PlateSetupPrice{'units'};
-		$Price{'Plate Price'} = $PlateSetupPrice{'Price'};
-	#} else{
-		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
-	} # end if
+			$Price{'Plate Units'} = $PlateSetupPrice{'units'};
+			$Price{'Plate Price'} = $PlateSetupPrice{'Price'};
+
+#} else{
+#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
+} # end if has a platesetupprice
+	} # end if setup_count
 
 	$Price{'Unit Count'} = $setup_count;
 	return \%Price;
