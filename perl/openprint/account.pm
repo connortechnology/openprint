@@ -786,5 +786,10 @@ sub _unapproved_relationships {
 	} # end if
 } # end sub _unapproved_relationships
 
+sub couple_view {
+	my $Company = $variable{'Company'} = new openprint::Company( $param{'company_id'} );
+	$variable{'Me'} = new openprint::User( $session{'user_id'} );
+} # end sub couple_view
+
 1;
 __END__

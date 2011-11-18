@@ -1,10 +1,10 @@
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
-<h2>User Profile</h2>
+<h2>Couple Profile</h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-	<div class="UserProfile">
+	<div class="CoupleProfile">
 		<p class="buttons">
 			<? echo ( 
 				my $html;
@@ -82,16 +82,15 @@
 				';
 				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/account/_statistics.html' );
 				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/account/_user_profile_view.html' );
-				$html .= '
-				</div></div><!--UserProfile-->';
+				$html .= '</div></div><!--UserProfile-->';
 			} # end foreach User
 			$html .= '
-				
 		<div class="rightColumn">
 			<div class="Relationships">
 				<fieldset><legend>Relationships</legend>
 					<div id="Relationships">';
-<!--#include virtual="/account/_relationships.html"--></div>
+			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/account/_relationships.html');
+			$html .= '</div>
 				</fieldset>
 			</div>
 			<div id="Events">
@@ -99,20 +98,20 @@
 					<div class="content">
 						<ul>
 ';
-								my @Events = openprint::Event->find('created_by'=>$User->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
-								if ( ! @Events ) {
-									$html .= '<li>No upcoming events</li>';
-								} else {
-								foreach my $Event ( @Events ) {
-									$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
-										$Event->id(), $Event->name(), 
-										Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
-										$Event->Asset()->thumbnail_url(),
-										( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
-										);
-								} # end foreach Event
-								} # end if
-$html .='
+			my @Events = openprint::Event->find('created_by'=>[ openprint::User->find('company_id'=>$variable{'Company'}->id())], 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
+			if ( ! @Events ) {
+				$html .= '<li>No upcoming events</li>';
+			} else {
+				foreach my $Event ( @Events ) {
+					$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+						$Event->id(), $Event->name(), 
+						Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+						$Event->Asset()->thumbnail_url(),
+						( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
+					);
+				} # end foreach Event
+			} # end if
+			$html .='
 						</ul>
 					</div>
 				</fieldset>
@@ -123,6 +122,7 @@ $html .='
 ';
 	return $html;
 ) ?>
+</div><!--CoupleProfile-->
 <? else ( $session{'user_id'} ) ?>
 You must be logged in to view profiles.<br/>
 <? endif ( $session{'user_id'} ) ?>
