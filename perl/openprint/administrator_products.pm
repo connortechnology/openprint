@@ -1,6 +1,5 @@
-package openprint::administrator_products;
-
 use strict;
+package openprint::administrator_products;
 
 use openprint ();
 use vars qw($r $log $dbh %variable %param);
@@ -9,7 +8,6 @@ use vars qw($r $log $dbh %variable %param);
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-
 
 require openprint::Product;
 require openprint::ProductCategory;
@@ -147,7 +145,8 @@ sub _prices {
 		foreach my $Pricelist ( openprint::Pricelist->find() ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-			foreach my $Price ( openprint::ProductPrice->find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
+			foreach my $Price ( openprint::ProductPrice->find( 
+						'product_id' => $$Product{'id'}, 'pricelist_id' => $$Pricelist{'id'} ) ) {
 				if ( $param{'chk-'.$Price->id()} ) {
 					$variable{'error'} .= $Price->save({
 							'min'			=>	$param{'min-'.$Price->id()},

@@ -9,6 +9,8 @@ CREATE TABLE Product_Prices (
 	cost			float,
 	markup			float,
 	price			float,
+	discountable	BOOLEAN NOT NULL default true,
+	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES companies (id),
 	PRIMARY KEY (id)
 );
 CREATE Index Product_Price_Product_idx ON Product_Prices (product_id, pricelist_id);
