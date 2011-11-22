@@ -34,18 +34,18 @@
 				if ( $session{'/account/search.html?field-'.$Field->id()} ) {
 					if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
 						if ( ! sets::intersection( split(',',$session{'/account/search.html?field-'.$Field->id()} ), $value ) ) {
-$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1; 
 						} # endif 
 					} elsif ( $Field->type() eq 'date' ) {
 					} elsif ( sets::isin( $Field->type(), [ 'country', 'state', ] ) ) {
 						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
-$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1; 
 						} # endif 
 					} else {
 						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
-$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1;
 							last;
 						} # end if
@@ -74,11 +74,12 @@ $log->debug( "Filtered becase $value not in " . $session{'/account/search.html?f
 							</div>`, $User->id(), $User->name(), new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
 if ( 1 ) {
 		my $age = 0;
-		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
-			my @Birthday = split('-', $Profile->Birthday() );
-			#$log->debug("Birthday (@Birthday) " . $Profile->Birthday() );
+		my $birthday = $Profile->date_of_birth();
+
+		if ( $birthday and $birthday ne '--' ) {
+			my @Birthday = split('-', $birthday );
 			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-			#$log->debug("Birthday $age years @Birthday");
+			$log->debug("Birthday $age years @Birthday");
 		} 
 			#$log->debug($User->to_string() );
 		$html .= sprintf(q`
@@ -94,7 +95,7 @@ if ( 1 ) {
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
 			);
-$log->debug($html);
+#$log->debug($html);
 }
 		$html .= '</div>';
 	} # end foreach User

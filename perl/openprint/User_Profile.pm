@@ -77,10 +77,10 @@ sub value {
 	} # end if 
 		
 	if ( $Entry ) {
-		$openprint::log->debug("Returning Entry " . $Entry->to_string() );
+		#$openprint::log->debug("Returning Entry " . $Entry->to_string() );
 		return $$Entry{'value'};
 	}
-	$openprint::log->debug("Returning No Entry");
+	#$openprint::log->debug("Returning No Entry");
 	return undef;
 } # end sub value
 
