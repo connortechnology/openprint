@@ -2,8 +2,9 @@ use strict;
 package openprint::Company_Profile;
 require openprint::Company_Profile_Field;
 require openprint::Company_Profile_Entry;
+require openprint::Location;
 
-use vars qw( $AUTOLOAD );
+use vars qw( $debug $AUTOLOAD );
 
 # Not backed by db, this is an abstract object providing a convenient interface to Company_Profile_Fields and Values
 
@@ -12,9 +13,11 @@ sub new {
 
 	my $self = {};
 	bless $self, $parent;
-	$$self{'companyr_id'} = $company_id;
+	$$self{'company_id'} = $company_id;
 #$openprint::log->debug("new Company_Profile");
-	%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$company_id);
+	if ( $company_id ) {
+		%{$$self{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$company_id);
+	} # end if
 #$openprint::log->debug("new Company_Profile now listing fields and values");
 #foreach my $f ( keys %{$$self{'fields'}} ) {
 #$openprint::log->debug("$f => " . $$self{'fields'}{$f}-value() );
@@ -41,6 +44,20 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub value {
+	if ( ! $_[0]{'fields'} ) {
+		%{$_[0]{'fields'}} = map { $_->field(), $_ } openprint::Company_Profile_Entry->find('company_id'=>$_[0]{'company_id'}) if $_[0]{'company_id'};
+	} # end if
+	
+    my ( $Field, $Entry );
+    if ( ref $_[1] eq 'openprint::User_Profile_Field' ) {
+        $Field = $_[1];
+        $Entry = $_[0]{'fields'}{$$Field{'name'}};
+    } else {
+        $Entry = $_[0]{'fields'}{$_[1]};
+        # We don't do the Field here because we only need it when saving
+    } # end if
+	
+
 	my $Entry = $_[0]{'fields'}{$_[1]} if $_[0]{'fields'};
 	if ( @_ > 2 ) {
 		if ( ! $Entry ) {

@@ -275,9 +275,9 @@ function filter_onChange( element, id, selected ) {
 				<option value="all">All</option>
 <? echo ( 
 	my %types;
-foreach ( openprint::Fold->find('equipment_id'=>$$variable{'Equipment'}->id()) ) {
-	$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
-}
+	foreach ( openprint::Fold->find('equipment_id'=>$$variable{'Equipment'}->id()) ) {
+		$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
+	}
 	ssi::make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );
 ) ?>
 			</select>
