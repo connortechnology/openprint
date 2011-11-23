@@ -1331,14 +1331,6 @@ sub manifest {
 						$Project = $Projects[0];
 					} # end if
 				} # end if
-				if ( $param{'po_id-'.$Type->id()} ) {
-					my $PO = new openprint::PurchaseOrder( $param{'po_id-'.$Type->id()} );
-					if ( $PO->id() ) {
-						$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()});
-					} else {
-						$variable{'error'} .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
-					} # end if
-				} # end if po_id
 
 				# Save any new entries that might have been entered but not added.
 				if ( $param{"qty_lbs-$$Type{id}-"} ) {
@@ -1368,7 +1360,8 @@ sub manifest {
 								'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$Type{id}-"}),
 								} );
 					} # end if
-				} # end if
+				} # end if New Quantity
+
 				my $total_qty = 0;
 				# Save data for the rest of the contents
 				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
@@ -1393,7 +1386,7 @@ sub manifest {
 							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
-				} # end foreach tag_id
+				} # end foreach Manifest_Content for this type
 
 if ( 0 ) {
 				if ( $total_qty and $Project and ( $param{"allocate-$$Type{id}"} ne 'Specific' ) ) {
@@ -1401,6 +1394,23 @@ if ( 0 ) {
 					$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $total_qty, ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
 				} # end if
 } # end if
+				if ( $param{'po_id-'.$Type->id()} ) {
+					my $PO = new openprint::PurchaseOrder( $param{'po_id-'.$Type->id()} );
+					if ( $PO->id() ) {
+						$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()}) if $PO->manifest_id() != $Manifest->id();;
+
+						# Run through, and warn if the PO is not satisfied
+						my $PO_Content = $Type->PurchaseOrder_Content();
+						if ( $PO_Content->qty() > $total_qty ) {
+							$variable{'warning'} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
+								Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
+								PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
+						} # end if	
+					} else {
+						$variable{'error'} .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
+					} # end if
+				} # end if po_id
+
 			} # end foreach Type
 		} # end if has Types
 		if ( ! $variable{'error'} ) {
