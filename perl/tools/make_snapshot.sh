@@ -20,6 +20,35 @@ CP=/bin/cp;
 TOUCH=/bin/touch;
 RSYNC=/usr/bin/rsync;
 
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] args"
+
+while getopts hvc: OPT; do
+    case "$OPT" in
+        h)
+            echo $USAGE
+            exit 0
+            ;;
+        v)
+            echo "`basename $0` version 0.1"
+            exit 0
+            ;;
+        c)
+            CHECK_FILE=$OPTARG
+            ;;
+        \?)
+            # getopts issues an error message
+            echo $USAGE >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [ $CHECK_FILE ] ; then
+	if [ ! -e "$CHECK_FILE" ] ; then
+		echo "Check file missing"
+		exit 1
+	fi;
+fi;	
 
 # ------------- the script itself --------------------------------------
 

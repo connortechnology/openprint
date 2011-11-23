@@ -56,7 +56,7 @@
 		next if $Company->id() == $session{'company_id'};
 		my $Profile = $Company->Profile();
 		$html .= '<div class="Result">';
-		$html .= '<a class="company_info"><span class="name">'.$Company->name().'</span>';
+		$html .= '<a href="/account/couple_view.html" class="company_info"><span class="name">'.$Company->name().'</span>';
 		$html .= '<span class="location">'.$Company->location().'</span></a>';
 		my @Users = openprint::User->find('company_id'=>$Company->id());
 		foreach my $User ( @Users ) {

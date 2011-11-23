@@ -610,6 +610,19 @@ if ( ! sets::isin( 'promo_codes', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Promo_Codes.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+if ( ! sets::isin( 'product_prices', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Product_Prices.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_prices'", 'column_name');
+	if ( ! exists $$data{'discountable'} ) {
+		$dbh->do('ALTER TABLE product_prices ADD discountable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Product_Prices ADD owner_id INTEGER NOT NULL');
+		$dbh->do('ALTER TABLE Product_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
+	}
+}
 $dbh->disconnect();
 1;
 __END__

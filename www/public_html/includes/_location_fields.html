@@ -1,0 +1,18 @@
+<? echo (
+	my $html;
+	my $Field = new openprint::User_Profile_Field();
+$log->debug("Place: " . $$variable{'Location'}->id() . ' ' . $$variable{'Location'}->name() );
+	$Field->type('place');
+	$html .= $Field->html( $$variable{'Location'}->id() );
+
+	$Field->type('country');
+	$html .= $Field->html( ( $$variable{'Location'}->ancestor('type'=>'country') )->id() );
+
+	$Field->type('state');
+	$html .= $Field->html( ( $$variable{'Location'}->ancestor('type'=>'state') )->id() );
+
+	$Field->type('city');
+	$html .= $Field->html( ( $$variable{'Location'}->ancestor('type'=>'city') )->id() );
+
+	return $html;
+) ?>

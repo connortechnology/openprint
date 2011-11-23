@@ -68,22 +68,19 @@ sub value {
 			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} });
 			$openprint::log->debug("After set");
 		} # end if
-		if ( $$Entry{'value'} ne $_[2] ) {
-
-		$openprint::log->debug("Savig Entry " . $Entry->to_string() );
-			$openprint::log->debug("Before Saving " . $Entry->field() . ': value=' . $_[2] );
-			$_ = $Entry->save( { 'value' => $_[2] } );
-			$openprint::log->warn("Saving " . $Entry->field() . ': value=' . $_[2] . " error: $_ " );
+		my $v = ref $_[2] eq 'ARRAY' ? join(',',@{$_[2]}) : $_[2];
+		if ( $$Entry{'value'} ne $v ) {
+			$_ = $Entry->save( { 'value' => $v } );
 		} else {
-			$openprint::log->debug("Not saving: $$Entry{'field'} value: $$Entry{'value'} == $_[2]");
+			$openprint::log->debug("Not saving: $$Entry{'field'} value: $$Entry{'value'} == $v");
 		} # end if
 	} # end if 
 		
 	if ( $Entry ) {
-		$openprint::log->debug("Returning Entry " . $Entry->to_string() );
+		#$openprint::log->debug("Returning Entry " . $Entry->to_string() );
 		return $$Entry{'value'};
 	}
-	$openprint::log->debug("Returning No Entry");
+	#$openprint::log->debug("Returning No Entry");
 	return undef;
 } # end sub value
 

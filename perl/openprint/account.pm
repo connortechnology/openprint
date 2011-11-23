@@ -60,7 +60,7 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
 	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
 	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
-	if ( ! $session{'user_id'} ) {
+	if ( ! $session{'company_id'} ) {
 		$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
 		if ( $required_fields{'postalcode'} ) {
 			$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
@@ -80,7 +80,7 @@ sub registration {
 	if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
 		$error .= "Password not good enough.  $reason<br/>";
 	} # end if
-	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
+	if ( ( ! $session{'company_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
 		} elsif ( ! $param{'MD5SUM'} ) {
@@ -173,6 +173,8 @@ sub registration {
 	} elsif ( $session{'company_id'} ) {
 		$Company = new openprint::Company( $session{'company_id'} );
 		@Users = openprint::User->find('company_id'=>$Company->id());
+	} else {
+		# Don't know what company to assign
 	} # end if
 
 	my $User = new openprint::User();
@@ -743,10 +745,22 @@ sub _relationships {
 		} # end if
 	} elsif ( $param{'action'} eq 'approve' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
-		$variable{'error'} .= $R->save({'approved'=>1});
+		if ( $R->user_id2() != $session{'user_id'} ) {
+			$variable{'error'} .= 'You cannot approve that relationship.';
+			$log->error("Invalid attempt to approve relationship");
+		} else {
+			if ( $R->approved() ) {
+				$log->warn('Relationship already approved.');
+			} else {
+				$variable{'error'} .= $R->save({'approved'=>1});
+			} # end if
+		} # end if
 	} elsif ( $param{'action'} eq 'add' ) {
+		if ( $param{'company_id'} ) {
+		} else {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
 		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		} # end if
 	} # end if
 	$variable{'User'} = new openprint::User( $param{'user_id'} );
 } # end sub _relationships
@@ -756,9 +770,7 @@ sub relationships {
 
 # Assume that user_id2 is session{user_id}
 sub _unapproved_relationships {
-$log->debug("In unapproved");
 	if ( $param{'action'} eq 'delete' ) {
-$log->debug("delete");
 		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
 		if ( $R->user_id2() == $session{'user_id'} ) {
 			$variable{'error'} .= $R->delete();
@@ -776,6 +788,11 @@ $log->debug("delete");
 		} # end if
 	} # end if
 } # end sub _unapproved_relationships
+
+sub couple_view {
+	my $Company = $variable{'Company'} = new openprint::Company( $param{'company_id'} );
+	$variable{'Me'} = new openprint::User( $session{'user_id'} );
+} # end sub couple_view
 
 1;
 __END__

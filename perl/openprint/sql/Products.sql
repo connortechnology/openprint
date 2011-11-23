@@ -8,6 +8,8 @@ CREATE TABLE Products (
 	ysnTaxExempt1 char(1) NOT NULL DEFAULT 'N',
 	ysnTaxExempt2 char(1) NOT NULL DEFAULT 'N',
 	weight	FLOAT,
+	sort		INTEGER,
+	deleted		BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
 );
  
