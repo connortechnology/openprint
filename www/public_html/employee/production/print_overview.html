@@ -295,7 +295,7 @@ function textarea_init() {
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			# Get the shifts on this day.
-			my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+			my $TZ = DateTime::TimeZone->new( name => $config{'Timezone'} );
 			my $st = new DateTime( 'year'=>$year, 'month'=>$month, 'day'=>$day, 'time_zone'=>$TZ );
 			my $et = $st + DateTime::Duration->new( 'days'=>$end );
 			my $parser = 'DateTime::Format::Pg';
