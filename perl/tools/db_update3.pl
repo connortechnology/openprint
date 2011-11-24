@@ -586,6 +586,9 @@ if ( ! sets::isin( 'survey_questions', \@tables ) ) {
 	if ( ! $$data{'alignment'} ) { 
 		$dbh->do('ALTER TABLE survey_questions ADD alignment BOOLEAN');
 	} # end if
+	if ( ! $$data{'sorting'} ) { 
+		$dbh->do('ALTER TABLE survey_questions ADD sorting INTEGER');
+	} # end if
 } # end if
 if ( ! sets::isin( 'survey_responses', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Responses.sql' ) );

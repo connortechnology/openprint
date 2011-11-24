@@ -30,6 +30,7 @@ sub send {
 	} # end if
 
     my %mail = (
+			CC		=>	$params{'CC'},
 			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
