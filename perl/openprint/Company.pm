@@ -353,7 +353,7 @@ sub dropdown {
 	} # end if
 
 	if ( @_ ) {
-		my %params = @_;
+		my %params = %{$_[0]};
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
 				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
@@ -367,7 +367,7 @@ sub dropdown {
 } # end sub dropdown
 
 sub get_dropdown {
-	my $companies = dropdown( $_[1] ? @{$_[1]} : () );
+	my $companies = dropdown( $_[1] ? $_[1] : () );
 	return ssi::make_drop_down( $companies, $_[0] );
 } # sub get_dropdown
 
