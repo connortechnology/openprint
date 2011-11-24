@@ -50,91 +50,80 @@
 		</fieldset>
 		<br class="spacer"/><hr/><br class="spacer"/>
 		<div class="leftColumn">
-		<fieldset><legend>Product Information</legend>
-			<ul>
-				<li> 
-					<label>Product ID:</label>
-					<? echo ( $$variable{'Product'}->id(); ) ?>
-				</li>
-				<li> 
-					<label>Product Name:</label>
-					<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
-				</li>
-				<li> 
-					<label>Category:</label>
-					<select name="category_id">
-						<option value="">Select a category</option>
-						<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
-						) ?>
-					</select>
-				</li>
-				<li> 
-					<label>Description:</label>
-					<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
-				</li>
-				<li>
-					<label>Sort:</label>
-					<input type="number" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
-				</li>
-				<li>
-					<label>Template:</label>
-					<select name="project_id" id="project_id">
-						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
-					</select>
-				</li>
-			</ul>
+			<fieldset><legend>Product Information</legend>
+				<ul>
+					<li> 
+						<label>Product ID:</label>
+						<? echo ( $$variable{'Product'}->id(); ) ?>
+					</li>
+					<li> 
+						<label>Product Name:</label>
+						<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
+					</li>
+					<li> 
+						<label>Category:</label>
+						<select name="category_id">
+							<option value="">Select a category</option>
+							<? echo (
+								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
+							) ?>
+						</select>
+					</li>
+					<li> 
+						<label>Description:</label>
+						<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
+					</li>
+					<li>
+						<label>Sort:</label>
+						<input type="number" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
+					</li>
+					<li>
+						<label>Template:</label>
+						<select name="project_id" id="project_id">
+							<option value="">select</option>
+							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+						</select>
+					</li>
+				</ul>
+			</fieldset>
+			<fieldset><legend>Tax Information</legend>
+				<p> 
+					<label>Federal Exemption:</label>
+					<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() eq 'Y' ); ) ?> />
+					<label class="radio" for="taxexempt1Y">Yes</label>
+					<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() ne 'Y' ); ) ?> />
+					<label class="radio" for="taxexempt1N">No</label>
+				</p>
+				<p> 
+					<label>Prov/State Exemption:</label>
+					<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() eq 'Y' ); ) ?> />
+					<label class="radio" for="taxexempt2Y">Yes</label>
+					<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() ne 'Y' ); ) ?> />
+					<label class="radio" for="taxexempt2N">No</label>
+				</p>
+			</fieldset>
+			<input type="hidden" name="btnFunction"/>
+		</div>
+		<div class="rightColumn">
+			<fieldset><legend>Specifications</legend>
+				<div id="Specifications">
+			<? if ( $$variable{'Product'}->id() ) ?>
+					<!--#include virtual="_specifications.html"-->
+			<? else ( $$variable{'Product'}->id() ) ?>
+					Please save your new Product before setting specifications.
+			<? endif ( $$variable{'Product'}->id() ) ?>
+				</div>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+		<fieldset><legend>Prices</legend>
+			<div id="Prices">
+		<? if ( $$variable{'Product'}->id() ) ?>
+				<!--#include virtual="_prices.html"-->
+		<? else ( $$variable{'Product'}->id() ) ?>
+				Please save your new Product before setting pricing.
+		<? endif ( $$variable{'Product'}->id() ) ?>
+			</div>
 		</fieldset>
-	<!--
-		<fieldset><legend> Purchasing Information</legend>
-			<p> 
-				<label>Supplier:</label>
-				<select name="ddmSupplier">
-					<option value="">Select a supplier</option>
-					<?ddmSupplier?>
-				</select>
-			</p>
-		</fieldset>
-	-->
-		<fieldset><legend>Tax Information</legend>
-			<p> 
-				<label>Federal Exemption:</label>
-				<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() eq 'Y' ); ) ?> />
-				<label class="radio" for="taxexempt1Y">Yes</label>
-				<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() ne 'Y' ); ) ?> />
-				<label class="radio" for="taxexempt1N">No</label>
-			</p>
-			<p> 
-				<label>Prov/State Exemption:</label>
-				<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() eq 'Y' ); ) ?> />
-				<label class="radio" for="taxexempt2Y">Yes</label>
-				<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() ne 'Y' ); ) ?> />
-				<label class="radio" for="taxexempt2N">No</label>
-			</p>
-		</fieldset>
-		<input type="hidden" name="btnFunction"/>
-	</div>
 	</form>
-	<div class="rightColumn">
-	<fieldset><legend>Specifications</legend>
-		<div id="Specifications">
-	<? if ( $$variable{'Product'}->id() ) ?>
-			<!--#include virtual="_specifications.html"-->
-	<? else ( $$variable{'Product'}->id() ) ?>
-			Please save your new Product before setting specifications.
-	<? endif ( $$variable{'Product'}->id() ) ?>
-		</div>
-	</fieldset>
-	</div>
-	<br class="spacer"/>
-	<fieldset><legend>Prices</legend>
-		<div id="Prices">
-	<? if ( $$variable{'Product'}->id() ) ?>
-			<!--#include virtual="_prices.html"-->
-	<? else ( $$variable{'Product'}->id() ) ?>
-			Please save your new Product before setting pricing.
-	<? endif ( $$variable{'Product'}->id() ) ?>
-		</div>
-	</fieldset>
 </div>

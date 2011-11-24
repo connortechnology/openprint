@@ -1,6 +1,7 @@
 use strict;
 package openprint::User_Profile;
 require openprint::User_Profile_Entry;
+require openprint::Location;
 
 use vars qw( $debug $AUTOLOAD );
 $debug = 0;
@@ -67,17 +68,16 @@ sub value {
 			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} });
 			$openprint::log->debug("After set");
 		} # end if
-		if ( $$Entry{'value'} ne $_[2] ) {
-			$openprint::log->warn("Before Saving " . $Entry->field() . ': value=' . $_[2] . " error: $_ " ) if $_;
-			$_ = $Entry->save( { 'value' => $_[2] } );
-			$openprint::log->warn("Saving " . $Entry->field() . ': value=' . $_[2] . " error: $_ " );
+		my $v = ref $_[2] eq 'ARRAY' ? join(',',@{$_[2]}) : $_[2];
+		if ( $$Entry{'value'} ne $v ) {
+			$_ = $Entry->save( { 'value' => $v } );
 		} else {
-			$openprint::log->debug("Not saving: $$Entry{'value'} == $_[2]");
+			$openprint::log->debug("Not saving: $$Entry{'field'} value: $$Entry{'value'} == $v");
 		} # end if
 	} # end if 
 		
 	if ( $Entry ) {
-		#$openprint::log->debug("Returning Entry");
+		#$openprint::log->debug("Returning Entry " . $Entry->to_string() );
 		return $$Entry{'value'};
 	}
 	#$openprint::log->debug("Returning No Entry");
@@ -111,6 +111,7 @@ sub Field {
 
 sub save {
 	my ( $self, $param ) = @_;
+	my $error;
 $openprint::log->debug("Saving profile");
 	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort') ) {
 		if ( $Field->type() eq 'date' ) {
@@ -126,13 +127,24 @@ $openprint::log->debug("Saving profile");
 			} # end if
 		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
 			if ( $$param{'field-'.$$Field{'id'}.'_name'} ) {
-				my $parent_id = $self->value( $Field, openprint::Location->parent_type( $Field->type() ) );
-				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id );
+
+				# A new one... need to see if it already exists
+
+				# Gets the set value for the parent... so if this is a city, load the field type for a state
+				# Needs to do more.  We may be setting the parent in this save request, so it may not exist yet.
+				my $parent_id = openprint::Location->transform('parent_id', $self->value( $Field, openprint::Location->parent_type( $Field->type() ) ) );
+$openprint::log->debug("Got parent: $parent_id");
+
+
+				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, $parent_id?('parent_id'=>$parent_id):() );
 				if ( ! $Location ) {
+$openprint::log->debug("DIdn't find location, so adding it");
 					$Location = new openprint::Location();
-					$Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 'parent_id'=>$parent_id});
+					$error .= $Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 
+($parent_id?('parent_id'=>$parent_id):())});
+					return $error if $error;
 				} # end if
-				$self->value( $Field, $Location->id() );
+				$self->value( $Field, $Location->id() ) if $Location->id();
 			} else {
 				$self->value( $Field, $$param{'field-'.$Field->id()} );
 			} # end if
@@ -140,6 +152,7 @@ $openprint::log->debug("Saving profile");
 			$self->value( $Field, $$param{'field-'.$Field->id()} );
 		} # end if
 	} # end foreach $Field
+	return $error;
 } # end sub save
 
 1;

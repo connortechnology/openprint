@@ -332,5 +332,17 @@ sub load_shipping {
 sub Profile {
 	return new openprint::Company_Profile( $_[0]{'id'} );
 }
+
+sub location {
+	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
+} # end sub location
+
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+} # end sub can_edit
+
 1;
 __END__

@@ -16,44 +16,46 @@ $table = 'products';
 $serial = 'products_id_seq';
 
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
+	'id'			=>	'id',
+	'name'			=>	'name',
 	'description'	=>	'description',
-	'weight'	=>	'weight',
+	'weight'		=>	'weight',
 	'taxexempt1'	=>	'taxexempt1',
 	'taxexempt2'	=>	'taxexempt2',
-	'sort'		=>	'sort',
+	'sort'			=>	'sort',
 	'category_id'	=>	'category_id',
 	'project_id'	=>	'project_id',
-	'deleted'	=>	'deleted',
-	'owner_id'	=>	'owner_id',
+	'deleted'		=>	'deleted',
+	'owner_id'		=>	'owner_id',
 );
 
 %transforms = (
 );
 %defaults = (
-	'weight'	=>	undef,
+	'weight'		=>	undef,
 	'taxexempt1'	=>	'N',
 	'taxexempt2'	=>	'N',
-	'sort'		=>	undef,
+	'sort'			=>	undef,
 	'category_id'	=>	undef,
 	'project_id'	=>	undef,
-	'deleted'	=>	0,
+	'owner_id'		=>	q`$session{'company_id'}`,
+	'deleted'		=>	0,
 );
 
 sub destroy {
-	my $self = shift;
-	my $ac = sql::start_transaction( $dbh );
-	foreach my $Price ( openprint::ProductPrice->find( 'Product' => $self ) ) {
-		$Price->delete();
+	my $error = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $_[0]{'id'}, 'deleted'=>[0,1] ) ) {
+		$error .= $Price->delete();
 	} # end foreach
 
-	sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM Products WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $dbh, $ac );
+	sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=?}, $_[0]{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM Products WHERE id=?}, $_[0]{'id'} );
+	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Product".
-	new openprint::Log()->save({'action'=>'Delete Product', 'note'=> "Product ID: $$self{id} Name: $$self{name}"});
+	(new openprint::Log())->save({'action'=>'Delete Product', 'note'=> "Product ID: $_[0]{id} Name: $_[0]{name}"});
+	return $error;
 } # end sub destroy
 
 sub copy {
@@ -68,16 +70,14 @@ sub copy {
 } # end sub copy
 
 sub prices {
-	my $self = shift;
-	if ( ! exists $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::ProductPrice->find( 'product_id',	$$self{'id'});
+	if ( ! exists $_[0]{'Prices'} ) {
+		@{$_[0]{'Prices'}} = openprint::ProductPrice->find( 'product_id'=>$_[0]{'id'} );
 	} # end if
-	return @{$$self{'Prices'}};
+	return @{$_[0]{'Prices'}};
 } # end sub prices
 
 sub Prices {
-	my $self = shift;
-	return $self->prices();
+	return $_[0]->prices();
 } # end sub Prices
 
 sub save {
@@ -118,9 +118,12 @@ sub save {
 } # end sub save
 
 sub category {
-	my $self = shift;
-	return new openprint::ProductCategory( $$self{'category_id'} );
+$log->error("deprecated Product->category()");
+	return new openprint::ProductCategory( $_[0]{'category_id'} );
 } # end sub category
+sub Category {
+	return new openprint::ProductCategory( $_[0]{'category_id'} );
+} # end sub Category
 
 sub get_price {
 	my ( $self, $qty ) = @_;

@@ -74,7 +74,7 @@ foreach my $db ( @dbs ) {
 		print "Backing up $db to $path/$db/$year-$mon-$mday.sql.bz2\n" if $$opts{'debug'};
 		if ( ! -e "$path/$db" ) {
 			print "Making $path/$db ..\n" if $$opts{'debug'};
-			if ( ! mkdir $path/$db ) {
+			if ( ! mkdir "$path/$db" ) {
 				print "Unable to mkdir $path/$db .. skipping\n";
 				next;
 			} # end if

@@ -67,8 +67,16 @@ sub configuration {
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({'action'=>'Update Configuration'});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
 	} # end if
 } # end sub configuration
+
+sub _configuration {
+	if ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
+	} # end if
+} # end sub _configuration
 
 sub _configuration_popup {
 	my $Entry = {};
@@ -433,6 +441,8 @@ sub company_profiles {
 		$index = $Company->id();
 
 		if ( $index > 0 ) {
+			$Company->Profile()->save( \%param );
+			$log->debug("Back from profile sae");
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.	Then it occurred to me: Just delete them all from the table, and add back in the ones we want.	
@@ -770,7 +780,6 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-$openprint::log->debug("Hello");
 	if ( $param{'action'} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
@@ -847,6 +856,15 @@ sub user_relationships {
 				'text3'	=>	$param{'text3-'.$URT->id()},
 			});
 		} # end foreach URT
+		if ( $param{'name-new'} ) {
+			my $URT = new openprint::User_Relationship_Type();
+			$variable{'error'} .= $URT->save({
+				'name'	=>	$param{'name-new'},
+				'text1'	=>	$param{'text1-new'},
+				'text2'	=>	$param{'text2-new'},
+				'text3'	=>	$param{'text3-new'},
+			});
+		} # end if
 	} # end if
 } # end sub user_relationships
 sub upload_log {
@@ -888,6 +906,15 @@ sub promo_codes {
 		} # end if
 	} # end if
 } # end sub promo_codes
+
+sub logs {
+} # end sub logs
+sub _logs {
+	if ( $param{'action'} eq 'delete' ) {
+		my $Log = new openprint::Log( $param{'log_id'} );
+		$Log->delete();
+	} # end if
+} # end sub _logs
 
 1;
 __END__

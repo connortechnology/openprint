@@ -50,7 +50,8 @@ $log->debug("In survey view");
 			my $Response = $Responses{$$Question{id}};
 			$Response = new openprint::Survey_Response() if ! $Response;
 			if ( 
-					( $Response->answer_id() != $param{'answer_id-'.$$Question{'id'}} ) or
+					( ( ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ) and ( $Response->answer_id() ne join(',',@{$param{'answer_id-'.$$Question{'id'}}}) ) ) or
+					( ( ref $param{'answer_id-'.$Question->id()} ne 'ARRAY' ) and ( $Response->answer_id() != $param{'answer_id-'.$$Question{'id'}} ) ) or
 					( $Response->answer() ne $param{'answer-'.$$Question{'id'}} ) 
 			   ) {
 
@@ -59,8 +60,8 @@ $log->debug("In survey view");
 						'user_id'		=>	$session{'user_id'},
 						'survey_id'		=>	$$Survey{'id'},
 						'question_id'	=>	$$Question{'id'},
-						'answer_id'=>$param{'answer_id-'.$Question->id()},
-						'answer'=>$param{'answer-'.$Question->id()},
+						'answer_ids'	=>	(ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ? $param{'answer_id-'.$Question->id()} : [ $param{'answer_id-'.$Question->id()} ] ),
+						'answer'		=>	$param{'answer-'.$Question->id()},
 						});
 			} # end nif answer has changed
 		} # end foreach Question
@@ -82,8 +83,9 @@ sub edit {
 		$variable{'error'} = $variable{'Survey'}->save( \%param );
 		foreach my $Question ( $Survey->Questions() ) {
 			$variable{'error'} .= $Question->save({
-					'text'=>$param{'text-'.$Question->id()},
-					'type'=>$param{'type-'.$Question->id()},
+					'text'		=>	$param{'text-'.$Question->id()},
+					'type'		=>	$param{'type-'.$Question->id()},
+					'alignment'	=>	$param{'alignment-'.$Question->id()},
 					});
 		} # end foreach Question
 	} elsif ( $param{'action'} eq 'Delete' ) {

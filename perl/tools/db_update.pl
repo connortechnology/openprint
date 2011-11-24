@@ -795,29 +795,6 @@ if ( $config{cookie_issue_URIs} ) {
 sql::execute( undef, undef, 'delete from configuration where name=?', 'cookie_issue_URIs' );
 } # end if
 
-if ( $version < 1897 ) {
-	print "Updating to version 1897\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
-	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
-	if ( exists $$blah{'ysntaxexempt1'} ) {
-		if ( ! exists $$blah{'taxexempt1'} ) {
-			$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
-		} else {
-			$dbh->do(q{alter table products drop column ysntaxexempt1});
-		} # end if
-	} # end if
-	if ( exists $$blah{'ysntaxexempt2'} ) {
-		if ( ! exists $$blah{'taxexempt2'} ) {
-			$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
-		} else {
-			$dbh->do(q{alter table products drop column ysntaxexempt2});
-		} # end if
-	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1897, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1897;
-} # end if
 
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
@@ -1487,8 +1464,36 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 		$dbh->do($st);
 	}
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Products LIMIT 1', {} );
-	$dbh->do('ALTER TABLE Products ADD deleted boolean') if $data and ! exists $$data{'deleted'};
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
+	if ( ! $data ) { die $openprint::dbh->errstr(); }
+	$dbh->do('ALTER TABLE Products ADD deleted boolean') if ! exists $$data{'deleted'};
+	$dbh->do('ALTER TABLE Products ADD sort INTEGER') if ! exists $$data{'sort'};
+	if ( ! exists $$data{'project_id'} ) {
+		$dbh->do('ALTER TABLE Products ADD project_id INTEGER');
+		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
+	} # en dif
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Products ADD owner_id INTEGER NOT NULL');
+		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
+	}
+	if ( exists $$data{'ysntaxexempt1'} ) {
+		if ( ! exists $$data{'taxexempt1'} ) {
+			$dbh->do(q{alter table products rename column ysntaxexempt1 to taxexempt1});
+		} else {
+			$dbh->do(q{alter table products drop column ysntaxexempt1});
+		} # end if
+	} elsif ( ! exists $$data{'taxexempt1'} ) {
+		$dbh->do(q{alter table products add ysntaxexempt1 CHAR(1) default 'N'});
+	} # end if
+	if ( exists $$data{'ysntaxexempt2'} ) {
+		if ( ! exists $$data{'taxexempt2'} ) {
+			$dbh->do(q{alter table products rename column ysntaxexempt2 to taxexempt2});
+		} else {
+			$dbh->do(q{alter table products drop column ysntaxexempt2});
+		} # end if
+	} elsif ( ! exists $$data{'taxexempt2'} ) {
+		$dbh->do(q{alter table products add ysntaxexempt2 CHAR(1) default 'N'});
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {

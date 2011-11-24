@@ -23,7 +23,7 @@
         if ( $description eq '' ) {
             $description = $name;
         } # end if
-        $html .= qq{<li><label>$description</label>\n};
+        $html .= qq{<li id="$name"><label>$description</label>\n};
         if ( $type eq 'Supplier' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
             $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y','order'=>'lower(name)') ], $value );
@@ -49,6 +49,7 @@
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if
+		$html .= ssi::button( 'Delete'.$name, { 'onclick'=>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$name', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
 		$html .= ssi::button( 'Edit'.$name, { 'onclick'=>qq`popup_window('_configuration_popup.html','name=$name');`, 'text'=>'Edit' } );
         $html .= qq{</li>\n};
 		$cat = $category;

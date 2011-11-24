@@ -15,8 +15,8 @@ use vars qw( $log $dbh );
 $log = new logger( 'warn' );
 
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
-$src_db = 'pleasureablethings' if ! $src_db;
-$dst_db = 'pleasureablethings' if ! $dst_db;
+$src_db = 'pleasurablethings' if ! $src_db;
+$dst_db = 'pleasurablethings' if ! $dst_db;
 $src_host = 'www.pleasurablethings.ca' if ! $src_host;
 
 `/etc/init.d/apache2 reload`;
@@ -54,9 +54,9 @@ if ( $year ) {
 } # end if
 
 print "upgrading db ...";
-`/etc/apache2/lib/perl/tools/db_update3.pl $dst_db pleasureablethings pleasureablethings` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update3.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
 print 'Turning off backups...';
-$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'pleasureablethings', 'password'=>'pleasureablethings') );
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'pleasurablethings', 'password'=>'pleasurablethings') );
 configuration::init_cache( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );

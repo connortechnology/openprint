@@ -26,13 +26,13 @@
 				<div class="content">
 					<ul>
 						<li>
-							<label>All day:</label>
+							<label>All day</label>
 							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated0">Yes</label>
 							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated1">No</label>
 						</li>
-						<li><label>Start:</label>
+						<li><label>Start</label>
 							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{'Event'}->starting_on(),
 										{
 										'onchange'	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
@@ -41,7 +41,7 @@
 										} ); ) ?>
 							</span>
 						</li>
-						<li><label>End:</label>
+						<li><label>End</label>
 							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{'Event'}->ending_on(), 
 										{
 											'onchange'	=>	q`update_duration(this.form,'starting_on','ending_on');`,
@@ -50,7 +50,7 @@
 							} ); ) ?>
 							</span>
 						</li>
-						<li><label>Duration:</label>
+						<li><label>Duration</label>
 							<span id="duration">
 							</span>
 							<script type="text/javascript">update_duration(document.forms['f1'],'starting_on','ending_on');</script>
@@ -64,25 +64,19 @@
 								) ?>
 							</select>
 						</li>
-						<li><label>Name:</label>
+						<li><label>Name</label>
 							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Event'}->name() ) ?>" />
 						</li>
 						<li>
-							<label for="info">More info:</label>
+							<label for="info">More info</label>
 							<textarea cols="" id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Event'}->info() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
-				<div class="content">
-					<ul>
-<? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();
-$openprint::log->debug( $$variable{'Event'}->to_string() );
-) ?>
+<? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();) ?>
 <!--#include virtual="/includes/_location_fields.html"-->
-					</ul>
-				</div>
 			</fieldset>
 			<p class="buttons">
 				<? echo (

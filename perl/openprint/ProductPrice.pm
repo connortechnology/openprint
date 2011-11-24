@@ -42,6 +42,7 @@ $serial = 'product_prices_id_seq';
 	'markup'	=>	0,
 	'price'		=>	0,
 	'discountable'	=>	1,
+	'owner_id'	=>	q`$session{'company_id'}`,
 );
 
 
