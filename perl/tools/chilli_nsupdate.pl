@@ -49,9 +49,11 @@ if ($CFG::Config{help}) {
     exit 0;
 }
 
+if ( 0 ) {
 if ( $CFG::Config{'log_level'} eq 'debug' ) {
 foreach my $k ( keys %ENV ) {
 $log->debug("Environment: $k => $ENV{$k}");
+}
 }
 }
 
@@ -66,22 +68,30 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 				);
 		die 'Error opening db' if ! $dbh;
 	} else {
-		$log->warn("Must specify database name in order to look up hosts.\n");
+		$log->error("Must specify database name in order to look up hosts.\n");
+		exit(1);
 	} # end if
 	my $Host = openprint::Host->find_one('mac any'=>$ENV{'CALLING_STATION_ID'});
 	if ( $Host ) {
-		if ( $Host->ip() != $ENV{'FRAMED_IP_ADDRESS'} ) {
-			$Host->save({'ip'=>$ENV{'FRAMED_IP_ADDRESS'}});
+		if ( $Host->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
+			$_ = $Host->save({'ip'=>$ENV{'FRAMED_IP_ADDRESS'}});
+			$log->error($_) if $_;
+		} else {
+			$log->debug("Not changing IP");
 		} # end if
+
 		my $hostname = $Host->hostname();
 		$hostname .= '.internal.point-one.com' if $hostname !~ /.internal.point-one.com$/;
 
 		if ( open NSUPDATE, "| nsupdate" ) {
+			$log->debug("Updating $hostname to $ENV{'FRAMED_IP_ADDRESS'}");
 			print NSUPDATE "server localhost\n";
 			print NSUPDATE "update delete $hostname. IN A\n";
 			print NSUPDATE "update add $hostname. 86400 IN A $ENV{'FRAMED_IP_ADDRESS'}\n";
 			print NSUPDATE "send\n";
 			close NSUPDATE;
+		} else {
+			$log->error("Unable to open NSUPDATE $!");
 		} # end if 
 
 	} # end if Hosts
