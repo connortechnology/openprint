@@ -261,7 +261,7 @@ sub get_li {
 			$colour = 'approval';
 		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( openprint::ScheduledJob->find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multibindery';
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';

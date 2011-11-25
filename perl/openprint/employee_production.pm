@@ -1663,8 +1663,8 @@ sub _shift_change {
 
 		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift->find(
-					'starttime_<='	=>	$parser->format_datetime( $new_start_datetime ), 
-					'endtime_>'		=>	$parser->format_datetime( $new_start_datetime ),
+					'starttime <='	=>	$parser->format_datetime( $new_start_datetime ), 
+					'endtime >'		=>	$parser->format_datetime( $new_start_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_start_datetime = $parser->parse_datetime( $S->endtime() );
@@ -1673,8 +1673,8 @@ sub _shift_change {
 			last;
 		} # end foreach
 		foreach my $S ( openprint::Shift->find(
-					'starttime_>='	=>	$parser->format_datetime( $new_start_datetime ),
-					'starttime_<'	=>	$parser->format_datetime( $new_end_datetime ),
+					'starttime >='	=>	$parser->format_datetime( $new_start_datetime ),
+					'starttime <'	=>	$parser->format_datetime( $new_end_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_end_datetime = $parser->parse_datetime( $S->starttime() );

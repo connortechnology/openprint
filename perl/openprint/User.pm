@@ -32,6 +32,7 @@ $debug = 1;
 	'lastname'			=>	'lastname',
 	'email'				=>	'email',
 	'phone'				=>	'phone',
+	'extension'			=>	'extension',
 	'mobile'			=>	'mobile',
 	'sms'				=>	'sms',
 	'fax'				=>	'fax',
@@ -234,13 +235,11 @@ sub prev {
 	return $_;
 }
 sub Prev {
-	my $self = shift;
-	return new openprint::User( $self->prev(@_) );
+	return new openprint::User( $_[0]->prev(@_) );
 } # end sub Nex
 
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
 sub name {
@@ -284,7 +283,7 @@ sub csr_ids {
 
 sub Groups {
 	if ( $_[0]{'id'} ) {
-    return openprint::UserGroup->find('user_id in'=>$_[0]{id} );
+		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
 	} # end if
 	return ();
 } # end sub Groups
@@ -441,7 +440,7 @@ sub AUTOLOAD {
 		} else {
 			return $_[0]{$name};
 		} # end if
-	} else {
+	} elsif ( ! sets::isin( $name, [ 'DESTROY' ] ) ) {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{'fields'}{$name} ) {
 			if ( @_ > 1 ) {

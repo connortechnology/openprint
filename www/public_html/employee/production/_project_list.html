@@ -44,15 +44,15 @@
 <? if ( @{$$variable{'Projects'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th width="60">Project#</th>
-			<th width="60">Docket#</th>
-			<th align="left">Customer</th>
-			<th align="left">Project Name</th>
+			<th class="project_id">Project#</th>
+			<th class="docket">Docket#</th>
+			<th class="Company">Company</th>
+			<th class="reference">Project Name</th>
 	<? if ( ! $param{'ddmEmployee'} ) ?>
-			<th align="left">Operators</th>
+			<th class="Operators">Operators</th>
 	<? endif ( ! $param{'ddmEmployee'} ) ?>
-			<th width="75" align="center">Due Date</th>
-			<th width="85" align="right">Status</th>
+			<th class="duedate">Due Date</th>
+			<th class="status">Status</th>
 		</tr>
 		<? echo (
 			my $html = '';
@@ -64,24 +64,24 @@
 				#next if $param{'ddmEmployee'} and sets::isin( $param{'ddmEmployee'}, \@operators );
 				$html .= "<tr$rowclass>\n";
 				$html .= sprintf(q`
-						<td><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>
-						<td><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
-						<td><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
-						<td><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
+						<td class="project_id"><a href="/employee/project/view.html?project_id=%1$d">%1$d</a>&nbsp;</td>
+						<td class="docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a>&nbsp;</td>
+						<td class="Company"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+						<td class="reference"><a href="/employee/project/view.html?project_id=%1$d">%4$s</a>&nbsp;</td>
 			`, $Project->id(), $Project->docket(), $Project->Company()->name(), ssi::htmlize($Project->reference()),
  );
 
-			if ( ! $param{'ddmEmployee'} ) {
-				$html .= sprintf(q`<td><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>`, $Project->id(), 
-					join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{'operators'}} ) );
+				if ( ! $param{'ddmEmployee'} ) {
+					$html .= sprintf(q`<td class="Operators"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>`, $Project->id(), 
+						join(', ', map { $_->name() } map { new openprint::User( $_ ); } @{$$variable{'operators'}} ) );
 				} # end if
-			$html .= sprintf(q`
-			<td align="center"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>
-			<td align="right"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
-		</tr>`, $Project->id(), $Project->due_date(), $Project->status(),
-);
+				$html .= sprintf(q`
+					<td class="duedate"><a href="/employee/project/view.html?project_id=%1$d">%2$s</a>&nbsp;</td>
+					<td class="status"><a href="/employee/project/view.html?project_id=%1$d">%3$s</a>&nbsp;</td>
+				</tr>`, $Project->id(), $Project->due_date(), $Project->status(),
+				);
 
-		$rowclass = $rowclass eq ' class="colRow"' ? '' : ' class="colRow"';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach
 			return $html;
 		) ?>
