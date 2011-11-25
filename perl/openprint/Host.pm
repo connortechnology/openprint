@@ -127,16 +127,20 @@ sub Type {
 } # end sub Type
 
 sub type {
+$openprint::log->debug("type: @_");
 	if ( @_ > 1 ) {
 		my $Type = openprint::Host_Type->find_one('name lc'=> lc $_[1] );
 		if ( ! $Type ) {
 			$Type = new openprint::Host_Type();
 			$Type->save({'name'=>$_[1]});
-		}
+		} # end if
 		$_[0]{'type_id'} = $Type->id();
-		return $Type->name();
+		$_[0]{'type'} = $Type->name();
 	}
-	return new openprint::Host_Type( $_[0]{'type_id'} )->name();
+	if ( ! exists $_[0]{'type'} ) {
+		$_[0]{'type'} = new openprint::Host_Type( $_[0]{'type_id'} )->name();
+	} # end if
+	return $_[0]{'type'};
 } # end sub type
 
 sub Assets {

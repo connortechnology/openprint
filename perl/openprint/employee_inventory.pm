@@ -176,14 +176,15 @@ sub inventory_report {
 if ( 0 ) {
 	my @papers = openprint::Paper::find(
 			( defined $param{'Owner'} ? ( 'owner_id'	=> $param{'Owner'} ) : () ),
-			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
+			( defined $param{'Manufacturer'} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'} ) : ( ) ),
 			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
 			'finish_id' =>	( defined $param{'Finish'} ? $param{'Finish'} : undef ),
 			'colour_id' =>	( defined $param{'Colour'} ? $param{'Colour'} : undef ),
 			'weight_id' =>	( defined $param{'Weight'} ? $param{'Weight'} : undef ),
 			'type'		=>	$param{'Type'},
-			'created_on_start'  => defined $param{'StartYear'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
-			'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
+            ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
+            ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
+
 			'allocated_to_docket'   => $param{'Docket'},
 			'fsc_code'  =>  $param{'fsc_code'},
 			'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
@@ -248,17 +249,18 @@ if ( 0 ) {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
-	#next if ! $Skid->rfidtag_id();
-	#next if ! $Skid->RFIDTag()->id();
-	foreach my $C ( $Skid->Contents() ) {
-		next if ! $C;
-		my $Paper = $C->Paper();
-my $weight = 0;
+	foreach my $Skid ( openprint::Skid::find(
+            ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
+            ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
+			'quantity_>='=>1,'type'=>'Roll') ) {
+		foreach my $C ( $Skid->Contents() ) {
+			next if ! $C;
+			my $Paper = $C->Paper();
+			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
 				$weight = $C->quantity();
 			} else {
-				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
+				$weight += $Paper->sheet_weight() * $C->quantity();
 			} # end if
 			$total_weight += $weight;
 			$count += 1;
@@ -284,10 +286,9 @@ my $weight = 0;
 					$weight,
 					$Skid->updated_on(),
 					);
-	}
-}
+		} # end foreach C
+	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	#my $date = '2011-06-01 00:01';
 	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
 } # end sub paper_inventory
@@ -395,10 +396,19 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		} # end foreach
 	} # end if
 
+	_paper_results();
+    $session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
+
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' ) );
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
+		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
+		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' )
+			);
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _paper_results
 

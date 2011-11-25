@@ -944,7 +944,7 @@ sub gsm {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'gsm'} = shift;
-	} elsif ( ! $$self{'gsm'} ) {
+	} elsif ( ! defined $$self{'gsm'} ) {
 		if ( ! $$self{'wpsi'} ) {
 			if ( $$self{'type'} eq 'Roll' ) {
 				if ( $self->basis_mweight() ) {
@@ -960,7 +960,8 @@ sub gsm {
 		if ( $$self{'wpsi'} ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
-			$openprint::log->warn("Can't calculate gsm");
+			$$self{'gsm'} = 0;
+			$openprint::log->warn("Can't calculate gsm " . $self->to_string());
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1299,8 +1300,7 @@ sub basis_height {
 } # end sub basis_height
 
 sub sheet_weight {
-    my ( $self ) = @_;
-    return $$self{'width'} * $$self{'height'} * $self->wpsi();
+    return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
 } # end sub sheet_weight
 
 sub start_sheet_weight {
