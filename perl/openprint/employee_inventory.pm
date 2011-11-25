@@ -1493,13 +1493,17 @@ sub manifests {
 
 		} # end foreach manifest_id
 	} # end if
-	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	_manifests();
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 } # end sub manifests
 
 sub _manifests {
-	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	ssi::save_params( '/employee/inventory/manifests.html', ( 
+				'received_on_start_year','received_on_start_month','received_on_start_day',
+				'received_on_end_year','received_on_end_month','received_on_end_day',
+				'supplier_id', 'over_delivery', 'under_delivery',
+				) );
 } # end sub _manifests
 
 sub inventory_log {

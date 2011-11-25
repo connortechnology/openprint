@@ -1,0 +1,11 @@
+table .manifest_num {
+	width: 100px;
+	text-align: left;
+}
+table .po_id {
+	width: 60px;
+	text-align: left;
+}
+table .contents {
+	text-align: left;
+}

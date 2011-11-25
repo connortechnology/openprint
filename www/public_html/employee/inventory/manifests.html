@@ -41,6 +41,14 @@ Please select a Manifest to view/edit.<br>
 <? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end' ); ) ?>
 			</span>
 		</p>
+		<p>
+			<label>Over Delivery</label>
+			<? echo ( ssi::radio( 'over_delivery', ['1','Yes','0','No','','Both'], $session{'/employee/inventory/manifests.html?over_delivery'} ); ) ?>
+		</p>
+		<p>
+			<label>Under Delivery</label>
+			<? echo ( ssi::radio( 'under_delivery', ['1','Yes','0','No','','Both'], $session{'/employee/inventory/manifests.html?under_delivery'} ); ) ?>
+		</p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", '', 'Show Results' ),
