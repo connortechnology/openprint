@@ -492,7 +492,11 @@ sub find_operators {
 		push @{$results{' uc'}}, "upper($f) = ?", $$params{$k.' uc'};
 	} # end if
 	if ( exists $$params{$k.' any'} ) {
-		push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+		if ( ref $$params{$k.' any'} eq 'ARRAY' ) {
+			push @{$results{' any'}}, '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", @{$$params{$k.' any'}};
+		} else {
+			push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+		} # end if
 	} # end if
 	if ( exists $$params{$k.' is null'} ) {
 		if ( $$params{$k.' is null'} ) {

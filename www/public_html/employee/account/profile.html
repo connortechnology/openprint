@@ -222,7 +222,7 @@
         my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/it/_radius_mac_line.html' );
 		$$variable{'username'} = $$variable{'User'}->email();
 		$html .= qq`<li id="mac_$$variable{username}">`;
-		$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
+		$html .= ssi::variable_substitution( \$fragment, $variable );
 		$html .= '</li>';
         return $html;
     ) ?>
@@ -238,20 +238,20 @@
 			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<li> 
 				<label>Commission Rate</label>
-				<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />%
+				<input type="number" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />%
 			</li>
 			<li> 
 				<label>Purchasing Limit (per PO)</label>
-				<input type="text" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="number" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</li>
 			<li> 
 				<label>Purchasing Limit (Total)</label>
-				<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="number" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</li>
 			<li>
 				<label>Assistant to:</label>
 				<select name="csr_ids" size="4" multiple="multiple">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 				</select>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
@@ -271,10 +271,10 @@
 			<li>
 				<label>Groups:</label>
 				<? echo (
-					require openprint::Usergroup;
+					require openprint::UserGroup;
 					my $html = '<ul class="UserGroups">';
 					my @usergroup_ids = map { $_->id() } $$variable{'User'}->Groups();
-					foreach my $Group ( openprint::Usergroup->find( 'order'=>'lower(name)' ) ) {
+					foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
 						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
 					} # end foreach
 					return $html . '</ul>';

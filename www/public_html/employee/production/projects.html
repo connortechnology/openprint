@@ -9,15 +9,15 @@
 <fieldset class="filters"><legend>Enter Docket #</legend>
 	<p>
 		<label>Docket #:</label>
-		<input type="number" name="StartDocket" value="<?StartDocket?>" size="13" />
-		to <input type="number" name="EndDocket" value="<?EndDocket?>" size="13"  />
+		<input type="number" name="StartDocket" value="<?StartDocket?>" />
+		to <input type="number" name="EndDocket" value="<?EndDocket?>" />
 		<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
 	</p>
 </fieldset>
 <fieldset class="filters"><legend>Search Information</legend>
 	<p>
 		<label>Company:</label>
-		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" onkeydown="if(event.keyCode == 13){load_projects(f1);}" /> &nbsp;
+		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){load_projects(f1);}" /> &nbsp;
 		<select name="ddmCustomer" onchange="load_projects(this.form);">
 			<option value="">All Companies</option>
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/production/projects.html?ddmCustomer'} ); ) ?>
@@ -29,7 +29,7 @@
 		<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname)', 'usergroups'=>['Prepress'], 'type'=>['E','A'] ) ],
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname)', 'usergroup any'=>['Prepress'], 'type'=>['E','A'] ) ],
 	$session{'/employee/production/projects.html?dmEmployee'} );
 )?>
 			</select>
@@ -40,7 +40,7 @@
 			<option value="">All Employees</option>
 <? echo (
 	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
-	my @Users = openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
+	my @Users = openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'type'=>['E','A'],'usergroup any'=>['Sales']);
 	if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
 		$session{'/employee/production/projects.html?ddmSalesRep'} = '';
 	} # end if
