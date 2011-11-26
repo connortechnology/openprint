@@ -738,6 +738,21 @@ function Location_onchange( parent_element, child_element, type ) {
 			}
 			);
 	} // end if
+	if ( type == 'state' ) {
+		var state_label = $(parent_element.name + '_state');
+		var postal_label = $(parent_element.name + '_postal');
+		var country = get_ddm_text( parent_element );
+		if ( country == 'United States' ) {
+			if ( state_label ) state_label.innerHTML='State:';
+			if ( postal_label ) postal_label.innerHTML='ZIP Code:';
+		} else if ( country == 'Canada' ) {
+			if ( state_label ) state_label.innerHTML='Province:';
+			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		} else {
+			if ( state_label ) state_label.innerHTML='State/Province:';
+			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+		}  // end if
+	} // end if
 }
 
 function countLines(strtocount, cols) {

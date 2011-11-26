@@ -395,12 +395,14 @@ sub html {
 					<a href="/account/view.html?user_id=%1$d">
 					<div class="Name">%2$s</div>
 					<div class="Details">%5$s %6$s</div>
+					<div class="Tagline">%7$s</div>
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
 				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
 				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
+				$Profile->Tagline(),
 			);
 	return sprintf(q`
 				<div class="User">

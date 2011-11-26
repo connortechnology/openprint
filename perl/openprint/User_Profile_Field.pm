@@ -129,7 +129,7 @@ new Ajax.Autocompleter('field-%1$d','field-%1$d_autocomplete', '_locations.html?
 	} elsif ( $Field->type() eq 'number' ) {
 		$html .= sprintf( q`<input type="number" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
 	} elsif ( $Field->type() eq 'radio' ) {
-		$html .= ssi::radio( 'field-'.$Field->id(), $Field->values() );
+		$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value );
 	} # end if
 	$html .= "</span></li>\n";
 	return $html;

@@ -1,0 +1,45 @@
+<? echo (
+	my $Location = new openprint::Location( $param{'location_id'} );
+	my $City = $Location->ancestor('type'=>'city');
+	my $State = $Location->ancestor('type'=>['state','province']);
+	my $Country = $Location->ancestor('type'=>'country');
+
+	return sprintf(q`
+var address_e = $('address');
+if ( address_e ) {
+	address_e.value = '%s';
+} // end if
+var postalcode_e = $('postalcode');
+if ( postalcode_e ) {
+	postalcode_e.value = '%s';
+} // end if
+var city_e = $('city');
+if ( city_e ) {
+	if ( city_e.type == 'select-one' ) {
+		ddm_select_by_value( city_e, '%s' );
+	} else {
+		city_e.value = '%s';
+	} // end if
+} // end if
+var state_e = $('state');
+if ( state_e ) {
+	if ( state_e.type=='select-one' ) {
+		ddm_select_by_value( state_e, '%s' );
+	} else {
+		state_e.value ='%s';
+	} // end if
+} // end if
+var country_e = $('country');
+if ( country_e ) {
+	if ( country_e.type == 'select-one' ) {
+		ddm_select_by_value( country_e, '%s' );
+	} else {
+		country_e.value = '%s';
+	} // end if
+} // end if	
+`, map { $_ =~ s/'/\\'/g; $_;} ( $Location->address(), $Location->postalcode(), 
+( $City ? ( $City->id(), $City->name() ) : ( '', '' ) ),
+( $State ? ( $State->id(), $State->name() ) : ( '', '' ) ),
+( $Country ? ( $Country->id(), $Country->name() ) : ( '', '' ) ),
+		) );
+) ?>
