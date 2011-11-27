@@ -1,0 +1,14 @@
+<? echo (
+	sub recurse {
+		my @Children = $_[0]->children();
+		return if ! @Children;
+		#$log->debug("Doing $_[0]{name}");
+
+		return '<ul>'. join('', map { '<li>' . $_->name().recurse($_) . '</li>' } @Children ) . '</ul>';
+	} # end sub recurse
+	my $html;
+	foreach my $Root ( openprint::Location->find('parent_id_is_null'=>1) ) {
+		$html .= recurse( $Root );
+	} # end foreach Root
+	return $html;
+) ?>
