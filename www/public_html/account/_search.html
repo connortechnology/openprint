@@ -1,8 +1,6 @@
 <? echo (
 	my @Users;
 
-	pagination::defaults( '/account/search.html' );
-
 	if ( $param{'company_name'} ) {
 		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
 			$param{'company_name'} .= '%';
@@ -107,7 +105,7 @@
 		$html .= '</div>';
 	} # end foreach User
 	if ( @Users == $session{'/account/search.html?paging_per_page'} ) {
-		$html .= ssi::button( 'More', { 'onclick'=>q`new Ajax.Updater('_search.html', { parameters: { paging_page: `.($session{'/account/search.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+		$html .= ssi::button( 'More', { 'onclick'=>q`new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($session{'/account/search.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
 ) ?>
