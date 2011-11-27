@@ -574,7 +574,7 @@ sub find {
 
 		foreach my $k ( keys %$params ) {
 			next if ! $$f{$k};
-			next if sets::isin( $k,[ 'order','limit','or' ] );
+			next if sets::isin( $k,[ 'order','limit','offset','or' ] );
 
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
@@ -686,6 +686,10 @@ Carp::cluck("Use of deprecated Object ref in find");
 	if ( exists $$params{'limit'} ) {
 		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
 		delete $$params{'limit'};
+	} # end if
+	if ( exists $$params{'offset'} ) {
+		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
+		delete $$params{'offset'};
 	} # end if
 	foreach my $k ( keys %$params ) {
 		$log->error("Extra parameters in $type ::find $k => $$params{$k}");

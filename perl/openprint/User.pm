@@ -349,11 +349,11 @@ sub Asset {
 			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
-				$openprint::log->debug("Loading by gender");
+				#$openprint::log->debug("Loading by gender");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
 			if ( ! $_[0]{'Asset'} ) {
-				$openprint::log->debug("Loading by default");
+				#$openprint::log->debug("Loading by default");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
 			my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
@@ -372,8 +372,11 @@ sub Asset {
 } # end sub Asset
 
 sub Profile {
-	return new openprint::User_Profile( $_[0]{'id'} );
-}
+	if ( ! exists $_[0]{'Profile'} ) {
+		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
+	} # end if
+	return $_[0]{'Profile'};
+} # end sub Profile
 
 sub html {
 	my $User = $_[0];
@@ -446,8 +449,8 @@ sub AUTOLOAD {
 				$$Profile{'fields'}{$name} = $_[1];
 			} # end if
 			return $$Profile{'fields'}{$name};
-		} else {
-			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		#} else {
+			#$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD

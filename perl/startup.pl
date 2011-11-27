@@ -39,6 +39,7 @@ BEGIN {
 	use misc;
 	use ssi;
 	use configuration;
+	use pagination;
 
 	use openprint::www;
 	use openprint::upload_handler;
