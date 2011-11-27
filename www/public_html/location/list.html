@@ -1,14 +1,21 @@
+<div class="Location"><div class="List">
 <? echo (
 	sub recurse {
-		my @Children = $_[0]->children();
-		return if ! @Children;
-		#$log->debug("Doing $_[0]{name}");
+		return '' if ! @_;
+		my $html = '<ul>';
+		foreach my $L ( @_ ) {
+			my @Children = $L->children();
 
-		return '<ul>'. join('', map { '<li>' . $_->name().recurse($_) . '</li>' } @Children ) . '</ul>';
+			$html .= 
+				sprintf('<li id="location_%1$d">%1$d %2$s %3$s <span class="buttons">%4$s</span></li>', $L->id(), $L->name(),
+					( @Children ? recurse( @Children ) : '' ), join('',
+						( ! @Children ? ssi::button( 'delete'.$L->id(), { 'onclick'=>qq`new Ajax.Request('_action.json', { parameters: { location_id: '$$L{id}', action: 'delete' } } );`, 'text'=>'X' } ) : () ),
+						),
+					);
+		} # end foreach L
+		return $html.'</ul>';
 	} # end sub recurse
-	my $html;
-	foreach my $Root ( openprint::Location->find('parent_id_is_null'=>1) ) {
-		$html .= recurse( $Root );
-	} # end foreach Root
-	return $html;
+
+	return recurse ( openprint::Location->find('parent_id is null'=>1) );
 ) ?>
+</div></div>
