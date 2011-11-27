@@ -91,15 +91,19 @@
 		$html .= sprintf(q`
 				<div class="User">
 					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>
-					<div class="Age"><label>Age:</label>%4$s</div>
-					<div class="Gender"><label>Gender:</label>%5$s</div>
-					<div class="Joined"><label>Joined:</label>%6$s</div>
+					<div class="Tagline">%4$s</div>
+					<div class="Age"><label>Age</label>%5$s</div>
+					<div class="Gender"><label>Gender</label>%6$s</div>
+					<div class="Joined"><label>Joined</label>%7$s</div>
+					<div class="Joined"><label>Last On</label>%8$s</div>
 				</div>`,
 				$User->id(),
 				$User->Asset()->thumbnail_url(), '',
+				$Profile->Tagline(),
 				$age ? $age : 'old!',
 				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->last_logged_in() ) ),
 			);
 		$html .= '</div>';
 	} # end foreach User
