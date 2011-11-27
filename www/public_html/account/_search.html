@@ -26,8 +26,8 @@
 		foreach my $User ( openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
-			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_null_or_>=' ),
-			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_null_or_<=' ),
+			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
+			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
 			'order'	=>	'lower(firstname),lower(lastname)',
 			'limit'		=>	$session{'/account/search.html?paging_per_page'},
 			'offset'	=>	$session{'/account/search.html?paging_per_page'} * $session{'/account/search.html?paging_page'},
@@ -92,18 +92,17 @@
 				<div class="User">
 					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>
 					<div class="Tagline">%4$s</div>
-					<div class="Age"><label>Age</label>%5$s</div>
-					<div class="Gender"><label>Gender</label>%6$s</div>
-					<div class="Joined"><label>Joined</label>%7$s</div>
-					<div class="Joined"><label>Last On</label>%8$s</div>
+					<div class="Details">%5$s %6$s</div>
+					<div class="Joined"><label>Joined:</label>%7$s</div>
+					<div class="LastOn"><label>Last On:</label>%8$s</div>
 				</div>`,
 				$User->id(),
 				$User->Asset()->thumbnail_url(), '',
 				$Profile->Tagline(),
-				$age ? $age : 'old!',
-				$Profile->Gender() ? $Profile->Gender() : 'indeterminate',
+				$age ? $age.'yr old': '',
+				$Profile->Gender() ? $Profile->Gender() : 'indeterminate gender',
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
-				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->last_logged_in() ) ),
+				( $User->last_logged_in() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->last_logged_in() ) ) : 'never' ),
 			);
 		$html .= '</div>';
 	} # end foreach User
