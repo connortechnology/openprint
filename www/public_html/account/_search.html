@@ -51,7 +51,7 @@
 						} # endif 
 					} else {
 						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
-$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
+#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
 							$filtered = 1;
 							last;
 						} # end if
@@ -81,10 +81,13 @@ $log->debug( "Filtered becase $value not in " . $session{'/account/search.html?f
 							</div>`, $User->id(), $User->name(), 
 							new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
 		my $age = 0;
-		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
-			my @Birthday = split('-', $Profile->Birthday() );
+		my $birthday = $Profile->date_of_birth();
+
+		if ( $birthday and $birthday ne '--' ) {
+			my @Birthday = split('-', $birthday );
 			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-		}  # end if
+			$log->debug("Birthday $age years @Birthday");
+		} 
 		$html .= sprintf(q`
 				<div class="User">
 					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>

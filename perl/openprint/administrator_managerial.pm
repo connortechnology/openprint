@@ -67,8 +67,16 @@ sub configuration {
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({'action'=>'Update Configuration'});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
 	} # end if
 } # end sub configuration
+
+sub _configuration {
+	if ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
+	} # end if
+} # end sub _configuration
 
 sub _configuration_popup {
 	my $Entry = {};
@@ -433,6 +441,8 @@ sub company_profiles {
 		$index = $Company->id();
 
 		if ( $index > 0 ) {
+			$Company->Profile()->save( \%param );
+			$log->debug("Back from profile sae");
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.	Then it occurred to me: Just delete them all from the table, and add back in the ones we want.	

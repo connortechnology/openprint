@@ -38,6 +38,7 @@ $serial = 'products_id_seq';
 	'sort'			=>	undef,
 	'category_id'	=>	undef,
 	'project_id'	=>	undef,
+	'owner_id'		=>	q`$session{'company_id'}`,
 	'deleted'		=>	0,
 );
 

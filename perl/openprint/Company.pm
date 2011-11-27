@@ -238,9 +238,9 @@ sub Credit {
 	
 	return new openprint::customer_credit( $$self{id}, $supplier );
 } # end sub Credit
-sub get_dropdown {
-	my $selected = shift;
-	my $params = shift;
+
+sub dropdown {
+	shift @_ if $_[0] eq 'openprint::Company';
 
 	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false or deleted IS NULL)';
 	my @values;
@@ -249,18 +249,24 @@ sub get_dropdown {
 		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
-	if ( $params ) {
-		if ( $$params{'id'} ) {
-			if ( ref $$params{'id'} eq 'ARRAY' ) {
-				$sql .= ' AND id IN ( '.join(',', @{$$params{'id'}} ).' )';
+
+	if ( @_ ) {
+		my %params = %{$_[0]};
+		if ( $params{'id'} ) {
+			if ( ref $params{'id'} eq 'ARRAY' ) {
+				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
 			} # en dif
 		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 
 	my @company = sql::execute( undef, undef, $sql, @values );
+	return \@company;
+} # end sub dropdown
 
-    return ssi::make_drop_down( \@company, $selected );
+sub get_dropdown {
+	my $companies = dropdown( $_[1] ? $_[1] : () );
+	return ssi::make_drop_down( $companies, $_[0] );
 } # sub get_dropdown
 
 sub CSR {
@@ -336,5 +342,13 @@ sub Profile {
 sub location {
 	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
 } # end sub location
+
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+} # end sub can_edit
+
 1;
 __END__

@@ -99,7 +99,7 @@ $openprint::log->debug("Type: " . $Type->to_string() );
 	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
-$openprint::log->debug("Location: " . $_[0]->to_string() );
+$openprint::log->debug("Location::type " . $_[0]->to_string() );
 	return $_[0]{'type'};
 } # end sub type
 
@@ -110,11 +110,13 @@ sub ancestor {
 	return if ! @_;
 	my ( $value ) = $self->get( $_[0] );
 	if ( sets::isin( $value, $_[1] ) ) {
+		$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
 		return $self;
 	} else {
-		$openprint::log->debug( "Location: $_[0] ($_[0]) ($value) != $_[1]($$self{$_[1]})");
+		$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
 	} # end if
 	if ( $$self{'parent_id'} ) {
+$openprint::log->debug("Recursing" );
 		return $self->Parent()->ancestor( @_ );
 	} # end if
 	return;

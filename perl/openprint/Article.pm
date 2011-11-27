@@ -185,6 +185,9 @@ sub html {
 	if ( $Article->source() ) {
 		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
 	} # end if
+	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
+		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
+	} # end if
 	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
 	$html .= '</div>';
 	return $html;

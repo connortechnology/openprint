@@ -1,0 +1,35 @@
+<ul class="location">
+<? echo (
+	my $html;
+	my $Country = $$variable{'Location'}->ancestor('type'=>'country');
+	my $State = $$variable{'Location'}->ancestor('type'=>'state');
+	my $City = $$variable{'Location'}->ancestor('type'=>'city');
+
+	$html .= '<li class="place"><label>Place</label>';
+	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
+		<div id="location_autocomplete" class="autocomplete" style="display:none;">
+		<script type="text/javascript">
+		new Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
+		</script>
+`, $$variable{'Location'}->name() );
+	$html .= '</li>';
+
+	$html .= q`<li class="country"><label>Country</label>
+		<select id="country_id" name="country_id" onchange="Location_onchange( this, this.form.elements['state_id'], 'state' );$('country').value='';"><option value=""> </option>`;
+		$html .= ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'country'), $Country ? $Country->id() : () );
+	$html .= q`</select> or other <input type="text" name="country" id="country" onkeyup="ddm_select_by_text_case_insensitive( $('country_id'), this.value, 0 );"/>`;
+	$html .= '</li>';
+	$html .= q`<li class="state"><label>State/Province</label>
+<select id="state_id" name="state_id" onchange="Location_onchange( this, this.form.elements['city_id'], 'city' );$('state').value='';"><option value=""> </option>`;
+	$html .= ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'state'), $State ? $State->id() : () );
+	$html .= q`</select> or other <input type="text" name="state" id="state" onkeyup="ddm_select_by_text_case_insensitive( $('state_id'), this.value, 0 );"/>`;
+
+	$html .= '</li>';
+	$html .= q`<li class="city"><label>City</label><select id="city_id" name="city_id" onchange="$('city').value='';"><option value=""> </option>`;
+	$html .= ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $City ? $City->id() : () );
+	$html .= q`</select> or other <input type="text" name="city" id="city" onkeyup="ddm_select_by_text_case_insensitive( $('city_id'), this.value, 0 );"/>`; 
+	$html .= '</li>';
+
+	return $html;
+) ?>
+</ul>

@@ -293,7 +293,7 @@ sub get_Shifts {
 	# Case #1 Shift before
 	if ( my $LastShift = openprint::Shift->find(
 			'equipment_id'      =>  $Equipment->id(),
-			'starttime_<'       =>  $parser->format_datetime( $start_dt ),
+			'starttime <'       =>  $parser->format_datetime( $start_dt ),
 			'order'             =>  'starttime DESC',
 			) ) {
 		my $last_time = $LastShift->starttime_seconds()+1;

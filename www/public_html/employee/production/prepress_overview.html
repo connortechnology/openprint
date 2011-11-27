@@ -10,7 +10,7 @@
 						<option value=""> select </option>
 						<? echo (
 							ssi::make_drop_down(
-								[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup in'=>'Prepress','order'=>'lower(firstname),lower(lastname)') ], $session{'/employee/production/prepress_overview.html?operator_id'}
+								[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup any'=>'Prepress','order'=>'lower(firstname),lower(lastname)') ], $session{'/employee/production/prepress_overview.html?operator_id'}
 							);
 						) ?>
 					</select>
@@ -41,9 +41,9 @@
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
 			$html .= '<ul>';
 			foreach my $Project ( openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber',
-				( $param{'operator_id'} ? ( 'operator_id in' => $param{'operator_id'} ) : () ),
+				( $param{'operator_id'} ? ( 'operator_id any' => $param{'operator_id'} ) : () ),
+				'docket is null'	=>	0,
 					) ) {
-				next if ! $Project->docket();
 				my $services = $Project->services();
 
 				my $impressions = 0;
@@ -52,11 +52,9 @@
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					if ( ! $$sig_specs{'SignatureQuantity'} ) {
 						$$sig_specs{'SignatureQuantity'} = 1;
-#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
 					} # end if
 					if ( ! $$sig_specs{'ImpressionQuantity'} ) {
 						$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
 					} # end if
 					$impressions += $$sig_specs{'ImpressionQuantity'};
 					$forms += $$sig_specs{'SignatureQuantity'};
@@ -69,7 +67,6 @@
 				if ( $Project->rush() ) {
 					$colour .= ' rush';
 				} # end if
-
 
 				$html .= sprintf( '<li class="%s">', $colour );
 				$html .= '<div class="Company">';

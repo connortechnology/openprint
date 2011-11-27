@@ -30,6 +30,7 @@ sub send {
 	} # end if
 
     my %mail = (
+			CC		=>	$params{'CC'},
 			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
@@ -37,7 +38,7 @@ sub send {
             FROM    => $$self{'from'},
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
 			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
-            );
+			);
 #$log->debug("SMTP: $mail{SMTP}, from: $mail{'from'} subject: $mail{SUBJECT}");
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : ();
 	@attachments = ( $$self{'ATTACHMENTS'} ? @{$$self{'ATTACHMENTS'}} : () ) if ! @attachments;
@@ -63,7 +64,7 @@ sub send {
 			} # end if
 			
 			my @to;
-			foreach my $email ( split (',',  $recipient->email() ) ) {
+			foreach my $email ( split (',',	$recipient->email() ) ) {
 				s/^\s+//, s/\s+$// for $email;
 #$openprint::log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {

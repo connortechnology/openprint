@@ -8,8 +8,7 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) or ( $$variable{'User'}->id() == $session{'user_id'} ) 
-				) {
+				if ( $$variable{'Company'}->can_edit() ) {
 					$html .= ssi::button( 'Delete', { 'href'=>'/account/company_profile.html?btnFunction=Delete&amp;ddmCompany='.$$variable{'Company'}->id() } );
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/company_profile.html?ddmCompany='.$$variable{'Company'}->id() } );
 				} # end if
@@ -23,6 +22,7 @@
 		<? echo ( 
 			my $html = '';
 			foreach my $User ( openprint::User->find('company_id'=>$$variable{'Company'}->id(),'order'=>'id') ) {
+				$variable{'User'} = $User;
 				$html .= '<div class="UserProfile">
 
 				<div class="leftColumn">

@@ -1,29 +1,12 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
-<? eval ( 
-	foreach my $key ( 'Group','Manufacturer','Brand','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code', 'width','height','OrLarger' ) {
-		$session{'/employee/inventory/paper.html?'.$key} = $param{$key} if exists $param{$key};
-	} # end foreach
-	$session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
-	if ( ! $session{'/employee/inventory/paper.html?StartYear'} ) {
-		@session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 );
-	} # end if
-	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
-		@session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} );
-
-	if ( ! $session{'/employee/inventory/paper.html?EndYear'} ) {
-		@session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} = Date::Calc::Today();
-	} # end if
-	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, 
-		@session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ); 
-) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" style="width: auto;" size="6" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>
@@ -127,15 +110,12 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Date Added:</label>
-			<span class="DateSelector">
-				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><?StartYears?></select>
-				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><?StartMonths?></select>
-				<select name="StartDay"><?StartDays?></select>
-			to </span>
-			<span class="DateSelector">
-				<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><?EndYears?></select>
-				<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><?EndMonths?></select>
-				<select name="EndDay"><?EndDays?></select>
+			<span class="DateSelectorCT">
+			<? echo ( ssi::date_select_session('/employee/inventory/paper.html', 'added_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			</span>
+			to 
+			<span class="DateSelectorCT">
+			<? echo ( ssi::date_select_session('/employee/inventory/paper.html', 'added_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
