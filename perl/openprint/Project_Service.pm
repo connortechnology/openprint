@@ -103,5 +103,10 @@ $log->debug("Project Service runtime $$specs{'ServiceType'}");
 
 } # end sub get_runtime
 
+sub ordered_price {
+	my $specs = $_[0]->specs();
+	return $$specs{'txtPrice'.$_[0]->Project()->ordered_quantity_index()};
+} # end sub ordered_price
+
 1;
 __END__

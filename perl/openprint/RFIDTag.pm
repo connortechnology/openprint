@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw($debug $log $dbh %fields %transforms %defaults $table $serial );
+use vars qw($debug $log $dbh %find_fields %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -23,6 +23,9 @@ $serial = 'rfidtags_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'valid'			=>	'valid',
+);
+%find_fields = (
+	'skid_id'	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
 );
 
 %transforms = (
@@ -55,6 +58,10 @@ sub find {
 	if ( ( exists $params{'valid'} ) and ( $params{'valid'} ne '' ) ) {
 		$sql .= ' AND valid=?';
 		push @values, $params{'valid'};
+	} # end if
+	if ( $params{'location_id'} ) {
+		$sql .= ' AND location_id=?';
+		push @values, $params{'location_id'};
 	} # end if
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
@@ -91,6 +98,13 @@ sub find {
 	} elsif ( $params{'updated_on_end'} ) {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( exists $params{'skid_id exists'} ) {
+	if ( $params{'skid_id exists'} ) {
+		$sql .= ' AND EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
+	} else {
+		$sql .= ' AND NOT EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
+	} # end if
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
@@ -138,7 +152,10 @@ sub save {
 	} # end if
 
 	if ( $self->type() eq 'Skid' ) {
-		$self->Skid()->save({location_id=>$$self{'location_id'}});
+		my $Skid = $self->Skid();
+		if ( $Skid->id() and ( $Skid->location_id() != $$self{'location_id'} ) ) {
+			$Skid->save({location_id=>$$self{'location_id'}});
+		} # end if
 	} # end if
 
 	$$self{'updated_on'} = 'NOW()';

@@ -3,6 +3,7 @@
 <h2>User Profile</h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <? if ( $session{'user_id'} ) ?>
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -115,16 +116,24 @@
    			   <legend>Login Information</legend>
    				<p>
    					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+   					<input type="email" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
    				</p>
+				<p>
+					<!--#include virtual="/includes/password_requirements.html"-->
+				</p>
    				<p>
    					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="Password" name="password" />
+   					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
+					<span id="psContainer"><span id="psStrength"></span></span>
    				</p>
    				<p>
    					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="VerifyPassword" name="verifypassword" />
+   					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);"/>
+					<span id="password_alert"></span>
    				</p>
+				<p><label>Password Last Changed:</label>
+				<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
+				</p>
    			</fieldset>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>

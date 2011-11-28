@@ -11,7 +11,7 @@
 		$filters{'supplier_id'} = $param{'supplier_id'} if $param{'supplier_id'};
 		$filters{'docket'} = $param{'Docket'} if $param{'Docket'};
 		my $rowclass;
-		foreach my $PO ( openprint::PurchaseOrder::find(%filters) ) {
+		foreach my $PO ( openprint::PurchaseOrder->find(%filters) ) {
 			$html .= sprintf( q`<tr %2$s onclick="$('po_id').value=%1$d;"><td>%1$d</td><td>`, $PO->id(), $rowclass );
 			foreach my $C ( $PO->Contents() ) {
 				my $desc = $C->description();

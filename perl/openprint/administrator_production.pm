@@ -562,5 +562,8 @@ $openprint::log->debug("Doing $name");
 
 } # end sub edit
 
+sub pricelists {
+} # end sub pricelists
+
 1;
 __END__

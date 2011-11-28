@@ -39,9 +39,8 @@
 				$html .= qq`href="/maps/index.html?location_id=$$Region{id}" `;
 			} elsif ( $param{'skid_id'} ) {
 				$html .= qq`href="/employee/inventory/skid_details.html?skid_id=$param{'skid_id'}&location_id=$$Region{id}&btnFunction=Save" `;
-			
 			} # end if
-			$html .= qq`coords="`.$Region->coordinates().q`" alt="`.$Region->name().qq`" title="`.$Region->name().qq`" onmouseover="mouseOver('MapImage','/images/maps/`.$$variable{'Location'}->name() . '_' . $Region->name().q`.gif');" onmouseout="mouseOut('MapImage','/images/maps/`.$$variable{'MapFile'}.q`.gif');"/>`;
+			$html .= qq`coords="`.$Region->coordinates().q`" alt="`.$Region->name().qq`" title="`.$Region->name().qq`" onmouseover="mouseOver('MapImage','/images/maps/`.$$variable{'Location'}->name() . '/' . $Region->name().q`.gif');" onmouseout="mouseOut('MapImage','/images/maps/`.$$variable{'MapFile'}.q`.gif');"/>`;
 		} # end foreach
 		return $html;
 	) ?>

@@ -416,6 +416,9 @@ sub button {
 	$$options{'text'} = $name if ! $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	if ( $$options{'target'} ) {
+		$html .= 'target="'.$$options{'target'}.'" ';
+	} # end if
 	if ( $$options{'onclick'} ) {
 		$html .= 'onclick="';
 		#if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
@@ -479,7 +482,7 @@ return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) 
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
-	if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+	if ( ( ! ( exists $session{$page.'?'.$prefix.'_year'} and exists $session{$page.'?'.$prefix.'_month'} and exists $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
 		if ( $delta ne '' ) {
 			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
 		} else {
@@ -548,12 +551,24 @@ sub date_select_session {
 	return date_select( $prefix, [ @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} ], $options );
 } # end sub date_select_session
 
+sub datetime_select_session {
+	my ( $page, $prefix, $options ) = @_;
+	return datetime_select( $prefix, [ @session{
+			$page.'?'.$prefix.'_year',
+			$page.'?'.$prefix.'_month',
+			$page.'?'.$prefix.'_day',
+			$page.'?'.$prefix.'_hour',
+			$page.'?'.$prefix.'_minute'} ], $options );
+} # end sub date_select_session
+
 sub datetime_select {
 	my ( $prefix, $value, $options ) = @_;
 
 	my ($year,$month,$day, $hour,$min,$sec);
 	if ( ! defined $value ) {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( time );
+	} elsif ( ref $value eq 'ARRAY' ) {
+		($year,$month,$day, $hour,$min,$sec) = @$value;
 	} elsif ( $value ) {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( Date::Parse::str2time( $value ) );
 		if ( ! $year ) {
@@ -594,8 +609,14 @@ $openprint::log->error("No date from $value");
 ( ( exists $$options{'with_time'} and ! $$options{'with_time'} ) ? ' style="display: none;"' : '' ),
 	make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour ),
 	make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min ),
-);
-	 return $html;
+	);
+	if ( $$options{'with_clear'} ) {
+		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
+	} # end if
+	if ( $$options{'with_today'} ) {
+		$html .= button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T' } );
+	} # end if
+	return $html;
 } # end sub datetime_select
 
 sub datetime_text {
@@ -645,6 +666,20 @@ sub radio {
 	} # end foreach value
 	return $html;
 } # end sub radio
+sub checkboxes {
+	my ( $name, $values, $selected, $options ) = @_;
+
+	my $onclick = $$options{'onclick'} if $options;
+	my $html;
+
+	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+		$html .= sprintf(q`
+				<input type="checkbox" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+				<label class="radio" for="%1$s%2$s">%3$s</label>
+				`, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+	} # end foreach value
+	return $html;
+} # end sub checkboxes
 
 sub date_filter {
     my ( $field, $sql_field, $hash ) = @_;
@@ -660,12 +695,22 @@ sub date_filter {
 #$log->debug("ssi::date_filter: No date specified for $field");
         return ();
     } # end if
-    my ( $year, $month, $day ) = @$hash{$field.'_year',$field.'_month',$field.'_day'};
+    my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
     $month = 1 if ! $month;
     $day = 1 if ! $day;
-#$log->debug("ssi::date_filter: $year $month $day");
+	if ( $field =~ /end$/ ) {
+		$hour = 23 if ( ! defined $hour ) or $hour eq '';
+		$minute = 59 if ( ! defined $minute ) or $minute eq '';
+		$second = 59 if ( ! defined $second ) or $second eq '';
+	} else {
+		$hour = 0 if ( ! defined $hour ) or $hour eq '';
+		$minute = 0 if ( ! defined $minute ) or $minute eq '';
+		$second = 0 if ( ! defined $second ) or $second eq '';
+	} # end if
+#$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day ), ( $field =~ /end$/ ? ( 23,59,59 ) : ( 0, 0, 0 ) ) ) );
+    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
 sub input {

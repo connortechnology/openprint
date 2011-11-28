@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw($table $serial %variable $log $dbh %config %fields %transforms %defaults );
+use vars qw( $debug $table $serial %variable $log $dbh %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -22,7 +22,7 @@ require openprint::Company;
 $table = 'manifests';
 $serial = 'manifests_id_seq';
 
-my $debug = 1;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -146,7 +146,7 @@ sub find {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'name'}) ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
 	foreach my $C ( $self->Contents() ) {

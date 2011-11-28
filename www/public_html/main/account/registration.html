@@ -1,3 +1,4 @@
+<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
 <h2>Registration</h2>
@@ -178,15 +179,18 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 				</p>
 				<p> 
 					<label>E-mail: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
+					<input type="email" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</p>
+				<p><!--#include virtual="/includes/password_requirements.html"-->
 				<p> 
-					<label>Password: <span class="requiredFieldIndicator">*</span></label>
-					<input type="password" name="password" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"  />
-				</p>
-				<p> 
-					<label>Verify Password: <span class="requiredFieldIndicator">*</span></label>
-					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"  />
+					<label for="password">Password: <span class="requiredFieldIndicator">*</span></label>
+					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>" />
+                    Strength: <span id="psContainer"><span id="psStrength"></span></span>
+                </p>
+                <p>
+                    <label for="verifypassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
+                    <input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>" />
+                    <span id="password_alert"></span>
 				</p>
 <? echo (
     my $html;

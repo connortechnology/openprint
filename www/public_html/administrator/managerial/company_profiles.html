@@ -40,7 +40,7 @@
 						$params{'supplier'} = 'N';
 						$params{'reseller'} = 'N';
 					} # end if
-					my @Companies = openprint::Company::find( %params );
+					my @Companies = @{$$variable{'Companies'}} = openprint::Company::find( %params );
 					if ( ! sets::isin( $param{'ddmCustomer'}, map { $_->id() } @Companies ) ) {
 						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
 					} # end if
@@ -67,6 +67,13 @@
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
 				$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+				if ( (new openprint::User( $session{'user_id'} ))->email() =~ /^iconnor/ ) {
+					$html .= '<br/>';
+					$html .= ssi::button( 'Merge', { 'onclick'=>"f1.btnFunction.value='merge';f1.submit();" } );
+					$html .= '<select name="merge_company_id">';
+					$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
+					$html .= '</select>';
+				} # end if
 			return $html;
 		) ?>
 		</p>

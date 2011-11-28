@@ -364,10 +364,11 @@ sub hms2time {
 } # end sub hms2time
 
 sub format_bytes {
+	$_[1] = '.3' if ! $_[1];
 	if ( $_[0] > 1048576 ) {
-		return sprintf( '%.3f MB', $_[0] / 1048576 );
+		return sprintf( "%$_[1]f MB", $_[0] / 1048576 );
 	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%.3f KB', $_[0] / 1024 );
+		return sprintf( '%$_[1]f KB', $_[0] / 1024 );
 	} else {
 		return $_[0].' B';
 	} # end if

@@ -15,7 +15,6 @@
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/main.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css" media="screen, print"/>
 		<link href="/css/menu-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
 		<link href="/css/button.css" rel="stylesheet" type="text/css" media="screen,print"/>
@@ -39,6 +38,22 @@
 		<? if ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
 <link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
 		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
+<? echo (
+    my $html;
+    my $css = $$variable{'uri'};
+    $css =~ s/^\///;
+    $css =~ s/\..+$//;
+    my @parts = split '/', $css;
+    while ( @parts ) {
+    $css = join('_', @parts ) . '.css';
+        $log->debug("URI: $$variable{uri} $css");
+        if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+        }
+        pop @parts;
+    } # end while
+    return $html;
+) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
     <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
@@ -173,25 +188,31 @@
 
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
-						<div id="DidYouKnowText">
-						<? echo ( 
-							my @messages = (
-								#'Our 8 colour Heidelberg Perfector Press enables printing both sides of the sheet in a single pass saving you time and money.',
-								#'PointOne continues to invest in new technology, ensuring old equipment does not limit our production.',
-								'PointOne is ISO 9001:2000 certified which means that we are constantly measuring our performance and initiating procedures for continuous improvement.',
-								#'PointOne matches the capabilities of our press production to our finishing equipment to ensure efficiency.',
-								#'Our new MAN Roland Heat Set Web Press is capable of running 65,000 impressions per hour.',
-								#'The PointOne online estimating tool allows you to track jobs through production, 24 hours a day, 7 days a week.',
-								#'PointOne has 2 separate FUJI CTP imaging systems to ensure we have back up plate burning capabilities.',
-								#'The PoineOne ftp site is fibre optic based for fast, easy file uploads.',
-								#'Our Rampage ripping software is one of the largest installations in Canada.',
-								q{We shop the globe for technology, equipment and paper to ensure we're offering clients the very best in service and value.},	
-								q{The PointOne name originated from our desire to provide clients with 'One Point' for complete printing services - from prepress to delivery!},
-							);
-							return '&quot;'.$messages[rand @messages].'&quot;';
-						) ?>
+					<div id="DidYouKnowText">
+					<? echo ( 
+						my @messages = (
+							#'Our 8 colour Heidelberg Perfector Press enables printing both sides of the sheet in a single pass saving you time and money.',
+							#'PointOne continues to invest in new technology, ensuring old equipment does not limit our production.',
+							'PointOne is ISO 9001:2000 certified which means that we are constantly measuring our performance and initiating procedures for continuous improvement.',
+							#'PointOne matches the capabilities of our press production to our finishing equipment to ensure efficiency.',
+							#'Our new MAN Roland Heat Set Web Press is capable of running 65,000 impressions per hour.',
+							#'The PointOne online estimating tool allows you to track jobs through production, 24 hours a day, 7 days a week.',
+							#'PointOne has 2 separate FUJI CTP imaging systems to ensure we have back up plate burning capabilities.',
+							#'The PoineOne ftp site is fibre optic based for fast, easy file uploads.',
+							#'Our Rampage ripping software is one of the largest installations in Canada.',
+							q{We shop the globe for technology, equipment and paper to ensure we're offering clients the very best in service and value.},	
+							q{The PointOne name originated from our desire to provide clients with 'One Point' for complete printing services - from prepress to delivery!},
+						);
+						return '&quot;'.$messages[rand @messages].'&quot;';
+					) ?>
 					</div>
 				</div>
+<? echo (
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+		my @ss=split " ",`cat /proc/loadavg`;
+		return '<div class="ServerInfo"><ul><li><label>Server:</label>'.$config{'ServerName'}."</li><li><label>Load:</label>$ss[0]</li></ul></div>";
+	} # end if
+) ?>
 			</div>
 		<div id="Content">
 			<div id="ContentInner">

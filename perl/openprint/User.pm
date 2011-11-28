@@ -36,6 +36,7 @@ my %fields = (
 	'updated_on'		=>	'dtmlastmodified',
 	'type'				=>	'chrtype',
 	'change_password'	=>	'ysnchangepassword',
+	'password_changed_on'	=>	'password_changed_on',
 	'commission'		=>	'dblcommission',
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'strpassword',
@@ -69,6 +70,7 @@ my %defaults = (
 	'commission'		=>	undef,
 	'purchasing_limit'	=>	undef,
 	'purchasing_total_limit'	=>	undef,
+	'password_changed_on'		=>	undef,
 );
 
 sub get {
@@ -314,6 +316,7 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::User';
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
@@ -384,6 +387,14 @@ sub find {
 		} # end if
 		$sql .= ' AND ysnaccountactivation=?';
 		push @values, $param{'web_active'};
+	} # end if
+	if ( exists $param{'administrator'} ) {
+		if ( ! sets::isin( $param{'administrator'}, ['Y','N'] ) ) {
+		$param{'administrator'} = 'N' if $param{'administrator'} == 0;
+		$param{'administrator'} = 'Y' if $param{'administrator'} == 1;
+		} # end if
+		$sql .= ' AND ysnadministrator=?';
+		push @values, $param{'administrator'};
 	} # end if
 	if ( exists $param{'deleted'} ) {
 		if ( ref $param{'deleted'} eq 'ARRAY' ) {
@@ -465,7 +476,7 @@ sub notification {
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total

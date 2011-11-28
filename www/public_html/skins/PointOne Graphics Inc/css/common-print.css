@@ -53,13 +53,11 @@ display: none;
 	display: none;
 }
 
-.filters {
-	display: none;
-}
-
 .colRow {
 	background-color: #dddddd;
 }
-.Service div.templates {
+.filters,
+.Service div.templates,
+.ServerInfo {
 	display: none;
 }

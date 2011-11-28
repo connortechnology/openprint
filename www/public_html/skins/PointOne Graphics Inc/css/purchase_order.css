@@ -87,7 +87,7 @@ table td input.SheetQTY {
 }
 .PO .Header .Logo {
 	margin: 7px;
-	padding: 0px;
+	padding: 0;
 	color: black;
 	width: 270px;
 	background: none;
@@ -115,6 +115,7 @@ table td input.SheetQTY {
 	color: black;
 	border: none;
 	float: left;
+	width: 100%;
 }
 .PO .Header .Logo .PointOne {
 	border-bottom: none;
@@ -306,4 +307,8 @@ table .docket {
 .method {
 	width: 203px;
 }
+}
+
+table .supplier, table .item_name, table .product {
+	text-align: left;
 }

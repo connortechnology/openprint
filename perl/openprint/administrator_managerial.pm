@@ -159,7 +159,11 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', $error);
 		} # end if
 
-		delete $openprint::param{'password'} if ! $openprint::param{'password'};
+		if ( ! $openprint::param{'password'} ) {
+			delete $openprint::param{'password'};
+		} elsif ( $openprint::param{'password'} ne $User->password() ) {
+			$openprint::param{'password_changed_on'} = 'NOW()';
+		} # end if
 		# This has to exist, in order to save the no assistants situation
 		$openprint::param{'assistant_ids'} = [] if ! exists $openprint::param{'assistant_ids'};
 		$openprint::param{'csr_ids'} = [] if ! exists $openprint::param{'csr_ids'};
@@ -234,6 +238,13 @@ sub user_profiles {
 			$User = new openprint::User( $openprint::session{user_id} );
 		} else {
 			$User = $Users[0] if @Users;
+		} # end if
+    } # end if
+	if ( $User->id() ) {
+		if ( $User->deleted() ) {
+			unshift @Users, $User;
+		} elsif ( ! sets::isin( $User->id(), [ map { $_->id() } @Users ] ) ) {
+			unshift @Users, $User;
 		} # end if
     } # end if
 
@@ -364,6 +375,47 @@ sub company_profiles {
 		if ( $openprint::param{'txtSearchAccountNum'} ne '' ) {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT Index from Company WHERE strAccountNum=?',$openprint::param{'txtSearchAccountNum'}); 
 		} # end if 
+	} elsif ( $openprint::param{'btnFunction'} eq 'merge' ) {
+		if ( $openprint::param{'ddmCustomer'} == $openprint::param{'merge_company_id'} ) {
+			$variable{'error'} .= 'Choose a different company to merge into.';
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			foreach my $User ( openprint::User::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $User->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("User find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$User->save({'company_id'=>$index});
+			} # end foreach User
+			foreach my $Project ( openprint::Project::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Project->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Project find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Project->save({'company_id'=>$index});
+			} # end foreach Project
+			foreach my $Quote ( openprint::Quote::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Quote->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Project find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Quote->save({'company_id'=>$index});
+			} # end foreach Quote
+			foreach my $Order ( openprint::Order::find('company_id'=>$openprint::param{'merge_company_id'}) ) {
+				if ( $Order->company_id() != $openprint::param{'merge_company_id'} ) {
+					$log->error("Orderct find didn't work.");
+					$dbh->rollback();
+					return;
+				} # end if
+				$Order->save({'company_id'=>$index});
+			} # end foreach Order
+			my $MergeCompany = new openprint::Company( $openprint::param{'merge_company_id'} );
+			$MergeCompany->delete();
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
@@ -492,8 +544,8 @@ if ( 0 ) {
 		
 		$$variable{'rdbAccountActivation'.$$variable{'rdbAccountActivation'}} = 'CHECKED';
 
-		$$variable{'txtPricingLevel'} = sprintf ( "%.0f", $$variable{'txtPricingLevel'} ) . "%";
-		$$variable{'txtDownpayment'} = sprintf ( "%.0f", $$variable{'txtDownpayment'} ) . "%";
+		$$variable{'txtPricingLevel'} = sprintf ( "%.3f", $$variable{'txtPricingLevel'} ) . "%";
+		$$variable{'txtDownpayment'} = sprintf ( "%.2f", $$variable{'txtDownpayment'} ) . "%";
 
 		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
 		my $shipping_address = $customer->get_shipping_address();
@@ -725,6 +777,15 @@ sub usergroup {
 sub _search_by_email {
 } # end sub _search_by_email
 
+sub upload_log {
+	ssi::save_params( '/administrator/managerial/upload_log.html', ( 
+		( map { 'uploaded_on_start_'.$_ } ( 'year', 'month', 'day' ) ),
+		( map { 'uploaded_on_end_'.$_ } ( 'year', 'month', 'day' ) ),
+	) );
+
+	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
+	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
+} # end sub upload_log
 
 1;
 __END__

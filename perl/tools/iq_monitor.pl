@@ -8,11 +8,13 @@ require configuration;
 require sql;
 require openprint::Host;
 require logger;
+require openprint::Email;
+require openprint::logRecord;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-#*config = \%openprint::config;
+*config = \%openprint::config;
 $log = logger->new();
 $log->{level} = 'debug';
 
@@ -82,10 +84,10 @@ if ( $CFG::Config{'pid_file'} ) {
 } # end if
 
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp');
+my $p = Net::Ping->new('icmp',10);
 
 while(1) {
-	if ( ! $dbh ) {
+	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
 				'host'		=> $CFG::Config{'db_host'},
@@ -99,6 +101,7 @@ while(1) {
 			sleep 5;
 			next;
 		} # end if ! dbh
+		configuration::init_cache( $log, $dbh );
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
@@ -106,17 +109,43 @@ while(1) {
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
 		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
-		my $ping = $p->ping($Host->ip());
-		if ( ! defined $ping ) {
+		my @ping = $p->ping($Host->ip());
+		my $ping = $ping[0];
+$openprint::log->debug("@ping");
+		if ( ! @ping ) {
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
+		} elsif ( $ping and ( $ping[1] > 1 ) ) {
+(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+
 		} # end if
 		if ( $Host->online() != $ping ) {
-			$Host->save({'online'=>$ping});
-			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+			# Make sure
+			my @ping2 = $p->ping($Host->ip());
+			my $ping2 = $ping[0];
+			if ( $ping2 == $ping ) {
+
+				$Host->save({'online'=>$ping});
+
+				(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+				my @To = map { $_->User() } $Host->Notifications();
+				if ( @To and ( @To < 10 ) ) {
+					my $results = (new openprint::Email())->send(
+							'TO'	=>	\@To,
+							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+							'FROM'		=>	$config{'TechSupportEmail'},
+							'BODY'		=>	"
+	IP: $$Host{ip}
+	Description: $$Host{'description'}
+
+	Please investigate.",
+							);
+				} # end if @To > 10
+			} # end if 2nd ping is same as first
 		} # end if
 		if ( $Host->online() ) {
-			if ( $Host->type() eq 'AIC500W' ) {
+			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 				my $browser = LWP::UserAgent->new();
 				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
 
@@ -134,12 +163,26 @@ while(1) {
 				} # end if
 				if ( ! $response->is_success ) {
 					$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
-				my $headers = $response->headers();
+					my $headers = $response->headers();
 					foreach my $k ( keys %$headers ) {
-$log->debug("Header $k => $$headers{$k}");
+						$log->debug("Header $k => $$headers{$k}");
 					}  # end foreach
 					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
 					$log->debug($response->is_success);
+					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+					my @To = map { $_->User() } $Host->Notifications();
+					if ( @To and ( @To < 10 ) ) {
+						$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+						my $results = (new openprint::Email())->send(
+								'TO'	=>	\@To,
+								'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
+								'FROM'		=>	$config{'TechSupportEmail'},
+								'BODY'		=>	"
+IP: $$Host{ip}
+Description: $$Host{'description'}
+",
+								);
+					} # end if
 				} else {
 					$log->debug("Got content from host. Size: " . $response->content_type );
 				} # end if

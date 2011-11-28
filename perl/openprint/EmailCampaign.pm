@@ -221,13 +221,12 @@ sub send_email {
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
 	my @attachments = eval $self->{attachments};
 	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
-$openprint::log->debug("# of attachments: " . scalar @attachments );
 
 	# Setup the mail message
 	my %mail = (
-			SMTP => $openprint::config{'Mail Server'},
-			FROM => $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
+			SMTP	=> $openprint::config{'Mail Server'},
+			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
+			TO		=> sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
 			SUBJECT => $$self{'email_subject'}
 		);
 

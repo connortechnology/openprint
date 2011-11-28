@@ -558,6 +558,9 @@ my $master_time = gettimeofday();
 	} elsif ( $$specs{'txtFinalHeight'} and ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Flat Height must be greater than Final Height.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( ( ! $$specs{'txtSignatureType'} ) and ($$specs{'ProjectType'} ne 'PressSheetCombination' ) and ! ( $$specs{'txtFinalHeight'} and $$specs{'txtFinalWidth'} ) ) {
+		$$specs{'alert'} .= 'Please enter the finished dimensions.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
@@ -1009,9 +1012,9 @@ $openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
-foreach my $k ( keys %PlateCounts ) {
-$openprint::log->debug(" $k => $PlateCounts{$k}");
-} 
+#foreach my $k ( keys %PlateCounts ) {
+#$openprint::log->debug(" $k => $PlateCounts{$k}");
+#} 
 
 		$project{print_sides} = 1;
 		if ( ( @side_two_colours > 0 ) and ( @side_one_colours > 0 ) ) {
@@ -1081,6 +1084,7 @@ $openprint::log->debug("No spread layout for you!");
 				if ( $$specs{'PrintingTypes'} and ! sets::isin( $Press->specification('Printing Type'), $$specs{'PrintingTypes'} ) ) {
 					if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
 						$$specs{'alert'} .= 'Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} );
+						$openprint::log->warn( 'Press ' . $Press->strid() . ' Printing Type ('.$Press->specification('Printing Type') . ') is not in PrintingTypes  '. join(',', @{$$specs{'PrintingTypes'}} ) );
 					} # end if
 					next;
 				} # end if
@@ -1094,17 +1098,17 @@ $openprint::log->debug("No spread layout for you!");
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 			my $do_perfecting = 1;
 			if ( $Press->specification('Perfecting Press') ne 'Y' ) {
-#$openprint::log->debug("** This Press Can't Perfect - Missing \'Perfecting Press\' = Y equipment spec ***") if $debug;
+$openprint::log->debug("** This Press Can't Perfect - Missing \'Perfecting Press\' = Y equipment spec ***") if $debug;
 				$do_perfecting = 0;
 			} elsif ( @side_one_colours > ($Press->specification('Number of Colours')/2) or @side_two_colours > ($Press->specification('Number of Colours')/2) ) {
-#$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
+$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 				$do_perfecting = 0;
 			} elsif ( $project{print_sides} == 1 ) {
 				$do_perfecting = 0;
-#$openprint::log->debug("** One sided:  Perfect  ***") if $debug;
+$openprint::log->debug("** One sided:  Perfect  ***") if $debug;
 			} elsif ( $$specs{'txtSpecificStockCalliper'} > $Press->specification('Maximum Calliper Perfecting') ) {
 				$do_perfecting = 0;
-#$openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
+$openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
 			my $do_work_turn = $project{print_sides} == 2 ? 1 : 0;
 			if ( $do_work_turn ) {
@@ -1175,7 +1179,7 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
-					#$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug or 1;
+					$openprint::log->debug("Not consider paper cuz it's not the previous stock type " . $Paper->type() .' ' .$$specs{'PreviousStockType'} ) if $debug or 1;
 					next;
 				} # end if
 				my @imps;
@@ -1187,6 +1191,11 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 					if ( sets::isin( 'Sheet', \@feed ) ) {
 						if ( $MinimumWeight ) {
 							if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
+$openprint::log->debug("Stock < Minimum ROll Weight $$MinimumWeight{'value'} > " . $Paper->gsm() );
+		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
+			$$specs{'alert'} .= 'Press has a minimum Roll 2 Sheet weight of ' . $$MinimumWeight{'value'} . 'gsm. Your stock is ' . $Paper->gsm().'gsm<br/>';
+			last;
+		} # end if
 								next;
 							} # end if
 						} # end if

@@ -1,3 +1,4 @@
+<? if ( $$variable{'PurchaseOrder'}->can_edit() ) ?>
 <script type="text/javascript" src="/employee/purchase_order/edit.js"></script>
 <script type="text/javascript">
 <!--
@@ -282,3 +283,6 @@ function update_taxes( form ) {
 	</div><!--PO-->
 	<input type="hidden" name="btnFunction" />
 </form>
+<? else ( $$variable{'PurchaseOrder'}->can_edit() ) ?>
+You do not have rights to edit this PO
+<? endif ( $$variable{'PurchaseOrder'}->can_edit() ) ?>

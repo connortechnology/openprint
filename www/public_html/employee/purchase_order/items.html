@@ -24,24 +24,21 @@
 				<label>Types:</label>
 				<? echo (
 					my $html;
-					foreach my $type ( 'Other', 'Roll Stock','Sheet Stock' ) {
-						my $id = $type;
-						$id =~ s/\s//g;
-
-						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $id, $type, ssi::checked( sets::isin( $type, [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/items.html?types'} ) );
+					foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id, $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/items.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/items.html?types'} ) );
 					} # end foreach type
 					return $html;
 				) ?>
 			</li>
 			<li>
 				<label>Item Contains:</label>
-				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
+				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" value="<? echo ( $param{'item_contains'} ) ?>" />
 			</li>
 		</ul>
 		<p class="buttons">
 			<? echo ( join( '',
 				ssi::button( 'ShowResults', { 'onclick'=>'f1.submit();', 'text'=>'Show Results' } ),
-				ssi::button( 'Add', { 'href'=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
+				#ssi::button( 'Add', { 'href'=>'/employee/purchase_order/edit.html', 'text'=>'Add New' } ),
 				ssi::button( 'Reset', { 'onclick'=>'f1.reset();' } ),
 			); ) ?>
 		</p>

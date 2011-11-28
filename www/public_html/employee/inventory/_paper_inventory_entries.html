@@ -40,12 +40,12 @@
 						<td align="right"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>',
 						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
 						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
-						Number::Format::format_number($C->quantity()), $C->Paper()->units(), 
+( defined $C->quantity() ? Number::Format::format_number( $C->quantity() ) : 0 ), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
 						$C->quality(),
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-					$html .= '<td class="Price">'.openprint::Currency::format( $C->cost() ) . '/100lb</td>';
+					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
 					} # end if
 					$html .= '<td>';
 					$html .= ssi::writeButton( $log, $dbh, "label$$C{skid_id}", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );

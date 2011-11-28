@@ -38,4 +38,13 @@ img.stream {
 #Available li {
 	width: 100px;
 }
-	
+.RADIUS .username, .RADIUS .attribute, .RADIUS .value {
+	text-align: left;
+}
+
+table .description {
+	text-align: left;
+}
+table .action_type, table .note {
+	text-align: left;
+}

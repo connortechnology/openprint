@@ -1,10 +1,6 @@
 <? echo (
 	$r->content_type('text/javascript');
 	my $Item = new openprint::PurchaseOrder_Item( $param{'item_id'} );
-	my $desc = $Item->description();
-	$desc =~ s/'/&apos;/mg;
-	$desc =~ s/\r\n//g;
-	$desc =~ s/\n//g;
 
 	my $html;
 

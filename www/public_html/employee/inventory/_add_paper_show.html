@@ -79,7 +79,7 @@
 	</select>
 	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
 -->
-	<input type="text" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); if ( $weight =~ /PT/i ) { $weight = '' } $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
+	<input type="number" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); if ( $weight =~ /PT/i ) { $weight = '' } $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
 </p>
 <p>
 	<label for="txtQuality" onclick="toggleInput('Quality');">Quality:</label>
@@ -110,23 +110,23 @@
     </p>
 	<p>
         <label for="width">Size:</label>
-        <input type="text" id="width" name="width" value="<? echo ( $param{'width'} ? $param{'width'} : $$variable{'Paper'}->width(); ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
+        <input type="number" id="width" name="width" value="<? echo ( $param{'width'} ? $param{'width'} : $$variable{'Paper'}->width(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
         <span id="PaperHeight"<? echo ( ' style="display: none;"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?>>
         &nbsp;x&nbsp;
-        <input type="text" id="height" name="height" value="<? echo ( $param{'height'} ? $param{'height'} : $$variable{'Paper'}->height(); ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
+        <input type="number" id="height" name="height" value="<? echo ( $param{'height'} ? $param{'height'} : $$variable{'Paper'}->height(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);"/>
         </span>
     </p>
     <p>
         <label>Calliper:</label>
-        <input type="text" id="calliper" name="calliper" value="<? echo ( $param{calliper} ? $param{calliper} : $$variable{'Paper'}->calliper(); ) ?>" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" style="width: auto;" />PT
+        <input type="number" id="calliper" name="calliper" value="<? echo ( $param{calliper} ? $param{calliper} : $$variable{'Paper'}->calliper(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" />PT
     </p>
     <p>
         <label>GSM:</label>
-        <input type="text" id="gsm" name="gsm" value="<? echo ( $param{gsm} ? $param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" style="width: auto;" />
+        <input type="number" id="gsm" name="gsm" value="<? echo ( $param{gsm} ? $param{gsm} : $$variable{'Paper'}->gsm(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" />
     </p>
     <p id="MWeight" <? echo ( 'style="display:none;"' if $param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll' ) ?> >
         <label>MWeight:</label>
-        <input type="text" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" style="width: auto;" />M
+        <input type="number" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" />M
     </p>
 	<p>
 		<label for="Owner">Owner:</label>
@@ -136,15 +136,15 @@
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>
-		<input type="text" id="Quantity" name="Quantity" size="10" value="<? echo ( $param{'Quantity'} ? $param{'Quantity'} : $$variable{'Skid'}->contents( $$variable{'Paper'} ); ) ?>" style="width: auto;" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}" />
+		<input type="number" id="Quantity" name="Quantity" value="<? echo ( $param{'Quantity'} ? $param{'Quantity'} : $$variable{'Skid'}->contents( $$variable{'Paper'} ); ) ?>" onkeyup="if(get_rdb_value(this.form.type) == 'Roll' ) { $('Units').innerHTML='lbs';$('KgDIV').show();convert_lbs_to_kg( this, $('Kg') ); } else { $('Units').innerHTML='sheets';$('KgDIV').hide();}" />
 		<span id="Units"><? echo ( ($param{type} eq 'Roll' or $$variable{'Paper'}->type() eq 'Roll') ? 'lbs' : 'sheets' ) ?></span>
 		<span id="KgDIV" <? echo ( ($param{type} eq 'Sheet' or $$variable{'Paper'}->type() eq 'Sheet') ? 'style="display:none;"' : '' ) ?>>
-			<input type="text" id="Kg" name="Kg" value="<? echo ( $param{'Kg'} ? $param{'Kg'} : int($$variable{'Skid'}->contents( $$variable{'Paper'} )/2.2); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');convert_kg_to_lbs( this, $('Quantity') );" size="10" style="width:auto;" />kg
+			<input type="number" id="Kg" name="Kg" value="<? echo ( $param{'Kg'} ? $param{'Kg'} : int($$variable{'Skid'}->contents( $$variable{'Paper'} )/2.2); ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');convert_kg_to_lbs( this, $('Quantity') );" />kg
 		</span>
 	</p>
     <p>
         <label>FSC Code:</label>
-        <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $param{'fsc_code'} ? $param{'fsc_code'} : $$variable{'Paper'}->fsc_code(); ) ?>" size="13"  style="width: auto;" />
+        <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $param{'fsc_code'} ? $param{'fsc_code'} : $$variable{'Paper'}->fsc_code(); ) ?>" />
     </p>
 <br/>
 <? eval ( $session{'/employee/inventory/skid_details.html?ShowAddPaper'} = 1; ) ?>

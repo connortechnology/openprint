@@ -38,7 +38,7 @@ Please select a PAR to view/edit.<br>
 	<fieldset class="filters"><legend>Choose PAR</legend>
 		<p>
 			<label for="par_id">PAR ID #</label>
-			<input type="text" id="par_id" name="par_id" size="10" onkeypress="return input_handler( this, event);"/>
+			<input type="number" id="par_id" name="par_id" onkeypress="return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -66,8 +66,8 @@ Please select a PAR to view/edit.<br>
 			<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartYears?></select>
 			<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><option value="">select</option><?StartMonths?></select>
 			<select name="StartDay"><option value="">select</option><?StartDays?></select>
-			to 
 			</span>
+			to 
 			<span class="DateSelector">
 			<select name="EndYear" onchange="setDaysDropDown(this.value,this.form.EndMonth.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndYears?></select>
 			<select name="EndMonth" onchange="setDaysDropDown(this.form.EndYear.value,this.value,this.form.EndDay,this.form.EndDay.value);"><option value="">select</option><?EndMonths?></select>

@@ -65,6 +65,9 @@ sub registration {
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $openprint::param{'email'} );
 	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
+	if ( my $reason = openprint::login::check_password( $openprint::param{'password'} ) ) {
+		$error .= "Password not good enough.  $reason<br/>";
+	} # end if
 	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		# Remove spaces, because some people want to put spaces between the characters, etc.
 		$openprint::param{'Captcha'} =~ s/\s//g;
@@ -354,7 +357,14 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = "";
-		$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+		if ( $param{'password'} ne $User->password() ) {
+			if ( ! $param{'verifypassword'} ) {
+				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{'password'};
+			} else {
+				$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+			} # end if
+		} # end if
 		$error .= "First Name cannot be blank.<br/>" if ! $param{'firstname'};
 		$error .= "Last Name cannot be blank.<br/>" if ! $param{'lastname'};
 		$error .= "Salutation cannot be blank.<br/>" if ! $param{'salutation'};
@@ -373,7 +383,14 @@ sub user_profile {
 			$User->company_id( $session{company_id} ) if ! $User->company_id();
 		} # end if
 		my $oldpassword = $User->password();
-		$param{'change_password'} = 'N' if $param{'password'};
+		if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+			# Are changing passwords
+			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+			} # end if
+			$param{'change_password'} = 'N' if $param{'password'};
+			$param{'password_changed_on'} = 'NOW()';
+		} # end if
 		$variable{'error'} .= $User->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
@@ -413,37 +430,7 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-		if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
-			$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-
-		if ( $openprint::param{'txtNewPassword'} eq '' ) {
-			$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-
-		my $User = new openprint::User( $openprint::session{'user_id'} );
-
-		if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
-			$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-		
-		if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
-			$User->password( $openprint::param{'txtNewPassword'} );
-			$User->change_password( 'N' );
-			$$variable{'error'} .= $User->save();
-		} else {
-			$$variable{'error'} = 'You entered the wrong old password.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
+	openprint::login::change_password();
 } # sub change_password
 
 sub login {
@@ -488,10 +475,8 @@ sub login {
 } # end sub login
 
 sub logout {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	openprint::logs::insertLogRecord('3',);
-	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id'};
+	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id','Destination'};
 	#openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
 	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
 	

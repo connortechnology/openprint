@@ -141,11 +141,7 @@ width: 196px;
 		text-align: left;
 	}
 	.Forms {
-		float: left;
-		display: inline;
-        border: 1px outset gray;
         width: 65px;
-        text-align: center;
 	}
 	.DueDate {
 		font-weight: bold;
@@ -154,39 +150,39 @@ width: 196px;
 		display: inline;
 	}
 	.Impressions {
-		float: left;
 		min-width: 70px;
-        border: 1px outset gray;
-        text-align: center;
 		padding:0 4px 0 4px;
 	}
 	.RunTime {
-		float: left;
-        display: inline;
-        border: 1px outset gray;
         width: 85px;
-        text-align: center;
 	}
 	.StockVerified {
-		float: left;
-        display: inline;
-        border: 1px outset gray;
         width: 80px;
-        text-align: center;
 	}
+	.StockVerified,
+	.Forms,
+	.Impressions,
+	.RunTime,
 	.StartTime {
 		float: left;
         display: inline;
         border: 1px outset gray;
-        width: 80px;
         text-align: center;
-        padding:0;
+	}
+	.StartTime {
+        width: 80px;
 	}
 .StartTime img {
     margin:0;
     padding:0;
     height: 11px;
     border: none;
+	vertical-align: middle;
+}
+@media print {
+	.StartTime img {
+	height: 10px;
+	}
 }
 	.Buttons {
 		float: right;

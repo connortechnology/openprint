@@ -12,6 +12,7 @@ use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transform
 
 require openprint::Manifest;
 require openprint::Paper;
+require openprint::PurchaseOrder_Content;
 
 $debug = 1;
 
@@ -50,30 +51,41 @@ sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
 } # end sub Manifest
 
-sub cost_from_po {
+sub PurchaseOrder_Content {
 	my $Type = $_[0];
 	my $PO = new openprint::PurchaseOrder( $Type->po_id() );
 	my $PO_Stock;
 	my $Paper = $Type->Paper();
 	foreach my $POC ( $PO->Contents() ) {
-		$log->debug($POC->description());
+		$log->debug('POC desc: ' . $POC->item());
 		next if $POC->type() ne $Paper->type().' Stock';
-		my ( $weight ) = $POC->description() =~ /(\d+)lb/i;
-		if ( $weight and $Paper->basis_weight() and ( $Paper->basis_weight() != $weight*2 ) ) {
-			$log->debug("Wrong weight: $weight != " . $Paper->basis_weight() );
+		my ( $weight ) = $POC->item() =~ /(\d+)lb/i;
+		if ( $weight and $Paper->basis_mweight() and ( $Paper->basis_mweight() != $weight*2 ) ) {
+			$log->debug("Wrong weight: $weight != " . $Paper->basis_mweight() );
 			next;
+		} else {
+			$log->debug("Right weight: $weight == " . $Paper->basis_mweight() );
 		} # end if
-		my ( $width ) = $POC->description() =~ /([\.\d]+)in/i;
+		my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 		if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {
 			$log->debug("Wrong width: $width != " . $Paper->width() );
+			next;
+		} else {
+			$log->debug("Right width: $width == " . $Paper->width() );
+		} # end if
+		if ( $Paper->fsc_code() and ( $POC->item() !~ /^FSC/ ) ) {
+			$log->debug("FSC Mismatch");
+			next;
+		} elsif ( (!$Paper->fsc_code()) and $POC->item() =~ /^FSC/ ) {
+			$log->debug("FSC Mismatch");
 			next;
 		} # end if
 		$PO_Stock = $POC;
 		last;
 	} # end foreach POC
-	return if ! $PO_Stock;
-	return $PO_Stock->price();
-} # end if
+	$PO_Stock = new openprint::PurchaseOrder_Content() if ! $PO_Stock;
+	return $PO_Stock;
+} # end sub PurchaseOrder_Content
 
 1;
 __END__

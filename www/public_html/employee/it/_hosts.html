@@ -1,27 +1,92 @@
 <? eval (
-	if ( $param{'mac'} ) {
-		@{$$variable{'Hosts'}} = openprint::Host->find('mac_any'=>$param{'mac'}, 'order'=>'lower(hostname)');
-	} elsif ( $param{'ip'} ) {
-		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=> $param{'ip'}, 'order'=>'lower(hostname)');
-	} elsif ( $param{'hostname'} ) {
-		@{$$variable{'Hosts'}} = openprint::Host->find( 
-			( 'hostname_ilike' => ( $param{'hostname'} =~ /%/ ? $param{'hostname'} : $param{'hostname'}.'%' ) ),
-			'order'=>'lower(hostname)'
-			);
+	my @Hosts;
+	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} !~ /%/ ) {
+		@Hosts = openprint::Host->find(
+			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+			'mac_any'=> $session{'/employee/it/hosts.html?mac'},
+			'limit'	=>	10,
+		);
 	} else {
-		@{$$variable{'Hosts'}} = openprint::Host->find(
-			'order' => $param{'order'} ? $param{'order'} : 'lower(hostname)',
-			( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
-			( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
-			( $param{'monitored'} ne '' ? ( 'monitored'=>$param{'monitored'} ) : () ),
-			( $param{'online'} ne '' ? ( 'online'=>$param{'online'} ) : () ),
-			( $param{'has_hostname'} ne '' ? ( 'hostname is null' => ! $param{'has_hostname'} ) : () ),
-			ssi::date_filter( 'created_on_start', 'created_on >=' ),
-			ssi::date_filter( 'created_on_end', 'created_on <=' ),
-			ssi::date_filter( 'updated_on_start', 'updated_on >=' ),
-			ssi::date_filter( 'updated_on_end', 'updated_on <=' ),
+		$session{'/employee/it/hosts.html?order'} = 'lower(hostname)' if ! $session{'/employee/it/hosts.html?order'};
+		@Hosts = openprint::Host->find(
+			'order' => $session{'/employee/it/hosts.html?order'} ? $session{'/employee/it/hosts.html?order'} : 'lower(hostname)',
+			( $session{'/employee/it/hosts.html?ip'} ? ( ( $session{'/employee/it/hosts.html?ip'} =~ /\// ) ? ( 'ip <<=' => $session{'/employee/it/hosts.html?ip'} ) : ( 'ip'=> $session{'/employee/it/hosts.html?ip'} ) ) : () ),
+			( $session{'/employee/it/hosts.html?hostname'} ? ( 'hostname_ilike' => ( $session{'/employee/it/hosts.html?hostname'} =~ /%/ ? $session{'/employee/it/hosts.html?hostname'} : $session{'/employee/it/hosts.html?hostname'}.'%' ) ) : () ),
+			( $session{'/employee/it/hosts.html?blacklisted'} ne '' ? ( 'blacklist'=>$session{'/employee/it/hosts.html?blacklisted'} ) : () ),
+			( $session{'/employee/it/hosts.html?whitelisted'} ne '' ? ( 'whitelist'=>$session{'/employee/it/hosts.html?whitelisted'} ) : () ),
+			( $session{'/employee/it/hosts.html?monitored'} ne '' ? ( 'monitored'=>$session{'/employee/it/hosts.html?monitored'} ) : () ),
+			( $session{'/employee/it/hosts.html?online'} ne '' ? ( 'online'=>$session{'/employee/it/hosts.html?online'} ) : () ),
+			( $session{'/employee/it/hosts.html?has_hostname'} ne '' ? ( 'hostname is null' => ! $session{'/employee/it/hosts.html?has_hostname'} ) : () ),
+			ssi::date_filter( '/employee/it/hosts.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/employee/it/hosts.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/employee/it/hosts.html?updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( '/employee/it/hosts.html?updated_on_end', 'updated_on <=' ),
+			'limit'	=>	1000,
 			);
-	} 
+	} # end if
+
+	my $mac_search;
+	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
+		$mac_search = $session{'/employee/it/hosts.html?mac'};
+		$mac_search =~ s/%/\.\*/g;
+$log->debug("Enable mac search for $mac_search");
+	} # end $mac_search
+
+	@{$$variable{'Hosts'}} = ();
+	foreach my $Host ( @Hosts ) {
+		
+		
+		if ( $mac_search ) {
+			next if ! $Host->mac();
+			my $next = 1;
+			
+			foreach my $mac ( @{$Host->mac()} ) {
+				$mac =~ s/://g;
+				if ( $mac =~ /$mac_search/ ) {
+					$next = 0;
+					last;
+				} # end if
+			} # end foreach mac
+			next if $next;
+		} # end if
+
+		if ( $session{'/employee/it/hosts.html?radius_auth'} ne '' ) {
+			if ( $session{'/employee/it/hosts.html?radius_auth'} eq '1' ) {
+				my $show = 0;
+				next if ! $Host->mac();
+				foreach my $mac ( @{$Host->mac()} ) {
+					if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+						$mac = "$1-$2-$3-$4-$5-$6";
+					} # end if
+					$mac = uc $mac;
+					
+					if ( openprint::RADIUS_Check->find_one( 'username'=>$mac ) ) {
+						$show = 1;
+						last;
+					} # end if
+				} # end foreach mac
+				next if ! $show;
+			} elsif ( $session{'/employee/it/hosts.html?radius_auth'} eq '0' ) {
+				my $show = 1;
+				if ( $Host->mac() ) {
+					foreach my $mac ( @{$Host->mac()} ) {
+						if ( $mac =~ /^([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})[\:\-]?([[:xdigit:]]{2})$/ ) {
+							$mac = "$1-$2-$3-$4-$5-$6";
+						} # end if
+						$mac = uc $mac;
+						if ( openprint::RADIUS_Check->find_one( 'username'=>$mac ) ) {
+							$show = 0;
+							last;
+						} # end if
+					} # end foreach mac
+				} # end if
+				next if ! $show;
+			} else {
+				$log->error("Unknown value of " . $session{'/employee/it/hosts.html?radius_auth'} );
+			} # end if
+		} # end if
+		push @{$$variable{'Hosts'}}, $Host;
+	} # end foreach Host
 ) ?>
 <table class="List">
 	<thead>
@@ -55,6 +120,7 @@
 						( $Host->blacklist() ? 'blacklisted' : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitored() ? 'monitored' : () ),
+						( ( defined $Host->online() and ! $Host->online() ) ? 'offline' : () ),
 					) ),
 					$Host->description(),
 $rowclass,
@@ -67,5 +133,5 @@ $rowclass = $rowclass ? '' : ' class="colRow"';
 	</tbody>
 </table>
 <p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f2.btnFunction.value='Delete';new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: f2.serialize() } );", '', 'Delete Checked' ); ) ?>
+<? echo ( ssi::button( 'delete', { 'onclick'=> "new Ajax.Updater( 'Results','/employee/it/_hosts.html?action=Delete', { parameters: { host_id: \$F('host_id') } } );", 'text'=>'Delete Checked' } ); ) ?>
 </p>

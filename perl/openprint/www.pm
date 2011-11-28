@@ -158,7 +158,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
 			##$log->warn("No template!");
-		$log->warn($variable{'PageContent'});
+		#$log->warn($variable{'PageContent'});
 			$r->print( $variable{'PageContent'} );
 		} # end if
 	} # end if
@@ -230,8 +230,6 @@ $openprint::log->debug("Getfile");
 				openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'A' );
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
-			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
-			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
 		} elsif ( $first ) {
 #$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
@@ -423,7 +421,6 @@ $log->debug("Dset: $variable{'Destination'}");
 				@variable{'ServiceTypeID','ServiceTypeName'} = ($variable{'ServiceType'}->name(), $variable{'ServiceType'}->description() ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-#, sql::execute( $log, $dbh, q{SELECT currency_id from tbl_Projects where index=?}, $variable{'ProjectIndex'} ) );
 				my $project_index = $variable{'ProjectIndex'};
 				my $service_index = $variable{'ServiceIndex'};
 

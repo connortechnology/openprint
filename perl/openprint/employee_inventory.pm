@@ -175,15 +175,16 @@ sub inventory_report {
 
 if ( 0 ) {
 	my @papers = openprint::Paper::find(
-			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
-			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
+			( defined $param{'Owner'} ? ( 'owner_id'	=> $param{'Owner'} ) : () ),
+			( defined $param{'Manufacturer'} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'} ) : ( ) ),
 			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
 			'finish_id' =>	( defined $param{'Finish'} ? $param{'Finish'} : undef ),
 			'colour_id' =>	( defined $param{'Colour'} ? $param{'Colour'} : undef ),
 			'weight_id' =>	( defined $param{'Weight'} ? $param{'Weight'} : undef ),
 			'type'		=>	$param{'Type'},
-			'created_on_start'  => defined $param{'StartYear'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
-			'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
+            ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
+            ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
+
 			'allocated_to_docket'   => $param{'Docket'},
 			'fsc_code'  =>  $param{'fsc_code'},
 			'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
@@ -248,17 +249,18 @@ if ( 0 ) {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
-	next if ! $Skid->rfidtag_id();
-	next if ! $Skid->RFIDTag()->id();
-	foreach my $C ( $Skid->Contents() ) {
-		next if ! $C;
-		my $Paper = $C->Paper();
-my $weight = 0;
+	foreach my $Skid ( openprint::Skid::find(
+            ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
+            ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
+			'quantity_>='=>1,'type'=>'Roll') ) {
+		foreach my $C ( $Skid->Contents() ) {
+			next if ! $C;
+			my $Paper = $C->Paper();
+			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
 				$weight = $C->quantity();
 			} else {
-				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
+				$weight += $Paper->sheet_weight() * $C->quantity();
 			} # end if
 			$total_weight += $weight;
 			$count += 1;
@@ -284,10 +286,9 @@ my $weight = 0;
 					$weight,
 					$Skid->updated_on(),
 					);
-	}
-}
+		} # end foreach C
+	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	#my $date = '2011-06-01 00:01';
 	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
 } # end sub paper_inventory
@@ -395,10 +396,19 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		} # end foreach
 	} # end if
 
+	_paper_results();
+    $session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
+
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' ) );
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
+		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
+		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' )
+			);
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _paper_results
 
@@ -696,20 +706,18 @@ sub skid_details {
 			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
 			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
-				$param{'skid_id'} = $skid_ids[0];
+				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} # end if
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	$variable{'skid_id'} = $param{'skid_id'};
-	$variable{'rfidtag_id'} = $param{'rfidtag_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
 	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
@@ -750,8 +758,8 @@ sub skid_details {
 				return;
 			} # end if
 
-			foreach my $rfidtag_id ( misc::trim( @rfidtags ) ) {
-				$log->debug( $rfidtag_id );
+			foreach my $rfidtag_id ( @rfidtags ) {
+				#$log->debug( $rfidtag_id );
 				if ( $_ = openprint::RFIDTag::is_invalid_id( $rfidtag_id ) ) {
 					$variable{'error'} .= "RFIDTAG $rfidtag_id is invalid: $_.<br/>";
 					next;
@@ -766,6 +774,7 @@ sub skid_details {
 				} # end if
 			} # end foreach rfidtag_id
 		} # end if
+		return if $variable{'error'};
 
 		if ( $param{'skid_quantity'} ) {
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
@@ -1134,7 +1143,7 @@ sub rfidtags {
 			$variable{'error'} .= $RFIDTag->save({'valid'=>1});
 		} # end foreach rfidtag_id
 	} else {
-		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid', 'location_id' );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_start', 0 );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_end', '' );
 		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_start', '' );
@@ -1149,7 +1158,7 @@ sub rfidtags {
 } # end sub rfidtags
 
 sub _rfidtags_results {
-	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid','location_id' );
 } # end sub _rfidtags_results
 
 sub rfidtag_details {
@@ -1332,14 +1341,6 @@ sub manifest {
 						$Project = $Projects[0];
 					} # end if
 				} # end if
-				if ( $param{'po_id-'.$Type->id()} ) {
-					my $PO = new openprint::PurchaseOrder( $param{'po_id-'.$Type->id()} );
-					if ( $PO->id() ) {
-						$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()});
-					} else {
-						$variable{'error'} .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
-					} # end if
-				} # end if po_id
 
 				# Save any new entries that might have been entered but not added.
 				if ( $param{"qty_lbs-$$Type{id}-"} ) {
@@ -1369,7 +1370,8 @@ sub manifest {
 								'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$Type{id}-"}),
 								} );
 					} # end if
-				} # end if
+				} # end if New Quantity
+
 				my $total_qty = 0;
 				# Save data for the rest of the contents
 				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
@@ -1394,7 +1396,7 @@ sub manifest {
 							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
-				} # end foreach tag_id
+				} # end foreach Manifest_Content for this type
 
 if ( 0 ) {
 				if ( $total_qty and $Project and ( $param{"allocate-$$Type{id}"} ne 'Specific' ) ) {
@@ -1402,6 +1404,23 @@ if ( 0 ) {
 					$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $total_qty, ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
 				} # end if
 } # end if
+				if ( $param{'po_id-'.$Type->id()} ) {
+					my $PO = new openprint::PurchaseOrder( $param{'po_id-'.$Type->id()} );
+					if ( $PO->id() ) {
+						$variable{'error'} .= $PO->save({'manifest_id'=>$Manifest->id()}) if $PO->manifest_id() != $Manifest->id();;
+
+						# Run through, and warn if the PO is not satisfied
+						my $PO_Content = $Type->PurchaseOrder_Content();
+						if ( $PO_Content->qty() > $total_qty ) {
+							$variable{'warning'} .= 'There is not enough stock to satisfy PO ' . $PO->id().'<br/>
+								Manifest has ' . $total_qty . $Type->Paper()->units() . ' of '. $Paper->to_string()	.'<br/>
+								PO wants ' . $PO_Content->qty() . $PO_Content->units() . ' of ' . $PO_Content->item().'<br/>';
+						} # end if	
+					} else {
+						$variable{'error'} .= 'Purchase Order ' . $param{'po_id-'.$Type->id()} . ' was not found in the system.<br/>';
+					} # end if
+				} # end if po_id
+
 			} # end foreach Type
 		} # end if has Types
 		if ( ! $variable{'error'} ) {
@@ -1474,13 +1493,17 @@ sub manifests {
 
 		} # end foreach manifest_id
 	} # end if
-	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	_manifests();
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 } # end sub manifests
 
 sub _manifests {
-	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	ssi::save_params( '/employee/inventory/manifests.html', ( 
+				'received_on_start_year','received_on_start_month','received_on_start_day',
+				'received_on_end_year','received_on_end_month','received_on_end_day',
+				'supplier_id', 'over_delivery', 'under_delivery',
+				) );
 } # end sub _manifests
 
 sub inventory_log {
@@ -1712,5 +1735,13 @@ sub _packingslips {
 				) );
 } # end sub _packingslips
 
+sub _rfidscanners_results {
+} # end sub _rfidscanners_results
+
+sub _map {
+} # end sub _map
+
+sub _docket_label {
+} # end sub _docket_label
 1;
 __END__

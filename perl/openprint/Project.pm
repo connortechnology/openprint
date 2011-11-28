@@ -405,6 +405,7 @@ sub update_status {
 									$changed = 1;
 								} # end if
 							} # end foreach
+
 						} # end if
 					} elsif ( $$self{'status'} eq 'Proofs Out' ) {
 						if ( $services{'Proofs'} ) {
@@ -434,7 +435,11 @@ sub update_status {
 				} # end if
 			} # end if
 		} else { # there isn't any ordered services
-			if ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
+			if ( $services{'CustomerPickUp'} ) {
+				if ( openprint::service::status( $$self{'id'}, $services{'CustomerPickUp'}[0] ) eq 'Complete' ) {
+					$new_status = 'Picked Up';
+				} # end if
+			} elsif ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
 				if ( $$self{'status'} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
@@ -511,6 +516,13 @@ sub find {
 		if ( $params{'predefined'} ne '' ) {
 			$sql .= ' AND predefined=?';
 			push @values, $params{'predefined'};
+		} # end if
+	} # end if
+	if ( exists $params{'quote_id exists'} ) {
+		if ( $params{'quote_id exists'} ) {
+		$sql .= ' AND EXISTS (SELECT quoteindex FROM tbl_quote_details where ProjectIndex=tbl_projects.index)';
+		} else {
+		$sql .= ' AND NOT EXISTS (SELECT quoteindex FROM tbl_quote_details where ProjectIndex=tbl_projects.index)';
 		} # end if
 	} # end if
 

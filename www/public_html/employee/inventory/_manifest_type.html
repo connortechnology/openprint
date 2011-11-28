@@ -33,12 +33,15 @@
 				$param{'fsc_code-'.$$variable{'type_id'}} = $Paper->fsc_code();
 			} # end if
 		} # end if
+		$$variable{'PO_Content'} = $$variable{'Type'}->PurchaseOrder_Content();
+
+		$$variable{'Owners'} = openprint::Company->dropdown() if ! $$variable{'Owners'};
 	) ?>
 	<div class="leftColumn">
 		<p id="Owner-<?type_id?>_div">
 			<label for="Owner-<?type_id?>">Owner:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
-			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( openprint::Company::get_dropdown( $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
+			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( ssi::make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p id="Manufacturer-<?type_id?>_div">
 			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer:</label>
@@ -156,6 +159,11 @@
 			<label>Docket:</label>
 			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
 		</p>
+		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
+		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
+			<!--#include virtual="_manifest_purchase_orders.html"-->
+		<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
+		</div>
 		<p>
 			<label>Purchase Order:</label>
 			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
@@ -164,15 +172,14 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost from PO (/CWT):</label>
-			<? echo ( openprint::Currency::format( $$variable{'Type'}->cost_from_po() ) ) ?>
+			<? echo ( openprint::Currency::format( $$variable{'PO_Content'}->price() ) ) ?>
+		</p>
+		<p>
+			<label>Quantity from PO:</label>
+			<? echo ( Number::Format::format_number( defined $$variable{'PO_Content'}->qty() ? $$variable{'PO_Content'}->qty() : 0 ) . $$variable{'PO_Content'}->units() ) ?>
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<? endif ( $$variable{'Type'}->po_id() ) ?>
-		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
-	<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
-			<!--#include virtual="_manifest_purchase_orders.html"-->
-	<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
-		</div>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>

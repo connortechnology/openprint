@@ -26,7 +26,7 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 my $GST_Tax = openprint::Tax->find_one('state'=>undef,'country'=>undef,'rate'=>5);
 my $PST_Tax = openprint::Tax->find_one('state'=>undef,'country'=>undef,'rate'=>8);
 	
-foreach my $PO ( openprint::PurchaseOrder::find('created_on_end'=>'2010-06-30') ) {
+foreach my $PO ( openprint::PurchaseOrder->find('created_on_end'=>'2010-06-30') ) {
 	if ( ! openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$PO->id() ) ) {
 		my $GST = new openprint::PurchaseOrder_Tax();
 		$GST->save({

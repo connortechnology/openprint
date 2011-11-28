@@ -302,7 +302,7 @@ fieldset p.buttons {
 fieldset p input {
 	width: expression(this.type=="text" || this.type=="password" ?'275px':'auto');
 }
-fieldset p input[type="text"], fieldset p input[type="password"], fieldset p input[type="number"]  {
+fieldset p input[type="text"], fieldset p input[type="password"], fieldset p input[type="number"], fieldset p input[type="email"]  {
 	width: 60%;
 	vertical-align: top;
 }
@@ -437,9 +437,9 @@ fieldset.filters p select {
 }
 
 @media print {
-.unprintable {
-display: none;
-}
+	.unprintable {
+		display: none;
+	}
 }
 hr {
         width: 100%;
@@ -514,7 +514,7 @@ td.Date, th.Date {
 	width: 120px;
 	text-align: right;
 }
-td.DateTime, th.DateTime {
+table .DateTime {
 	width: 150px;
 	text-align: left;
 }
@@ -558,7 +558,7 @@ td.Price, th.Price {
 	width: 100px;
 	text-align: right;
 }
-td.Status, th.Status {
+table .Status {
 	width: 100px;
 	text-align: right;
 	padding-right: 4px;
@@ -691,4 +691,75 @@ td p label {
 }
 .thumbnail {
 	width: 48px;
+}
+.ServerInfo ul {
+	color:#E3BF28; 
+	font-weight: bold;
+	background-color: #22275e;
+	font-size: 16px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.ServerInfo li {
+	list-style: none;
+	margin: 0;
+	padding: 4px 4px 4px 70px;
+	text-align: right;
+}
+.ServerInfo label {
+	margin: 0 0 0 -60px;
+	font-weight: bold;
+	width: 55px;
+	text-align: left;
+	float: left;
+}
+.ServerInfo li:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+#DidYouKnow {
+	margin: 0;
+	padding: 0;
+	min-height: 155px;
+	width: 190px;
+}
+#DidYouKnowHeader {
+	color:#E3BF28; 
+	font-weight: bold;
+	padding: 10px 10px 10px 15px;
+	background-color: #22275e;
+	font-size: 16px;
+}
+#DidYouKnowText {
+	padding: 15px;
+	background-color: #22275e;
+	color: white;
+	background-image: url(/images/did_you_know_background.png);
+	background-position: top;
+	background-repeat: repeat-x;
+	font-size: 12px;
+	min-height: 88px;
+}
+#QuickLogin {
+	margin-bottom: 10px;
+	margin-top: 10px;
+}
+#QuickLogin {
+}
+#QuickLogin fieldset {
+	border: none;
+	padding: 5px;
+}
+#QuickLogin fieldset legend {
+	margin-left: 0px;
+	padding: 0px;
+	font-size: 16px;
+}
+#QuickLogin fieldset input {
+	width: 90%;
 }

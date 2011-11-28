@@ -1,0 +1,4 @@
+	<select name="status" onchange="window.location='/employee/project/view.html?action=Change%20Status&amp;project_id=<? echo ( $$variable{'Project'}->id() ) ?>&amp;service_id=<? echo ( $$variable{'Service'}->service_id() ) ?>&amp;status='+this.getValue();;">
+		<? echo ( 
+			ssi::make_drop_down( [ map { $_, $_ } ( 'Approved', 'Complete', 'Ordered', 'Waiting For Customer Approval' ) ], $$variable{'Service'}->status() ); ) ?>
+	</select>

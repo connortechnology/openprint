@@ -4,27 +4,21 @@
 </div>
 <style type="text/css">
 <? eval ( 
-	$$variable{'QTYS'} = 0;
-
-	foreach my $qty_index ( 1 .. 3 ) {
-		if ( $$variable{'Project'}{'quantity'.$qty_index} ) {
-			$$variable{'QTYS'} += 1;
-		} # end if
-	} # end foreach
+	$$variable{'QTYS'} = $$variable{'Project'}->ordered_quantity() ? 1 : scalar  $$variable{'Project'}->quantity_indexes();
 ) ?>
 
 div.ProjectSummary div.row span.label {
-    width: 40%;
+    width: 35%;
 }
 div.ProjectSummary div.row span.value {
 <? if ( $$variable{'QTYS'} == 1 ) ?>
-    width: 57%;
+    width: 60%;
 <? endif ( $$variable{'QTYS'} == 1 ) ?>
 <? if ( $$variable{'QTYS'} == 2 ) ?>
-    width: 24%;
+    width: 30%;
 <? endif ( $$variable{'QTYS'} == 2 ) ?>
 <? if ( $$variable{'QTYS'} == 3 ) ?>
-    width: 18%;
+    width: 20%;
 <? endif ( $$variable{'QTYS'} == 3 ) ?>
 }
 </style>
@@ -51,7 +45,7 @@ There is no current project.
 		
 		<fieldset><legend><?ServiceTypeName?> <?txtServiceDescription?></legend>
 			<? if ( $$variable{'prod_url'} ) ?>
-			<!--#include virtual="/main/summ/<?prod_url?>"--><br/>
+			<!--#include virtual="/main/summ/<?prod_url?>"-->
 			<? else ( $$variable{'prod_url'} ) ?>
 			<? endif ( $$variable{'prod_url'} ) ?>
 		</fieldset>

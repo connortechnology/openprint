@@ -363,7 +363,7 @@ sub stock {
 				$$self{'stock'} .= ' not allocated.';
 			} # end if
 			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find('docket'=>$Project->docket()) ) ) {
-				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
@@ -492,6 +492,7 @@ sub get_li {
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
+			$html .= ssi::button( 'PO'.$$self{'id'}, { 'target'=>'_blank', 'href'=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", 'text'=>'PO' } );
 		} # end if
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
 		if ( $$self{'project_id'} ) {

@@ -45,12 +45,12 @@
 	<table class="List sortable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
-			<th align="left" width="100">Manifest #</th>
-			<th align="left" width="60">PO ID</th>
-			<th align="left" width="60">Docket</th>
-			<th align="left" width="120">Vendor</th>
+			<th class="manifest_num">Manifest #</th>
+			<th class="po_id">PO ID</th>
+			<th class="Docket">Docket</th>
+			<th class="Company">Vendor</th>
 			<th class="Date">Received On</th>
-			<th align="left">Contents</th>
+			<th class="contents">Contents</th>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<th class="Price">Value</th>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
@@ -61,22 +61,48 @@
 			my $value_total;
 			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
 
-				$html .= '<tr>';
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, $$Manifest{'name'} );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->po_ids() ) );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->dockets() ) );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, $Manifest->Vendor()->name() );
-				$html .= sprintf( '<td class="Date"><a href="manifest.html?manifest_id=%s">%s&nbsp;</a></td>', $$Manifest{'id'}, Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ) );
+				if ( $session{'/employee/inventory/manifests.html?over_delivery'} or $session{'/employee/inventory/manifests.html?under_delivery'} ) {
+					my $has_po = 0;
+					# First, see if any have po_ids, skip the ones that dont
+					foreach my $Type ( $Manifest->Types() ) {
+						if ( $Type->po_id() ) {
+							$has_po = 1 ;
+							last;
+						}  # end if
+					} # end foreach
+					next if ! $has_po;
 
-				$html .= '<td>';
+					if ( $session{'/employee/inventory/manifests.html?over_delivery'} ) {
+						my $over = 0;
+						foreach my $Type ( $Manifest->Types() ) {
+							my $PO_Content = $Type->PurchaseOrder_Content();
+							if ( $PO_Content ) {
+								my $quantity = 0;
+								my $min_roll_size;
+
+								foreach my $C ( $Manifest->Contents() ) {
+									next if $C->type_id() != $Type->id();
+									$quantity += $C->quantity();
+									$min_roll_size = $C->quantity() if (!defined $min_roll_size) or ($min_roll_size < $C->quantity());
+								} # end foreach Content
+
+	$openprint::log->debug("Min size: " . $min_roll_size . ' quantity: ' . $quantity . ' PO QTY: ' . $PO_Content->qty());
+								if ( ($PO_Content->qty() + $min_roll_size) < $quantity ) {
+									$over = 1;
+									last;
+								} # end if
+							} # end if
+						} # end foreach
+						next unless $over;
+					} # end if
+				} # end if
 
 				my %manifest_skids;
 				my %manifest_weight;
 				my %real_skids;
 				my %real_weight;
 
-				my $value;
+				my $value = 0;
 
 				foreach my $MC ( $Manifest->Contents() ) {
 					$manifest_skids{$MC->Type()->paper_id()} += 1;
@@ -90,13 +116,27 @@
 					$value += $MC->value();	
 				} # end foreach MC
 
+				$html .= sprintf(q`<tr>
+				<td class="checkbox"><input type="checkbox" name="manifests" value="%1$s"/></td>
+				<td class="manifest_num"><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>
+				<td class="po_id"><a href="manifest.html?manifest_id=%1$s">%3$s</a></td>
+				<td class="Docket"><a href="manifest.html?manifest_id=%1$s">%4$s</a></td>
+				<td class="Company"><a href="manifest.html?manifest_id=%1$s">%5$s</a></td>
+				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s&nbsp;</a></td>`, 
+					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
+					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
+					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ),
+					);
+
+				$html .= '<td class="contents">';
+
 				foreach my $paper_id ( keys %manifest_weight ) {
 					my $Paper = new openprint::Paper( $paper_id );
 					$html .= sprintf('%s : %dlbs : %d skids', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
 						if ( $Type ) {
-							$html .= ' @ ' . openprint::Currency::format( $Type->cost_from_po() ) . '/100lbs';
+							$html .= ' @ ' . ( $Type->cost_from_po() ? openprint::Currency::format( $Type->cost_from_po() ) : '0.00' ). '/100lbs';
 						} # end if
 					} # end if
 					$html .= '<br/>';

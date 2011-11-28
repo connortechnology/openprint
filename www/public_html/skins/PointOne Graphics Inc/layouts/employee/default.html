@@ -12,7 +12,7 @@
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
 <? echo (
-	my $html;
+	my @html;
 	my $css = $$variable{'uri'};
 	$css =~ s/^\///;
 	$css =~ s/\..+$//;
@@ -21,11 +21,11 @@
 	$css = join('_', @parts ) . '.css';
 		$log->debug("URI: $$variable{uri} $css");
 		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
 		}
 		pop @parts;
 	} # end while
-	return $html;
+	return join("\n", reverse @html );
 ) ?>
 		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
 		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
@@ -111,7 +111,7 @@
 							</ul>
 						</li>
 <? if ( $session{'user_id'} ) ?>
-						<li id="ProductionMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/p/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
+						<li id="ProductionMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/pro/ or $$variable{'uri'} =~ /employee\/per/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
@@ -154,9 +154,11 @@
 								<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
 								<li><a href="/employee/reports/stock.html;NOSSL">&raquo; Stock</a></li>
 								<li><a href="/employee/reports/prepress_productivity.html;NOSSL">&raquo; Prepress Productivity</a></li>
+								<li><a href="/employee/reports/job_size.html;NOSSL">&raquo; Job Size</a></li>
 								<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/reports/stock_usage.html;NOSSL">&raquo; Stock Usage</a></li>
 								<li><a href="/employee/reports/prepress_overview.html;NOSSL">&raquo; Prepress Overview</a></li>
+								<li><a href="/employee/reports/customer_performance.html;NOSSL">&raquo; Customer Performance</a></li>
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
@@ -173,6 +175,9 @@
 						<li id="InventoryMenu" class="<? echo ( ($$variable{'uri'} =~ /employee\/inventory/ or $$variable{'uri'} =~ /employee\/claim/ or $$variable{'uri'} =~ /employee\/purchase_order/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/purchase_order/history.html;NOSSL">&raquo; Purchase Orders</a></li>
+<? if ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+								<li><a href="/employee/purchase_order/items.html;NOSSL">&raquo; Purchase Order Items</a></li>
+<? endif ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
@@ -196,12 +201,14 @@
 						<li id="ITMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/it/ or $$variable{'uri'} =~ /employee\/assets/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ITMenu'), 'off', 'on');return false;">IT</a>
 							<ul>
 								<li><a href="/employee/it/hosts.html;NOSSL">&raquo; Hosts</a></li>
+								<li><a href="/employee/it/radius.html;NOSSL">&raquo; RADIUS</a></li>
 								<li><a href="/mrtg/index.html;NOSSL">&raquo; MRTG Graphs</a></li>
 								<li><a href="/employee/assets/history.html;NOSSL">&raquo; Assets</a></li>
 								<li><a href="/employee/it/cameras.html;NOSSL">&raquo; Camera Admin</a></li>
 								<li><a href="/employee/it/camera_viewer.html;NOSSL">&raquo; Camera Viewer</a></li>
 								<li><a href="/employee/it/logs.html;NOSSL">&raquo; Login Log</a></li>
 								<li><a href="/employee/it/locations.html;NOSSL">&raquo; Locations</a></li>
+								<li><a href="/employee/it/sessions.html;NOSSL">&raquo; Sessions</a></li>
 							</ul>
 						</li>
 						<li id="SREDMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/sred/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SREDMenu'), 'off', 'on');return false;">SRED</a>

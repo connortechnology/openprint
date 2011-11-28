@@ -7,14 +7,26 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
 			</select>
 		</p>
-		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts:</label>
+		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ) ?>:</label>
+ 
 			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->supplier_id() ) {
-						my @Users = openprint::User::find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'name'=>$$variable{'PurchaseOrder'}->vendor_contact() );
-			
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'company_id'=>$$variable{'PurchaseOrder'}->supplier_id() ) ], @Users ? $Users[0]->id() : undef );
+						my @Users = openprint::User::find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(),'order'=>'lower(strfirstname),lower(strlastname)' );
+						my $selected;
+						if ( ( ! $$variable{'PurchaseOrder'}->contact_id() ) and ( $$variable{'PurchaseOrder'}->vendor_contact() ) ) {
+							foreach my $U ( @Users ) {
+								if ( lc $U->name() eq lc $$variable{'PurchaseOrder'}->vendor_contact() ) {
+									$selected = $$U{'id'};
+									last;
+								} # end if
+							}
+						} elsif ( @Users == 1 ) {
+							$selected = $Users[0]{'id'};
+						}
+							
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $selected ? $selected : undef );
 					} # end if
 					return;
 				) ?>
@@ -25,7 +37,7 @@
 		<p><label for="vendor_address1">Address:</label><input type="text" name="vendor_address1" id="vendor_address1" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address1() ) ?>" />
 		<input type="text" name="vendor_address2" id="vendor_address2" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address2() ) ?>" /></p>
 		<p><label for="vendor_country">Country:</label>
-			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );update_taxes( this.form );">
+			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );<? if ( $$variable{'PurchaseOrder'}->id() ) ?>update_taxes( this.form );<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>">
 				<option value=""> select </option>
 				<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
 			</select>
@@ -39,7 +51,7 @@
 					return 'State/Province:';
 				} # end if
 			) ?></span></label>
-			<select id="vendor_state" name="vendor_state" onchange="update_taxes( this.form );">
+			<select id="vendor_state" name="vendor_state" <? if ( $$variable{'PurchaseOrder'}->id() ) ?>onchange="update_taxes( this.form );"<? endif ( $$variable{'PurchaseOrder'}->id() ) ?>>
 				<option value=""> Select </option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {

@@ -1,8 +1,4 @@
 <? eval (
-	require openprint::RFIDTag;
-
-	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned' );
-
 	@{$$variable{'RFIDTags'}} = ();
 	if ( $param{'rfidtag_id'} ) {
 		@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 'id_like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
@@ -41,6 +37,7 @@
 				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) : undef,
 			'type_id'			=> $session{'/employee/inventory/rfidtags.html?Type'} ? $session{'/employee/inventory/rfidtags.html?Type'} : undef,
 			'valid'				=> $session{'/employee/inventory/rfidtags.html?valid'},
+			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( 'location_id'=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
 			'order'		=>	'id',
 			) ) {
 			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
@@ -96,8 +93,8 @@
 	<input type="hidden" name="btnFunction"/>
 	<p class="buttons">
 		<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "RFIDTagResults.btnFunction.value='Validate';RFIDTagResults.submit();", '', 'Validate' ),
-					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "RFIDTagResults.btnFunction.value='Delete';RFIDTagResults.submit();", '', 'Delete Checked' ),
+					ssi::button( 'Validate', { 'onclick'=>"RFIDTagResults.btnFunction.value='Validate';RFIDTagResults.submit();", 'text'=>'Validate' } ),
+					ssi::button( 'Delete', { 'onclick'=>"RFIDTagResults.btnFunction.value='Delete';RFIDTagResults.submit();", 'text'=>'Delete Checked' } ),
 			); ) ?>
 	</p>
 </form>

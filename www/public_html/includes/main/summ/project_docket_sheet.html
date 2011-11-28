@@ -8,16 +8,16 @@
 		<th width="20">&nbsp;</th>
 	</tr><tr>
 		<td width="20">&nbsp;</td>
-		<td align="left"><img src="/barcode.png?code=P<?ProjectIndex?>+&NoText=1&Height=20"/></td>
+		<td align="left"><img src="/barcode.png?code=P<?ProjectIndex?>+&amp;NoText=1&amp;Height=20" alt=""/></td>
 		<!--
 		<img src="/barcode.png?code=D<?DocketNumber?>+"/>&nbsp;</td>-->
 		<!--<td align="center"><img src="/barcode.png?code=O<?OrderId?>+"/></td>-->
-		<td align="right"><img src="/barcode.png?Code=S10000+&NoText=1&Height=20"/></td>
+		<td align="right"><img src="/barcode.png?Code=S10000+&amp;NoText=1&amp;Height=20" alt=""/></td>
 		<td width="20">&nbsp;</td>
 	</tr>
 </table>
 <? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
@@ -53,7 +53,7 @@
 		<td colspan="6" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
 					<td width="16%" class="headerText" valign="top"><b>Project Reference:</b></td>
-					<td width="84%" class="docketText"><?ProjectReference?></td>
+					<td width="84%" class="docketText"><? hecho ( $$variable{'ProjectReference'} ) ?></td>
 				</tr>
 			</table></td>
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -88,8 +88,8 @@
 			</table></td>
 	</tr>
 </table>
-<br>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td class="headerText" width="25%"><b>Flat Size:</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
 		<td class="headerText" width="25%"><b>Folded To:</b>&nbsp;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;</td>
@@ -97,8 +97,8 @@
 		<td class="headerText" width="25%"><b>Cover Type:</b>&nbsp;<?rdbCover?></td>
 	</tr>
 </table>
-<br>
-<table width="100%" border="1" cellspacing="0" cellpadding="0"  bordercolorlight="black" bordercolordark="white">
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr>
 		<td width="30%" class="headerText"><b>Press Proof Required?</b>&nbsp;
 		<? if ( $$variable{'rdbPressProofYes'} ne '' ) ?>
@@ -113,7 +113,7 @@
 	</tr>
 </table>
 <br/>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="20%" class="headerText" valign="top"><b>Press</b></td>
 		<td class="headerText" valign="top"><b>Stock/Weight/Size</b></td>
@@ -166,7 +166,7 @@
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
 			if ( $config{'Barcodes Enabled'} ne 'N' ) {
-			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/>';
+			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&amp;NoText=1&amp;Height=20"/>';
 			} # end if
 			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
 			$html .= '</td><td class="docketText">';
@@ -320,7 +320,7 @@ $inkCoverage{$colour} = 100;
 			<? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 	<tr>
 		<td align="center">
-<img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/>
+<img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&amp;NoText=1&amp;Height=20"/>
 </td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
@@ -328,12 +328,12 @@ $inkCoverage{$colour} = 100;
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td><br><br><br></td>
+		<td><br/><br/><br/></td>
 	</tr>
 			<? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 </table>
 <br/>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
+<table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
 	<tr> 
          <td class="headerText"><b>Special Press Instructions:</b>
 			<? echo ( 
@@ -364,7 +364,7 @@ $inkCoverage{$colour} = 100;
 <br/>
 <span class="docketText">Stock allocated by: _______________ on _______________. Stock ordered by _______________ on _______________ for delivery on _______________.</span><br/>
 <br/>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
+<table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
 	<tr> 
 		<td colspan="3" class="headerText"><b>Proofs</b>:</td>
 	</tr>
@@ -376,7 +376,7 @@ $inkCoverage{$colour} = 100;
 	<tr>
 		<td class="headerText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -403,7 +403,7 @@ $inkCoverage{$colour} = 100;
 </td>
 		<td class="docketText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -430,7 +430,7 @@ $inkCoverage{$colour} = 100;
 		</td>
 		<td class="docketText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -480,8 +480,8 @@ $inkCoverage{$colour} = 100;
         </tr>
 
 </table>
-<br>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="10%" class="docketText" ><b>Quantity</b></td>
 		<td width="60%" class="headerText" ><b>Bindery Instructions:</b></td>
@@ -600,19 +600,19 @@ $inkCoverage{$colour} = 100;
 		<? endif ( $$variable{Services}{'KraftWrap'} ) ?>
 
 		<? if ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
-		, Bulk Pack in Cartons<br>
+		, Bulk Pack in Cartons<br/>
 		<? endif ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
 	</td>
 		<td class="docketText">&nbsp;</td>
 		<td class="docketText">&nbsp;</td>
 		<td class="docketText">
-			<br><br><br><br><br><br><br><br>
+			<br/><br/><br/><br/><br/><br/><br/><br/>
 		</td>
 
 	</tr>
 </table>
-<br>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<br/>
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="60%" class="headerText"><b>Shipping Instructions</b>:</td>
 		<td width="40%" class="headerText"><b>Sample Instructions</b>:</td>
@@ -640,7 +640,7 @@ $inkCoverage{$colour} = 100;
 	</tr>
 </table>
 <br/>
-<table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
+<table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr>
 		<td colspan="4" class="headerText"><b>Folding mockup or sample:</b></td>
 	</tr>
