@@ -73,6 +73,13 @@ sub PurchaseOrder_Content {
 		} else {
 			$log->debug("Right width: $width == " . $Paper->width() );
 		} # end if
+		if ( $Paper->fsc_code() and ( $POC->item() !~ /^FSC/ ) ) {
+			$log->debug("FSC Mismatch");
+			next;
+		} elsif ( (!$Paper->fsc_code()) and $POC->item() =~ /^FSC/ ) {
+			$log->debug("FSC Mismatch");
+			next;
+		} # end if
 		$PO_Stock = $POC;
 		last;
 	} # end foreach POC

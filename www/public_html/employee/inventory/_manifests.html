@@ -61,16 +61,40 @@
 			my $value_total;
 			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
 
-				if ( $session{$$variable{'uri'}.'?over_delivery'} or $session{$$variable{'uri'}.'?under_delivery'} ) {
+				if ( $session{'/employee/inventory/manifests.html?over_delivery'} or $session{'/employee/inventory/manifests.html?under_delivery'} ) {
 					my $has_po = 0;
 					# First, see if any have po_ids, skip the ones that dont
 					foreach my $Type ( $Manifest->Types() ) {
 						if ( $Type->po_id() ) {
 							$has_po = 1 ;
 							last;
-						} 
+						}  # end if
 					} # end foreach
 					next if ! $has_po;
+
+					if ( $session{'/employee/inventory/manifests.html?over_delivery'} ) {
+						my $over = 0;
+						foreach my $Type ( $Manifest->Types() ) {
+							my $PO_Content = $Type->PurchaseOrder_Content();
+							if ( $PO_Content ) {
+								my $quantity = 0;
+								my $min_roll_size;
+
+								foreach my $C ( $Manifest->Contents() ) {
+									next if $C->type_id() != $Type->id();
+									$quantity += $C->quantity();
+									$min_roll_size = $C->quantity() if (!defined $min_roll_size) or ($min_roll_size < $C->quantity());
+								} # end foreach Content
+
+	$openprint::log->debug("Min size: " . $min_roll_size . ' quantity: ' . $quantity . ' PO QTY: ' . $PO_Content->qty());
+								if ( ($PO_Content->qty() + $min_roll_size) < $quantity ) {
+									$over = 1;
+									last;
+								} # end if
+							} # end if
+						} # end foreach
+						next unless $over;
+					} # end if
 				} # end if
 
 				my %manifest_skids;
@@ -78,7 +102,7 @@
 				my %real_skids;
 				my %real_weight;
 
-				my $value;
+				my $value = 0;
 
 				foreach my $MC ( $Manifest->Contents() ) {
 					$manifest_skids{$MC->Type()->paper_id()} += 1;
@@ -112,7 +136,7 @@
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
 						if ( $Type ) {
-							$html .= ' @ ' . openprint::Currency::format( $Type->cost_from_po() ) . '/100lbs';
+							$html .= ' @ ' . ( $Type->cost_from_po() ? openprint::Currency::format( $Type->cost_from_po() ) : '0.00' ). '/100lbs';
 						} # end if
 					} # end if
 					$html .= '<br/>';
