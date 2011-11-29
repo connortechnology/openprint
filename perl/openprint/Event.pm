@@ -58,7 +58,14 @@ sub Category {
 } # end sub Category
 
 sub where {
-	return join(', ', map { $_->name() } $_[0]->Location(), $_[0]->Location()->Parents() );
+	if ( ! $_[0]{'where'} ) {
+		my $L = $_[0]->Location();
+		$_[0]{'where'} = join(', ', map { $_->name() } $L, $L->Parents() );
+		if ( $L->address() or $L->postalcode() ) {
+		$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+		} # end if
+	} # end if
+	return $_[0]{'where'};
 } # end sub where
 
 sub Asset {
