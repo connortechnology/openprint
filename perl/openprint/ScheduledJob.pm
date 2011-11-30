@@ -159,6 +159,9 @@ sub find {
 	if ( $params{'starttime_<'} ) {
 		$sql .= ' AND starttime < ?';
 		push @values, $params{'starttime_<'};
+	} elsif ( $params{'starttime <'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime <'};
 	} # end if
 	if ( $params{'starttime_>='} ) {
 		$sql .= ' AND starttime >= ?';
