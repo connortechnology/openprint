@@ -77,7 +77,12 @@
 								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
 								<div class="Address">%3$s</div>
 							</div>`, $User->id(), $User->name(), 
-							new openprint::Location( $Profile->city() )->name() . ', ' . new openprint::Location( $Profile->state() )->name() );
+							join(', ',
+								( $Profile->city() ? new openprint::Location( $Profile->city() )->name() : () ),
+								( $Profile->state() ? new openprint::Location( $Profile->state() )->name() : () ),
+								( $Profile->country() ? new openprint::Location( $Profile->country() )->name() : () ),
+							),
+				);
 		my $age = 0;
 		my $birthday = $Profile->date_of_birth();
 

@@ -8,8 +8,8 @@
 								'id in' => [ 
 								sets::union( 
 									map { $_->user_id() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}) 
-) ], 
-								'order'=>'lower(firstname),lower(lastname)') ) ], $param{'user_id'} );
+									) ], 
+								'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} );
 				) ?>
 			</select>
 		</p>
@@ -22,18 +22,18 @@
 	<table class="List">
 	<? echo (
 		my $html;
-		my @categories = sql::execute( $log, $dbh, q{SELECT id, name FROM survey_question_categories ORDER BY sorting} );
+		my @Categories = openprint::Survey_Question_Category->find('order'=>'sorting,name');
 		my %answers = map { $_->question_id(), $_->answer() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}, 'user_id'=>$param{'user_id'} );
-		while ( my ( $cat_id, $cat_name ) = splice @categories, 0, 2 ) {
-			$html .= qq{<tr><th colspan="2" align="left">$cat_name</th></tr>};
-			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $r->param('survey_id'), $cat_id );
+		foreach my $Category ( @Categories ) {
+			$html .= qq{<tr><th colspan="2" align="left">$$Category{'name'}</th></tr>};
+
+			my @Questions = openprint::Survey_Question->find('survey_id'=>$param{'survey_id'}, 'category_id'=>$Category->id() );
 			my $rowclass;
-			while ( my ( $id, $text, $type ) = splice @questions, 0, 3 ) {
-				
-				$html .= qq`<tr$rowclass><td>$text</td><td>$answers{$id}</td></tr>\n`;
+			foreach my $Question ( @Questions ) {
+				$html .= qq`<tr$rowclass><td>$$Question{text}</td><td>$answers{$$Question{id}}</td></tr>\n`;
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end while questions
-		} # end while ctegories
+			} # end foreach Question
+		} # end foreach Category
 		return $html;
 		) ?>
 	</table>

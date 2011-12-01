@@ -20,6 +20,7 @@ package openprint::survey;
 
 require openprint::Survey;
 require openprint::Survey_Question;
+require openprint::Survey_Question_Category;
 require openprint::Survey_Answer;
 require openprint::Survey_Response;
 
