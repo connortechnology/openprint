@@ -9,6 +9,7 @@ require configuration;
 require openprint::Object;
 require openprint::Log;
 require openprint::Log_Action;
+require openprint::ServiceType;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -251,32 +252,6 @@ if ( ! sets::isin( 'video_albums', \@tables ) ) {
 if ( ! sets::isin( 'locations', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'events', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
-		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
-	} # end if
-	if ( ! exists $$data{'asset_id'} ) {
-		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
-		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
-	} # end if
-} # end if
-if ( ! sets::isin( 'event_attendance', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'user_relationships', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'locations', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='locations'", 'column_name');
 	if ( ! exists $$data{'type_id'} ) {
@@ -307,9 +282,37 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	if ( ! exists $$data{'address'} ) {
 	$dbh->do('ALTER TABLE Locations add address text');
 	} # end if
+	if ( ! exists $$data{'latitude'} ) {
+	$dbh->do('ALTER TABLE Locations add latitude float');
+	} # end if
+	if ( ! exists $$data{'longitude'} ) {
+	$dbh->do('ALTER TABLE Locations add longitude float');
+	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
 		
+} # end if
+if ( ! sets::isin( 'events', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
+	} # end if
+} # end if
+if ( ! sets::isin( 'event_attendance', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'user_relationships', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'messages', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Messages.sql' ) );
@@ -575,6 +578,15 @@ if ( ! sets::isin( 'surveys', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'survey_question_categories', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Question_Categories.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='survey_question_categories'", 'column_name');
+	if ( ! exists $$data{'sorting'} ) {
+		$dbh->do('ALTER TABLE survey_question_categories ADD sorting INTEGER');
+	} # end if
+}
 if ( ! sets::isin( 'survey_questions', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Survey_Questions.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -626,6 +638,13 @@ if ( ! sets::isin( 'product_prices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Product_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
 	}
 }
+
+my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+if ( ! $ServiceType ) {
+	if ( $ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature') ) {
+		$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

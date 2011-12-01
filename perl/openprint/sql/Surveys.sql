@@ -27,6 +27,7 @@ CREATE SEQUENCE survey_question_category_id_seq;
 CREATE TABLE survey_question_categories (
 	id		SERIAL,
 	name	TEXT NOT NULL,
+	sorting	INTEGER,
 	PRIMARY KEY (id)
 );
 

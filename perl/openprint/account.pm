@@ -702,6 +702,7 @@ sub search {
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
+	$session{'/account/search.html?paging_per_page'} = 5;
 } # end sub search
 
 sub _search {
@@ -710,16 +711,14 @@ sub _search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
-				map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) 
+				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
+				'paging_page',
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked
 	foreach my $F ( openprint::User_Profile_Field->find( ) ) {
- if ( ! $param{'field-'.$F->id()} ) {
-$log->debug("Deleting " . $F->name() );
-		delete $session{'/account/search.html?field-'.$F->id()};
-	} else {
-$log->debug("Not Deleting " . $F->name() );
-	} # end if
+		if ( ! $param{'field-'.$F->id()} ) {
+			delete $session{'/account/search.html?field-'.$F->id()};
+		} # end if
 	} # end foreach Field
 
 } # end sub _search
