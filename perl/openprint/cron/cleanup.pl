@@ -295,8 +295,10 @@ foreach my $Host ( openprint::Host->find('hostname'=>undef) ) {
 
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find() ) {
-	if ( $Paper->wpsi() != $Paper->wpsi(undef) ) {
-$openprint::log->debug("Updating wpsi for " . $Paper->to_string() );
+	my $old_wpsi = $Paper->wpsi();
+	$old_wpsi = '' if ! defined $old_wpsi;
+	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+$openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
 		$Paper->save();
 		last if $dbh->errstr();
 	} # end if

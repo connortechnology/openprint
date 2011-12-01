@@ -251,7 +251,14 @@ sub dropdown {
 	} # end if
 
 	if ( @_ ) {
-		my %params = %{$_[0]};
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+		%params = %{$_[0]};
+		} elsif ( ref $_[0] eq 'ARRAY' ) {
+		%params = @{$_[0]};
+		} else {
+		%params = @_;
+		} # end if
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
 				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
