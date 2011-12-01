@@ -634,7 +634,7 @@ if ( ! sets::isin( 'product_prices', \@tables ) ) {
 		$dbh->do('ALTER TABLE product_prices ADD discountable BOOLEAN NOT NULL default true');
 	} # end if
 	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Product_Prices ADD owner_id INTEGER NOT NULL');
+		$dbh->do('ALTER TABLE Product_Prices ADD owner_id INTEGER');
 		$dbh->do('ALTER TABLE Product_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
 	}
 }

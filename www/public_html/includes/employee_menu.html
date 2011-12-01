@@ -40,7 +40,7 @@
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $session{'user_id'} ) ) ?>
 	<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
-                        <li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/marketing/ ? 'on' : 'off' ) ?>"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">MARKETING</a>
+                        <li id="MarketingMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/marketing/ ? 'on' : '' ) ?>"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">MARKETING</a>
                             <ul>
                                 <li><a href="/employee/marketing/categories.html;NOSSL">Marketing Categories</a></li>
                                 <li><a href="/employee/marketing/email_templates.html;NOSSL">Email Templates</a></li>
@@ -95,12 +95,6 @@
 		</ul>
 	</li>
 	<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-	<li id="MarketingMenu"><a href="#" onclick="$('MarketingMenu').toggleClassName('on');return false;">Marketing</a>
-		<ul>
-			<li><a href="/employee/marketing/email_campaigns.html;NOSSL">Email Campaigns</a></li>
-			<li><a href="/employee/marketing/surveys.html;NOSSL">Surveys</a></li>
-		</ul>
-	</li>
 	<li id="SupportMenu"><a href="#" onclick="$('SupportMenu').toggleClassName('on');return false;">SUPPORT</a>
 		<ul>
 			<li><a href="/employee/support/helpdesk_search.html;NOSSL">Help Desk</a></li>
