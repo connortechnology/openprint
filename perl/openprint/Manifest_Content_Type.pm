@@ -54,6 +54,10 @@ sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
 } # end sub Manifest
 
+sub PurchaseOrder {
+	return new openprint::PurchaseOrder( $_[0]{'po_id'} );
+} # end sub PurchaseOrder
+
 sub PurchaseOrder_Content {
 	if ( ! exists $_[0]{'PurchaseOrder_Content'} ) {
 		if ( ! $_[0]{'po_content_id'} ) {

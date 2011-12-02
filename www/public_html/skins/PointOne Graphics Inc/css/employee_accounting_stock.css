@@ -21,3 +21,7 @@ table .po_id {
 table .SupplierINV {
 	width: 80px;
 }
+table .Cost input {
+	width: 60px;
+	text-align: right;
+}

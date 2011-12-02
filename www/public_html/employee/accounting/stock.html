@@ -6,7 +6,7 @@
 			<li><label>Received On:</label>
 				<span class="DateSelectorCT">
 				<? echo ( ssi::date_select_session( '/employee/accounting/stock.html', 'received_on_start', { 'onchange' =>
-							q`AjaxLoadContent('Results','/employee/accoutning/_stock.html', $('f1').serialize() );`,
+							q`AjaxLoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
 							'with_today'=>1, 'with_clear'=>1,
 							} ); ) ?>
 				</span>to<span class="DateSelectorCT">

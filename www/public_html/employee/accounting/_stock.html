@@ -41,11 +41,13 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 			} # end if
 			$html .= '<td class="Skid">'.$skid_html.'</td>';
 			$html .= '<td class="quantity">'.$qty_html.'</td>';
+
+			my $POC = $Type->PurchaseOrder_Content();
+			$html .= '<td class="Stock">From manifest:';
 			if ( $Paper->id() ) {
-				$html .= sprintf('<td class="Stock"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+				$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a><br/>', $$Paper{'id'}, $Paper->to_string() );
 			} else {
 				my %Papers;
-				$html .= '<td class="Stock">';
 				foreach my $MC ( @Contents ) {
 					foreach my $SC ( $MC->Skid()->Contents() ) {
 						$Papers{$SC->paper_id()} = $SC->Paper();
@@ -55,8 +57,24 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 					my $Paper = $Papers{$paper_id};
 					$html .= sprintf('<a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></br>', $Paper->id(), $Paper->to_string() );
 				} # end foreach
-				$html .= '</td>';
 			} # end if
+			$html .= '<span id="PO_'.$$Type{'id'}.'">';
+			if ( $$Type{'po_content_id'} ) {
+				$html .= '<br/>From PO: ' . $POC->item() ? $POC->item() : $POC->description();
+			} elsif ( $POC->id() ) {
+				$html .= '<br/>Guessed From PO: ' . ($POC->item() ? $POC->item() : $POC->description() );
+				$html .= ssi::button('confirm'.$$Type{'id'}, { 'onclick'=>qq`new Ajax.Request('_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$Type{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } );
+			} else {
+				$html .= '<br/>Unable to guess from PO.  PO contents: (click to select)';
+				foreach my $C ( $Type->PurchaseOrder()->Contents() ) {
+					if ( $C->item() ) {
+						$html .= $C->item() . '<br/>';
+					} else { 
+						$html .= $C->description() . '<br/>';
+					} # end if
+				} # end foreach C
+			} # end if
+			$html .= '</span></td>';
 			
 			$html .= sprintf('<td class="Supplier">%1$s</td>', $Type->Manifest()->Vendor()->name() );
 			$html .= sprintf('<td class="manifest_id"><a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a></td>', $Type->manifest_id(), $Type->Manifest()->name() );
@@ -67,7 +85,11 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 			$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>', $Type->manifest_id(), Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Type->Manifest()->received_on() ) ) ) if $Type->Manifest()->received_on();
 			$html .= '</td>';
 			$html .= sprintf('<td class="SupplierINV"><input type="text" id="supplier_invoice-%1$d" name="supplier_invoice-%1$d" value="%2$s"></td>', $Type->id(), $Type->supplier_invoice() );
-			$html .= sprintf(q{<td class="Cost"><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$s" size="6" style="width:auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"><select id="units-%1$d" name="units-%1$d"><option value="/lb">/lb</option><option value="/cwt">/cwt</option></select></td>}, $Type->id(), $Type->cost() ? $Type->cost() : $Type->cost_from_po() );
+
+			$html .= sprintf(q{<td class="Cost"><input type="number" id="cost-%1$d" name="cost-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"><select id="units-%1$d" name="units-%1$d">
+					<option value="/cwt">/cwt</option>
+					<option value="/lb">/lb</option>
+					</select></td>}, $Type->id(), $POC->price() );
 			$html .= '</tr>';
 		} # end foreach Type
 		$rowclass = $rowclass ? '' : ' class="colRow"';
