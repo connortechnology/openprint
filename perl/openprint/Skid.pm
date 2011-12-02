@@ -490,18 +490,16 @@ sub contents {
 } # end sub contents
 
 sub rfidtag_id {
-	my $self = shift;
-
-	if ( @_ ) {
-		my $rfidtag_id = shift;	
+	if ( @_ > 1 ) {
+		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
-		$$self{'rfidtag_id'} = $rfidtag_id;
+		$_[0]{'rfidtag_id'} = $rfidtag_id;
 	} # end if
-	return $$self{'rfidtag_id'};
+	return $_[0]{'rfidtag_id'};
 } # end sub rfidtag_id
 
 sub RFIDTag {

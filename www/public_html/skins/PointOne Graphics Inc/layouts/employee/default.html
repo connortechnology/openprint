@@ -190,6 +190,9 @@
 								<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
 								<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
 								<li><a href="/employee/inventory/packingslips.html;NOSSL">&raquo; Packing Slips</a></li>
+						<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock Value</a></li>
+						<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 							</ul>
 						</li>
 						<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
