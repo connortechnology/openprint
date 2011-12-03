@@ -73,11 +73,11 @@ sub view_services {
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
+	my $Project = $$variable{'Project'} = new openprint::Project( $project_index );
 	if ( ! $project_index ) {
 		return;
 	} # end if
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
