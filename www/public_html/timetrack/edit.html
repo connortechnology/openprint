@@ -14,7 +14,7 @@
 		<span class="warning">This timetrack has been deleted</span>
 		<? endif ( $$variable{'Timetrack'}->deleted() ) ?>
 		
-		<input type="hidden" name="timetrack_id" value="<? echo ( $openprint::param{'timetrack_id'} ) ?>" />
+		<input type="hidden" name="timetrack_id" value="<? echo ( $$variable{'Timetrack'}->id() ) ?>" />
 		<div class="leftColumn">
 			<ul>
 			<li><label for="company_id">Company:</label>
@@ -66,7 +66,7 @@
 				</select>
 			</li>
 			<li><label for="timetrack_rate">Override Rate:</label>
-				<input type="text" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="number" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</li>
 			<li>
 				<label>Travel Associated:</label>
@@ -83,7 +83,7 @@
 		<div class="rightColumn">
 			<li>
 				<label for="description">Description:</label>
-				<textarea cols="" id="description" name="description" rows="<? echo ( $$variable{'Timetrack'}->description() ? scalar split("\n", $$variable{'Timetrack'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);" style="width: 100%;"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
+				<textarea id="description" name="description" rows="<? echo ( $$variable{'Timetrack'}->description() ? scalar split("\n", $$variable{'Timetrack'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Timetrack'}->description() ) ?></textarea>
 			</li>
 			<? if ( $$variable{'Timetrack'}->invoice_id() ) ?>
 			<li>
