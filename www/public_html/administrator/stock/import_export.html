@@ -27,10 +27,10 @@
 	<div class="row"> 
 		<span class="label">&nbsp;</span>
 		<span class="input">
-			<script type="text/javascript">
-				writeButton('Import', 'import.gif', "f1.action='import_export.html?Import';f1.btnFunction.value='Import Paper';f1.submit();",'','Import' );
-				writeButton('Export', 'export.gif', "f1.action='import_export.html?Export';f1.btnFunction.value='Export Paper';f1.submit();",'','Export' );
-			</script>
+			<? echo (join('',
+				ssi::button( 'Import', { 'onclick'=>"f1.action='import_export.html?Import';f1.btnFunction.value='Import Paper';f1.submit();" } ),
+				ssi::button( 'Export', { 'onclick'=>"f1.action='import_export.html?Export';f1.btnFunction.value='Export Paper';f1.submit();" }),
+			); ) ?>
 		</span>
 	</div>
 	<input type="hidden" name="btnFunction"/>
