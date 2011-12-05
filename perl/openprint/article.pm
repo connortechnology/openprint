@@ -27,7 +27,7 @@ sub history {
 		} # end if
 		if ( $param{'category_id'} ) {
 			delete $param{'category'};
-		} else {
+		} elsif ($param{'category'}) {
 			delete $param{'category_id'};
 		} # end if
 		if ( $param{'source'} ) {
