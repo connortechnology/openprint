@@ -430,6 +430,32 @@ sub get_start_end_dates {
 
 } # end sub get_start_end_dates
 
+sub button {
+	my ( $name, $options ) = @_;
+
+	$$options{'href'} = '#' if ! $$options{'href'};
+	$$options{'text'} = $name if ! $$options{'text'};
+
+	my $html = qq`<a id="Button$name" href="$$options{href}" class="buttonImageOff $$options{class}" `;
+	$html .= qq`title="$$options{title}" ` if $$options{'title'};
+	$html .= 'target="$$options{target}" ' if $$options{'target'};
+	if ( $$options{'onclick'} ) {
+		$html .= 'onclick="';
+		$html .= $$options{'onclick'}."return false;\" ";
+	} # end if
+	$html .= '>';
+	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
+		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
+		if ( $$options{'text'} ) {
+			$html .= "alt=\"$$options{text}\"";
+		} # end if
+		$html .= "/>";
+	} else {
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+	}
+	$html .= "</a>\n";
+	return $html;
+} # end sub button
 sub writeButton {
 	my ( $log, $dbh, $name, $gif, $onclick, $href, $text, $options ) = @_;
 	if ( $href eq '' ) {
