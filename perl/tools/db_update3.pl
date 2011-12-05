@@ -510,16 +510,20 @@ if ( sets::isin( 'stocknames', \@tables ) ) {
 } # end if
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
 	$dbh->do('ALTER TABLE Papers rename column name_id to brand_id') if exists $$data{'name_id'};
-if ( sets::isin( 'papername_id_seq' ) ) {
-	$dbh->do('ALTER SEQUENCE papername_id_seq RENAME TO stocknames_id_seq');
+if ( sets::isin( 'papername_id_seq', \@sequences ) ) {
+	$dbh->do('ALTER SEQUENCE papername_id_seq RENAME TO stockbrands_id_seq');
+} elsif ( ! sets::isin( 'stockbrands_id_seq', \@sequences ) ) {
+	$dbh->do('CREATE SEQUENCE stockbrands_id_seq');
+	$dbh->do(q`ALTER TABLE stockbrands alter id set default nextval('stockbrands_id_seq')`);
 } # end if
-if ( sets::isin( 'paperfinish_id_seq' ) ) {
+
+if ( sets::isin( 'paperfinish_id_seq', \@sequences ) ) {
 	$dbh->do('ALTER SEQUENCE paperfinish_id_seq RENAME TO stockfinishes_id_seq');
 } # end if
-if ( sets::isin( 'papercolour_id_seq' ) ) {
+if ( sets::isin( 'papercolour_id_seq', \@sequences ) ) {
 	$dbh->do('ALTER SEQUENCE papercolour_id_seq RENAME TO stockcolours_id_seq');
 } # end if
-if ( sets::isin( 'paperweight_id_seq' ) ) {
+if ( sets::isin( 'paperweight_id_seq', \@sequences ) ) {
 	$dbh->do('ALTER SEQUENCE paperweight_id_seq RENAME TO stockweights_id_seq');
 } # end if
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');

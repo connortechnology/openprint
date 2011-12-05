@@ -286,11 +286,22 @@ sub import_export {
 				$gsm =~ s/[^\d\.]//g;
 				$spp =~ s/[^\d]//g;
 
+				my @recommendations = ();
+				foreach my $ProjectType_name ( split(',',$recommendations ) ) {
+					next if ! $ProjectType_name;
+					my $ProjectType = openprint::ProjectType->find_one('name lc'=>lc openprint::ProjectType->transform('name',$ProjectType_name));
+					if ( ! $ProjectType ) {
+					$ProjectType = new openprint::ProjectType();
+					$ProjectType->save({'name'=>$ProjectType_name});
+					} # end if
+					push @recommendations, $ProjectType->id();
+				} # end foreach
+
 				my $Paper = $papers{$paper_id} ? $papers{$paper_id} : new openprint::Paper();
 				$Paper->owner_id( $owners{$owner} ? $owners{$owner} : $session{'company_id'} );
 				$Paper->manufacturer( $manufacturer );
-				$Paper->name( $group );
-				$Paper->name( $name );
+				$Paper->group( $group );
+				$Paper->brand( $name );
 				$Paper->finish( $finish );
 				$Paper->colour( $colour );
 				$Paper->weight( $weight );
@@ -317,7 +328,7 @@ sub import_export {
 				$Paper->inventory_number( $inventory_number );
 				$Paper->material( $material );
 				$Paper->message( $message );
-				$Paper->recommendations( misc::trim(split(',', $recommendations)));
+				$Paper->recommendations( @recommendations );
 				my $rc = $Paper->save();	
 				if ( $rc ) {
 					$error .= "Error adding Stock: $rc<br>";

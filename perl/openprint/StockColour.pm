@@ -5,13 +5,13 @@ our @ISA = qw(openprint::Object);
 use vars qw( $table $serial %fields %transforms %defaults );
 
 $table = 'stockcolours';
-$serial= 'stockcolour_id_seq';
+$serial= 'stockcolours_id_seq';
 %fields = (
 	'id'	=>  'id',
 	'name' =>  'name',
 );
 %transforms = (
-	'name' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
