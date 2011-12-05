@@ -329,6 +329,9 @@ if ( $data ) {
 	if ( ! exists $$data{'notes'} ) {
 		$dbh->do('alter table users add notes text');
 	} # end if
+	if ( ! exists $$data{'extension'} ) {
+		$dbh->do('alter table users add extension text');
+	} # end if
 	if ( ! exists $$data{'password_changed_on'} ) {
 		$dbh->do('alter table users add password_changed_on TIMESTAMP WITH TIME ZONE');
 	} # end if
@@ -2148,7 +2151,7 @@ if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM paper_inventory LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_inventory'", 'column_name');
 	if ( $data ) {
 		$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if exists $$data{'updatetime'};
 		if ( ! exists $$data{'id'} ) {
@@ -2163,6 +2166,12 @@ if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'docket'} ) {
 			$dbh->do('alter table paper_inventory add docket integer');
+		} # end if
+		if ( exists $$data{'poindex'} ) {
+			$dbh->do('alter table paper_inventory DROP poindex');
+		} # end if
+		if ( exists $$data{'po_id'} ) {
+			$dbh->do('alter table paper_inventory DROP po_id');
 		} # end if
 	} # end if
 	#foreach my $PI ( openprint::PaperInventory->find('docket'=>undef) ) {

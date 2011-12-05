@@ -323,6 +323,13 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
 	} # end if
 } # end if
+if ( ! sets::isin( 'object_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
+	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
+}
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
 	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
@@ -337,8 +344,13 @@ if ( ! sets::isin( 'logs', \@tables ) ) {
 		$dbh->do('ALTER TABLE Logs rename action_type to action_id');
 		$dbh->do('ALTER TABLE Logs ADD FOREIGN KEY (action_id) REFERENCES Log_Actions (id)');
 	} # end if
-	if ( ! exists $$data{'object'} ) {
-		$dbh->do('ALTER TABLE Logs add object TEXT');
+	if ( ! exists $$data{'object_type_id'} ) {
+		$dbh->do('ALTER TABLE Logs add object_type_id INTEGER');
+		$dbh->do('ALTER TABLE Logs add FOREIGN KEY (object_type_id) REFERENCES Object_types (id)');
+	}
+	if (  exists $$data{'object'} ) {
+		$dbh->do('UPDATE Logs set object_type_id = (SELECT id FROM object_types where name=object)');
+		$dbh->do('ALTER TABLE Logs DROP object');
 	}
 	if ( ! exists $$data{'object_id'} ) {
 		$dbh->do('ALTER TABLE Logs add object_id INTEGER');
@@ -375,13 +387,6 @@ foreach my $config_action ( keys %config_actions ) {
 	} # end if
 } # end foreach config_action
 
-if ( ! sets::isin( 'object_types', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
-}
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Comments.sql' ) );
@@ -648,6 +653,13 @@ if ( ! $ServiceType ) {
 		$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
 	} # end if
 } # end if
+
+if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
+if ( sets::isin( 'paper_purchase_order_contents', \@tables ) ) {
+	$dbh->do('DROP TABLE paper_purchase_order_contents');
+}
+	$dbh->do('DROP TABLE paper_purchase_orders');
+}
 $dbh->disconnect();
 1;
 __END__

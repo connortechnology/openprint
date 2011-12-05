@@ -22,7 +22,8 @@ $serial = 'logs_id_seq';
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
 	'url'			=>	'url',
-	'object'		=>	'object',
+	'object_type_id'		=>	'object_type_id',
+	'object_type'	=>	undef,
 	'object_id'		=>	'object_id',
 );
 %find_fields = (
@@ -34,7 +35,7 @@ $serial = 'logs_id_seq';
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
 	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{'host_id'};`,
-	'object'		=>	q`undef`,
+	'object_type_id'		=>	q`undef`,
 	'object_id'		=>	q`undef`,
 );
 
@@ -81,7 +82,7 @@ sub ip_address {
 } # end sub ip_address
 
 sub Host {
-	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]=>$_[0]{'ip_address'} ) ) {
+	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]{'ip_address'} ) ) {
 		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
@@ -107,6 +108,22 @@ sub action {
 	} # end if
 	return $_[0]->Action()->name();
 } # end sub action
+
+sub object_type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::Object_Type->find_one('name lc'=> lc (openprint::Object_Type->transform( 'name', $_[1] ) ) );
+		if ( ! $Type ) {
+			$Type = new openprint::Object_Type();
+			$Type->save({'name'=>$_[1], 'human'=>$_[1]});
+		} # end if
+		$_[0]{'object_type'} = $Type->name();
+		$_[0]{'object_type_id'} = $Type->id();
+	} # end if
+	if ( ! $_[0]{'object_type'} ) {
+		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+	} # end if
+	return $_[0]{'object_type'};
+} # end sub object_type
 
 1;
 __END__

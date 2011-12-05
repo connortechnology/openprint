@@ -176,6 +176,7 @@ sub destroy {
 	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
+	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{'id'}], 'created_by_id', undef );
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
