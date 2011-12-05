@@ -109,7 +109,7 @@ sub destroy {
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{'id'} );
 
 	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->delete();

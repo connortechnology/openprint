@@ -84,9 +84,9 @@ sub load_simple {
 
 } # end sub load_simple
 
-sub prin_broc {
+sub Signature {
 	load_simple();
-} # end sub prin_broc
+} # end sub Signature
 
 sub prin_multi {
 	load_simple();
