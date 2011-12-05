@@ -151,33 +151,45 @@ sub save {
 		$$self{'material_id'} = $new_material->id();
 	} # end if material
 	if ( $$self{'brand'} and ! $$self{'brand_id'} ) {
-		$_ = new openprint::StockBrand();
-		$_->save({'name'=>$$self{'brand'}});
-		@$self{'brand_id','brand'} = @$_{'id','name'};
+		my $Brand = new openprint::StockBrand();
+		if ( $_ = $Brand->save({'name'=>$$self{'brand'}}) ) {
+			return $_;
+		} # end if
+		@$self{'brand_id','brand'} = @$Brand{'id','name'};
 	} # end if brand_id
 	if ( $$self{'finish'} and ! $$self{'finish_id'} ) {
-		$_ = new openprint::StockFinish();
-		$_->save({'name'=>$$self{'finish'}});
-		@$self{'finish_id','finish'} = @$_{'id','name'};
+		my $Finish = new openprint::StockFinish();
+		if ( $_ = $Finish->save({'name'=>$$self{'finish'}}) ) {
+			return $_;
+		} # end if
+		@$self{'finish_id','finish'} = @$Finish{'id','name'};
 	} # end if finish_id
 	if ( $$self{'colour'} and ! $$self{'colour_id'} ) {
-		$_ = new openprint::StockColour();
-		$_->save({'name'=>$$self{'colour'}});
-		@$self{'colour_id','colour'} = @$_{'id','name'};
+		my $Colour = new openprint::StockColour();
+		if ( $_ = $Colour->save({'name'=>$$self{'colour'}}) ) {
+			return $_;
+		} # end if
+		@$self{'colour_id','colour'} = @$Colour{'id','name'};
 	} # end if colour_id
 	if ( $$self{'weight'} and ! $$self{'weight_id'} ) {
-		$_ = new openprint::StockColour();
-		$_->save({'name'=>$$self{'weight'}});
-		@$self{'weight_id','weight'} = @$_{'id','name'};
+		my $Weight = new openprint::StockWeight();
+		if ( $_ = $Weight->save({'name'=>$$self{'weight'}}) ) {
+		return $_;
+		} # end if
+		@$self{'weight_id','weight'} = @$Weight{'id','name'};
 	} # end if weight_id
 	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		$_ = new openprint::StockQuality();
-		$_->save({'name'=>$$self{'quality'}});
-		@$self{'quality_id','quality'} = @$_{'id','name'};
+		my $Quality = new openprint::StockQuality();
+		if ( $_ = $Quality->save({'name'=>$$self{'quality'}}) ) {
+			return $_;
+		} # end if
+		@$self{'quality_id','quality'} = @$Quality{'id','name'};
 	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
-		$_ = new openprint::Manufacturer();
-		$_->save({'name'=>$$self{'manufacturer'}});
+		my $Manufacturer = new openprint::Manufacturer();
+		if ( $_ = $Manufacturer->save({'name'=>$$self{'manufacturer'}}) ) {
+			return $_;
+		} # end if
 		@$self{'manufacturer_id','manufacturer'} = @$_{'id','name'};
 	} # end if manufacturer
 
@@ -206,8 +218,7 @@ sub save {
 
 		$error = sql::insert( undef, undef, 'Papers', \%sql );
 
-		# Add record to audit log - action "New Paper".
-		openprint::logs::insertLogRecord('63', "Paper ID: " . $$self{'id'},);
+		(new openprint::Log())->save({'action'=>'New Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
 
 		if ( ! $error ) {
 
@@ -236,7 +247,7 @@ sub save {
 			return $error;
 		} # end if
 		# Add record to audit log - action "Update Paper".
-		openprint::logs::insertLogRecord('64', "Paper ID: " . $$self{'id'},);
+		(new openprint::Log())->save({'action'=>'Update Stock', 'note'=>'Paper ID: ' . $$self{'id'}});
 	} # end if
 	sql::execute( undef, undef, q{DELETE FROM StockBrands WHERE id NOT IN (SELECT DISTINCT brand_id FROM Papers)} );
 	sql::execute( undef, undef, q{DELETE FROM StockFinishes WHERE id NOT IN (SELECT DISTINCT finish_id FROM Papers)} );
@@ -413,12 +424,14 @@ sub Manufacturer {
 sub manufacturer {
 
 	if ( defined $_[1] ) {
-		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
+		$_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
-			@{$_[0]}{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, name FROM Manufacturers WHERE lower(name)=?}, lc $_[1] );
-			if ( ! $_[0]{'manufacturer_id'} ) {
-				$_[0]{'manufacturer'} = $_[1];
+			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
+			if ( ! $Manufacturer ) {
+				$Manufacturer = new openprint::Manufacturer();
+				$Manufacturer->save({'name'=>$_[1]});
 			} # end if
+			@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 		} else {
 			$_[0]{'manufacturer'} = $_[1];
 		} # end if
