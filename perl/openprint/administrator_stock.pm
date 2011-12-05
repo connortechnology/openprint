@@ -247,6 +247,7 @@ sub _prices {
 sub import_export {
 
 	if ( $param{'btnFunction'} eq 'Export Stock' ) {
+$log->debug('Export');
 		my @header = ( 'ID', 'Owner','Manufacturer','Group','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
