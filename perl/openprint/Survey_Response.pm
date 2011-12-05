@@ -26,9 +26,9 @@ $table = 'survey_responses';
 	'answer'		=>	q`undef`,
 );
 
-sub Answer {
-	return new openprint::Survey_Answer( $_[0]{'answer_id'} );
-} # end sub Answer
+sub Answers {
+	return map { $_ ? new openprint::Survey_Answer( $_ ) : () } ( $_[0]{'answer_ids'} ? @{$_[0]{'answer_ids'}} : () );
+} # end sub Answers
 
 1;
 __END__

@@ -11,7 +11,7 @@
 				<ul>
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				<li>
-					<label for="ddmUser">User Name:</label>
+					<label for="ddmUser">User Name</label>
 					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 						<option value="">Select a User</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$$variable{'User'}->company_id(), 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
@@ -40,11 +40,11 @@
 			</div>
 		<!--#include virtual="_statistics.html"-->
 			<div id="UserInformation">
-   			<fieldset><legend>User Information:</legend>
+   			<fieldset><legend>User Information</legend>
 				<div class="content">
 					<ul>
-   				<li class="required"> 
-   					<label>Salutation:</label>
+   				<li class="salutation required"> 
+   					<label>Salutation</label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ); ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
 					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mrs.' ); ) ?> />
@@ -55,31 +55,31 @@
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
    				<li class="required"> 
-   					<label for="firstname">First Name:</label>
+   					<label for="firstname">First Name</label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
    				</li>
    				<li class="required"> 
-   					<label for="lastname">Last Name:</label>
+   					<label for="lastname">Last Name</label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
    				</li>
-   				<li class="notrequired"> 
-   					<label for="title">Title:</label>
+   				<li class="title notrequired"> 
+   					<label for="title">Title</label>
    					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
    				</li>
-   				<li class="notrequired"> 
-   					<label for="phone">Phone:</label>
+   				<li class="phone notrequired"> 
+   					<label for="phone">Phone</label>
    					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" />
    				</li>
-   				<li class="notrequired">
-   					<label for="mobile">Mobile:</label>
+   				<li class="mobile notrequired">
+   					<label for="mobile">Mobile</label>
    					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{'User'}->mobile() ) ?>" />
    				</li>
-   				<li class="notrequired">
-   					<label for="fax">Fax:</label>
+   				<li class="fax notrequired">
+   					<label for="fax">Fax</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
    				</li>
-   				<li class="notrequired">
-   					<label>Add to our Mailing List:</label>
+   				<li class="mailinglist notrequired">
+   					<label>Add to our Mailing List</label>
 					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() eq 'Y' ); ) ?> value="Y" />
 					<label class="radio" for="MailingListY">Yes</label>
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() ne 'Y' ); ) ?> value="N" />
@@ -117,7 +117,7 @@
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
    				<li class="notrequired">
-   					<label>Quote Level:</label>
+   					<label>Quote Level</label>
 					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
@@ -135,21 +135,21 @@
 				<div class="content">
 					<ul>
 						<li class="required">
-							<label for="email">E-mail Address:</label>
+							<label for="email">E-mail Address</label>
 							<input type="email" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
 						</li>
 						<li><!--#include virtual="/includes/password_requirements.html"--></li>
 						<li class="required">
-							<label for="password">Password:</label>
+							<label for="password">Password</label>
 							<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
 							<span id="psContainer"><span id="psStrength"></span></span>
 						</li>
 						<li class="required">
-							<label for="verifypassword">Verify Password:</label>
+							<label for="verifypassword">Verify Password</label>
 							<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);"/>
 							<span id="password_alert"></span>
 						</li>
-						<li><label>Password Last Changed:</label>
+						<li><label>Password Last Changed</label>
 						<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 						</li>
 					</ul>

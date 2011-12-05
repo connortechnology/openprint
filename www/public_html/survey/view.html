@@ -4,6 +4,11 @@
 		return sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s"/>%3$s</a>', $User->id(), $User->Asset()->thumbnail_url(), $User->name() ); ) ?></div>
 	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
 	<? echo ( $$variable{'Survey'}->description() ) ?>
+
+<? if ( $session{'user_id'} ) ?>
+<div id="Likes"><? echo ( $$variable{'Survey'}->likes('Likes') ) ?></div>
+<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
+<? endif ( $session{'user_id'} ) ?>
 	
 	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
 		<input type="hidden" name="action" />
@@ -23,7 +28,12 @@
 					foreach my $answer_id ( $R->answer_ids() ? @{$R->answer_ids()} :() ) {
 						push @{$Responses{$answer_id}}, $R;
 					} # end foreach
-					$Response = $R if $R->user_id() == $session{'user_id'};
+					if (
+						( $R->user_id() == $session{'user_id'} ) and
+						( $R->Answers() or $R->answer() ) ) {
+						# handle when no actual was given, but a response was recorded
+					$Response = $R;
+					} # end if
 				} # end foreach Response
 
 				if ( $Response or $can_edit ) {
@@ -36,7 +46,11 @@
 					} # end foreach
 					$html .= '</ul>';
 					if ( $Response ) {
-						$html .= 'Your reponse: ' . $Response->Answer()->text().'<br/>' . ( $Response->answer() ? $Response->answer().'<br/>' : '' );
+$log->debug($Response->to_string());
+foreach my $A ( $Response->Answers() ) {
+	$log->debug("Answer: " . $A->to_string() );
+}
+						$html .= 'Your reponse: ' . join(',',map{$_->text()} $Response->Answers() ).'<br/>' . ( $Response->answer() ? $Response->answer().'<br/>' : '' );
 					} # end if
 				} # end if
 				if ( ! $Response ) {
@@ -53,7 +67,7 @@
 								[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ], 
 								$Response->answer_ids(),
 								);
-					} elsif ( $Question->type() eq 'select-one' ) {
+					} elsif ( $Question->type() eq 'select' ) {
 						$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
 								ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
 					} # end if
