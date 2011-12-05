@@ -44,6 +44,7 @@ sub save {
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		# The union gets rid of duplicates
 		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
+			next if ! $servicetype_id;
 			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
 		} # end foreach
 	} # end if
