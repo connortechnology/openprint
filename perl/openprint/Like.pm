@@ -13,6 +13,7 @@ $table = 'likes';
 	'object_type'	=>	undef,
 	'object_id'		=>	'object_id',
 	'created_on'	=>	'created_on',
+	'value'			=>	'value',
 );
 %find_fields = (
 	'object_type'	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
@@ -20,6 +21,7 @@ $table = 'likes';
 @identified_by = ( 'user_id', 'object_type_id', 'object_id' );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
+	'value'			=>	undef,
 );
 
 sub object_type {

@@ -854,10 +854,18 @@ sub like_button {
 sub like {
 	my $Like = $_[0]->Like();
 	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}});
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>1});
 		$_[0]{'Like'} = $Like;
 	} # end if
 } # end sub like
+
+sub dislike {
+	my $Like = $_[0]->Like();
+	if ( ! $Like ) {
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>0});
+		$_[0]{'Like'} = $Like;
+	} # end if
+} # end sub dislike
 
 sub unlike {
 	my $Like = $_[0]->Like();

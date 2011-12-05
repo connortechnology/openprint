@@ -550,6 +550,9 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('ALTER TABLE likes DROP object_type');
 		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
 	} # end if
+	if ( ! exists $$data{'value'} ) {
+		$dbh->do('ALTER TABLE likes ADD value INTEGER');
+	} # end if
 }
 if ( ! sets::isin( 'keywords', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
