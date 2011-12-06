@@ -20,6 +20,17 @@
 						$html .= ssi::button( 'SAT', { 'onclick' => q`f1.elements['action'].value='set as thumbnail';f1.submit();`,
 						'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail
+					my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
+					if ( $DoDont ) {
+						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
+						if ( $DoDontPhoto ) {
+						$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
+                        'text'=>"Remove from Do/Don't" } );
+						} else {
+						$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='Do/Dont';f1.submit();`,
+                        'text'=>"Include in Do/Don't" } );
+						} # end if
+					} # end if
 				} # end if can edit
 				my @Photos = $Album->Photos();
 				my $index = 0;
