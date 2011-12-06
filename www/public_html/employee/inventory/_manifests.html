@@ -51,9 +51,9 @@
 			<th class="Company">Vendor</th>
 			<th class="Date">Received On</th>
 			<th class="contents">Contents</th>
-		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
-		<th class="Price">Value</th>
-		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+			<th class="Price">Value</th>
+			<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		</tr>
 		<? echo (
 			my $html;
@@ -61,41 +61,37 @@
 			my $value_total;
 			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
 
-				if ( $session{'/employee/inventory/manifests.html?over_delivery'} or $session{'/employee/inventory/manifests.html?under_delivery'} ) {
-					my $has_po = 0;
+				if ( $session{'/employee/inventory/manifests.html?delivery'} ) {
+					my $under = 0;
+					my $over = 0;
+
 					# First, see if any have po_ids, skip the ones that dont
 					foreach my $Type ( $Manifest->Types() ) {
-						if ( $Type->po_id() ) {
-							$has_po = 1 ;
-							last;
-						}  # end if
-					} # end foreach
-					next if ! $has_po;
+						next if ! $Type->po_id();
 
-					if ( $session{'/employee/inventory/manifests.html?over_delivery'} ) {
-						my $over = 0;
-						foreach my $Type ( $Manifest->Types() ) {
-							my $PO_Content = $Type->PurchaseOrder_Content();
-							if ( $PO_Content ) {
-								my $quantity = 0;
-								my $min_roll_size;
+						my $PO_Content = $Type->PurchaseOrder_Content();
+						next if ! $PO_Content;
 
-								foreach my $C ( $Manifest->Contents() ) {
-									next if $C->type_id() != $Type->id();
-									$quantity += $C->quantity();
-									$min_roll_size = $C->quantity() if (!defined $min_roll_size) or ($min_roll_size < $C->quantity());
-								} # end foreach Content
+						my $quantity = 0;
+						my $min_roll_size;
 
-	$openprint::log->debug("Min size: " . $min_roll_size . ' quantity: ' . $quantity . ' PO QTY: ' . $PO_Content->qty());
-								if ( ($PO_Content->qty() + $min_roll_size) < $quantity ) {
-									$over = 1;
-									last;
-								} # end if
-							} # end if
-						} # end foreach
-						next unless $over;
-					} # end if
-				} # end if
+						# Get QTY
+						foreach my $C ( $Manifest->Contents() ) {
+							next if $C->type_id() != $Type->id();
+							$quantity += $C->quantity();
+							$min_roll_size = $C->quantity() if (!defined $min_roll_size) or ($min_roll_size < $C->quantity());
+						} # end foreach Content
+
+						if ( ($PO_Content->qty() + $min_roll_size) < $quantity ) {
+							$over = 1;
+						} elsif ( $PO_Content->qty() > $quantity ) {
+							$under = 1;
+						} # end if
+					} # end foreach Type
+					next if ( $session{'/employee/inventory/manifests.html?delivery'} eq 'over' ) and ! $over;
+					next if ( $session{'/employee/inventory/manifests.html?delivery'} eq 'under' ) and ! $under;
+					next if ( $session{'/employee/inventory/manifests.html?delivery'} eq 'exact' ) and ( $under or $over );
+				} # end if under or over
 
 				my %manifest_skids;
 				my %manifest_weight;
@@ -104,6 +100,8 @@
 
 				my $value = 0;
 
+				# Why? We are counting the # of skids and weight on the manifest
+				# Supposedly to compare to the actual skid contents
 				foreach my $MC ( $Manifest->Contents() ) {
 					$manifest_skids{$MC->Type()->paper_id()} += 1;
 					$manifest_weight{$MC->Type()->paper_id()} += $MC->quantity();
@@ -122,7 +120,7 @@
 				<td class="po_id"><a href="manifest.html?manifest_id=%1$s">%3$s</a></td>
 				<td class="Docket"><a href="manifest.html?manifest_id=%1$s">%4$s</a></td>
 				<td class="Company"><a href="manifest.html?manifest_id=%1$s">%5$s</a></td>
-				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s&nbsp;</a></td>`, 
+				<td class="Date"><a href="manifest.html?manifest_id=%1$s">%6$s</a></td>`, 
 					$$Manifest{'id'}, $$Manifest{'name'},join('<br/>', $Manifest->po_ids() ), 
 					join('<br/>', $Manifest->dockets() ), $Manifest->Vendor()->name(),
 					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ),
@@ -136,7 +134,9 @@
 					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
 						if ( $Type ) {
-							$html .= ' @ ' . ( $Type->cost_from_po() ? openprint::Currency::format( $Type->cost_from_po() ) : '0.00' ). '/100lbs';
+							my $POC = $Type->PurchaseOrder_Content();
+
+							$html .= ' @ ' . ( $POC ? openprint::Currency::format( $POC->price() ) : '0.00' ). '/100lbs';
 						} # end if
 					} # end if
 					$html .= '<br/>';

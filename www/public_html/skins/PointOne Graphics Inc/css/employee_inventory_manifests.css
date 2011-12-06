@@ -9,3 +9,9 @@ table .po_id {
 table .contents {
 	text-align: left;
 }
+li label:after {
+	content: ":";	
+}
+li label.radio:after {
+	content: "";
+}

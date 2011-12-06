@@ -1502,7 +1502,7 @@ sub _manifests {
 	ssi::save_params( '/employee/inventory/manifests.html', ( 
 				'received_on_start_year','received_on_start_month','received_on_start_day',
 				'received_on_end_year','received_on_end_month','received_on_end_day',
-				'supplier_id', 'over_delivery', 'under_delivery',
+				'supplier_id', 'delivery',
 				) );
 } # end sub _manifests
 

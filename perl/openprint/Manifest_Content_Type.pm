@@ -1,8 +1,8 @@
+use strict;
 package openprint::Manifest_Content_Type;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
 use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;

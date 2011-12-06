@@ -524,9 +524,12 @@ sub _po_content_line {
 		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
-		$PO = $PO_Content->PurchaseOrder();
-		$PO_Content->delete();
-		$variable{'error'} .= $PO->save();
+		if ( $PO_Content->id() ) {
+			# Might have already been deleted
+			$PO = $PO_Content->PurchaseOrder();
+			$PO_Content->delete();
+			$variable{'error'} .= $PO->save();
+		} # end if
 	} # end if
 } # end sub _purchase_order_content_line
 

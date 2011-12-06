@@ -510,9 +510,10 @@ tr.highlightOn {
 img {
 	border: none;
 }
-td.Date, th.Date {
-	width: 120px;
+table .Date {
+	width: 118px;
 	text-align: right;
+	padding-right: 2px;
 }
 table .DateTime {
 	width: 150px;

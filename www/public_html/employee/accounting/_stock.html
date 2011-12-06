@@ -64,15 +64,18 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 			} elsif ( $POC->id() ) {
 				$html .= '<br/>Guessed From PO: ' . ($POC->item() ? $POC->item() : $POC->description() );
 				$html .= ssi::button('confirm'.$$Type{'id'}, { 'onclick'=>qq`new Ajax.Request('_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$Type{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } );
-			} else {
-				$html .= '<br/>Unable to guess from PO.  PO contents: (click to select)';
+			} elsif ( $Type->po_id() ) {
+				$html .= '<br/>Unable to guess from PO.  PO contents: (click to select)<br/>';
 				foreach my $C ( $Type->PurchaseOrder()->Contents() ) {
 					if ( $C->item() ) {
 						$html .= $C->item() . '<br/>';
 					} else { 
 						$html .= $C->description() . '<br/>';
 					} # end if
+				$html .= ssi::button('confirm'.$$Type{'id'}.'-'.$$C{id}, { 'onclick'=>qq`new Ajax.Request('_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$Type{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/><br/>';
 				} # end foreach C
+			} else {
+				$html .= '<br/>No PO assigned.';
 			} # end if
 			$html .= '</span></td>';
 			
