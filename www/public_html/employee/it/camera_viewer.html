@@ -5,7 +5,7 @@
 		  'host'      => $config{'zm_db_hostname'},
 		  'login'     => $config{'zm_db_username'},
 		  'password'  => $config{'zm_db_password'},
-		);
+		) if $config{'zm_db_name'};
 	return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
 	require openprint::ZM_Monitor;
 	@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None' );

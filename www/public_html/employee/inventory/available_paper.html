@@ -103,7 +103,7 @@ Please select a Paper to view/edit.<br>
 		} # end if
 	} # end if
 
-    my @StockOptions = ( 'Manufacturer','Name','Finish','Colour','Weight' );
+    my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight' );
 
     foreach my $option ( @StockOptions ) {
         my @Papers = openprint::Paper->find( %find );
@@ -143,7 +143,7 @@ Please select a Paper to view/edit.<br>
 						( $session{'/employee/inventory/available_paper.html?Type'} ? ( 'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ] ) : () ),
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						( $session{'/employee/inventory/available_paper.html?Manufacturer'} ? ( 'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'} ) : () ),
-						( $session{'/employee/inventory/available_paper.html?Name'} ? ( 'name_id'=>$session{'/employee/inventory/available_paper.html?Name'} ) : () ),
+						( $session{'/employee/inventory/available_paper.html?Brand'} ? ( 'name_id'=>$session{'/employee/inventory/available_paper.html?Brand'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Finish'} ? ( 'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Colour'} ? ( 'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Weight'} ? ( 'weight_id'=>$session{'/employee/inventory/available_paper.html?Weight'} ) : () ),
@@ -172,7 +172,7 @@ Please select a Paper to view/edit.<br>
 						( $session{'/employee/inventory/available_paper.html?Type'} ? ( 'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ] ) : () ),
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						( $session{'/employee/inventory/available_paper.html?Manufacturer'} ? ( 'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'} ) : () ),
-						( $session{'/employee/inventory/available_paper.html?Name'} ? ( 'name_id'=>$session{'/employee/inventory/available_paper.html?Name'} ) : () ),
+						( $session{'/employee/inventory/available_paper.html?Brand'} ? ( 'name_id'=>$session{'/employee/inventory/available_paper.html?Brand'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Finish'} ? ( 'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Colour'} ? ( 'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'} ) : () ),
 						( $session{'/employee/inventory/available_paper.html?Weight'} ? ( 'weight_id'=>$session{'/employee/inventory/available_paper.html?Weight'} ) : () ),

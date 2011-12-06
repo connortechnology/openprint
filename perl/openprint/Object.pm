@@ -702,9 +702,9 @@ Carp::cluck("Use of deprecated Object ref in find");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->debug('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );

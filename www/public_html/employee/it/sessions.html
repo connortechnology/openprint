@@ -56,7 +56,7 @@ Please select a session to view/edit.<br>
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 							( $session{'/employee/it/sessions.html?company_id'} ? ( 'company_id'=>$session{'/employee/it/sessions.html?company_id'} ) : () ),
 							( $session{'/employee/it/sessions.html?user_type'} ? ( 'user_type'	=>	$session{'/employee/it/sessions.html?user_type'} ) : () ),
-							'order'=>'lower(strfirstname),lower(strlastname)' ) ], $session{'/employee/it/sessions.html?user_id'} ); ) ?>
+							'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/employee/it/sessions.html?user_id'} ); ) ?>
 			</select>
 		</li>
 		</ul>

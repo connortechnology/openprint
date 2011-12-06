@@ -1,11 +1,11 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? eval (
 		my %sql = (
-			'order'=>'lower(manufacturers.shortname),name,finish,colour,weight,width,height', 
+			'order'=>'lower(manufacturers.name),brand,finish,colour,weight,width,height', 
 			'in_stock_start'=>1,
 			'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-			'table'	=>	'Papers,Manufacturers,papernames,paperfinishes,papercolours,paperweights',
-			'columns'	=>	'*,papernames.shortname as name,paperfinishes.shortname as finish,papercolours.shortname as colour,paperweights.shortname as weight',
+			'table'	=>	'Papers,Manufacturers,StockBrands,StockFinishes,StockColours,StockWeights',
+			'columns'	=>	'*,StockBrands.name as brand,StockFinishes.name as finish,StockColours.name as colour,StockWeights.name as weight',
 		);
 		if ( $session{'/employee/inventory/available_paper.html?Owner'} ) {
 			if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
