@@ -64,12 +64,11 @@ $serial = 'schedule_id_seq';
 );
 
 sub runtime_seconds {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'runtime'} = misc::seconds2hms($_[0]);
+	if ( @_ > 1 ) {
+		$_[0]{'runtime'} = misc::seconds2hms($_[1]);
 	} # end if
 	
-	return misc::hms2time( $self->runtime() );
+	return misc::hms2time( $_[0]{'runtime'} );
 } # end sub runtime_seconds
 
 sub starttime {

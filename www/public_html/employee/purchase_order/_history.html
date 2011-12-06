@@ -7,7 +7,7 @@
 			'order' => 'id desc');
 	} elsif ( $param{'docket'} ) {
 		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
-			'docket'=>$param{'docket'}, 
+			'docket any'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
 	} elsif ( $param{'manifest_id'} ) {

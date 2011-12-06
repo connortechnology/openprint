@@ -78,6 +78,7 @@ $serial	= 'paper_id_seq';
 		'message'				=>	'message',
 		'diescoring'			=>	'diescoring',
 		'in_stock'				=>	'in_stock',
+		'allocated'				=>	'allocated',
 		'parts'					=>	'parts',
 		'material_id'			=>	'material_id',
 		);
@@ -107,7 +108,6 @@ sub load {
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated'} = @$data{'allocated'} if exists $$data{'allocated'};
 } # end sub load
 
 # Returns a copy of the paper object.
@@ -193,9 +193,10 @@ sub save {
 		@$self{'manufacturer_id','manufacturer'} = @$_{'id','name'};
 	} # end if manufacturer
 
-	delete $$self{'in_stock'};
-	$self->in_stock();
-	#$self->wpsi( undef );
+	if ( $$self{'id'} ) {
+		$self->in_stock(undef);
+		$self->allocated(undef,undef);
+	} # end if
 
 	foreach my $key ( keys %fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -679,8 +680,6 @@ sub add_inventory {
 			'docket'		=> $docket,
 			} );
 
-	delete $$self{allocated};
-	# Updates in_stock
 	$self->save();
 } # end sub add_inventory
 
@@ -711,7 +710,7 @@ sub allocate {
 				);
 	} # end if project_id
 
-	delete $$self{allocated};
+	$self->save();
 	delete $$self{available};
 	return $PA;
 } # end sub allocate
@@ -727,43 +726,40 @@ sub allocated {
 	my ( $self, $project_id, $new ) = @_;
 	return 0 if ! $$self{'id'};
 	if ( @_ == 3 ) {
-		if ( defined $new ) {
-			$$self{allocated} = $new;
-		} else {
-			delete $$self{allocated};
-		} # end if
+		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
 		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
 		return $_;
 	} # end if
-	if ( ! exists $$self{allocated} ) {
-		@$self{allocated} = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+	if ( ! defined $$self{allocated} ) {
+		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
 	} # end if
 	return $$self{allocated};
 } # end sub allocated
 
 sub in_stock {
-	my $self = shift;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{'id'};
 
-	if ( @_ ) {
-		if ( ref $_[0] eq 'openprint::StockQuality' ) {
+	if ( @_ > 1 ) {
+		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
 			foreach my $C ( openprint::SkidContent->find('paper_id'=>$$self{'id'}, 'quality_id'=>$_[0]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
+		} else {
+			$_[0]{'in_stock'} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! exists $$self{in_stock} ) {
+	if ( ! defined $_[0]{'in_stock'} ) {
 		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			$$self{in_stock} += $SkidContent->quantity();
+			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-	return 1*$$self{in_stock};
+    return $_[0]{'in_stock'};
 } # end sub in_stock
 
 sub available {

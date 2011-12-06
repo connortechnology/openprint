@@ -145,19 +145,25 @@
 		</p>
 		<p>
 			<label>GSM:</label>
-			<input type="text" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" style="width: auto;" />
+			<input type="number" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" />
 		</p>
 		<p id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
 			<label>MWeight:</label>
-			<input type="text" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" size="6"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" style="width: auto;" />M
+			<input type="number" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" />M
 		</p>
 		<p>
 			<label>FSC Code:</label>
-			<input type="text" id="fsc_code-<?type_id?>" name="fsc_code-<?type_id?>" value="<? echo ( $param{'fsc_code-'.$$variable{'type_id'}} ) ?>" size="13" style="width: auto;" />
+			<input type="text" id="fsc_code-<?type_id?>" name="fsc_code-<?type_id?>" value="<? echo ( $param{'fsc_code-'.$$variable{'type_id'}} ) ?>" />
+		</p>
+		<p>
+			<label>Supplier Invoice#:</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
 		</p>
 		<p>
 			<label>Docket:</label>
-			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
+			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" />
+<? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
+			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
@@ -166,28 +172,47 @@
 		</div>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
+			<input type="number" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::button( 'GoPO'.$$variable{'Type'}->id(), { 'href'=>'/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'text'=>'Go' } ) : '' ) ?>
 		</p>
-		<? if ( $$variable{'Type'}->po_id() ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
-		<p>
-			<label>Cost from PO (/CWT):</label>
-			<? echo ( openprint::Currency::format( $$variable{'PO_Content'}->price() ) ) ?>
-		</p>
-		<p>
-			<label>Quantity from PO:</label>
-			<? echo ( Number::Format::format_number( defined $$variable{'PO_Content'}->qty() ? $$variable{'PO_Content'}->qty() : 0 ) . $$variable{'PO_Content'}->units() ) ?>
-		</p>
-		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
-		<? endif ( $$variable{'Type'}->po_id() ) ?>
+<div id="PO_<? echo ( $$variable{'Type'}->id() ) ?>">
+		<? echo ( 
+			return if !$$variable{'Type'}->po_id();
+			my $PO = $$variable{'Type'}->PurchaseOrder();
+			my $POC = $$variable{'Type'}->PurchaseOrder_Content();
+
+			my $html = '';
+
+			if ( $$variable{'Type'}->po_content_id() ) {
+				$html .= 'Confirmed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
+				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
+				} # end if
+			} elsif ( my $POC = $$variable{'Type'}->PurchaseOrder_Content() ) {
+				$html .= 'Guessed: ' . ( $POC->item() ? $POC->item() : $POC->description() );
+				$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+					$html .= ' @ ' . openprint::Currency::format( $POC->price() );
+				} # end if
+				$html .= ssi::button('confirm'.$$POC{id}, { 'onclick'=>qq`new Ajax.Request('/employee/accounting/_stock.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$POC{id} } } );`, 'text'=>'Confirm' } ) . '<br/>';
+			} else {
+				$html .= 'Select one:<br/>';
+				foreach my $C ( $PO->Contents() ) {
+					$html .= $POC->item() ? $POC->item() : $POC->description();
+					$html .= ' ' . Number::Format::format_number($POC->qty()).$POC->units();
+					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+						$html .= openprint::Currency::format( $POC->price() );
+					} # end if
+					$html .= ssi::button('confirm'.$$C{id}, { 'onclick'=>qq`new Ajax.Request('_manifest_po_content.json', { parameters: { action: 'confirm_po_content', manifest_content_type_id: $$variable{'Type'}{id}, po_content_id: $$C{id} } } );`, 'text'=>'Select' } ) . '<br/>';
+
+				} # end foreach C
+			} # end if
+		) ?>		
+</div>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>
 			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-		</p>
-		<p>
-			<label>Supplier Invoice#:</label>
-			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</div>

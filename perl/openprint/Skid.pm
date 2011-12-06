@@ -1,7 +1,7 @@
-package openprint::Skid;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Skid;
+our @ISA = qw( openprint::Object );
+
 use openprint ();
 use vars qw( $log $dbh %variable %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *variable = \%openprint::variable;
@@ -82,14 +82,17 @@ sub find {
 		} # end if
 	} # end if
 
-	if ( $params{'paper_id'} ) {
+	if ( $params{'paper_id'} and $params{'quantity >='} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity >= ?)';
+		push @values, $params{'paper_id'}, $params{'quantity >='};
+	} elsif ( $params{'paper_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
 		push @values, $params{'paper_id'};
-	} # end if
-	if ( $params{'quantity >='} ) {
+	} elsif ( $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity >='};
 	} # end if
+
 	if ( $params{'quality_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
 		push @values, $params{'quality_id'};
@@ -505,18 +508,16 @@ sub contents {
 } # end sub contents
 
 sub rfidtag_id {
-	my $self = shift;
-
-	if ( @_ ) {
-		my $rfidtag_id = shift;	
+	if ( @_ > 1 ) {
+		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
-		$$self{'rfidtag_id'} = $rfidtag_id;
+		$_[0]{'rfidtag_id'} = $rfidtag_id;
 	} # end if
-	return $$self{'rfidtag_id'};
+	return $_[0]{'rfidtag_id'};
 } # end sub rfidtag_id
 
 sub RFIDTag {
@@ -552,12 +553,13 @@ sub is_empty {
 } # end sub is_empty
 
 sub last_seen_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+	if ( ! exists $_[0]{last_seen_days} ) {
+		$_[0]{last_seen_days} = int( (time - Date::Parse::str2time($_[0]{'updated_on'})) / 86400 );
+	} # end if
+	return $_[0]{last_seen_days};
 }
 sub age_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+	return int( (time - Date::Parse::str2time($_[0]{'created_on'})) / 86400 );
 }
 
 sub Manifest {

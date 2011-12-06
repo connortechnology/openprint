@@ -11,6 +11,9 @@
 		$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();" } );
 	} # end if
 	$html .= ssi::button( 'Print', { 'onclick'=>'window.print();' } );
+	if ( $session{'user_type'} eq 'A' ) {
+		$html .= ssi::button( 'EmailToMe', { 'onclick'=>"f1.btnFunction.value='Email Me';f1.submit();", 'text'=>'Send Email to Me' } );
+	} # end if
 	if ( $$variable{'PurchaseOrder'}->can_edit() ) {
 		$html .= ssi::button( 'Email', { 'onclick'=>"f1.btnFunction.value='Email Vendor';f1.submit();", 'text'=>'Send Email' } );
 		$html .= ssi::button( 'Edit', { 'href'=>'edit.html?po_id='.$$variable{'PurchaseOrder'}->id() } );

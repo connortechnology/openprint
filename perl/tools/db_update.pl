@@ -528,6 +528,9 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 		sql::update( undef, undef, 'papers', 'width > height', 'grain_direction', 'Short' );
 		sql::update( undef, undef, 'papers', 'width < height', 'grain_direction', 'Long' );
 	} # end if
+	if ( ! exists $$data{'allocated'} ) {
+		$dbh->do('alter table papers add allocated integer');
+	} # end if
 } # end if
 if ( ! sets::isin( 'materials', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Materials.sql') );

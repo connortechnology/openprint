@@ -6,12 +6,12 @@
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Project ID:</label>
-			<input type="text" size="10" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
 			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" class="filter" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
 				<option value=""> Select a Customer</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
