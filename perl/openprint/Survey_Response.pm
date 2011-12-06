@@ -24,8 +24,11 @@ $table = 'survey_responses';
 	'company_id'	=>	q`undef`,
 	'survey_id'		=>	q`undef`,
 	'answer'		=>	q`undef`,
-	
 );
+
+sub Answers {
+	return map { $_ ? new openprint::Survey_Answer( $_ ) : () } ( $_[0]{'answer_ids'} ? @{$_[0]{'answer_ids'}} : () );
+} # end sub Answers
 
 1;
 __END__

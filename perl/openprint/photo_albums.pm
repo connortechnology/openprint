@@ -122,6 +122,23 @@ sub view_photo {
 
 		if ( $param{'action'} eq 'set as thumbnail' ) {
 			$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+		} elsif ( $param{'action'} eq 'Do/Dont' ) {
+			my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont','user_id is null'=>1);
+			if ( ! $DoDont ) {
+				$log->error("DoDont not found");
+			} else {
+				my $DoDontPhoto = new openprint::Photo_in_Album();
+				$variable{'error'} .= $DoDontPhoto->save({'asset_id'=>$param{'asset_id'}, 'album_id'=>$DoDont->id()});
+			} # end if
+		} elsif ( $param{'action'} eq 'UnDo/Dont' ) {
+			my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont','user_id is null'=>1);
+			if ( ! $DoDont ) {
+				$log->error("DoDont not found");
+			} else {
+				my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$param{'asset_id'}, 'album_id'=>$DoDont->id() );
+				$variable{'error'} .= $DoDontPhoto->delete() if $DoDontPhoto;
+			} # end if
+			
 		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$variable{'error'} .= $Photo->delete();
 			if ( ! $variable{'error'} ) {

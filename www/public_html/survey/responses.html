@@ -2,14 +2,14 @@
 	<fieldset class="filters unprintable"><legend>Select Response to View</legend>
 		<p>
 			<label>Responder:</label>
-			<select name="user_id" onChange="this.form.submit();">
+			<select name="user_id" onchange="this.form.submit();">
 				<option value=""> select </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 								'id in' => [ 
 								sets::union( 
 									map { $_->user_id() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}) 
-) ], 
-								'order'=>'lower(firstname),lower(lastname)') ) ], $param{'user_id'} );
+									) ], 
+								'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} );
 				) ?>
 			</select>
 		</p>
@@ -22,23 +22,40 @@
 	<table class="List">
 	<? echo (
 		my $html;
-		my @categories = sql::execute( $log, $dbh, q{SELECT id, name FROM survey_question_categories ORDER BY sorting} );
-		my %answers = map { $_->question_id(), $_->answer() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}, 'user_id'=>$param{'user_id'} );
-		while ( my ( $cat_id, $cat_name ) = splice @categories, 0, 2 ) {
-			$html .= qq{<tr><th colspan="2" align="left">$cat_name</th></tr>};
-			my @questions = sql::execute( $log, $dbh, q{SELECT id, text, type FROM survey_questions WHERE survey_id=? AND category_id=?}, $r->param('survey_id'), $cat_id );
+		my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}, 'user_id'=>$param{'user_id'} );
+		my @Categories = openprint::Survey_Question_Category->find('order'=>'sorting,name');
+		if ( @Categories ) {
+			foreach my $Category ( @Categories ) {
+				$html .= qq{<tr><th colspan="2" align="left">$$Category{'name'}</th></tr>};
+
+				my @Questions = openprint::Survey_Question->find('survey_id'=>$param{'survey_id'}, 'category_id'=>$Category->id(),'order'=>'sorting' );
+				my $rowclass;
+				foreach my $Question ( @Questions ) {
+					my $Response = $Responses{$$Question{id}};
+					$Response = new openprint::Survey_Response() if ! $Response;
+					$html .= qq`<tr$rowclass><td>$$Question{text}</td><td>`.join(',',map{$_->text()} $Response->Answers()).qq` $$Response{answer}</td></tr>\n`;
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Question
+			} # end foreach Category
+		} else {
+			my @Questions = openprint::Survey_Question->find('survey_id'=>$param{'survey_id'},'order'=>'sorting' );
 			my $rowclass;
-			while ( my ( $id, $text, $type ) = splice @questions, 0, 3 ) {
-				
-				$html .= qq`<tr$rowclass><td>$text</td><td>$answers{$id}</td></tr>\n`;
+			foreach my $Question ( @Questions ) {
+				my $Response = $Responses{$$Question{id}};
+				$Response = new openprint::Survey_Response() if ! $Response;
+				$html .= qq`<tr$rowclass><td>$$Question{text}</td><td>`.join(',',map{$_->text()} $Response->Answers()).qq` $$Response{answer}</td></tr>\n`;
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end while questions
-		} # end while ctegories
+			} # end foreach Question
+		} # end if
 		return $html;
 		) ?>
 	</table>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Response' ); )?>
+		<? echo ( 
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $param{'user_id'} ) {
+				ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();", 'text'=>'Delete Response' } );
+			} # end if
+		) ?>
 	</p>
 </fieldset>
 <? endif ( $param{'user_id'} ) ?>

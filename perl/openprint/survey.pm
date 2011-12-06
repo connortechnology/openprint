@@ -20,6 +20,7 @@ package openprint::survey;
 
 require openprint::Survey;
 require openprint::Survey_Question;
+require openprint::Survey_Question_Category;
 require openprint::Survey_Answer;
 require openprint::Survey_Response;
 
@@ -193,5 +194,57 @@ sub _answers_edit {
 sub questions {
 } # end sub questions
 
+sub _comments {
+	my $Survey = $variable{'Survey'} = openprint::Survey->find_one( 'id'=>$param{'survey_id'} );
+	if ( ! $Survey ) {
+		$variable{'error'} .= 'Survey not found.';
+		return;
+	} # end if
+	if ( $param{'text'} =~ /\S/ ) {
+		if ( ! openprint::Comment->find_one(
+			'user_id'	=>	$session{'user_id'},
+			'text'		=>	$param{'text'},
+			'object_id'	=>	$Survey->id(),
+			'object_type'	=>	ref $Survey,
+			) ) {
+
+			my $approved = 0;
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $Survey->created_by() ) {
+				$approved = 1;
+			} # endif
+
+			$variable{'error'} .= new openprint::Comment()->save({
+					'text'			=>	$param{'text'},
+					'object_type'	=>	ref $Survey,
+					'object_id'		=>	$Survey->id(),
+					'approved'		=>	$approved,
+					});
+		} # end if comment already exists
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Survey{'id'}, 'object_type'=>ref $Survey, 'id'=>$param{'comment_id'} );
+		if ( $Comment ) {
+			if ( $Comment->can_approve() ) {
+				$Comment->save({'approved'=>1});
+			} else {
+				$variable{'error'} .= 'You do not have rights to approve that comment.';
+$log->error("Attempt to approve a comment without rights");
+			} # end if
+		} else {
+			$variable{'error'} .= 'Comment not found.';
+		} # end if
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Survey{'id'}, 'object_type'=>ref $Survey, 'id'=>$param{'comment_id'} );
+		if ( $Comment ) {
+			if ( $Comment->can_delete() ) {
+				$variable{'error'} .= $Comment->delete();
+			} else {
+				$variable{'error'} .= 'You do not have rights to delete that comment.';
+$log->error("Attempt to delete a comment without rights");
+			} # end if
+		} else {
+			$variable{'error'} .= 'Comment not found or you do not have rights to delete.';
+		} # end if
+	} # end if
+} # end sub _comments
 1;
 __END__

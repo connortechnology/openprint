@@ -176,6 +176,7 @@ sub destroy {
 	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
+	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{'id'}], 'created_by_id', undef );
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
@@ -348,11 +349,11 @@ sub Asset {
 			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
-				$openprint::log->debug("Loading by gender");
+				#$openprint::log->debug("Loading by gender");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
 			if ( ! $_[0]{'Asset'} ) {
-				$openprint::log->debug("Loading by default");
+				#$openprint::log->debug("Loading by default");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
 			my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
@@ -371,8 +372,11 @@ sub Asset {
 } # end sub Asset
 
 sub Profile {
-	return new openprint::User_Profile( $_[0]{'id'} );
-}
+	if ( ! exists $_[0]{'Profile'} ) {
+		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
+	} # end if
+	return $_[0]{'Profile'};
+} # end sub Profile
 
 sub html {
 	my $User = $_[0];
@@ -394,12 +398,14 @@ sub html {
 					<a href="/account/view.html?user_id=%1$d">
 					<div class="Name">%2$s</div>
 					<div class="Details">%5$s %6$s</div>
+					<div class="Tagline">%7$s</div>
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
 				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
 				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
+				$Profile->Tagline(),
 			);
 	return sprintf(q`
 				<div class="User">
@@ -447,8 +453,8 @@ sub AUTOLOAD {
 				$$Profile{'fields'}{$name} = $_[1];
 			} # end if
 			return $$Profile{'fields'}{$name};
-		} else {
-			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		#} else {
+			#$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD

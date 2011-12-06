@@ -1,0 +1,37 @@
+<script type="text/javascript">
+<!--
+	function load_page( form ) {
+		var div = $('Results');
+		div.innerHTML = 'Please wait, loading.....';
+		new Ajax.Updater( 'Results', '_stream.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+-->
+</script>
+	<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Assets"><div class="Stream">
+<form id="f1" name="f1" action="stream.html" method="post">
+	<input type="hidden" name="action"/>
+<? echo (
+		my @Likes = openprint::Like->find('user_id'=>$session{'user_id'}, 'object_type'=>'openprint::Asset');
+
+		my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
+
+		my $Asset = openprint::Asset->find_one( 'created_by !=' => $session{'user_id'}, 'order'	=>	'id desc',
+				'id not in'=>[ map { $_->object_id() } @Likes ],
+				'id in' => [ map { $_->asset_id() } $DoDont->Photos() ],
+			);
+
+		my $html .= sprintf('<input type="hidden" name="asset_id" value="%d"/><img src="%s" alt=""/>', $Asset->id(), $Asset->url(), $Asset->caption() );
+		return $html;
+	) ?>
+	<p class="buttons">
+		<? echo ( 
+			join('',
+				ssi::button( 'Do', { 'onclick'=>q`f1.elements['action'].value='Do';f1.submit();` } ),
+				ssi::button( 'Dont', { 'onclick'=>q`f1.elements['action'].value='Dont';f1.submit();` } ),
+			);
+		) ?>
+	</p>
+</form>
+</div>
+</div>

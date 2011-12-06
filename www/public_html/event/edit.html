@@ -1,4 +1,5 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript" src="/javascripts/location.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -6,11 +7,6 @@
 		mode : "textareas",
 		theme : "advanced"
 	});
-	function getSelectionId(text, li) {
-		if ( li.id ) {
-			new Ajax.Request( '_load_location.json', { parameters: { location_id: li.id } } );
-		} // end if
-	}
 -->
 </script>
 <div class="Event"><div class="Edit">
@@ -55,7 +51,7 @@
 							</span>
 							<script type="text/javascript">update_duration(document.forms['f1'],'starting_on','ending_on');</script>
 						</li>
-						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
 							<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 							<select name="category_id" id="category_id" onchange="$('category').value='';">
 								<option value="">select</option>
@@ -76,7 +72,7 @@
 			</fieldset>
 			<fieldset><legend>Where</legend>
 <? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();) ?>
-<!--#include virtual="/includes/_location_fields.html"-->
+<!--#include virtual="/location/_location_fields.html"-->
 			</fieldset>
 			<p class="buttons">
 				<? echo (

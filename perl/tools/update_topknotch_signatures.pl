@@ -33,10 +33,6 @@ my @projects;
 
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
-	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
-}
-if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
 	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
 }

@@ -109,7 +109,7 @@ sub destroy {
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{'id'} );
 
 	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->delete();
@@ -251,7 +251,14 @@ sub dropdown {
 	} # end if
 
 	if ( @_ ) {
-		my %params = %{$_[0]};
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+		%params = %{$_[0]};
+		} elsif ( ref $_[0] eq 'ARRAY' ) {
+		%params = @{$_[0]};
+		} else {
+		%params = @_;
+		} # end if
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
 				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';

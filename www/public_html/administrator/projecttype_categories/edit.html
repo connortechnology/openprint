@@ -1,23 +1,26 @@
 <form name="f1" id="f1" action="list.html" method="post">
-	<input type="hidden" name="category_id" value="<? echo ( $openprint::param{'category_id'}; ) ?>" />
+	<input type="hidden" name="category_id" value="<? echo ( $$variable{'ProjectTypeCategory'}->id(); ) ?>" />
 	<fieldset>
 		<legend>
 		<? echo (
 			return $openprint::param{'category_id'} ? 'Editing Category '. $$variable{'ProjectTypeCategory'}->name() : 'Add New Category';
 		) ?>
 		</legend>
-		<p>
+		<div class="leftColumn">
+		<ul>
+		<li>
 			<label>Name:</label>
 			<input type="text" id="name" name="name" value="<? hecho ( $$variable{'ProjectTypeCategory'}->name(); ) ?>"  />
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Description:</label>
 			<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'ProjectTypeCategory'}->description(); ) ?></textarea>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Sort:</label>
-			<input type="text" id="sort" name="sort" value="<? hecho ( $$variable{'ProjectTypeCategory'}->sort(); ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
-		</p>
+			<input type="number" id="sort" name="sort" value="<? hecho ( $$variable{'ProjectTypeCategory'}->sort(); ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
+		</li>
+		</ul>
 		<p class="buttons">
 			<? echo ( join('',
 			ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' ),
@@ -25,6 +28,20 @@
 			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 			); ) ?>
 		</p>
+		</div>
+		<div class="rightColumn">
+			<ul>
+			<? echo (
+				my $html = '';
+				my @pt_ids = map { $_->id() } $$variable{'ProjectTypeCategory'}->ProjectTypes();
+				foreach my $PT ( openprint::ProjectType->find( 'order'=>'sorting,lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" name="projecttype_id" value="%d" %s/> %s</li>',
+						$PT->id(), ssi::checked( sets::isin( $PT->id(), \@pt_ids ) ), $PT->description() );
+				} # end foreach	
+				return $html;
+			) ?>
+			</ul>
+		</div>
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>
