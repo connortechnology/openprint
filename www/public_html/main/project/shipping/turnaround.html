@@ -16,7 +16,7 @@
 	my $Service = openprint::Service->find_one('name'=>'Turnaround'.$$variable{'Project'}->Type()->name());
 	$Service = openprint::Service->find_one('name'=>'Turnaround') if ! $Service;
 	if ( $Service ) {
-		my @Prices = openprint::ServicePrice::find( 'service_id'=>$$Service{id}, 'pricelist_id'=>$session{'Pricelist_id'}, 'order'=>'min DESC NULLS LAST,max DESC NULLS LAST' );
+		my @Prices = openprint::ServicePrice->find( 'service_id'=>$$Service{id}, 'pricelist_id'=>$session{'Pricelist_id'}, 'order'=>'min DESC NULLS LAST,max DESC NULLS LAST' );
 		my @options;
 		foreach my $Price ( @Prices ) {
 			if ( $Price->min() == $Price->max() ) {

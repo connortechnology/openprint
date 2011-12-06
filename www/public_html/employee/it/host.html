@@ -117,7 +117,7 @@
 
 			$html .= qq`<li id="mac_$mac">`;
 			$$variable{'username'} = $mac;
-			$html .= ssi::variable_substitution( $r, $log, $dbh, \$fragment, $variable );
+			$html .= ssi::variable_substitution( \$fragment, $variable );
 			$html .= '</li>';
 		} # end foreach mac
 		return $html;

@@ -19,11 +19,11 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
-		'order' => 'lower(strfirstname),lower(strlastname)',
+			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+		'order' => 'lower(firstname),lower(lastname)',
 				'id'=>[ sets::exclude(
 						[ map { $_->user_id() } $$variable{'Host'}->Notifications()], 
-						[ map { $_->id() } openprint::User::find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
+						[ map { $_->id() } openprint::User->find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
 					) ],
 		 ) ] );
 		) ?>

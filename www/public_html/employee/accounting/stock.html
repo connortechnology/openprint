@@ -6,12 +6,12 @@
 			<li><label>Received On:</label>
 				<span class="DateSelectorCT">
 				<? echo ( ssi::date_select_session( '/employee/accounting/stock.html', 'received_on_start', { 'onchange' =>
-							q`AjaxLoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
+							q`LoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
 							'with_today'=>1, 'with_clear'=>1,
 							} ); ) ?>
 				</span>to<span class="DateSelectorCT">
 				<? echo ( ssi::date_select_session( '/employee/accounting/stock.html', 'received_on_end', { 'onchange' =>
-							q`AjaxLoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
+							q`LoadContent('Results','/employee/accounting/_stock.html', $('f1').serialize() );`,
 							'with_today'=>1, 'with_clear'=>1,
 							} ); ) ?>
 				</span>
@@ -20,7 +20,7 @@
 				<? echo ( ssi::radio( 'cost_assigned', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/accounting/stock.html?cost_assigned'} ); ) ?>
 			</li>
 		</ul>
-		<p class="buttons"><? echo ( ssi::button( 'Load', { 'onclick'=>q`AjaxLoadContent('Results','_stock.html', $('f1').serialize() );` } ); ) ?></p>
+		<p class="buttons"><? echo ( ssi::button( 'Load', { 'onclick'=>q`LoadContent('Results','_stock.html', $('f1').serialize() );` } ); ) ?></p>
 	</fieldset>
 	<div id="Results"><!--#include virtual="_stock.html"--></div>
 	<p class="buttons"><? echo ( ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();" } ); ) ?></p>
