@@ -744,7 +744,7 @@ sub in_stock {
 	if ( @_ > 1 ) {
 		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent->find('paper_id'=>$$self{'id'}, 'quality_id'=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'}, 'quality_id'=>$_[0]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
@@ -754,7 +754,7 @@ sub in_stock {
 	} # end if
 
 	if ( ! defined $_[0]{'in_stock'} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
