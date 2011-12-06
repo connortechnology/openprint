@@ -1,0 +1,27 @@
+<? echo (
+	my @Articles = ();
+	foreach my $Article ( openprint::Article->find( 
+		'published'			=>	1,
+		'category_id'		=>	$session{'/article/list.html?category_id'},
+		'order'				=> 'published_on DESC',
+		'limit'		=>	$session{'/article/list.html?paging_per_page'},
+		'offset'	=>	$session{'/article/list.html?paging_per_page'} * $session{'/article/list.html?paging_page'},
+		) ) {
+		push @Articles, $Article;
+	} # end foreach Article
+
+	if ( @Articles == 0 ) {
+		return 'There are no articles which match your search criteria.';
+	} # end if
+
+	my $html;
+	foreach my $Article ( @Articles ) {
+		next if ! $Article->can_view();
+		$html .= $Article->html();
+	} # end foreach Article
+
+	if ( @Articles == $session{'/article/list.html?paging_per_page'} ) {
+		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Articles','_list.html', { parameters: { paging_page: `.($session{'/article/list.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+	} # end if
+	return $html;
+) ?>

@@ -27,7 +27,7 @@ sub history {
 		} # end if
 		if ( $param{'category_id'} ) {
 			delete $param{'category'};
-		} else {
+		} elsif ($param{'category'}) {
 			delete $param{'category_id'};
 		} # end if
 		if ( $param{'source'} ) {
@@ -190,7 +190,14 @@ sub edit {
 
 sub list {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	_list();
+	$session{'/article/list.html?paging_per_page'} = 5;
+	$session{'/article/list.html?paging_page'} = 0;
 } # end sub list
+
+sub _list {
+	ssi::save_params('/article/list.html', 'paging_page','category_id' );
+} # end sub _list
 
 sub category {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
