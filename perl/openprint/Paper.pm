@@ -1,9 +1,10 @@
+use strict;
 package openprint::Paper;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
+use Data::Dumper;
 
-use strict;
 use openprint ();
 use vars qw( $log %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
@@ -35,7 +36,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages','in_stock','parts','message',
+		'minimum_order','full_packages','in_stock','parts','message','allocated',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -227,11 +228,10 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated'} = @$data{'allocated'} if exists $$data{'allocated'};
 } # end sub load
 
 
@@ -302,8 +302,10 @@ sub save {
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
 	} # end if manufacturer
 
-	delete $$self{'in_stock'};
-	$self->in_stock();
+	if ( $$self{'id'} ) {
+		$self->in_stock(undef);
+		$self->allocated(undef,undef);
+	} # end if
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -672,8 +674,7 @@ sub add_inventory {
 		'units',	$units,
 		'docket',	$docket,
         );
-	delete $$self{allocated};
-	# Updates in_stock
+	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 
@@ -705,7 +706,7 @@ sub allocate {
 				);
 	} # end if project_id
 
-	delete $$self{allocated};
+	$self->save();
 	delete $$self{available};
 	return $PA;
 } # end sub allocate
@@ -721,43 +722,40 @@ sub allocated {
     my ( $self, $project_id, $new ) = @_;
 	return 0 if ! $$self{'id'};
 	if ( @_ == 3 ) {
-		if ( defined $new ) {
-			$$self{allocated} = $new;
-		} else {
-			delete $$self{allocated};
-		} # end if
+		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
 		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
 		return $_;
 	} # end if
-	if ( ! exists $$self{allocated} ) {
-		@$self{allocated} = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+	if ( ! defined $$self{allocated} ) {
+		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
 	} # end if
     return $$self{allocated};
 } # end sub allocated
 
 sub in_stock {
-    my $self = shift;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{'id'};
 
-	if ( @_ ) {
-		if ( ref $_[0] eq 'openprint::StockQuality' ) {
+	if ( @_ > 1 ) {
+		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent::find('paper_id'=>$$self{'id'}, 'quality_id'=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent::find('paper_id'=>$_[0]{'id'}, 'quality_id'=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
+		} else {
+			$_[0]{'in_stock'} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! exists $$self{in_stock} ) {
-		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+	if ( ! defined $_[0]{'in_stock'} ) {
+		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$_[0]{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			$$self{in_stock} += $SkidContent->quantity();
+			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return 1*$$self{in_stock};
+    return $_[0]{'in_stock'};
 } # end sub in_stock
 
 sub available {

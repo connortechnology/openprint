@@ -1,0 +1,23 @@
+table .paper_name {
+	text-align: left;
+}
+table .available {
+	text-align: right;
+	width: 72px;
+	padding-right: 3px;
+}
+table .age {
+	text-align: left;
+	width: 125px;
+}
+table .last_seen {
+	text-align: left;
+	width: 125px;
+}
+table .inventory {
+	text-align: left;
+	width: 200px;
+}
+table .buttons {
+	width: 40px;
+}

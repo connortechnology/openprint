@@ -1,7 +1,7 @@
-package openprint::Skid;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Skid;
+our @ISA = qw( openprint::Object );
+
 use openprint ();
 use vars qw( $log $dbh %variable %session $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -18,7 +18,7 @@ require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -76,14 +76,17 @@ sub find {
 		} # end if
 	} # end if
 
-	if ( $params{'paper_id'} ) {
+	if ( $params{'paper_id'} and $params{'quantity_>='} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity >= ?)';
+		push @values, $params{'paper_id'}, $params{'quantity_>='};
+	} elsif ( $params{'paper_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
 		push @values, $params{'paper_id'};
-	} # end if
-	if ( $params{'quantity_>='} ) {
+	} elsif ( $params{'quantity_>='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity_>='};
 	} # end if
+
 	if ( $params{'quality_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
 		push @values, $params{'quality_id'};
@@ -535,12 +538,13 @@ sub is_empty {
 } # end sub is_empty
 
 sub last_seen_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+	if ( ! exists $_[0]{last_seen_days} ) {
+		$_[0]{last_seen_days} = int( (time - Date::Parse::str2time($_[0]{'updated_on'})) / 86400 );
+	} # end if
+	return $_[0]{last_seen_days};
 }
 sub age_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+	return int( (time - Date::Parse::str2time($_[0]{'created_on'})) / 86400 );
 }
 
 sub Manifest {
