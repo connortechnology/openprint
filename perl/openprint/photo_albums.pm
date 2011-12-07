@@ -122,6 +122,14 @@ sub view_photo {
 
 		if ( $param{'action'} eq 'set as thumbnail' ) {
 			$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+		} elsif ( $param{'action'} eq 'set as profile pic' ) {
+			if ( $Album->user_id() == $session{'user_id'} ) {
+				my $User = new openprint::User( $session{'user_id'} );
+				$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
+			} else {
+				$variable{'error'} .= q`That photo isn't yours. Not cool.`;
+				$log->error($variable{'error'} );
+			} # end if
 		} elsif ( $param{'action'} eq 'Do/Dont' ) {
 			my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont','user_id is null'=>1);
 			if ( ! $DoDont ) {
