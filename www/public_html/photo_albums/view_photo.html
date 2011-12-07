@@ -20,6 +20,11 @@
 						$html .= ssi::button( 'SAT', { 'onclick' => q`f1.elements['action'].value='set as thumbnail';f1.submit();`,
 						'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail
+					if ( $Photo->Album()->user_id() == $session{'user_id'} and $Photo->asset_id() != new openprint::User($session{'user_id'})->asset_id() ) {
+						$html .= ssi::button( 'SAPP', { 'onclick' => q`f1.elements['action'].value='set as profile pic';f1.submit();`,
+						'text'=>'Set as profile picture' } );
+		
+					} # end if
 					my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
 					if ( $DoDont ) {
 						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
