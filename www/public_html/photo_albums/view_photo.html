@@ -24,19 +24,19 @@
 					if ( $DoDont ) {
 						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
 						if ( $DoDontPhoto ) {
-						$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
-                        'text'=>"Remove from Do/Don't" } );
+							$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
+								'text'=>"Remove from Do/Don't" } );
 						} else {
-						$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='Do/Dont';f1.submit();`,
-                        'text'=>"Include in Do/Don't" } );
+							$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='Do/Dont';f1.submit();`,
+								'text'=>"Include in Do/Don't" } );
 						} # end if
 					} # end if
 				} # end if can edit
 				my @Photos = $Album->Photos();
 				my $index = 0;
 				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $Photo->id(); $index += 1 ) {};
-				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]&amp;album_id=$$Photo{'album_id'}" } ) if $index;
-				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]&amp;album_id=$$Photo{'album_id'}" } ) if ( $index + 1 ) < @Photos;
+				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } ) if $index;
+				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } ) if ( $index + 1 ) < @Photos;
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
 				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
