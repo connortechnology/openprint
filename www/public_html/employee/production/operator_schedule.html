@@ -32,13 +32,14 @@ return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() }
 			<select name="equipment_id" id="equipment_id" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/operator_schedule.html?category'},'useinscheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find(
+		( $session{'/employee/production/operator_schedule.html?category'} ? ( 'category'=>$session{'/employee/production/operator_schedule.html?category'} ) : () ),
+		,'useinscheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?equipment_id'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/operator_schedule.html?equipment_id'} ) ] );
 	} # end foreach press
-
 	if ( $session{'/employee/production/operator_schedule.html?equipment_id'} ) {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/operator_schedule.html?equipment_id'} ] );
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/operator_schedule.html?equipment_id'} ] );
 	} else {
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if

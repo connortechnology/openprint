@@ -404,12 +404,14 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
-		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' )
-			);
-	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	ssi::save_params( '/employee/inventory/paper.html', ( 
+				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
+				'type','owner_id','material_id','group_id',
+				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
+				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude',
+			) );
+	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 } # end sub _paper_results
 
 sub paper_details {

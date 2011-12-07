@@ -27,7 +27,7 @@
 
 	# Find the index of the selected option
 	my $option_index = 0;
-	if ( sets::isin( $param{'selected'}, \@options ) ) {
+	if ( sets::isin( $param{'selected'}, \@options ) or sets::isin( $param{'selected'}, [ map { lc $_.'_id' } @options ] ) ) {
 		for ( ; $option_index < @options; $option_index += 1 ) {
 			last if $options[$option_index] eq $param{'selected'};
 			last if lc $options[$option_index] . '_id' eq $param{'selected'};

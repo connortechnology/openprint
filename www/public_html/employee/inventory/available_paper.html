@@ -99,17 +99,12 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
         my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-		if ( @options == 2 ) {
-			$session{'/employee/inventory/available_paper.html?'.$option} = $options[0];
-		} # end if
+		$session{'/employee/inventory/available_paper.html?'.$option} = $options[0] if ( @options == 2 );
 
         $html .= sprintf(q`<li><label>%1$s</label>
                 <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
-                <option value=""> All </option>
-                %4$s
-                </select>
-            </li>
-            `, $option, lc $option, $$variable{'Signature'},
+                <option value=""> All </option> %4$s </select>
+            </li>`, $option, lc $option, $$variable{'Signature'},
             ssi::make_drop_down( \@options, $session{'/employee/inventory/available_paper.html?'.$option} ),
         );
     } # end foreach option
