@@ -59,7 +59,7 @@
 			my $allocated_lbs;
 			my $allocated_sheets;
 
-			my $Quality = $session{'/employee/inventory/paper.html?Quality'} ? new openprint::StockQuality( $session{'/employee/inventory/paper.html?Quality'}) : undef;
+			my $Quality = $session{'/employee/inventory/paper.html?quality_id'} ? new openprint::StockQuality( $session{'/employee/inventory/paper.html?quality_id'}) : undef;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
