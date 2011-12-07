@@ -146,12 +146,10 @@ function calc_from_gsm( form ) {
 			<p>
 				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.Quality.toggle();">Quality:</label>
 				<select id="Quality" name="Quality" size="1">
+					<option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, name FROM PaperQualities ORDER BY lower(name)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
-						) ?>
+					return ssi::make_drop_down( openprint::StockQuality->dropdown('order'=>'lower(name)'), $$variable{'Paper'}->quality_id() );
+				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
 			</p>
@@ -163,40 +161,40 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label for="width">Size:</label>
-				<input type="text" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
+				<input type="number" id="width" name="width" value="<? echo ( $$variable{'Paper'}->width(); ) ?>" onkeyup="gsm_to_mweight(this.form);"/>
 				<span id="PaperHeight"<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? ' style="display:none;"' : '' ) ?>>
 				&nbsp;x&nbsp;
-				<input type="text" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" size="6" style="width: auto;" onkeyup="gsm_to_mweight(this.form);"/>
+				<input type="number" id="height" name="height" value="<? echo ( $$variable{'Paper'}->height(); ) ?>" onkeyup="gsm_to_mweight(this.form);"/>
 				</span>
 			</p>
 			<p id="MWeight" <? echo ( 'style="display:none;"' if $$variable{'Paper'}->type() eq 'Roll' ) ?>>
 				<label>MWeight:</label>
-				<input type="text" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" size="6"	onkeyup="calc_from_mweight(this.form);" style="width: auto;" />M
+				<input type="number" id="mweight" name="mweight" value="<? echo ( $$variable{'Paper'}->mweight(); ) ?>" onkeyup="calc_from_mweight(this.form);" />M
 			</p>
 			<p>
 				<label>Basis Weight:</label>
-				<input type="text" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_weight(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
+				<input type="number" id="basis_weight" name="basis_weight" value="<? echo ( $$variable{'Paper'}->basis_weight(); ) ?>" onkeyup="calc_from_basis_weight(this.form);" />
 			</p>
 			<p>
 				<label>Basis Size:</label>
-				<input type="text" id="basis_width" name="basis_width" value="<? echo ( $$variable{'Paper'}->basis_width(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" /> x
-				<input type="text" id="basis_height" name="basis_height" value="<? echo ( $$variable{'Paper'}->basis_height(); ) ?>" size="6" onkeyup="calc_from_basis_weight(this.form);" style="width: auto;" />
+				<input type="number" id="basis_width" name="basis_width" value="<? echo ( $$variable{'Paper'}->basis_width(); ) ?>" onkeyup="calc_from_basis_weight(this.form);" /> x
+				<input type="number" id="basis_height" name="basis_height" value="<? echo ( $$variable{'Paper'}->basis_height(); ) ?>" onkeyup="calc_from_basis_weight(this.form);" />
 			</p>
 			<p>
 				<label>GSM:</label>
-				<input type="text" id="gsm" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>" size="6"	onkeyup="calc_from_gsm(this.form);" style="width: auto;" />
+				<input type="number" id="gsm" name="gsm" value="<? echo ( $$variable{'Paper'}->gsm(); ) ?>" onkeyup="calc_from_gsm(this.form);" style="width: auto;" />
 			</p>
 			<p>
 				<label>Calliper:</label>
-				<input type="text" id="txtCalliper" name="txtCalliper" value="<? echo ( $$variable{'Paper'}->calliper(); ) ?>" size="8"	/>inches
+				<input type="number" id="txtCalliper" name="txtCalliper" value="<? echo ( $$variable{'Paper'}->calliper(); ) ?>" />inches
 			</p>
 			<p>
 				<label>FSC Code:</label>
-				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" size="13"	/>
+				<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Paper'}->fsc_code(); ) ?>" />
 			</p>
 			<p>
 				<label for="Owner">Owner:</label>
-				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $session{'company_id'} ); ) ?></select>
+				<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() || $session{'company_id'} ); ) ?></select>
 			</p>
 <? else ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 <p>
@@ -248,14 +246,12 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label>Available:</label><span id="Available">
-				<? echo ( $$variable{'Paper'}->available(); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( $$variable{'Paper'}->available().( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Ordered:</label>
-				<? echo ( int($$variable{'Paper'}->back_ordered()); ) ?>
-				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
+				<? echo ( int($$variable{'Paper'}->back_ordered()). ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ); ) ?>
 			</p>
 		</div>
 		<div style="float: right;">
@@ -280,6 +276,7 @@ function calc_from_gsm( form ) {
 		'finish_id'				=>$$variable{Paper}->finish_id(),
 		'colour_id'				=>$$variable{Paper}->colour_id(),
 		'weight_id'				=>$$variable{Paper}->weight_id(),
+		'quality_id'			=>$$variable{Paper}->quality_id(),
 		'width'					=>$$variable{Paper}->width(),
 		'height'				=>$$variable{Paper}->height(),
 		'fsc_code'				=>$$variable{Paper}->fsc_code(),

@@ -1,12 +1,8 @@
-package openprint::SkidContent;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::SkidContent;
+our @ISA = qw(openprint::Object);
 
-require sql;
-use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug %fields %transforms %defaults $table $serial );
 
 $debug = 0;
 
@@ -59,6 +55,7 @@ sub allocateable {
     my ( $self ) = @_;
     return $self->quantity() - $self->allocation();
 } # end sub allocateable
+
 sub allocated {
 	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_id'=>$_[0]{'skid_id'});
 	return $PA->quantity() if $PA;
@@ -66,18 +63,16 @@ sub allocated {
 } # end sub allocated
 
 sub quality {
-    my ( $self, $quality ) = @_;
-
-    if ( defined $quality ) {
-		$quality =~ s/^\s+//;
-		$quality =~ s/\s+$//;
-		$quality =~ s/\s\s+$/ /;
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
-        if ( ! $$self{'quality_id'} ) {
-			$$self{'quality'} = $quality;
-        } # end if
+	my $self = $_[0];	
+    if ( @_ > 1 ) {
+		my $Quality = openprint::StockQuality->find_one('name lc'=>lc openprint::StockQuality->transform('name', $_[1]) );
+		if ( ! $Quality ) {
+			$Quality = new openprint::StockQuality();
+			$Quality->save({'name'=>$_[1]});
+		} # end if
+        @$self{'quality_id','quality'} = @$Quality{'id','name'};
     } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
     } # end if
     return $$self{'quality'};
 } # end sub quality

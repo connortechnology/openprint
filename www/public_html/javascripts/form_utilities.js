@@ -16,15 +16,18 @@ function get_value( obj ) {
 	} // end if
 	if ( obj.type == 'select-one' ) {
 		return get_ddm_value( obj );
-	} else if ( obj.type == 'radio' ) {
-		return get_rdb_value( obj );
+	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+		if ( obj.checked )
+			return obj.value;
 	} else if ( obj.type == 'hidden' || obj.type == 'text' ) {
 		return obj.value;
 	} else if ( obj.length ) {
+		var value = new Array();
 		for ( var x = 0; x < obj.length; x += 1 ) {
 			if ( obj[x].checked )
-				return obj[x].value;
+				value[value.length] = obj[x].value;
 		}
+		return value;
 	} else {
 		return obj.innerHTML;
 	} // end if

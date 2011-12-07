@@ -99,6 +99,8 @@ $serial	= 'paper_id_seq';
 		);
 
 %defaults = (
+	'allocated'	=>	'0',
+	'in_stock'	=>	'0',
 );
 
 sub load {

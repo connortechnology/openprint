@@ -21,6 +21,7 @@ BEGIN {
 	use Apache::DBI ();
 	use URI::Escape;
 	use HTML::Entities;
+	use Data::Dumper;
 #
 	use MIME::QuotedPrint;
 	use MIME::Base64;
