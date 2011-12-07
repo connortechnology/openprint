@@ -295,8 +295,8 @@ function textarea_init() {
 
 			my @Shifts = openprint::Shift->find( 
 				'equipment_id' 		=>	$E->id(),
-				'starttime_>='		=>	$parser->format_datetime( $st ),
-				'starttime_<'		=>	$parser->format_datetime( $et ),
+				'starttime >='		=>	$parser->format_datetime( $st ),
+				'starttime <'		=>	$parser->format_datetime( $et ),
 				'order'				=>	'starttime',
 				);
 

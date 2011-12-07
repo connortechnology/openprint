@@ -404,12 +404,14 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
-		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' )
-			);
-	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	ssi::save_params( '/employee/inventory/paper.html', ( 
+				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
+				'type','owner_id','material_id','group_id',
+				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
+				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude',
+			) );
+	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 } # end sub _paper_results
 
 sub paper_details {
@@ -1594,17 +1596,24 @@ sub _skid_allocations {
 
 
 sub available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'width','height','OrLarger', 'Type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
-	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
-	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
-	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
+	ssi::save_params( '/employee/inventory/available_paper.html', 
+			'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 
+			'material_id','quality_id','group_id',
+			'width','height','OrLarger', 'type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
+	$session{'/employee/inventory/available_paper.html?owner_id'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?owner_id'};
+	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
+	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
 } # end sub available_paper
 sub _available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner' ) );
-	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	ssi::save_params( '/employee/inventory/available_paper.html', 
+			'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 
+			'material_id','quality_id','group_id',
+			'width','height','OrLarger', 'type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
+	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
+	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 } # end sub _available_paper
 
 sub _allocate_popup {

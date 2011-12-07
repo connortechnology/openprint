@@ -18,7 +18,7 @@ require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';

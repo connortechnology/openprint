@@ -4,7 +4,6 @@ use Text::CSV_XS;
 use strict;
 require sql;
 require misc;
-require openprint::paper;
 
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
