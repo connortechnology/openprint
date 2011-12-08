@@ -5,6 +5,7 @@
 	$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
+<ul>
 <li>
 	<label>Quantity:</label>
 	<? echo (
@@ -487,17 +488,19 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" size="3" onkeyup="calc(this.form.name);" /> Out
+		<input type="number" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> Out
 		<? echo ( ssi::write_override( 'chkOverrideImposition'.$$variable{'QTYIndex'}, $$variable{'chkOverrideImposition'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 		Dutch?:
 		<input type="radio" name="dutch<?QTYIndex?>" id="dutch<?QTYIndex?>Y" value="Y" <? echo ( ssi::checked( $$variable{'dutch'.$$variable{'QTYIndex'}} ne 'N' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="dutch<?QTYIndex?>Y">Yes</label>
 		<input type="radio" name="dutch<?QTYIndex?>" id="dutch<?QTYIndex?>N" value="N" <? echo ( ssi::checked( $$variable{'dutch'.$$variable{'QTYIndex'}} eq 'N' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="dutch<?QTYIndex?>N">No</label>
 		<br/>
-		<input type="text" size="3" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="3" name="hdnImpositionRows<?QTYIndex?>" /> + 
-		<input type="text" size="3" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x <input type="text" readonly="readonly" size="3" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
+		<input type="number" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x 
+		<input type="number" readonly="readonly" name="hdnImpositionRows<?QTYIndex?>" /> + 
+		<input type="number" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x 
+		<input type="number" readonly="readonly" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
 		<br/>
-		<input type="text" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" size="9" onkeyup="calc(this.form.name);" />
-		<input type="text" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" size="9" onkeyup="calc(this.form.name);" />
+		<input type="number" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" onkeyup="calc(this.form.name);" /> x
+		<input type="number" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" onkeyup="calc(this.form.name);" />
 		(W x H)
 	</span>
 <input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
@@ -523,4 +526,4 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-
+</ul>

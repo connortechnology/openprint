@@ -1,16 +1,16 @@
 <? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-	<p>
+	<li>
 		<label><b>Markup:</b></label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" name="Markup<?QTYIndex?>" size="9" value="<? echo ( $$variable{'Markup'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />%
+		<input type="number" name="Markup<?QTYIndex?>" value="<? echo ( $$variable{'Markup'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />%
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</p>
+	</li>
 <? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -26,7 +26,7 @@
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input name="MPrice<?QTYIndex?>" size="9" onfocus="this.blur();" readonly="readonly" />
+		<input name="MPrice<?QTYIndex?>" onfocus="this.blur();" readonly="readonly" />
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -39,10 +39,10 @@
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 <? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />
+		<input type="number" name="txtPrice<?QTYIndex?>" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />
 		<? echo ( return ssi::write_override( 'OverridePrice'.$$variable{'QTYIndex'}, $$variable{'OverridePrice'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 <? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-		<input name="txtPrice<?QTYIndex?>" size="9" onfocus="this.blur();" readonly="readonly" />
+		<input type="number" name="txtPrice<?QTYIndex?>" onfocus="this.blur();" readonly="readonly" />
 		<? if ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
 		<input type="hidden" name="OverridePrice<?QTYIndex?>" value="Y" />
 		Overridden

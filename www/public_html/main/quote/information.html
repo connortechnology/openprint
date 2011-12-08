@@ -325,7 +325,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
 				</td>
 				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
 			</tr>
