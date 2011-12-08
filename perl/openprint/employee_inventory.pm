@@ -298,8 +298,8 @@ sub paper {
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
 		my @data;
 		my @inventory = openprint::PaperInventory->find(
-				'updated_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ),
-				'updated_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
+				ssi::date_filter( 'added_on_start', 'updated_on >=', \%param ),
+				ssi::date_filter( 'added_on_end', 'updated_on <=', \%param ),
 				'order'=>'updated_on',
 		);
 		foreach my $I ( @inventory ) {
@@ -397,7 +397,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 	} # end if
 
 	_paper_results();
-    $session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
+    $session{'/employee/inventory/paper.html?owner_id'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?owner_id'};
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
 
