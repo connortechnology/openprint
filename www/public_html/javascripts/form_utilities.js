@@ -19,6 +19,9 @@ function get_value( obj ) {
 	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
 		if ( obj.checked )
 			return obj.value;
+		} else {
+			return;
+		} 
 	} else if ( obj.type == 'hidden' || obj.type == 'text' ) {
 		return obj.value;
 	} else if ( obj.length ) {
