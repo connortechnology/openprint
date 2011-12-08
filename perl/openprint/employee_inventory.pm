@@ -291,7 +291,7 @@ if ( 0 ) {
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
-} # end sub paper_inventory
+} # end sub inventory_report
 
 sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
@@ -396,9 +396,17 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		} # end foreach
 	} # end if
 
-	_paper_results();
+	ssi::save_params( '/employee/inventory/paper.html', ( 
+				'manufacturer_id','brand_id','finish_id','colour_id','weight_id','quality_id', 
+				'type','owner_id','material_id','group_id',
+				( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
+				( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
+				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude',
+			) );
+	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
     $session{'/employee/inventory/paper.html?owner_id'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?owner_id'};
-	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
+    $session{'/employee/inventory/paper.html?type'} = 'Roll,Sheet' if ! exists $session{'/employee/inventory/paper.html?type'};
+	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', '' );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
 
 } # end sub paper
@@ -412,6 +420,16 @@ sub _paper_results {
 				'Docket','fsc_code','width','height','OrLarger','instock','owner_id_exclude',
 			) );
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
+    openprint::Manufacturer->find();
+    openprint::StockBrand->find();
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+    openprint::StockMaterial->find();
+    openprint::StockMaterial->find();
+    openprint::Location->find();
+
 } # end sub _paper_results
 
 sub paper_details {

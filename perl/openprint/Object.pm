@@ -51,9 +51,11 @@ sub new {
 	my $ref = ref $id;
 	if ( ! $ref ) {
 		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+#$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
+$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 

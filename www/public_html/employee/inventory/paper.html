@@ -15,14 +15,14 @@ Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input type="number" id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>
 			<ul>
 				<li>
-					<label>Owner:</label>
+					<label>Owner</label>
 					<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
 					<option value=""> All </option>
 					<? echo ( 
@@ -46,25 +46,43 @@ Please select a Paper to view/edit.<br>
 		} # end if
 	} # end if
 
+use Time::HiRes qw{ time gettimeofday tv_interval };
+my $starttime = gettimeofday();
     my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
 
-    my @Papers = @{$$variable{'Paper'}} = openprint::Paper->find( %find );
+    my @Papers = openprint::Paper->find( %find );
+	$openprint::log->debug( 'Loading paper: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+	my %filter_validations;
+	openprint::Manufacturer->find();
+	openprint::StockBrand->find();
+	openprint::StockFinish->find();
+	openprint::StockColour->find();
+	openprint::StockWeight->find();
+	openprint::StockQuality->find();
+	openprint::StockMaterial->find();
 
 	my %filters;
-    foreach my $option ( @StockOptions ) {
-		my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
-		# Validate the filter
-		$session{'/employee/inventory/paper.html?'.$option} = undef if ! sets::isin( 
-$session{'/employee/inventory/paper.html?'.$option}, [ map { $$_{$option_id} } @Papers ] );
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
 
-		foreach my $Stock ( @Papers ) {
+		foreach my $option ( @StockOptions ) {
+			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
 			# Load up the filter
 			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
-		} # end foreach $Stock
-		if ( $session{'/employee/inventory/paper.html?'.$option} ) {
-			@Papers = map { $$_{$option_id} eq $session{'/employee/inventory/paper.html?'.$option} ? $_ : () } @Papers;
-		} # end if
-	} # end foreach option
+
+			if ( $session{'/employee/inventory/paper.html?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{'/employee/inventory/paper.html?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1;
+					$stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+	$openprint::log->debug( 'Filtering paper: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
@@ -81,7 +99,7 @@ $session{'/employee/inventory/paper.html?'.$option}, [ map { $$_{$option_id} } @
 	@{$$variable{'Paper'}} = @Papers;
     return $html;
 ) ?>
-		<li><label>Size:</label>
+		<li><label>Size</label>
 		<select name="width" size="1" onchange="calc('f1');">
 			<option value="">All</option>
 			<? echo ( 
@@ -111,14 +129,14 @@ $session{'/employee/inventory/paper.html?'.$option}, [ map { $$_{$option_id} } @
             <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/paper.html?OrLarger'} ) ?> /><label class="radio" for="OrLarger">or larger</label>
 		</li>
 		<li>
-			<label>type:</label>
+			<label>Type</label>
 			<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', $session{'/employee/inventory/paper.html?type'} ) or ! $session{'/employee/inventory/paper.html?type'}; ) ?> />
 			<label class="radio" for="typeSheet">Sheet</label>
 			<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', $session{'/employee/inventory/paper.html?type'} ) or ! $session{'/employee/inventory/paper.html?type'}; ) ?> />
 			<label class="radio" for="typeRoll">Roll</label>
         </li>
 		<li>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session('/employee/inventory/paper.html', 'added_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
@@ -128,7 +146,7 @@ $session{'/employee/inventory/paper.html?'.$option}, [ map { $$_{$option_id} } @
 			</span>
 		</p>
 		<li>
-			<label>FSC Code:</label>
+			<label>FSC Code</label>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/employee/inventory/paper.html?fsc_code'} ) ?>" />
 		</li>
 		<li>

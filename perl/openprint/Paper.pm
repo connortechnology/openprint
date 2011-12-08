@@ -174,9 +174,13 @@ sub save {
 		@$self{'colour_id','colour'} = @$Colour{'id','name'};
 	} # end if colour_id
 	if ( $$self{'weight'} and ! $$self{'weight_id'} ) {
-		my $Weight = new openprint::StockWeight();
-		if ( $_ = $Weight->save({'name'=>$$self{'weight'}}) ) {
-		return $_;
+		my $Weight = openprint::StockWeight->find_one('name lc'=>lc openprint::StockWeight->transform( 'name', $$self{'weight'} ) );
+		
+		if ( ! $Weight ) {
+			$Weight = new openprint::StockWeight();
+			if ( $_ = $Weight->save({'name'=>$$self{'weight'}}) ) {
+				return $_;
+			} # end if
 		} # end if
 		@$self{'weight_id','weight'} = @$Weight{'id','name'};
 	} # end if weight_id
@@ -425,7 +429,6 @@ sub Manufacturer {
 	return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
 }
 sub manufacturer {
-
 	if ( defined $_[1] ) {
 		$_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
@@ -448,44 +451,45 @@ sub Finish {
 	return new openprint::StockFinish( $_[0]{'finish_id'} );
 }
 sub finish {
-	my ( $self, $finish ) = @_;
-
-	if ( defined $finish ) {
-		$finish = openprint::StockFinish->transform( 'name', $finish );
-		if ( ! $$self{'custom'} ) {
-			@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,name FROM StockFinishes WHERE lower(name)=?}, lc $finish );
-			if ( ! $$self{'finish_id'} ) {
-				$$self{'finish'} = $finish;
+	if ( @_ > 1 ) {
+		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
+		if ( ! $_[0]{'custom'} ) {
+			my $Finish = openprint::StockFinish->find_one('name lc'=> lc $_[1] );
+			if ( ! $Finish ) {
+				$Finish = new openprint::StockFinish();
+				$Finish->save({'name'=>$_[1]});
 			} # end if
+			@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
 		} else {
-			$$self{'finish'} = $finish;
+			$_[0]{'finish'} = $_[1];
 		} # end if
-	} elsif ( $$self{'finish_id'} and ! $$self{'finish'} ) {
-		$$self{'finish'} = new openprint::StockFinish( $$self{'finish_id'} )->name();
+	} elsif ( $_[0]{'finish_id'} and ! $_[0]{'finish'} ) {
+		$_[0]{'finish'} = new openprint::StockFinish( $_[0]{'finish_id'} )->name();
 	} # end if
-	return $$self{'finish'};
+	return $_[0]{'finish'};
 } # end sub finish
 
 sub Colour {
 	return new openprint::StockColour( $_[0]{'colour_id'} );
 }
 sub colour {
-	my ( $self, $colour ) = @_;
 
-	if ( defined $colour ) {
-		$colour = openprint::StockColour->transform( 'name', $colour );
-		if ( ! $$self{'custom'} ) {
-			@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,name FROM StockColours WHERE lower(name)=?}, lc $colour );
-			if ( ! $$self{'colour_id'} ) {
-				$$self{'colour'} = $colour;
+	if ( @_ > 1 ) {
+		$_[1] = openprint::StockColour->transform( 'name', $_[1] );
+		if ( ! $_[0]{'custom'} ) {
+			my $Colour = openprint::StockColour->find_one('name lc'=> lc $_[1] );
+			if ( $Colour ) {
+				@{$_[0]}{'finish_id','finish'} = @$Colour{'id','name'};
+			} else {
+				$_[0]{'colour'} = $_[1];
 			} # end if
 		} else {
-			$$self{'colour'} = $colour;
+			$_[0]{'colour'} = $_[1];
 		} # end if
-	} elsif ( $$self{'colour_id'} and ! $$self{'colour'} ) {
-		$$self{'colour'} = new openprint::StockColour( $$self{'colour_id'} )->name();
+	} elsif ( $_[0]{'colour_id'} and ! $_[0]{'colour'} ) {
+		$_[0]{'colour'} = new openprint::StockColour( $_[0]{'colour_id'} )->name();
 	} # end if
-	return $$self{'colour'};
+	return $_[0]{'colour'};
 } # end sub colour
 
 sub Quality {
@@ -506,7 +510,7 @@ sub quality {
 			$_[0]{'quality'} = $_[1];
 		} # end if
 	} elsif ( $_[0]{'quality_id'} and ! $_[0]{'quality'} ) {
-		$_[0]{'quality'} = new openprint::StockColour( $_[0]{'quality_id'} )->name();
+		$_[0]{'quality'} = new openprint::StockQuality( $_[0]{'quality_id'} )->name();
 	} # end if
 	return $_[0]{'quality'};
 } # end sub quality
@@ -515,23 +519,23 @@ sub Weight {
 	return new openprint::StockWeight( $_[0]{'weight_id'} );
 }
 sub weight {
-	my ( $self, $weight ) = @_;
 
-
-	if ( defined $weight ) {
-		$weight = openprint::StockWeight->transform( 'name', $weight );
-		if ( ! $$self{'custom'} ) {
-			@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, name FROM StockWeights WHERE lower(name)=?}, lc $weight );
-			if ( ! $$self{'weight_id'} ) {
-				$$self{'weight'} = $weight;
+	if ( @_ > 1 ) {
+		$_[1] = openprint::StockWeight->transform( 'name', $_[1] );
+		if ( ! $_[0]{'custom'} ) {
+			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $_[1]);
+			if ( $Weight ) {
+				$_[0]{'weight_id','weight'} = @$Weight{'id','name'};
+			} else {
+				$_[0]{'weight'} = $_[1];
 			} # end if
 		} else {
-			$$self{'weight'} = $weight;
+			$_[0]{'weight'} = $_[1];
 		} # end if
-	} elsif ( $$self{'weight_id'} and ! $$self{'weight'} ) {
-		$$self{'weight'} = new openprint::StockWeight( $$self{'weight_id'} )->name();
+	} elsif ( $_[0]{'weight_id'} and ! $_[0]{'weight'} ) {
+		$_[0]{'weight'} = new openprint::StockWeight( $_[0]{'weight_id'} )->name();
 	} # end if
-	return $$self{'weight'};
+	return $_[0]{'weight'};
 } # end sub weight
 
 sub width {
@@ -757,8 +761,9 @@ sub in_stock {
 
 	if ( ! defined $_[0]{'in_stock'} ) {
 		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$_[0]{'id'},'quantity >'=>0) ) {
-			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			$_[0]{'in_stock'} += $SkidContent->quantity();
+			if ( ! $SkidContent->Skid()->location_id() or ( $SkidContent->Skid()->Location()->name() ne 'Missing' ) ) {;
+				$_[0]{'in_stock'} += $SkidContent->quantity();
+			} # end nif
 		} # end foreach SkidContent
 	} # end if
     return $_[0]{'in_stock'};
