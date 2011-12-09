@@ -548,20 +548,72 @@ sub age_days {
 }
 
 sub Manifest {
-	my $self = $_[0];
-	foreach my $MC ( openprint::ManifestContent->find_one('skid_id'=>$$self{id}) ) {
+	if ( my $MC = $_[0]->ManifestContent() ) {
 		return $MC->Manifest();
-	} # end foreach MC
+	} # end if
 	return new openprint::Manifest();
 } # end sub Manifest
 
-sub ManifestContents {
-	return openprint::ManifestContent->find('skid_id'=>$_[0]{id});
+sub ManifestContent {
+	if ( ! $_[0]{'ManifestContent'} ) {
+		$_[0]{'ManifestContent'} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
+	} # end if
+	return $_[0]{'ManifestContent'};
 } # end sub ManifestContents
 
 sub manifest_id {
-	return $_[0]->Manifest()->id();
+	return $_[0]->ManifestContent()->manifest_id();
 } # end sub manifest_id
+
+sub value {
+	if ( ! $_[0]{'value'} ) {
+		my $ManifestContent = $_[0]->ManifestContent();
+		return undef if ! $ManifestContent;
+		my $ManifestType = $ManifestContent->Type();
+		my ( $cost, $units );
+		if ( $ManifestType->cost() ) {
+			$cost = $ManifestType->cost();
+			$units = $ManifestType->cost_units();
+		} else {
+			my $POC = $ManifestType->PurchaseOrder_Content();
+			return undef if ! $POC;
+			$cost = $POC->price();
+			$units = $POC->price_units();
+		} # end if
+
+		my $value = 0;
+		foreach my $C ( $_[0]->Contents() ) {
+$log->debug("Units: $units");
+			if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
+				$value += $C->quantity() * $cost / 100;
+			} else {
+				$value += $C->quantity() * $cost;
+			} # end if
+		} # end foreach Content
+		$_[0]{'value'} = $value;
+	} # end if
+	return $_[0]{'value'};
+} # end sub value
+
+sub cost {
+	if ( ! $_[0]{'cost'} ) {
+		my $ManifestContent = $_[0]->ManifestContent();
+		return undef if ! $ManifestContent;
+		my $ManifestType = $ManifestContent->Type();
+		my ( $cost, $units );
+		if ( $ManifestType->cost() ) {
+			$cost = $ManifestType->cost();
+			$units = $ManifestType->cost_units();
+		} else {
+			my $POC = $ManifestType->PurchaseOrder_Content();
+			return undef if ! $POC;
+			$cost = $POC->price();
+			$units = $POC->price_units();
+		} # end if
+		$_[0]{'cost'} = $cost.$units;
+	} # end if
+	return $_[0]{'cost'};
+} # end sub cost
 
 1;
 __END__

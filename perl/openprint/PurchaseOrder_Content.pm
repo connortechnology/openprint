@@ -25,6 +25,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'created_on'	=>	'created_on',
 	'qty'			=>	'qty',
 	'price'			=>	'price',
+	'price_units'	=>	'price_units',
 	'total'			=>	'total',
 	'product'		=>	'product',
 	'item'			=>	'item',

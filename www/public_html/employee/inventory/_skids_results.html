@@ -54,7 +54,7 @@
  @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
 		} # end if
 		if ( $session{'/employee/inventory/skids.html?Type'} ne 'All' ) {
-		$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
+			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
 		}
 		$sql{'quality_id'} = $session{'/employee/inventory/skids.html?quality_id'} if $session{'/employee/inventory/skids.html?quality_id'};
 
@@ -74,13 +74,16 @@
 	<table class="List">
 		<tr>
 			<th class="checkbox unprintable"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
-			<th align="left" width="75">Skid ID</th>
+			<th class="Skid">Skid ID</th>
 			<th class="DateTime">Date Added</th>
 			<th class="DateTime">Updated On</th>
 			<th class="DateTime">Last Seen</th>
-			<th align="left" width="85">RFIDTag</th>
-			<th align="left" width="100">Location</th>
-			<th align="left" width="140">Dockets</th>
+			<th class="RFID">RFIDTag</th>
+			<th class="location">Location</th>
+			<th class="Dockets">Dockets</th>
+			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+			<th class="Price">Value</th>
+			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 		</tr>
 		<? echo (
 			my $html;
@@ -89,6 +92,7 @@
 			my $total_skids;
 			my $total_weight;
 			my $total_sheets;
+			my $total_value;
 			my %Allocations;
 			foreach my $Allocation ( openprint::PaperAllocation::find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
@@ -128,12 +132,12 @@
 
 				$html .= sprintf('<tr%1$s>
 					<td class="checkbox unprintable"><input type="checkbox" name="skids" value="%2$d"/></td>
-				<td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
+				<td class="Skid"><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%5$s</a></td>
-				<td><a href="skid_details.html?skid_id=%2$d" title="%6$s">%7$s</a></td>
-				<td><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
+				<td class="RFID"><a href="skid_details.html?skid_id=%2$d" title="%6$s">%7$s</a></td>
+				<td class="location"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
 				', $rowclass, $$Skid{'id'},
 Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ),
 Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ),
@@ -152,6 +156,11 @@ $Skid->Location()->name(),
 					);
 				} # end while
 				$html .= '</td>';	
+				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
+					#$html .= '<td rowspan="2" class="Price">@'.$Skid->cost().'='.openprint::Currency::format($Skid->value()).'</td>';
+					$total_value += $Skid->value();
+				} # end if
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
@@ -181,7 +190,11 @@ $Skid->Location()->name(),
 			$html .= '<tr class="totals"><td class="unprintable"></td><td colspan="3">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td colspan="2">&nbsp;</td></tr>';
+			$html .= '</td><td colspan="2">&nbsp;</td>';
+				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+					$html .= '<td class="Price">'.openprint::Currency::format($total_value).'</td>';
+				} # end if
+				$html .= '</tr>';
 			return $html;
 		) ?>
 	</table>
