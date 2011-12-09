@@ -92,6 +92,7 @@ Please select a Paper to view/edit.<br>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
 				<option value="">Please select one</option>
 				<? echo (
+					openprint::Manufacturer->find();
 					my %sql = (
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
@@ -117,6 +118,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Name" size="1" onchange="Name_onChange(this,'');">
 				<option value="">Please select one</option>
 				<? echo ( 
+					openprint::StockName->find();
 					my %sql = (
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
@@ -143,6 +145,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
 				<option value="">Please select one</option>
 			<? echo (
+					openprint::StockFinish->find();
 					my %sql = (
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
@@ -170,6 +173,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Colour" size="1" onchange="Colour_onChange(this,'');">
 				<option value="">Please select one</option>
 			<? echo (
+					openprint::StockColour->find();
 					my %sql = (
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
@@ -198,6 +202,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Weight" size="1" onchange="Weight_onChange(this,'');">
 				<option value="">Please select one</option>
 			<? echo (
+					openprint::StockWeight->find();
 					my %sql = (
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},

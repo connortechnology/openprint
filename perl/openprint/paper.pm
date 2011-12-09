@@ -15,6 +15,11 @@ sub get_paper {
 	my @types = ('Sheet');
 	push @types, 'Roll';
 
+	openprint::StockName->find();
+	openprint::StockFinish->find();
+	openprint::StockColour->find();
+	openprint::StockWeight->find();
+
 	my @papers = openprint::Paper::find( 
 			( $selected eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'manufacturer_id'} ) : () ),
 			( $selected eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),

@@ -44,8 +44,12 @@ sub new {
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
-		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-			return $openprint::Object::cache{$parent}{$id};
+		if ( $id and (!$data) ) {
+			if ( $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+				return $openprint::Object::cache{$parent}{$id};
+			} else {
+				$log->debug("Not loading from cache $id $parent ");
+			} # end if
 		} # end if
 
 		$$self{'log'} = $openprint::log;
