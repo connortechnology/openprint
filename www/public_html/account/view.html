@@ -3,7 +3,7 @@
 <h2>User Profile</h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $session{'user_id'} ) ?>
+<div class="disclaimer"><? echo ( $config{'UserProfileDisclaimer'} ) ?></div>
 	<div class="UserProfile">
 		<p class="buttons">
 			<? echo ( 
@@ -125,6 +125,3 @@
 		</div>
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 	</div><!--UserProfile-->
-<? else ( $session{'user_id'} ) ?>
-You must be logged in to view user profiles.<br/>
-<? endif ( $session{'user_id'} ) ?>
