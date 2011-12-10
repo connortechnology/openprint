@@ -26,7 +26,7 @@
             <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
         <tr class="totals unprintable">
-            <td colspan="2">Record new payment:</td>
+            <td colspan="2">Record new payment</td>
             <td class="description"><input type="text" name="Description" /></td>
 			<td class="ReceivedOn"><? echo ( ssi::date_select('received_on'); ) ?></td>
             <td class="Price"><?CurrencySymbol?><input type="number" id="Amount" name="Amount" value="<? echo ( $$variable{'Order'}->owing() ) ?>"/></td>

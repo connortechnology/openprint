@@ -25,25 +25,25 @@ Thank you. Your information has been received. Someone will contact you in the i
 				<br/>
 				<ul>
 				<li>
-					<label for="FirstOrderValue">Value of first order (est):</label>
+					<label for="FirstOrderValue">Value of first order (est)</label>
 					<input type="text" id="FirstOrderValue" name="FirstOrderValue" value="<? hecho ( $param{'FirstOrderValue'} ) ?>"/>
 				</li>
 				<li>
-					<label for="AnnualPurchases">Annual Purchases (est):</label>
+					<label for="AnnualPurchases">Annual Purchases (est)</label>
 					<input type="text" id="AnnualPurchases" name="AnnualPurchases" value="<? hecho ( $param{'AnnualPurchases'} ) ?>"/>
 				</li>
 				<li>
-					<label for="DesiredCreditLimit">Credit Limit Desired:</label>
+					<label for="DesiredCreditLimit">Credit Limit Desired</label>
 					<input type="text" id="DesiredCreditLimit" name="DesiredCreditLimit" value="<? hecho ( $param{'DesiredCreditLimit'} ) ?>" />
 				</li>
 				<li>
-					<label>Terms Desired:</label>
+					<label>Terms Desired</label>
 					<select id="DesiredTerms" name="DesiredTerms" size="1">
 						<? echo ( ssi::make_drop_down( [ 15,'15 Days', 30, '30 Days', 60, '60 Days', 90, '90 Days' ], $param{'DesiredTerms'} ); ) ?>
 					</select>
 				</li>
 				<li class="required">
-					<label for="AccountsPayableContact">Accounts Payable:</label>
+					<label for="AccountsPayableContact">Accounts Payable</label>
 					<input type="text" id="AccountsPayableContact" name="AccountsPayableContact" value="<? hecho ( $param{'AccountsPayableContact'} ) ?>" />
 				</li>
 				<li>
@@ -58,7 +58,7 @@ Thank you. Your information has been received. Someone will contact you in the i
 				<br/>
 				<ul>
 				<li class="required">
-					<label for="Signature">Name - First/Last:</label>
+					<label for="Signature">Name - First/Last</label>
 					<input type="text" id="Signature" name="Signature" />
 				</li>
 				</ul>

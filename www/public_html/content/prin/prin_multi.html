@@ -20,7 +20,7 @@
 						<div class="content">
 							<ul>
 								<li>
-									<label>Size:</label>
+									<label>Size</label>
 									<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
 										<option value=""> select </option>
 										<? echo ( 
@@ -35,18 +35,18 @@
 										<option value="Custom">Custom</option>
 									</select>
 								</li>
-								<!--#include virtual="/includes/dimensions.html"-->
+								<!--#include virtual="_dimensions.html"-->
 								<li>
-									<label>Number of pages:</label>
+									<label>Number of pages</label>
 <? if ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
 <select id="txtTotalPageQuantity" name="txtTotalPageQuantity" onchange="remove_div('OrderButton');calc(this.form.name);">
 <? echo ( ssi::make_drop_down( [ map { $_, $_ . ' pages' } ( 12, 24, 28, 32 ) ], $$variable{'txtTotalPageQuantity'} ); ) ?>
 </select>
 <? else ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
-									<input id="txtTotalPageQuantity" name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
+									<input id="txtTotalPageQuantity" name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="number" onkeyup="remove_div('OrderButton');"/>
 <? endif ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
 								</li>
-								</li>
+								<li>
 									<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('Cover');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'rdbCover'} ne 'Different' ); ) ?> />
 									<label class="radio" for="rdbCoverSelf">Self Cover</label>
 									<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('Cover');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
@@ -78,7 +78,7 @@
 						<div class="content">
 							<ul>
 								<li>
-									<label>Colours:</label>
+									<label>Colours</label>
 									<select id="ColoursCover" name="ColoursCover" onchange="calc(this.form.name);">
 										<option value="4/0">4 Colour One Side</option>
 										<option value="4/1">4 Colour/Black</option>
@@ -96,9 +96,9 @@
 
 							$$variable{'Signature'} = '1';
 							my $html;
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/uvcoating.html' );
-							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_aqueous.html' );
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_uvcoating.html' );
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_paper_dropdowns.html' );
 							return variable_substitution( \$html, $variable );
 							) ?>
 							</ul>
@@ -116,7 +116,7 @@
 							<div class="content">
 								<ul>
 									<li>
-										<label>Colours:</label>
+										<label>Colours</label>
 										<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 											<option value="4/4">4 Colour</option>
 											<option value="1/1">Black</option>
@@ -124,8 +124,8 @@
 									</li>
 									<? echo ( 
 										$$variable{'Signature'} = '2';
-										my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-										$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+										my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_aqueous.html' );
+										$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/content/prin/_paper_dropdowns.html' );
 										return variable_substitution( \$html, $variable );
 										) ?>
 								</ul>
@@ -142,10 +142,10 @@
 						<fieldset><legend>Finishing</legend>
 						<div class="content">
 							<ul>
-							<!--#include virtual="/includes/drilling.html"-->
-							<!--#include virtual="/includes/bundling.html"-->
+							<!--#include virtual="_drilling.html"-->
+							<!--#include virtual="_bundling.html"-->
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
-							<!--#include virtual="/includes/shrinkwrapping.html"-->
+							<!--#include virtual="_shrinkwrapping.html"-->
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
 							</ul>
 						</div>
@@ -155,9 +155,9 @@
 						<fieldset><legend>Production</legend>
 							<div class="content">
 								<ul>
-								<!--#include virtual="/includes/turnaround.html"-->
-								<!--#include virtual="/includes/quantity.html"-->
-								<!--#include virtual="/includes/press_type.html"-->
+								<!--#include virtual="_turnaround.html"-->
+								<!--#include virtual="_quantity.html"-->
+								<!--#include virtual="_press_type.html"-->
 								</ul>
 							</div>
 						</fieldset>
@@ -167,7 +167,7 @@
 					<br class="spacer"/>
 				</div><!--ProjectSpecifications-->
 
-				<!--#include virtual="/includes/prices.html"-->
+				<!--#include virtual="_prices.html"-->
 				</div><!--Questions-->
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>

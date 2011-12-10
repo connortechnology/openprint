@@ -8,7 +8,7 @@
 	my $Profile = $$variable{'Company'}->Profile();
 	
 	foreach my $Field ( @{$$variable{'Fields'}} ) {
-		$html .= '<li><label>'.$Field->description().':</label><span id="field-'.$Field->id().'_container">';
+		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 		my $value = $Profile->value( $Field->name() );
 
 		if ( $Field->type() eq 'checkbox' ) {

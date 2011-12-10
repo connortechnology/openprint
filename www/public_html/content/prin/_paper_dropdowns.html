@@ -1,18 +1,19 @@
 <? echo (
+	openprint::StockWeight->find();
 	my $html;
 	my @types = ('Sheet');
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
 	my %find = (
-			'project_type_id in'	=>	$$variable{'ProjectType'}->id(),
+			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='			=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
 			'type'				=>	\@types,
 	);
 
 	my @StockOptions = misc::trim(split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} ));
 	@StockOptions = misc::trim(split( ',', $config{'StockOptions'} )) if ! @StockOptions;
-	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	foreach my $option ( @StockOptions ) {
 		my ( $desc,$name ) = split('=>', $option );
@@ -37,10 +38,6 @@
 		} # end if
 		$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $options[0] if @options == 2;
 
-		# Special case for Name which used to be called Brand
-		if ( ( $name eq 'Name' ) and ( ! $$variable{'ddmStock'.$name.$$variable{'Signature'}} ) and ( $$variable{'ddmStockBrand'.$$variable{'Signature'}} ) ) {
-			$$variable{'ddmStock'.$name.$$variable{'Signature'}} = $$variable{'ddmStockBrand'.$$variable{'Signature'}};
-		} # end if
 		$find{lc $name} = $$variable{'ddmStock'.$name.$$variable{'Signature'}} if $$variable{'ddmStock'.$name.$$variable{'Signature'}};
 		$html .= sprintf(q`<li><label>Stock %2$s</label>
 				<select name="ddmStock%1$s%3$s" size="1" onchange="Stock_onchange( this, '%3$s' );">

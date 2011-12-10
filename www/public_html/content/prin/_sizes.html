@@ -1,7 +1,7 @@
 <div class="Size"><fieldset><legend>Size</legend>
 	<div class="content"><ul>
-	<li>
-		<label>Size:</label>
+	<li class="Dimensions">
+		<label>Size</label>
 		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this, '' );">
 			<option value=""> select </option>
 			<? echo ( 
@@ -37,8 +37,8 @@
 		</select>
 	</li>
 				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
-				<li>
-					<label>Fold Type:</label>
+				<li class="FoldType">
+					<label>Fold</label>
 					<select name="FoldType" id="FoldType" size="1" onchange="FoldType_onchange( this );">
 						<? echo (
 							ssi::make_drop_down( [ 'NoFold','No Fold', 
@@ -66,19 +66,19 @@
 					<input type="hidden" id="FoldType" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
-					<li>
-						<label>Fold Type:</label>
+					<li class="FoldType">
+						<label>Fold Type</label>
 						<select id="FoldType" name="FoldType" size="1" onchange="FoldType_onchange( this );">
 							<option value="NoFold">No Fold</option>
 							<option value="2PanelFold">2 Panel Fold</option>
 						</select>
 					</li>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
-				<!--#include virtual="/includes/dimensions.html"-->
+				<!--#include virtual="_dimensions.html"-->
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
-					<li>
-						<label>Number of pages per pad:</label>
-						<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
+					<li class="PageQuantity">
+						<label>Number of pages per pad</label>
+						<input type="number" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" />
 					</li>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>

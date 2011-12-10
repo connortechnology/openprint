@@ -17,8 +17,8 @@
 <? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 <? endif ( 0 ) ?>
             <input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-			<!--#include virtual="/includes/sizes.html"-->
-			<div class="row"><span class="label">Colours:</span>
+			<!--#include virtual="_sizes.html"-->
+			<div class="row"><span class="label">Colours</span>
 				<span class="input">
 				<select name="Colours" onChange="calc(this.form.name);">
 					<option value="4/0">4 Colour One Side</option>
@@ -27,14 +27,14 @@
 				</span>
 			</div>
 </br>
-			<!--#include virtual="/includes/aqueous.html"-->
+			<!--#include virtual="_aqueous.html"-->
 			<div class="row">
 				<span class="label">Stock Information</span><br/>
-				<!--#include virtual="/includes/paper_dropdowns.html"-->
+				<!--#include virtual="_paper_dropdowns.html"-->
 			</div>
 <? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 		<div class="row">
-			<span class="label">Fold Type:</span>
+			<span class="label">Fold Type</span>
 			<span class="input">
 				<select name="FoldType" size="1" onChange="FoldType_onChange( this );">
 					<option value="NoFold">No Fold</option>
@@ -51,15 +51,15 @@
 			</span>
 		</div>
 <? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
-			<!--#include virtual="/includes/drilling.html"-->
-			<!--#include virtual="/includes/scoring.html"-->
-			<!--#include virtual="/includes/perfing.html"-->
-			<!--#include virtual="/includes/ups_shipping.html"-->
-			<!--#include virtual="/includes/turnaround.html"-->
+			<!--#include virtual="_drilling.html"-->
+			<!--#include virtual="_scoring.html"-->
+			<!--#include virtual="_perfing.html"-->
+			<!--#include virtual="_ups_shipping.html"-->
+			<!--#include virtual="_turnaround.html"-->
 			<br class="spacer"/>
-			<!--#include virtual="/includes/quantity.html"-->
+			<!--#include virtual="_quantity.html"-->
 			<br class="spacer"/>
-			<!--#include virtual="/includes/prices.html"-->
+			<!--#include virtual="_prices.html"-->
 		</form>
 	</div><!--Questions-->
 	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->

@@ -11,22 +11,22 @@
 		</fieldset>
 	</div>
 	<div class="Login">
-		<fieldset><legend>Please login:</legend>
+		<fieldset><legend>Please login</legend>
 			<div class="content">
 				<div class="instruction">Please enter your e-mail address and password.<br/><br/></div>
 				<ul>
 					<li>
-						<label for="email">E-mail:</label>
+						<label for="email">E-mail</label>
 						<input type="email" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
 						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
 					</li>
 					<li>
-						<label for="password">Password:</label>
+						<label for="password">Password</label>
 						<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
 						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
 					</li>
 					<li>
-						<label>Remember me:</label>
+						<label>Remember me</label>
 						<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( ssi::checked( $param{'rdbRememberMe'} eq 'Y' ); ) ?> />
 						<label class="radio" for="rdbRememberMeY">Yes</label>
 						<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( ssi::checked( $param{'rdbRememberMe'} ne 'Y' ); ) ?> />
