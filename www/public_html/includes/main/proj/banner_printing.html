@@ -2,7 +2,7 @@
 	<fieldset><legend>Banner Options</legend>
 		<div class="content">
 			<ul>
-				<li><label># of Grommets per Banner:</label>
+				<li><label># of Grommets per Banner</label>
 					<input type="text" size="4" name="grommets" id="grommets" value="<?grommets?>" onkeyup="this.value=this.value.replace(/\D/g, '');calc(this.form.name);" />
 				</li>
 				<li id="pocketsli"><label>Will your banner have pole pockets?</label>
@@ -11,7 +11,7 @@
 					<input type="radio" name="pockets" id="pocketsN" value="N" <? echo ( ssi::checked( $$variable{'pockets'} ne 'Y' ); ) ?> onclick="$('PocketSizeli').hide();calc(this.form.name);" />
 					<label class="radio" for="pocketsN">No</label>
 				</li>
-				<li id="PocketSizeli" <? echo ( $$variable{'pockets'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Pole pocket diameter:</label>
+				<li id="PocketSizeli" <? echo ( $$variable{'pockets'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Pole pocket diameter</label>
 					<input type="text" size="4" name="PocketSize" id="PocketSize" value="<?PocketSize?>" onkeyup="this.value=this.value.replace(/[^\.\d]/g, '');calc(this.form.name);" />
 				</li>
 				<li id="hemmed"><label>Will your banner be hemmed?</label>
@@ -20,7 +20,7 @@
 					<input type="radio" name="hemmed" id="hemmedN" value="N" <? echo ( ssi::checked( $$variable{'hemmed'} eq 'N' ); ) ?> onclick="$('edges').hide();calc(this.form.name);" />
 					<label class="radio" for="hemmedN">No</label>
 				</li>
-				<li id="edges" <? echo ( $$variable{'hemmed'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges:</label>
+				<li id="edges" <? echo ( $$variable{'hemmed'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges</label>
 					<? echo (
 						my $html;
 						foreach my $edge ( 'Left', 'Right','Top', 'Bottom' ) {

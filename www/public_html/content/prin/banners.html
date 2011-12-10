@@ -14,28 +14,44 @@
 						<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
 						<!--#include virtual="_sizes.html"-->
 						<div class="Colours">
-							<p><label>Colours:</label>
+							<fieldset><legend>Colours</legend>
+								<div class="content">
+		
+							<ul>
+							<li><label>Colours</label>
 								<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 									<option value="4/0">4 Colour One Side</option>
 									<option value="4/1">4 Colour/Black</option>
 									<option value="4/4">4 Colour Both Sides</option>
 								</select>
-							</p>
+							</li>
+							</ul>
 						</div>
-						<br/>
-						<div class="row">
-							<label>Stock Information</label><br/>
-							<!--#include virtual="_paper_dropdowns.html"-->
+					</fieldset>
+				</div>
+						<div class="Stock">
+							<fieldset><legend>Stock</legend>
+								<div class="content">
+									<!--#include virtual="_paper_dropdowns.html"-->
+								</div>
+							</fieldset>
 						</div>
+<div class="Production">
+                    <fieldset><legend>Production</legend>
+                        <div class="content">
+                            <ul>
+
 						<!--#include virtual="_proofs.html"-->
 						<!--#include virtual="_drilling.html"-->
 						<!--#include virtual="_scoring.html"-->
 						<!--#include virtual="_perfing.html"-->
 						<!--#include virtual="_turnaround.html"-->
-						<br class="spacer"/>
 						<!--#include virtual="_quantity.html"-->
-						<br class="spacer"/>
 						<!--#include virtual="_press_type.html"-->
+							</ul>
+						</div>
+					</fieldset>
+				</div>
 						<br class="spacer"/>
 						<!--#include virtual="_prices.html"-->
 					</div><!--Questions-->

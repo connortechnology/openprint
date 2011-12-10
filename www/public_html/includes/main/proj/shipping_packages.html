@@ -1,5 +1,5 @@
 <p>
-	<label>Full Package Weight:</label>
+	<label>Full Package Weight</label>
 <? echo (
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -18,7 +18,7 @@
 ) ?>
 </p>
 <p>
-	<label>Package Quantity:</label>
+	<label>Package Quantity</label>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 	<input type="checkbox" id="chkOverridePackageQuantity" name="chkOverridePackageQuantity" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( ssi::checked( $$variable{'chkOverridePackageQuantity'} eq 'Y' ); ) ?> /> 
 	<label class="radio" for="chkOverridePackageQuantity">Override</label>
@@ -36,7 +36,7 @@
 ) ?>
 </p>
 <p>
-	<label>Total Weight:</label>
+	<label>Total Weight</label>
 <? echo (
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

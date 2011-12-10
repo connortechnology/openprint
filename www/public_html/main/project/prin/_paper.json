@@ -10,7 +10,7 @@
 	my %find = (
 		'width is null' => 0,
 		'project_type_id any'	=>	$Project->type_id(),
-		( exists $param{'Supplied'} ? ( 'supplied'			=>	[ undef, $param{'Supplied'} ] ) : () ),
+		( exists $param{'Supplied'} ? ( 'supplied is null or ='			=>	$param{'Supplied'} ) : () ),
 		);
 	$param{'selected'} =~ s/ddmStock//;
 

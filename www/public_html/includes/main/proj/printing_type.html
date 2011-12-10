@@ -60,7 +60,7 @@
 ) ?>
 <? if ( 1 < @{$$variable{'Types'}} ) ?>
 <p>
-	<label>Printing type:</label>
+	<label>Printing type</label>
 	<select name="PrintingType" onchange="calc(this.form.name);">
 		<? echo (
 			ssi::make_drop_down( [ '', 'No Preference', map { $_, $_ } @{$$variable{'Types'}} ], $$variable{'PrintingType'} );

@@ -1,6 +1,6 @@
 <div class="PresentationFolderQuestions">
 	<p>
-		<label>Number of panels:</label>
+		<label>Number of panels</label>
 		<span class="checkOption">
 		<input type="radio" id="rdbPanels2<?Signature?>" name="rdbPanels<?Signature?>" value="2" onclick="$('PocketCenter<?Signature?>').hide();calc(this.form.name);" <? echo ( $$variable{'rdbPanels'.$$variable{'Signature'}} == 2 ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPanels2<?Signature?>">2</label>
@@ -15,7 +15,7 @@
 		</span>
 	</p>
 	<p>
-		<label>Pocket size:</label>
+		<label>Pocket size</label>
 		<span class="checkOption">
 		<input type="radio" id="rdbPocketSize3<?Signature?>" name="rdbPocketSize<?Signature?>" value="3" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'PocketSize'.$$variable{'Signature'}} == 3 ); ) ?> />
 		<label class="radio" for="rdbPocketSize3<?Signature?>">3&quot;</label>
@@ -31,7 +31,7 @@
 		</span>
 	</p>
 	<p>
-		<label>Pocket location:</label>
+		<label>Pocket location</label>
 		<span class="checkOption">
 			<input type="checkbox" id="chkPocketLeft<?Signature?>" name="chkPocketLeft<?Signature?>" value="Left" onclick="calc(this.form.name);" <? echo ( $$variable{'chkPocketLeft'.$$variable{'Signature'}} eq 'Left' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="chkPocketLeft<?Signature?>">Left</label>

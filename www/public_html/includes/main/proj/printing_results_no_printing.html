@@ -6,7 +6,7 @@
 	} # end if
 ) ?>
 <p>
-	<label>Sheet Size:</label>
+	<label>Sheet Size</label>
 		<input type="text" name="StockWidth" value="<?StockWidth?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /> x
 		<input type="text" name="StockHeight" value="<?StockHeight?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -21,7 +21,7 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <p>
-    <label><? echo ( ssi::writeTip( 'Run style' ); ) ?>:</label>
+    <label><? echo ( ssi::writeTip( 'Run style' ); ) ?></label>
 	<select name="ddmRunStyle" size="1" onchange="calc(this.form.name);">
 		<option value="">No runstyle selected</option>
 		<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{'ddmRunStyle'} ); ) ?>
@@ -36,7 +36,7 @@
 </p>
 <? if ( $$variable{'txtSignatureType'} ) ?>
 <p>
-	<label>Page Quantity:</label>
+	<label>Page Quantity</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -57,7 +57,7 @@
 <? endif ( $$variable{'txtSignatureType'} ) ?>
 
 <p>
-    <label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>
+    <label><? echo ( ssi::writeTip('Imposition'); ) ?></label>
     <input type="text" name="txtImposition" value="<?txtImposition?>" size="4" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> out
 	<input type="text" size="3" name="hdnImpositionColumns" value="<?hdnImpositionColumns?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> x
 	<input type="text" size="3" name="hdnImpositionRows" value="<?hdnImpositionRows?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> + 

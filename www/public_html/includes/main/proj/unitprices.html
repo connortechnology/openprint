@@ -6,7 +6,7 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <p>
-	<label><b>Unit Price:</b></label>
+	<label><b>Unit Price</b></label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

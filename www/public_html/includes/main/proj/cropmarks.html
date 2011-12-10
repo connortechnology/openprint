@@ -1,6 +1,6 @@
 <? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 <p>
-	<label>Crop mark space:</label>
+	<label>Crop mark space</label>
 	<? echo ( ssi::input( 'type'=>'number','name'=>'txtCropMarkSpace'.$$variable{'Signature'},'value'=>$$variable{'txtCropMarkSpace'.$$variable{'Signature'}}, 'onkeyup'=>'calc(this.form.name);'); ) ?> inches
 </p>
 <? else ( $$variable{'Mode'} ne 'Easy' ) ?>

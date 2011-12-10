@@ -2,7 +2,7 @@
 <input type="hidden" name="rdbColourBar<?Signature?>" value="<? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} ) ?>"/>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <p class="ColourBars" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
-	<label><? echo ( ssi::writeTip('Colour bar'); ) ?>:</label>
+	<label><? echo ( ssi::writeTip('Colour bar'); ) ?></label>
 		<input type="radio" id="rdbColourBar<?Signature?>Y" name="rdbColourBar<?Signature?>" value="Y" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbColourBar<?Signature?>Y">Yes</label>
 		<input type="radio" id="rdbColourBar<?Signature?>N" name="rdbColourBar<?Signature?>" value="N" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbColourBar'.$$variable{'Signature'}} eq 'N' ? 'checked="checked"' : '' ) ?> />

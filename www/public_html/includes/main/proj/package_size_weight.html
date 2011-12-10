@@ -3,7 +3,7 @@
 ) ?>
 <? if ( @{$$variable{'PackageTypes'}} ) ?>
 <p>
-	<label>Package Type:</label>
+	<label>Package Type</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -26,7 +26,7 @@
 <input type="hidden" name="txtPackageHeight" />
 <input type="hidden" name="txtPackageDepth" />
 <p>
-	<label>Weight of <?ServiceTypeName?>:</label>
+	<label>Weight of <?ServiceTypeName?></label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -38,7 +38,7 @@
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <p>
-    <label>Maximum Quantity per <?ServiceTypeName?>:</label>
+    <label>Maximum Quantity per <?ServiceTypeName?></label>
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
