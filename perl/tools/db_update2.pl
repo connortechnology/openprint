@@ -264,22 +264,42 @@ if ( sets::isin('purchaseorders', \@tables ) ) {
 		$dbh->do('ALTER TABLE purchaseorders add shipto_mobile text') if ! exists $$data{'shipto_mobile'};
 		$dbh->do('ALTER TABLE purchaseorders add shipto_sms text') if ! exists $$data{'shipto_sms'};
 		$dbh->do('ALTER TABLE purchaseorders add delivered_on_switch text') if ! exists $$data{'delivered_on_switch'};
-	if ( $$data{'item'} and ! $$data{'item_id'} ) {
-		$dbh->do('ALTER TABLE purchaseorder_Contents add item_id INTEGER');
-		foreach my $C ( openprint::PurchaseOrder_Content() ) {
-			
-			my $Item = openprint::PurchaseOrder_Item->find_one('name lc'=> lc $openprint::PurchaseOrder_Item->transform('name', $$C{'item'} ) );
-			if ( ! $Item ) {
-				$Item = new openprint::PurchaseOrder_Item();
-				$Item->save({'name'=>$$C{'item'},'type_id'=>$$C{'type_id'},'price'=>$$C{'price'},'vendor_id'=>$C->PurchaseOrder()->supplier_id(),'company_id'=>$C->PurchaseOrder()->company_id()});
-			} # end if
-			$C->save({'item_id'=>$$Item{'id'}});
-		} # end if
-		$dbh->do('alter table purchaseorder_contents drop column item');
-	} # end if
 	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( sets::isin('purchaseorder_contents', \@tables ) ) {
+$log->debug("contents");
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_contents'", 'column_name');
+	if ( ! exists $$data{'item_id'} ) {
+$log->debug('!item_id');
+		$dbh->do('ALTER TABLE purchaseorder_Contents ADD item_id INTEGER');
+		if ( exists $$data{'item'} ) {
+			require openprint::PurchaseOrder_Item;
+			foreach my $C ( openprint::PurchaseOrder_Content->find() ) {
+				my $Item = openprint::PurchaseOrder_Item->find_one('name lc'=> lc $openprint::PurchaseOrder_Item->transform('name', $$C{'item'} ) );
+				if ( ! $Item ) {
+					$Item = new openprint::PurchaseOrder_Item();
+					$Item->save({'name'=>$$C{'item'},'type_id'=>$$C{'type_id'},'price'=>$$C{'price'},'vendor_id'=>$C->PurchaseOrder()->supplier_id(),'company_id'=>$C->PurchaseOrder()->company_id()});
+				} # end if
+				$C->save({'item_id'=>$$Item{'id'}});
+			} # end if
+		} # end if
+		#$dbh->do('alter table purchaseorder_contents drop column item');
+	} else {
+		$log->debug("has item_id");
+	} # end if
+	if ( ! exists $$data{'created_on'} ) {
+		$dbh->do('ALTER TABLE PurchaseOrder_Contents ADD created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
+	if ( ! exists $$data{'product'} ) {
+		$dbh->do('ALTER TABLE PurchaseOrder_Contents ADD product text');
+	} # end if
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach

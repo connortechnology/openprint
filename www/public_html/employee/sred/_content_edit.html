@@ -15,7 +15,7 @@
 <? echo (
 	my $Type = $$variable{'C'}->Type();
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_content_edit_'. ( $Type->name() ? $Type->name() : 'Other' ) . '.html' );
-	return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+	return ssi::variable_substitution( \$content, $variable );
 ) ?>
 		</ul>
 		<div id="alert-<? echo ( $$variable{C}->id() ) ?>"></div>

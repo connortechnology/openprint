@@ -165,7 +165,7 @@ function update_taxes( form ) {
 	my $line = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/purchase_order/_po_content_line.html' );
 	foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
 		$$variable{'C'} = $C;
-		$html .= ssi::variable_substitution( $r, $log, $dbh, \$line, $variable );
+		$html .= ssi::variable_substitution( \$line, $variable );
 	} # end foreach C
 	return $html;
 ) ?>
