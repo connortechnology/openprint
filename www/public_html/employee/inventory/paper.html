@@ -87,7 +87,9 @@ my $starttime = gettimeofday();
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
         my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-		$session{'/employee/inventory/paper.html?'.$option} = $options[0] if ( @options == 2 );
+
+		# Don't do this because even if there is only 1 entry, papers can be unassigned.
+		#$session{'/employee/inventory/paper.html?'.$option} = $options[0] if ( @options == 2 );
 
         $html .= sprintf(q`<li><label>%1$s</label>
                 <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">

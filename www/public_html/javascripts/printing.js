@@ -85,8 +85,12 @@ function SpecialColour_onchange( element, side, index, signature ) {
 	} // end if
 	if ( -1 != type.indexOf('PMS') ) {
 		$('ColourCoatingColour'+index+side+signature).show();
+		$('ColourCoatingPrice'+index+side+signature).show();
+		$('ColourCoatingMileage'+index+side+signature).show();
 	} else {
 		$('ColourCoatingColour'+index+side+signature).hide();
+		$('ColourCoatingPrice'+index+side+signature).hide();
+		$('ColourCoatingMileage'+index+side+signature).hide();
 	} // end if
 	calc(element.form.name);
 } // end function
