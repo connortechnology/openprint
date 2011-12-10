@@ -659,9 +659,9 @@ if ( ! $ServiceType ) {
 } # end if
 
 if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
-if ( sets::isin( 'paper_purchase_order_contents', \@tables ) ) {
-	$dbh->do('DROP TABLE paper_purchase_order_contents');
-}
+	if ( sets::isin( 'paper_purchase_order_contents', \@tables ) ) {
+		$dbh->do('DROP TABLE paper_purchase_order_contents');
+	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
 $dbh->disconnect();

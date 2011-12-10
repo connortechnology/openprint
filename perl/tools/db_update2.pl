@@ -243,8 +243,14 @@ if ( ! openprint::Order_Tax->find_one() ) {
 	} # end foreachOrder 
 	sql::end_transaction( $dbh, $ac );
 } # end if
+if ( ! sets::isin('purchaseorder_items', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Items.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 if ( sets::isin('purchaseorders', \@tables ) ) {
-	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorders'", 'column_name');
 	if ( $data ) {
 		if ( ! exists $$data{'manifest_id'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add manifest_id integer');
@@ -258,6 +264,19 @@ if ( sets::isin('purchaseorders', \@tables ) ) {
 		$dbh->do('ALTER TABLE purchaseorders add shipto_mobile text') if ! exists $$data{'shipto_mobile'};
 		$dbh->do('ALTER TABLE purchaseorders add shipto_sms text') if ! exists $$data{'shipto_sms'};
 		$dbh->do('ALTER TABLE purchaseorders add delivered_on_switch text') if ! exists $$data{'delivered_on_switch'};
+	if ( $$data{'item'} and ! $$data{'item_id'} ) {
+		$dbh->do('ALTER TABLE purchaseorder_Contents add item_id INTEGER');
+		foreach my $C ( openprint::PurchaseOrder_Content() ) {
+			
+			my $Item = openprint::PurchaseOrder_Item->find_one('name lc'=> lc $openprint::PurchaseOrder_Item->transform('name', $$C{'item'} ) );
+			if ( ! $Item ) {
+				$Item = new openprint::PurchaseOrder_Item();
+				$Item->save({'name'=>$$C{'item'},'type_id'=>$$C{'type_id'},'price'=>$$C{'price'},'vendor_id'=>$C->PurchaseOrder()->supplier_id(),'company_id'=>$C->PurchaseOrder()->company_id()});
+			} # end if
+			$C->save({'item_id'=>$$Item{'id'}});
+		} # end if
+		$dbh->do('alter table purchaseorder_contents drop column item');
+	} # end if
 	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
@@ -275,6 +294,14 @@ if ( ! sets::isin('purchaseorder_taxes', \@tables ) ) {
 if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Other') ) {
 	my $PO_CT = new openprint::PurchaseOrder_ContentType();
 	$PO_CT->save({'name'=>'Other'});
+} # end if
+if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Roll Stock') ) {
+	my $PO_CT = new openprint::PurchaseOrder_ContentType();
+	$PO_CT->save({'name'=>'Roll Stock'});
+} # end if
+if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Sheet Stock') ) {
+	my $PO_CT = new openprint::PurchaseOrder_ContentType();
+	$PO_CT->save({'name'=>'Sheet Stock'});
 } # end if
 if ( $config{'Default State Tax'} ) {
 	$dbh->do("DELETE FROM Configuration WHERE name='Default State Tax'");
