@@ -1,10 +1,10 @@
-<li id="Turnaround">
-	<label>Turnaround:</label>
-	<select id="TurnaroundDays" name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');calc(this.form.name);">
 <? echo (
 	my $Service = openprint::Service->find_one('name'=>'Turnaround'.$$variable{'Project'}->Type()->name());
 	$Service = openprint::Service->find_one('name'=>'Turnaround');
+	my $html;
 	if ( $Service ) {
+		$html .= q`<li id="Turnaround"><label>Turnaround</label>
+	<select id="TurnaroundDays" name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');calc(this.form.name);">`;
 		my @Prices = openprint::ServicePrice->find( 'service_id'=>$$Service{id}, 'pricelist_id'=>$session{'Pricelist_id'}, 'order'=>'min DESC NULLS LAST,max DESC NULLS LAST' );
 		my @options;
 		foreach my $Price ( @Prices ) {
@@ -18,8 +18,8 @@
 				push @options, int($Price->min()).'-'.int($Price->max()), int($Price->min()).'-'.int($Price->max()) . ' days after approval';
 			} # end if
 		} # end foreach $Price
-		return ssi::make_drop_down( \@options, $$variable{'TurnaroundDays'} );
+		$html .= ssi::make_drop_down( \@options, $$variable{'TurnaroundDays'} );
+		$html .= '</select></li>';
 	} # end if
+	return $html;
 ) ?>
-	</select>
-</li>

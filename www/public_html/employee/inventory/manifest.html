@@ -41,7 +41,7 @@
 			foreach my $Type ( $$variable{'Manifest'}->Types() ) {
 				$$variable{'Type'} = $Type;
 				$$variable{'type_id'} = $Type->id();
-				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+				$html .= ssi::variable_substitution( \$content, $variable );
 			} # end foreach
 			return $html;
 		) ?>

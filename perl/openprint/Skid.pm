@@ -116,6 +116,15 @@ sub find {
 		$sql .= ' AND created_on <= ?';
 		push @values, $params{'created_on_end'};
 	} # end if
+
+	if ( $params{'created_on >='} ) {
+		$sql .= ' AND created_on >= ?';
+		push @values, $params{'created_on >='};
+	} 
+	if ( $params{'created_on <='} ) {
+		$sql .= ' AND created_on <= ?';
+		push @values, $params{'created_on <='};
+	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
 		push @values, @params{'updated_on_start','updated_on_end'};
@@ -126,6 +135,15 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+
+	if ( $params{'updated_on >='} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on >='};
+	} # end if
+	if ( $params{'updated_on <='} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on <='};
+	} # end if
 	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
 		push @values, @params{'last_seen_start','last_seen_end'};
@@ -135,6 +153,14 @@ sub find {
 	} elsif ( $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( $params{'last_seen >='} ) {
+		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
+		push @values, $params{'last_seen >='};
+	} # end if
+	if ( $params{'last_seen <='} ) {
+		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
+		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';

@@ -16,7 +16,7 @@ Posted on <? echo ( $$variable{'Article'}->datetime_format( 'published_on' ) ) ?
 		<a href="<? echo ( $$variable{'Article'}->source() ) ?>" target="_blank">View Original Article</a><br/>
 	<? endif ( $$variable{'Article'}->source() ) ?>
 
-	<? echo ( $$variable{'Article'}->body() ) ?>
+	<div class="body"><? echo ( $$variable{'Article'}->body() ) ?></div>
 	<? if ( $session{'user_id'} ) ?>
 		<div id="Likes"><? echo ( $$variable{'Article'}->likes() ) ?></div>
 		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><!--#include virtual="_comments.html"--></div>

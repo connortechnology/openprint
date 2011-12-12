@@ -112,14 +112,14 @@
 </style>
 <form name="f1" method="post" action="#">
 	<input type="hidden" name="btnFunction" value=""/>
-	<fieldset class="filters"><legend>Filters:</legend>
+	<fieldset class="filters"><legend>Filters</legend>
 		<div style="float: left; width: 47%;">
 		<p>
-			<label>Status:</label>
+			<label>Status</label>
 				<select name="Status" multiple size="3"><?Status?></select>
 		</p>
 		<p>
-			<label>Sales Rep:</label>
+			<label>Sales Rep</label>
 				<select name="ddmSalesRep" size="1" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)">
 					<option value="">All Employees</option>
 					 <? echo ( 
@@ -130,7 +130,7 @@
 		</div>
 		<div style="float: right; width: 47%;">
 			<p>
-				<label>Due Date:</label>
+				<label>Due Date</label>
 				<span class="DateSelector">
 					<select name="ddmStartYear" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmStartYear?></select>
 					<select name="ddmStartMonth" onChange="off(this.options[this.selectedIndex])" onFocus="on(this.options[this.selectedIndex]);on(this)" onBlur="off(this.options[this.selectedIndex]);off(this)"><?ddmStartMonth?></select>
@@ -145,7 +145,7 @@
 		</div>
 		<br class="spacer"/>
 		<p>
-			<label>Services:</label>
+			<label>Services</label>
 				<? eval ( @{$$variable{'temp_services'}} = @{$$variable{'DisplayServices'}} ) ?>
 				<? while ( $$variable{'service_type'} = shift @{$$variable{'temp_services'}}; ) ?>
 				<input type="checkbox" name="chkViewServices<?service_type?>" value="checked" <? echo ( $$variable{'chkViewServices'.$$variable{'service_type'}} ) ?> />

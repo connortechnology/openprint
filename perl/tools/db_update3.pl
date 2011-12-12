@@ -663,11 +663,58 @@ if ( ! $ServiceType ) {
 } # end if
 
 if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
-if ( sets::isin( 'paper_purchase_order_contents', \@tables ) ) {
-	$dbh->do('DROP TABLE paper_purchase_order_contents');
-}
+	if ( sets::isin( 'paper_purchase_order_contents', \@tables ) ) {
+		$dbh->do('DROP TABLE paper_purchase_order_contents');
+	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
+<<<<<<< HEAD
+if ( ! $config{'Timezone'} ) {
+$dbh->do(q`insert into Configuration values ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
+	
+} # end if
+if ( ! sets::isin( 'schedule', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Schedule.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='schedule'", 'column_name');
+	if ( ! exists $$data{'stock'} ) {
+		$dbh->do('ALTER TABLE Schedule add stock text');
+	} 
+	if ( ! exists $$data{'stock_verified'} ) {
+		$dbh->do('ALTER TABLE Schedule add stock_verified boolean not null default false');
+	} 
+	if ( ! exists $$data{'tentative'} ) {
+		$dbh->do('ALTER TABLE Schedule add tentative boolean');
+	} 
+	if ( ! exists $$data{'comment'} ) {
+		$dbh->do('ALTER TABLE Schedule add comment text');
+	} 
+	if ( ! exists $$data{'servicetype_id'} ) {
+		$dbh->do('ALTER TABLE Schedule add servicetype_id INTEGER');
+	} 
+	if ( ! exists $$data{'pertains_id'} ) {
+		$dbh->do('ALTER TABLE Schedule add pertains_id INTEGER[]');
+	} 
+	if ( ! exists $$data{'created_on'} ) {
+		$dbh->do('ALTER TABLE Schedule add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} 
+	$dbh->do('ALTER TABLE SChedule alter projectindex drop not null');
+	if ( exists $$data{'serviceindex'} ) {
+		$dbh->do('ALTER TABLE SChedule drop serviceindex');
+	} # end if
+	if ( ! exists $$data{'service_id'} ) {
+		$dbh->do('ALTER TABLE Schedule add service_id INTEGER[]');
+	} 
+}
+=======
+
+if ( ! sets::isin( 'conversations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Conversations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+
+>>>>>>> f64a36c0c515989e7f47504dd707e5e01cbe9cb1
 $dbh->disconnect();
 1;
 __END__

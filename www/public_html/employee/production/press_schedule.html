@@ -213,7 +213,7 @@ onDestroy: function(eventName, win) {
 	<input type="hidden" name="ServiceIndex" />
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<p>
-			<label>Presses:</label>
+			<label>Presses</label>
 				<select name="Presses" multiple size="4">
 <? echo ( 
 	@{$$variable{'Presses'}} = openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );

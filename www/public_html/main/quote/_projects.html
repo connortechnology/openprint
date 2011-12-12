@@ -51,7 +51,7 @@
 					$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
 				} # end if
 				$html .= sprintf('</td><td class="markup">%1$s%</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>', 
-						$Project->markup($qty_index), 
+						$QP->markup($qty_index), 
 						$Project->quantity($qty_index), 
 						openprint::Currency::format( $Project->price($qty_index) ), 
 						openprint::Currency::format( $QP->price($qty_index) )
@@ -117,8 +117,9 @@
 				} # end if
 				$html .= sprintf('</td><td class="quantity">%1$s</td><td class="newprice">%2$s</td></tr>', 
 						$Project->quantity($qty_index), 
-						openprint::Currency::format( $Project->price($qty_index) ),
+						openprint::Currency::format( $QP->price($qty_index) ),
 						);
+				$subtotal += $QP->price($qty_index);
 			} # end foreach qty_index
 			$html .= "</table>\n</td>\n</tr>\n";
 			$html .= sprintf('<tr class="totals"><td colspan="3">Subtotal:</td><td class="price">%1$s</td></tr>',

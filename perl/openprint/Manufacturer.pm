@@ -1,8 +1,7 @@
-package openprint::Manufacturer;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+package openprint::Manufacturer;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $table $serial %fields %transforms %defaults );
 
 $table = 'manufacturers';
@@ -12,7 +11,7 @@ $serial= 'manufacturers_id_seq';
     'name' =>  'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );

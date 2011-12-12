@@ -86,7 +86,7 @@
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<div class="presses"><ul>
 		<li>
-			<label>Presses:</label>
+			<label>Presses</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
@@ -106,7 +106,7 @@
 		</li></ul>
 		</div>
 		<div class="statuses">
-			<ul><li><label>Status:</label>
+			<ul><li><label>Status</label>
 <? echo (
 	my @statuses = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
@@ -124,7 +124,7 @@
 		</div>
 		<div class="legend">
 			<ul><li>
-				<label>Legend:</label>
+				<label>Legend</label>
 				<ul>
 					<li class="unscheduled">Unscheduled</li>
 					<li class="scheduled">Scheduled</li>
@@ -134,7 +134,7 @@
 		</div>
 		<div class="dates">
 			<ul><li>
-				<label>Proofs Out:</label>
+				<label>Proofs Out</label>
 				<span class="DateSelectorT">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_start', { 'with_today'=>1 } );

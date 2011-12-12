@@ -78,7 +78,7 @@ function textarea_init() {
 <div id="FormsPopup" style="display:none;">
 	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );" action="">
 		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
+		<span style="float: left;"> # of Forms <input type="text" name="Forms"/></span>
 		<span style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
@@ -125,7 +125,7 @@ function textarea_init() {
 		<div class="presses">
 		<ul>
 			<li>
-				<label>Category:</label>
+				<label>Category</label>
 				<select name="category" id="category" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
@@ -133,7 +133,7 @@ function textarea_init() {
 	) ?>
 				</select>
 			</li>
-<li><label>Equipment:</label>
+<li><label>Equipment</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find(
@@ -162,7 +162,7 @@ function textarea_init() {
 		<div class="dates">
 		<ul>
 			<li>
-				<label>Date Range:</label>
+				<label>Date Range</label>
 				<span class="DateSelector">
 					<? echo ( 
 						ssi::date_select_session( '/employee/production/print_overview.html', 'schedule_start', { 'with_today'=>1, 'onclick'=>'f1.submit();' } );
@@ -176,7 +176,7 @@ function textarea_init() {
 				</span>
 			</li>
 			<li>
-				<label>Scale:</label>
+				<label>Scale</label>
 				<select id="scale" name="scale" onchange="this.form.submit();">
 					<? echo ( 
 						my @options = ( 
@@ -191,7 +191,7 @@ function textarea_init() {
 				</select>
 			</li>
 			<li>
-				<label>Quick Views:</label>
+				<label>Quick Views</label>
 				<? echo (
 					my $html = ssi::writeButton( $log, $dbh, 'Today', 'today.gif', '', '/employee/production/print_overview.html?action=Today', 'Today' );
 					$html .= ssi::writeButton( $log, $dbh, 'twoday', '2day.gif', '', '/employee/production/print_overview.html?action=2day', '2day' );
@@ -202,7 +202,7 @@ function textarea_init() {
 			</ul>
 		</div>
 		<div class="legend">
-			<ul><li><label>Legend:</label>
+			<ul><li><label>Legend</label>
 				<ul>
 					<li class="multipress">Has forms on other presses</li>
 					<li class="inprepress">In Prepress</li>
@@ -343,10 +343,10 @@ $log->debug("Setp 2" . $ES->to_string());
 
 			$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide)</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide)</h3><div id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
 		$html .= '</div></div>';
 		return $html;

@@ -1,7 +1,7 @@
-<form name="f1" method="post">
-	<fieldset class="filters"><legend>Search:</legend>
+<form id="f1" name="f1" method="post">
+	<fieldset class="filters"><legend>Search</legend>
 		<p>
-			<label>Category:</label>
+			<label>Category</label>
 			<select name="category_id" onchange="if(this.options[this.selectedIndex].value != '') fmCheck(f1);">
 				<option value="">Select a Category</option>
 				<? echo (
@@ -24,22 +24,22 @@
 	<div class="leftColumn">
 		<fieldset><legend>Category Information</legend>
 			<p> 
-				<label>Name:</label>
+				<label>Name</label>
 				<input type="text" name="name" value="<? echo ( ssi::htmlize( $$variable{'Category'}->name() ); ) ?>" />
 			</p>
 			<p> 
-				<label>Description:</label>
-				<textarea name="description" rows="5" cols=""><? echo ( ssi::htmlize( $$variable{'Category'}->description() ); ) ?></textarea>
+				<label>Description</label>
+				<textarea name="description" rows="5"><? echo ( ssi::htmlize( $$variable{'Category'}->description() ); ) ?></textarea>
 			</p>
 			<p> 
-				<label>Greeting:</label>
-				<textarea name="greeting" rows="5" cols=""><? echo ( ssi::htmlize( $$variable{'Category'}->greeting() ); ) ?></textarea>
+				<label>Greeting</label>
+				<textarea name="greeting" rows="5"><? echo ( ssi::htmlize( $$variable{'Category'}->greeting() ); ) ?></textarea>
 			</p>
 		</fieldset>
 	</div>
 	<div class="rightColumn">
 		<? if ( $$variable{'Category'}->id() ) ?>
-			<fieldset><legend>Companies in this marketing Category:</legend>
+			<fieldset><legend>Companies in this marketing Category</legend>
 				<? echo (
 					my $html;
 					foreach my $Company ( $$variable{'Category'}->Companies( 'order' => 'lower(name)' ) ) {
@@ -53,7 +53,7 @@
 				</p>
 				<hr class="spacer"/>
 				<p>
-					<label>Add Company to Category:</label>
+					<label>Add Company to Category</label>
 					<select name="Company">
 						<option value=""> select one </option>
 					<? echo ( 

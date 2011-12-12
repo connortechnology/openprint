@@ -1,7 +1,7 @@
-package openprint::StockWeight;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockWeight;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $table $serial %fields %transforms %defaults );
 
 $table = 'stockweights';

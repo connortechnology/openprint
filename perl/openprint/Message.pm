@@ -55,5 +55,11 @@ sub To {
 	$$params{'message_id'} = $$self{'id'};
 	return openprint::Message_To->find($params);
 } # end sub To
+
+sub Who {
+	my ( $self, $params ) = @_;
+	$$params{'message_id'} = $$self{'id'};
+	return ( $self->From(), map { new openprint::User( $_->user_id() ) } openprint::Message_To->find($params) );
+} # end sub Who
  1;
 __END__

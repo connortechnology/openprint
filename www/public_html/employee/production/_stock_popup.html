@@ -2,7 +2,7 @@
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
 ) ?>
-<fieldset><legend>Ordered Stock:</legend>
+<fieldset><legend>Ordered Stock</legend>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
 	<table class="List">
 		<tr><th width="50" align="left">PO</th><th align="left">Description</th><th width="75" align="left">Quantity</th></tr>
@@ -24,7 +24,7 @@
 No stock has been ordered.
 <? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
 </fieldset>
-<fieldset><legend>Allocated Stock:</legend>
+<fieldset><legend>Allocated Stock</legend>
 <? echo ( 
 	require openprint::PaperAllocation;
 

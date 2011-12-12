@@ -1,0 +1,9 @@
+<li id="CustomDimensions" <? echo ( sets::isin( $$variable{'ProjectType'}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>>
+	<label>Finished</label>
+	<input type="number" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x
+	<input type="number" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
+	<br class="spacer"/>
+	<label>Flat</label>
+	<input type="number" id="txtWidth" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x 
+	<input type="number" id="txtHeight" name="txtHeight" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
+</li>

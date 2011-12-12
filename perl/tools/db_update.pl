@@ -1264,7 +1264,7 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 		$dbh->do($st);
 	}
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manifests'", 'column_name');
 	if ( $data ) {
 		my $ac = sql::start_transaction( $dbh );
 		if ( ! exists $$data{'po_id'} ) {
@@ -1287,7 +1287,29 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 		if ( ! exists $$data{'shipto_sms'} ) {
 			$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
 		} # end if
+		if ( ! exists $$data{'name'} ) {
+			$dbh->do('ALTER TABLE Manifests RENAME COLUMN id TO name');
+			$dbh->do('ALTER TABLE Manifests ADD id SERIAL');
+			$dbh->do('ALTER TABLE Manifest_Content_Types add m_id INTEGER');
+			$dbh->do('UPDATE manifest_content_types set m_id=(SELECT id from manifests where name=manifest_id)');
+			$dbh->do('ALTER TABLE manifest_content_types drop manifest_id');
+			$dbh->do('ALTER TABLE manifest_content_types rename column m_id to manifest_id');
+
+			$dbh->do('ALTER TABLE ManifestContents add m_id INTEGER');
+			$dbh->do('UPDATE manifestcontents set m_id=(SELECT id from manifests where name=manifest_id)');
+			$dbh->do('ALTER TABLE manifestcontents drop manifest_id');
+			$dbh->do('ALTER TABLE manifestcontents rename column m_id to manifest_id');
+
+			$dbh->do('ALTER TABLE manifests DROP CONSTRAINT "manifests_pkey"');
+			$dbh->do('ALTER TABLE manifests ADD PRIMARY KEY (id)');
+
+			$dbh->do('ALTER TABLE manifest_content_types add foreign key (manifest_id) REFERENCES Manifests (id)');
+			$dbh->do('ALTER TABLE manifestcontents add foreign key (manifest_id) REFERENCES Manifests (id)');
+			$dbh->do('CREATE INDEX Manifests_name_idx ON Manifests (name)');
+		} # end if
+		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
+		die "Blah" if $dbh->errstr();
 	} # end if
 } # end if
 
@@ -1479,7 +1501,7 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
 	} # en dif
 	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Products ADD owner_id INTEGER NOT NULL');
+		$dbh->do('ALTER TABLE Products ADD owner_id INTEGER');
 		$dbh->do('ALTER TABLE Products ADD FOREIGN KEY (owner_id) REFERENCES companies (id)');
 	}
 	if ( exists $$data{'ysntaxexempt1'} ) {

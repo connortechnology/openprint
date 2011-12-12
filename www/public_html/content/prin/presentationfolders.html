@@ -15,19 +15,19 @@
 					<!--#include virtual="_project_name.html"-->
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
-						<!--#include virtual="/includes/sizes.html"-->
+						<!--#include virtual="_sizes.html"-->
 						<div class=">Colours">
 							<fieldset><legend>Colours</legend>
 								<div class="content">
 									<ul>
-										<li><label>Colours:</label>
+										<li><label>Colours</label>
 											<select name="Colours" onchange="calc(this.form.name);">
 												<option value="4/0">4 Colour One Side</option>
 												<option value="4/4">4 Colour Both Sides</option>
 											</select>
 										</li>
-										<!--#include virtual="/includes/aqueous.html"-->
-										<!--#include virtual="/includes/uvcoating.html"-->
+										<!--#include virtual="_aqueous.html"-->
+										<!--#include virtual="_uvcoating.html"-->
 									</ul>
 								</div>
 							</fieldset>
@@ -36,7 +36,7 @@
 							<fieldset><legend>Stock</legend>
 								<div class="content">
 									<ul>
-										<!--#include virtual="/includes/paper_dropdowns.html"-->
+										<!--#include virtual="_paper_dropdowns.html"-->
 									</ul>
 								</div>
 							</fieldset>
@@ -45,9 +45,9 @@
 							<fieldset><legend>Finishing</legend>
 								<div class="content">
 									<ul>
-										<!--#include virtual="/includes/scoring.html"-->
-										<!--#include virtual="/includes/shrinkwrapping.html"-->
-										<!--#include virtual="/includes/bundling.html"-->
+										<!--#include virtual="_scoring.html"-->
+										<!--#include virtual="_shrinkwrapping.html"-->
+										<!--#include virtual="_bundling.html"-->
 									</ul>
 								</div>
 							</fieldset>
@@ -57,16 +57,16 @@
 								<div class="content">
 									<ul>
 									<!--#include virtual="_proofs.html"-->
-									<!--#include virtual="/includes/turnaround.html"-->
-									<!--#include virtual="/includes/quantity.html"-->
+									<!--#include virtual="_turnaround.html"-->
+									<!--#include virtual="_quantity.html"-->
 									</ul>
 								</div>
 							</fieldset>
 						</div>
-				<!--#include virtual="_ups.html"-->
+						<!--#include virtual="_ups.html"-->
 						<div id="AlertDiv" style="display:none;"></div>
 					</div><!--ProjectSpecifications-->
-					<!--#include virtual="/includes/prices.html"-->
+					<!--#include virtual="_prices.html"-->
 				</div><!--Questions-->
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>

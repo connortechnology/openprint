@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Message;
+require openprint::Conversation;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
@@ -49,11 +50,19 @@ sub _history {
 
 sub list {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
+		if ( ! $Conversation->id() ) {
+			$Conversation->save({'subject'=>$param{'subject'}});
+		} # end if
+		my $Message = new openprint::Message();
 		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
 			$Message->sent_on('NOW()');
 		} # end if send
-		$variable{'error'} .= $Message->save(\%param);
+		$variable{'error'} .= $Message->save({
+			'conversation_id'	=>	$Conversation->id(),
+			'body'				=>	$param{'body'},
+			});
 	} elsif ( $param{'btnFunction'} ) {
 		$log->error("Invalid value for btnFunction $param{btnFunction}");
 	} else {
@@ -67,7 +76,6 @@ sub list {
 		ssi::setup_date_select( '/messaging/list.html', 'sent_on_start', -31 );
 		ssi::setup_date_select( '/messaging/list.html', 'sent_on_end', '' );
 	} # end if
-	$session{'/messaging/list.html?folder'} = 'Inbox' if ! $session{'/messaging/list.html?folder'};
 } # end sub list
 
 sub _list {
@@ -88,7 +96,7 @@ sub edit {
 } # end sub edit
 
 sub view {
-	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
 		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
 			$Message->sent_on('NOW()');
@@ -98,8 +106,7 @@ sub view {
 } # end sub view
 
 sub _view {
-	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
-	$Message->set( \%param );
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 } # end sub _view
 
 sub _to {

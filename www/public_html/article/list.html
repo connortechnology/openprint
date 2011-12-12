@@ -20,5 +20,12 @@
 	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
 </div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>
+<form id="f1" name="f1" method="post" action="list.html" onsubmit="load_articles(this);return false;">
+	<fieldset class="filters">
+	<ul>
+		<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>"/></li>
+	</ul>
+	</fieldset>
+</form>
 <div id="Articles"><!--#include virtual="_list.html"--></div>
 </div></div><!--Article-->
