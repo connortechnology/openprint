@@ -91,17 +91,17 @@ sub _list {
 } # end sub _list
 
 sub edit {
-	$variable{'Message'} = new openprint::Message( $param{'message_id'} );
-	$variable{'Message'}->save() if ! $variable{'Message'}->id();
+	$variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
+	#$variable{'Conversation'}->save() if ! $variable{'Conversation'}->id();
 } # end sub edit
 
 sub view {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
 		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
-			$Message->sent_on('NOW()');
+			$Conversation->sent_on('NOW()');
 		} # end if send
-		$variable{'error'} .= $Message->save(\%param);
+		$variable{'error'} .= $Conversation->save(\%param);
 	} # end if
 } # end sub view
 

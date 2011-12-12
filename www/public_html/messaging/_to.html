@@ -2,10 +2,10 @@
 <ul>
 <? echo ( 
 	my $html;
-	foreach my $To ( $$variable{'Message'}->To() ) {
+	foreach my $To ( $$variable{'Conversation'}->To() ) {
 		my $User = $To->User();
 		$html .= sprintf('<li><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
-			$User->id(), $User->name(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ) );
+			$User->id(), $User->name(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X', 'title'=>'Remove' } ) );
 	} # end foreach user
 	return $html;
 ) ?>
@@ -13,13 +13,13 @@
 <!--
 <input type="text" id="to_filter" name="to_filter"/>
 -->
-<select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
+<select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Conversation'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
 	<option value="">select</option>
 	<? echo ( 
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
-			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Message'}->To() ],
+			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
 			'distinct' => 1,
 			);
 		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
