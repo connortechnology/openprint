@@ -70,10 +70,8 @@ sub load_simple {
 		} # end foreach
 	} elsif ( $variable{'ProjectType'}->id() ) {
 		# Load defaults
-        $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
-        my %defaults = sql::execute( $log, $dbh, $_, $variable{'ProjectType'}->id() );
-        foreach my $k ( keys %defaults ) {
-            $variable{$k} = $defaults{$k};
+		foreach ( openprint::ProjectType_Default->find('projecttype_id'=> $variable{'ProjectType'}->id() ) ) {
+            $variable{$_->name()} = $_->value();
         } # end foreach
 	} # end if
 

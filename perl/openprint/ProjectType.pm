@@ -100,8 +100,8 @@ sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, q{DELETE FROM tbl_projecttype_defaults WHERE lngProjectTypeIndex=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE ProjectType_Id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM projecttype_defaults WHERE projecttype_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE projecttype_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{'id'}], 'type_id', undef );

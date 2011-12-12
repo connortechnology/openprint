@@ -18,24 +18,21 @@
 <? endif ( 0 ) ?>
             <input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 			<!--#include virtual="_sizes.html"-->
-			<div class="row"><span class="label">Colours</span>
-				<span class="input">
+			<ul>
+			<li><label>Colours</label>
 				<select name="Colours" onChange="calc(this.form.name);">
 					<option value="4/0">4 Colour One Side</option>
 					<option value="4/4">4 Colour Both Sides</option>
 				</select>
-				</span>
-			</div>
-</br>
+			</li>
 			<!--#include virtual="_aqueous.html"-->
-			<div class="row">
-				<span class="label">Stock Information</span><br/>
+			<li>
+				<label>Stock Information</label><br/>
 				<!--#include virtual="_paper_dropdowns.html"-->
-			</div>
+			</li>
 <? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
-		<div class="row">
-			<span class="label">Fold Type</span>
-			<span class="input">
+			<li>
+				<label>Fold Type</span>
 				<select name="FoldType" size="1" onChange="FoldType_onChange( this );">
 					<option value="NoFold">No Fold</option>
 					<option value="2PanelFold">2 Panel Fold</option>
@@ -48,18 +45,16 @@
 					<option value="6PanelFold">6 Panel Fold</option>
 					<option value="6PanelZFold">6 Panel Z Fold</option>
 				</select>
-			</span>
-		</div>
+			</li>
 <? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 			<!--#include virtual="_drilling.html"-->
 			<!--#include virtual="_scoring.html"-->
 			<!--#include virtual="_perfing.html"-->
 			<!--#include virtual="_ups_shipping.html"-->
 			<!--#include virtual="_turnaround.html"-->
-			<br class="spacer"/>
 			<!--#include virtual="_quantity.html"-->
-			<br class="spacer"/>
 			<!--#include virtual="_prices.html"-->
+			</ul>
 		</form>
 	</div><!--Questions-->
 	<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->

@@ -1,24 +1,22 @@
-package openprint::ProjectType_Default;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
-use vars qw( $debug $table $serial %fields %transforms %defaults %find_fields );
+package openprint::ProjectType_Default;
+our @ISA = qw(openprint::Object);
 
+use vars qw( $debug $table $serial %fields %transforms %defaults %find_fields );
 
 $debug = 1;
 
-$table = 'tbl_projecttype_defaults';
-$serial = 'tbl_projecttype_defaults_id_seq';
+$table = 'projecttype_defaults';
+$serial = 'projecttype_defaults_id_seq';
 
 %fields = (
 	'id'				=>	'id',
-	'projecttype_id'	=>	'lngprojecttypeindex',
-	'name'				=>	'strfieldname',
-	'value'				=>	'strdefaultvalue',
+	'projecttype_id'	=>	'projecttype_id',
+	'name'				=>	'name',
+	'value'				=>	'value',
 );
 %find_fields = (
-	'projecttype'		=>	'(SELECT name FROM project_types WHERE id=lngprojecttypeindex)',
+	'projecttype'		=>	'(SELECT name FROM project_types WHERE id=projecttype_id)',
 );
 
 %transforms = (
@@ -27,6 +25,7 @@ $serial = 'tbl_projecttype_defaults_id_seq';
 );
 
 %defaults = (
+	'projecttype_id'	=>	q`undef`;
 );
 
 1;
