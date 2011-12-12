@@ -96,7 +96,7 @@ sub edit {
 
 sub _photos {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
-	if ( $param{'action'} eq 'set as thumbnail' ) {
+	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
 	} elsif ( $param{'action'} eq 'set as profile pic' ) {
 		my $User = new openprint::User( $session{'user_id'} );
