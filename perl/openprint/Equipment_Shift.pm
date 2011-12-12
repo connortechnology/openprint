@@ -47,10 +47,10 @@ $serial = 'equipment_shifts_id_seq';
 
 %defaults = (
 	'operator_id'	=>	undef,
-	'starttime'		=>	'00:00:00',
+	'starttime'		=>	q`'00:00:00'`,
 	'starttime_seconds'	=>	0,
 	'duration_seconds'	=>	1,
-	'name'			=>	'Shift',
+	'name'			=>	q`'Shift'`,
 );
 
 sub starttime_seconds {

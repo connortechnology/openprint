@@ -1,7 +1,7 @@
 <form name="StartTimeForm" onsubmit="return saveStartTime( StartTimeForm.schedule_id.value, StartTimeForm.StartTime.value );">
 	<input type="hidden" name="id" value="<? echo ( $param{'id'} ) ?>" />
 	<p>
-		<label>Start Time:</p>
+		<label>Start Time</p>
 		<? echo ( 
 			my @rows = openprint::press_schedule->find('id'=>$param{'id'});
 			if ( @rows ) {

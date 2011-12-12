@@ -8,7 +8,7 @@
 <form id="f1" name="f1" method="post" action="projects.html">
 <fieldset class="filters"><legend>Enter Docket #</legend>
 	<p>
-		<label>Docket #:</label>
+		<label>Docket #</label>
 		<input type="number" name="StartDocket" value="<?StartDocket?>" />
 		to <input type="number" name="EndDocket" value="<?EndDocket?>" />
 		<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
@@ -16,7 +16,7 @@
 </fieldset>
 <fieldset class="filters"><legend>Search Information</legend>
 	<p>
-		<label>Company:</label>
+		<label>Company</label>
 		<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){load_projects(f1);}" /> &nbsp;
 		<select name="ddmCustomer" onchange="load_projects(this.form);">
 			<option value="">All Companies</option>
@@ -25,7 +25,7 @@
 		<? echo ( ssi::writeButton( $log, $dbh, 'CompanyGo', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
 	</p>
 	<p>
-		<label>Operator:</label>
+		<label>Operator</label>
 		<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
@@ -35,7 +35,7 @@
 			</select>
 	</p>
 	<p>
-		<label>Sales Rep:</label>
+		<label>Sales Rep</label>
 		<select name="ddmSalesRep" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
@@ -49,7 +49,7 @@
 		</select>
 	</p>
 	<p>
-	<label>Project Status:</label>
+	<label>Project Status</label>
 	<select name="ProjectStatus" multiple="multiple" size="6" onchange="load_projects(this.form);">
 <? echo (
 		my @statuses = (
@@ -85,7 +85,7 @@
 			</select>
 	</p>
 	<p>
-		<label>Press:</label>
+		<label>Press</label>
 			<select name="ddmPress" onchange="load_projects(this.form);">
 				<option value="">All Presses</option>
 <? echo (
@@ -122,7 +122,7 @@
 			);
 ) ?>
 	<p>
-		<label>Due Date:</label>
+		<label>Due Date</label>
 		<span class="DateSelector">
 			<select name="DueDateStartYear" onchange="load_projects(this.form);"><?DueDateStartYears?></select>
 			<select name="DueDateStartMonth" onchange="load_projects(this.form);"><?DueDateStartMonths?></select>

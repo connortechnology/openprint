@@ -58,7 +58,7 @@ $serial = 'schedule_id_seq';
 
 %defaults = (
 	'speed'			=>	undef,
-	'created_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
 	'stock_verified'	=>	0,
 	'tentative'			=>	0,
 );

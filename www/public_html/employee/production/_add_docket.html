@@ -1,16 +1,16 @@
 <form name="AddDocketForm" action="/employee/production/print_overview.html" method="post">
 	<input type="hidden" name="btnFunction" value="Add Docket" />
 	<fieldset><legend>Create New Docket</legend>
-		<p><label>Company:</label>
+		<p><label>Company</label>
 			<select name="company_id">
 			<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
 			</select>
 		</p>
-		<p><label>Comment:</label>
+		<p><label>Comment</label>
 			<textarea name="comment" rows="5"></textarea>
 		</p>
 	<!--
-		<p><label>DueDate:</label>
+		<p><label>DueDate</label>
 	<? eval ( @$variable{'DueDateYears','DueDateMonths','DueDateDays','DueDate'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() ); ) ?>
 			<span class="DateSelector">
 			<select name="DueDateYear"><?DueDateYears?></select>
@@ -19,18 +19,18 @@
 			</span>
 		</p>
 	-->
-		<p><label>Forms:</label>
+		<p><label>Forms</label>
 			<input type="number" name="forms" value="1" size="2" />
 		</p>
-		<p><label>Press:</label>
+		<p><label>Press</label>
 			<select name="press_id">
 		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
 			</select>
 		</p>
-		<p><label>Impressions:</label>
+		<p><label>Impressions</label>
 			<input type="number" name="impressions" size="7" />
 		</p>
-		<p><label>Runtime:</label>
+		<p><label>Runtime</label>
 			<input type="text" name="runtime" size="7" />
 		</p>
 		<p class="buttons">

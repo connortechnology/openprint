@@ -1,7 +1,7 @@
 <form id="equipment_popup_form" name="equipment_popup_form" action="" >
 	<input type="hidden" name="equipment_id" value="<? echo ( $param{'equipment_id'} ) ?>" />
 	<fieldset><legend>Edit <? echo ( $$variable{'Equipment'}->strid() .' ' . $$variable{'Equipment'}->name() ) ?></legend>
-		<p><label>Message:</label>
+		<p><label>Message</label>
 		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols=""><? echo ( 
 	$_ = $$variable{'Equipment'}->message();
 	$_ =~ s/ \.\.\.\w+$//;
