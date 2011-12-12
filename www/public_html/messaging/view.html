@@ -5,20 +5,33 @@
 		<span class="warning">This message has been deleted</span>
 		<? endif ( $$variable{'Message'}->deleted() ) ?>
 		<fieldset><legend></legend>
-			<? echo ( $$variable{'Message'}->From()->html() ) ?>
-			<div class="content">
+			<div class="Who">
+				<fieldset><legend>Who is in this conversation</legend>
+				<? echo ( my $html = '';
+					foreach my $User ( $$variable{'Message'}->Who() ) {
+						$html .= $User->html();
+					} # end foreach
+					return $html;
+				) ?>
+				</fieldset>
+			</div>
+			<div class="Header">
 				<ul>
-					<li><label>Sent:</label>
+					<li><label>Sent</label>
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Message'}->sent_on() ) ); ) ?>
 					</li>
-					<li><label>From:</label>
+					<li><label>From</label>
 						<? echo ( $$variable{'Message'}->From()->name ) ?>
 					</li>
-					<li><label>Subject:</label>
+					<li><label>Subject</label>
 						<? echo ( $$variable{'Message'}->subject() ) ?>
 					</li>
+				</ul>
+			</div>
+			<div class="Body">
+				<ul>
 					<li>
-						<label for="info">Body:</label>
+						<label for="info">Body</label>
 						<? echo ( $$variable{'Message'}->body() ) ?>
 					</li>
 				</ul>
@@ -28,7 +41,7 @@
 			<? echo (
 				my $html = '';
 				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", 'text'=>'Delete' } );
-				$html .= ssi::button( 'reply', { 'href'='edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
+				$html .= ssi::button( 'reply', { 'href'=>'edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
 				return $html;
 			) ?>
 		</p>

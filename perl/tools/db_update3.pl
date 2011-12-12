@@ -664,6 +664,7 @@ if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
 	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
+<<<<<<< HEAD
 if ( ! $config{'Timezone'} ) {
 $dbh->do(q`insert into Configuration values ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
 	
@@ -702,6 +703,14 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 		$dbh->do('ALTER TABLE Schedule add service_id INTEGER[]');
 	} 
 }
+=======
+
+if ( ! sets::isin( 'conversations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Conversations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+
+>>>>>>> f64a36c0c515989e7f47504dd707e5e01cbe9cb1
 $dbh->disconnect();
 1;
 __END__

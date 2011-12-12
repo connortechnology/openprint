@@ -17,7 +17,7 @@ $log = new logger( 'warn' );
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
 $src_db = 'jonarts' if ! $src_db;
 $dst_db = 'jonarts' if ! $dst_db;
-$src_host = 'penultima.org' if ! $src_host;
+$src_host = 'jonarts.intelligentquote.ca' if ! $src_host;
 
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
