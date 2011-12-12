@@ -11,7 +11,7 @@
 <form id="f1" name="f1">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id">
 				<option value="">All</option>
@@ -19,7 +19,7 @@
 			</select>
 		</p>
 		<p>
-			<label>Status:</label>
+			<label>Status</label>
 			<select name="status" multiple size="4" >
 			<? echo (
 					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
@@ -46,7 +46,7 @@
 				 } # end if
 				 ) ?>
 		 <p>
-			 <label>Date:</label>
+			 <label>Date</label>
 			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
 			 <select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
 			 <select name="DateStartDay"><?DateStartDays?></select>
@@ -56,12 +56,12 @@
 			 <select name="DateEndDay"><?DateEndDays?></select>
 		</p>
 		<p>
-			<label>Value:</label>
+			<label>Value</label>
 			<input type="text" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" style="width: auto;"  /> to
 			<input type="text" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" style="width: auto;"  />
 		</p>
 		<p>
-			<label>Press:</label>
+			<label>Press</label>
 			<select id="press_id" name="press_id">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
@@ -69,7 +69,7 @@
 		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		<p>
-			<label>CSR:</label>
+			<label>CSR</label>
 			<select name="CSR" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
@@ -80,20 +80,20 @@
 			 </select>
 		</p>
 		<p>
-			<label>Reprint:</label>
+			<label>Reprint</label>
 			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked($param{reprint} eq 'Y' ); ) ?> /><label class="radio" for="reprintY">Yes</label>
 			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked($param{reprint} eq 'N' ); ) ?> /><label class="radio" for="reprintN">No</label>
 			<input type="radio" name="reprint" id="reprintAll" value="" <? echo ( ssi::checked(!$param{reprint}); ) ?> /><label class="radio" for="reprintAll">Both</label>
 			
 		</p>
 		<p>
-			<label>POs:</label>
+			<label>POs</label>
 			<input type="radio" name="pos" id="posWith" value="With" <? echo ( ssi::checked($param{pos} eq 'With' ); ) ?> /><label class="radio" for="posWith">With</label>
 			<input type="radio" name="pos" id="posWithout" value="Without" <? echo ( ssi::checked($param{pos} eq 'Without' ); ) ?> /><label class="radio" for="posWithout">Without</label>
 			<input type="radio" name="pos" id="posAll" value="" <? echo ( ssi::checked(!$param{pos}); ) ?> /><label class="radio" for="posAll">All</label>
 		</p>
 		<p>
-			<label>Sort By:</label>
+			<label>Sort By</label>
 			<select name="order">
 				<option value="created_on">Date Ordered</option>
 				<option value="total">Value</option>

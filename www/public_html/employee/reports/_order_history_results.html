@@ -102,11 +102,11 @@ The following had one or more signatures that ran on <? echo ( join(': ', new op
 			$total += $price;
 		} # end foreach Order
 		$html .= sprintf(q`<tr class="totals">
-			<td align="right">Count:</td>
+			<td align="right">Count</td>
 			<td>%d</td>
-			<td align="right">Average Value:</td>
+			<td align="right">Average Value</td>
 			<td>%s</td>
-			<td colspan="2" align="right">Total:</td>
+			<td colspan="2" align="right">Total</td>
 			<td class="Price">%s</td>
 		</tr>`, scalar @{$$variable{'Orders'}}, openprint::Currency::format( $total/scalar @{$$variable{'Orders'}} ), openprint::Currency::format( $total ) );
 		return $html;

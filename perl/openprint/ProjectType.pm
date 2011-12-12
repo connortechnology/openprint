@@ -74,10 +74,9 @@ sub required_services {
 	if ( @_ > 1 ) {
 		@{$$self{'required_services'}} = @_;
 	} elsif ( @_ ) {
-		if ( $_[0] ) {
-		} elsif ( ref $_[0] eq 'ARRAY' ) {
+		if ( ref $_[0] eq 'ARRAY' ) {
 			@{$$self{'required_services'}} = @{$_[0]};
-		} elsif ( $_ ) {
+		} elsif ( $_[0] ) {
 			@{$$self{'required_services'}} = ($_[0]);
 		} # end if
 	} # end if

@@ -95,7 +95,7 @@ Results for <? echo (
 		return $html;
 		) ?>
 		<tr class="totals">
-			<td><b>Totals:</b></td>
+			<td><b>Totals</b></td>
 			<td>Dockets: <? echo ( @{$$variable{'PROJECTS'}} ) ?></td>
 			<td colspan="2">Less than 24H:<?FastCount?> <? echo ( sprintf('%.0f', ($$variable{'FastCount'} / @{$$variable{'PROJECTS'}})*100 ); ) ?>%</td>
 			<td colspan="2">Less than 48H:<?MediumCount?> <? echo ( sprintf('%.0f', ($$variable{'MediumCount'} / @{$$variable{'PROJECTS'}})*100 ); ) ?>%</td>

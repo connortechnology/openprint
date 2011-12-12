@@ -143,7 +143,7 @@ if ( ! $qty ) {
 				$total_sheets += $totals{$paper_string};
 			} # end if
 		} # end foreach paper_string
-		$html .= '<tr class="totals"><td colspan="1" align="right">Totals:</td><td align="right">'. Number::Format::format_number($total_sheets) .'sheets</td><td align="right">'.Number::Format::format_number($total_lbs).'lbs</td></tr>';
+		$html .= '<tr class="totals"><td colspan="1" align="right">Totals</td><td align="right">'. Number::Format::format_number($total_sheets) .'sheets</td><td align="right">'.Number::Format::format_number($total_lbs).'lbs</td></tr>';
 	return $html;
 ) ?>
 </table>

@@ -11,20 +11,20 @@
 		<div class="content leftColumn">
 			<ul>
 				<li>
-					<label>Hostname:</label>
+					<label>Hostname</label>
 					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{'Host'}->hostname() ) ?>" />
 				</li>
 				<li>
-					<label>IP Address:</label>
+					<label>IP Address</label>
 					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" />
 					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( ssi::checked( $$variable{'Host'}->dhcp() ); ) ?> />
 					<label class="radio" for="dhcp">DHCP?</label>
 				</li>
 				<li>
-					<label>MAC:</label>
+					<label>MAC</label>
 					<textarea id="mac" name="mac" rows="<? echo ( $$variable{'Host'}->mac() ? scalar @{$$variable{'Host'}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{'Host'}->mac() ? join("\n", @{$$variable{'Host'}->mac()} ) : '' ) ?></textarea>
 				</li>
-				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type:</label>
+				<li><label onclick="toggle_input( $('type_id'), $('type') );">Type</label>
 					<input type="text" id="type" name="type" style="display:none;" onkeyup="ddm_select_by_text( $('type_id'), this.value, 0 );" />
 					<select name="type_id" id="type_id" onchange="$('type').value='';">
 						<option value="">select</option>
@@ -32,32 +32,32 @@
 					</select>
 				</li>
 				<li>
-					<label>Blacklist:</label>
+					<label>Blacklist</label>
 					<? echo ( ssi::radio( 'blacklist', [ '1','Yes','0','No' ], $$variable{'Host'}->blacklist() ); ) ?>
 				</li>
 				<li>
-					<label>Access violation count:</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
+					<label>Access violation count</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
 				</li>
 				<li>
-					<label>Whitelist:</label>
+					<label>Whitelist</label>
 					<? echo ( ssi::radio( 'whitelist', [ '1','Yes','0','No' ], $$variable{'Host'}->whitelist() ); ) ?>
 				</li>
 				<li>
-					<label>Monitor:</label>
+					<label>Monitor</label>
 					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{'Host'}->monitored() ); ) ?>
 				</li>
 				<? if ( $$variable{'Host'}->monitored() ) ?>
-				<li><label>Actions:</label>
+				<li><label>Actions</label>
 				</li>
 				<? endif ( $$variable{'Host'}->monitored() ) ?>
 				<li>
-					<label>Online:</label><? echo ( $$variable{'Host'}->online() ? 'Yes' : 'No' ) ?>
+					<label>Online</label><? echo ( $$variable{'Host'}->online() ? 'Yes' : 'No' ) ?>
 				</li>
-				<li><label>Description:</label>
+				<li><label>Description</label>
 					<textarea id="description" name="description" rows="<? echo (ssi::count_lines($$variable{'Host'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Host'}->description() ) ?></textarea>
 				</li>
-				<li><label>Created On:</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
-				<li><label>Updated On:</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
+				<li><label>Created On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
+				<li><label>Updated On</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Host'}->created_on() ) ); ) ?></li>
 				<li class="buttons">
 					<? echo ( 
 						my $html;
@@ -129,7 +129,7 @@ No RADIUS Support
 <? endif ( $config{'RADIUS Support'} eq 'Y' ) ?>
 	<fieldset><legend>Logs</legend>
 		<ul>
-			<li><label>Date:</label>
+			<li><label>Date</label>
 				<span class="DateSelectorCT"><? echo (
 						ssi::datetime_select_session( '/employee/it/host.html','log_created_on_start', {
 							'onchange'	=>q`new Ajax.Updater( 'Logs', '/employee/it/_host_logs.html', { parameters: $('f1').serialize() } );`,

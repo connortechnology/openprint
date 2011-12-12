@@ -25,7 +25,7 @@ $serial = 'projecttype_defaults_id_seq';
 );
 
 %defaults = (
-	'projecttype_id'	=>	q`undef`;
+	'projecttype_id'	=>	q`undef`,
 );
 
 1;

@@ -143,7 +143,6 @@ sub defaults_edit {
 		my @header = ( 'Project Type ID', 'Field Name', 'Field Value');
 		openprint::ProjectType->find();
 
-		$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 		my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ProjectType_Default->find('order'=>'projecttype_id NULLS FIRST, lower(name)');
 		misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
 
