@@ -64,9 +64,11 @@ sub handler {
 	if ( $dbh ) {
 		openprint::session_init();
 
-		my $Asset = new openprint::Asset( $r->param('asset_id') );
-
-		$r->sendfile( $Asset->on_disk_path() );
+		my ( $id, $filename ) = $r->uri() =~ /(\d+)_(.+)$/;
+		if ( $id ) {
+			my $Asset = new openprint::Asset( $id );
+			$r->sendfile( $Asset->on_disk_path() );
+		} # end if
 
 		$session{'lastupdated'} = time;
 		untie %session;
