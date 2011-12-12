@@ -4,13 +4,11 @@ DROP TABLE IF EXISTS Message_to;
 DROP TABLE IF EXISTS Messages;
 CREATE TABLE Messages (
 	id 		SERIAL,
-	subject	TEXT,
 	body	TEXT,
 	from_id		INTEGER, FOREIGN KEY (from_id) REFERENCES Users (id),
-	reply_to	INTEGER, FOREIGN KEY (reply_to) REFERENCES Messages (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	sent_on		TIMESTAMP WITH TIME ZONE,
-	conversation_id	INTEGER,
+	conversation_id	INTEGER NOT NULL, FOREIGN KEY (conversation_id) REFERENCES Messages (id),
 	PRIMARY KEY (id)
 );
 

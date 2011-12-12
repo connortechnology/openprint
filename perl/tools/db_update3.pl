@@ -664,6 +664,12 @@ if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
 	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
+
+if ( ! sets::isin( 'conversations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Conversations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+
 $dbh->disconnect();
 1;
 __END__

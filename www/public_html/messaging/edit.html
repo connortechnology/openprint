@@ -7,18 +7,18 @@
 		theme : "advanced"
 	});
 	function delete_to( user_id ) {
-		new Ajax.Updater( 'To', '_to.html', { parameters: { user_id: user_id, message_id: <? echo ( $$variable{'Message'}->id() ) ?>, action: 'remove' } } );
+		new Ajax.Updater( 'To', '_to.html', { parameters: { user_id: user_id, conversation_id: <? echo ( $$variable{'Conversation'}->id() ) ?>, action: 'remove' } } );
 	} // end function delete_to
 -->
 </script>
-<div class="Message"><div class="Edit">
+<div class="Conversation"><div class="Edit">
 	<form name="f1" id="f1" action="/messaging/list.html" method="post" enctype="multipart/form-data">
-		<fieldset><legend>Editing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
-			<? if ( $$variable{'Message'}->deleted() ) ?>
+		<fieldset><legend>Editing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{'Conversation'}->deleted() ) ?>
 			<span class="warning">This messaging has been deleted</span>
-			<? endif ( $$variable{'Message'}->deleted() ) ?>
+			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
 			
-			<input type="hidden" name="message_id" value="<? echo ( $param{'message_id'} ) ?>" />
+			<input type="hidden" name="conversation_id" value="<? echo ( $param{'conversation_id'} ) ?>" />
 
 			<fieldset><legend></legend>
 				<div class="content">
@@ -31,7 +31,7 @@
 						</li>
 						<li>
 							<label for="body">Body:</label>
-							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
+							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Conversation'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Conversation'}->body() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
@@ -41,7 +41,7 @@
 					my $html = '';
 					$html = ssi::button( 'Cancel', { 'href'=>'inbox.html' } );
 					
-					if ( $$variable{'Message'}->id() ) {
+					if ( $$variable{'Conversation'}->id() ) {
 						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					} # end if
 					$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();", 'text'=>'Save (Draft)' } );
