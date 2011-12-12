@@ -153,7 +153,11 @@ if ( exists $$data{'type'} ) {
 	$dbh->do('ALTER TABLE hosts drop type');
 }
 if ( exists $$data{'monitor'} ) {
-	$dbh->do('ALTER TABLE hosts RENAME COLUMN monitor to monitored');
+	if ( ! exists $$data{'monitored'} ) {
+		$dbh->do('ALTER TABLE hosts RENAME COLUMN monitor to monitored');
+	} else {
+		$dbh->do('ALTER TABLE hosts DROP COLUMN monitor');
+	} # end if
 } elsif ( ! exists $$data{'monitored'} ) {
 	$dbh->do('ALTER TABLE hosts add monitored BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
