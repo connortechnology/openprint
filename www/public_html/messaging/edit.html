@@ -6,9 +6,26 @@
 		mode : "textareas",
 		theme : "advanced"
 	});
+
+	// delete goes to server mainly to update the dropdown
 	function delete_to( user_id ) {
-		new Ajax.Updater( 'To', '_to.html', { parameters: { user_id: user_id, conversation_id: <? echo ( $$variable{'Conversation'}->id() ) ?>, action: 'remove' } } );
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id',form.conversation_id.getValue());
+		params.set('action', 'remove' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
 	} // end function delete_to
+	function add_to( user_id ) {
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id',form.conversation_id.getValue());
+		params.set('action', 'add' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
+	} // end function add_to
 -->
 </script>
 <div class="Conversation"><div class="Edit">
@@ -42,14 +59,14 @@
 					$html = ssi::button( 'Cancel', { 'href'=>'inbox.html' } );
 					
 					if ( $$variable{'Conversation'}->id() ) {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 					} # end if
-					$html .= ssi::button( 'Save', { 'onclick'=>"f1.btnFunction.value='Save';f1.submit();", 'text'=>'Save (Draft)' } );
-					$html .= ssi::button( 'Send', { 'onclick'=>"f1.btnFunction.value='Send';f1.submit();" } );
+					$html .= ssi::button( 'Save', { 'onclick'=>"f1.elements['action'].value='Save';f1.submit();", 'text'=>'Save (Draft)' } );
+					$html .= ssi::button( 'Send', { 'onclick'=>"f1.elements['action'].value='Send';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
 		</fieldset>
-		<input type="hidden" name="btnFunction" />
+		<input type="hidden" name="action" />
 	</form>
 </div></div>

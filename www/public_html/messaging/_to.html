@@ -1,25 +1,29 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<ul>
 <? echo ( 
 	my $html;
+	my @To = $$variable{'Conversation'}->To();
+	if ( @To ) {
+		$html .= '<ul>';
 	foreach my $To ( $$variable{'Conversation'}->To() ) {
 		my $User = $To->User();
-		$html .= sprintf('<li><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
+		$html .= sprintf('<li id="to_id-%1$d"><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
 			$User->id(), $User->name(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X', 'title'=>'Remove' } ) );
 	} # end foreach user
+		$html .= '</ul>';
+	} # end if @To
 	return $html;
 ) ?>
-</ul>
 <!--
 <input type="text" id="to_filter" name="to_filter"/>
 -->
-<select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Conversation'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
+<select name="new_to_id" id="new_to_id" onchange="add_to(this.getValue());">
 	<option value="">select</option>
 	<? echo ( 
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
 			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
+			'user_id1 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
 			'distinct' => 1,
 			);
 		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );

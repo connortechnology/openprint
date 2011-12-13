@@ -16,12 +16,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 <div class="Messaging"><div class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>">
-	<? echo ( join('',
-			( $session{'/messaging/list.html?folder'} ne 'Inbox' ? ssi::button( 'Inbox', { 'href'=>'/messaging/list.html?folder=Inbox' } ) : '' ),
-			( $session{'/messaging/list.html?folder'} ne 'Drafts' ? ssi::button( 'Drafts', { 'href'=>'/messaging/list.html?folder=Drafts' } ) : '' ),
-			( $session{'/messaging/list.html?folder'} ne 'Sent' ? ssi::button( 'Sent', { 'href'=>'/messaging/list.html?folder=Sent' } ) : '' ),
-			); ) ?>
-	
 	<form id="f1" name="f1" method="post" action="/messaging/list.html">
 		<fieldset class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>"><legend><? echo ( $session{'/messaging/list.html?folder'} ) ?></legend>
 			<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
