@@ -368,7 +368,7 @@ sub Content {
 
 sub Contents {
     my $self = shift;
-	return if ! $$self{'id'};
+	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		my %params = @_;
@@ -566,10 +566,11 @@ sub manifest_id {
 } # end sub manifest_id
 
 sub value {
-	if ( ! $_[0]{'value'} ) {
-		$_[0]{'value'} = misc::sum( map { $_->value() } $_[0]->Contents() );
+	my $self = $_[0];
+	if ( ! $$self{'value'} ) {
+		$$self{'value'} = misc::sum( map { $_->value() } ($self->Contents()) );
 	} # end if
-	return $_[0]{'value'};
+	return $$self{'value'};
 } # end sub value
 
 sub cost {

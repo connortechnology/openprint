@@ -1,8 +1,8 @@
+use strict;
 package openprint::ManifestContent;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use Math::Round qw( nearest );
 use openprint ();
 use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
@@ -12,6 +12,8 @@ use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fiel
 *config = \%openprint::config;
 
 require openprint::Manifest_Content_Type;
+require openprint::Manifest;
+require openprint::Skid;
 
 $debug = 0;
 

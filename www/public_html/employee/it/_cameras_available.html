@@ -19,7 +19,7 @@ Click on the image to start streaming
 		my @monitor_ids = split(',', $session{'cameras_viewing'} );
 		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
 			next if sets::isin( $Monitor->id(), \@monitor_ids );
-			$html .= sprintf('<li id="camera_%1$d" onclick="start_stream( %1$d );"><img src="%3$s" class="thumbnail" alt="%2$s" /></li>',
+			$html .= sprintf('<li id="camera_%1$d" onclick="start_stream( %1$d );"><img src="%3$s" class="thumbnail" alt="%2$s" title="%2$s"/></li>',
 				$Monitor->id(), $Monitor->name(), $Monitor->source_snapshot_url(),
 				);
 		} # end foreach Monitor	
