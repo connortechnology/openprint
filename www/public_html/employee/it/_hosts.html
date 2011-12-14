@@ -27,7 +27,7 @@
 
 	my $mac_search;
 	if ( $session{'/employee/it/hosts.html?mac'} and $session{'/employee/it/hosts.html?mac'} =~ /%/ ) {
-		$mac_search = $session{'/employee/it/hosts.html?mac'};
+		$mac_search = lc $session{'/employee/it/hosts.html?mac'};
 		$mac_search =~ s/%/\.\*/g;
 $log->debug("Enable mac search for $mac_search");
 	} # end $mac_search
@@ -40,7 +40,8 @@ $log->debug("Enable mac search for $mac_search");
 			next if ! $Host->mac();
 			my $next = 1;
 			
-			foreach my $mac ( @{$Host->mac()} ) {
+			foreach my $m ( @{$Host->mac()} ) {
+				my $mac = lc $m;
 				$mac =~ s/://g;
 				if ( $mac =~ /$mac_search/ ) {
 					$next = 0;

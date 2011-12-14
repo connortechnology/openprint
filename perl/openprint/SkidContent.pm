@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -14,10 +14,12 @@ $debug = 0;
 	'purpose_id'	=>	'purpose_id',
 	'units'			=>	'units',
 	'quality_id'	=>	'quality_id',
+	'manifestcontent_id'	=>	'manifestcontent_id',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
 	'quality_id'	=>	undef,
+	'manifestcontent_id'	=>	undef,
 );
 %transforms = (
 );
@@ -79,23 +81,64 @@ sub quality {
 
 # Looks to find a PO matching this stock and pulls the value from it.
 sub cost {
-	my $self = $_[0];
-	my $MC = openprint::ManifestContent->find_one('skid_id'=>$$self{'skid_id'},'paper_id'=>$$self{'paper_id'});
-	if ( ! $MC ) {
-		#$log->debug("No Manifest Content found for skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
-		return;
-	} # end if
-	if ( ! $MC->Type()->po_id() ) {
-		#$log->debug("No Po_id skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
-		return;
-	} # end if
- if ( $MC->cost() ) {
-#$log->debug("Returning cost from Manifest");
-	return $MC->cost();
-	} # end if
-#$log->debug("Returning cost from PO");
-	return $MC->Type()->cost_from_po();
+	if ( ! exists $_[0]{'cost'} ) {
+		if ( ! $_[0]{'manifestcontent_id'} ) {
+			my @MCS = openprint::ManifestContent->find('skid_id'=>$_[0]{'skid_id'});
+			if ( @MCS == 1 ) {
+				$_[0]->save({'manifestcontent_id'=>$MCS[0]->id()});
+			} elsif ( @MCS > 1 ) {
+				$log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
+			} # end if
+		}
+		my $MC = new openprint::ManifestContent( $_[0]{'manifestcontent_id'} );
+		if ( ! $MC->id() ) {
+			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
+			return;
+		} # end if
+		if ( $MC->Type()->cost() ) {
+			$_[0]{'cost'} = $MC->Type()->cost().$MC->Type()->cost_units();
+		} else {
+			my $POC = $MC->Type()->PurchaseOrder_Content();
+			return if ! $POC;
+			$_[0]{'cost'} = $POC->price().$POC->price_units();
+		} # end if
+	} # end if ! exists cost
+    return $_[0]{'cost'};
 } # end sub cost
+# Looks to find a PO matching this stock and pulls the value from it.
+sub value {
+	if ( ! exists $_[0]{'value'} ) {
+		if ( ! $_[0]{'manifestcontent_id'} ) {
+			my @MCS = openprint::ManifestContent->find('skid_id'=>$_[0]{'skid_id'});
+			if ( @MCS == 1 ) {
+				$_[0]->save({'manifestcontent_id'=>$MCS[0]->id()});
+			} elsif ( @MCS > 1 ) {
+				$log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
+			} # end if
+		}
+		my $MC = new openprint::ManifestContent( $_[0]{'manifestcontent_id'} );
+		if ( ! $MC->id() ) {
+			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
+			return;
+		} # end if
+		my ( $cost, $units );
+		if ( $MC->Type()->cost() ) {
+			$cost = $MC->Type()->cost();
+			$units = $MC->Type()->cost_units();
+		} else {
+			my $POC = $MC->Type()->PurchaseOrder_Content();
+			return if ! $POC;
+			$cost = $POC->price();
+			$units = $POC->price_units();
+		} # end if
+		if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
+			$_[0]{'value'} = $_[0]{'quantity'} * $cost / 100;
+		} else {
+			$_[0]{'value'} = $$_[0]{'quantity'} * $cost;
+		} # end if
+	} # end if ! exists value
+    return $_[0]{'value'};
+} # end sub value
 
 1;
 __END__

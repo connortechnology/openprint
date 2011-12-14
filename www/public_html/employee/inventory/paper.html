@@ -132,10 +132,7 @@ my $starttime = gettimeofday();
 		</li>
 		<li>
 			<label>Type</label>
-			<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', $session{'/employee/inventory/paper.html?type'} ) or ! $session{'/employee/inventory/paper.html?type'}; ) ?> />
-			<label class="radio" for="typeSheet">Sheet</label>
-			<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', $session{'/employee/inventory/paper.html?type'} ) or ! $session{'/employee/inventory/paper.html?type'}; ) ?> />
-			<label class="radio" for="typeRoll">Roll</label>
+			<? echo ( ssi::checkboxes( 'Type', [ 'Sheet','Sheet','Roll','Roll' ], [ split(',', $session{'/employee/inventory/paper.html?Type'} ) ] ); ) ?>
         </li>
 		<li>
 			<label>Date Added</label>
@@ -146,20 +143,18 @@ my $starttime = gettimeofday();
 			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session('/employee/inventory/paper.html', 'added_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
-		</p>
+		</li>
 		<li>
 			<label>FSC Code</label>
 			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/employee/inventory/paper.html?fsc_code'} ) ?>" />
 		</li>
 		<li>
-        <label>In Stock/Out of Stock?</label>
-        <input type="radio" id="instockY" name="instock" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $session{'/employee/inventory/paper.html?instock'} ); ) ?> />
-        <label class="radio" for="instockY">In Stock</label>
-        <input type="radio" id="instockN" name="instock" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'N' ); ) ?> />
-        <label class="radio" for="instockN">Out Of Stock</label>
-        <input type="radio" id="instock" name="instock" value="" <? echo ( ssi::checked( ! $session{'/employee/inventory/skids.html?instock'} ); ) ?> />
-        <label class="radio" for="instock">Both</label>
+			<label>In Stock/Out of Stock</label>
+			<? echo ( ssi::radio( 'instock', [ 'Y', 'In Stock', 'N', 'Out of Stock', 'B', 'Both' ], $session{'/employee/inventory/paper.html?instock'} ); ) ?>
         </li>
+		<li><label>Allocated</label>
+			<? echo ( ssi::radio( 'allocated', [ '1','Yes','0','No','','Both' ], $session{'/employee/inventory/paper.html?allocated'} ); ) ?>
+		</li>
 		</ul>
 
 		<p class="buttons">

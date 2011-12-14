@@ -1,10 +1,4 @@
 <? eval (
-	openprint::Location->find();
-	openprint::Manufacturer->find();
-	openprint::StockBrand->find();
-	openprint::StockFinish->find();
-	openprint::StockColour->find();
-	openprint::StockWeight->find();
 
 	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
 		@{$$variable{'Skids'}} = openprint::Skid->find( 
@@ -38,7 +32,7 @@
  @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
 		} # end if
 		if ( $session{'/employee/inventory/skids.html?Type'} ne 'All' ) {
-		$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
+			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
 		}
 		$sql{'quality_id'} = $session{'/employee/inventory/skids.html?quality_id'} if $session{'/employee/inventory/skids.html?quality_id'};
 
@@ -51,6 +45,14 @@
 		} # end if
 	} # end if
 		@{$$variable{'Skids'}} = openprint::Skid->find( %sql );
+	} # end if
+	if ( @{$$variable{'Skids'}} > 100 ) {
+		openprint::Location->find();
+		openprint::Manufacturer->find();
+		openprint::StockBrand->find();
+		openprint::StockFinish->find();
+		openprint::StockColour->find();
+		openprint::StockWeight->find();
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
@@ -65,6 +67,9 @@
 			<th class="RFID">RFIDTag</th>
 			<th class="location">Location</th>
 			<th class="Dockets">Dockets</th>
+			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+			<th class="Price">Value</th>
+			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 		</tr>
 		<? echo (
 			my $html;
@@ -73,6 +78,7 @@
 			my $total_skids;
 			my $total_weight;
 			my $total_sheets;
+			my $total_value;
 			my %Allocations;
 			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
@@ -136,6 +142,11 @@ $Skid->Location()->name(),
 					);
 				} # end while
 				$html .= '</td>';	
+				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
+					#$html .= '<td rowspan="2" class="Price">@'.$Skid->cost().'='.openprint::Currency::format($Skid->value()).'</td>';
+					$total_value += $Skid->value();
+				} # end if
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
@@ -166,7 +177,11 @@ $Skid->Location()->name(),
 			$html .= '<tr class="totals"><td class="unprintable"></td><td colspan="3">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td colspan="2">&nbsp;</td></tr>';
+			$html .= '</td><td colspan="3">&nbsp;</td>';
+			if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
+				$html .= '<td class="Price">'.openprint::Currency::format($total_value).'</td>';
+			} # end if
+			$html .= '</tr>';
 			return $html;
 		) ?>
 	</table>
