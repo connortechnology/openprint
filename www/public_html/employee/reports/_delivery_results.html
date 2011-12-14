@@ -90,7 +90,7 @@ Results for <? echo (
 		) ?>
 		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
 <TR><th COLSPAN="6"></th></TR>
-		<tr><TD><B>Totals:</B></TD><TD colspan="2">Selected Dockets: <?DocketCount?></TD><TD>Late:<?LateCount?></TD><TD colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></TD></tr>
+		<tr><TD><B>Totals</B></TD><TD colspan="2">Selected Dockets: <?DocketCount?></TD><TD>Late:<?LateCount?></TD><TD colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></TD></tr>
 	</table>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", '', 'Save Reasons' ); ) ?>

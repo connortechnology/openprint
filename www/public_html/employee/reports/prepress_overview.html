@@ -8,14 +8,14 @@
 	<fieldset class="filters">
 		<legend>Select By Docket #</legend>
 		<p>
-			<label>Docket #:</label>
+			<label>Docket #</label>
 			<input type="text" name="StartDocket" value="<?StartDocket?>" size="13"  />
 			- <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_projects( document.f1 );", '', 'Go' );) ?>
 		</p>
 	</fieldset><fieldset class="filters"><legend>Or Select From the Following</legend>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 				<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
 				<select name="ddmCustomer" onchange="load_projects(this.form);">
 					<option value="">All</option>
@@ -23,7 +23,7 @@
 				</select>
 		</p>
 		<p>
-			<label>Operator:</label>
+			<label>Operator</label>
 				<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 					<option value="">All Employees</option>
 	<? echo (
@@ -32,7 +32,7 @@
 				</select>
 		</p>
 		<p>
-			<label>Press:</label>
+			<label>Press</label>
 			<select name="ddmPress">
 				<option value="">All Presses</option>
 <? echo (
@@ -54,7 +54,7 @@
 			@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} );
 	) ?>
 		<p>
-			<label>Take Over Date:</label>
+			<label>Take Over Date</label>
 			 <select name="TakeOverStartYear" onchange="setDaysDropDown(this.value,this.form.TakeOverStartMonth.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartYears?></select>
 			 <select name="TakeOverStartMonth" onchange="setDaysDropDown(this.form.TakeOverStartYear.value,this.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartMonths?></select>
 			 <select name="TakeOverStartDay" onchange="load_projects(this.form);"><?TakeOverStartDays?></select>

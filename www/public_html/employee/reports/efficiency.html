@@ -22,7 +22,7 @@
 	<fieldset class="filters">
 		<legend>Select By Docket #</legend>
 		<p>
-			<label>Docket #:</label>
+			<label>Docket #</label>
 				<input type="text" name="StartDocket" value="<?StartDocket?>" size="13"  onKeyPress="return input_handler( this, event);" />
 				- <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  onKeyPress="return input_handler( this, event);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_projects( document.f1 );", '', 'Go' ); ) ?>
@@ -45,7 +45,7 @@
 		} # end if
 	) ?>
 		<p>
-			<label>Task Date:</label>
+			<label>Task Date</label>
 			 <select name="TakeOverStartYear" onchange="setDaysDropDown(this.value,this.form.TakeOverStartMonth.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartYears?></select>
 			 <select name="TakeOverStartMonth" onchange="setDaysDropDown(this.form.TakeOverStartYear.value,this.value,this.form.TakeOverStartDay,this.form.TakeOverStartDay.value);load_projects(this.form);"><?TakeOverStartMonths?></select>
 			 <select name="TakeOverStartDay" onchange="load_projects(this.form);"><?TakeOverStartDays?></select>

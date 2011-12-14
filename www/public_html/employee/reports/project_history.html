@@ -11,7 +11,7 @@
 <form id="f1" name="f1" action="">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id">
 				<option value="">All</option>
@@ -19,17 +19,17 @@
 			</select>
 		</p>
 		<p>
-			<label>Estimator:</label>
+			<label>Estimator</label>
 			<select name="Estimator" size="1">
 			<? echo (
 					my @options = ( '', 'All', 'Non Employee', 'Non Employee' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $param{'Estimator'} );
 					) ?>
 			 </select>
 		</p>
 		<p>
-			<label>Project Status:</label>
+			<label>Project Status</label>
 			<select name="status" multiple="multiple" size="4" >
 			<? echo (
 				my @options = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
@@ -56,7 +56,7 @@
 				 @param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
 				 ) ?>
 		 <p>
-			 <label>Date:</label>
+			 <label>Date</label>
 			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
 			 <select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
 			 <select name="DateStartDay"><?DateStartDays?></select>
@@ -66,24 +66,24 @@
 			 <select name="DateEndDay"><?DateEndDays?></select>
 		</p>
 		<p>
-			<label>Value:</label>
+			<label>Value</label>
 			<input type="text" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" style="width: auto;"  /> to
 			<input type="text" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" style="width: auto;"  />
 		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p>
-			<label>CSR:</label>
+			<label>CSR</label>
 			<select name="CSR" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $param{'CSR'} );
 					) ?>
 
 			 </select>
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-		<p><label>Reprint:</label>
+		<p><label>Reprint</label>
 			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked( $param{'reprint'} eq 'Y' ); ) ?> />
 			<label class="radio" for="reprintY">Yes</label>
 			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked( $param{'reprint'} eq 'N' ); ) ?> />

@@ -15,18 +15,18 @@
 <form id="f1" name="f1" method="post" action="turnaround.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
-			<label>CSR:</label>
+			<label>CSR</label>
 			<select name="CSR" size="1" onchange="load_projects(this.form);">
 			<? echo ( 
 				my @options = ( '', 'All' );
-				push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
+				push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup any'=>'Sales');
 				return ssi::make_drop_down( \@options, $param{'CSR'} );
 			 ) ?>
 			
 			</select>
 		</p>
 		<p>
-			<label>Due Date:</label>
+			<label>Due Date</label>
 			<? echo ( ssi::date_select( 'duedate_start' ); ) ?>
 			to 
 			<? echo ( ssi::date_select( 'duedate_end' ); ) ?>

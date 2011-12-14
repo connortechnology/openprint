@@ -12,13 +12,14 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Message;
+require openprint::Message_To;
 require openprint::Conversation;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Destroy' ) {
+	if ( $param{'action'} eq 'Destroy' ) {
 		my $Message = new openprint::Message( $param{'message_id'} );
 		$variable{'error'} .= $Message->destroy();
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{'action'} eq 'Delete' ) {
 		my $Message = new openprint::Message( $param{'message_id'} );
 		$variable{'error'} .= $Message->destroy();
 	} # end if
@@ -38,7 +39,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	if ( ! $param{'btnFunction'} ) {
+	if ( ! $param{'action'} ) {
 	ssi::save_params( '/messaging/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
@@ -51,20 +52,20 @@ sub _history {
 sub list {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
-	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
+	if ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
 		if ( ! $Conversation->id() ) {
 			$Conversation->save({'subject'=>$param{'subject'}});
 		} # end if
 		my $Message = new openprint::Message();
-		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
+		if ( $param{'action'} eq 'Send' and ! $variable{'error'} ) {
 			$Message->sent_on('NOW()');
 		} # end if send
 		$variable{'error'} .= $Message->save({
 			'conversation_id'	=>	$Conversation->id(),
 			'body'				=>	$param{'body'},
 			});
-	} elsif ( $param{'btnFunction'} ) {
-		$log->error("Invalid value for btnFunction $param{btnFunction}");
+	} elsif ( $param{'action'} ) {
+		$log->error("Invalid value for action $param{action}");
 	} else {
 		ssi::save_params( '/messaging/list.html', ( 
 				'sent_on_start_year','sent_on_start_month','sent_on_start_day',
@@ -82,7 +83,7 @@ sub _list {
 	if ( $param{'action'} eq 'delete' ) {
 		my $To = new openprint::Message_To( { 'message_id'=>$param{'message_id'},'user_id'=>$session{'user_id'} } );
 		$variable{'error'} .= $To->delete();	
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( ! $param{'action'} ) {
 		ssi::save_params( '/messaging/list.html', ( 
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
@@ -91,17 +92,17 @@ sub _list {
 } # end sub _list
 
 sub edit {
-	$variable{'Message'} = new openprint::Message( $param{'message_id'} );
-	$variable{'Message'}->save() if ! $variable{'Message'}->id();
+	$variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
+	#$variable{'Conversation'}->save() if ! $variable{'Conversation'}->id();
 } # end sub edit
 
 sub view {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
-	if ( sets::isin( $param{'btnFunction'}, [ 'Save', 'Send' ] ) ) {
-		if ( $param{'btnFunction'} eq 'Send' and ! $variable{'error'} ) {
-			$Message->sent_on('NOW()');
+	if ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
+		if ( $param{'action'} eq 'Send' and ! $variable{'error'} ) {
+			$Conversation->sent_on('NOW()');
 		} # end if send
-		$variable{'error'} .= $Message->save(\%param);
+		$variable{'error'} .= $Conversation->save(\%param);
 	} # end if
 } # end sub view
 
@@ -110,19 +111,22 @@ sub _view {
 } # end sub _view
 
 sub _to {
-	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
-	$Message->save() if ! $Message->id();
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( $param{'action'} eq 'add' ) {
-		my $To = new openprint::Message_To();
-		$variable{'error'} .= $To->save({
-			'message_id'=>	$param{'message_id'},
-			'user_id'	=>	$param{'user_id'},
-			});
+		my @ids = sets::exclude([''], [ sets::union(
+			$param{'to_id'} ? ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{to_id}} : ( $param{to_id} ) ) : (),
+			$param{'user_id'} ) ] );
+
+		my @To = map { my $MTo = new openprint::Message_To(); $$MTo{user_id} = $_; $MTo } @ids;
+		$Conversation->To( \@To );
 	} elsif ( $param{'action'} eq 'remove' ) {
-		my $To = new openprint::Message_To(\%param);
-		$To->delete();
+		my @ids = sets::exclude(['', $param{'user_id'} ], [ sets::union(
+			$param{'to_id'} ? ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{to_id}} : ( $param{to_id} ) ) : (),
+			) ] );
+
+		my @To = map { my $MTo = new openprint::Message_To(); $$MTo{user_id} = $_; $MTo } @ids;
+		$Conversation->To( \@To );
 	} # end if
-	
 } # end sub _to
 
 1;

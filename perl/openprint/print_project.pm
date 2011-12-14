@@ -45,10 +45,11 @@ sub insert_project_type {
 			'strName',			'ProjectType',
 			'strValue',		 $project_type_id
 			] );
-		$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex IS NULL};
-		my @defaults = sql::execute( $log, $dbh, $_ );
-		$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
-		push @defaults, sql::execute( $log, $dbh, $_, $project_type_index );
+
+		my @defaults = map { $_->name(), $_->value() } openprint::ProjectType_Default->find(
+				'projecttype_id is null or ='=> $variable{'ProjectType'}->id(), 
+				'order'=>'projectype_id NULLS FIRST' );
+
 		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
 		push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
 		

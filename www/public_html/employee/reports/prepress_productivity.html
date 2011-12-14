@@ -2,7 +2,7 @@
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<p>
-		<label>Employee:</label>
+		<label>Employee</label>
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
@@ -24,7 +24,7 @@
 ) ?>
 
 	<p>
-		<label>Ordered Date:</label>
+		<label>Ordered Date</label>
 			<select name="ddmStartYear"> <?StartYears?> </select>
 			<select name="ddmStartMonth"> <?StartMonths?> </select>
 			<select name="ddmStartDay"> <?StartDays?> </select>
@@ -153,7 +153,7 @@
 </table>
 <? if ( $$variable{'UnassignedProjects'} ) ?>
 <br/>
-	<h3>Unassigned Projects:</h3>
+	<h3>Unassigned Projects</h3>
 <table class="List">
 	<tr>
 		<th valign="top" align="left" width="100">Index</th>

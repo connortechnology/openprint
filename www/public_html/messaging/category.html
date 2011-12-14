@@ -14,7 +14,7 @@
 	<fieldset class="filters">
 		<ul>
 			<li><label>Category:</label>
-				<select name="category_id" id="category_id" onchange="f1.btnFunction='';f1.submit();">
+				<select name="category_id" id="category_id" onchange="f1.elements['action'].value='';f1.submit();">
 					<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $param{'category_id'} ); ) ?>
 				</select>
@@ -59,13 +59,13 @@
 			<? echo (
 				my $html = '';
 				if ( $$variable{'Category'}->id() ) {
-				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Destroy' );
+				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", '', 'Destroy' );
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.elements['action'].value='Save';f1.submit();", '', 'Save' );
 				return $html;
 			) ?>
 		</p>
 	</fieldset>
-	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="action" />
 </form>
 </div></div>

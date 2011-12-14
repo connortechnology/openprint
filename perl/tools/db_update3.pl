@@ -668,7 +668,6 @@ if ( sets::isin( 'paper_purchase_orders', \@tables ) ) {
 	}
 	$dbh->do('DROP TABLE paper_purchase_orders');
 }
-<<<<<<< HEAD
 if ( ! $config{'Timezone'} ) {
 $dbh->do(q`insert into Configuration values ('Timezone', 'America/Toronto', 'text', 'Timezone','Miscellaneous Settings' );` );
 	
@@ -707,14 +706,35 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 		$dbh->do('ALTER TABLE Schedule add service_id INTEGER[]');
 	} 
 }
-=======
 
 if ( ! sets::isin( 'conversations', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Conversations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
 
->>>>>>> f64a36c0c515989e7f47504dd707e5e01cbe9cb1
+if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
+	$dbh->do('ALTER TABLE tbl_projecttype_defaults RENAME TO projecttype_defaults');
+	unshift @tables, 'projecttype_defaults';
+	$dbh->do('CREATE SEQUENCE projecttype_defaults_id_seq');
+	$dbh->do(q`ALTER TABLE projecttype_defaults ALTER id SET default nextval('projecttype_defaults_id_seq')`);
+	$dbh->do(q`SELECT setval('projecttype_defaults_id_seq', (SELECT max(id) FROM projecttype_defaults));`);
+	$dbh->do('DROP SEQUENCE tbl_projecttype_defaults_id_seq');
+} # end if
+if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Defaults.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttype_defaults'", 'column_name');
+	if ( exists $$data{'lngprojecttypeindex'} ) {
+		$dbh->do('ALTER TABLE Projecttype_defaults RENAME COLUMN lngprojecttypeindex to projecttype_id');
+	}
+	if ( exists $$data{'strfieldname'} ) {
+		$dbh->do('ALTER TABLE Projecttype_defaults RENAME COLUMN strfieldname to name');
+	}
+	if ( exists $$data{'strdefaultvalue'} ) {
+		$dbh->do('ALTER TABLE Projecttype_defaults RENAME COLUMN strdefaultvalue to value');
+	}
+} 
 $dbh->disconnect();
 1;
 __END__

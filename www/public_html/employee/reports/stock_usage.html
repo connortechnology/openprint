@@ -15,7 +15,7 @@ function load() {
     <fieldset class="filters"><legend>Search Criteria</legend>
         <div class="leftColumn">
             <p>
-                <label>Company:</label>
+                <label>Company</label>
 				<input type="text" onKeyUp="filterDDM(this, this.form.company_id);" size="4" />
                 <select id="company_id" name="company_id" size="1" onchange="">
                 <option value=""> All </option>
@@ -23,7 +23,7 @@ function load() {
                 </select>
             </p>
             <p>
-                <label>Ordered Date:</label>
+                <label>Ordered Date</label>
                 <span class="DateSelector">
 <? echo ( ssi::date_select( 'ordered_on_start', [@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'}], {} ); ) ?>
                     to
@@ -34,7 +34,7 @@ function load() {
             </p>
         </div>
         <div class="rightColumn">
-            <p><label>Type:</label>
+            <p><label>Type</label>
     <? eval (
         $session{'/employee/reports/stock_usage.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock_usage.html?Type'};
     ) ?>
@@ -44,7 +44,7 @@ function load() {
                 <label class="radio" for="TypeRoll">Roll</label>
             </p>
         <p>
-            <label>Manufacturer:</label>
+            <label>Manufacturer</label>
             <select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -60,7 +60,7 @@ function load() {
             </select>
         </p>
         <p>
-            <label>Brand:</label>
+            <label>Brand</label>
             <select name="Name" size="1" onchange="Name_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo ( 
@@ -77,7 +77,7 @@ function load() {
             </select>
         </p>
         <p>
-            <label>Finish:</label>
+            <label>Finish</label>
             <select name="Finish" size="1" onchange="Finish_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -95,7 +95,7 @@ function load() {
             </select>
         </p>
         <p>
-            <label>Colour:</label>
+            <label>Colour</label>
             <select name="Colour" size="1" onchange="Colour_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -114,7 +114,7 @@ function load() {
             </select>
         </p>
         <p>
-            <label>Weight:</label>
+            <label>Weight</label>
             <select name="Weight" size="1" onchange="Weight_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -134,7 +134,7 @@ function load() {
             </select>
         </p>
         <p>
-            <label>Size:</label>
+            <label>Size</label>
             <select name="width" size="1" onchange="" >
                 <option value="">All</option>
             <? echo ( 
@@ -175,17 +175,17 @@ function load() {
             <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="" /><label class="radio" for="OrLarger">or larger</label>
         </p>
         <p>
-            <label>MWeight:</label>
+            <label>MWeight</label>
             <input type="text" id="mweight" name="mweight" style="width: auto;" size="13" onkeyup="this.value=this.value.replace(/\D/g,'');"/>lbs
         </p>
 <!--
         <p>
-            <label>Basis Weight:</label>
+            <label>Basis Weight</label>
             <input type="text" id="basis_weight" name="basis_weight" style="width: auto;" size="13" onkeyup="this.value=this.value.replace(/\D/g,'');"/>lbs
         </p>
 -->
         <p>
-            <label>FSC Code:</label>
+            <label>FSC Code</label>
             <input type="text" id="fsc_code" name="fsc_code" style="width: auto;" size="13" onkeyup=""/>
         </p>
         </div>

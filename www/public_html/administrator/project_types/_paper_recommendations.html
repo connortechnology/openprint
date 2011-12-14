@@ -4,7 +4,10 @@
 	</thead>
 <? echo (
 	my $html;
-	
+	openprint::StockBrand->find();	
+	openprint::StockFinish->find();	
+	openprint::StockColour->find();	
+	openprint::StockWeight->find();	
 	my @recommended_papers = openprint::Paper->find( 
 		'columns'   =>  '*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
 'project_type_id any' => $$variable{'ProjectType'}->id(),'order'=>'brand,finish,colour,weight,width,height' );

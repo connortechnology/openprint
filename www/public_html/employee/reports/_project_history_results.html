@@ -75,9 +75,9 @@
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	<? if ( $$variable{'ReportCount'} ) ?>
 	<tr class="totals">
-		<td>Counts:</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
-		<td>Percentage:</td><td><? echo ( sprintf('%.1f',($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
-		<td align="right">Totals:</td>
+		<td>Counts</td><td><?ReportCount?> Projects, <?OrderedCount?> Ordered</td>
+		<td>Percentage</td><td><? echo ( sprintf('%.1f',($$variable{'OrderedCount'}/$$variable{'ReportCount'})*100 ); ) ?>%</td>
+		<td align="right">Totals</td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>

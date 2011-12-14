@@ -40,7 +40,7 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", 'text'=>'Delete' } );
+				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'Delete' } );
 				$html .= ssi::button( 'reply', { 'href'=>'edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
 				return $html;
 			) ?>

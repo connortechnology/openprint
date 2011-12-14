@@ -2,8 +2,9 @@ package openprint::administrator_project_types;
 
 use strict;
 
-require openprint::ProjectTypeCategory;
 require openprint::ProjectType;
+require openprint::ProjectTypeCategory;
+require openprint::ProjectType_Default;
 require sql;
 require misc;
 require openprint::logs;
@@ -89,14 +90,14 @@ sub defaults_edit {
 
 		my $ac = sql::start_transaction( $dbh );
 
-		sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
 		foreach my $key ( keys %param ) {
-			if ( $key =~ /txtID-(.*)/ and $param{"txtName-$1"} ne '' ) {
-				$error .= sql::insert( $log, $dbh, 'tbl_ProjectType_Defaults', 
-						'lngProjectTypeIndex', ( $param{$key} eq '' ? undef : $param{$key} ),
-						'strFieldName', $param{"txtName-$1"},
-						'strDefaultValue', $param{"txtValue-$1"}
-						);
+			if ( $key =~ /^projecttype_id-(.*)$/ and $param{"name-$1"} ne '' ) {
+				my $PTD = new openprint::ProjectType_Default( $1 );
+				$error .= $PTD->save({
+					'projecttype_id'	=>	$param{'projecttype_id'},
+					'name'				=>	$param{'name'},
+					'value'				=>	$param{'value'},
+				});
 			} # end if
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -112,8 +113,8 @@ sub defaults_edit {
 			$_ = <$io>;
 			my $csv = Text::CSV_XS->new();
 			my $ac = sql::start_transaction( $dbh );
-			my %cache = map { $_->strid(), $_->id() } openprint::ProjectType->find();
-			sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
+			my %cache = map { $_->name(), $_->id() } openprint::ProjectType->find();
+			sql::execute( $log, $dbh, 'DELETE FROM projecttype_defaults' );
 
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
@@ -122,9 +123,12 @@ sub defaults_edit {
 					$error .= "Project Type $id not found.<br>";
 					next;
 				} # end if
-				sql::insert( $log, $dbh, 'tbl_ProjectType_Defaults', 
-						'lngProjectTypeIndex', ( ( $id eq '' or $id eq 'All' ) ? undef : $cache{$id} ),
-						'strFieldName', $name, 'strDefaultValue', $value  );
+				my $PTD = new openprint::ProjectType_Default();
+				$error .= $PTD->save({
+					'projecttype_id'	=>	( ( $id eq '' or $id eq 'All' ) ? undef : $cache{$id} ),
+					'name'				=>	$name,
+					'value'				=>	$value,
+				});
 			} # end foreach
 			sql::end_transaction( $dbh, $ac );
 
@@ -137,18 +141,12 @@ sub defaults_edit {
 
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Project Type ID', 'Field Name', 'Field Value');
+		openprint::ProjectType->find();
 
-		$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
-			"FROM tbl_ProjectType_Defaults\n".
-			"ORDER BY ID, strFieldName";
-		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
+		my @data = map { $_->ProjectType()->name(), $_->name(), $_->value() } openprint::ProjectType_Default->find('order'=>'projecttype_id NULLS FIRST, lower(name)');
+		misc::export_csv( $r, $log, \%variable, 'ProjectTypes.csv', \@header, \@data );
 
 	} # end if
-	$_ = "SELECT lngprojecttypeindex, (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
-		"FROM tbl_ProjectType_Defaults\n".
-		"ORDER BY ID, strFieldName";
-	@{$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );
 } # end sub defaults_edit
 
 sub templates {
