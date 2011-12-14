@@ -87,7 +87,7 @@ sub cost {
 			if ( @MCS == 1 ) {
 				$_[0]->save({'manifestcontent_id'=>$MCS[0]->id()});
 			} elsif ( @MCS > 1 ) {
-				$log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
+				$openprint::log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
 			} # end if
 		}
 		my $MC = new openprint::ManifestContent( $_[0]{'manifestcontent_id'} );
@@ -113,7 +113,7 @@ sub value {
 			if ( @MCS == 1 ) {
 				$_[0]->save({'manifestcontent_id'=>$MCS[0]->id()});
 			} elsif ( @MCS > 1 ) {
-				$log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
+				$openprint::log->error("TOo many MCs ffor SKID " .$_[0]{'skid_id'});
 			} # end if
 		}
 		my $MC = new openprint::ManifestContent( $_[0]{'manifestcontent_id'} );
