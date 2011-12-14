@@ -250,7 +250,8 @@ p.buttons {
     visibility: hidden;
 }
 
-fieldset p {
+fieldset p,
+fieldset ul li {
 	margin: 0;
 	margin-top: .4em;
 	padding: 0 0 0 185px;
@@ -321,11 +322,6 @@ fieldset ul:after {
 	font-size: 0;
     clear: both; 
     visibility: hidden;
-}
-fieldset ul li {
-	list-style: none;
-	margin: 0px;
-	padding: 0px 0px 0px 185px;
 }
 fieldset ul li:after {
     content: "."; 

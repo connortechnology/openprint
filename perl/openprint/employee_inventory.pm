@@ -25,6 +25,8 @@ require openprint::PaperAllocation;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
 require openprint::Label;
+require openprint::Skid;
+require openprint::SkidContent;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -291,7 +293,7 @@ if ( 0 ) {
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
-} # end sub paper_inventory
+} # end sub inventory_report
 
 sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
@@ -400,6 +402,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
     $session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
+	$session{'/employee/inventory/paper.html?Type'} = 'Sheet,Roll' if ! $session{'/employee/inventory/paper.html?Type'};
 
 } # end sub paper
 
@@ -407,7 +410,7 @@ sub _paper_results {
 	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
 		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' )
+		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude', 'allocated' )
 			);
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _paper_results
@@ -1369,6 +1372,9 @@ sub manifest {
 								'manifest_id'	=>	$Manifest->id(),
 								'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$Type{id}-"}),
 								} );
+						foreach my $SkidContent ( openprint::SkidContent->find('skid_id'=>$Skid->id(),'paper_id'=>$Type->paper_id()) ) {
+							$SkidContent->save({'manifestcontent_id'=>$MC->id()});
+						} # end foreach SkidContent
 					} # end if
 				} # end if New Quantity
 
@@ -1464,8 +1470,8 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
 			} else {
 				my $MC = new openprint::ManifestContent();
+				my @SC = $Skid->Contents();
 				if ( ! $param{"qty_lbs"} ) {
-					my @SC = $Skid->Contents();
 					if ( @SC == 1 ) {
 						$param{'qty_lbs'} = $SC[0]->quantity();
 					} # end if
@@ -1477,6 +1483,9 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 						'docket'		=>	$param{'docket'},
 						'quantity'		=>	sprintf('%d', $param{'qty_lbs'}),
 						} );
+				foreach my $SkidContent ( @SC ) {
+					$SkidContent->save({'manifestcontent_id'=>$MC->id()});
+				} # end foreach SkidContent
 				$variable{'C'} = $MC;
 				$variable{'type_id'} = $param{'type_id'};
 				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );

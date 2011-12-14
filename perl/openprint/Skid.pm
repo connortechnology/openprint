@@ -567,30 +567,7 @@ sub manifest_id {
 
 sub value {
 	if ( ! $_[0]{'value'} ) {
-		my $ManifestContent = $_[0]->ManifestContent();
-		return undef if ! $ManifestContent;
-		my $ManifestType = $ManifestContent->Type();
-		my ( $cost, $units );
-		if ( $ManifestType->cost() ) {
-			$cost = $ManifestType->cost();
-			$units = $ManifestType->cost_units();
-		} else {
-			my $POC = $ManifestType->PurchaseOrder_Content();
-			return undef if ! $POC;
-			$cost = $POC->price();
-			$units = $POC->price_units();
-		} # end if
-
-		my $value = 0;
-		foreach my $C ( $_[0]->Contents() ) {
-$log->debug("Units: $units");
-			if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
-				$value += $C->quantity() * $cost / 100;
-			} else {
-				$value += $C->quantity() * $cost;
-			} # end if
-		} # end foreach Content
-		$_[0]{'value'} = $value;
+		$_[0]{'value'} = misc::sum( map { $_->value() } $_[0]->Contents() );
 	} # end if
 	return $_[0]{'value'};
 } # end sub value
