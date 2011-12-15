@@ -1,6 +1,6 @@
 <? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-	<li>
-		<label><b>Markup</b></label>
+	<li class="markup">
+		<label>Markup</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -20,20 +20,20 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
-<p>
-	<label><b>1000 Price (<?CurrencySymbol?>)</b></label>
+<li class="mprice">
+	<label>1000 Price (<?CurrencySymbol?>)</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input name="MPrice<?QTYIndex?>" onfocus="this.blur();" readonly="readonly" />
+		<input type="number" name="MPrice<?QTYIndex?>" onfocus="this.blur();" readonly="readonly" />
 	</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
-<p>
-	<label><b>Service Price (<?CurrencySymbol?>)</b></label>
+</li>
+<li class="serviceprice">
+	<label>Service Price (<?CurrencySymbol?>)</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -54,4 +54,4 @@
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>

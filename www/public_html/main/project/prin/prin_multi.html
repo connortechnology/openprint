@@ -95,11 +95,11 @@ if ( 0 ) {
 			<fieldset><legend>Book Specifications</legend>
 				<div id="PagesCover">
 				<p>
-					<label>Total pages:</label>
-					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+					<label>Total pages</label>
+					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="number" onkeyup="calc(this.form.name);" />
 				</p>
 				<p>
-					<label>Cover:</label>
+					<label>Cover</label>
 					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Self' ); ) ?> />
 					<label class="radio" for="rdbCoverSelf">Self Cover</label>
 					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
@@ -108,23 +108,23 @@ if ( 0 ) {
 				</div>
 				<div id="GateInsert">
 				<p>
-					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages:</label>
-					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="text" size="4" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages</label>
+					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="number" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 				</p>
 				<p>
-					<label>Supplied Inserts:</label>
-					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<label>Supplied Inserts</label>
+					<input type="number" name="txtInsertQuantity" value="<?txtInsertQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? if ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
 				<p>
-					<label># of tip-ins:</label>
-					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<label># of tip-ins</label>
+					<input type="number" name="TippingQuantity" value="<?TippingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? endif ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
 			<? if ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				<p>
-					<label># of blow-ins:</label>
-					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<label># of blow-ins</label>
+					<input type="number" name="BlowingQuantity" value="<?BlowingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
 			<? endif ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				</div>

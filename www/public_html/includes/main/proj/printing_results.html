@@ -19,7 +19,7 @@
 	) ?>
 </li>
 <? if ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
-<li>
+<li class="stockformat">
 	<label>Stock Format</label>
 	<? echo ( my $html = '';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -39,7 +39,7 @@
 	) ?>
 </li>
 <? endif ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
-<li>
+<li class="stocksize">
 	<label><? echo ( ssi::writeTip( 'Stock size' ); ) ?></label>
 <? echo (
 	my @options = misc::trim( split(',', $config{$$variable{'Project'}->Type()->name().'StockOptions'} ));
@@ -294,17 +294,17 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
 	<li>
-		<label><? echo ( ssi::writeTip( 'Plate' ); ) ?> Quantity</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-			<input name="txtPlateQuantity<?QTYIndex?>" readonly="readonly" type="text" />
-			<input name="BlankPlateQuantity<?QTYIndex?>" type="hidden" />
-	</span>
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<label><? echo ( ssi::writeTip( 'Plate' ); ) ?> quantity</label>
+		<? echo ( 
+			my $html;
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+				$html .= ssi::input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);", "readonly"=>1 );
+				$html .= ssi::input( name=>"BlankPlateQuantity$qty_index", value=>$$variable{'BlankPlateQuantity'.$qty_index}, type=>"hidden" );
+				$html .= '</span>';
+			} # end foreach qty_index
+			return $html;
+		) ?>
 	</li>
 	<li>
 		<label>Plate changes</label>
@@ -361,7 +361,7 @@
 	) ?>
 </li>
 <li>
-	<label>Total </label>
+	<label>Total</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -389,13 +389,13 @@
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
-<li>
+<li class="stockquantity">
 	<label>Stock Quantity</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="number" name="txtPressSheetQty<?QTYIndex?>" readonly="readonly"	/>
+		<input type="number" name="txtPressSheetQty<?QTYIndex?>" readonly="readonly" />
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -442,22 +442,22 @@
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 
 <? if ( $$variable{'txtSignatureType'} ) ?>
-<li>
+<li class="pagequantity">
 	<label>Page Quantity</label>
 	<input type="hidden" name="GroupPageQuantity" value="<?GroupPageQuantity?>" />
 	<input type="hidden" name="Group" value="<?Group?>" />
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' );.' Pages';
-			$html .= ssi::input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" );
-			$html .= ' x ';
-			$html .= ssi::input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" );
-			$html .= ssi::input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" );
-			$html .= ssi::input( type=>"hidden", name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" );
-			$html .= ssi::write_override( 'chkOverridePageQuantity'.$qty_index, $$variable{'chkOverridePageQuantity'.$qty_index},'',"calc('f1');" );
-			$html .= '</span>';
+			$html .= sprintf('<span class="%sColumns">%s Pages %s x %s %s%s%s</span>',
+				$$variable{'Columns'},
+				ssi::input( type=>"number", id=>"PageQuantity$qty_index", name=>"PageQuantity$qty_index", value=>$$variable{'PageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' ),
+				ssi::input( type=>"number", name=>"page_columns$qty_index", readonly=>"readonly" ),
+				ssi::input( type=>"number", name=>"page_rows$qty_index", readonly=>"readonly" ),
+				ssi::input( type=>"hidden", name=>"SpreadRows$qty_index", value=>"SpreadRows$qty_index" ),
+				ssi::input( type=>"hidden", name=>"SpreadCols$qty_index", value=>"SpreadCols$qty_index" ),
+				ssi::write_override( 'chkOverridePageQuantity'.$qty_index, $$variable{'chkOverridePageQuantity'.$qty_index},'',"calc('f1');" ),
+				);
 		} # end foreach
 		return $html;
 	) ?>
@@ -482,32 +482,28 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
-<li>
+<li class="imposition">
 	<label><? echo ( ssi::writeTip('Imposition'); ) ?></label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input type="number" name="txtImposition<?QTYIndex?>" value="<? echo ( $$variable{'txtImposition'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> Out
-		<? echo ( ssi::write_override( 'chkOverrideImposition'.$$variable{'QTYIndex'}, $$variable{'chkOverrideImposition'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
-		Dutch?:
-		<input type="radio" name="dutch<?QTYIndex?>" id="dutch<?QTYIndex?>Y" value="Y" <? echo ( ssi::checked( $$variable{'dutch'.$$variable{'QTYIndex'}} ne 'N' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="dutch<?QTYIndex?>Y">Yes</label>
-		<input type="radio" name="dutch<?QTYIndex?>" id="dutch<?QTYIndex?>N" value="N" <? echo ( ssi::checked( $$variable{'dutch'.$$variable{'QTYIndex'}} eq 'N' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="dutch<?QTYIndex?>N">No</label>
-		<br/>
-		<input type="number" readonly="readonly" name="hdnImpositionColumns<?QTYIndex?>" /> x 
-		<input type="number" readonly="readonly" name="hdnImpositionRows<?QTYIndex?>" /> + 
-		<input type="number" readonly="readonly" name="hdnImpositionDutchColumns<?QTYIndex?>" /> x 
-		<input type="number" readonly="readonly" name="hdnImpositionDutchRows<?QTYIndex?>" /> dutch
-		<br/>
-		<input type="number" name="txtLayoutWidth<?QTYIndex?>" readonly="readonly" onkeyup="calc(this.form.name);" /> x
-		<input type="number" name="txtLayoutHeight<?QTYIndex?>" readonly="readonly" onkeyup="calc(this.form.name);" />
-		(W x H)
-	</span>
-<input type="hidden" name="txtImageWidth<?QTYIndex?>" value="<? echo ( $$variable{'txtImageWidth'.$$variable{'QTYIndex'}} ) ?>" />
-<input type="hidden" name="txtImageHeight<?QTYIndex?>" value="<? echo ( $$variable{'txtImageHeight'.$$variable{'QTYIndex'}} ) ?>" />
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? echo ( my $html = '';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+
+		$html .= sprintf( '<span class="%sColumns">%s Out %s Dutch?: %s <br/> %s x %s + %s x %s<br/>%s x %s (W x H)</span>%s%s',
+			$$variable{'Columns'},
+			ssi::input( type=>"number", name=>"txtImposition$qty_index", value=>$$variable{'txtImposition'.$qty_index}, onkeyup=>"calc(this.form.name);" ),
+			ssi::write_override( 'chkOverrideImposition'.$qty_index, $$variable{'chkOverrideImposition'.$qty_index},'',"calc('f1');" ),
+			ssi::radio( 'dutch'.$qty_index, [ 'Y', 'Yes', 'N', 'No' ], $$variable{'dutch'.$qty_index} ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionColumns$qty_index" ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionRows$qty_index" ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchColumns$qty_index" ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"hdnImpositionDutchRows$qty_index" ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"txtLayoutWidth$qty_index" ),
+			ssi::input( type=>"number", readonly=>"readonly", name=>"txtLayoutHeight$qty_index" ),
+			ssi::input( type=>"hidden", name=>"txtImageWidth$qty_index" ),
+			ssi::input( type=>"hidden", name=>"txtImageHeight$qty_index" ),
+			);
+		} # end foreach
+		return $html;
+	) ?>
 </li>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 

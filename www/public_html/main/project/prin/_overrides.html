@@ -1,7 +1,7 @@
 <div class="Overrides">
 <fieldset><legend>Overrides</legend>
 	<p>
-		<label>Stock Format:</label>
+		<label>Stock Format</label>
 		<input type="radio" id="StockTypeOverride<?Signature?>Auto" name="StockTypeOverride<?Signature?>" value="" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq '' ); ) ?> />
 		<label class="radio" for="StockTypeOverride<?Signature?>Auto">Auto</label>
 		<input type="radio" id="StockTypeOverride<?Signature?>Sheet" name="StockTypeOverride<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> />
@@ -10,14 +10,14 @@
 		<label class="radio" for="StockTypeOverride<?Signature?>Roll">Roll</label>
 	</p>
 	<p>
-		<label>Runstyle:</label>
+		<label>Runstyle</label>
 		<select name="ddmRunStyle<?Signature?>" size="1">
 			<option value="">Auto</option>
 			<? echo ( ssi::make_drop_down( $$variable{'RunStyleOptions'}, $$variable{"ddmRunStyle$$variable{Signature}"} ); ) ?>
 		</select>
 	</p>
 	<p>
-		<label>Press:</label>
+		<label>Press</label>
 		<select name="ddmPress<?Signature?>" size="1">
 			<option value="">Auto</option>
 			<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)') ], $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
@@ -25,7 +25,7 @@
 	</p>
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 <p>
-    <label>Printing type:</label>
+    <label>Printing type</label>
     <select name="PrintingTypeOverride<?Signature?>" size="1">
 			<option value="">Auto</option>
         <? echo (

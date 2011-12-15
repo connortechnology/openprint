@@ -772,6 +772,7 @@ sub input {
 	$html .= ' onkeydown="'.$options{onkeydown}.'"' if $options{onkeydown};
 	$html .= ' onchange="'.$options{onchange}.'"' if $options{onchange};
 	$html .= ' required' if $options{required};
+	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
 	return $html;
 } # end sub input
