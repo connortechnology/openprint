@@ -13,6 +13,8 @@ require openprint::PaperInventory;
 require openprint::StockBrand;
 require openprint::StockFinish;
 require openprint::StockColour;
+require openprint::StockQuality;
+require openprint::InventoryCondition;
 require openprint::RFIDTag;
 require openprint::RFIDTagType;
 require openprint::RFIDTagHistory;
@@ -166,14 +168,14 @@ sub skids {
 				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
 				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
-				'quality_id',
+				'condition_id',
 				) );
  
 } # end sub skids
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Last Seen');
+	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen');
 
 if ( 0 ) {
 	my @papers = openprint::Paper->find(
@@ -212,7 +214,7 @@ if ( 0 ) {
 		foreach my $Skid ( $Paper->skids() ) {
 			my $weight = 0;
 			my $C = $Skid->Content( $Paper );
-			if ( $param{'Quality'} and $C->quality_id() != $param{'Quality'} ) {
+			if ( $param{'Condition'} and $C->condition_id() != $param{'Condition'} ) {
 				next;
 			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
@@ -233,7 +235,7 @@ if ( 0 ) {
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
-					$C->quality(),
+					$Paper->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
@@ -242,6 +244,7 @@ if ( 0 ) {
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
+					$C->condition(),
 					);
 		} # end foreach skid
 	} # end foreach
@@ -277,7 +280,7 @@ if ( 0 ) {
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
-					$C->quality(),
+					$Paper->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
@@ -286,12 +289,13 @@ if ( 0 ) {
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
+					$C->condition(),
 					$Skid->updated_on(),
 					);
 		} # end foreach C
 	} # end foreach Skid
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight, undef, undef );
 	return ( \@header, \@data );
 } # end sub inventory_report
 
@@ -545,6 +549,9 @@ sub save_Paper {
 			'colour'	=>	$param{'txtColour'.$id},
 			'weight_id' =>	$param{'Weight'.$id},
 			'weight'	=>	$weight,
+# We might 
+			#'quality_id' =>	$param{'Quality'.$id},
+			#'quality'	=>	$param{'txtQuality'.$id},
 			'width'		=> $param{'width'.$id},
 			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
 			'type'		=>	$param{'type'.$id},
@@ -554,7 +561,7 @@ sub save_Paper {
 	my $Paper;
 
 # Paper not found, this is the first time we are adding it to the skid
-	if ( 0 == @papers ) {
+	if ( 0 == @Papers ) {
 		$Paper = new openprint::Paper( );
 		$Paper->owner_id( $param{'Owner'.$id} );
 		$Paper->manufacturer( $param{'txtManufacturer'.$id} ) if $param{'txtManufacturer'.$id};
@@ -567,6 +574,8 @@ sub save_Paper {
 		$Paper->colour_id( $param{'Colour'.$id} ) if $param{'Colour'.$id};
 		$Paper->weight( $weight ) if $weight;
 		$Paper->weight_id( $param{'Weight'.$id} ) if $param{'Weight'.$id};
+		$Paper->quality( $param{'txtQuality'.$id} ) if $param{'txtQuality'.$id};
+		$Paper->quality_id( $param{'Quality'.$id} ) if $param{'Quality'.$id};
 		$Paper->type( $param{'type'.$id} );
 		$Paper->fsc_code( $param{'fsc_code'.$id} );
 		if ( $param{'type'.$id} eq 'Roll' ) {
@@ -587,8 +596,8 @@ sub save_Paper {
 		} else {
 			$variable{'information'} .= 'Paper created.<br/>';
 		} # end if
-	} elsif ( 1 == @papers ) {
-		$Paper = shift @papers;
+	} elsif ( 1 == @Papers ) {
+		$Paper = shift @Papers;
 		my $changed = 0;
 # This is so that papers that don't have mweights will get filled in
 		if ( ( ! $Paper->basis_mweight() ) and $param{'weight'.$id} ) {
@@ -611,11 +620,22 @@ sub save_Paper {
 			$Paper->fsc_code( $param{'fsc_code'.$id} );
 			$changed = 1;
 		} # end if
-		$Paper->save() if $changed;
+		if ( $param{'Quality'} ) {
+			if ( $param{'Quality'} != $Paper->quality_id() ) {
+				$Paper->quality_id( $param{'Quality'} );
+				$changed = 1;
+			} # end if
+		} elsif ( $param{'txtQuality'} ) {
+			$Paper->quality($param{'txtQuality'});
+			$changed = 1;
+		} # end if
+		if ( $changed ) {
+			$Paper->save();
+		} # end if
 	} else {
 		$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';
 		$variable{'information'} .= 'The following papers both match, please edit them:<br/>';
-		foreach my $Paper ( @papers ) {
+		foreach my $Paper ( @Papers ) {
 			$variable{'information'}	.= '<a href="paper_details.html?paper_id='.$Paper->id().'">'.$Paper->to_string().'</a><br/>';
 		} # end foreach
 	} # end if
@@ -623,8 +643,8 @@ sub save_Paper {
 } # end sub save_Paper
 
 sub save_inventory {
-	my ( $Skid, $Paper, $qty, $comment, $Quality ) = @_;
-	my $delta = $Skid->add( $Paper, $qty, $Quality );
+	my ( $Skid, $Paper, $qty, $comment, $Condition ) = @_;
+	my $delta = $Skid->add( $Paper, $qty, $Condition );
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment );
 #FIXME
 	if ( $delta > 0 ) {
@@ -654,21 +674,21 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 		return;
 	} # end if
 
-	my $Quality;
-	if ( $param{'txtQuality'} ) {
-		if ( ! ( $Quality = openprint::StockQuality->find_one('name'=>$param{'txtQuality'}) ) ) {
-			$Quality = new openprint::StockQuality();
-			$Quality->save({'shortname'=>$param{'txtQuality'},'longname'=>$param{'txtQuality'}});
+	my $Condition;
+	if ( $param{'txtCondition'} ) {
+		if ( ! ( $Condition = openprint::InventoryCondition->find_one('name lc'=>lc openprint::InventoryCondition->transform('name',$param{'txtCondition'})) ) ) {
+			$Condition = new openprint::InventoryCondition();
+			$Condition->save({'name'=>$param{'txtCondition'}});
 		} # end if
 	} else {
-		$Quality = new openprint::StockQuality( $param{'Quality'} );
+		$Condition = new openprint::InventoryCondition( $param{'Condition'} );
 	} # end if
 	
 	if ( $param{'Name'} or $param{'txtName'} ) {
 		my $Paper = save_Paper();
 
 		if ( $Paper and $Paper->id() ) {
-			save_inventory( $Skid, $Paper, $qty, undef, $Quality );
+			save_inventory( $Skid, $Paper, $qty, undef, $Condition );
 
 			if ( $param{'Docket'} ) {
 				my @Projects = openprint::Project->find('docket'=>$param{'Docket'} );
@@ -975,7 +995,7 @@ sub check_out {
 } # end sub check_out
 
 sub check_in {
-	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason, $Quality ) = @_;
+	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason, $Condition ) = @_;
 	if ( ! ( $paper_id or $skid_id ) ) {
 		$variable{'error'} .= 'Skid or Paper not specified. No paper checked in.<br/>';
 		return;
@@ -995,10 +1015,9 @@ sub check_in {
 			return;
 		} # end if
 	} # end if
-
-	if ( ! $Quality ) {
+	if ( ! $Condition ) {
 		my $C = $Skid->Content( $Paper );
-		$Quality = $C->Quality();
+		$Condition = $C->Condition();
 	} # end if
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
@@ -1018,7 +1037,7 @@ sub check_in {
 	} # end if
 
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	my $delta = $Skid->add( $Paper, $quantity, $units, $Quality );
+	my $delta = $Skid->add( $Paper, $quantity, $units, $Condition );
 	if ( ! @Projects ) {
 		$Paper->add_inventory( $Skid, $delta, $units, $description );
 		$variable{'information'} .= "Checked in $quantity$units from unknown docket.<br/>";
@@ -1715,7 +1734,7 @@ sub _skids_results {
 				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
 				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents',
-				'hasmanifest','quality_id',
+				'hasmanifest','condition_id',
 				) );
 }
 
