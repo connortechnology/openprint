@@ -140,37 +140,52 @@ sub save {
 	} # end if
 	
 	if ( $$self{'group'} and ! $$self{'group_id'} ) {
-		my $new_group = new openprint::StockGroup();
-		if ( $_ = $new_group->save( {'name'=>$$self{'group'}} ) ) {
-			return $_;
+		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{'group'} ) );
+		if ( ! $Group ) {
+			my $Group = new openprint::StockGroup();
+			if ( $_ = $Group->save( {'name'=>$$self{'group'}} ) ) {
+				return $_;
+			} # end if
 		} # end if
-		$$self{'group_id'} = $new_group->id();
+		@$self{'group_id','group'} = @$Group{'id','name'};
 	} # end if group_id
 	if ( $$self{'material'} and ! $$self{'material_id'} ) {
-		my $new_material = new openprint::StockMaterial();
-		if ( $_ = $new_material->save( {'name'=>$$self{'material'}} ) ) {
-			return $_;
+		my $Material = openprint::StockMaterial->find_one('name lc'=>lc openprint::StockMaterial->transform( 'name', $$self{'material'} ) );
+		if ( ! $Material ) {
+			$Material = new openprint::StockMaterial();
+			if ( $_ = $Material->save( {'name'=>$$self{'material'}} ) ) {
+				return $_;
+			} # end if
 		} # end if
-		$$self{'material_id'} = $new_material->id();
+		@$self{'material_id','material'} = @$Material{'id','name'};
 	} # end if material
 	if ( $$self{'brand'} and ! $$self{'brand_id'} ) {
-		my $Brand = new openprint::StockBrand();
-		if ( $_ = $Brand->save({'name'=>$$self{'brand'}}) ) {
-			return $_;
+		my $Brand = openprint::StockBrand->find_one('name lc'=>lc openprint::StockBrand->transform( 'name', $$self{'brand'} ) );
+		if ( ! $Brand ) {
+			$Brand = new openprint::StockBrand();
+			if ( $_ = $Brand->save({'name'=>$$self{'brand'}}) ) {
+				return $_;
+			} # end if
 		} # end if
 		@$self{'brand_id','brand'} = @$Brand{'id','name'};
 	} # end if brand_id
 	if ( $$self{'finish'} and ! $$self{'finish_id'} ) {
-		my $Finish = new openprint::StockFinish();
-		if ( $_ = $Finish->save({'name'=>$$self{'finish'}}) ) {
-			return $_;
+		my $Finish = openprint::StockFinish->find_one('name lc'=>lc openprint::StockFinish->transform( 'name', $$self{'finish'} ) );
+		if ( ! $Finish ) {
+			$Finish = new openprint::StockFinish();
+			if ( $_ = $Finish->save({'name'=>$$self{'finish'}}) ) {
+				return $_;
+			} # end if
 		} # end if
 		@$self{'finish_id','finish'} = @$Finish{'id','name'};
 	} # end if finish_id
 	if ( $$self{'colour'} and ! $$self{'colour_id'} ) {
-		my $Colour = new openprint::StockColour();
-		if ( $_ = $Colour->save({'name'=>$$self{'colour'}}) ) {
-			return $_;
+		my $Colour = openprint::StockColour->find_one('name lc'=>lc openprint::StockColour->transform( 'name', $$self{'colour'} ) );
+		if ( ! $Colour ) {
+			$Colour = new openprint::StockColour();
+			if ( $_ = $Colour->save({'name'=>$$self{'colour'}}) ) {
+				return $_;
+			} # end if
 		} # end if
 		@$self{'colour_id','colour'} = @$Colour{'id','name'};
 	} # end if colour_id
@@ -196,11 +211,14 @@ sub save {
 		@$self{'quality_id','quality'} = @$Quality{'id','name'};
 	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
-		my $Manufacturer = new openprint::Manufacturer();
-		if ( $_ = $Manufacturer->save({'name'=>$$self{'manufacturer'}}) ) {
-			return $_;
+		my $Manufacturer = openprint::Manufacturer->find_one('name lc'=>lc openprint::Manufacturer->transform( 'name', $$self{'manufacturer'} ) );
+		if ( ! $Manufacturer ) {
+			$Manufacturer = new openprint::Manufacturer();
+			if ( $_ = $Manufacturer->save({'name'=>$$self{'manufacturer'}}) ) {
+				return $_;
+			} # end if
 		} # end if
-		@$self{'manufacturer_id','manufacturer'} = @$_{'id','name'};
+		@$self{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 	} # end if manufacturer
 
 	if ( $$self{'id'} ) {
@@ -266,6 +284,7 @@ sub save {
 	sql::execute( undef, undef, q{DELETE FROM StockWeights WHERE id NOT IN (SELECT DISTINCT weight_id FROM Papers)} );
 	sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
 	sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
+	sql::execute( undef, undef, q{DELETE FROM StockQualities WHERE id NOT IN (SELECT DISTINCT quality_id FROM Papers)} );
 
 	my @recommendations = $self->recommendations();
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
@@ -366,13 +385,12 @@ sub material {
 	my ( $self, $material ) = @_;
 
 	if ( defined $material ) {
-		$material =~ s/^\s+//;
-		$material =~ s/\s+$//;
-		$material =~ s/\s\s+$/ /;
-
-		@$self{'material_id','material'} = sql::execute( undef, undef, q{SELECT id, name FROM StockMaterials WHERE lower(name)=?}, lc $material );
-		if ( ! $$self{'material_id'} ) {
-			$$self{'material'} = $material;
+		$material = openprint::StockMaterial->transform('name',$material);
+		my $Material = openprint::StockMaterial->find_one('name lc'=> lc $material );
+		if ( $Material ) {
+			@$self{'material_id','material'} = @$Material{'id','name'};
+		} else {
+			@$self{'material_id','material'} = ( undef, $material );
 		} # end if
 	} elsif ( $$self{'material_id'} and ! $$self{'material'} ) {
 		$$self{'material'} = new openprint::StockMaterial( $$self{'material_id'} )->name();
@@ -388,17 +406,12 @@ sub group {
 	my ( $self, $group ) = @_;
 
 	if ( defined $group ) {
-		$group =~ s/^\s+//;
-		$group =~ s/\s+$//;
-		$group =~ s/\s\s+$/ /;
-
-		if ( ! $$self{'custom'} ) {
-			@$self{'group_id','group'} = sql::execute( undef, undef, q{SELECT id, name FROM StockGroups WHERE lower(name)=?}, lc $group );
-			if ( ! $$self{'group_id'} ) {
-				$$self{'group'} = $group;
-			} # end if
+		$group = openprint::StockGroup->transform('name',$group);
+		my $Group = openprint::StockGroup->find_one('name lc'=> lc $group );
+		if ( $Group ) {
+			@$self{'group_id','group'} = @$Group{'id','name'};
 		} else {
-			$$self{'group'} = $group;
+			@$self{'group_id','group'} = ( undef, $group );
 		} # end if
 	} elsif ( $$self{'group_id'} and ! $$self{'group'} ) {
 		$$self{'group'} = new openprint::StockGroup( $$self{'group_id'} )->name();
@@ -415,11 +428,11 @@ sub brand {
 		$_[1] = openprint::StockBrand->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
 			my $Brand = openprint::StockBrand->find_one('name lc'=> lc $_[1] );
-			if ( ! $Brand ) {
-				$Brand = new openprint::StockBrand();
-				$Brand->save({'name'=>$_[1]});
+			if ( $Brand ) {
+				@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
+			} else {
+				@{$_[0]}{'brand_id','brand'} = ( undef, $_[1] );;
 			} # end if
-			@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
 		} else {
 			$_[0]{'brand'} = $_[1];
 			$_[0]{'brand_id'} = undef;
@@ -438,11 +451,11 @@ sub manufacturer {
 		$_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
 			my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
-			if ( ! $Manufacturer ) {
-				$Manufacturer = new openprint::Manufacturer();
-				$Manufacturer->save({'name'=>$_[1]});
+			if ( $Manufacturer ) {
+				@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
+			} else {
+				@{$_[0]}{'manufacturer_id','manufacturer'} = ( undef, $_[1] );
 			} # end if
-			@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 		} else {
 			$_[0]{'manufacturer'} = $_[1];
 			$_[0]{'manufacturer_id'} = undef;
@@ -461,11 +474,11 @@ sub finish {
 		$_[1] = openprint::StockFinish->transform( 'name', $_[1] );
 		if ( ! $_[0]{'custom'} ) {
 			my $Finish = openprint::StockFinish->find_one('name lc'=> lc $_[1] );
-			if ( ! $Finish ) {
-				$Finish = new openprint::StockFinish();
-				$Finish->save({'name'=>$_[1]});
+			if ( $Finish ) {
+				@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
+			} else {
+				@{$_[0]}{'finish_id','finish'} = ( undef, $_[1] );
 			} # end if
-			@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
 		} else {
 			$_[0]{'finish'} = $_[1];
 			$_[0]{'finish_id'} = undef;
