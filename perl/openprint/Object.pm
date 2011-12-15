@@ -10,7 +10,7 @@ use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %tr
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 
-my $debug = 1;
+my $debug = 0;
 $no_cache = 0;
 
 sub init_cache {
