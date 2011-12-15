@@ -2292,7 +2292,7 @@ sub breakdown {
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
-	$breakdown .= '<p>'.$$price{'AdditionalSignature Breakdown'}.'</p>';
+	$breakdown .= '<p>'.$$price{'AdditionalSignature Breakdown'}.'</p>' if $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};

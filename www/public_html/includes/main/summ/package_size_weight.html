@@ -1,5 +1,5 @@
 <p>
-	<label><?ServiceTypeName?> Weight:</label>
+	<label><?ServiceTypeName?> Weight</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -16,7 +16,7 @@
 		) ?>
 </p>
 <p>
-    <label>Maximum <?ProjectTypeName?> per <?ServiceTypeName?>:</label>
+    <label>Maximum <?ProjectTypeName?> per <?ServiceTypeName?></label>
 	<? echo (
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -27,7 +27,7 @@
 </p>
 <? if ( $$variable{'txtPackageWidth'} and $$variable{'txtPackageHeight'} and $$variable{'txtPackageDepth'} ) ?>
 <p>
-    <label><?ServiceTypeName?> dimensions:</label>
+    <label><?ServiceTypeName?> dimensions</label>
    <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>

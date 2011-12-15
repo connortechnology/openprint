@@ -29,22 +29,25 @@
         <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
 <? if ( $$variable{'txtSignatureType'} ) ?>
-<? if ( $$variable{'Group'} == 1 ) ?>
-            <div class="leftColumn">
-<? endif ( $$variable{'Group'} == 1 ) ?>
-                <p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+            <div class="<? echo ( my $type = $$variable{'txtSignatureType'}; $type =~ s/\s//g; return $type; ) ?>">
+                <p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
                 <p class="Dimensions">
-                    <label>Spread dimensions:</label>
-                        <input type="number" name="txtWidth" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="number" name="txtHeight" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
-                        <input type="number" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="number" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /><? echo (
-							return sets::isin( $session{'user_type'}, ['A','E'] ) ?
-							ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', "calc('f1');" ) : '';
-							) ?>
+                    <label>Spread dimensions</label>
+					<? echo (
+						my $html = sprintf('%s x %s => %s x %s',
+							ssi::input( type=>"number", name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							);
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', q`calc('f1');` );
+						} # end if
+						return $html;
+					) ?>
                 </p>
-<? if ( $$variable{'Group'} == 1 ) ?>
             </div>
+<? if ( $$variable{'Group'} == 1 ) ?>
             <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
             <? echo (
                 my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
@@ -122,7 +125,7 @@
 <? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<p id="NotepadPages">
-			<label># of pages per pad:</label>
+			<label># of pages per pad</label>
 			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
 		<!--#include virtual="/includes/main/proj/dimensions.html" -->
