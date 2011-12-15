@@ -125,11 +125,11 @@ Please select a Skid to view/edit.<br>
 				) ?>
 			</select>
 		</p>
-		<p><label>Quality:</label>
-			<select name="quality_id">
+		<p><label>Condition:</label>
+			<select name="condition_id">
 				<? echo ( 
-					my @options = ('','All', map { $_->id(), $_->name() } openprint::StockQuality->find('order'=>'lower(name)') );
-					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?quality_id'} );
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') );
+					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
 				) ?>
 			</select>
 		</p>

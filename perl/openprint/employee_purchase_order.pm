@@ -621,5 +621,8 @@ sub item {
 	} # end if
 } # end sub item
 
+sub _po_created_by_options {
+} # end sub _po_created_by_options
+
 1;
 __END__

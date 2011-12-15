@@ -1,14 +1,15 @@
 use strict;
-package openprint::StockPurpose;
+package openprint::InventoryCondition;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
+
 $debug = 1;
-$table = 'stockpurposes';
-$serial='stockpurposes_id_seq';
+$table = 'inventoryconditions';
+$serial= 'inventoryconditions_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+    'id'    =>  'id',
+    'name' =>  'name',
 );
 %transforms = (
     'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],

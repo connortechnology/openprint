@@ -34,7 +34,7 @@
 		if ( $session{'/employee/inventory/skids.html?Type'} ne 'All' ) {
 			$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
 		}
-		$sql{'quality_id'} = $session{'/employee/inventory/skids.html?quality_id'} if $session{'/employee/inventory/skids.html?quality_id'};
+		$sql{'condition_id'} = $session{'/employee/inventory/skids.html?condition_id'} if $session{'/employee/inventory/skids.html?condition_id'};
 
 	if ( $session{'/employee/inventory/skids.html?location_id'} ) {
 		if ( $session{'/employee/inventory/skids.html?location_id'} eq 'None' ) {
@@ -67,6 +67,7 @@
 			<th class="RFID">RFIDTag</th>
 			<th class="location">Location</th>
 			<th class="Dockets">Dockets</th>
+			<th class="Condition">Condition</th>
 			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 			<th class="Price">Value</th>
 			<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
@@ -141,7 +142,7 @@ $Skid->Location()->name(),
 					$PA->Paper()->units(),	
 					);
 				} # end while
-				$html .= '</td>';	
+				$html .= '</td><td rowspan="2" class="Condition">'. join('<br/>', map { $_->condition() } $Skid->Contents() ) . '</td>';
 				if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) {
 					$html .= '<td rowspan="2" class="Price">'.openprint::Currency::format($Skid->value()).'</td>';
 					#$html .= '<td rowspan="2" class="Price">@'.$Skid->cost().'='.openprint::Currency::format($Skid->value()).'</td>';
@@ -160,7 +161,7 @@ $Skid->Location()->name(),
 						new openprint::StockPurpose( $C->purpose_id() )->name(),
 						$C->quantity(),
 						$Paper->units(),
-						$C->quality(),
+						$C->condition(),
 					);
 					if ( $Paper->type() eq 'Roll' ) {
 						$total_rolls += 1;
@@ -170,7 +171,7 @@ $Skid->Location()->name(),
 						$total_sheets += $C->quantity();
 					} # end if	
 				} # end foreach
-				$html .= '</td>';	
+				$html .= '</td>';
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
