@@ -735,6 +735,17 @@ if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
 		$dbh->do('ALTER TABLE Projecttype_defaults RENAME COLUMN strdefaultvalue to value');
 	}
 } 
+if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/InventoryConditions.sql}) );
+	die if $dbh->errstr();
+	$dbh->do('SELECT * INTO inventoryconditions FROM stockqualities');
+	$dbh->do('alter table skid_contents ADD condition_id INTEGER');
+	$dbh->do('UPDATE skid_contents set condition_id=quality_id');
+	$dbh->do('ALTER TABLE skid_contents DROP quality_id');
+	$dbh->do('ALTER TABLE Skid_Contents add FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id)');
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventoryconditions'", 'column_name');
+}
 $dbh->disconnect();
 1;
 __END__
