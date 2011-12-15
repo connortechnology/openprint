@@ -90,17 +90,18 @@ $serial	= 'paper_id_seq';
 		'finish'	=>	'(SELECT name FROM stockfinishes WHERE stockfinishes.id=papers.finish_id)',
 		'colour'	=>	'(SELECT name FROM stockcolours WHERE stockcolours.id=papers.colour_id)',
 		'weight'	=>	'(SELECT name FROM stockweights WHERE stockweights.id=papers.weight_id)',
+		'quality'	=>	'(SELECT name FROM stockqualities WHERE stockqualities.id=papers.quality_id)',
 		'size'		=>	q`width || '" x ' || height || '"'`,
 		'sheetsize'		=>	q`width || '" x ' || height || '"'`,
-		'allocated_to_docket'	=>	'(SELECT lngdocketnumber FROM tbl_projects WHERE Projects.id IN ( SELECT project_id FROM paper_allocations WHERE paper_id = papers.id) )',
+		'allocated_to_docket'	=>	'(SELECT lngdocketnumber FROM projects WHERE projects.id IN ( SELECT project_id FROM paper_allocations WHERE paper_id = papers.id) )',
 		'project_type_name'	=>	'(SELECT name FROM project_types WHERE id IN ( SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id ) )',
 		'project_type_id'	=>	'(SELECT lngProjectTypeIndex FROM Paper_Recommendations WHERE lngPaperIndex = papers.id)',
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
 %defaults = (
-	'allocated'	=>	'0',
-	'in_stock'	=>	'0',
+	'allocated'	=>	q`'0'`,
+	'in_stock'	=>	q`'0'`,
 );
 
 sub load {
@@ -175,7 +176,6 @@ sub save {
 	} # end if colour_id
 	if ( $$self{'weight'} and ! $$self{'weight_id'} ) {
 		my $Weight = openprint::StockWeight->find_one('name lc'=>lc openprint::StockWeight->transform( 'name', $$self{'weight'} ) );
-		
 		if ( ! $Weight ) {
 			$Weight = new openprint::StockWeight();
 			if ( $_ = $Weight->save({'name'=>$$self{'weight'}}) ) {
