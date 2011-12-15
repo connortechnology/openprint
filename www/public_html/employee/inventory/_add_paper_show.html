@@ -86,22 +86,43 @@
 	<select id="Quality" name="Quality" size="1">
 		<option value="">select</option>
 	<? echo (
-		if ( ! ( $$variable{'C'}->quality_id() or $param{'Quality'} ) ) {
-			my @Qualities = openprint::StockQuality->find('name'=>'new');
-			if ( @Qualities ) {
-				$$variable{'C'}->quality_id( $Qualities[0]->id() );
+		if ( ! ( $$variable{'Paper'}->quality_id() or $param{'Quality'} ) ) {
+			my $Quality = openprint::StockQuality->find_one('name'=>'new');
+			if ( $Quality ) {
+				$$variable{'Paper'}->quality_id( $Quality->id() );
 			} # end if
 		} # end if
 		my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
 		if ( @Qualities == 1 ) {
 			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 		} else {
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'C'}->quality_id() );
+			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'Paper'}->quality_id() );
 		} # end if
 	) ?>
 	</select>
 	<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />
 	</p>
+	<p>
+		<label for="txtCondition" onclick="toggleInput('Condition');">Condition:</label>
+		<select id="Condition" name="Condition" size="1">
+			<option value="">select</option>
+		<? echo (
+			if ( ! ( $$variable{'C'}->condition_id() or $param{'Condition'} ) ) {
+				my $Condition = openprint::InventoryCondition->find_one('name'=>'new');
+				if ( $Condition ) {
+					$$variable{'C'}->condition_id( $Condition->id() );
+				} # end if
+			} # end if
+			my @Conditions = openprint::InventoryCondition->find('order'=>'lower(name)');
+			if ( @Conditions == 1 ) {
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $Conditions[0]->id() );
+			} else {
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Conditions ], $param{'Condition'} ? $param{'Condition'} : $$variable{'C'}->condition_id() );
+			} # end if
+		) ?>
+		</select>
+		<input style="display: none;" type="text" id="txtCondition" name="txtCondition" />
+		</p>
 	<p><label>Type:</label>
         <input type="radio" id="typeSheet" name="type" value="Sheet" onclick="$('PaperHeight').show();$('MWeight').show();$('Units').innerHTML='sheets';$('KgDIV').hide();" <? echo ( 'checked="checked"' if $param{'type'} eq 'Sheet' or $$variable{'Paper'}->type() eq 'Sheet'; ) ?> />
         <label class="radio" for="typeSheet">Sheet</label>

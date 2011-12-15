@@ -185,9 +185,13 @@ sub save {
 		@$self{'weight_id','weight'} = @$Weight{'id','name'};
 	} # end if weight_id
 	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		my $Quality = new openprint::StockQuality();
-		if ( $_ = $Quality->save({'name'=>$$self{'quality'}}) ) {
-			return $_;
+        $$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
+        my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
+		if ( ! $Quality ) {
+			$Quality = new openprint::StockQuality();
+			if ( $_ = $Quality->save({'name'=>$$self{'quality'}}) ) {
+				return $_;
+			} # end if
 		} # end if
 		@$self{'quality_id','quality'} = @$Quality{'id','name'};
 	} # end if quality_id
@@ -418,6 +422,7 @@ sub brand {
 			@{$_[0]}{'brand_id','brand'} = @$Brand{'id','name'};
 		} else {
 			$_[0]{'brand'} = $_[1];
+			$_[0]{'brand_id'} = undef;
 		} # end if
 	} elsif ( $_[0]{'brand_id'} and ! $_[0]{'brand'} ) {
 		$_[0]{'brand'} = new openprint::StockBrand( $_[0]{'brand_id'} )->name();
@@ -440,6 +445,7 @@ sub manufacturer {
 			@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
 		} else {
 			$_[0]{'manufacturer'} = $_[1];
+			$_[0]{'manufacturer_id'} = undef;
 		} # end if
 	} elsif ( $_[0]{'manufacturer_id'} and ! $_[0]{'manufacturer'} ) {
 		$_[0]{'manufacturer'} = new openprint::Manufacturer( $_[0]{'manufacturer_id'} )->name();
@@ -462,6 +468,7 @@ sub finish {
 			@{$_[0]}{'finish_id','finish'} = @$Finish{'id','name'};
 		} else {
 			$_[0]{'finish'} = $_[1];
+			$_[0]{'finish_id'} = undef;
 		} # end if
 	} elsif ( $_[0]{'finish_id'} and ! $_[0]{'finish'} ) {
 		$_[0]{'finish'} = new openprint::StockFinish( $_[0]{'finish_id'} )->name();
@@ -479,9 +486,10 @@ sub colour {
 		if ( ! $_[0]{'custom'} ) {
 			my $Colour = openprint::StockColour->find_one('name lc'=> lc $_[1] );
 			if ( $Colour ) {
-				@{$_[0]}{'finish_id','finish'} = @$Colour{'id','name'};
+				@{$_[0]}{'colour_id','colour'} = @$Colour{'id','name'};
 			} else {
 				$_[0]{'colour'} = $_[1];
+				$_[0]{'colour_id'} = undef;
 			} # end if
 		} else {
 			$_[0]{'colour'} = $_[1];
@@ -497,22 +505,23 @@ sub Quality {
 } # end sub Quality
 
 sub quality {
-	if ( @_ > 1 ) {
-		$_[1] = openprint::StockQuality->transform( 'name', $_[1] );
-		if ( ! $_[0]{'custom'} ) {
-			my $Quality = openprint::StockQuality->find_one('name lc'=>lc $_[1]);
-			if ( $Quality ) {
-				$_[0]{'quality_id','quality'} = @$Quality{'id','name'};
-			} else {
-				$_[0]{'quality'} = $_[1];
-			} # end if
-		} else {
-			$_[0]{'quality'} = $_[1];
-		} # end if
-	} elsif ( $_[0]{'quality_id'} and ! $_[0]{'quality'} ) {
-		$_[0]{'quality'} = new openprint::StockQuality( $_[0]{'quality_id'} )->name();
-	} # end if
-	return $_[0]{'quality'};
+	my ( $self, $quality ) = @_;
+    if ( @_ > 1 ) {
+        $quality = openprint::StockQuality->transform( 'name', $quality );
+        if ( ! $$self{'custom'} ) {
+            my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
+            if ( $Quality ) {
+                @$self{'quality_id','quality'} = @$Quality{'id','name'};
+            } else {
+                @$self{'quality_id','quality'} = ( undef, $quality );
+            } # end if
+        } else {
+            $$self{'quality'} = $quality;
+        } # end if
+    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
+    } # end if
+    return $$self{'quality'};
 } # end sub quality
 
 sub Weight {
