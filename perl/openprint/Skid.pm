@@ -17,6 +17,7 @@ require openprint::Skid_Verification;
 require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
+require openprint::InventoryCondition;
 
 $debug = 0;
 
@@ -235,16 +236,16 @@ sub to_string {
 } # end sub
 
 sub add {
-	my ( $self, $Paper, $quantity, $quality ) = @_;
-	my $Quality;
-	if ( ref $quality eq 'openprint::StockQuality' ) {
-		$Quality = $quality;
-	} elsif ( ! $quality ) {
+	my ( $self, $Paper, $quantity, $condition ) = @_;
+	my $Condition;
+	if ( ref $condition eq 'openprint::InventoryCondition' ) {
+		$Condition = $condition;
+	} elsif ( ! $condition ) {
 		# Default to new
-		$Quality = openprint::StockQuality->find_one('name'=>'new');
+		$Condition = openprint::InventoryCondition->find_one('name'=>'new');
 	} # end if
-	if ( ! $Quality ) {
-		$log->error("Must specify quality");
+	if ( ! $Condition ) {
+		$log->error("Must specify condition");
 		return 0;
 	} # end if
 	if ( ! $Paper ) {
@@ -275,7 +276,7 @@ sub add {
 	$C->save({
 			'skid_id' => $$self{'id'},
 			'paper_id'	=>	$Paper->id(),
-			'quality_id'	=>	$Quality->id(),
+			'condition_id'	=>	$Condition->id(),
 			'quantity'=>$quantity,
 			});
 	return $quantity - $old_quantity;

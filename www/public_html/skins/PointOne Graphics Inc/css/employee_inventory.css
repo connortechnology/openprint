@@ -29,3 +29,15 @@ table .on_order, table .allocated, table .in_stock {
 	text-align: right;
 	width: 90px;
 }
+table .location {
+	text-align: left;
+	width: 100px;
+}
+table .Condition {
+	width: 100px;
+	text-align: left;
+}
+
+#SkidResults table .RFID {
+	width: 60px;
+}

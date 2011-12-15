@@ -10,7 +10,7 @@ use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %tr
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 
-my $debug = 0;
+my $debug = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -517,7 +517,7 @@ sub find_one {
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'->find(%params);');
+	my @Results = $type->find(%params);
 	return $Results[0] if @Results;
 } # end sub find_one
 

@@ -6,6 +6,7 @@ use Carp qw( cluck );
 
 require sql;
 require openprint::StockPurpose;
+require openprint::InventoryCondition;
 require openprint::ManifestContent;
 use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
@@ -20,12 +21,12 @@ $debug = 1;
 	'quantity'		=>	'quantity',
 	'purpose_id'	=>	'purpose_id',
 	'units'			=>	'units',
-	'quality_id'	=>	'quality_id',
+	'condition_id'	=>	'condition_id',
 	'manifestcontent_id'	=>	'manifestcontent_id',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
-	'quality_id'	=>	undef,
+	'condition_id'	=>	undef,
 	'manifestcontent_id'	=>	undef,
 );
 %transforms = (
@@ -127,22 +128,22 @@ sub allocated {
 	return 0;
 } # end sub allocated
 
-sub quality {
-    my ( $self, $quality ) = @_;
+sub condition {
+    my ( $self, $condition ) = @_;
 
-    if ( defined $quality ) {
-		$quality =~ s/^\s+//;
-		$quality =~ s/\s+$//;
-		$quality =~ s/\s\s+$/ /;
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
-        if ( ! $$self{'quality_id'} ) {
-			$$self{'quality'} = $quality;
-        } # end if
-    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
+    if ( defined $condition ) {
+		$condition = openprint::InventoryCondition->transform('name', $condition );
+		my $Condition = openprint::InventoryCondition->find_one('name lc'=>$condition);
+		if ( ! $Condition ) {
+			$Condition = new openprint::InventoryCondition();
+			$Condition->save({'name'=>$condition});
+		} # end if
+        @$self{'condition_id','condition'} = @$Condition{'id','name'};
+    } elsif ( $$self{'condition_id'} and ! $$self{'condition'} ) {
+        $$self{'condition'} = new openprint::InventoryCondition( $$self{'condition_id'} )->name();
     } # end if
-    return $$self{'quality'};
-} # end sub quality
+    return $$self{'condition'};
+} # end sub condition
 
 # Looks to find a PO matching this stock and pulls the value from it.
 sub cost {

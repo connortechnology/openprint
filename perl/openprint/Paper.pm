@@ -32,7 +32,7 @@ my $debug = 0;
 
 my @fields = (
 		'id', 'created_on',
-		'owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
+		'owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','quality_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
@@ -293,10 +293,15 @@ sub save {
 		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
-	#if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		#sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
-		#@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
-	#} # end if quality_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+        $$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
+        my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
+		if ( ! $Quality ) {
+			$Quality = new openprint::StockQuality();
+			$Quality->save({'name'=>$$self{'quality'}});
+		} # end if
+		$$self{'quality_id'} = $Quality->id();
+	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
@@ -523,6 +528,30 @@ sub colour {
     } # end if
     return $$self{'colour'};
 } # end sub colour
+
+sub Quality {
+    return new openprint::StockQuality( $_[0]{'quality_id'} );
+} # end sub Quality
+
+sub quality {
+	my ( $self, $quality ) = @_;
+    if ( @_ > 1 ) {
+        $quality = openprint::StockQuality->transform( 'name', $quality );
+        if ( ! $$self{'custom'} ) {
+            my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
+            if ( $Quality ) {
+                @$self{'quality_id','quality'} = @$Quality{'id','name'};
+            } else {
+                @$self{'quality_id','quality'} = ( undef, $quality );
+            } # end if
+        } else {
+            $$self{'quality'} = $quality;
+        } # end if
+    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
+    } # end if
+    return $$self{'quality'};
+} # end sub quality
 
 sub Weight {
 	return openprint::StockWeight( $_[0]{'weight_id'} );
