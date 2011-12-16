@@ -43,16 +43,6 @@ sub update_late_jobs {
 	} # end while
 } # end sub update_late_jobs
 
-sub set_duedate {
-	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
-	my $Job = new openprint::ScheduledJob( $schedule_id );
-	if ( $$Job{'project_id'} ) {
-		my $Project = $Job->Project();
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
-	} # end if
-} # end sub set_duedate
 
 sub insert {
 	my ( $log, $dbh, $project_index, $service_index, $equipment_id ) = @_;

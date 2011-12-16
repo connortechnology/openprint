@@ -84,6 +84,4 @@ sub get_config {
 } # end sub get_config
 
 1;
-
 __END__
-~       

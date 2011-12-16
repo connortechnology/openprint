@@ -37,23 +37,15 @@ function submit_handler( formName ) {
 
 	if ( gettingNewPrice && ! confirm('The system is still calculating a price.  Click OK to continue saving, or Cancel to wait for the system') ) {
 		return;
-		
 	} // end if
+
 	var status = true;
 	if ( typeof(validate_data) == 'function' ) {
 		status = validate_data(formName);
-	} // end nif
+	} // end if
 
 	if (status) {
-		if ( window.name == 'popup' ) {
-			var vars = Serialize( form );
-			vars.unshift( 'openprint::print::view_services' );
-			vars.unshift( '' ); //DIV
-			jsrsExecute( '/jsrs.htm', cbWindowSaveClose, 'openprint::jsrs_handler::exec', vars );
-
-		} else {
-			form.submit();
-		} // end if
+		form.submit();
 	} // end if
 	return status;
 
