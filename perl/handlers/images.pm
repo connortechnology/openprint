@@ -17,9 +17,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 
 require openprint::login;
-
 require openprint::Page_Setting;
-
 require openprint::logs;
 
 require sql;
@@ -60,7 +58,7 @@ sub handler {
 			);
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $log, $dbh, $r->dir_config() );
+	configuration::init_cache( $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
 

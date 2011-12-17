@@ -9,13 +9,13 @@ require sql;
 *cache = \%openprint::config;
 
 sub init_cache {
-	my ( $log, $dbh, $apr_table ) = @_;
+	my $apr_table = $_[0];
 	
 	%cache = ();
-	if ( $dbh ) {
+	if ( $openprint::dbh ) {
 		my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration', {Slice=>{}} );
 		foreach (@{$data}) {
-			$cache{$_->{name}} = $_->{value};
+			$cache{$$_{name}} = $$_{value};
 		} # end foreach
 	} # end if
 	
