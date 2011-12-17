@@ -31,9 +31,6 @@ function filter_onChange( element, id, selected ) {
         } // end if filter exists
     } // end for 
     new Ajax.Request( '/administrator/stock/_stock.json', { parameters: h, evalScripts: true } );
-
-	//jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, selected ) );
-
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {

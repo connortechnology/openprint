@@ -738,7 +738,7 @@ if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
 if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/InventoryConditions.sql}) );
 	die if $dbh->errstr();
-	$dbh->do('SELECT * INTO inventoryconditions FROM stockqualities');
+	$dbh->do('insert into inventoryconditions select * from stockqualities');
 	$dbh->do('alter table skid_contents ADD condition_id INTEGER');
 	$dbh->do('UPDATE skid_contents set condition_id=quality_id');
 	$dbh->do('ALTER TABLE skid_contents DROP quality_id');

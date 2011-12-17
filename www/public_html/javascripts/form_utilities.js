@@ -1388,3 +1388,16 @@ function changed( e, div ) {
 		e.removeClassName('changed');
 	} // end if
 } // end function changed
+function integerize(e) {
+	e.value = e.value.replace(/[^\d\-]/g,'');
+alert(e.value);
+	e.focus();
+}
+function floatize(e) {
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
+	e.focus();
+}
+function hexize(e) {
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+	e.focus();
+}

@@ -110,7 +110,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 			$log->debug("Parameter $key is (" . $r->param($key) . ")" );
 			$param{$key} = $r->param($key);
 		} # end foreach
-		configuration::init_cache( $log, $dbh, $r->dir_config() );
+		configuration::init_cache( $r->dir_config() );
 		openprint::session_init();
 		if ( $serial ) {
 			my $rsize=$request->headers_in->{'Content-Length'};
