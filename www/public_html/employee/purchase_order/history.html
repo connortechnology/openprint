@@ -30,15 +30,15 @@
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
 			<li><label>PO #</label>
-				<input type="number" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+				<input type="number" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::button( 'Go3', { 'onclick'=>"page_load('Results', \$('f1'));",'text'=>'Go' } ); ) ?>
 			</li>
 			<li><label>Docket</label>
-				<input type="number" id="docket" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+				<input type="number" id="docket" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::button( 'Go', { 'onclick'=>"page_load('Results', \$('f1'));",'text'=>'Go' } ); ) ?>
 			</li>
 			<li><label>Manifest</label>
-				<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){LoadContent('Results', '_purchase_orders.html', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){LoadContent('Results', '_purchase_orders.html', $('f1') );}" />
 				<? echo ( ssi::button( 'Go2', { 'onclick'=>"page_load('Results', \$('f1'));",'text'=>'Go' } ); ) ?>
 			</li>
 		</ul>

@@ -100,7 +100,7 @@
 		</p>
 		<p>
 			<label for="weight-<?type_id?>">Weight:</label>
-			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
+			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="floatize(this);"/>lb
 		</p>
 		<p>
 			<label for="txtQuality-<?type_id?>" onclick="toggleInput('Quality-<?type_id?>');">Quality:</label>
@@ -131,25 +131,25 @@
 		</p>
 		<p>
 			<label for="width-<?type_id?>">Size:</label>
-			<input type="text" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<input type="text" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
 			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?>>
 			&nbsp;x&nbsp;
-			<input type="text" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<input type="text" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
 			</span>
 		</p>
 	</div>
 	<div class="rightColumn">
 		<p>
 			<label>Calliper:</label>
-			<input type="text" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" size="6" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );" style="width: auto;" />PT
+			<input type="text" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" size="6" onkeyup="floatize(this);" style="width: auto;" />PT
 		</p>
 		<p>
 			<label>GSM:</label>
-			<input type="number" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );gsm_to_mweight(this.form);" />
+			<input type="number" id="gsm-<?type_id?>" name="gsm-<?type_id?>" value="<? echo ( $param{'gsm-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize();gsm_to_mweight(this.form);" />
 		</p>
 		<p id="MWeight-<?type_id?>" <? echo ( 'style="display:none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?> >
 			<label>MWeight:</label>
-			<input type="number" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'' );mweight_to_gsm(this.form);" />M
+			<input type="number" id="mweight-<?type_id?>" name="mweight-<?type_id?>" value="<? echo ( $param{'mweight-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize();mweight_to_gsm(this.form);" />M
 		</p>
 		<p>
 			<label>FSC Code:</label>
@@ -161,7 +161,7 @@
 		</p>
 		<p>
 			<label>Docket:</label>
-			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" />
+			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" onkeyup="integerize(this);"/>
 <? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
 			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>
@@ -172,7 +172,7 @@
 		</div>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="number" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::button( 'GoPO'.$$variable{'Type'}->id(), { 'href'=>'/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'text'=>'Go' } ) : '' ) ?>
+			<input type="number" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" onkeyup="integerize(this);" /><? echo ( $$variable{'Type'}->po_id() ? ssi::button( 'GoPO'.$$variable{'Type'}->id(), { 'href'=>'/employee/purchase_order/view.html?po_id='.$$variable{'Type'}->po_id(), 'text'=>'Go' } ) : '' ) ?>
 		</p>
 <div id="PO_<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? echo ( 
@@ -212,7 +212,7 @@
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Cost (/CWT):</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="floatize();" />
 		</p>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</div>
