@@ -1048,14 +1048,15 @@ function toggletinymce(textarea_id, toggle ) {
 } // end function toggletinymce
 
 function integerize(e) {
-	e.value = e.value.replace(/[^\d\-/g,'');
+	e.value = e.value.replace(/[^\d\-]/g,'');
+alert(e.value);
 	e.focus();
 }
 function floatize(e) {
-	e.value = e.value.replace(/[^\d\-\./g,'');
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
 	e.focus();
 }
 function hexize(e) {
-	e.value = e.value.replace(/[^\da-fA-F/g,'');
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
 	e.focus();
 }
