@@ -1784,5 +1784,19 @@ sub _map {
 
 sub _docket_label {
 } # end sub _docket_label
+sub _paper_inventory_entries {
+	$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
+
+	if ( $param{'Action'} eq 'Add' ) {
+		my $Skid = new openprint::Skid( $param{'skid_id'} );
+		my $Paper = new openprint::Paper( $param{'paper_id'} );
+		my $Condition = new openprint::InventoryCondition( $param{'condition_id'} );
+		$Skid->location_id( $param{'Location'} );
+		$Skid->add( $Paper, $param{'quantity'}, $Condition );
+		$Skid->save();
+		$Paper->add_inventory( $Skid->id(), $param{'quantity'} );
+	} # end if
+} # end sub _paper_inventory_entries
+
 1;
 __END__
