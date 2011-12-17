@@ -1416,7 +1416,17 @@ sub _li_change {
 	} # end if
 	my $Equipment = $Job->Equipment();
 
-	if ( $param{'action'} eq 'start' ) {
+	if ( $param{'action'} eq 'setduedate' ) {
+		if ( $$Job{'project_id'} ) {
+			my $Project = $Job->Project();
+			$Project->due_date( $param{duedate} );
+			if ( ! $variable{'error'} .= $Project->save() ) {
+				$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+			} # end if
+		} else {
+			$variable{'error'} .= 'Cant set duedate without project.';
+		} # end if
+	} elsif ( $param{'action'} eq 'start' ) {
 
 		# Stop any currently running jobs, which will be the first job on the schedule, right?
 		foreach my $J ( openprint::ScheduledJob->find('equipment_id'=>$Job->equipment_id(),'order'=>'starttime','starttime is null'=>0,'limit'=>1) ) {
