@@ -45,7 +45,7 @@
             $html .= qq{ /><label class="radio" for="}.$name.qq{N">No</label>\n};
         } elsif ( $type eq 'textarea' ) {
 			my @rows = split "\n", $value;
-            $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', ssi::htmlize($name), scalar @rows, $value );
+            $html .= sprintf('<textarea name="%s" cols="80" rows="%d" onkeyup="textarea_resize(this);" />%s</textarea>', ssi::htmlize($name), scalar @rows, ssi::htmlize($value) );
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if

@@ -8,14 +8,14 @@ $debug = 1;
 $table = 'privacy';
 $serial = 'privacy_id_seq';
 %fields = (
-	'id'			=>	'id',
+	'id'				=>	'id',
 	'object_type_id'	=>	'object_type_id',
 	'object_type'		=>	undef,
-	'object_id'		=>	'object_id',
-	'value'			=>	'value',
+	'object_id'			=>	'object_id',
+	'value'				=>	'value',
 );
 %find_fields = (
-	'object_type'	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
+	'object_type'		=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
 );
 %defaults = (
 );
