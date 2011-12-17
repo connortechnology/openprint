@@ -38,6 +38,11 @@ table .Condition {
 	text-align: left;
 }
 
-#SkidResults table .RFID {
+#SkidResults table .RFID,
+#CurrentInventory table .RFID {
 	width: 60px;
+}
+
+input#quantity {
+	width: 100%;
 }

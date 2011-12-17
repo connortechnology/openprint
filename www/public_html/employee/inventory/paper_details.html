@@ -145,12 +145,9 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label for="txtQuality" onclick="f1.txtQuality.toggle();f1.Quality.toggle();">Quality:</label>
-				<select id="Quality" name="Quality" size="1">
+				<select id="Quality" name="Quality" size="1"><option value="">select</option>
 				<? echo (
-						my @options = ( '', 'select one',
-							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperQualities ORDER BY lower(longname)} )
-							);
-						return ssi::make_drop_down( \@options, $$variable{'Paper'}->quality_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockQuality->find('order'=>'lower(name)') ], $$variable{'Paper'}->quality_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.Weight, 0 );" />

@@ -108,12 +108,12 @@
 				<option value="">select</option>
 			<? echo (
 				if ( ! $param{'Quality-'.$$variable{'type_id'}} ) {
-					my @Qualities = openprint::StockQuality::find('shortname'=>'new');
+					my @Qualities = openprint::StockQuality->find('name'=>'new');
 					if ( @Qualities ) {
 						$param{'Quality-'.$$variable{'type_id'}} = $Qualities[0]->id();
 					} # end if
 				} # end if
-				my @Qualities = openprint::StockQuality::find('order'=>'lower(shortname)');
+				my @Qualities = openprint::StockQuality->find('order'=>'lower(name)');
 				if ( @Qualities == 1 ) {
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 				} else {
