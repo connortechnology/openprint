@@ -341,7 +341,7 @@ $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
-	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
+	} elsif ( sets::isin( $first , ['handheld' ] ) ) { # Handheld
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
 		if ( $variable{'Redirect'} ) {
 			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
