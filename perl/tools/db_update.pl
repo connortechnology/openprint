@@ -1358,7 +1358,8 @@ if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	} # end foreach
 } # en dif
 if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die 'user_purchaseorder_limits';
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_PurchaseOrder_Limits.sql}) );
+	die 'user_purchaseorder_limits' if $dbh->errstr();
 } # end if
 
 
