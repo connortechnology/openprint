@@ -50,6 +50,7 @@ sub list {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
 		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		$variable{'error'} .= $Album->Privacy()->save( \%param );
 
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );

@@ -4,10 +4,9 @@ CREATE TABLE Privacy (
 	id	SERIAL,
 	object_id	INTEGER NOT NULL,
 	object_type_id	INTEGER NOT NULL, FOREIGN KEY (object_type_id) REFERENCES Object_Types (id),
-	relationship_id	INTEGER	NOT NULL, FOREIGN KEY (relationship_id) REFERENCES User_Relationship_Types (id),
 	mode	text,
 	user_id	INTEGER[],
-	relationship_id	INTEGER[],
+	relationship_type_id	INTEGER[],
 	usergroup_id	INTEGER[],
 	PRIMARY KEY (id)
 );

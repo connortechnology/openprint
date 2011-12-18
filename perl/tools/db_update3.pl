@@ -582,8 +582,11 @@ if ( ! sets::isin( 'privacy', \@tables ) ) {
 	if ( ! exists $$data{'usergroup_id'} ) {
 		$dbh->do('ALTER TABLE privacy ADD usergroup_id INTEGER[]');
 	} # end if
-	if ( ! exists $$data{'relationship_id'} ) {
-		$dbh->do('ALTER TABLE privacy ADD relationship_id INTEGER[]');
+	if ( ! exists $$data{'relationship_type_id'} ) {
+		$dbh->do('ALTER TABLE privacy ADD relationship_type_id INTEGER[]');
+	} # end if
+	if ( exists $$data{'relationship_id'} ) {
+		$dbh->do('ALTER TABLE Privacy DROP relationship_id');
 	} # end if
 	if ( ! exists $$data{'user_id'} ) {
 		$dbh->do('ALTER TABLE privacy ADD user_id INTEGER[]');

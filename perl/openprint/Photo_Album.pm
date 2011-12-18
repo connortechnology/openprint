@@ -93,15 +93,6 @@ sub can_view {
 	return 0;
 } # end sub can_view
 
-sub Privacy {
-	if ( ! exists $_[0]{'Privacy'} ) {
-		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>'Privacy', 'object_id'=>$_[0]{'id'} );
-		if ( ! $_[0]{'Privacy'} ) {
-			$_[0]{'Privacy'} = new openprint::Privacy();
-		} # end if
-	} # end if
-	return $_[0]{'Privacy'};	
-} # end sub Privacy
 
 1;
 __END__

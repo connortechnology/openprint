@@ -7,6 +7,7 @@ use openprint ();
 require sets;
 require openprint::Like;
 require openprint::Comment;
+require openprint::Privacy;
 require openprint::Object_Type;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
@@ -924,6 +925,16 @@ sub Comments {
 	} # end if
 	return @{$_[0]{'Comments'}};
 } # end sub Comments
+
+sub Privacy {
+	if ( ! exists $_[0]{'Privacy'} ) {
+		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'} );
+		if ( ! $_[0]{'Privacy'} ) {
+			$_[0]{'Privacy'} = new openprint::Privacy();
+		} # end if
+	} # end if
+	return $_[0]{'Privacy'};
+} # end sub Privacy
 
 1;
 __END__
