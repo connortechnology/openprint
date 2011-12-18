@@ -12,7 +12,10 @@ $serial = 'privacy_id_seq';
 	'object_type_id'	=>	'object_type_id',
 	'object_type'		=>	undef,
 	'object_id'			=>	'object_id',
-	'value'				=>	'value',
+	'mode'				=>	'mode',
+	'usergroup_id'		=>	'usergroup_id',# an array of group_id
+	'relationship_type_id'	=>	'relationship_type_id',# an array of relationship_ids
+	'users_id'				=>	'user_id', # an array
 );
 %find_fields = (
 	'object_type'		=>	'(SELECT name FROM object_types WHERE id=object_type_id)',

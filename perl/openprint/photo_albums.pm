@@ -92,6 +92,7 @@ sub edit {
 		$variable{'error'} .= $Album->delete();
 		$variable{'ExternalRedirect'} = '/photo_albums/list.html';
 	} # end if
+	$variable{'Privacy'} = $Album->Privacy();
 } # end sub edit
 
 sub _photos {

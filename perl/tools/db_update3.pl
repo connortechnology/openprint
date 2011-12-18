@@ -574,6 +574,20 @@ if ( ! sets::isin( 'keywords', \@tables ) ) {
 if ( ! sets::isin( 'privacy', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Privacy.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='privacy'", 'column_name');
+	if ( exists $$data{'value'} ) {
+		$dbh->do('ALTER TABLE privacy RENAME value to mode');
+	} # end if
+	if ( ! exists $$data{'usergroup_id'} ) {
+		$dbh->do('ALTER TABLE privacy ADD usergroup_id INTEGER[]');
+	} # end if
+	if ( ! exists $$data{'relationship_id'} ) {
+		$dbh->do('ALTER TABLE privacy ADD relationship_id INTEGER[]');
+	} # end if
+	if ( ! exists $$data{'user_id'} ) {
+		$dbh->do('ALTER TABLE privacy ADD user_id INTEGER[]');
+	} # end if
 }
 if ( ! sets::isin( 'object_assets', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Assets.sql' ) );

@@ -17,17 +17,15 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Album Name:</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
-						<li><label>Privacy:</label><select name="privacy" id="privacy" multiple="multiple">
-							<? echo ( ssi::make_drop_down( [ 'owner', 'Only You', 'everyone', 'Everyone', 'registered', 'Registered User', map { $_->id(), $_->name() } openprint::User_Relationship_Type->find() ], $$variable{'Album'}->Privacy()->value() ); ) ?>
-						</select></li>
+						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
+						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
+						<!--#include virtual="/includes/_privacy_widget.html"-->
 					</ul>
 				</div>
 			</fieldset>
 			<? if ( $$variable{'Album'}->id() ) ?>
 			<fieldset><legend>Photos</legend>
-				<div id="Photos"><!--#include virtual="_photos.html"-->
-				</div>
+				<div id="Photos"><!--#include virtual="_photos.html"--></div>
 			</fieldset>
 <!--
 			<fieldset><legend>Upload Option 1</legend>
@@ -40,7 +38,7 @@
 			<fieldset><legend>Upload</legend>
 				<div class="content">
 					<ul>
-						<li><label>Select file:</label><input type="file" name="filename"/>
+						<li><label>Select file</label><input type="file" name="filename"/>
 			<? if ( $$variable{'Album'}->id() ) ?>
 						<? echo ( ssi::button( 'Upload', { 'onclick'=>"f1.action='/photo_albums/edit.html?album_id=$$variable{Album}{id}';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
 			<? endif ( $$variable{'Album'}->id() ) ?>
