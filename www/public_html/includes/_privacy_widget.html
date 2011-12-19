@@ -34,7 +34,7 @@ $('usergroups_div').show();$('relationships_div').show();$('users_div').show();}
 			<ul class="UserGroups">
 			<? echo ( my $html;
 				foreach my $U ( @{$$variable{'UserGroups'}} ) {
-					$html .= sprintf('<li><input type="checkbox" name="usergroup_id" value="%d" %s/>%s</li>',$U->id(), $U->name(), sets::isin( $U->id(), $$variable{'Privacy'}->usergroup_id() ) );
+					$html .= sprintf('<li><input type="checkbox" name="privacy_usergroup_id" value="%d" %s/>%s</li>',$U->id(), $U->name(), sets::isin( $U->id(), $$variable{'Privacy'}->usergroup_id() ) );
 				} # 
 				return $html;
 			) ?>
@@ -46,7 +46,7 @@ $('usergroups_div').show();$('relationships_div').show();$('users_div').show();}
 			<ul class="Relationships">
 			<? echo ( my $html;
 				foreach my $RT ( openprint::User_Relationship_Type->find( 'order' => 'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" name="relationship_id" value="%1$d" %3$s/><label class="radio" for="relationship_id%1$d">%2$s</label></li>',$RT->id(), $RT->name(), sets::isin( $RT->id(), $$variable{'Privacy'}->relationship_id() ) );
+					$html .= sprintf('<li><input type="checkbox" name="privacy_relationship_type_id" id="privacy_relationship_type_id%1$d" value="%1$d" %3$s/><label class="radio" for="relationship_type_id%1$d">%2$s</label></li>',$RT->id(), $RT->name(), sets::isin( $RT->id(), $$variable{'Privacy'}->relationship_type_id() ) );
 				} # 
 				return $html;
 			) ?>
@@ -54,7 +54,7 @@ $('usergroups_div').show();$('relationships_div').show();$('users_div').show();}
 		</div>
 		<label class="radio" for="privacy_modeusers">Users: Only users specified here can view this.</label>
 		<div id="Users">
-			Enter name: <input type="text" name="name"/>
+			Enter name: <input type="text" name="privacy_name"/>
 			<? echo ( join("\n", map { new openprint::User($_)->html() } $$variable{'Privacy'}->user_id() ? @{$$variable{'Privacy'}->user_id()} : () ); ) ?>
 		</div>
 	</div>

@@ -109,21 +109,6 @@ sub action {
 	return $_[0]->Action()->name();
 } # end sub action
 
-sub object_type {
-	if ( @_ > 1 ) {
-		my $Type = openprint::Object_Type->find_one('name lc'=> lc (openprint::Object_Type->transform( 'name', $_[1] ) ) );
-		if ( ! $Type ) {
-			$Type = new openprint::Object_Type();
-			$Type->save({'name'=>$_[1], 'human'=>$_[1]});
-		} # end if
-		$_[0]{'object_type'} = $Type->name();
-		$_[0]{'object_type_id'} = $Type->id();
-	} # end if
-	if ( ! $_[0]{'object_type'} ) {
-		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
-	} # end if
-	return $_[0]{'object_type'};
-} # end sub object_type
 
 1;
 __END__

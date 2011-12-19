@@ -31,12 +31,6 @@ sub Object {
 $openprint::log->debug( "Returning object of type " . ref $_ );
 	return $_;
 } # end sub Object
-sub object_type {
-	if ( ! $_[0]{'object_type'} ) {
-		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
-	} # end if
-	return $_[0]{'object_type'};
-} # end sub object_type
 
 1;
 __END__
