@@ -8,12 +8,12 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 <form id="f1" name="f1" method="post" action="quotes.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
-			<label>Quote ID:</label>
+			<label>Quote ID</label>
 			<input type="text" size="10" name="quote_id" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='../quote/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
@@ -21,7 +21,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 			</select>
 		</p>
 		<p> 
-			<label>Status:</label>
+			<label>Status</label>
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 <? echo ( 
@@ -31,7 +31,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 			</select>
 		</p>
 		<p>
-			<label>Currency:</label>
+			<label>Currency</label>
 			<select name="currency_id" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
@@ -40,14 +40,14 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 			</select>
 		</p>
 		<p> 
-			<label>Sales Reps:</label>
+			<label>Sales Reps</label>
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $param{'salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 
-			<label>Date Quoted:</label>
+			<label>Date Quoted</label>
 			<span class="DateSelector">
 				<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
 				<select name="ddmStartDay"><?startdays?></select>
@@ -60,7 +60,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 			</span>
 		</p>
 		<p> 
-			<label>Range Total:</label>
+			<label>Range Total</label>
 			<input type="text" name="total_start" size="12" value="<? echo ( $param{'total_start'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />
 			to
 			<input type="text" name="total_end" size="12" value="<? echo ( $param{'total_end'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g, '');" />

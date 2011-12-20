@@ -29,7 +29,7 @@
 				<td class="description"><a href="%5$s/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="5">
 				<table>`, $rowclass, $QP->project_id(),
-				( $Project->reference() ? ssi::htmlize($Project->reference()) . ':<br/>' : '' ),
+				( $Project->reference() ? ssi::htmlize($Project->reference()) . '<br/>' : '' ),
 				( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
 				$config{ExternalSiteURL},
 				);
@@ -100,7 +100,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 		$html .= '<tr class="totals">';
-		$html .= '<td colspan="4" style="text-align: right;">Subtotal:</td><td class="newprice">';
+		$html .= '<td colspan="4" style="text-align: right;">Subtotal</td><td class="newprice">';
 		$html .= openprint::Currency::format( $subtotal );
 		$html .= '</td></tr>';
 			return $html;
@@ -109,8 +109,8 @@
 </table>
 <? endif ( $$variable{'Quote'}->Products() ) ?>
 <span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
-		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
-		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
+		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
+		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
 <br class="spacer"/>
 <? echo ( $config{'QuoteViewDisclaimer'} ) ?>
 </div>

@@ -19,15 +19,15 @@ Please select a company or user to obtain login information.<br/>
 <br/>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
-		<fieldset class="filters"><legend>Search:</legend>
+		<fieldset class="filters"><legend>Search</legend>
 			<div class="content">
 				<ul>
-					<li><label>Email:</label>
+					<li><label>Email</label>
 						<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
 						<span id="search_email_results"></span>
 					</li>	
 					<li>
-						<label>Company Name:</label>
+						<label>Company Name</label>
 						<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='';this.form.submit();}" size="4" />
 						<select id="ddmCustomer" name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();}">
 							<option value="">All Companies</option>
@@ -36,14 +36,14 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( ssi::button( 'Go1', { 'onclick'=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 					</li>
 					<li>
-						<label>User Type:</label>
+						<label>User Type</label>
 						<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
 							<option value="">All User Types</option>
 							<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
 						</select>
 					</li>
 					<li>
-						<label>User Name:</label>
+						<label>User Name</label>
 						<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
 							<option value="">Select a User</option>
 							<?FILL_USER_NAME?>
@@ -89,13 +89,13 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<? if ( $$variable{'User'}->Company()->notes() ) ?>
 					<li>
-						<label>Company Notes:</label>
+						<label>Company Notes</label>
 						<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
 					</li>
 					<? endif ( $$variable{'User'}->Company()->notes() ) ?>
 					<? if ( $$variable{'User'}->notes() ) ?>
 						<li>
-							<label>User Notes:</label>
+							<label>User Notes</label>
 							<b><? echo ( $$variable{'User'}->notes() ) ?></b>
 						</li>
 					<? endif ( $$variable{'User'}->notes() ) ?>
@@ -105,7 +105,7 @@ Please select a company or user to obtain login information.<br/>
 			<div class="leftColumn">
 				<ul>
 					<li> 
-						<label>Company:</label>
+						<label>Company</label>
 						<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
 						<select id="company_id" name="company_id">
 							<option value=""> Select </option>
@@ -119,36 +119,36 @@ Please select a company or user to obtain login information.<br/>
 						</select>
 					</li>
 					<li>
-						<label>Salutation:</label>
+						<label>Salutation</label>
 						<? echo ( ssi::radio( 'salutation', [ 'Mr.','Mr.','Mrs.','Mrs.','Ms.','Ms.','Miss','Miss' ], $$variable{'User'}->salutation() ); ) ?>
 					</li>
 					<li> 
-						<label>First Name:</label>
+						<label>First Name</label>
 						<input type="text" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
 					</li>
 					<li> 
-						<label>Last Name:</label>
+						<label>Last Name</label>
 						<input type="text" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
 					</li>
 					<li class="title"> 
-						<label>Title:</label>
+						<label>Title</label>
 						<input type="text" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
 					</li>
 					<li class="phone"> 
-						<label>Phone:</label>
+						<label>Phone</label>
 						<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" style="width: auto;" size="15" />x
 						<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
 					</li>
 					<li class="mobile"> 
-						<label>Mobile:</label>
+						<label>Mobile</label>
 						<input type="text" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" style="width: auto;" size="15" />
 					</li>
 					<li class="sms"> 
-						<label>SMS (email):</label>
+						<label>SMS (email)</label>
 						<input type="text" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" style="width: auto;" size="15" />
 					</li>
 					<li class="fax"> 
-						<label>Fax:</label>
+						<label>Fax</label>
 						<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 					</li>
 				</ul>
@@ -156,7 +156,7 @@ Please select a company or user to obtain login information.<br/>
 			<div class="rightColumn">
 				<ul>
 					<li> 
-						<label>Add to our Mailing List:</label>
+						<label>Add to our Mailing List</label>
 						<? echo ( ssi::radio( 'mailinglist', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'User'}->mailinglist() ); ) ?>
 					</li>
 					<li class="administrator"> 
@@ -172,17 +172,17 @@ Please select a company or user to obtain login information.<br/>
 						<? echo ( ssi::radio( 'ftp_active', [ '1', 'Yes', '0', 'No' ], $$variable{'User'}->ftp_active() ); ) ?>
 					</li>
 					<li> 
-						<label>Custom Greeting:</label>
+						<label>Custom Greeting</label>
 						<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 					</li>
 					<li>
-						<label>Notes:</label>
+						<label>Notes</label>
 						<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
 					</li>
-					<li><label>Created:</label>
+					<li><label>Created</label>
 						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?>
 					</li>
-					<li><label>Updated:</label>
+					<li><label>Updated</label>
 						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?>
 					</li>
 		
@@ -192,7 +192,7 @@ Please select a company or user to obtain login information.<br/>
 			<div class="leftColumn">
 				<ul>
 					<li> 
-						<label>User Type:</label>
+						<label>User Type</label>
 						<select name="type">
 							<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $$variable{'User'}->type() ); ) ?>
 						</select>
@@ -200,7 +200,7 @@ Please select a company or user to obtain login information.<br/>
 					<? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id, name FROM QuoteLevels ORDER BY lower(name)' ); ) ?>
 					<? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 					<li> 
-						<label>Quote Level:</label>
+						<label>Quote Level</label>
 						<select name="quote_level">
 							<option value=""> select </option>
 							<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ); ) ?>
@@ -209,11 +209,11 @@ Please select a company or user to obtain login information.<br/>
 					<? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 					<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 					<li class="commission">
-						<label>Commission Rate:</label>
+						<label>Commission Rate</label>
 						<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />%
 					</li>
 					<li class="wage"> 
-						<label>Wage:</label>
+						<label>Wage</label>
 						<input type="text" name="wage" value="<? echo ( $$variable{'User'}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
 					</li>
 					<li class="purchasing_limit">
@@ -234,7 +234,7 @@ Please select a company or user to obtain login information.<br/>
 					) ?>
 					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup in'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<li class="csr_ids">
-						<label>Assistant to:</label>
+						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{'User'}->csr_ids()] ); ) ?>
 						</select>
@@ -247,7 +247,7 @@ Please select a company or user to obtain login information.<br/>
 				<ul>
 					<? if ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
 					<li class="user_categories">
-						<label>User Category:</label>
+						<label>User Category</label>
 						<select name="selectUserCategories" size="4" multiple="multiple">
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id in'=>$$variable{'User'}->id()) ] ); ) ?>
 						</select>
@@ -272,36 +272,36 @@ Please select a company or user to obtain login information.<br/>
 <div class="Email">
 		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 <div class="Settings">
-		<fieldset><legend>Email Settings:</legend>
+		<fieldset><legend>Email Settings</legend>
 			<ul>
 			<li>
-				<label>Password:</label>
+				<label>Password</label>
 				<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
 			</li>
 			<li>
-				<label>Verify Password:</label>
+				<label>Verify Password</label>
 				<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
 			</li>
 			<li>
-				<label>Forwards:<br/>(One per line)</label>
+				<label>Forwards<br/>(One per line)</label>
 				<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( scalar @{$$variable{'Aliases'}} + 1 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>
 			</li>
 			</ul>
 		</fieldset>
 </div>
 <div class="Vacation">
-		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
+		<fieldset><legend>Vacation Auto-Responder Settings</legend>
 			<ul>
 			<li>
-				<label>Subject:</label>
+				<label>Subject</label>
 				<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
 			</li>
 			<li>
-				<label>Vacation Message:</label>
+				<label>Vacation Message</label>
 				<textarea name="VacationMessage" rows="10"><?VacationMessage?></textarea>
 			</li>
 			<li>
-				<label>Vacation Status:</label>
+				<label>Vacation Status</label>
 				<input type="radio" id="VacationState1" name="VacationState" <? echo ( $$variable{'VacationState'} ? 'checked="checked"' : '' ) ?> value="1">
 				<label class="radio" for="VacationState1">Enabled</label>
 				<input type="radio" id="VacationState0" name="VacationState" <? echo ( (!$$variable{'VacationState'})? 'checked="checked"' : '' ) ?> value="0">
@@ -315,23 +315,23 @@ Please select a company or user to obtain login information.<br/>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<!--#include virtual="/account/_user_profile_edit.html"-->
 		<div class="LoginCredentials">
-			<fieldset><legend>Login Information:</legend> 
+			<fieldset><legend>Login Information</legend> 
 				<ul>
 					<li> 
-						<label>E-mail Address:</label>
+						<label>E-mail Address</label>
 						<input type="email" name="email" value="<? hecho ( $$variable{'User'}->email() ) ?>" />
 					</li>
 					<li> 
-						<label>Password:</label>
+						<label>Password</label>
 						<input type="text" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>" />
 						<span id="psContainer"><span id="psStrength"></span></span>
 					</li>
 					<li>
-						<label for="verifypassword">Verify Password:</label>
+						<label for="verifypassword">Verify Password</label>
 						<input type="text" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) ? $$variable{'User'}->password() : '' ) ?>"/>
 						<span id="password_alert"></span>
 					</li>
-					<li><label>Password Last Changed:</label>
+					<li><label>Password Last Changed</label>
 						<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 					</li>
 					<li> 
@@ -352,7 +352,7 @@ Please select a company or user to obtain login information.<br/>
 				my $n = $$variable{'User'}->notifications();
 				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
 				foreach my $k ( keys %types ) {
-					$html .= '<li><label>'.$types{$k}.':</label>';
+					$html .= '<li><label>'.$types{$k}.'</label>';
 					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
 					$html .= '</li>';
 				} # end foreach k

@@ -9,8 +9,8 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<p><label>Number of Soft Folds:</label>
-				<input type="text" id="Folds" name="Folds" value="<?Folds?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+			<p><label>Number of Soft Folds</label>
+				<input type="number" id="Folds" name="Folds" value="<?Folds?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 			</p>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>

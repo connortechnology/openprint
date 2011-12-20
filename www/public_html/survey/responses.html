@@ -1,7 +1,7 @@
 <form id="f1" name="f1" method="post" action="responses.html">
 	<fieldset class="filters unprintable"><legend>Select Response to View</legend>
 		<p>
-			<label>Responder:</label>
+			<label>Responder</label>
 			<select name="user_id" onchange="this.form.submit();">
 				<option value=""> select </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(

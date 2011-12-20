@@ -14,16 +14,16 @@
 			<div class="content">
 				<ul>
 					<li><label>Created By</label><? echo ( sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{'Event'}->created_by(), $$variable{'Event'}->Created_By()->name() ); ) ?></li>
-					<li><label>When:</label>
+					<li><label>When</label>
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Event'}->starting_on() ) ); ) ?>
 						until
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Event'}->ending_on() ) ); ) ?>
 					</li>
-					<li><label>Category:</label>
+					<li><label>Category</label>
 						<? echo ( $$variable{'Event'}->Category()->name() ) ?>
 					</li>
 					<li>
-						<label for="info">More info:</label>
+						<label for="info">More info</label>
 						<? echo ( $$variable{'Event'}->info() ) ?>
 					</li>
 				</ul>
@@ -32,7 +32,7 @@
 		<fieldset><legend>Where</legend>
 			<div class="content">
 				<ul>
-					<li><label>Location:</label>
+					<li><label>Location</label>
 						<? echo ( $$variable{'Event'}->where(); ) ?>
 					</li>
 				</ul>

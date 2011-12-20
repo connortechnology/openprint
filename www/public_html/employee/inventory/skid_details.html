@@ -52,7 +52,7 @@
 		<div class="column">
 		<? if ( $$variable{'Skid'}->id() ) ?>
 			<p>
-				<label>Created:</label>
+				<label>Created</label>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->created_on() ) {
@@ -63,7 +63,7 @@
 				) ?>
 			</p>
 			<p>
-				<label>Last Updated:</label>
+				<label>Last Updated</label>
 				<? echo (
 					my $html;
 					if ( $$variable{'Skid'}->updated_on() ) {
@@ -74,23 +74,23 @@
 				) ?>
 			</p>
 		<? else ( $$variable{'Skid'}->id() ) ?>
-			<p><label># of skids to add:</label>
+			<p><label># of skids to add</label>
 				<input type="number" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
-			<p><label>RFID Tag:</label>
+			<p><label>RFID Tag</label>
 				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
 					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a><br/>
 					Last seen: <? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->RFIDTag()->updated_on()) ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
-			<p><label>Verification:</label>
+			<p><label>Verification</label>
 				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", '', 'Verification:' ); ) ?>
 			</p>
 			<p>
-				<label>Location:</label>
+				<label>Location</label>
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
@@ -105,7 +105,7 @@
 			</p>
 <? if ( $$variable{'Skid'}->id() ) ?>
 			<p>
-				<label>Manifest:</label>
+				<label>Manifest</label>
 				<? echo (
 					my $html = '';
 					foreach my $MC ( openprint::ManifestContent->find('skid_id'=>$$variable{'Skid'}->id() ) ) {
@@ -116,7 +116,7 @@
 			</p>
 <? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
-				<label for="Docket">Docket:</label>
+				<label for="Docket">Docket</label>
 				<input type="number" id="Docket" name="Docket" value="<? echo ( $param{'Docket'} ) ?>" />
 			</p>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
@@ -160,13 +160,13 @@
 	</fieldset>
 </form>
 <? if ( $$variable{Skid}{id} ) ?>
-<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id:<? echo ( $$variable{'Skid'}->id() ) ?>} );">Allocations - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'Allocations', '/employee/inventory/_skid_allocations.html', {skid_id<? echo ( $$variable{'Skid'}->id() ) ?>} );">Allocations - click to hide/show</legend>
 <div id="Allocations"><!--#include virtual="_skid_allocations.html"--></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id:<? echo ( $$variable{'Skid'}->id() ) ?>} );">Inventory Log - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'Log', '/employee/inventory/_skid_log.html', {skid_id<? echo ( $$variable{'Skid'}->id() ) ?>} );">Inventory Log - click to hide/show</legend>
 <div id="Log"><!--#include virtual="_skid_log.html"--></div>
 </fieldset>
-<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', {skid_id:<? echo ( $$variable{'Skid'}->id() ) ?>} );">Verification Log - click to hide/show</legend>
+<fieldset><legend onclick="toggleContent( 'VerificationLog', '/employee/inventory/_verification_log.html', {skid_id<? echo ( $$variable{'Skid'}->id() ) ?>} );">Verification Log - click to hide/show</legend>
 <div id="VerificationLog"><!--#include virtual="_verification_log.html"--></div>
 </fieldset>
 <? endif ( $$variable{Skid}{id} ) ?>

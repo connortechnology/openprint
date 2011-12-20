@@ -22,7 +22,7 @@
 <form name="LogForm" id="LogForm" method="post">
 	<fieldset><legend>Filters</legend>
 	<p>
-		<label>Date:</label>
+		<label>Date</label>
 		<span class="DateTimeSelector">
 			<select name="StartYear" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartYears?></select>
 			<select name="StartMonth" onchange="LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartMonths?></select>
@@ -49,7 +49,7 @@
 		<input type="checkbox" name="outs" id="outs" <? echo ( $session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="outs">Check Outs</label>
 	</p>
-		<p><label>Type:</label>
+		<p><label>Type</label>
             <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
             <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
@@ -57,7 +57,7 @@
             <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
-		<p><label>Docket:</label>
+		<p><label>Docket</label>
 			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){LoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
 		</p>
 		<p class="buttons">

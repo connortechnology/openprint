@@ -31,7 +31,7 @@ $html .= ssi::writeButton( $log, $dbh, 'Remove'.$Product->id(), 'remove.gif', qq
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4" align="right"><b>Totals:</b></td>
+				<td colspan="4" align="right"><b>Totals</b></td>
 				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
 				<td class="unprintable">&nbsp;</td>
 			</tr>

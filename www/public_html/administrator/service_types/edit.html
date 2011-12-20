@@ -3,14 +3,14 @@
 <form name="f1" method="post" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
-			<label>Category:</label>
+			<label>Category</label>
 			<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value=""> All </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category->find('order'=>'sorting,name') ], $param{'SearchCategory'} ); ) ?>
 			</select>
 		</p>
 		<p>
-			<label>Service Type:</label>
+			<label>Service Type</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ': ' . $_->description() } openprint::ServiceType->find(
@@ -32,15 +32,15 @@
 	</fieldset>
 	<fieldset>
 		<p> 
-			<label>Name:</label>
+			<label>Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'ServiceType'}->name() ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}" />
 		</p>
 		<p> 
-			<label>Description:</label>
+			<label>Description</label>
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ServiceType'}->description() ) ?>" /> 
 		</p>
 		<p> 
-			<label>Category:</label>
+			<label>Category</label>
 			<select id="category_id" name="category_id">
 				<option value=""> None </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category->find('order'=>'sorting,name') ], $$variable{'ServiceType'}->category_id() ); ) ?>
@@ -48,30 +48,30 @@
 		</p>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p> 
-			<label>Type:</label>
+			<label>Type</label>
 			<input type="text" name="type" value="<? echo ( $$variable{'ServiceType'}->type() ) ?>" /> 
 		</p>
 		<p> 
-			<label>URL:</label>
+			<label>URL</label>
 			<input type="url" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" /> 
 		</p>
 <? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p>
-			<label>Visible in Project Create:</label>
+			<label>Visible in Project Create</label>
 			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( ssi::checked( $$variable{'ServiceType'}->create_visible() ); ) ?> />
 			<label class="radio" for="create_visible1">Yes</label>
 			<input type="radio" id="create_visible0" name="create_visible" value="0" <? echo ( ssi::checked( ! $$variable{'ServiceType'}->create_visible() ); ) ?> />
 			<label class="radio" for="create_visible0">No</label>
 		</p>
 		<p>
-			<label>Visible in Project View:</label>
+			<label>Visible in Project View</label>
 			<input type="radio" id="view_visible1" name="view_visible" value="1"  <? echo ( ssi::checked( $$variable{'ServiceType'}->view_visible() ); ) ?> />
 			<label class="radio" for="view_visible1">Yes</label>
 			<input type="radio" id="view_visible0" name="view_visible" value="0" <? echo ( ssi::checked( ! $$variable{'ServiceType'}->view_visible() ); ) ?> />
 			<label class="radio" for="view_visible0">No</label>
 		</p>
 		<p> 
-			<label>Sort:</label>
+			<label>Sort</label>
 			<input type="number" name="sorting" value="<? echo ( $$variable{'ServiceType'}->sorting() ) ?>" />
 		</p>
 	</fieldset>

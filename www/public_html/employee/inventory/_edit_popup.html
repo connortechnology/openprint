@@ -5,7 +5,7 @@
 		<input type="hidden" name="paper_id" />
 		<input type="hidden" name="btnFunction" value="Edit" />
 		<div class="row">
-			<span class="label">Quantity:</span>
+			<span class="label">Quantity</span>
 			<span class="input"><input style="float: left;" type="text" name="Quantity" onKeyPress="return input_handler( this, event);"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'clearEditQuantity', 'clear.gif', "EditForm.Quantity.value='';", '', 'Clear' ); ) ?>
 			</span>

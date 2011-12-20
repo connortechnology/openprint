@@ -31,7 +31,7 @@
 			<table>
 			`, $rowclass, $config{'ExternalSiteURL'}, $QP->project_id(),
 			(
-			 ( $Project->reference() ? ssi::htmlize($Project->reference()) . ':<br/>' : '' ) .
+			 ( $Project->reference() ? ssi::htmlize($Project->reference()) . '<br/>' : '' ) .
 			 ( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
 			),
 			);
@@ -66,7 +66,7 @@
                 $newsubtotal += $QP->price($qty_index);
             } # end foreach qty_index
             $html .= "</table>\n</td>\n</tr>\n";
-            $html .= sprintf('<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+            $html .= sprintf('<tr class="totals"><td colspan="4">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
                 openprint::Currency::format( $subtotal ),
                 openprint::Currency::format( $newsubtotal ),
 				);
@@ -80,6 +80,6 @@
 
 <span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span>
 <br/>
-<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
-<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b> <?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
+<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
+<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments</b> <?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
 </div>

@@ -10,11 +10,11 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<p>
-			<label>Pages per pad:</label>
-			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
+			<label>Pages per pad</label>
+			<input type="number" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
 		<p>
-			<label>Backing:</label>
+			<label>Backing</label>
 			<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
 			<label class="radio" for="BackingCardboard">Cardboard</label>
 			<input type="radio" id="BackingPrinted" name="Backing" value="Printed" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Printed' ); ) ?> />
@@ -28,7 +28,7 @@
 ) ?>
 <? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 		<p>
-			<label>Glue Type:</label>
+			<label>Glue Type</label>
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
 			</select>

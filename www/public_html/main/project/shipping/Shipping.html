@@ -35,7 +35,7 @@
     } # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
 			<div class="leftColumn">
 			<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
@@ -46,13 +46,13 @@
 			<br class="spacer"/>
 			<fieldset>
 			<p>
-				<label># of items to ship:</label>
+				<label># of items to ship</label>
 				<? echo (
 					my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 						$html .= sprintf(q`	
 							<span class="%3$sColumns">
-							<input type="text" name="txtQuantity%1$d" value="%2$d" size="9" onkeyup="calc(this.form.name);" />
+							<input type="number" name="txtQuantity%1$d" value="%2$d" onkeyup="calc(this.form.name);" />
 							</span>`, $qty_index, $$variable{"txtQuantity$qty_index"}, $$variable{'Columns'} );
 					} # end foreach qty_index
 					return $html;

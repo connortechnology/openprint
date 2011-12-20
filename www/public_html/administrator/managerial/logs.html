@@ -2,7 +2,7 @@
 	<fieldset class="filters"><legend>Search</legend>
 		<div class="content">
 			<ul>
-				<li><label>Actions:</label>
+				<li><label>Actions</label>
 					<input type="checkbox" id="all" name="all" onclick="select_all( searchLog, 'log_actions',this.checked);" />
 					<label class="radio" for="all">All</label><br/>
 					<ul id="logactions">
@@ -18,7 +18,7 @@
 					</ul>
 				</li>
 		<li>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" size="4" />
 			<select name="company_id">
 			<option value="">All</option>
@@ -26,7 +26,7 @@
 			</select>
 		</li>			
 		<li>
-			<label>User:</label>
+			<label>User</label>
 			<select name="user_id">
 			<option value="">All</option>
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} ); ) ?>
@@ -44,7 +44,7 @@
 		} # end if
 	) ?>
 		<li>
-			<label>Date:</label>
+			<label>Date</label>
 			<span class="DateSelector">
 			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?StartYear'} ); ) ?></select>
 			<select name="StartMonth"><? echo ( ssi::getmonths( $session{$r->uri().'?StartMonth'} ); ) ?></select>

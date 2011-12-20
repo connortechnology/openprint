@@ -14,7 +14,7 @@
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	<tr<?rowclass?>> 
 		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ) . ':<br/>' . $$variable{'Project'}->summary(); ) ?></a></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ) . '<br/>' . $$variable{'Project'}->summary(); ) ?></a></td>
 		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></td>
 		<td><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
 		<td align="right">
@@ -56,12 +56,12 @@
 <!--#include virtual="/main/order/_totals.html"-->
 	<? if ( $$variable{'AdministratorName'} ne '' ) ?>
 	<tr>
-		<td colspan="3" align="left"><b>Service Representative:</b> <?AdministratorName?></td>
+		<td colspan="3" align="left"><b>Service Representative</b> <?AdministratorName?></td>
 	</tr>
 	<? endif ( $$variable{'AdministratorName'} ne '' ) ?>
 	<? if ( $$variable{'AdministratorComments'} ne '' ) ?>
 	<tr>
-		<td colspan="3" align="left"><b>CSR Comments:</b> <?AdministratorComments?></td>
+		<td colspan="3" align="left"><b>CSR Comments</b> <?AdministratorComments?></td>
 	</tr>
 	<? endif ( $$variable{'AdministratorComments'} ne '' ) ?>
 </table>

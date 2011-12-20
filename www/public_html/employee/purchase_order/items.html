@@ -11,9 +11,9 @@
 <div class="PurchaseOrder_Items">
 	<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="items.html" method="post">
-	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
-			<li><label>Vendor:</label>
+			<li><label>Vendor</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 				<select name="supplier_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
@@ -21,7 +21,7 @@
 				</select>
 			</li>
 			<li>
-				<label>Types:</label>
+				<label>Types</label>
 				<? echo (
 					my $html;
 					foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
@@ -31,7 +31,7 @@
 				) ?>
 			</li>
 			<li>
-				<label>Item Contains:</label>
+				<label>Item Contains</label>
 				<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" value="<? echo ( $param{'item_contains'} ) ?>" />
 			</li>
 		</ul>

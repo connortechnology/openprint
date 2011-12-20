@@ -8,9 +8,9 @@
 	<!--#include virtual="/includes/error_reporting.html"-->
 <div class="SRED"><div class="Projects">
 	<form id="f1" name="f1" action="projects.html" method="post">
-		<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<fieldset class="filters"><legend>Select Search Criteria</legend>
 			<ul>
-			<li><label>Created By:</label>
+			<li><label>Created By</label>
 				<select name="created_by" onchange="load('Results',$('f1'));">
 					<option value="">All</option>
 					<? echo ( 
@@ -18,7 +18,7 @@
 				</select>
 			</li>
 			<li>
-				<label>Created:</label>
+				<label>Created</label>
 				<span class="DateSelectorT">
 				<? echo ( 
 					ssi::date_select_session( '/employee/sred/projects.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
@@ -30,7 +30,7 @@
 				</span>
 			</li>
 			<li>
-				<label>Updated:</label>
+				<label>Updated</label>
 				<span class="DateSelectorT">
 				<? echo ( ssi::date_select_session( '/employee/sred/projects.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
 				to

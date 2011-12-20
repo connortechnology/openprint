@@ -10,10 +10,10 @@
 <form id="f1" name="f1" action="<? echo ( $$variable{'Project'}->Contents() ? 'projects.html' : 'project.html' ) ?>" method="post" enctype="multipart/form-data">
 		<fieldset><legend></legend>
 			<ul>
-				<li><label>Name:</label>
+				<li><label>Name</label>
 					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Project'}->name() ) ?>" />
 				</li>
-				<li><label>Description:<br/>
+				<li><label>Description<br/>
 					<a href="#" onclick="toggletinymce('description', this);">Hide Editor</a>
 					</label>
 					<textarea name="description" id="description" class="project_description"><? echo ( $$variable{'Project'}->description() ) ?></textarea>

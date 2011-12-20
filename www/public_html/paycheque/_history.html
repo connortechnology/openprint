@@ -44,7 +44,7 @@
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Paycheque'} = shift @{$$variable{'Paycheques'}}; ) ?>
 		<tr class="totals">
-			<td colspan="4">Totals:</td>
+			<td colspan="4">Totals</td>
 			<td align="right"><? echo ( openprint::Currency::format($$variable{'Total'}); ) ?></td>
 		</tr>
 	</table>

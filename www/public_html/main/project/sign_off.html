@@ -64,18 +64,18 @@ I hereby give <?SiteTitle?> consent for this job to be printed.<br/>
 <? if ( $$variable{'Approved'} ) ?>
 	<span style="float: right;">
 		<table>
-			<tr><td>Name:</td><td><? echo ( $param{'Name') } ?></td></tr>
+			<tr><td>Name</td><td><? echo ( $param{'Name') } ?></td></tr>
 		</table>
 	</span>
 <? else ( $$variable{'Approved'} ) ?>
 	<div style="float: right;">
 		<table style="font-size: 8pt;">
 			<tr>
-			<td>Enter your name:</td>
+			<td>Enter your name</td>
 			<td><input type="text" name="Name" value="<?Name?>" /></span>
 		</tr>
 		<tr>
-			<td>Enter the numbers and letters seen below:</td>
+			<td>Enter the numbers and letters seen below</td>
 			<td><input type="text" name="Captcha" /></td>
 		</tr>
 		<tr><td align="right">

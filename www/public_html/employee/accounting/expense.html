@@ -80,11 +80,11 @@ function update_total( form ) {
 		<div class="leftColumn">
 			<ul>
 <!--
-				<li><label>Paid On:</label>
+				<li><label>Paid On</label>
 				<span class="DateSelector"><? echo ( ssi::date_select( 'occurred_on', $$variable{'Expense'}->occurred_on() ); ) ?></span>
 				</li>
 -->
-				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient:</label>
+				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient</label>
 					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
 					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';">
 						<option value="">select</option>
@@ -93,7 +93,7 @@ function update_total( form ) {
 						) ?>
 					</select>
 				</li>
-				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
 					<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 					<select name="category_id" id="category_id" onchange="$('category').value='';">
 						<option value="">select</option>
@@ -102,7 +102,7 @@ function update_total( form ) {
 						) ?>
 					</select>	
 				</li>
-				<li><label onclick="$('account').value='';$('account_id').selectedIndex=0;$('account').toggle();$('account_id').toggle();">Account:</label>
+				<li><label onclick="$('account').value='';$('account_id').selectedIndex=0;$('account').toggle();$('account_id').toggle();">Account</label>
 					<input type="text" id="account" name="account" style="display:none;" onkeyup="$('account_id').selectedIndex=0;" />
 					<select name="account_id" id="account_id" onchange="$('account').value='';">
 						<option value="">select</option>
@@ -111,7 +111,7 @@ function update_total( form ) {
 						) ?>
 					</select>	
 				</li>
-				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
+				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
 					<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" size="8" />
 					<? echo ( ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ) ) ?>
 					<select name="currency_id" id="currency_id">
@@ -124,11 +124,11 @@ function update_total( form ) {
 				<!--#include virtual="_expense_taxes.html"-->
 				</ul>
 				<ul>
-				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
+				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
 					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_amount_from_total(this.form);" size="8" />
 					<? echo ( ssi::write_override( 'total_locked', $$variable{'Expense'}->total_locked() ); ) ?>
 				</li>
-				<li><label for="business_use">Business %:</label>
+				<li><label for="business_use">Business %</label>
 					<input type="text" name="business_use" id="business_use" value="<? echo ( $$variable{'Expense'}->business_use() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />%
 				</li>
 			</ul>
@@ -136,7 +136,7 @@ function update_total( form ) {
 		<div class="rightColumn">
 			<ul>
 				<li>
-					<label>Invoiced On:</label>
+					<label>Invoiced On</label>
 					<? echo ( 	
 						ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
 							'with_today'=>1,
@@ -145,17 +145,17 @@ function update_total( form ) {
 					<? echo ( ssi::button( 'invoiced_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
-					<label>Due On:</label>
+					<label>Due On</label>
 					<? echo ( ssi::date_select( 'due_on', $$variable{'Expense'}->due_on(), { 'with_today'=>1 } ); ) ?>
 					<? echo ( ssi::button( 'due_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
-					<label>Paid On:</label>
+					<label>Paid On</label>
 					<? echo ( ssi::date_select( 'paid_on', $$variable{'Expense'}->paid_on(), { 'with_today'=>1 } ); ) ?>
 					<? echo ( ssi::button( 'paid_on_all', { 'onclick'=>q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );update_taxes();`, 'text'=>'All' } ); ) ?>
 				</li>
 				<li>
-					<label for="description">Description:</label>
+					<label for="description">Description</label>
 					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
 				</li>
 			</ul>

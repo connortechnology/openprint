@@ -6,7 +6,7 @@
 		<fieldset class="filters"><legend>Choose User</legend>
 			<ul>
 			<li>
-				<label>Company:</label>
+				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
@@ -15,7 +15,7 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</li>
 			<li>
-				<label>User:</label>
+				<label>User</label>
 				<select name="user_id" id="user_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
 					<? echo ( 
@@ -51,29 +51,29 @@
 		<fieldset><legend>User Information</legend>
 		<ul>
 			<? if ( $$variable{'User'}->Company()->notes() ) ?>
-			<li><label>Company Notes:</label>
+			<li><label>Company Notes</label>
 			<b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
 			</li>
 			<? endif ( $$variable{'User'}->Company()->notes() ) ?>
 			<? if ( $$variable{'User'}->notes() ) ?>
-			<li><label>User Notes:</label>
+			<li><label>User Notes</label>
 			<b><? echo ( $$variable{'User'}->notes() ) ?></b>
 			</li>
 			<? endif ( $$variable{'User'}->notes() ) ?>
 			<li> 
-				<label for="title">Title:</label>
+				<label for="title">Title</label>
 				<input type="text" id="title" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="firstname">First Name:</label>
+				<label for="firstname">First Name</label>
 				<input type="text" id="firstname" name="firstname" value="<? hecho ( $$variable{'User'}->firstname() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="LastName">Last Name:</label>
+				<label for="LastName">Last Name</label>
 				<input type="text" id="lastname" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
 			</li>
 			<li>
-				<label>Salutation:</label>
+				<label>Salutation</label>
 				<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ) ) ?> />
 				<label class="radio" for="SalutationMr.">Mr.</label>
 				<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
@@ -84,24 +84,24 @@
 				<label class="radio" for="SalutationMiss">Miss</label>
 			</li>
 			<li class="required"> 
-				<label for="phone">Phone:</label>
+				<label for="phone">Phone</label>
 				<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" > x
 				<input type="text" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
 			</li>
 			<li> 
-				<label for="mobile">Mobile:</label>
+				<label for="mobile">Mobile</label>
 				<input type="text" id="mobile" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" />
 			</li>
 			<li> 
-				<label for="sms">SMS (email):</label>
+				<label for="sms">SMS (email)</label>
 				<input type="text" id="sms" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" />
 			</li>
 			<li> 
-				<label for="fax">Fax:</label>
+				<label for="fax">Fax</label>
 				<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</li>
 			<li> 
-				<label for="">Mailing List:</label>
+				<label for="">Mailing List</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
 				<label class="radio" for="MailingListY">Yes</label>
 				<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
@@ -146,55 +146,55 @@
 		<fieldset><legend>The following information will be used for future logins.</legend>
 			<ul>
 				<li class="required"> 
-					<label for="email">E-mail Address:</label>
+					<label for="email">E-mail Address</label>
 					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
 				</li>
 				<li>
 					<!--#include virtual="/includes/password_requirements.html"-->
 				</li>
 				<li class="required"> 
-					<label for="password">Password:</label>
+					<label for="password">Password</label>
 					<input type="password" name="password" id="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);"/>
 					<span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="required"> 
-					<label for="VerifyPassword">Verify Password:</label>
+					<label for="VerifyPassword">Verify Password</label>
 					<input type="password" name="VerifyPassword" id="VerifyPassword" onkeyup="check_passwords(this.form.password, this);"/>
 					<span id="password_alert"></span>
 				</li>
-				<li><label>Password Last Changed:</label>
+				<li><label>Password Last Changed</label>
 					<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 				</li>
 			</ul>
 		</fieldset>
-		<fieldset><legend>Email Settings:</legend>
+		<fieldset><legend>Email Settings</legend>
 			<ul>
 				<li>
-					<label>Password:</label>
+					<label>Password</label>
 					<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
 				</li>
 				<li>
-					<label>Verify Password:</label>
+					<label>Verify Password</label>
 					<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
 				</li>
 				<li>
-					<label>Forwards:<br/>(One per line)</label>
+					<label>Forwards<br/>(One per line)</label>
 					<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
 				</li>
 			</ul>
 		</fieldset>
-		<fieldset><legend>Vacation Auto-Responder Settings:</legend>
+		<fieldset><legend>Vacation Auto-Responder Settings</legend>
 			<ul>
 				<li>
-					<label>Subject:</label>
+					<label>Subject</label>
 					<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
 				</li>
 				<li>
-					<label>Message:</label>
+					<label>Message</label>
 					<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( my $rows = scalar split("\n",$$variable{'VacationMessage'}); return $rows ? $rows + 1 : 2 ) ?>"><?VacationMessage?></textarea>
 				</li>
 				<li>
-					<label>Vacation Status:</label>
+					<label>Vacation Status</label>
 					<input type="radio" id="VacationState1" name="VacationState" <? echo ( 'checked' if $$variable{'VacationState'} ) ?> value="1"/>
 					<label class="radio" for="VacationState1">Enabled</label>
 					<input type="radio" id="VacationState0" name="VacationState" <? echo ( 'checked' if ! $$variable{'VacationState'} ) ?> value="0"/>
@@ -249,14 +249,14 @@
 				<input type="number" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</li>
 			<li>
-				<label>Assistant to:</label>
+				<label>Assistant to</label>
 				<select name="csr_ids" size="4" multiple="multiple">
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 				</select>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<li> 
-				<label>User Category:</label>
+				<label>User Category</label>
 				<select name="marketing_categories" size="4" multiple="multiple">
 				<? echo (
 					my @users_categories;
@@ -269,7 +269,7 @@
 			</li>
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 			<li>
-				<label>Groups:</label>
+				<label>Groups</label>
 				<? echo (
 					require openprint::UserGroup;
 					my $html = '<ul class="UserGroups">';

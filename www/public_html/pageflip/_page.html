@@ -5,7 +5,7 @@
 		<? echo ( ssi::writeButton($log, $dbh, 'save', 'save.gif', q`f1.command.value='Save';f1.submit();`, '', 'Save' ); ) ?>
 	</p>
 	<p>
-		<label>Resolution:</label>
+		<label>Resolution</label>
 		Source: 
 		<input type="text" name="src_width" id="src_width" value="<? echo ( $$variable{'Page'}->src_width() ) ?>" size="4" />
 		x
@@ -16,7 +16,7 @@
 		<input type="text" name="height" id="height" value="<? echo ( $$variable{'Page'}->height() ) ?>" size="4" onkeyup="update_resolution(this);" />
 	</p>
 	<p>
-		<label>Cropping Box:</label>
+		<label>Cropping Box</label>
 		Top: <input type="text" name="crop_top" id="crop_top" value="<? echo ( 1*$$variable{'Page'}->crop_top() ) ?>" size="4" onkeyup="this.value=this.value.replace(/[^\-\d]/g,'');$('CropTop').style.top=this.value+'px';" />
 		Left: <input type="text" name="crop_left" id="crop_left" value="<? echo ( 1*$$variable{'Page'}->crop_left() ) ?>" size="4" onkeyup="this.value=this.value.replace(/[^\-\d]/g,'');$('CropLeft').style.left=this.value+'px';" />
 		x

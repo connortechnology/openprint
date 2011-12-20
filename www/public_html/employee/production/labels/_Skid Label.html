@@ -54,20 +54,20 @@ Submit<br/>
 <br class="spacer"/>
 <ul>
 	<li class="Customer">
-		<label>Customer:</label>
+		<label>Customer</label>
 		<? echo ( $$variable{'Company'}->name() ) ?>
 	</li>
 	<li class="Docket">
-		<label>Docket:</label>
+		<label>Docket</label>
 			<? echo ( $$variable{'Project'}->docket() ) ?>
 			<? echo ( sprintf('%.1s%.1s', $$variable{'Operator'}->get('firstname','lastname') ); ) ?>
 	</li>
 	<li class="Description">
-		<label>Description:</label>
+		<label>Description</label>
 		<? echo ( substr $$variable{'Project'}->reference(), 0, 50; ) ?>
 	</li>
 	<li class="Press">
-		<label>Press:</label>
+		<label>Press</label>
 		<? echo (
 			my @presses;
 			foreach my $signature_service_index ( $$variable{'Project'}->signatures() ) {

@@ -33,14 +33,14 @@ function validate_data(formName) {
 				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
 			</div>
 			<p>
-				<label>Service Type:</label>
+				<label>Service Type</label>
 				<span id="ServiceTypeDiv">
 					Please wait while services types are loaded.
 					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
 				</span>
 			</p>
 			<p>
-				<label>Pickup Type:</label>
+				<label>Pickup Type</label>
 				<span id="PickupTypeDiv">
 					Please wait while pickup types are loaded.
 					<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
@@ -49,13 +49,13 @@ function validate_data(formName) {
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<p>
-				<label># of items to ship:</label>
+				<label># of items to ship</label>
 				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
 			</p>
 			<!--#include virtual="_shipping_packages.html"-->
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			<p>
-				<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>):</b></label>
+				<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
 				<input type="text" name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
 			</p>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

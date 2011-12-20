@@ -6,7 +6,7 @@
 		<fieldset class="filters"><legend>Search Information</legend>
 			<ul>
 			<li> 
-				<label>Category:</label>
+				<label>Category</label>
 				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value="">All</option>
 					<? echo (
@@ -15,7 +15,7 @@
 				</select>
 			</li>
 			<li> 
-				<label>Product:</label>
+				<label>Product</label>
 				<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
 					<option value="">select</option>
 					<? echo (
@@ -38,7 +38,7 @@
 					); ) ?>
 			</p>
 			<p class="buttons">
-					<b>CSV File:</b>
+					<b>CSV File</b>
 					<input type="file" name="fileImport" />
 		<? echo ( join('',
 					ssi::writeButton( $log, $dbh, 'ImportDefinitions','import.gif',"f1.btnFunction.value='Import Definitions';f1.action='edit.html';f1.submit();",'','Import Definitions'),
@@ -53,15 +53,15 @@
 			<fieldset><legend>Product Information</legend>
 				<ul>
 					<li> 
-						<label>Product ID:</label>
+						<label>Product ID</label>
 						<? echo ( $$variable{'Product'}->id(); ) ?>
 					</li>
 					<li> 
-						<label>Product Name:</label>
+						<label>Product Name</label>
 						<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
 					</li>
 					<li> 
-						<label>Category:</label>
+						<label>Category</label>
 						<select name="category_id">
 							<option value="">Select a category</option>
 							<? echo (
@@ -70,15 +70,15 @@
 						</select>
 					</li>
 					<li> 
-						<label>Description:</label>
+						<label>Description</label>
 						<input type="text" name="description" value="<? hecho ( $$variable{'Product'}->description(); ) ?>" />
 					</li>
 					<li>
-						<label>Sort:</label>
+						<label>Sort</label>
 						<input type="number" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
 					</li>
 					<li>
-						<label>Template:</label>
+						<label>Template</label>
 						<select name="project_id" id="project_id">
 							<option value="">select</option>
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
@@ -88,14 +88,14 @@
 			</fieldset>
 			<fieldset><legend>Tax Information</legend>
 				<p> 
-					<label>Federal Exemption:</label>
+					<label>Federal Exemption</label>
 					<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() eq 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt1Y">Yes</label>
 					<input type="radio" id="taxexempt1N" name="taxexempt1" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt1() ne 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt1N">No</label>
 				</p>
 				<p> 
-					<label>Prov/State Exemption:</label>
+					<label>Prov/State Exemption</label>
 					<input type="radio" id="taxexempt2Y" name="taxexempt2" value="Y" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() eq 'Y' ); ) ?> />
 					<label class="radio" for="taxexempt2Y">Yes</label>
 					<input type="radio" id="taxexempt2N" name="taxexempt2" value="N" <? echo ( ssi::checked( $$variable{'Product'}->taxexempt2() ne 'Y' ); ) ?> />

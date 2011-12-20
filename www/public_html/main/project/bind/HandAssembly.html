@@ -7,10 +7,10 @@
 	} # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 	<fieldset><legend><?ServiceTypeName?></legend>
-		<p><label># of hours:</label>
-			<input type="text" name="txtQuantity" value="<?txtQuantity?>" size="9" onkeyup="calc(this.form.name);" />
+		<p><label># of hours</label>
+			<input type="number" name="txtQuantity" value="<?txtQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
 		<!--#include virtual="/includes/main/proj/_service_price.html"-->
 		

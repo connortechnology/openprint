@@ -32,13 +32,13 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
       <div class="fieldContainer">
    <? if ( $$variable{'txtCompanyName'} ) ?>
    		<p>
-  			<label>Company Name:</label>
+  			<label>Company Name</label>
    			<?txtCompanyName?>
    		</p>
    <? endif ( $$variable{'txtCompanyName'} ) ?>
    <? if ( $$variable{'txtAddress1'} ) ?>
    		<p>
-   			<label>Address:</label>
+   			<label>Address</label>
    			<?txtAddress1?>
    		</p>
    <? endif ( $$variable{'txtAddress1'} ) ?>
@@ -49,7 +49,7 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
    		</p>
    <? endif ( $$variable{'txtAddress2'} ) ?>
    		<p>
-   			<label>Postal Code:</label>
+   			<label>Postal Code</label>
    			<?txtPostalCode?>
    		</p>
       </div>
@@ -60,19 +60,19 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
 	   <div class="fieldContainer">
 <? if ( $$variable{'txtContactName'} ) ?>
    		<p>
-   			<label>Contact Name:</label>
+   			<label>Contact Name</label>
    			<?txtContactName?>
    		</p>
 <? endif ( $$variable{'txtContactName'} ) ?>
 <? if ( $$variable{'txtEmailAddress'} ) ?>
    		<p>
-   			<label>Email Address:</label>
-   			<a href="mailto:<?txtEmailAdress?>"><?txtEmailAddress?></a>
+   			<label>Email Address</label>
+   			<a href="mailto<?txtEmailAdress?>"><?txtEmailAddress?></a>
    		</p>
 <? endif ( $$variable{'txtEmailAddress'} ) ?>
 <? if ( $$variable{'txtPhoneNumber'} ) ?>
    		<p>
-   			<label>Phone Number:</label>
+   			<label>Phone Number</label>
    			<?txtPhoneNumber?>
    		</p>
 <? endif ( $$variable{'txtPhoneNumber'} ) ?>
@@ -86,25 +86,25 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
    <div class="fieldContainer">
 <? if ( $param{'docket'} ) ?>
         <p>
-            <label>Docket #:</label>
+            <label>Docket #</label>
             <? echo ( $param{'docket'} ) ?>
         </p>
 <? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
         <p>
-            <label>Project ID:</label>
+            <label>Project ID</label>
             <? echo ( $$variable{'Project'}->id() ) ?>
         </p>
         <p>
-            <label>Reference:</label>
+            <label>Reference</label>
             <? echo ( $$variable{'Project'}->reference(); ) ?>
         </p>
         <p>
-            <label>Description:</label>
+            <label>Description</label>
             <? echo ( $$variable{'Project'}->summary(); ) ?>
         </p>
         <p>
-            <label>Due Date:</label>
+            <label>Due Date</label>
             <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
         </p>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
@@ -112,22 +112,22 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
 
 <? if ( $param{'project_id'} ) ?>
    	<p>
-   		<label>Project ID:</label>
+   		<label>Project ID</label>
    		<? echo ( $param{'project_id'} ) ?>
    	</p>
    	<p>
-   		<label>Reference:</label>
+   		<label>Reference</label>
    		<? echo ( 
    			$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
    			return $$variable{'Project'}->reference();
    			) ?>
    	</p>
    	<p>
-   		<label>Description:</label>
+   		<label>Description</label>
    		<? echo ( $$variable{'Project'}->summary(); ) ?>
    	</p>
 		<p>
-			<label>Due Date:</label>
+			<label>Due Date</label>
 			<? echo ( 
 				if ( $param{'duedate_year'} ) {
 					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
@@ -140,41 +140,41 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
 <? else ( $param{'project_id'} ) ?>
 	<? if ( $param{'txtQuoteNumber'} ) ?>
 		<p>
-			<label>Quote Number:</label>
+			<label>Quote Number</label>
 			<? echo ( $param{'txtQuoteNumber'} ) ?>
 		</p>
 	<? endif ( $param{'txtQuoteNumber'} ) ?>
 	<? if ( $param{'txtQuotedPrice'} ) ?>
 		<p>
-			<label>Quoted Price:</label>
+			<label>Quoted Price</label>
 			<? echo ( $param{'txtQuotedPrice'} ) ?>
 		</p>
 	<? endif ( $param{'txtQuotedPrice'} ) ?>
    	<p>
-   		<label>Description:</label>
+   		<label>Description</label>
    		<? echo ( $param{'txtJobDescription'} ) ?>
    	</p>
    	<p>
-   		<label>Due Date:</label>
+   		<label>Due Date</label>
    		<? echo ( 
 			return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
 				sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} ) ) );
 			) ?>
    	</p>
    	<p>
-   		<label>Size:</label>
+   		<label>Size</label>
    		<? echo ( $param{'Size'} ) ?>
    	</p>
    	<p>
-   		<label>Quantity:</label>
+   		<label>Quantity</label>
    		<? echo ( $param{'Quantity'} ) ?>
    	</p>
    	<p>
-   		<label>Stock:</label>
+   		<label>Stock</label>
    		<? echo ( $param{'Stock'} ) ?>
    	</p>
    	<p>
-   		<label>Proofs:</label>
+   		<label>Proofs</label>
    		<? echo ( $param{'proof_type'} ) ?>
    	</p>
 <? endif ( $param{'project_id'} ) ?>

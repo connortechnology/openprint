@@ -7,11 +7,11 @@
 		<fieldset>
 			<ul>
 				<li> 
-					<label>Please provide a reference:</label>
+					<label>Please provide a reference</label>
 					<textarea name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
 				</li>
 				<li>
-					<label>Additional comments or instructions:</label>
+					<label>Additional comments or instructions</label>
 					<textarea name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->comments() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
@@ -21,15 +21,15 @@
 			<legend>What quantities would you like to calculate pricing for?</legend>
 			<ul>
 				<li class="quantity1">
-					<label for="quantity1">Quantity 1:</label>
+					<label for="quantity1">Quantity 1</label>
 					<input id="quantity1" name="quantity1" value="<? echo ( $$variable{'Project'}->quantity1(); ) ?>" type="text" size="12" />
 				</li>
 				<li class="quantity2">
-					<label for="quantity2">Quantity 2:</label>
+					<label for="quantity2">Quantity 2</label>
 					<input id="quantity2" name="quantity2" value="<? echo ( $$variable{'Project'}->quantity2(); ) ?>" type="text" size="12" />
 				</li>
 				<li class="quantity3">
-					<label for="quantity3">Quantity 3:</label>
+					<label for="quantity3">Quantity 3</label>
 					<input id="quantity3" name="quantity3" value="<? echo ( $$variable{'Project'}->quantity3(); ) ?>" type="text" size="12" />
 				</li>
 			</ul>
@@ -40,7 +40,7 @@
 		If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
 		<ul>
 			<li>
-				<label>Company:</label>
+				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4" style="width: auto;"/>
 				<select name="ddmCompany">
 					<option value="">Select a Customer</option>

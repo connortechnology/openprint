@@ -6,7 +6,7 @@
 		<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist->find(); ) ?>
 		<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
 		<p>
-			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?>:</label>
+			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?></label>
 			<table class="List" id="Prices">
 				<tr>
 					<th class="Range">Quantity Range</th>
@@ -28,8 +28,8 @@
 			To add, put a + in front.  To subtract, put a - in front.  To set, don't put anything in front.
 			<table>
 				<tr>
-					<td>Add Amount:</td><td>$<input id="amount" type="text" name="amount" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" /></td>
-					<td>Markup:</td><td><input id="markup" type="text" name="markup" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" />%</td>
+					<td>Add Amount</td><td>$<input id="amount" type="text" name="amount" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" /></td>
+					<td>Markup</td><td><input id="markup" type="text" name="markup" onkeyup="this.value=this.value.replace(/[^\.\d\+\-]/,'');$('modemodify').checked=true;" />%</td>
 				</tr>
 			</table>
 		</p>

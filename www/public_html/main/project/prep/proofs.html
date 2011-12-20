@@ -56,12 +56,12 @@
 								<td class="type"><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);"><option value="">select one</option>%7$s</select></td>
 								<td class="Price"><input type="text" name="MRPrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" /></td>
 								<td class="Price">
-									<input type="text" name="ServicePrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" />
+									<input type="number" name="ServicePrice-%1$d-%3$d-%2$d" readonly="readonly" onfocus="this.blur();" />
 								</td>
 								<td class="Units">
 									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
 								</td>
-								<td class="Price"><input type="text" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="Price"><input type="number" name="txtProofUnitPrice-%1$d-%3$d-%2$s" readonly="readonly" onfocus="this.blur();" /></td>
 								<td class="Override"> %8$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
 								</td>
 							</tr>
@@ -89,8 +89,8 @@
 				$html .= sprintf( q`
 					<table>
 						<tr class="totals">
-							<td><b>Total Service Price (%2$s):</b></td>
-							<td class="Price"><input type="text" name="txtPrice%1$d" readonly="readonly" onfocus="this.blur();" /></td>
+							<td><b>Total Service Price (%2$s)</b></td>
+							<td class="Price"><input type="number" name="txtPrice%1$d" readonly="readonly" onfocus="this.blur();" /></td>
 							<td class="Override">&nbsp;</td>
 						</tr>
 						<tr class="breakdown">

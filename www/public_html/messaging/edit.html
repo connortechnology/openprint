@@ -40,14 +40,14 @@
 			<fieldset><legend></legend>
 				<div class="content">
 					<ul>
-						<li><label>To:</label>
+						<li><label>To</label>
 							<div id="To"><!--#include virtual="_to.html"--></div>
 						</li>
-						<li><label>Subject:</label>
+						<li><label>Subject</label>
 							<input type="text" id="subject" name="subject" />
 						</li>
 						<li>
-							<label for="body">Body:</label>
+							<label for="body">Body</label>
 							<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Conversation'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Conversation'}->body() ) ?></textarea>
 						</li>
 					</ul>

@@ -32,17 +32,17 @@ Only logged in customers have a quote history.
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Quote"><div class="History">
 	<form name="f1" method="post" action="history.html">
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<p>
-				<label for="QuoteID">Quote ID:</label>
+				<label for="QuoteID">Quote ID</label>
 				<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
 			</p>
 			<p>
-				<label for="QuotedFor">Quoted For:</label>
+				<label for="QuotedFor">Quoted For</label>
 				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="load_quotes(this.form);" />
 			</p>
 			<p>
-				<label for="ddmStartDay">Quote Date:</label>
+				<label for="ddmStartDay">Quote Date</label>
 				<span class="DateSelector">
 	<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_start', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
 				to&nbsp;

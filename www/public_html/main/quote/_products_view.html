@@ -31,7 +31,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 		$html .= '<tr class="totals">';
-		$html .= '<td colspan="4" style="text-align: right;">Subtotal:</td><td class="newprice">';
+		$html .= '<td colspan="4" style="text-align: right;">Subtotal</td><td class="newprice">';
 		$html .= openprint::Currency::format( $subtotal );
 		$html .= '</td></tr>';
 			return $html;

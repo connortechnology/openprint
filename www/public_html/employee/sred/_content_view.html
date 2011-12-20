@@ -7,7 +7,7 @@
 		my $html;
 		my $C = $$variable{'C'};
 		if ( $C->starting() or $C->ending() or $C->duration() ) {
-			$html .= '<li class="when"><label>When:</label>';
+			$html .= '<li class="when"><label>When</label>';
 			my $format = ($C->all_day_event() or $C->unknown_time() ? $config{'DateFormat'} : $config{'DateTimeFormat'});
 			if ( $C->starting() eq $C->ending() ) {
 				$html .= Date::Format::time2str( $format, Date::Parse::str2time( $C->starting() ) );
@@ -30,18 +30,18 @@
 			$html .= '</li>';
 		} # end if
 		if ( $C->quantity() ) {
-			$html .= sprintf(q`<li><label>Quantity:</label>%s%s</li>`, $C->quantity(), $C->quantity_units() );
+			$html .= sprintf(q`<li><label>Quantity</label>%s%s</li>`, $C->quantity(), $C->quantity_units() );
 		} # end if
 		if ( $C->weight() ) {
-			$html .= sprintf(q`<li><label>Weight:</label>%s%s</li>`, $C->weight(), $C->weight_units() );
+			$html .= sprintf(q`<li><label>Weight</label>%s%s</li>`, $C->weight(), $C->weight_units() );
 		} # end if
 		if ( $C->cost() or $C->total() ) {
-			$html .= sprintf(q`<li><label>Value:</label>%s%s = %s</li>`, openprint::Currency::format($C->cost()), $C->cost_units(), openprint::Currency::format( $C->total() ) );
+			$html .= sprintf(q`<li><label>Value</label>%s%s = %s</li>`, openprint::Currency::format($C->cost()), $C->cost_units(), openprint::Currency::format( $C->total() ) );
 		} 
 		if ( $C->user_id() ) {
-			$html .= sprintf('<li><label>Who:</label>%s</li>', $C->User()->name() ) if $C->user_id();
+			$html .= sprintf('<li><label>Who</label>%s</li>', $C->User()->name() ) if $C->user_id();
 		} # end if
-		$html .= sprintf('<li><label>Docket:</label>%s</li>', $C->docket() ) if $C->docket();
+		$html .= sprintf('<li><label>Docket</label>%s</li>', $C->docket() ) if $C->docket();
 		$html .= '</ul>';
 		$html .= '<p class="buttons">';
 		if ( $session{'user_id'} == $C->created_by() or $session{'user_type'} eq 'A' ) {
@@ -57,8 +57,8 @@
 <? echo (
 		my $html;
 		my $C = $$variable{'C'};
-		$html .= sprintf('<li><label>Description:</label>%2$s</li>', $C->id(), $C->description() );
-		$html .= '<li class="attachments"><label>Attachments:</label><div class="assets" id="assets-'.$$C{id}.'">';
+		$html .= sprintf('<li><label>Description</label>%2$s</li>', $C->id(), $C->description() );
+		$html .= '<li class="attachments"><label>Attachments</label><div class="assets" id="assets-'.$$C{id}.'">';
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/employee/sred/_assets.html' );
 		$html .= '</div></li></ul>';
 		$html .= '<p class="buttons">';

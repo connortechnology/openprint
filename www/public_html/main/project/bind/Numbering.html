@@ -9,10 +9,10 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<p><label>Sets of Numbers:</label>
-				<input type="text" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
+			<p><label>Sets of Numbers</label>
+				<input type="number" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
 			</p>
-			<p><label>Colour:</label>
+			<p><label>Colour</label>
 				<select name="colour" id="colour" onchange="calc(this.form.name);">
 					<? echo (
 						my @options = (

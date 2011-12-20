@@ -3,7 +3,7 @@
 	<input type="hidden" name="expenditure_id" value="<? echo ( $$variable{'Expenditure'}->id() ) ?>" />
 	<fieldset><legend>Editing Expenditure</legend>
 		<div class="leftColumn">
-			<p><label>Paid On:</label>
+			<p><label>Paid On</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'occurred_on', $$variable{'Expenditure'}->occurred_on() ); ) ?></span>
 			</p>
 			<p><label for="amount">Amount</label>

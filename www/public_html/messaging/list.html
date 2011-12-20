@@ -18,10 +18,10 @@
 <div class="Messaging"><div class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>">
 	<form id="f1" name="f1" method="post" action="/messaging/list.html">
 		<fieldset class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>"><legend><? echo ( $session{'/messaging/list.html?folder'} ) ?></legend>
-			<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+			<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 				<ul>
 					<li>
-						<label>When:</label>
+						<label>When</label>
 						<span class="DateSelector">
 		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
 						</span>

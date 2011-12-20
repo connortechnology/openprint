@@ -31,23 +31,23 @@
 			return $html;
 			) ?>
 			<p>
-				<label>Docket:</label>
+				<label>Docket</label>
 				<input type="text" name="Docket" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutDocket', 'clear.gif', "checkoutform.Docket.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Project #:</label>
+				<label>Project #</label>
 				<input type="text" name="Project" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutProject', 'clear.gif', "checkoutform.Project.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Quantity:( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+				<label>Quantity ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
 				<input type="hidden" name="available_quantity" value="<?quantity?>" />
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutQuantity', 'clear.gif', "checkoutform.Quantity.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Reason:</label>
+				<label>Reason</label>
 				<textarea id="reason" name="reason" onkeyup="textarea_resize(this);" cols="" rows="1"></textarea>
 			</p>
 			<hr/>

@@ -4,7 +4,7 @@ Please select an allocation to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<ul>
 		<li>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input type="text" name="docket" size="6" value="<? echo ( $session{'/employee/inventory/packingslips.html?docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_packingslips.html', $('f1').serialize() );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_packingslips.html', \$('f1').serialize() );",'','Go' ); ) ?>
 		</li>
@@ -12,20 +12,20 @@ Please select an allocation to view/edit.<br>
 		<hr/>
 		<ul>
 		<li>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id" id="company_id">
 				<option value="">All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/packingslips.html?company_id'} ); ) ?>
 			</select>
 		</li>
-		<li><label>Type:</label>
+		<li><label>Type</label>
 			<select name="type_id" id="type_id">
 				<option value="">All</option>
 				<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)'), $session{'/employee/inventory/packingslips.html?type_id'} ); ) ?>
 			</select>
 		<li>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/packingslips.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>

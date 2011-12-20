@@ -4,7 +4,7 @@
 	<tr><td colspan="10">CORRECTIVE ACTION</td></tr>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->action() ) ?></td></tr>
 	<tr>
-		<td colspan="1">Recipient:</td>
+		<td colspan="1">Recipient</td>
 		<td colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part3_user_id())->name() ) ?></td>
 		<td colspan="1">Date</td>
 		<td colspan="4"><? hecho ( $$variable{'CAR'}->part3_signed_on() ) ?></td>
@@ -17,6 +17,6 @@
 <? endif ( ($$variable{'CAR'}->issued_to_id() == $openprint::session{'user_id'} ) or ($$variable{'CAR'}->part3_user_id() == $openprint::session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? if ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <script type="text/javascript">
-	new Ajax.Updater( 'Part4', '/employee/iso/_car_edit_part4.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );
+	new Ajax.Updater( 'Part4', '/employee/iso/_car_edit_part4.html', { method: 'get', parameters: {car_id<? echo ( $$variable{'CAR'}->id() ) ?>} } );
 </script>
 <? endif ( ( ! $$variable{'CAR'}->part4_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>

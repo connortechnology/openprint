@@ -9,15 +9,15 @@
 		<div class="leftColumn">
 		<ul>
 		<li>
-			<label>Name:</label>
+			<label>Name</label>
 			<input type="text" id="name" name="name" value="<? hecho ( $$variable{'ProjectTypeCategory'}->name(); ) ?>"  />
 		</li>
 		<li>
-			<label>Description:</label>
+			<label>Description</label>
 			<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'ProjectTypeCategory'}->description(); ) ?></textarea>
 		</li>
 		<li>
-			<label>Sort:</label>
+			<label>Sort</label>
 			<input type="number" id="sort" name="sort" value="<? hecho ( $$variable{'ProjectTypeCategory'}->sort(); ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 		</li>
 		</ul>

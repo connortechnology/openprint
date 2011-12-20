@@ -5,12 +5,12 @@
 <form id="f1" name="f1" method="post" action="projects.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
-			<label>Project ID:</label>
+			<label>Project ID</label>
 			<input type="number" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" class="filter" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();" >
 				<option value=""> Select a Customer</option>
@@ -18,14 +18,14 @@
 			</select>
 		</p>
 		<p>
-			<label>Estimator:</label>
+			<label>Estimator</label>
 			<select name="ddmEstimator" size="1"> 
 				<option value="">All Estimators</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEstimator'} ); ) ?>
 			</select>
 		</p>
 		<p> 
-			<label>Status:</label>
+			<label>Status</label>
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 <? echo ( 
@@ -34,7 +34,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Type:</label>
+			<label>Type</label>
 			<select name="type_id" size="1">
 				<option value="">All</option>
 <? echo ( 
@@ -43,7 +43,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Sales Reps:</label>
+			<label>Sales Reps</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $$variable{'ddmEmployees'} ); ) ?>
@@ -53,7 +53,7 @@
 ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 ) ?>
 		<p> 
-			<label>Created Date:</label>
+			<label>Created Date</label>
 			<span class="DateSelector">
 				<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
 				<select name="ddmStartDay"><?startdays?></select>

@@ -122,7 +122,7 @@
 				);
 			$report_total += $total;
 		} # end while
-		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') </td><td style="text-align: right; font-weight: bold;">';
 		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
 		return $html;

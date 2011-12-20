@@ -2,7 +2,7 @@
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
 			<li>
-				<label>Date:</label>
+				<label>Date</label>
 				<span class="DateSelector">
 				<? echo ( ssi::date_select_session( '/administrator/managerial/upload_log.html', 'uploaded_on_start',  { 'onchange'=> '','with_today'=>1 } ); ) ?>
 				</span>
@@ -12,7 +12,7 @@
 				</span>
 			</li>
 			<li>
-				<label>Company:</label>
+				<label>Company</label>
 				<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
 				<select name="company_id" id="company_id" onchange="searchLog.submit();" >
 					<option value="">All</option>
@@ -21,7 +21,7 @@
 					) ?>
 				</select>
 			</li>
-			<li><label>Type:</label>
+			<li><label>Type</label>
 				<? echo ( ssi::radio( 'type', [ 'FTP','FTP', 'Web','Web', '', 'All' ], $session{'/administrator/managerial/upload_log.html?type'} ); ) ?>
 			</li>
 		</ul>
@@ -86,7 +86,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $Upload->size();
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5">Totals:</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
+			$html .= '<tr class="totals"><td colspan="5">Totals</td><td class="Size">'.misc::format_bytes($total).'</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>

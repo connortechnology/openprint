@@ -24,16 +24,16 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Created On:</label>
+						<li><label>Created On</label>
 				<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Asset'}->created_on() ) ) ) ?>
 						</li>
-						<li><label>Name:</label>
+						<li><label>Name</label>
 						<? echo ( $$variable{'Asset'}->name() ) ?>
 						</li>
-						<li><label>Description:</label>
+						<li><label>Description</label>
 						<? echo ( $$variable{'Asset'}->description() ) ?>
 						</li>
-						<li><label>Filename:</label>
+						<li><label>Filename</label>
 						<? echo ( 
 								my $html = $$variable{'Asset'}->filename() ;
 								if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/i ) {
@@ -42,13 +42,13 @@
 								return $html;
 						) ?>
 						</li>
-						<li><label>Attribution:</label>
+						<li><label>Attribution</label>
 						<? echo ( $$variable{'Asset'}->attribution() ) ?>
 						</li>
-						<li><label>License:</label>
+						<li><label>License</label>
 						<? echo ( $$variable{'Asset'}->license() ) ?>
 						</li>
-						<li><label>Used in:</label>
+						<li><label>Used in</label>
 						<? echo ( join(',', map { sprintf('<a href="/employee/claim/view.html?claim_id=%1$d">Claim %1$d</a>', $_->claim_id() ); } openprint::Claim_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 						<? echo ( join(',', map { sprintf('<a href="/employee/sred/view.html?content_id=%1$d">SRED %1$d</a>', $_->content_id() ); } openprint::SRED_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>
 						<? echo ( join(',', map { sprintf('<a href="/article/view.html?article_id=%1$d">Article %1$d</a>', $_->article_id() ); } openprint::Article_Asset->find('asset_id'=>$$variable{'Asset'}->id()) ); ) ?>

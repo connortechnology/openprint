@@ -3,12 +3,12 @@
 	function add_timetrack( timetrack_id ) {
 		new Ajax.Updater( 'Paid', '_paid.html', { 
 				parameters: { 
-					paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?>,
+					paycheque_id<? echo ( $$variable{'Paycheque'}->id() ) ?>,
 					timetrack_id: timetrack_id 
 				},
 				onSuccess: function(transport) {
 					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-						parameters: { paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?> }
+						parameters: { paycheque_id<? echo ( $$variable{'Paycheque'}->id() ) ?> }
 						} );
 				},
 				onFailure: function(transport) {
@@ -19,12 +19,12 @@
 	function del_timetrack( timetrack_id ) {
 		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
 				parameters: {
-					paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?>,
+					paycheque_id<? echo ( $$variable{'Paycheque'}->id() ) ?>,
 					timetrack_id: timetrack_id
 				},
 				onSuccess: function(transport) {
 					new Ajax.Updater( 'Paid', '_paid.html', {
-						parameters: { paycheque_id:<? echo ( $$variable{'Paycheque'}->id() ) ?> }
+						parameters: { paycheque_id<? echo ( $$variable{'Paycheque'}->id() ) ?> }
 						} );
 				},
 				onFailure: function(transport) {
@@ -41,19 +41,19 @@
 	<input type="hidden" name="paycheque_id" value="<? echo ( $$variable{'Paycheque'}->id() ) ?>" />
 	<fieldset><legend>Editing Paycheque <? echo ( $$variable{'Paycheque'}->id() ) ?></legend>
 		<div class="leftColumn">
-			<p><label for="employer_id">Employer:</label>
+			<p><label for="employer_id">Employer</label>
 				<select id="employer_id" name="employer_id">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Paycheque'}->employer_id() ? $$variable{'Paycheque'}->employer_id() : $session{'company_id'} ); ) ?>
 				</select>
 			</p>
-			<p><label for="employee_id">Employee:</label>
+			<p><label for="employee_id">Employee</label>
 				<select id="employee_id" name="employee_id">
 					<option value=""> select </option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'company_id'=>$session{company_id} ) ], ( $$variable{'Paycheque'}->employee_id() ? $$variable{'Paycheque'}->employee_id() : $session{'user_id'} ) ); ) ?>
 				</select>
 			</p>
-			<p><label>Paid On:</label>
+			<p><label>Paid On</label>
 			<span class="DateSelectorT"><? echo ( ssi::date_select( 'paid_on', $$variable{'Paycheque'}->paid_on(), { 'with_today'=>1 } ); ) ?></span>
 			</p>
 			<p><label for="total">Total</label>

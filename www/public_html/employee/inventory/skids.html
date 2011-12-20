@@ -13,18 +13,18 @@ Please select a Skid to view/edit.<br>
 <form id="f2" name="f2" method="post" action="skids.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<p>
-			<label>Verification:</label>
+			<label>Verification</label>
 			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<hr/>
 		<p>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelectorT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start', { 'with_today'=>1 } ); ) ?>
 			</span>
@@ -34,7 +34,7 @@ Please select a Skid to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Last Updated:</label>
+			<label>Last Updated</label>
 			<span class="DateSelectorT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start', { 'with_today'=>1 } ); ) ?>
 			</span>
@@ -44,7 +44,7 @@ Please select a Skid to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Last Seen (RFID):</label>
+			<label>Last Seen (RFID)</label>
 			<span class="DateSelectorT">
 <? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start', { 'with_today'=>1 } ); ) ?>
 			</span>
@@ -54,7 +54,7 @@ Please select a Skid to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Purpose:</label>
+			<label>Purpose</label>
 			<select name="purpose_id">
 				<option value=""> all </option>
 				<? echo (
@@ -63,7 +63,7 @@ Please select a Skid to view/edit.<br>
 			</select>
 		</p>
 		<p>
-			<label>FSC Code:</label>
+			<label>FSC Code</label>
 			<input type="text" name="fsc_code" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
 		</p>
 		<p>
@@ -109,7 +109,7 @@ Please select a Skid to view/edit.<br>
             <input type="checkbox" id="withoutrfid" name="withoutrfid" <? echo ( $session{'/employee/inventory/skids.html?withoutrfid'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="notempty">Without RFID</label>
 		</p>
-		<p><label>Type:</label>
+		<p><label>Type</label>
             <input type="radio" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Sheet'); ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
             <input type="radio" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Roll' ); ) ?> />
@@ -117,7 +117,7 @@ Please select a Skid to view/edit.<br>
             <input type="radio" id="TypeBoth" name="Type" value="All" <? echo ( ssi::checked ( $session{'/employee/inventory/skids.html?Type'} eq 'All' or !$session{'/employee/inventory/skids.html?Type'} ); ) ?> />
             <label class="radio" for="TypeBoth">Both</label>
         </p>
-		<p><label>Location:</label>
+		<p><label>Location</label>
 			<select name="location_id">
 				<? echo ( 
 					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
@@ -125,7 +125,7 @@ Please select a Skid to view/edit.<br>
 				) ?>
 			</select>
 		</p>
-		<p><label>Condition:</label>
+		<p><label>Condition</label>
 			<select name="condition_id">
 				<? echo ( 
 					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') );

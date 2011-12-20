@@ -20,7 +20,7 @@
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
 				<p>
-					<label>Die Cutting Needed:</label>
+					<label>Die Cutting Needed</label>
 					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>Y" value="Y" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').show();calc(this.form.name);" />
 					<label class="radio" for="Needed-<?SignatureIndex?>Y">Yes</label>
 					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>N" value="N" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'N' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').hide();calc(this.form.name);" />
@@ -34,7 +34,7 @@
 				</fieldset>
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
 <p id="DiePrice">
-	<label><b>Die Price (<?CurrencySymbol?>):</b></label>
+	<label><b>Die Price (<?CurrencySymbol?>)</b></label>
 <? echo (
 	my $html;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -51,7 +51,7 @@
 ) ?>
 </p>
 <p id="StrippingPrice">
-	<label><b>Stripping Price (<?CurrencySymbol?>):</b>
+	<label><b>Stripping Price (<?CurrencySymbol?>)</b>
 	</label>
 <? echo (
 	my $html;

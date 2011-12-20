@@ -26,8 +26,8 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Name:</label><? echo ( $$variable{'Album'}->name() ) ?></li>
-						<li><label>By:</label><? echo ( $$variable{'Album'}->user_id() ? sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{'Album'}->user_id(), $$variable{'Album'}->User()->name() ) : 'no one' ) ?></li>
+						<li><label>Name</label><? echo ( $$variable{'Album'}->name() ) ?></li>
+						<li><label>By</label><? echo ( $$variable{'Album'}->user_id() ? sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{'Album'}->user_id(), $$variable{'Album'}->User()->name() ) : 'no one' ) ?></li>
 					</ul>
 				</div>
 			</fieldset>

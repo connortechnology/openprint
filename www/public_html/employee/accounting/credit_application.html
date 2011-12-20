@@ -34,8 +34,8 @@
                         <td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
                     </tr>
                     <tr>
-                        <td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-                        <td>Fax:<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+                        <td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+                        <td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
                     </tr>
                 </table>
             </div><!--Logo-->
@@ -59,11 +59,11 @@
 								<input type="radio" name="verdict" id="verdictDeclined" value="Declined" onclick="decline(f1);" <?verdictDeclined?> />
 								<label class="radio" for="verdictDeclined">Declined</label>
 							</li>
-							<li><label>Terms:</label>
+							<li><label>Terms</label>
 							<input type="text" id="txtTerms" name="txtTerms" value="<?GrantedTerms?>"/> Days </li>
-							<li><label>Credit Limit:</label>
+							<li><label>Credit Limit</label>
 							<input type="text" id="CreditLimit" name="CreditLimit" value="<?GrantedCreditLimit?>" /></li>
-							<li><label>Required Downpayment Amount:</label>
+							<li><label>Required Downpayment Amount</label>
 								<input type="text" id="txtDownpayment" name="txtDownpayment" value="<?GrantedDownpayment?>"/> %
 							</li>
 						</ul>
@@ -73,27 +73,27 @@
 					</fieldset>
 				</div><!--Granted-->
 				<div class="Requested">
-					<fieldset><legend>Credit Options Requested:</legend>
+					<fieldset><legend>Credit Options Requested</legend>
 						<ul>
-							<li><label>First Order Value:</label> <?FirstOrderValue?></li>
-							<li><label>Annual Purchases:</label> <?AnnualPurchases?></li>
-							<li><label>Accounts Payable Contact:</label> <?AccountsPayableContact?></li>
-							<li><label>Account Limit:</label> <input type="hidden" name="AccountLimitDesired" value="<?AccountLimitDesired?>"/><?AccountLimitDesired?></li>
-							<li><label>Terms:</label>
+							<li><label>First Order Value</label> <?FirstOrderValue?></li>
+							<li><label>Annual Purchases</label> <?AnnualPurchases?></li>
+							<li><label>Accounts Payable Contact</label> <?AccountsPayableContact?></li>
+							<li><label>Account Limit</label> <input type="hidden" name="AccountLimitDesired" value="<?AccountLimitDesired?>"/><?AccountLimitDesired?></li>
+							<li><label>Terms</label>
 							<input type="hidden" name="AccountTermsDesired" value="<?AccountTermsDesired?>"/><?AccountTermsDesired?></li>
-							<li><label>Financial Statement Available?:</label>
+							<li><label>Financial Statement Available?</label>
 							<? echo ( $variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No' ) ?></li>
-							<li><label>Signed By:</label> <?Signature?></li>
-							<li><label>Submitted On:</label> <?SubmissionDate?></li>
+							<li><label>Signed By</label> <?Signature?></li>
+							<li><label>Submitted On</label> <?SubmissionDate?></li>
 						</ul>
 					</fieldset>
 				</div>
 				<div class="Current">
-					<fieldset><legend>Current Credit Information:</legend>
+					<fieldset><legend>Current Credit Information</legend>
 						<ul> 
-							<li><label>Terms:</label><? echo ( $$variable{'txtTerms'} ne '' ? $$variable{'txtTerms'}.'Days' : 'none' ) ?></li>
-							<li><label>Credit Limit:</label><? echo ( 1*$$variable{'CreditLimit'} ) ?></li>
-							<li><label>Required Downpayment Amount:</label><input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>"/><? echo ( 1*$$variable{'txtDownpayment'} ) ?>%</li>
+							<li><label>Terms</label><? echo ( $$variable{'txtTerms'} ne '' ? $$variable{'txtTerms'}.'Days' : 'none' ) ?></li>
+							<li><label>Credit Limit</label><? echo ( 1*$$variable{'CreditLimit'} ) ?></li>
+							<li><label>Required Downpayment Amount</label><input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>"/><? echo ( 1*$$variable{'txtDownpayment'} ) ?>%</li>
 						</ul>
 					</fieldset>
 				</div>
@@ -106,30 +106,30 @@
 			<!--#include virtual="/email_content/_business_information.html"-->
 		</div>
 		<div class="TradeReferences">
-			<fieldset><legend>Trade References:</legend>
+			<fieldset><legend>Trade References</legend>
 				<? eval ( @{$$variable{'indices'}} = ( 1 .. 3 ); ) ?>
 				<? while ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
 				<? eval ( $$variable{'Company'}->load_tradereferences( $$variable{'index'}, $variable ); ) ?>
 				<div class="TradeReference">
 					<ul>
 						<li class="CompanyName">
-							<label>Company Name:</label>
+							<label>Company Name</label>
 							<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?></span>
 						</li>
 						<li class="Contact"> 
-							<label>Contact:</label>
+							<label>Contact</label>
 							<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?></span>
 						</li>
 						<li class="Phone"> 
-							<label>Phone:</label>
+							<label>Phone</label>
 							<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?></span>
 						</li>
 						<li class="Fax">
-							<label>Fax:</label>
+							<label>Fax</label>
 							<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?></span>
 						</li>
 						<li class="Email">
-							<label>E-mail Address:</label>
+							<label>E-mail Address</label>
 							<span class="input"><? hecho ( $$variable{'tradereference'.$$variable{index}.'_email'} ) ?></span>
 						</li>
 					</ul>
@@ -146,16 +146,16 @@
 		<div class="Signatures">
 			<fieldset><legend>Signatures</legend>
 			<ul class="Signature">
-				<li class="SignedBy"><label>Signed By:</label><span class="input"></span></li>
-				<li class="Title"><label>Title:</label><span class="input"></span></li>
-				<li class="Name"><label>Name In Print:</label><span class="input"></span></li>
-				<li class="Date"><label>Date:</label><span class="input"></span></li>
+				<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+				<li class="Title"><label>Title</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+				<li class="Date"><label>Date</label><span class="input"></span></li>
 			</ul>
 			<ul class="Signature">
-				<li class="SignedBy"><label>Signed By:</label><span class="input"></span></li>
-				<li class="Title"><label>Title:</label><span class="input"></span></li>
-				<li class="Name"><label>Name In Print:</label><span class="input"></span></li>
-				<li class="Date"><label>Date:</label><span class="input"></span></li>
+				<li class="SignedBy"><label>Signed By</label><span class="input"></span></li>
+				<li class="Title"><label>Title</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print</label><span class="input"></span></li>
+				<li class="Date"><label>Date</label><span class="input"></span></li>
 			</ul>
 			Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
 			</fieldset>

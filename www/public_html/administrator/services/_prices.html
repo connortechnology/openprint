@@ -10,7 +10,7 @@
 		foreach my $Equipment ( map{new openprint::Equipment($_); } sets::union( map{ $_->equipment_id() } @Prices ) ) {
 			$html .= '<fieldset class="Equipment">';
 			if ( @Equipment ) {
-				$html .= '<p><label>Equipment:</label>';
+				$html .= '<p><label>Equipment</label>';
 				$html .= qq`<select name="ddmEquipment-$$Pricelist{id}-$$Equipment{id}"><option value="">All Equipment</option>`;
 				$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $Equipment->id() );
 				$html .= '</select></p>';

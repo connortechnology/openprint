@@ -25,11 +25,11 @@
 	<div class="content">
 		<ul> 
 			<li class="required">
-				<label>Company Name:</label>
+				<label>Company Name</label>
 				<input type="text" id="companyname" name="companyname" value="<?companyname?>"/>
 			</li>
 			<li> 
-				<label>Salutation:</label>
+				<label>Salutation</label>
 				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mr.' ); ) ?> />
 				<label class="radio" for="salutationMr.">Mr.</label>
 				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mrs.' ); ) ?> />
@@ -41,7 +41,7 @@
 			</li>
 		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
-				<label>Name:</label>
+				<label>Name</label>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 					<? echo ( 
@@ -55,21 +55,21 @@
 			</li>
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
-				<label >First Name:</label>
+				<label >First Name</label>
 				<input type="text" id="firstname" name="firstname" value="<?firstname?>"/>
 			</li>
 			<li> 
-				<label>Last Name:</label>
+				<label>Last Name</label>
 				<input type="text" id="lastname" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? endif ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li class="required"> 
-				<label>Address:</label>
+				<label>Address</label>
 				<input type="text" id="address1" name="address1" value="<?address1?>" /><br/>
 				<input type="text" id="address2" name="address2" value="<?address2?>" />
 			</li>
 			<li class="required">
-				<label>Country:</label>
+				<label>Country</label>
 				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
 					<? echo ( 
@@ -86,7 +86,7 @@ if ( $$variable{'country'} eq 'US' ) {
 } else {
 	return 'State/Province';
 } # end if
-) ?>:</span></label>
+) ?></span></label>
 				<select name="state">
 					<option value=""> Select </option>
 					<? echo ( 
@@ -96,7 +96,7 @@ if ( $$variable{'country'} eq 'US' ) {
 				</select>
 			</li>
 			<li class="required"> 
-				<label>City:</label>
+				<label>City</label>
 				<input type="text" id="city" name="city" value="<?city?>" />
 			</li>
 			<li class="required"> 
@@ -112,15 +112,15 @@ if ( $$variable{'country'} eq 'US' ) {
 				<input type="text" id="postalcode" name="postalcode" value="<?postalcode?>" />
 			</li>
 			<li>
-				<label>Phone:</label>
+				<label>Phone</label>
 				<input type="text" id="phone" name="phone" value="<?phone?>" />
 			</li>
 			<li>
-				<label>Fax:</label>
+				<label>Fax</label>
 				<input type="text" id="fax" name="fax" value="<?fax?>" />
 			</li>
 			<li class="required">
-				<label>E-mail:</label>
+				<label>E-mail</label>
 				<input type="text" id="email" name="email" value="<?email?>" />
 			</li>
 			<li class="help">We use your email to send your order confirmation and updates.</li>

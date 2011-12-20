@@ -27,13 +27,13 @@ function validate_data(formName) {
 	<form name="f1" method="post" action="/employee/project/view.html">
 		<fieldset><legend>Customer Pickup</legend>
 			<p>
-				<label># of items to pickup:</label>
+				<label># of items to pickup</label>
 				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
 			</p>
 			<!--#include virtual="_shipping_packages.html"-->
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			<p>
-				<label><b>Price (<?e cho ( $$variable{'Project'}->Currency->symbol() ) ?>):</b></label>
+				<label><b>Price (<?e cho ( $$variable{'Project'}->Currency->symbol() ) ?>)</b></label>
 				<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" />
 			</p>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

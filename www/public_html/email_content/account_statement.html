@@ -73,7 +73,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	</tr>
 	<? endwhile ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
 	<tr class="totals">
-		<td colspan="3">Totals:</td>
+		<td colspan="3">Totals</td>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
 			<? echo (
 				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );

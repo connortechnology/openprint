@@ -25,7 +25,7 @@
 				<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="5">
 				<table>`, $rowclass, $Project->id(), 
-				( $Project->references() ? ssi::htmlize( $Project->references() ) . ':<br/>' : '' ),
+				( $Project->references() ? ssi::htmlize( $Project->references() ) . '<br/>' : '' ),
 				$Project->summary(),
 				);
 
@@ -63,7 +63,7 @@
 			$html .= "</table>\n</td>\n</tr>\n";
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach QP
-		$html .= sprintf('<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+		$html .= sprintf('<tr class="totals"><td colspan="4">Subtotal</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
 				openprint::Currency::format( $subtotal ),
 				openprint::Currency::format( $newsubtotal ),
 				);
@@ -91,7 +91,7 @@
 				<td class="projects"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="3">
 					<table>`, $rowclass, $Project->id(),
-					( $Project->reference() ? $Project->reference() . ':<br/>' : '' ),
+					( $Project->reference() ? $Project->reference() . '<br/>' : '' ),
 					$Project->summary(),
 				);
 			my $services = $Project->services();
@@ -122,7 +122,7 @@
 				$subtotal += $QP->price($qty_index);
 			} # end foreach qty_index
 			$html .= "</table>\n</td>\n</tr>\n";
-			$html .= sprintf('<tr class="totals"><td colspan="3">Subtotal:</td><td class="price">%1$s</td></tr>',
+			$html .= sprintf('<tr class="totals"><td colspan="3">Subtotal</td><td class="price">%1$s</td></tr>',
 				openprint::Currency::format( $subtotal ),
 );
 			$rowclass = $rowclass ? '' : ' class="colRow"';

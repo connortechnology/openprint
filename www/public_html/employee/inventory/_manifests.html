@@ -143,7 +143,7 @@
 				} # end foreach
 
 				if ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) {
-					$html .= '<span class="warning"><br/>Actual skid contents:<br/>';
+					$html .= '<span class="warning"><br/>Actual skid contents<br/>';
 					foreach my $paper_id ( keys %real_weight ) {
 						my $Paper = new openprint::Paper( $paper_id );
 						$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $real_weight{$paper_id}, $real_skids{$paper_id}  );
@@ -160,7 +160,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Manifest
 			if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-				$html .= '<tr class="totals"><td colspan="7">Total:</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
+				$html .= '<tr class="totals"><td colspan="7">Total</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
 			} # end if
 			
 			return $html;

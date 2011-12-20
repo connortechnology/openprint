@@ -5,21 +5,21 @@
 <? if ( $session{'user_id'} ) ?>
 <form name="f1" action="history.html" method="post">
 	<div class="Order"><div class="History">
-		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID:</legend>
+		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID</legend>
 			<p>
-				<label for="OrderID">Order ID:</label>
+				<label for="OrderID">Order ID</label>
 				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
 			</p>
 			<p>
-				<label>Docket:</label>
+				<label>Docket</label>
 				<input type="text" size="10" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
-		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria:</legend>
+		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
 			<p>
-				<label>Ordered by:</label>
+				<label>Ordered by</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
 					<option value="">Ordered By</option>
 					<? echo ( 
@@ -28,7 +28,7 @@
 				</select>
 			</p>
 			<p> 
-				<label>Created:</label>
+				<label>Created</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				to

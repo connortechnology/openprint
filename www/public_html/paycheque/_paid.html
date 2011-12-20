@@ -24,7 +24,7 @@
 			$html .= sprintf('<td>%s</td>', ssi::button( 'del'.$Timetrack->id(), { 'onclick'=>'del_timetrack('.$Timetrack->id().');', 'text'=>'-' } ) );
 			$html .= '</tr>';
 		} # end foreach Timetrack
-		$html .= '<tr class="totals"><td colspan="4">Total:</td><td>'.sprintf('%.2f', $total_wage).'</td><td>&nbsp;</td></tr>';
+		$html .= '<tr class="totals"><td colspan="4">Total</td><td>'.sprintf('%.2f', $total_wage).'</td><td>&nbsp;</td></tr>';
 		return $html;
 	) ?>
 	</table>

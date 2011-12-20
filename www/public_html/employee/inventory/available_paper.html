@@ -51,7 +51,7 @@ Please select a Paper to view/edit.<br>
 		<div class="leftColumn">
 			<ul>
 				<li>
-					<label>Owner:</label>
+					<label>Owner</label>
 					<select id="owner_id" name="owner_id" size="1" onchange="filter_onChange(this,'');">
 					<option value=""> All </option>
 					<? echo ( 
@@ -115,14 +115,14 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 		</div>
 		<div class="rightColumn">
 			<ul>
-				<li><label>Type:</label>
+				<li><label>Type</label>
 					<input type="checkbox" id="typeSheet" name="type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeSheet">Sheet</label>
 					<input type="checkbox" id="typeRoll" name="type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ) ); ) ?> onclick="calc('f1');"/>
 					<label class="radio" for="typeRoll">Roll</label>
 				</li>
 				<li>
-					<label>Size:</label>
+					<label>Size</label>
 					<select name="width" size="1" onchange="calc(this.form.name);" >
 						<option value="">All</option>
 					<? echo ( 
@@ -152,11 +152,11 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 					<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
 				</li>
 				<li>
-					<label>FSC Code:</label>
+					<label>FSC Code</label>
 					<input type="text" name="fsc_code" onkeyup="calc(this.form.name);"/>
 				</li>
 				<li>
-					<label>Location:</label>
+					<label>Location</label>
 					<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 						<? echo ( 
 							my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
@@ -174,7 +174,7 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 					</select>
 				</li>
 				<li>
-					<label>Last seen:</label>
+					<label>Last seen</label>
 					<select name="last_seen" onchange="calc('f1');">
 						<? echo (
 							my @options = (
@@ -187,7 +187,7 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 					</select>
 				</li>
 				<li>
-					<label>Show unmatched stocks:</label>
+					<label>Show unmatched stocks</label>
 					<input type="radio" name="unmatched" id="unmatchedY" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?unmatched'} eq 'Y' ); ) ?> />
 					<label class="radio" for="unmatchedY">Yes</label>
 					<input type="radio" name="unmatched" id="unmatchedN" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?unmatched'} ne 'Y' ); ) ?> />

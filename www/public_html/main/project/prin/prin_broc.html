@@ -97,8 +97,8 @@
 <? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<p id="NotepadPages">
-			<label># of pages per pad:</label>
-			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
+			<label># of pages per pad</label>
+			<input type="number" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
 		<!--#include virtual="/includes/main/proj/dimensions.html" -->
 <? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>

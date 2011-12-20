@@ -13,7 +13,7 @@ Please select an RFID Scanner to view/edit.<br/>
 <form id="f2" name="f2" method="post" action="rfid_scanners.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
@@ -23,7 +23,7 @@ Please select an RFID Scanner to view/edit.<br/>
 			</span>
 		</p>
 		<p>
-			<label>Last Updated:</label>
+			<label>Last Updated</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/inventory/rfidscanners.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>

@@ -55,7 +55,7 @@
 
 						$html .= '</fieldset>';	
 					} else {
-						$html .= '<label>Keywords:</label>' . $Photo->keywords() . '<br/>';
+						$html .= '<label>Keywords</label>' . $Photo->keywords() . '<br/>';
 					} # end if
 				} else {
 					$log->error("Not a photo at view_photo : " . $Photo->url() );

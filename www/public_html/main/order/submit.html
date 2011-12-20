@@ -15,11 +15,11 @@
 		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 		<div id="AdminOptions"><ul>
 			<li>
-				<label>Representative:</label>
+				<label>Representative</label>
 				<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
 			</li>
 			<li>
-				<label>Comments:</label>
+				<label>Comments</label>
 				<textarea name="AdministratorComments" cols="30" rows="<? echo ( ssi::count_lines( $$variable{'AdministratorComments'} ); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 			</li>
 		</ul></div>

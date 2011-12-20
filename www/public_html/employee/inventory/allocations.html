@@ -4,13 +4,13 @@ Please select an allocation to view/edit.<br>
 <form id="f1" name="f1" method="post" action="skid_details.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/allocations.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_allocations.html', $('f1').serialize() );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );",'','Go' ); ) ?>
 		</p>
 		<hr/>
 		<p>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'created_on_start', $session{'/employee/inventory/allocations.html?created_on_start_year'} ? [@session{'/employee/inventory/allocations.html?created_on_start_year','/employee/inventory/allocations.html?created_on_start_month','/employee/inventory/allocations.html?created_on_start_day'}] : ' '); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'created_on_start_today', 't.gif', 'set_today( f1.created_on_start_year, f1.created_on_start_month, f1.created_on_start_day );', '', 'T' ); ) ?>
@@ -22,7 +22,7 @@ Please select an allocation to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Stock Age:</label>
+			<label>Stock Age</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'stock_age_start', $session{'/employee/inventory/allocations.html?stock_age_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_start_year','/employee/inventory/allocations.html?stock_age_start_month','/employee/inventory/allocations.html?stock_age_start_day'} ) : ' ' ); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'stock_age_start_today', 't.gif', 'set_today( f1.stock_age_start_year, f1.stock_age_start_month, f1.stock_age_start_day );', '', 'T' ); ) ?>
@@ -33,7 +33,7 @@ Please select an allocation to view/edit.<br>
 <? echo ( ssi::writeButton( $log, $dbh, 'stock_age_end_today', 't.gif', 'set_today( f1.stock_age_end_year, f1.stock_age_end_month, f1.stock_age_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
-		<p><label>Type:</label>
+		<p><label>Type</label>
             <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
             <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />

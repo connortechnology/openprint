@@ -49,7 +49,7 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td><b>Totals:</b></td>
+			<td><b>Totals</b></td>
 			<td><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
 			<td colspan="2">&nbsp;</td>
 			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
@@ -61,7 +61,7 @@
 			<td>&nbsp;</td>
 		</tr>
 		<tr class="totals unprintable">
-			<td colspan="2">Enter new inventory:</td>
+			<td colspan="2">Enter new inventory</td>
 			<td colspan="2">
 				<select id="Location" name="Location">
 					<? echo (

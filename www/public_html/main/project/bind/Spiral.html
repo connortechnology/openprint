@@ -12,13 +12,13 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<!--#include virtual="/includes/main/proj/finished_calliper.html"-->
 		<p>
-			<label>Spine Length:</label>
-				<input type="text" name="txtFinalHeight" size="9" onkeyup="calc('f1');" />
+			<label>Spine Length</label>
+			<input type="number" name="txtFinalHeight" onkeyup="calc('f1');" />
 <? echo ( ssi::write_override( 'chkOverrideFinalHeight', $$variable{'chkOverrideFinalHeight'}, '', "if(!this.checked)calc('f1');" ); ) ?>
 		</p>
 	   <p>
-			<label>Material used<br/>(in inches):</label>
-			<input type="text" name="txtMaterialLength" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/>
+			<label>Material used<br/>(in inches)</label>
+			<input type="number" name="txtMaterialLength" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/>
 <? echo ( ssi::write_override( 'chkOverrideMaterialLength', $$variable{'chkOverrideMaterialLength'}, '', "if(!this.checked)calc('f1');" ); ) ?>
 		</p>
 

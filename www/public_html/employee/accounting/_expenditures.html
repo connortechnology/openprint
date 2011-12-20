@@ -60,7 +60,7 @@
 		</tr>
 		<? endwhile ( $$variable{'Expenditure'} = shift @{$$variable{'Expenditures'}}; ) ?>
 		<tr class="totals">
-			<td colspan="3">Totals:</td>
+			<td colspan="3">Totals</td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
 			<td>&nbsp;</td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	

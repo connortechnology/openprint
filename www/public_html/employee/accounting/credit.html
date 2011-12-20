@@ -1,8 +1,8 @@
 <div class="error"><?error?></div>
 <form name="f1" method="post" action="credit.html">
-	<fieldset class="filters"><legend>Select Customer:</legend>
+	<fieldset class="filters"><legend>Select Customer</legend>
 		<p>
-			<label>Account #:</label>
+			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" size="13"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
 		</p>
@@ -17,36 +17,36 @@
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
-<fieldset><legend>Credit Information:</legend>
+<fieldset><legend>Credit Information</legend>
     <p>
-        <label>Deny Purchases after:</label>
+        <label>Deny Purchases after</label>
 		<input type="text" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
     </p>
     <p>
-        <label>Warn about credit after:</label>
+        <label>Warn about credit after</label>
 		<input type="text" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
     </p>
     <p>
-        <label>Credit Account Limit:</label>
+        <label>Credit Account Limit</label>
         <input type="text" name="txtCreditLimit" value="<?txtCreditLimit?>" />
     </p>
     <p>
-        <label>Current Credit Balance:</label>
+        <label>Current Credit Balance</label>
 		<?CreditBalance?>
     </p>
     <p>
-        <label>Remaining Credit:</label>
+        <label>Remaining Credit</label>
         <?CreditRemaining?>
     </p>
 	<p>
-        <label>Credit Hold:</label>
+        <label>Credit Hold</label>
 		<input type="radio" id="rdbCreditHoldY" name="rdbCreditHold" value="Y" <? echo ( 'checked' if $$variable{'rdbCreditHold'} eq 'Y' ) ?> />
 		<label class="radio" for="rdbCreditHoldY">Yes</label>
 		<input type="radio" id="rdbCreditHoldN" name="rdbCreditHold" value="N" <? echo ( 'checked' if $$variable{'rdbCreditHold'} ne 'Y' ) ?> />
 		<label class="radio" for="rdbCreditHoldN">No</label>
     </p>
     <p>
-        <label>Required Downpayment Amount:</label>
+        <label>Required Downpayment Amount</label>
 		<input type="text" name="txtDownpayment" value="<?txtDownpayment?>"/>
 	</p>
 	<p class="buttons">
@@ -108,7 +108,7 @@
 					$total_total += $Order->total();
 				} # end foreach Order
 				$html .= sprintf('<tr class="totals">
-					<td colspan="6" align="right">Totals:</td>
+					<td colspan="6" align="right">Totals</td>
 					<td class="Price">%s</td>
 					<td class="Price">%s</td>
 					<td>&nbsp;</td>

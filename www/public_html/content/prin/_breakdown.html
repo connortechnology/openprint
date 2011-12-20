@@ -168,7 +168,7 @@
 	return $html;
 ) ?>
 			<tr class="Prices"> 
-				<td align="left">Unit Prices:</td>
+				<td align="left">Unit Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 						$html .= '<td class="price">'.openprint::Currency::format($$variable{'Project'}->unit_price( $qty_index )).'</td>';
@@ -178,7 +178,7 @@
 			<td align="right">&nbsp;</td>
 		</tr>
 		<tr> 
-			<td align="left">Total Before Taxes:</td>
+			<td align="left">Total Before Taxes</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<td class="price">'.openprint::Currency::format($$variable{'Project'}->price( $qty_index )).'</td>';
