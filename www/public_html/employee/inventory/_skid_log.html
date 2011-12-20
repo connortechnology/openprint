@@ -9,9 +9,9 @@
 		<tr>
 			<th class="DateTime">When</th>
 			<th class="User">Employee</th>
-			<th class="StockQuantity">Amount</th>
-			<th class="StockQuantity">In Stock</th>
-			<th align="left">Comment</th>
+			<th class="Quantity">Amount</th>
+			<th class="Quantity">In Stock</th>
+			<th class="Comment">Comment</th>
 		</tr>
 		};
 		my $rowclass;
@@ -19,9 +19,9 @@
 			$html .= "<tr$rowclass>";
 			$html .= sprintf( '<td class="DateTime">%s</td>', Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on) ) );
 			$html .= sprintf( '<td class="User">%s</td>', $PI->User()->name() );
-			$html .= sprintf( '<td class="StockQuantity">%s</td>', Number::Format::format_number($PI->delta()).$PI->Paper()->units() );
-			$html .= sprintf( '<td class="StockQuantity">%s</td>', Number::Format::format_number($PI->instock()).$PI->Paper()->units() );
-			$html .= sprintf( '<td>%s</td>', $PI->comment_html(), );
+			$html .= sprintf( '<td class="Quantity">%s</td>', Number::Format::format_number($PI->delta()).$PI->Paper()->units() );
+			$html .= sprintf( '<td class="Quantity">%s</td>', Number::Format::format_number($PI->instock()).$PI->Paper()->units() );
+			$html .= sprintf( '<td class="Comment">%s</td>', $PI->comment_html(), );
 			$html .= '</tr>';
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
