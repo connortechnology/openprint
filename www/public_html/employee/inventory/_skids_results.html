@@ -79,7 +79,7 @@
 			<th class="DateTime">Updated On</th>
 			<th class="DateTime">Last Seen</th>
 			<th class="RFID">RFIDTag</th>
-			<th class="location">Location</th>
+			<th class="Location">Location</th>
 			<th class="Dockets">Dockets</th>
 			<th class="Condition">Condition</th>
 			<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
@@ -138,7 +138,7 @@
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%5$s</a></td>
 				<td class="RFID"><a href="skid_details.html?skid_id=%2$d" title="%6$s">%7$s</a></td>
-				<td class="location"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
+				<td class="Location"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
 				', $rowclass, $$Skid{'id'},
 Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ),
 Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ),

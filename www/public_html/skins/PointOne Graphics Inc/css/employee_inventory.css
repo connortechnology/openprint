@@ -19,30 +19,37 @@ table .inventory {
 	width: 200px;
 }
 table .buttons {
-	width: 40px;
+	width: 60px;
 }
 table .mweight, table .gsm {
 	text-align: right;
 	width: 50px;
 }
-table .on_order, table .allocated, table .in_stock {
+table .on_order, table .allocated, table .in_stock, table .Quantity {
 	text-align: right;
 	width: 90px;
+	padding-right: 5px;
 }
-table .location {
+table .Location {
 	text-align: left;
-	width: 100px;
 }
 table .Condition {
-	width: 100px;
 	text-align: left;
 }
 
 #SkidResults table .RFID,
+#Allocations table .RFID,
 #CurrentInventory table .RFID {
-	width: 60px;
+	width: 95px;
 }
 
 input#quantity {
 	width: 100%;
+}
+table .Employee, table .Comment {
+	text-align: left;
+}
+table .RFIDScanner {
+	width: 140px;
+	text-align: left;
 }

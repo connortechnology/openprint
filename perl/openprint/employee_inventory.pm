@@ -335,6 +335,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_start', -7 );
 	ssi::setup_date_select( '/employee/inventory/paper.html', 'added_on_end', '' );
 	$session{'/employee/inventory/paper.html?Type'} = 'Sheet,Roll' if ! $session{'/employee/inventory/paper.html?Type'};
+	$session{'/employee/inventory/paper.html?instock'} = 'B' if ! $session{'/employee/inventory/paper.html?instock'};
 
 } # end sub paper
 
@@ -365,6 +366,8 @@ sub paper_details {
 		$Paper->colour_id( $param{'Colour'} ) if $param{'Colour'};
 		$Paper->weight( $param{'txtWeight'} ) if $param{'txtWeight'};
 		$Paper->weight_id( $param{'Weight'} ) if $param{'Weight'};
+		$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
+		$Paper->quality_id( $param{'Quality'} ) if $param{'Quality'};
 		$Paper->type( $param{'type'} );
 		if ( $param{'type'} eq 'Roll' ) {
 			$Paper->width( $param{'width'} );
@@ -393,7 +396,9 @@ sub paper_details {
 					'colour_id' =>	$param{'Colour'},
 					'weight'	=>	$param{'txtWeight'},
 					'weight_id' =>	$param{'Weight'},
-					'width'	=> $param{'width'},
+					'quality'	=>	$param{'txtQuality'},
+					'quality_id'=>	$param{'Quality'},
+					'width'		=> $param{'width'},
 					'height'	=>	$param{'height'},
 					);
 			if ( @papers ) {
@@ -420,6 +425,7 @@ sub paper_details {
 				'finish_id'			=> $Paper->finish_id(),
 				'colour_id'			=> $Paper->colour_id(),
 				'weight_id'			=> $Paper->weight_id(),
+				'quality_id'		=> $Paper->quality_id(),
 				'width'				=> $Paper->width(),
 				'height'			=> $Paper->height(),
 				);

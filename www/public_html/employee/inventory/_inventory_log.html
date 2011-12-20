@@ -1,45 +1,45 @@
 <? eval (
-	if ( %openprint::param ) {
+	if ( %param ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','StartHour','StartMinute','EndYear','EndMonth','EndDay','EndHour','EndMinute','ins','outs', 'Type' ) {
-			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = join(',', @{$openprint::param{$key}} );
+			if ( ref $param{$key} eq 'ARRAY' ) {
+				$session{'/employee/inventory/inventory_log.html?'.$key} = join(',', @{$param{$key}} );
 			} else {
-				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = $openprint::param{$key};
+				$session{'/employee/inventory/inventory_log.html?'.$key} = $param{$key};
 			}
 		} # end foreach
 	} # end if
-	$openprint::session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartHour'};
-	$openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'};
-	$openprint::session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndHour'};
-	$openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'};
+	$session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?StartHour'};
+	$session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $session{'/employee/inventory/inventory_log.html?StartMinute'};
+	$session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $session{'/employee/inventory/inventory_log.html?EndHour'};
+	$session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $session{'/employee/inventory/inventory_log.html?EndMinute'};
 
 ) ?>
-<? if ( $openprint::param{'action'} ne 'Download' ) ?>
+<? if ( $param{'action'} ne 'Download' ) ?>
 <table class="List">
 	<tr>
-		<th align="left" width="120">When</th>
-		<th align="left" width="70">Skid</th>
-		<th align="left" width="125">RFIDTAG</th>
-		<th align="left">Paper</th>
-		<th align="left" width="70">Amount</th>
-		<th align="left" width="120">Allocated</th>
-		<th align="left" width="70">In Stock</th>
-		<th align="left" width="90">Location</th>
-		<th align="left" width="70">Docket</th>
-		<th align="left">Comment</th>
+		<th class="DateTime">When</th>
+		<th class="Skid">Skid</th>
+		<th class="RFID">RFID</th>
+		<th class="paper_name">Paper</th>
+		<th class="Quantity">Amount</th>
+		<th class="Quantity">Allocated</th>
+		<th class="Quantity">In Stock</th>
+		<th class="Location">Location</th>
+		<th class="Docket">Docket</th>
+		<th class="Comment">Comment</th>
 	</tr>
 	<? echo (
 		my $html;
 		my %params = (
 			'updated_on_start'	=>
-			sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @openprint::session{
+			sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @session{
 				'/employee/inventory/inventory_log.html?StartYear',
 				'/employee/inventory/inventory_log.html?StartMonth',
 				'/employee/inventory/inventory_log.html?StartDay',
 				'/employee/inventory/inventory_log.html?StartHour',
 				'/employee/inventory/inventory_log.html?StartMinute',
 				}),
-			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @openprint::session{
+			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @session{
 				'/employee/inventory/inventory_log.html?EndYear',
 				'/employee/inventory/inventory_log.html?EndMonth',
 				'/employee/inventory/inventory_log.html?EndDay',
@@ -54,18 +54,18 @@
 		my $rowclass;
 		my $total = 0;
 		foreach my $PI ( openprint::PaperInventory::find(%params) ) {
-			next if $PI->delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
-			next if $PI->delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
+			next if $PI->delta <= 0 and ! $session{'/employee/inventory/inventory_log.html?outs'};
+			next if $PI->delta > 0 and ! $session{'/employee/inventory/inventory_log.html?ins'};
 			my $Paper = $PI->Paper();
-			next if $Paper->type() and ! sets::isin( $Paper->type(), split(',', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
-			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(',',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if $Paper->type() and ! sets::isin( $Paper->type(), split(',', $session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(',',  $session{'/employee/inventory/inventory_log.html?Type'} ) );
 			my $Skid = $PI->Skid();
 			
-			$html .= sprintf( '<tr%1$s><td>%2$s</td><td><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td><a href="rfidtag_details.html?rfidtag_id=%4$s">%4$s</a></td><td><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td>%7$d</td><td>%8$s</td><td>%9$d</td><td>%10$s</td><td>%11$s</td><td>%12$s</td></tr>',
+			$html .= sprintf( '<tr%1$s><td class="DateTime">%2$s</td><td class="Skid"><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td class="RFID">%4$s</td><td class="paper_name"><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td class="Quantity">%7$d</td><td class="Quantity">%8$s</td><td class="Quantity">%9$d</td><td class="Location">%10$s</td><td class="Docket">%11$s</td><td class="Comment">%12$s</td></tr>',
 				$rowclass,
 				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($PI->updated_on) ),
 				$PI->skid_id,
-				$Skid->rfidtag_id(),
+( $Skid->rfidtag_id() ? sprintf('<a href="rfidtag_details.html?rfidtag_id=%s">%d (%x)</a>', $Skid->rfidtag_id(), $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ),
 				$Paper->id(),
 				$Paper->to_string(),
 				$PI->delta,
@@ -82,4 +82,4 @@
 		return $html;
 	) ?>
 </table>
-<? endif ( $openprint::param{'action'} ne 'Download' ) ?>
+<? endif ( $param{'action'} ne 'Download' ) ?>

@@ -39,6 +39,9 @@ body {
 	min-width: 880px;
 	max-width: 1280px;
 }
+input[type="radio"],input[type="checkbox"] {
+	vertical-align: middle;
+}
 input, select, textarea {
 	color: black;
 	font-size: small;
@@ -530,7 +533,7 @@ td.StockQuantity, th.StockQuantity, tr .StockQuality {
 	width: 100px;
 	text-align: right;
 }
-td.Quantity, th.Quantity {
+table .Quantity {
 	width: 40px;
 	text-align: right;
 }
