@@ -24,22 +24,6 @@ $table = 'likes';
 	'value'			=>	undef,
 );
 
-sub object_type {
-	if ( @_ > 1 ) {
-		$_[0]{'object_type'} = $_[1];
-		my $Type = openprint::Object_Type->find_one('name'=>$_[1]);
-		if ( ! $Type ) {
-			$Type = new openprint::Object_Type();
-			$Type->save({'name'=>$_[1],'human'=>$_[1]});
-		} # end if
-		$_[0]{'object_type_id'}=$Type->id();
-	} # end if
-	if ( ! $_[0]{'object_type'} ) {
-		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
-	} # end if
-	return $_[0]{'object_type'};
-} # end sub object_type
-
 sub Object {
 	if ( ! $_[0]{'Object'} ) {
 #$openprint::log->debug("Like: new object ".$_[0]->object_type());
@@ -59,16 +43,6 @@ sub Object {
 	} # end if
 	return $_[0]{'Object'};
 } # end sub Object
-
-sub Object_Type {
-	if ( $_[0]{'object_type_id'} ) {
-		$_[0]{'Object_Type'} = new openprint::Object_Type( $_[0]{'object_type_id'} );
-	} else {
-		$_[0]{'Object_Type'} = openprint::Object_Type->find_one('name'=>ref $_[0] );
-		$_[0]{'Object_Type'} = new openprint::Object_Type() if ! $_[0]{'Object_Type'};
-	} # end if
-	return $_[0]{'Object_Type'};
-} # end sub Object_Type
 
 1;
 __END__

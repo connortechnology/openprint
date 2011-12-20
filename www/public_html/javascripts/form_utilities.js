@@ -1390,7 +1390,6 @@ function changed( e, div ) {
 } // end function changed
 function integerize(e) {
 	e.value = e.value.replace(/[^\d\-]/g,'');
-alert(e.value);
 	e.focus();
 }
 function floatize(e) {

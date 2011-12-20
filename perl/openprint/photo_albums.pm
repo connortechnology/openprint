@@ -50,6 +50,9 @@ sub list {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
 		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		$variable{'error'} .= $Album->Privacy()->save( {
+				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+			} );
 
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );
@@ -82,7 +85,9 @@ sub edit {
 			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>" if ! $variable{'error'};
         } # end if
 		my $Privacy = $Album->Privacy();
-		$variable{'error'} .= $Privacy->save({'value'=>join(',', $param{'privacy'} ),'object_id'=>$$Album{'id'},'object_type'=>'Photo_Album'});
+		$variable{'error'} .= $Privacy->save( {
+				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+			} );
 	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );
@@ -92,6 +97,7 @@ sub edit {
 		$variable{'error'} .= $Album->delete();
 		$variable{'ExternalRedirect'} = '/photo_albums/list.html';
 	} # end if
+	$variable{'Privacy'} = $Album->Privacy();
 } # end sub edit
 
 sub _photos {

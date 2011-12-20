@@ -3,13 +3,14 @@
 	<table class="List">
 		<tr>
 			<th class="Skid">Skid</th>
-			<th class="RFID">RFIDTag</th>
-			<th class="location">Location</th>
+			<th class="RFID">RFID</th>
+			<th class="Location">Location</th>
 			<th class="last_seen">Last Seen</th>
-			<th class="quantity">Quantity</th>
+			<th class="Quantity">Quantity</th>
 			<th class="Condition">Condition</th>
 			<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 			<th class="Price">Cost</th>
+			<th class="Price">Value</th>
 			<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 			<th class="buttons">&nbsp;</th>
 		</tr>
@@ -17,6 +18,7 @@
 			my $html;
 			my $rowclass;
 			$$variable{'skid_count'} = 0;
+			$$variable{'value_total'} = 0;
 			foreach my $C ( openprint::SkidContent->find('paper_id'=>$param{'paper_id'}, 'quantity >'=>0,'order'=>'skid_id') ) {
 				my $Skid = $C->Skid();
 				my $last_seen_days = $Skid->last_seen_days();
@@ -24,7 +26,7 @@
 					<td class="rfidtag_id"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 					<td class="location"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 					<td class="last_seen"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
-					<td class="quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
+					<td class="Quantity"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
 					<td class="Condition"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>',
 					$rowclass, $C->skid_id(), $Skid->Location()->name(), 
 					( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
@@ -33,7 +35,9 @@
 					$C->condition(),
 					);
 				if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-				$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
+					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
+					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->value() ? $C->Value() : 0 ).'</td>';
+					$$variable{'value_total'} += $C->value();
 				} # end if
 				$html .= '<td class="buttons">';
 				$html .= ssi::writeButton( $log, $dbh, "label$$C{skid_id}", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
@@ -52,6 +56,7 @@
 			<td>&nbsp;</td>
 			<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 			<td>&nbsp;</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'value_total'} ); ) ?></td>
 			<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 			<td>&nbsp;</td>
 		</tr>
@@ -68,6 +73,7 @@
 			<td class="Quantity"><input type="number" id="quantity" name="quantity" onkeyup="floatize(this);"/></td>
 			<td class="Condition"><select id="condition_id" name="condition_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') ] ); ) ?></select></td>
 			<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 			<td class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'AddInventory', 'add.gif', "LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', Serialize( document.forms['f2'] ) );", '', 'Add' ); ) ?></td>

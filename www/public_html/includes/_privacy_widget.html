@@ -1,0 +1,66 @@
+<script type="text/javascript">
+	function mode_change( e ) {
+		if ( e.value='public' ) {
+			if ( e.checked ) {
+				$('logged_in').disabled = true;
+				$('logged_in').checked = false;
+			} else {
+				$('logged_in').disabled = false;
+			} // end if
+		} elsif ( e.value == 'logged_in' ) {
+			if ( e.checked ) {
+				$('public').checked = false;
+				
+	
+$('usergroups_div').show();$('relationships_div').show();$('users_div').show();}
+	} // end function
+</script>
+<li class="Privacy"><label>Privacy</label>
+	<div id="public_div">
+		<input type="radio" name="privacy_mode" id="privacy_modepublic" value="public" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() ) ) ?> onclick="mode_change(this);"/>
+		<label class="radio" for="privacy_modepublic">Public: Everyone, including people who are not logged in can view this.</label>
+	</div>
+	<div id="logged_in_div">
+		<input type="radio" name="privacy_mode" id="privacy_modelogged_in" value="logged_in" <? echo ( ssi::checked( $$variable{'Privacy'}->logged_in() ) ) ?>/>
+		<label class="radio" for="privacy_modelogged_in">Logged In: All logged in users of this site can view this.</label>
+	</div>
+	<div id="specific_div">
+		<input type="radio" name="privacy_mode" id="privacy_modespecific" value="specific" <? echo ( ssi::checked( $$variable{'Privacy'}->specific() ) ) ?>/>
+		
+		<label class="radio" for="privacy_modespecific">Specific: Users in these groups can view this.</label><br/>
+		<? if ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
+		<div id="UserGroups">
+			<label class="radio">Usergroups: Users in these groups can view this.</label>
+			<ul class="UserGroups">
+			<? echo ( my $html;
+				foreach my $U ( @{$$variable{'UserGroups'}} ) {
+					$html .= sprintf('<li><input type="checkbox" name="privacy_usergroup_id" value="%d" %s/>%s</li>',$U->id(), $U->name(), sets::isin( $U->id(), $$variable{'Privacy'}->usergroup_id() ) );
+				} # 
+				return $html;
+			) ?>
+			</ul>
+		</div>
+		<? endif ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
+		<div id="Relationships">
+			<label class="radio">Relationships: Users in these relationships can view this.</label>
+			<ul class="Relationships">
+			<? echo ( my $html;
+				foreach my $RT ( openprint::User_Relationship_Type->find( 'order' => 'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" name="privacy_relationship_type_id" id="privacy_relationship_type_id%1$d" value="%1$d" %3$s/><label class="radio" for="relationship_type_id%1$d">%2$s</label></li>',$RT->id(), $RT->name(), sets::isin( $RT->id(), $$variable{'Privacy'}->relationship_type_id() ) );
+				} # 
+				return $html;
+			) ?>
+			</ul>
+		</div>
+		<label class="radio" for="privacy_modeusers">Users: Only users specified here can view this.</label>
+		<div id="Users">
+			Enter name: <input type="text" name="privacy_name"/>
+			<? echo ( join("\n", map { new openprint::User($_)->html() } $$variable{'Privacy'}->user_id() ? @{$$variable{'Privacy'}->user_id()} : () ); ) ?>
+		</div>
+	</div>
+	<div id="onlyyou_div">
+		<input type="radio" name="privacy_mode" id="privacy_modeonlyyou" value="onlyyou" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() eq '' ) ) ?>/>
+		<label class="radio" for="privacy_modeonlyyou">Only You: Only you (and site admins) can view this.</label>
+	</div>
+	
+</li>

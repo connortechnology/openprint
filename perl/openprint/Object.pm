@@ -7,6 +7,7 @@ use openprint ();
 require sets;
 require openprint::Like;
 require openprint::Comment;
+require openprint::Privacy;
 require openprint::Object_Type;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
@@ -903,6 +904,22 @@ $log->debug("Object: Object_Type: No id, looking up by name" . ref $_[0] );
 	return $_[0]{'Object_Type'};
 } # end sub Object_Type
 
+sub object_type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::Object_Type->find_one('name'=> $_[1] );
+		if ( ! $Type ) {
+			$Type = new openprint::Object_Type();
+			$Type->save({'name'=>$_[1], 'human'=>$_[1]});
+		} # end if
+		$_[0]{'object_type'} = $Type->name();
+		$_[0]{'object_type_id'} = $Type->id();
+	} # end if
+	if ( ! $_[0]{'object_type'} ) {
+		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+	} # end if
+	return $_[0]{'object_type'};
+} # end sub object_type
+
 sub date_format {
 	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub date_format 
@@ -924,6 +941,18 @@ sub Comments {
 	} # end if
 	return @{$_[0]{'Comments'}};
 } # end sub Comments
+
+sub Privacy {
+	if ( ! exists $_[0]{'Privacy'} ) {
+		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'} );
+		if ( ! $_[0]{'Privacy'} ) {
+			$_[0]{'Privacy'} = new openprint::Privacy();
+			$_[0]{'Privacy'}->object_type( ref $_[0] );
+			$_[0]{'Privacy'}{'object_id'} = $_[0]{'id'};
+		} # end if
+	} # end if
+	return $_[0]{'Privacy'};
+} # end sub Privacy
 
 1;
 __END__

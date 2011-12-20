@@ -405,12 +405,9 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'();' );
 		$log->error( "www.pm[400] Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
-$log->debug("Main");
 		if ( $second eq 'project' ) {
-$log->debug("project");
 			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
-$log->debug("third");
 				if ( $param{'ServiceIndex'} and ! $variable{'ServiceIndex'} ) {
 					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
 					$variable{'ServiceIndex'} = $service_ids[0];
