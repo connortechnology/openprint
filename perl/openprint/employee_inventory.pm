@@ -175,82 +175,8 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen');
+	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
-if ( 0 ) {
-	my @papers = openprint::Paper::find(
-			( defined $param{'Owner'} ? ( 'owner_id'	=> $param{'Owner'} ) : () ),
-			( defined $param{'Manufacturer'} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'} ) : ( ) ),
-			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
-			'finish_id' =>	( defined $param{'Finish'} ? $param{'Finish'} : undef ),
-			'colour_id' =>	( defined $param{'Colour'} ? $param{'Colour'} : undef ),
-			'weight_id' =>	( defined $param{'Weight'} ? $param{'Weight'} : undef ),
-			'type'		=>	$param{'Type'},
-            ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
-            ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
-
-			'allocated_to_docket'   => $param{'Docket'},
-			'fsc_code'  =>  $param{'fsc_code'},
-			'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
-			);
-	my @data;
-	my $total_weight = 0;
-	my $count = 0;
-	foreach my $Paper ( @papers ) {
-		if ( $param{'width'} ) {
-			if ( $param{'OrLarger'} ) {
-				next if $Paper->width() < $param{'width'};
-			} else {
-				next if $Paper->width() != $param{'width'};
-			} # end if
-		} # end if
-		if ( $param{'height'} ) {
-			if ( $param{'OrLarger'} ) {
-				next if $Paper->height() < $param{'height'};
-			} else {
-				next if $Paper->height() != $param{'height'};
-			} # end if
-		} # end if
-		foreach my $Skid ( $Paper->skids() ) {
-			my $weight = 0;
-			my $C = $Skid->Content( $Paper );
-			if ( $param{'Condition'} and $C->condition_id() != $param{'Condition'} ) {
-				next;
-			} # end if
-			if ( $Paper->type() eq 'Roll' ) {
-				$weight = $C->quantity();
-			} else {
-				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
-			} # end if
-			$total_weight += $weight;
-			$count += 1;
-			push @data,(
-					$$Paper{'id'},
-					new openprint::Company($Paper->owner_id())->name(),
-					$Paper->manufacturer(),
-					$Paper->name(),
-					$Paper->finish(),
-					$Paper->colour(),
-					$Paper->weight(),
-					$Paper->type(),
-					$Paper->width(),
-					$Paper->height(),
-					$Paper->quality(),
-					$Paper->mweight(),
-					$Paper->gsm(),
-					$$Skid{'id'},
-					$Skid->RFIDTag()->id_short(),
-					$$Skid{'created_on'},
-					$Skid->Location()->name(),
-					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
-					$weight,
-					$C->condition(),
-					);
-		} # end foreach skid
-	} # end foreach
-	#my $date;
-	#my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
-}
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
@@ -291,6 +217,8 @@ if ( 0 ) {
 					$weight,
 					$C->condition(),
 					$Skid->updated_on(),
+					1*$C->cost(),
+					1*$C->value(),
 					);
 		} # end foreach C
 	} # end foreach Skid
