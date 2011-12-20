@@ -113,7 +113,7 @@ sub cost {
 			if ( $POCurrency ) {
 				$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
 			} else {
-				$log->error("No POCurrency");
+				$openprint::log->error("No POCurrency");
 				$$self{'cost'} = $POC->price();
 			} # end if
 		} # end if
@@ -148,7 +148,7 @@ sub value {
 			if ( $POCurrency ) {
 				$cost = $POCurrency->convert_from( $POC->price() );
 			} else {
-				$log->error("No POCurrency");
+				$openprint::log->error("No POCurrency");
 				$cost = $POC->price();
 			} # end if
 			$units = $POC->price_units();
