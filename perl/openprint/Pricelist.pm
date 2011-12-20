@@ -1,7 +1,7 @@
-package openprint::Pricelist;
-@ISA = qw(openprint::Object);
-
 use strict;
+
+package openprint::Pricelist;
+our @ISA = qw(openprint::Object);
 
 require sql;
 require openprint::MaterialPrice;

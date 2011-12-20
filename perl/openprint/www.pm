@@ -300,11 +300,13 @@ $openprint::log->debug("Getfile");
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 		} elsif ( $first ) {
-			eval( 'require openprint::'.join('_', @path ) );
+			my $path = 'openprint::'.join('_',@path);
+			eval( "require $path;");
 $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+			$log->debug("Calling $path :: $proc");
+			$path->$proc( $r, $log, $dbh, \%variable );
+#$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
