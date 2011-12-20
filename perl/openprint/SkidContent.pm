@@ -167,7 +167,13 @@ sub cost {
 		} else {
 			my $POC = $MC->Type()->PurchaseOrder_Content();
 			return if ! $POC;
-			$$self{'cost'} = $POC->price();
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$$self{'cost'} = $POC->price();
+			} # end if
 		} # end if
 	} # end if ! exists cost
     return $$self{'cost'};
@@ -196,7 +202,13 @@ sub value {
 		} else {
 			my $POC = $MC->Type()->PurchaseOrder_Content();
 			return if ! $POC;
-			$cost = $POC->price();
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$cost = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$cost = $POC->price();
+			} # end if
 			$units = $POC->price_units();
 		} # end if
 		if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
