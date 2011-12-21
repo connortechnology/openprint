@@ -36,7 +36,7 @@ sub delete {
 		$error .= $AA->delete();
 	} # end foreach AA
 	return $error if $error;
-	foreach my $R ( openprint::Survey_Response->find('question_id'=>$_[0]{'question_id'}) ) {
+	foreach my $R ( openprint::Survey_Response->find('question_id'=>$_[0]{'id'}) ) {
 		$error .= $R->delete();
 	} # end foreach Response
 	return $error if $error;
