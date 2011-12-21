@@ -28,6 +28,9 @@ $table = 'photo_albums';
 	'deleted'		=>	0,
 );
 
+sub created_by {
+	return $_[0]{'user_id'};
+} # end sub
 
 sub Thumbnail {
 	if ( ! $_[0]{'thumbnail_id'} ) {
@@ -89,10 +92,11 @@ sub can_edit {
 sub can_view {
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
-	return 1 if ! $_[0]{'privacy_mode_id'};
-	return 0;
+	my $Privacy = $_[0]->Privacy();
+		
+	return 1 if ! $$Privacy{'id'};
+	return $Privacy->can_view();
 } # end sub can_view
-
 
 1;
 __END__

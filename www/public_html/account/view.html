@@ -44,6 +44,7 @@
 					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
+						next if ! $Album->can_view();
 						
 						my $Photo = $Album->Thumbnail();
 						if ( $Photo->asset_id() ) {
@@ -63,6 +64,7 @@
 					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
+						next if ! $Album->can_view();
 						
 						my $Video = $Album->Thumbnail();
 						if ( $Video->asset_id() ) {
