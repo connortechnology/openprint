@@ -102,7 +102,12 @@ sub xor {
 # We do it this way to maintain ordering of the input array
 sub exclude {
 	my ( $exclude, $array ) = @_;
-	return if (! $exclude) or (! $array);
+	if ( (! $array) or (! @{$array}) ) {
+		return ();
+	} # end if
+	if ( (! $exclude) or (! @{$exclude}) ) {
+		return @{$array};
+	} # end if
 	my @results;
 	foreach my $element ( @{$array} ) {
 		push @results, $element if ( ! sets::isin( $element, $exclude ) );

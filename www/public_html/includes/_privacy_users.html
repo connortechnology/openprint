@@ -1,0 +1,8 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( 
+	my @user_ids = sets::exclude([$session{'user_id'}], $$variable{'Privacy'}->user_id());
+	if ( @user_ids ) {
+		return join("\n", map { '<input type="hidden" name="privacy_user_id" value="'.$_.'"/>'. new openprint::User($_)->html() } @user_ids ); 
+	}
+	return;
+) ?>

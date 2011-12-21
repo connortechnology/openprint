@@ -5,6 +5,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="PhotoAlbum">
 	<div class="Edit">
+<? if ( $$variable{'Album'}->can_edit() ) ?>
 		<form id="f1" name="f1" action="/photo_albums/edit.html?album_id=<? echo ( $$variable{'Album'}->id() ) ?>" enctype="multipart/form-data" method="post">
 			<input type="hidden" name="btnFunction" />
 			<p class="buttons">
@@ -49,9 +50,13 @@
 				<div class="disclaimer"><? echo ( $config{'PhotoUploadDisclaimer'} ) ?></div>
 			</fieldset>
 		</form>
+<? else ( $$variable{'Album'}->can_edit() ) ?>
+	You do not have rights to edit this album.
+<? endif ( $$variable{'Album'}->can_edit() ) ?>
 	</div>
 </div>
 <script type="text/javascript">
+if ( 0 ) {
 var uploader = new qq.FileUploader({
     // pass the dom node (ex. $(selector)[0] for jQuery users)
     element: $('file_uploader'),
@@ -69,4 +74,5 @@ var uploader = new qq.FileUploader({
 	}
 
 });
+}
 </script>

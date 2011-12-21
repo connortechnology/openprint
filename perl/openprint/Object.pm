@@ -217,7 +217,7 @@ $log->debug("No serial") if $debug;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
-	} else {
+	} else { # not identified_by
 		if ( ! $$self{'id'} ) {
 			my $serial = eval '$'.$type.'::serial';
 			if ( $serial ) {
@@ -251,7 +251,7 @@ $log->debug("No serial") if $debug;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, $$self{'id'} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
@@ -487,6 +487,8 @@ sub find_operators {
 			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
+		} else {
+			push @{$results{' not in'}}, ();
 		} # end if
 	} # end if
 	if ( exists $$params{$k.'_lc'} ) {

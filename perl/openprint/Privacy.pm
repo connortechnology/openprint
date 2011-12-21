@@ -44,9 +44,9 @@ sub user_id {
 		$$self{'user_id'} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-		$$self{'user_id'} = $_[0];
+			$$self{'user_id'} = @{$_[0]} ? $_[0] : undef;
 		} else {
-		$$self{'user_id'} = [ $_[0] ];
+			$$self{'user_id'} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
 	if ( ! $$self{'user_id'} ) {
@@ -62,9 +62,9 @@ sub usergroup_id {
 		$$self{'usergroup_id'} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-		$$self{'usergroup_id'} = $_[0];
+			$$self{'usergroup_id'} = @{$_[0]} ? $_[0] : undef;
 		} else {
-		$$self{'usergroup_id'} = [ $_[0] ];
+			$$self{'usergroup_id'} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
 	return $$self{'usergroup_id'} ? $$self{'usergroup_id'} : [];
@@ -77,9 +77,9 @@ sub relationship_type_id {
 		$$self{'relationship_type_id'} = [@_];
 	} elsif ( @_ == 1 ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-		$$self{'relationship_type_id'} = $_[0];
+			$$self{'relationship_type_id'} = @{$_[0]} ? $_[0] : undef;
 		} else {
-		$$self{'relationship_type_id'} = [ $_[0] ];
+			$$self{'relationship_type_id'} = $_[0] ? [ $_[0] ] : undef;
 		} # end if
 	} # end if
 	return $$self{'relationship_type_id'} ? $$self{'relationship_type_id'} : [];

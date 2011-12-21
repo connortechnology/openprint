@@ -379,6 +379,10 @@ sub Profile {
 } # end sub Profile
 
 sub html {
+	if ( ! $_[0]{'id'} ) {
+		$log->error("called html on user without id".$_[0]->to_string() );
+		return '';
+	} # end if
 	my $User = $_[0];
 	my $Profile = $_[1] ? $_[1] : $_[0]->Profile();
 
