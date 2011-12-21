@@ -6,6 +6,7 @@
 			ssi::button( 'Edit', { 'href'=>'edit.html?article_id='.$$variable{'Article'}->id() } ),
 			ssi::button( 'Destroy', { 'href'=>'history.html?func=Destroy&amp;article_id='.$$variable{'Article'}->id() } ),
 		); ) ?>
+		<span class="GooglePlusOne"><g:plusone annotation="inline"></g:plusone></span>
 	</p>
 <? endif ( $$variable{'Article'}->can_edit() ) ?>
 <? if ( $$variable{'Article'}->can_view() ) ?>
@@ -25,3 +26,11 @@ Posted on <? echo ( $$variable{'Article'}->datetime_format( 'published_on' ) ) ?
 	You cannot view this article.
 <? endif ( $$variable{'Article'}->can_view() ) ?>
 </div></div>
+<script type="text/javascript">
+	window.___gcfg = {lang: 'en-GB'};
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>

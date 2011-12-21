@@ -2,6 +2,7 @@ package openprint::article;
 
 use strict;
 use LWP::UserAgent;
+use HTML::LinkExtractor;
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -96,6 +97,7 @@ sub save_article {
 			 } # end if
 		} # end if
 	} # end if source
+
 if ( 0 ) {
 	my $body = '';
 	my $remainder = $param{'body'};
@@ -121,20 +123,26 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} else {
 		$variable{'error'} .= $Article->save(\%param);
 	} # end if
-	%param = ();
+	my $LX = new HTML::LinkExtractor();
+	$LX->parse( \$$Article{'body'} );
+	if ( $LX->links ) {
+	foreach my $Link ( @{$LX->links} ) {
+		next if $$Link{'tag'} ne 'a';
+		next if $$Link{'target'} eq '_blank';	
+		$variable{'warning'} .= 'The link ' . $$Link{'_TEXT_'} . ' does not have a target="_blank" on it<br/>.';
+	} # end foreach  Link
+	} # end if links
+	undef $LX;
 } # end sub save_article
 
 sub history {
-	if ( $param{'func'} eq 'Save' ) {
-		save_article();
-	} elsif ( $param{'func'} eq 'Destroy' ) {
+	if ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		if ( ! $Article->can_edit() ) {
 			$variable{'error'} .= 'You do not have rights to destroy this article.';
 			return;
 		} # end if
 		$variable{'error'} .= $Article->destroy();
-	} elsif ( ! $param{'func'} ) {
 	} # end if
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -168,7 +176,18 @@ sub edit {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'func'} eq 'Save' ) {
 		save_article();
-		$variable{'Redirect'} = '/article/history.html';
+		if ( $variable{'error'} or $variable{'warning'} ) {
+		} else {
+			%param = ();
+			$variable{'Redirect'} = '/article/history.html';
+		} # end if
+	} elsif ( $param{'func'} eq 'Destroy' ) {
+		my $Article = new openprint::Article( $param{'article_id'} );
+		if ( ! $Article->can_edit() ) {
+			$variable{'error'} .= 'You do not have rights to destroy this article.';
+			return;
+		} # end if
+		$variable{'error'} .= $Article->destroy();
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
