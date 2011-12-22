@@ -302,7 +302,7 @@ sub registration {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{'company_id'} = $Company->id();
 		$variable{'information'} .= 'You are now representing '.$Company->name().'<br/>';
-	} else { 
+	} elsif ( ! $session{'company_id'} ) { 
 		# auto log in.
 		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
 			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
