@@ -51,6 +51,10 @@
            <fieldset><legend><a href="/photo_albums/view.html?album_id=<? echo ( $$variable{'Category'}->album_id() ) ?>">Photos</a></legend>
             <? if ( $$variable{'Category'}->id() ) ?>
                 <div id="Photos"><!--#include virtual="_category_photos.html"--></div>
+				<fieldset><legend>Set by asset id</legend>
+					<input type="number" name="asset_id" id="asset_id" />
+					<? echo ( ssi::button( 'Add', { 'onclick'=>"new Ajax.Updater('Photos','_category_photos.html', {parameters: { category_id: $$variable{Category}{id}, asset_id: \$('asset_id').value, action: 'add' } } );" } ); ) ?>
+				</fieldset>
 				<fieldset><legend>Upload Asset</legend>
 					<div class="content">
 						<ul>

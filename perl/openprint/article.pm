@@ -306,12 +306,33 @@ sub _assets {
 sub _category_photos {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Asset = openprint::Photo_in_Album->find_one('album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'});
-		if ( ! $Asset ) {
-			$variable{'error'} .= 'Asset not found.';
+		my $Photo = openprint::Photo_in_Album->find_one('album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'});
+		if ( ! $Photo ) {
+			$variable{'error'} .= 'Photo not found.';
 		} else {
-			$variable{'error'} .= $Asset->delete();
+			$variable{'error'} .= $Photo->delete();
 		} # end if
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $Album = $Category->Photo_Album();
+		if ( ! $Album ) {
+			$variable{'error'} .= 'WTF Album not found.';
+			return;
+		} # end if
+		if ( ! $Album->id() ) {
+			$variable{'error'} .= $Album->save({'name'=>'Images for article category: ' . $Category->name()});
+			$variable{'error'} .= $Category->save({'album_id'=>$Album->id()});
+		} # end if
+		
+		my $Asset = new openprint::Asset( $param{'asset_id'} );
+		if ( ! $Asset->id() ) {
+			$variable{'error'} .= 'Asset not found.';
+			return;
+		} # end if
+		my $Photo = new openprint::Photo_in_Album();
+		$variable{'error'} .= $Photo->save({
+				'album_id'	=>	$Album->id(),
+				'asset_id'	=>	$Asset->id(),
+		});
 	} else {
 		$log->error("article/_category_photos: Uknown function");
 	} # end if
