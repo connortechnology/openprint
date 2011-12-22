@@ -10,13 +10,21 @@
 			<fieldset class="filters">
 				<ul>
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+			<? echo (
+				my @Users = openprint::User->find('company_id'=>$$variable{'User'}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
+				if ( @Users == 1 ) {
+					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
+				} elsif ( @Users ) {
+					return q` 
 				<li>
 					<label for="ddmUser">User Name</label>
 					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
-						<option value="">Select a User</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$$variable{'User'}->company_id(), 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
+						<option value="">Select a User</option>`.
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $$variable{'User'}->id() ).'
 					</select>
-				</li>
+				</li>';
+				} 	
+			) ?>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				</ul>
 				<p class="buttons">

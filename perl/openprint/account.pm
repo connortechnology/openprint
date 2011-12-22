@@ -195,6 +195,7 @@ sub registration {
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
 		$variable{'information'} .= 'Registration was successful.<br/><br/>';
+		$variable{'success'} = 1;
 		$variable{'error'} .= $User->Profile()->save(\%param);
 		$variable{'error'} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
 
@@ -248,6 +249,7 @@ sub registration {
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
 		$variable{'information'} .= 'Registration was successful.<br/><br/>';
+		$variable{'success'} = 1;
 		$variable{'error'} .= $User->Profile()->save(\%param);
 		$variable{'error'} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
 
@@ -307,10 +309,7 @@ sub registration {
 			(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
 			$variable{'information'} .= '<p>Your account has been activated and you have been automatically logged in.</p>';
 		} else {
-			        $variable{'information'} .= 'At this time your login remains inactive.<br/>
-        <br/>
-        You will be notified via email when your account is activated.<br/>';
-
+			$variable{'information'} .= 'At this time your login remains inactive.<br/><br/>You will be notified via email when your account is activated.<br/>';
 		} # end if
 	} # end if
 
