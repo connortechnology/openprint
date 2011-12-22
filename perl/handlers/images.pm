@@ -1,8 +1,5 @@
 package handlers::images;
 
-#use Benchmark;
-#use diagnostics;
-
 use strict;
 use Apache2::Request;
 use Apache2::RequestRec ();
@@ -49,7 +46,7 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $r->dir_config() );
 	if ( $dbh ) {
-		openprint::session_init();
+		#openprint::session_init();
 
 		# The asset filename form is id_title.extension
 		my ( $id ) = $r->uri() =~ /(\d+)_.+$/;

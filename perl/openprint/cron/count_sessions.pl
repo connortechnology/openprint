@@ -15,7 +15,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $program = 'count_sessions.pl';
-$log = logger->new('debug');
+$log = logger->new('warn');
 my $opts = {};
 GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','output=s','debug=s');
 
