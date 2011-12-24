@@ -104,6 +104,7 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{'id'} );
 	foreach my $Payment ( openprint::Payment->find('recipient_id'=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
@@ -127,8 +128,8 @@ sub destroy {
 		last if $dbh->errstr();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'} ) ) {
-		$User->delete();
+	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'}, 'deleted'=>[0,1] ) ) {
+		$User->destroy();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
 

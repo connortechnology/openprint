@@ -581,13 +581,14 @@ sub find {
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
 	my @used_fields;
 
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
+
 	foreach ( 'find_fields', 'fields' ) {
 		my $f = eval '\%'.$type.'::'.$_;
 		next if ! $f;
 
-		foreach my $k ( keys %$params ) {
+		foreach my $k ( @param_keys ) {
 			next if ! $$f{$k};
-			next if sets::isin( $k,[ 'order','limit','offset','or' ] );
 
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
@@ -672,7 +673,7 @@ Carp::cluck("Use of deprecated Object ref in find");
 			} # end if
 		} # end foreach
 	} # end if
-	if ( $$fields{'deleted'} and ! sets::isin( @used_fields, 'deleted') ) {
+	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if

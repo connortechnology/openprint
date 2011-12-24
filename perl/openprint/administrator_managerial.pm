@@ -294,6 +294,7 @@ sub user_profiles {
 	my @Users = openprint::User->find( 
 		( $cust_id ? ( 'company_id'=>$cust_id ) : () ), 
 		( $user_role ? ( 'type'=>$user_role ) : () ),
+		( $param{'deleted'} ne '' ? ( 'deleted'=>$param{'deleted'} ) : () ),
 		'order'=>'lower(firstname),lower(lastname)'
 		);
 
@@ -476,6 +477,12 @@ sub company_profiles {
 		$Company = new openprint::Company( $param{'company_id'} );
 		$index = $Company->next();
 		$Company->delete();
+		$Company = new openprint::Company( $index );
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		$Company = new openprint::Company( $param{'company_id'} );
+		if ( ! $Company->destroy() ) {
+			$index = $Company->next();
+		} # end if
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
 		$index = $param{'company_id'};

@@ -184,13 +184,17 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM User_Relationships WHERE user_id1=? OR user_id2=?', @$self{'id','id'} );
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
 	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
-} # end sub delete
+} # end sub destroy
 
 sub next {
 	my $self = shift;
