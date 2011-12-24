@@ -1,18 +1,18 @@
 <a name="top"></a>
 <div class="CompanyProfiles">
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f2" name="f2" method="post" action="/administrator/managerial/company_profiles.html">
+<form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
 		<li>
 			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" />
-			<? echo ( ssi::button( 'Go', { 'onlick'=>"f2.btnFunction.value='Go';fmCheck(f2);" } ); ) ?>
+			<? echo ( ssi::button( 'Go', { 'onlick'=>"f1.btnFunction.value='Go';fmCheck(f1);" } ); ) ?>
 		</li>
 		<li>
 			<label>Type</label>
-			<select name="search_type" onchange="f2.btnFunction.value='Go';this.form.submit();">
+			<select name="search_type" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<? echo ( 
 					my @options = ('All','Suppliers', 'Resellers', 'Customers');
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
@@ -22,20 +22,22 @@
 <? if ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
 		<li>
 			<label>Sales Rep</label>
-			<select name="search_salesrep_id" onchange="f2.btnFunction.value='Go';this.form.submit();">
+			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
 				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } @{$$variable{'SalesReps'}} ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{'SalesReps'}} = openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ) ?>
+		<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {'onclick'=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f2.btnFunction.value='Go';this.form.submit();}" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f2.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f2.submit();}">
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" />
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
 					my %params = (
 							( $param{'search_salesrep_id'} ? ( 'salesrep_id'=>$param{'search_salesrep_id'} ) : () ),
+							( $param{'deleted'} ne '' ? ( 'deleted'=>$param{'deleted'} ) : () ),
 							'order'=>'lower(name)',
 					);
 					if ( $param{'search_type'} eq 'Suppliers' ) {
@@ -54,12 +56,10 @@
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
-			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f2.btnFunction.value='Go';fmCheck(f2);",'','Go'); ) ?>
+			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
 		</li>
 		</ul>
 	</fieldset>
-</form>
-<form id="f1" name="f1" action="company_profiles.html" method="post">
 	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<fieldset id="ButtonsTop">
 		<p> 
@@ -299,7 +299,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 					<option value=""> Select </option>
 					<? echo ( ssi::getmonths( $$variable{'Company'}->start_month() ); ) ?>
 				</select>
-				<input type="text" name="start_year" id="start_year" value="<? echo ( $$variable{'Company'}->start_year(); ) ?>" style="width:auto;" size="6" />
+				<input type="text" name="start_year" id="start_year" value="<? echo ( $$variable{'Company'}->start_year(); ) ?>" />
 			</li>
 			<li> 
 				<label>President/Owner/CEO</label>
@@ -597,6 +597,5 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 			) ?>
 		</p>
 	</fieldset>
-	<input type="hidden" name="btnFunction"/>
 </form>
 </div>

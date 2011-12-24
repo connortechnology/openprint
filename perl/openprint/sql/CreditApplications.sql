@@ -1,9 +1,9 @@
 DROP TABLE IF EXISTS CreditApplications;
 
-CREATE TABLE CreditApplcations ( 
+CREATE TABLE CreditApplications ( 
 	id					SERIAL,
 	company_id			INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
-	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCS USers (id),
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES USers (id),
 	strSignature		TEXT,
 	ysnFinancialStatementAvailable	CHAR(1) default 'N',
 	strFirstOrderValue	TEXT,

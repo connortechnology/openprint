@@ -8,6 +8,7 @@
 \i Companies.sql
 \i companies_in_marketing_categories.sql
 \i Company_Credit.sql
+\i CreditApplications.sql
 \i User_Types.sql
 \i Pricelists.sql
 \i Users.sql
@@ -70,3 +71,5 @@
 \i Equipment.sql
 \i Services.sql
 \i Service_Prices.sql
+\i RMA.sql
+\i Complaints.sql

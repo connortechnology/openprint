@@ -42,6 +42,7 @@ Please select a company or user to obtain login information.<br/>
 							<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
 						</select>
 					</li>
+					<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {'onclick'=>"f1.ddmUser.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 					<li>
 						<label>User Name</label>
 						<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">

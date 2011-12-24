@@ -1,9 +1,9 @@
-CREATE SEQUENCE complaints_id_seq;
+DROP TABLE IF EXISTS Complaints;
 
 CREATE TABLE Complaints (
-	id	INTEGER NOT NULL default nextval('complaints_id_seq'),
-	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Company (index),
-	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (index),
+	id			SERIAL,
+	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
 	company_name	TEXT,
 	contact_name	TEXT,
 	ponum			TEXT,
