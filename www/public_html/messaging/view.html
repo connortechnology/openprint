@@ -1,14 +1,14 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<div class="Message"><div class="View">
-	<fieldset><legend>Viewing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
-		<? if ( $$variable{'Message'}->deleted() ) ?>
+<div class="Conversation"><div class="View">
+	<fieldset><legend>Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Conversation'}->deleted() ) ?>
 		<span class="warning">This message has been deleted</span>
-		<? endif ( $$variable{'Message'}->deleted() ) ?>
+		<? endif ( $$variable{'Conversation'}->deleted() ) ?>
 		<fieldset><legend></legend>
 			<div class="Who">
 				<fieldset><legend>Who is in this conversation</legend>
 				<? echo ( my $html = '';
-					foreach my $User ( $$variable{'Message'}->Who() ) {
+					foreach my $User ( $$variable{'Conversation'}->Who() ) {
 						$html .= $User->html();
 					} # end foreach
 					return $html;
@@ -18,13 +18,13 @@
 			<div class="Header">
 				<ul>
 					<li><label>Sent</label>
-						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Message'}->sent_on() ) ); ) ?>
+						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Conversation'}->sent_on() ) ); ) ?>
 					</li>
 					<li><label>From</label>
-						<? echo ( $$variable{'Message'}->From()->name ) ?>
+						<? echo ( $$variable{'Conversation'}->From()->name ) ?>
 					</li>
 					<li><label>Subject</label>
-						<? echo ( $$variable{'Message'}->subject() ) ?>
+						<? echo ( $$variable{'Conversation'}->subject() ) ?>
 					</li>
 				</ul>
 			</div>
@@ -32,7 +32,7 @@
 				<ul>
 					<li>
 						<label for="info">Body</label>
-						<? echo ( $$variable{'Message'}->body() ) ?>
+						<? echo ( $$variable{'Conversation'}->body() ) ?>
 					</li>
 				</ul>
 			</div>
@@ -41,7 +41,7 @@
 			<? echo (
 				my $html = '';
 				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'Delete' } );
-				$html .= ssi::button( 'reply', { 'href'=>'edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
+				$html .= ssi::button( 'reply', { 'href'=>'edit.html?reply_to='.$$variable{'Conversation'}->id(), 'text'=>'Reply' } );
 				return $html;
 			) ?>
 		</p>

@@ -51,7 +51,13 @@ sub registration {
 	# perform input field validation
 	my $error = '';
 	my %required_fields = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
-	$error .= 'Missing company name.<br/>' if $required_fields{'company_name'} and ! $param{'company_name'};
+	if ( ! $param{'company_name'} ) {
+		if ( $required_fields{'company_name'} ) {
+			$error .= 'Missing company name.<br/>';
+		} elsif ( $param{'firstname'} or $param{'lastname'} ) {
+			$param{'company_name'} = $param{'firstname'} . ' ' . $param{'lastname'};
+		} # end if
+	} # end if
 	$error .= 'Missing contact first name.<br/>' if $required_fields{'firstname'} and ! $param{'firstname'};
 	$error .= 'Missing contact last name.<br/>' if $required_fields{'lastname'} and ! $param{'lastname'};
 	$error .= 'Missing Salutation.<br/>' if $required_fields{'salutation'} and ! $param{'salutation'};
@@ -143,8 +149,6 @@ sub registration {
 
 			$Company = new openprint::Company();
 			$Company->set( \%param );
-			$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
-			$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
 			$Company->activation( $config{'NewCustomerAccountActivation'} );
 			if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ! $Company->salesrep_id() ) {
 				$Company->salesrep_id( $session{'user_id'} );
@@ -153,17 +157,6 @@ sub registration {
 				$variable{'error'} .= $error;
 				return;
 			} # end if
-
-			# Setup default Credit
-			my $customer_credit = new openprint::customer_credit( $Company->id() );
-			my %params = (
-					'WarnDays'	=>	1*$config{'DefaultWarnDays'},
-					'DenyDays'	=>	1*$config{'DefaultDenyDays'},
-					'Limit'	=>	1*$config{'DefaultCreditLimit'},
-					'Hold'	=>	$config{'DefaultCreditHold'},
-					'Downpayment'	=>	1*$config{'DefaultDownpayment'},
-					);
-			$customer_credit->set( \%params );
 		} else {
 			if ( $config{'Require Unique Company'} eq 'Y' ) {
 				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
@@ -173,8 +166,18 @@ sub registration {
 	} elsif ( $session{'company_id'} ) {
 		$Company = new openprint::Company( $session{'company_id'} );
 		@Users = openprint::User->find('company_id'=>$Company->id());
+
 	} else {
 		# Don't know what company to assign
+		$Company = new openprint::Company( );
+		$Company->save();
+		$Company->name( $Company->id() );
+		$Company->set( \%param );
+		$Company->activation( $config{'NewCustomerAccountActivation'} );
+		if ( my $error = $Company->save() ) {
+			$variable{'error'} .= $error;
+			return;
+		} # end if
 	} # end if
 
 	my $User = new openprint::User();

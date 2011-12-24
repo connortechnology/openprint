@@ -8,8 +8,8 @@
 		$('MessageList').innerHTML = 'Please wait...';
 		new Ajax.Updater('MessageList','_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
-	function delete_message( message_id ) {
-		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', message_id: message_id, user_id: '<? echo ( $session{user_id} ) ?>' } } );
+	function delete_conversation( conversation_id ) {
+		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', conversation_id: conversation_id, user_id: '<? echo ( $session{user_id} ) ?>' } } );
 	} // end function delete_message
 -->
 </script>	 

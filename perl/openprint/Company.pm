@@ -357,5 +357,24 @@ sub can_edit {
 	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
 } # end sub can_edit
 
+sub taxexempt1 {
+	if ( @_ > 1 ) {
+		$_[0]{'taxexempt1'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'taxexempt1'} ) {
+		$_[0]{'taxexempt1'} = $_[0]{'gstnumber'} ? 'Y' : 'N';
+	} # end if
+	return $_[0]{'taxexempt1'};
+} # end sub taxexempt1
+
+sub taxexempt2 {
+	if ( @_ > 1 ) {
+		$_[0]{'taxexempt2'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'taxexempt2'} ) {
+		$_[0]{'taxexempt2'} = $_[0]{'pstnumber'} ? 'Y' : 'N';
+	} # end if
+	return $_[0]{'taxexempt2'};
+} # end sub taxexempt2
 1;
 __END__

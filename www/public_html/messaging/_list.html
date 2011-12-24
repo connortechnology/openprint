@@ -5,7 +5,7 @@
 	my @Message_Tos = openprint::Message_To->find('user_id'=>$session{'user_id'});
 	my @message_ids = sets::union( map { $$_{'message_id'} } @Message_Tos );
 	my @Messages = openprint::Message->find('id'=>\@message_ids);
-	my @Conversations = openprint::Conversation->find('id'=>[ map { $$_{conversation_id} } @Messages ] );
+	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] );
 	@{$$variable{'Conversations'}} = @Conversations;
 
 #if ( 0 ) {
@@ -30,12 +30,17 @@
 		<? echo ( 
 			my $html;
 			foreach my $Conversation ( @{$$variable{'Conversations'}} ) {
+
+				# Get last message
 				my $Message = openprint::Message->find_one('conversation_id'=>$$Conversation{'id'},'order'=>'sent_on DESC');
 				$html .= sprintf(q` 
-					<div class="Conversation" onclick="this.window.location='/messaging/view.html?conversation_id=%1$d';return false;"> 
+					<div class="Conversation"> 
+						<a href="/messaging/view.html?conversation_id=%1$d">
+						<div class="from thumbnail"><img src="%6$s" alt=""/></div>
 						<div class="subject">%2$s</div>
 						<div class="last_sent">%3$s</div>
 						<div class="who">%4$s</div>
+						</a>
 						<div class="buttons">%5$s</div>
 					</div>
 					`, $Conversation->id(), 
@@ -43,8 +48,9 @@
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
 					join( ',', map { $_->User()->name() } $Message->To() ),
 					join('', 
-						ssi::button( 'delete'.$Message->id(), {'onclick'=> 'delete_message( '.$Message->id().');', 'text'=>'X' } ),
+						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),
 						),
+					$Message->From()->Asset()->thumbnail_url(),
 				);
 			} # end foreach Conversations
 			return $html;
