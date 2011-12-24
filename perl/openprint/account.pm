@@ -195,7 +195,7 @@ sub registration {
 	if ( ! @Users ) {
 		$User->web_active( $config{'NewFirstUserAccountActivation'} );
 		$User->administrator( 'Y' );
-		$variable{'error'} .= $User->save();		
+		$variable{'error'} .= $User->save();
 		return if $variable{'error'};
 		$variable{'information'} .= 'Registration was successful.<br/><br/>';
 		$variable{'success'} = 1;
@@ -247,6 +247,7 @@ sub registration {
 		} # end if
 	} else {
 
+#FIXME
 		$User->web_active( $session{'company_id'} ? 'Y' : $config{'NewNonFirstUserAccountActivation'} );
 		$User->administrator( 'N' );
 		$variable{'error'} .= $User->save();		
@@ -305,7 +306,11 @@ sub registration {
 		# If I'm a salesrep, then only change my company, not the user.
 		$session{'company_id'} = $Company->id();
 		$variable{'information'} .= 'You are now representing '.$Company->name().'<br/>';
-	} elsif ( ! $session{'company_id'} ) { 
+	} elsif ( 
+			( (! $session{'company_id'} ) or ( $session{'company_id'} == $Company->id() ) )
+			and ( ! $session{'user_id'} ) 
+			) { 
+$log->debug('U ' . $User->web_active(). ' C' . $Company->activation() );
 		# auto log in.
 		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
 			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
