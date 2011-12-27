@@ -28,9 +28,7 @@ $serial = 'conversations_id_seq';
 
 # returns an array of objects
 sub To {
-$openprint::log->debug('To');
 	if ( @_ > 1 ) {
-$openprint::log->debug("Setting To @{$_[1]}");
 		$_[0]{'To'} = $_[1];
 	} # endif
 	if ( $_[0]{'id'} and ! $_[0]{'To'} ) {

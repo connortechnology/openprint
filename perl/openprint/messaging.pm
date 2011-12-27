@@ -115,7 +115,19 @@ sub view {
 } # end sub view
 
 sub _view {
-	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
+	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	if ( $param{'action'} eq 'Delete Message' ) {
+		my @To = $Message->To();
+		for ( my $to_index = 0; $to_index < @To; $to_index += 1 ) {
+			if ( $To[$to_index]{'user_id'} == $session{'user_id'} ) {
+				if ( ! ( $variable{'error'} .= $To[$to_index]->delete() ) ) {
+					splice @To, $to_index, 1;
+					$Message->To( @To );
+				} # end if
+				last;
+			} # end if
+		} # end foreach T
+	} # end if
 } # end sub _view
 
 sub _to {

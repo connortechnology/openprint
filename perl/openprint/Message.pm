@@ -1,6 +1,9 @@
 use strict;
 package openprint::Message;
 our @ISA = qw( openprint::Object );
+require openprint::User;
+require openprint::Message_To;
+use Date::Format qw( time2str );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
@@ -9,7 +12,6 @@ $serial = 'messages_id_seq';
 
 %fields = (
 	'id'    		=>  'id',
-	'subject'		=>	'subject',
 	'body'			=>	'body',
 	'from_id'		=>	'from_id',
 	'reply_to'		=>	'reply_to',
@@ -23,11 +25,11 @@ $serial = 'messages_id_seq';
 %transforms = (
 );
 %defaults = (
-	'reply_to'	=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'sent_on'	=>	undef,
+	'reply_to'			=>	undef,
+	'created_on'		=>	q`'NOW()'`,
+	'sent_on'			=>	undef,
 	'conversation_id'	=>	undef,
-	'from_id'		=>	q`$session{'user_id'}`,
+	'from_id'			=>	q`$session{'user_id'}`,
 );
 sub From {
 	new openprint::User( $_[0]{'from_id'} );
@@ -45,5 +47,30 @@ sub Who {
 	$$params{'message_id'} = $$self{'id'};
 	return ( $self->From(), map { new openprint::User( $_->user_id() ) } openprint::Message_To->find($params) );
 } # end sub Who
+
+sub sent_on_string {
+	if ( ! $_[0]{'sent_on_string'} ) {
+		my $sent_on = Date::Parse::str2time( $_[0]{'sent_on'} );
+		my $difference = time - $sent_on;
+		if ( $difference > 7*24*60*60 ) {
+			# Use date
+			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A, %d %m %Y</span>', $sent_on );
+		} elsif ( $difference > 24*60*60 ) {
+			# Use date
+			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A</span>', $sent_on );
+		} elsif ( $difference > 3600 ) {
+			# Use hours
+			$difference = int($difference/3600);
+			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
+		} elsif ( $difference > 60 ) {
+			$difference = int($difference/60);
+			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
+		} else {
+			$difference = int($difference);
+			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
+		}
+	} # end if
+	return $_[0]{'sent_on_string'};
+} # end sub sent_on_string
  1;
 __END__

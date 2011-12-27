@@ -7,30 +7,9 @@
 			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
 			<? echo (
 				my $html = '';
-				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(), 'order'=>'id' ) ) {
-				my $sent_on_string;
-				my $sent_on = Date::Parse::str2time( $Message->sent_on() );
-				my $difference = time - $sent_on;
-				if ( $difference > 7*24*60*60 ) {
-					# Use date
-					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A, %d %m %Y</span>', $sent_on );
-				} elsif ( $difference > 24*60*60 ) {
-					# Use date
-					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A</span>', $sent_on );
-				} elsif ( $difference > 3600 ) {
-					# Use hours
-					$difference = int($difference/3600);
-					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
-				} elsif ( $difference > 60 ) {
-					$difference = int($difference/60);
-					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
-				} else {
-					$difference = int($difference);
-					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
-				}
-						
-				$html .= sprintf(q`
-<div class="Message">
+				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(), 'to_id any'=>$session{'user_id'}, 'order'=>'id' ) ) {
+					$html .= sprintf(q`
+<div class="Message" id="message_%2$d">
 	<div class="From">%4$s</div>
 	<div class="buttons">%7$s</div>
 	<div class="SentOn">%3$s</div>
@@ -38,9 +17,9 @@
 	<div class="Body">%6$s</div>
 </div>
 `, $$variable{'Conversation'}->id(), $Message->id(),
-				$sent_on_string,
+				$Message->sent_on_string(),
 				$Message->From()->icon(), $Message->From()->name(), $Message->body(),
-				ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'X', 'title'=>'Delete' } ),
+				ssi::button( 'delete', { 'onclick'=>"new Ajax.Request('_view.json', { parameters: { message_id: $$Message{id}, action: 'Delete Message' } } );", 'text'=>'X', 'title'=>'Delete' } ),
 );
 
 			} # end foreach Message
