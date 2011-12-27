@@ -118,7 +118,7 @@ $log->debug("Enable mac search for $mac_search");
 					($Host->mac() ? join('<br/>', @{$Host->mac()} ) : ''), 
 					join(', ', (
 						( $Host->dhcp() ? 'dhcp' : () ),
-						( $Host->blacklist() ? 'blacklisted' : () ),
+						( $Host->blacklist() ? 'blacklisted: count='.$Host->count() : () ),
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitored() ? 'monitored' : () ),
 						( ( defined $Host->online() and ! $Host->online() ) ? 'offline' : () ),
