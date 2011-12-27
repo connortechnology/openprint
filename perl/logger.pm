@@ -47,9 +47,7 @@ sub emerg {
 }
 
 sub alert {
-    my $self = shift;
-	my $message = shift;
-	$self->print( "[alert] $message\n" );
+	$_[0]->print( "[alert] $_[1]\n" );
 }
 sub crit {
     my $self = shift;
@@ -57,10 +55,8 @@ sub crit {
 	$self->print( "[crit] $message\n" );
 }
 sub error {
-    my $self = shift;
-	my $message = shift;
-	if ( $self->{level} eq 'error' or $self->{level} eq 'warn' or $self->{level} eq 'debug' ) {
-		$self->print( "[error] $message\n" );
+	if ( $_[0]{level} eq 'error' or $_[0]->{level} eq 'warn' or $_[0]->{level} eq 'debug' ) {
+		$_[0]->print( "[error] $_[1]\n" );
 	} # end if
 }
 sub warn {

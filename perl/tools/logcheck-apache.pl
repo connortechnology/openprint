@@ -8,7 +8,6 @@ use strict;
 use Date::Parse;
 use Date::Calc;
 use Socket;
-require openprint::Blacklist;
 require openprint::Host;
 
 require logger;
@@ -17,8 +16,6 @@ use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 #*config = \%openprint::config;
-$log = logger->new();
-$log->{level} = 'warn';
 
 use Getopt::Long;
 use File::Basename qw(basename);
@@ -27,7 +24,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'file=s','log_level=s',
  );
 
 if ($opts->{help}) {
@@ -47,6 +44,10 @@ unless ($opts->{db_pass}) {
     print STDERR "$program: missing required --db_pass parameter\n";
     exit 1;
 }
+unless ($opts->{file}) {
+    print STDERR "$program: missing required --file parameter\n";
+    exit 1;
+}
 
 $dbh = sql::open_sql( $log,
     'host'      => $opts->{'db_host'},
@@ -57,13 +58,15 @@ $dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 
+$log = logger->new( {
+( $$opts{'log_file'} ? ( 'file'=>$$opts{'log_file'} ) : () ),
+( $$opts{'log_level'} ? ( 'level'=>$$opts{'log_level'} ) : ( 'level'=>'warn' ) ),
+} );
 
-my @log_files = (
-	'/var/log/auth.log',
-);
+my @log_files = ref $opts->{file} eq 'ARRAY' ? @{$opts->{file}} : ( $opts->{file} );
 
 my @re = (
-'^\[(\w{3} \w{3} [ :0-9]{16})\] \[[a-z]\]+ \[client ([0-9]+)\] File does not exist: .+$',
+'^\[(\w{3} \w{3} [ :0-9]{16})\] \[[a-z]+\] \[client ([\.0-9]+)\] File does not exist:',
 );
 
 my $ac = sql::start_transaction( $dbh );
@@ -72,17 +75,18 @@ my %host_counts;
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM HOSTS where whitelist=?', 1 );
 
 foreach my $log_file ( @log_files ) {
+	$log->debug("Trying $log_file");
 	if ( open( FH, "<$log_file" ) ) {
 		foreach my $line (<FH>) {
 			foreach my $re ( @re ) {
-#print "Trying $re against $line\n" if $opts->{debug};
+				$log->debug( "Trying $re against $line\n" );
 				if ( $line =~ /$re/ ) {
 					my ($when, $source ) = ( $1, $2 );
-					print "match for $source\n" if $opts->{debug};
+					$log->debug( "matched $re against $line for $source\n" );
 					my ( $ip, $hostname );
 					if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 						# Is an IP
-						print "$source is an ip\n" if $opts->{debug};
+						$log->debug( "$source is an ip\n" );;
 						$ip = $source;
 					} else {
 						# is a hostname
@@ -90,14 +94,14 @@ foreach my $log_file ( @log_files ) {
 						$ip = gethostbyname($source);
 						if ( defined $ip ) {
 							$ip = Socket::inet_ntoa($ip);
-							print "Got $ip for $source\n" if $opts->{debug};
+							$log->debug( "Got $ip for $source\n" );
 						} # end if
 					} # end if
 					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
-						print "$ip is whitelisted\n" if $opts->{debug};
+						$log->debug( "$ip is whitelisted\n" );
 					} # end if
 					if ( ! $ip ) {
-						print "No ip for $source\n" if $opts->{debug};
+						$log->debug( "No ip for $source\n" );
 					} else {
 						if ( ! $host_counts{$ip} ) {
 							my $Host = openprint::Host->find_one('ip'=>$ip);
@@ -124,6 +128,8 @@ foreach my $log_file ( @log_files ) {
 			} # end foreach re
 		} # end if
 		close( FH );
+	} else {
+		$log->error("Unable to open $log_file $!");
 	} # end if
 } # end foreach
 
