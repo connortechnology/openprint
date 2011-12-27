@@ -1,49 +1,66 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Conversation"><div class="View">
-	<fieldset><legend>Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
-		<? if ( $$variable{'Conversation'}->deleted() ) ?>
-		<span class="warning">This message has been deleted</span>
-		<? endif ( $$variable{'Conversation'}->deleted() ) ?>
-		<fieldset><legend></legend>
-			<div class="Who">
-				<fieldset><legend>Who is in this conversation</legend>
-				<? echo ( my $html = '';
-					foreach my $User ( $$variable{'Conversation'}->Who() ) {
-						$html .= $User->html();
-					} # end foreach
-					return $html;
-				) ?>
-				</fieldset>
-			</div>
-			<div class="Header">
-				<ul>
-					<li><label>Sent</label>
-						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Conversation'}->sent_on() ) ); ) ?>
-					</li>
-					<li><label>From</label>
-						<? echo ( $$variable{'Conversation'}->From()->name ) ?>
-					</li>
-					<li><label>Subject</label>
-						<? echo ( $$variable{'Conversation'}->subject() ) ?>
-					</li>
-				</ul>
-			</div>
-			<div class="Body">
-				<ul>
-					<li>
-						<label for="info">Body</label>
-						<? echo ( $$variable{'Conversation'}->body() ) ?>
-					</li>
-				</ul>
-			</div>
-		</fieldset>
-		<p class="buttons">
+	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
+		<fieldset><legend>Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{'Conversation'}->deleted() ) ?>
+			<span class="warning">This message has been deleted</span>
+			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
 			<? echo (
 				my $html = '';
-				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'Delete' } );
-				$html .= ssi::button( 'reply', { 'href'=>'edit.html?reply_to='.$$variable{'Conversation'}->id(), 'text'=>'Reply' } );
-				return $html;
-			) ?>
-		</p>
-	</fieldset>
+				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(), 'order'=>'id' ) ) {
+				my $sent_on_string;
+				my $sent_on = Date::Parse::str2time( $Message->sent_on() );
+				my $difference = time - $sent_on;
+				if ( $difference > 7*24*60*60 ) {
+					# Use date
+					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A, %d %m %Y</span>', $sent_on );
+				} elsif ( $difference > 24*60*60 ) {
+					# Use date
+					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A</span>', $sent_on );
+				} elsif ( $difference > 3600 ) {
+					# Use hours
+					$difference = int($difference/3600);
+					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
+				} elsif ( $difference > 60 ) {
+					$difference = int($difference/60);
+					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
+				} else {
+					$difference = int($difference);
+					$sent_on_string = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
+				}
+						
+				$html .= sprintf(q`
+<div class="Message">
+	<div class="From">%4$s</div>
+	<div class="buttons">%7$s</div>
+	<div class="SentOn">%3$s</div>
+	<div class="Subject">%5$s</div>
+	<div class="Body">%6$s</div>
+</div>
+`, $$variable{'Conversation'}->id(), $Message->id(),
+				$sent_on_string,
+				$Message->From()->icon(), $Message->From()->name(), $Message->body(),
+				ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'X', 'title'=>'Delete' } ),
+);
+
+			} # end foreach Message
+			return $html;
+		) ?>
+				<div class="Message Reply">
+					<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
+					<textarea id="reply" name="reply" onkeyup="textarea_resize(this);" placeholder="Reply"></textarea>
+					<span class="buttons">
+					<? echo (ssi::button( 'Reply', { 'onclick'=>q`$('f1').submit();` } ); ) ?>
+					</span>
+				</div>
+			</fieldset>
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'Delete' } );
+					return $html;
+				) ?>
+			</p>
+		</fieldset>
+	</form>
 </div></div>

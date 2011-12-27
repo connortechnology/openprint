@@ -63,20 +63,7 @@ my @log_files = (
 );
 
 my @re = (
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for illegal user [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from ([0-9.]+)$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because not listed in AllowUsers$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because account is locked$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: input_userauth_request: invalid user [\._a-zA-Z0-9\-]+$',
+'^\[(\w{3} \w{3} [ :0-9]{16})\] \[[a-z]\]+ \[client ([0-9]+)\] File does not exist: .+$',
 );
 
 my $ac = sql::start_transaction( $dbh );

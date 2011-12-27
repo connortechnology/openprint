@@ -103,6 +103,14 @@ sub view {
 			$Conversation->sent_on('NOW()');
 		} # end if send
 		$variable{'error'} .= $Conversation->save(\%param);
+	} elsif ( $param{'reply'} ne '' ) {
+		my $Reply = new openprint::Message();
+		$variable{'error'} .= $Reply->save({
+				'conversation_id'=>$Conversation->id(),
+				'body'				=>	$param{'reply'},
+				'from'				=>	$session{'user_id'},
+				'sent_on'			=>	'NOW()',
+			});
 	} # end if
 } # end sub view
 

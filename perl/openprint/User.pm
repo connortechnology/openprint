@@ -382,6 +382,14 @@ sub Profile {
 	return $_[0]{'Profile'};
 } # end sub Profile
 
+sub icon {
+	if ( ! $_[0]{'icon'} ) {
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s"/></a>',
+			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->name() );
+	} # end if
+	return $_[0]{'icon'};
+} # end sub icon
+
 sub html {
 	if ( ! $_[0]{'id'} ) {
 		$log->error("called html on user without id".$_[0]->to_string() );
