@@ -1,13 +1,51 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "simple"
+	});
+
+	// delete goes to server mainly to update the dropdown
+	function delete_to( user_id ) {
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'remove' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
+	} // end function delete_to
+	function add_to( user_id ) {
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'add' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
+	} // end function add_to
+-->
+</script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Conversation"><div class="View">
 	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
-		<fieldset><legend>Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?></legend>
+		<fieldset><legend>
+<? if ( $$variable{'Conversation'}->id() ) ?>
+Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?>
+<? else ( $$variable{'Conversation'}->id() ) ?>
+Start a New Conversation
+<? endif ( $$variable{'Conversation'}->id() ) ?>
+</legend>
 			<? if ( $$variable{'Conversation'}->deleted() ) ?>
 			<span class="warning">This message has been deleted</span>
 			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
+<div id="People"><!--#include virtual="_people.html"--></div>
 			<? echo (
 				my $html = '';
-				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(), 'to_id any'=>$session{'user_id'}, 'order'=>'id' ) ) {
+				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(),'order'=>'id' ) ) {
+					next if ! sets::isin( $session{'user_id'}, [ $Message->from_id(), map { $$_{'user_id'} } $Message->To() ] );
 					$html .= sprintf(q`
 <div class="Message" id="message_%2$d">
 	<div class="From">%4$s</div>
@@ -21,15 +59,17 @@
 				$Message->From()->icon(), $Message->From()->name(), $Message->body(),
 				ssi::button( 'delete', { 'onclick'=>"new Ajax.Request('_view.json', { parameters: { message_id: $$Message{id}, action: 'Delete Message' } } );", 'text'=>'X', 'title'=>'Delete' } ),
 );
+				$variable{'Message'} = $Message;
 
 			} # end foreach Message
 			return $html;
 		) ?>
 				<div class="Message Reply">
+					<div id="To"><!--#include virtual="_to.html"--></div>
 					<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
 					<textarea id="reply" name="reply" onkeyup="textarea_resize(this);" placeholder="Reply"></textarea>
 					<span class="buttons">
-					<? echo (ssi::button( 'Reply', { 'onclick'=>q`$('f1').submit();` } ); ) ?>
+					<? echo (ssi::button( 'Reply', { 'onclick'=>qq`new Ajax.Request( '_view.json', { parameters: { action: 'reply', message_id: $$variable{Message}{id}, body: \$('reply').value } } );` } ); ) ?>
 					</span>
 				</div>
 			</fieldset>
@@ -41,5 +81,6 @@
 				) ?>
 			</p>
 		</fieldset>
+		<input type="hidden" id="last_message_id" value="<? echo ( $$variable{'Message'}{id} ) ?>" />
 	</form>
 </div></div>

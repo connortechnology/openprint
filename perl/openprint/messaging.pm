@@ -127,6 +127,23 @@ sub _view {
 				last;
 			} # end if
 		} # end foreach T
+	} elsif ( $param{'action'} eq 'reply' ) {
+		my $Reply = new openprint::Message();
+		$variable{'error'} .= $Reply->save({
+			'conversation_id'	=>	$Message->conversation_id(),
+			'from_id'	=>	$session{'user_id'},
+			'reply_to'	=>	$param{'message_id'},
+			'body'		=>	$param{'body'},
+			'sent_on'	=>	'NOW()',
+		});
+		foreach my $user_id ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{'to_id'}} : ( $param{'to_id'} ) ) {
+			next if $user_id == $session{'user_id'};
+			my $Message_To = new openprint::Message_To();
+			$variable{'error'} .= $Message_To->save({
+				'message_id'	=>	$Reply->id(),
+				'user_id'		=>	$user_id,
+			});
+		} # end foreach user_id in to
 	} # end if
 } # end sub _view
 

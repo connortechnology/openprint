@@ -442,6 +442,9 @@ sub find_operators {
 	if ( exists $$params{$k.' !='} ) {
 		push @{$results{' !='}}, $f.' != ?', $$params{$k.' !='};
 	} # end if
+	if ( exists $$params{$k.' <<='} ) {
+		push @{$results{' <<='}}, "$f <<= ?", $$params{$k.' <<='};
+	} # end if
 	if ( exists $$params{$k.' &&'} ) {
 		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' &&'}} ) {
@@ -514,6 +517,7 @@ sub find_operators {
 			push @{$results{' is null'}}, "$f IS NOT NULL";
 		} # end if
 	} # end if
+
 	return \%results;
 } # end sub
 
