@@ -40,5 +40,8 @@ sub To {
 	return $_[0]{'To'} ? @{$_[0]{'To'}} : ();
 } # end sub To
 
+sub Messages {
+	return openprint::Message->find('conversation_id'=>$_[0]{'id'});
+} # end sub Messages
  1;
 __END__

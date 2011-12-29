@@ -81,8 +81,11 @@ sub list {
 
 sub _list {
 	if ( $param{'action'} eq 'delete' ) {
-		my $To = new openprint::Message_To( { 'message_id'=>$param{'message_id'},'user_id'=>$session{'user_id'} } );
-		$variable{'error'} .= $To->delete();	
+		my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
+		my @message_ids = map { $$_{id} } $Conversation->Messages();
+		foreach my $To ( openprint::Message_To->find('message_id'=>\@message_ids, 'user_id'=>$session{'user_id'}) ) {
+			$variable{'error'} .= $To->delete();
+		} # end foreach To
 	} elsif ( ! $param{'action'} ) {
 		ssi::save_params( '/messaging/list.html', ( 
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
@@ -98,24 +101,47 @@ sub edit {
 
 sub view {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
-	if ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
+	if ( $param{'action'} eq 'Delete' ) {
+		my @message_ids = map { $$_{id} } $Conversation->Messages();
+		foreach my $To ( openprint::Message_To->find('message_id'=>\@message_ids, 'user_id'=>$session{'user_id'}) ) {
+			$variable{'error'} .= $To->delete();
+		} # end foreach To
+		$variable{'ExternalRedirect'} = '/messaging/list.html' if ! $variable{'error'};
+	} elsif ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
+		if ( ! $Conversation->id() ) {
+			$variable{'error'} .= $Conversation->save({'subject'=>$param{'subject'}});
+		} # end if
+		my $Message = new openprint::Message();
 		if ( $param{'action'} eq 'Send' and ! $variable{'error'} ) {
-			$Conversation->sent_on('NOW()');
+			$Message->sent_on('NOW()');
 		} # end if send
-		$variable{'error'} .= $Conversation->save(\%param);
-	} elsif ( $param{'reply'} ne '' ) {
-		my $Reply = new openprint::Message();
-		$variable{'error'} .= $Reply->save({
-				'conversation_id'=>$Conversation->id(),
-				'body'				=>	$param{'reply'},
-				'from'				=>	$session{'user_id'},
-				'sent_on'			=>	'NOW()',
+		$variable{'error'} .= $Message->save({
+			'conversation_id'	=>	$Conversation->id(),
+			'from'				=>	$session{'user_id'},
+			'body'				=>	$param{'body'},
 			});
+		foreach my $user_id ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{'to_id'}} : ( $param{'to_id'} ) ) {
+			next if $user_id == $session{'user_id'};
+			my $Message_To = new openprint::Message_To();
+			$variable{'error'} .= $Message_To->save({
+				'message_id'	=>	$Message->id(),
+				'user_id'		=>	$user_id,
+			});
+		} # end foreach user_id in to
+		my $Message_To = new openprint::Message_To();
+		$variable{'error'} .= $Message_To->save({
+			'message_id'	=>	$Message->id(),
+			'user_id'		=>	$session{'user_id'},
+		});
+		if ( (! $variable{'error'}) and (!$param{'conversation_id'}) ) {
+			$variable{'ExternalRedirect'} = '/messaging/list.html';
+		} # end if
 	} # end if
 } # end sub view
 
 sub _view {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( $param{'action'} eq 'Delete Message' ) {
 		my @To = $Message->To();
 		for ( my $to_index = 0; $to_index < @To; $to_index += 1 ) {
@@ -125,6 +151,8 @@ sub _view {
 					$Message->To( @To );
 				} # end if
 				last;
+			} else {
+$log->debug("Delete to but $To[$to_index]{user_id} != $session{user_id}");
 			} # end if
 		} # end foreach T
 	} elsif ( $param{'action'} eq 'reply' ) {
@@ -144,6 +172,11 @@ sub _view {
 				'user_id'		=>	$user_id,
 			});
 		} # end foreach user_id in to
+		my $Message_To = new openprint::Message_To();
+		$variable{'error'} .= $Message_To->save({
+				'message_id'	=>	$Reply->id(),
+				'user_id'		=>	$session{'user_id'},
+				});
 	} # end if
 } # end sub _view
 
@@ -165,6 +198,10 @@ sub _to {
 		$Conversation->To( \@To );
 	} # end if
 } # end sub _to
+
+sub _messages {
+	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
+} # end sub _messages
 
 1;
 __END__

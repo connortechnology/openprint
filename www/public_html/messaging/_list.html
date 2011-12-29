@@ -32,7 +32,8 @@
 			foreach my $Conversation ( @{$$variable{'Conversations'}} ) {
 
 				# Get last message
-				my $Message = openprint::Message->find_one('conversation_id'=>$$Conversation{'id'},'order'=>'sent_on DESC');
+				my $Message = openprint::Message->find_one('conversation_id'=>$$Conversation{'id'},'to_id any'=>$session{'user_id'}, 'order'=>'sent_on DESC');
+				next if ! $Message;
 				$html .= sprintf(q` 
 					<div class="Conversation"> 
 						<a href="/messaging/view.html?conversation_id=%1$d">
@@ -46,7 +47,7 @@
 					`, $Conversation->id(), 
 					ssi::html_escape($Conversation->subject()),
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
-					join( ',', map { $_->User()->name() } $Message->To() ),
+					join( ', ', map { $$_{user_id} == $session{user_id} ? () : sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$_{user_id}, $_->User()->name() ) } $Message->To() ),
 					join('', 
 						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),
 						),

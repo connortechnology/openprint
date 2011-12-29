@@ -26,14 +26,25 @@
 
 		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
 	} // end function add_to
+	function reply_to( form ) {
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'reply' );
+		params.set('message_id', form.last_message_id.value );
+		params.set('body', form.elements['body'].value );
+
+		new Ajax.Request( '_view.json', { parameters: params } );
+	} // end function reply_to
 -->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Conversation"><div class="View">
 	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
+		<input type="hidden" id="last_message_id" value="" />
 		<fieldset><legend>
 <? if ( $$variable{'Conversation'}->id() ) ?>
-Viewing Conversation <? echo ( $$variable{'Conversation'}->id() ? '('.$$variable{'Conversation'}->id().')' : '' ) ?>
+Viewing Conversation
+<h1><? echo ( $$variable{'Conversation'}->subject() ) ?></h1>
 <? else ( $$variable{'Conversation'}->id() ) ?>
 Start a New Conversation
 <? endif ( $$variable{'Conversation'}->id() ) ?>
@@ -41,46 +52,36 @@ Start a New Conversation
 			<? if ( $$variable{'Conversation'}->deleted() ) ?>
 			<span class="warning">This message has been deleted</span>
 			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
-<div id="People"><!--#include virtual="_people.html"--></div>
-			<? echo (
-				my $html = '';
-				foreach my $Message ( openprint::Message->find('conversation_id'=>$$variable{'Conversation'}->id(),'order'=>'id' ) ) {
-					next if ! sets::isin( $session{'user_id'}, [ $Message->from_id(), map { $$_{'user_id'} } $Message->To() ] );
-					$html .= sprintf(q`
-<div class="Message" id="message_%2$d">
-	<div class="From">%4$s</div>
-	<div class="buttons">%7$s</div>
-	<div class="SentOn">%3$s</div>
-	<div class="Subject">%5$s</div>
-	<div class="Body">%6$s</div>
-</div>
-`, $$variable{'Conversation'}->id(), $Message->id(),
-				$Message->sent_on_string(),
-				$Message->From()->icon(), $Message->From()->name(), $Message->body(),
-				ssi::button( 'delete', { 'onclick'=>"new Ajax.Request('_view.json', { parameters: { message_id: $$Message{id}, action: 'Delete Message' } } );", 'text'=>'X', 'title'=>'Delete' } ),
-);
-				$variable{'Message'} = $Message;
-
-			} # end foreach Message
-			return $html;
-		) ?>
-				<div class="Message Reply">
-					<div id="To"><!--#include virtual="_to.html"--></div>
-					<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
-					<textarea id="reply" name="reply" onkeyup="textarea_resize(this);" placeholder="Reply"></textarea>
-					<span class="buttons">
-					<? echo (ssi::button( 'Reply', { 'onclick'=>qq`new Ajax.Request( '_view.json', { parameters: { action: 'reply', message_id: $$variable{Message}{id}, body: \$('reply').value } } );` } ); ) ?>
-					</span>
+			<div id="Messages"><!--#include virtual="_messages.html"--></div>
+			<div class="Message Reply">
+				<div id="To"><!--#include virtual="_to.html"--></div>
+				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
+<? if ( ! $$variable{'Conversation'}->id() ) ?>
+				<div id="Subject"><label>Subject</label>
+					<input type="text" id="subject" name="subject" />
 				</div>
-			</fieldset>
+<? endif ( ! $$variable{'Conversation'}->id() ) ?>
+				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"></textarea>
+				<span class="buttons">
+				<? echo (
+if ( $$variable{'Conversation'}->id() ) {
+	return ssi::button( 'Reply', { 'onclick'=>q`reply_to( $('f1') );` } );
+} else {
+	return ssi::button( 'Send', { 'onclick'=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
+} # end if
+) ?>
+				</span>
+			</div>
+
 			<p class="buttons">
 				<? echo (
+					return if ! $$variable{'Conversation'}->id();
 					my $html = '';
-					$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}", 'text'=>'Delete' } );
+					$html .= ssi::button( 'delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
 					return $html;
 				) ?>
 			</p>
 		</fieldset>
-		<input type="hidden" id="last_message_id" value="<? echo ( $$variable{'Message'}{id} ) ?>" />
+		<input type="hidden" name="action"/>
 	</form>
 </div></div>

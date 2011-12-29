@@ -173,7 +173,8 @@ $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
 			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
-				$log->error('Error deleting: ' . $dbh->errstr);
+				$where =~ s/\?/\%s/g;
+				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $local_dbh->errstr;

@@ -193,7 +193,7 @@ sub destroy {
 
 	sql::end_transaction( $dbh, $ac );
 
-	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
+	(new openprint::Log())->save({'action'=>'Destroy User','note'=>"User ID: " . $$self{'id'}});
 } # end sub destroy
 
 sub next {
