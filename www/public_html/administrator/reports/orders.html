@@ -29,7 +29,7 @@
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 				<? echo (
-						ssi::fill_drop_down( $log, $dbh, q{SELECT DISTINCT strStatus, strStatus FROM Orders ORDER BY strStatus}, $param{'ddmStatus'} );
+						ssi::fill_drop_down( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY name}, $param{'ddmStatus'} );
 						) ?>
 			</select>
 		</p>
