@@ -1,19 +1,6 @@
 <script type="text/javascript">
-	function privacy_get_user_ids( form ) {
-		var user_ids;
-		if ( form.elements['privacy_user_id'] ) {
-			if ( ! form.elements['privacy_user_id'].length ) {
-				user_id = new Array()
-				user_id.push( form.elements['privacy_user_id'].value );
-			} else {
-				user_id = form.elements['privacy_user_id'].map( function( e ) { return e.value; } );
-			}
-		} else {
-			user_id = new Array()
-		} // end if
-	} // end function privacy_get_user_ids
 	function privacy_set_users(input, li) {
-		var user_ids = privacy_get_user_ids( input.form );
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
 		user_ids.push(li.id);
 
 		if ( li.id ) {
@@ -21,13 +8,13 @@
 		} // end if
 	}
 	function privacy_remove_user( user_id ) {
-		var user_ids = privacy_get_user_ids( $('f1') );
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
 		user_ids = user_ids.without( user_id );
 		new Ajax.Updater( 'privacy_users', '/includes/_privacy_users.html', { parameters: { action: 'set', user_id: user_ids } } );
 	}
 	// adds the currently selected users, so that we can filter them out of returned results
 	function privacy_add_user_ids( input, query ) {
-		var user_ids = privacy_get_user_ids( input.form );
+		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
 		query += '&user_id=' + user_id.join('&user_id=');
 		return query;
 	}

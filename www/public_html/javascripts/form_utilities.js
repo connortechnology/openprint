@@ -1419,3 +1419,18 @@ if (!Array.prototype.map)
     return res;
   };
 }
+
+function get_form_element_array( form, name ) {
+	var values;
+	if ( form.elements[name] ) {
+		if ( ! form.elements[name].length ) {
+			values = new Array()
+			values.push( form.elements[name].value );
+		} else {
+			values = form.elements[name].map( function( e ) { return e.value; } );
+		}
+	} else {
+		values = new Array()
+	} // end if
+	return values;
+} // end function get_form_element_array

@@ -17,9 +17,16 @@
 <!--
 <input type="text" id="to_filter" name="to_filter"/>
 -->
+	<input type="text" id="new_to" name="new_to" placeholder="enter name of new person to add"/>
+		<div id="new_to_autocomplete" class="autocomplete" style="display:none;"></div>
+		<script type="text/javascript">
+		new Ajax.Autocompleter('new_to','new_to_autocomplete', '/messaging/_users.html', { minChars: 3,afterUpdateElement : add_to, callback: add_to_id } );
+		</script>
+<!--
 <select name="new_to_id" id="new_to_id" onchange="add_to(this.getValue());">
 	<option value="">select</option>
 	<? echo ( 
+return '';
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
@@ -31,3 +38,4 @@
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
 	) ?>
 </select>
+-->

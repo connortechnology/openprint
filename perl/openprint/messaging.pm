@@ -108,6 +108,10 @@ sub view {
 		} # end foreach To
 		$variable{'ExternalRedirect'} = '/messaging/list.html' if ! $variable{'error'};
 	} elsif ( sets::isin( $param{'action'}, [ 'Save', 'Send' ] ) ) {
+		if ( ! ( $param{'body'} or $param{'subject'} ) ) {
+			$variable{'error'} .= 'Please enter a subject or message.';
+			return;	
+		} # end if
 		if ( ! $Conversation->id() ) {
 			$variable{'error'} .= $Conversation->save({'subject'=>$param{'subject'}});
 		} # end if
@@ -156,6 +160,10 @@ $log->debug("Delete to but $To[$to_index]{user_id} != $session{user_id}");
 			} # end if
 		} # end foreach T
 	} elsif ( $param{'action'} eq 'reply' ) {
+		if ( ! $param{'body'} ) {
+			$variable{'error'} .= 'Please enter a message.';
+			return;	
+		} # end if
 		my $Reply = new openprint::Message();
 		$variable{'error'} .= $Reply->save({
 			'conversation_id'	=>	$Message->conversation_id(),
@@ -202,6 +210,9 @@ sub _to {
 sub _messages {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 } # end sub _messages
+
+sub _users {
+} # end sub _users
 
 1;
 __END__

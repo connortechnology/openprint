@@ -7,7 +7,7 @@
 
 	$html .= '<li class="place"><label>Place</label>';
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
-		<div id="location_autocomplete" class="autocomplete" style="display:none;">
+		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
 		new Ajax.Autocompleter('location','location_autocomplete', '/location/_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectedLocation } );
 		</script>

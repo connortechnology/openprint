@@ -6,6 +6,11 @@
 		mode : "textareas",
 		theme : "simple"
 	});
+	function add_to_id( input, query ) {
+		var to_id = get_form_element_array( input.form, 'to_id' );
+		query += '&to_id=' + to_id.join('&to_id=');
+		return query;
+	}
 
 	// delete goes to server mainly to update the dropdown
 	function delete_to( user_id ) {
@@ -15,16 +20,16 @@
 		params.set('action', 'remove' );
 		params.set('user_id', user_id );
 
-		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
 	} // end function delete_to
-	function add_to( user_id ) {
-		var form = $('f1');
+	function add_to( input, li ) {
+		var form = input.form;
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
 		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
 		params.set('action', 'add' );
-		params.set('user_id', user_id );
+		params.set('user_id', li.id );
 
-		new Ajax.Updater( 'To', '_to.html', { parameters: params } );
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
 	} // end function add_to
 	function reply_to( form ) {
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));

@@ -1,0 +1,16 @@
+<ul>
+	<? echo ( 
+		my $html;
+		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
+			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
+			'user_id2 not in' => $param{'to_id'},
+			'user_id1 not in' => $param{'to_id'},
+			'distinct' => 1,
+			);
+		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
+		foreach my $User ( sort { $a->name() <=> $b->name() } @To ) {
+			$html .= sprintf(q`<li id="%d">%s</li>`, $User->id(), $User->name() );
+		} # end foreach Location
+		return $html;
+	) ?>
+</ul>
