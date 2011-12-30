@@ -181,7 +181,7 @@ sub get_url {
 	my ( $uri, $params, $options ) = @_;
 	my @keys = keys %$params;
 	if ( $options and $$options{'exclude'} ) {
-		@keys = sets::exclude( $$options{'exclude'}, \@keys );
+		@keys = sets::exclude( (ref $$options{'exclude'} eq 'ARRAY' ? $$options{'exclude'} : [ $$options{'exclude'} ]), \@keys );
 	} # end if	
 	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
