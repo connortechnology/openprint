@@ -29,7 +29,14 @@ $serial = 'conversations_id_seq';
 # returns an array of objects
 sub To {
 	if ( @_ > 1 ) {
-		$_[0]{'To'} = $_[1];
+		if ( @_ > 2 ) {
+			shift @_;
+			$_[0]{'To'} = [ @_ ];
+		} elsif ( ref $_[1] eq 'ARRAY' ) {
+			$_[0]{'To'} = $_[1];
+		} else {
+			$_[0]{'To'} = [ $_[1] ];
+		} # end if
 	} # endif
 	if ( $_[0]{'id'} and ! $_[0]{'To'} ) {
 		my $Last_Message = openprint::Message->find_one('conversation_id'=>$_[0]{'id'});

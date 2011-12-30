@@ -140,6 +140,14 @@ sub view {
 		if ( (! $variable{'error'}) and (!$param{'conversation_id'}) ) {
 			$variable{'ExternalRedirect'} = '/messaging/list.html';
 		} # end if
+	} elsif ( $param{'to_id'} ) {
+		my @To = $Conversation->To();
+		if ( ! sets::isin( $param{'to_id'}, [ map { $_->user_id() } @To ] ) ) {
+			my $New_To = new openprint::Message_To();
+			$New_To->user_id( $param{'to_id'} );
+			push @To, $New_To;
+			$Conversation->To( \@To );
+		} # end if
 	} # end if
 } # end sub view
 
