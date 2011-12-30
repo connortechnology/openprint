@@ -18,6 +18,10 @@ table .inventory {
 	text-align: left;
 	width: 200px;
 }
+table .condition {
+	text-align: left;
+	width: 100px;
+}
 table .buttons {
 	width: 60px;
 }
