@@ -185,7 +185,7 @@ if ( 1 ) {
 
 if ( 0 ) {
 	my $ac = sql::start_transaction( $dbh );
-	my @users = sql::execute( undef, undef, q{SELECT Index FROM Users WHERE CompanyIndex NOT IN (SELECT Index FROM Company)} );
+	my @users = sql::execute( undef, undef, q{SELECT Id FROM Users WHERE company_id NOT IN (SELECT id FROM Companies)} );
 	foreach my $user_id ( @users ) {
 		new openprint::User( $user_id)->delete();
 	} 
@@ -199,6 +199,22 @@ if ( 0 ) {
 	} # end foreach empty company
 	sql::end_transaction( $dbh, $ac );
 } # end if
+
+my $deleted_skids = 0;
+foreach my $Skid ( openprint::Skid->find(
+			'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
+			) ) {
+	my $delete = 1;
+	my @Contents = $Skid->Contents();
+	foreach my $C ( @Contents ) {
+		$delete = 0 if $C->quantity();
+	}
+	if ( $delete ) {
+		$Skid->destroy();
+		$deleted_skids += 1;
+	} # end if
+} # end foreach Skid
+
 
 if ( 0 ) {
 foreach my $Skid ( openprint::Skid->find() ) {

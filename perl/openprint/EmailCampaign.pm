@@ -18,7 +18,7 @@ require openprint::EmailTemplate;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 $table = 'emailcampaigns';
-$serial = 'emailcampaign_id_seq';
+$serial = 'emailcampaigns_id_seq';
 
 %fields = (
 	'id'	=>	'id',

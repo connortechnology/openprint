@@ -262,10 +262,11 @@ sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, q{DELETE FROM manifestcontents WHERE skid_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{UPDATE manifestcontents SET skid_id=NULL WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM skid_verifications WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete

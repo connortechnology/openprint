@@ -485,6 +485,11 @@ if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 		
 	} # end if
 } # end if
+if ( ! sets::isin( 'emailcampaigns_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'emailcampaign_id_seq', \@sequences ) ) {
+		$dbh->do('ALTER SEQUENCE emailcampaign_id_seq RENAME to emailpaigns_id_seq');
+	} 
+}
 if ( ! sets::isin( 'emailcampaign_log', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/EmailCampaign_Log.sql' ) );
     die $dbh->errstr() if $dbh->errstr();

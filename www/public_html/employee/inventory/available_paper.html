@@ -111,6 +111,14 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 	@{$$variable{'Paper'}} = @Papers;
     return $html;
 ) ?>
+			<li>
+				<label>Condition:</label>
+				<select name="condition_id"><option value="">select</option>
+				<? echo (
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') ], $session{'/employee/inventory/paper.html?condition_id'} );
+					) ?>
+				</select>
+			</li>
 			</ul>
 		</div>
 		<div class="rightColumn">
