@@ -12,7 +12,7 @@ sub isin {
 #$openprint::log->debug( 'REF' . ref $thing );
 		if ( ref $thing eq 'ARRAY' ) {
 			foreach (@{$thing}) {
-#$openprint::log->debug( 'thing' . $value );
+#$openprint::log->debug( 'var' . $var . ' value: ' . $_ );
 				return 1 if $_ eq $var;
 			} # end foeach
 		} else {

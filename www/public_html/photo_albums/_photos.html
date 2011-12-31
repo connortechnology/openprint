@@ -7,31 +7,47 @@
 		$html .= sprintf('<a class="thumbnail" href="view_photo.html?asset_id=%d&amp;album_id=%d"><img src="%s" alt="%s"/></a>', $Photo->asset_id(), $Photo->album_id(), $Photo->thumbnail_url(), $Photo->caption() );
 		$html .= '<br/>';
 
-if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {
-		my $deletable = 1;
-		if ( $Photo->asset_id() != $$variable{'Album'}->thumbnail_id() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'SAT'.$Photo->asset_id(), 'sat.gif', 
-				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as album thumbnail' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
-				'', 'Set as album thumbnail' );
-			$html .= '<br/>';
-		} else {
-			$deletable = 0;
-		} # end if
-		if ( new openprint::User( $session{'user_id'} )->asset_id() != $Photo->asset_id() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'SPP'.$Photo->asset_id(), 'spp.gif', 
-				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as profile pic' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
-, '', 'Set as profile picture' );
-			$html .= '<br/>';
-		} else {
-			$deletable = 0;
-		} # end if
-		if ( $deletable ) {
-			$html .= ssi::writeButton( $log, $dbh, 'D'.$Photo->asset_id(), 'd.gif', 
-				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'delete' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
-, '', 'Delete' );
-			$html .= '<br/>';
-		} # end if
-} # end if
+		if ( $$variable{'Album'}->user_id() == $session{'user_id'} ) {
+			my $deletable = 1;
+			if ( my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont') ) {
+$log->debug("Photos in $$Photo{asset_id} DD" . map { $_->asset_id() } $DoDont->Photos() );
+				if ( ! sets::isin( $Photo->asset_id(), [ map { $_->asset_id() } $DoDont->Photos() ] ) ) {
+					$html .= ssi::button( 'DoDontAdd'.$Photo->asset_id(), { 'onclick'=>
+						sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, a_id: %d, asset_id: %d, action: 'add to album' } } );`, 
+							$$variable{'Album'}->id(), $$DoDont{id}, $$Photo{asset_id} ),
+						'text'=>q`Submit to Do/Don't` } );
+				} else {
+					$html .= ssi::button( 'DoDontRemove'.$Photo->asset_id(), { 'onclick'=>
+						sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, a_id: %d, asset_id: %d, action: 'remove from album' } } );`, 
+							$$variable{'Album'}->id(), $$DoDont{id}, $$Photo{asset_id} ),
+						'text'=>q`Remove from Do/Don't` } );
+				} # end if
+			} # end if
+			if ( $Photo->asset_id() != $$variable{'Album'}->thumbnail_id() ) {
+				$html .= ssi::button( 'SAT'.$Photo->asset_id(), { 'onclick'=> 
+					sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as album thumbnail' } } );`, 
+						$$variable{'Album'}->id(), $Photo->asset_id() ),
+					'text'=>'Set as album thumbnail' } );
+				$html .= '<br/>';
+			} else {
+				$deletable = 0;
+			} # end if
+			if ( new openprint::User( $session{'user_id'} )->asset_id() != $Photo->asset_id() ) {
+				$html .= ssi::writeButton( $log, $dbh, 'SPP'.$Photo->asset_id(), 'spp.gif', 
+					sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as profile pic' } } );`, 
+						$$variable{'Album'}->id(), $Photo->asset_id() ),
+	, '', 'Set as profile picture' );
+				$html .= '<br/>';
+			} else {
+				$deletable = 0;
+			} # end if
+			if ( $deletable ) {
+				$html .= ssi::writeButton( $log, $dbh, 'D'.$Photo->asset_id(), 'd.gif', 
+					sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'delete' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
+	, '', 'Delete' );
+				$html .= '<br/>';
+			} # end if
+		} # end if I am the owner
 		$html .= '</div>';
 	} # end foreach Photo
 	return $html;

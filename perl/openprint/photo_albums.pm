@@ -104,6 +104,23 @@ sub _photos {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+	} elsif ( $param{'action'} eq 'add to album' ) {
+		my $A = new openprint::Photo_Album( $param{'a_id'} );
+		if ( ! $A->id() ) {
+			$variable{'error'} .= 'Album does not exist<br/>';
+			return;
+		} # end if
+		my $Photo = openprint::Photo_in_Album->find_one('album_id'=>$param{'a_id'}, 'asset_id'=>$param{'asset_id'});
+		if ( $Photo ) {
+			$variable{'error'} .= 'Photo is already in ' . $A->name().'<br/>';
+			$log->error("Photo is already in $$A{name}");
+			return;
+		}
+		my $Photo = new openprint::Photo_in_Album();
+		$variable{'error'} .= $Photo->save({'album_id'=>$$A{id}, 'asset_id'=>$param{'asset_id'}});
+	} elsif ( $param{'action'} eq 'remove from album' ) {
+		my $Photo = openprint::Photo_in_Album->find_one('album_id'=>$param{'a_id'}, 'asset_id'=>$param{'asset_id'});
+		$Photo->delete();
 	} elsif ( $param{'action'} eq 'set as profile pic' ) {
 		my $User = new openprint::User( $session{'user_id'} );
 		$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
