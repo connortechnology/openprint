@@ -112,6 +112,11 @@ sub view {
 			$variable{'error'} .= 'Please enter a subject or message.';
 			return;	
 		} # end if
+		if ( ! $param{'to_id'} ) {
+			$variable{'error'} .= 'Please select someone to send the message to.';
+			return;
+		} # end if
+
 		if ( ! $Conversation->id() ) {
 			$variable{'error'} .= $Conversation->save({'subject'=>$param{'subject'}});
 		} # end if

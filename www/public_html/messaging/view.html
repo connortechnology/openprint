@@ -32,6 +32,7 @@
 		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
 	} // end function add_to
 	function reply_to( form ) {
+		tinyMCE.triggerSave();
 		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
 		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
 		params.set('action', 'reply' );
@@ -63,10 +64,10 @@ Start a New Conversation
 				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
 <? if ( ! $$variable{'Conversation'}->id() ) ?>
 				<div id="Subject"><label>Subject</label>
-					<input type="text" id="subject" name="subject" />
+					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" />
 				</div>
 <? endif ( ! $$variable{'Conversation'}->id() ) ?>
-				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"></textarea>
+				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>
 				<span class="buttons">
 				<? echo (
 if ( $$variable{'Conversation'}->id() ) {
