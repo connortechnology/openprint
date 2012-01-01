@@ -735,11 +735,15 @@ if ( ! sets::isin( 'conversations', \@tables ) ) {
 }
 
 if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
-	$dbh->do('ALTER TABLE tbl_projecttype_defaults RENAME TO projecttype_defaults');
-	unshift @tables, 'projecttype_defaults';
-	$dbh->do('CREATE SEQUENCE projecttype_defaults_id_seq');
-	$dbh->do(q`ALTER TABLE projecttype_defaults ALTER id SET default nextval('projecttype_defaults_id_seq')`);
-	$dbh->do(q`SELECT setval('projecttype_defaults_id_seq', (SELECT max(id) FROM projecttype_defaults));`);
+	if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
+		$dbh->do('ALTER TABLE tbl_projecttype_defaults RENAME TO projecttype_defaults');
+		unshift @tables, 'projecttype_defaults';
+		$dbh->do('CREATE SEQUENCE projecttype_defaults_id_seq');
+		$dbh->do(q`ALTER TABLE projecttype_defaults ALTER id SET default nextval('projecttype_defaults_id_seq')`);
+		$dbh->do(q`SELECT setval('projecttype_defaults_id_seq', (SELECT max(id) FROM projecttype_defaults));`);
+	} else {
+		$dbh->do('DROP TABLE tbl_projecttype_defaults');
+	} # end if
 	$dbh->do('DROP SEQUENCE tbl_projecttype_defaults_id_seq');
 } # end if
 if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {

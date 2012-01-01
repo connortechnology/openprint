@@ -3,12 +3,12 @@
 	function pay_invoice( invoice_id ) {
 		new Ajax.Updater( 'Paid', '_paid.html', { 
 				parameters: { 
-					payment_id<? echo ( $$variable{'Payment'}->id() ) ?>,
+					payment_id: <? echo ( $$variable{'Payment'}->id() ) ?>,
 					invoice_id: invoice_id 
 				},
 				onSuccess: function(transport) {
 					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
-						parameters: { payment_id<? echo ( $$variable{'Payment'}->id() ) ?> }
+						parameters: { payment_id: <? echo ( $$variable{'Payment'}->id() ) ?> }
 						} );
 				},
 				onFailure: function(transport) {
@@ -19,7 +19,7 @@
 	function unpay_invoice( invoice_id ) {
 		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
 				parameters: {
-					payment_id<? echo ( $$variable{'Payment'}->id() ) ?>,
+					payment_id: <? echo ( $$variable{'Payment'}->id() ) ?>,
 					invoice_id: invoice_id
 				},
 				onSuccess: load_paid(),
@@ -30,7 +30,7 @@
 	} // end function unpay_invoice(invoice_id)
 	function load_paid ( ) {
 		new Ajax.Updater( 'Paid', '_paid.html', {
-			parameters: { payment_id<? echo ( $$variable{'Payment'}->id() ) ?> },
+			parameters: { payment_id: <? echo ( $$variable{'Payment'}->id() ) ?> },
 			evalScripts: true,
 		} );
 	} // end function load_paid

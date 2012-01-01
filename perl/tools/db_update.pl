@@ -170,6 +170,7 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 		sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
 	} # end foreach
 } # end if
+if ( 0 ) {
 	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category->find('name'=>'Printing');
 	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category->find('name'=>'Coatings');
 	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>3}) if ! openprint::ServiceType_Category->find('name'=>'Prepress');
@@ -204,6 +205,7 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	if ( my $STC = openprint::ServiceType_Category->find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
+}
 
 my $data;
 if ( sets::isin( 'service_types', \@tables ) ) {
@@ -346,21 +348,13 @@ if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 
-my $new_version = 1273;
-if ( $version < $new_version ) {
-    print "Updating to version $new_version\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manufacturers LIMIT 1', {} );
-    my $ac = sql::start_transaction( $dbh );
-	if ( ! $data ) {
-		$_ = misc::load_file( $log, q{../openprint/sql/Manufacturers.sql});
-		foreach my $st ( split(';', $_ ) ) {
-			$dbh->do($st);
-		}
-	} 
-    sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
-    sql::end_transaction( $dbh, $ac );
-    $version = $new_version;
-} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='manufacturers'", 'column_name');
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manufacturers.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} 
 
 print "Updating Companies\n";
 if ( ! sets::isin( 'companies', \@tables ) ) {
@@ -531,6 +525,10 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	if ( ! exists $$data{'allocated'} ) {
 		$dbh->do('alter table papers add allocated integer');
 	} # end if
+	$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
+	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
+	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
+	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
 } # end if
 if ( ! sets::isin( 'materials', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Materials.sql') );
@@ -541,27 +539,6 @@ if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_specifications'", 'column_name');
 $dbh->do('alter table material_specifications add interpolate boolean') if ! exists $$data{'interpolate'};
-if ( $version < 1333 ) {
-	print "Updating to version 1333\n";
-	my $ac = sql::start_transaction( $dbh );
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
-	$dbh->do('alter table papers add basis_width float') if ! exists $$data{basis_width};
-	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
-	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
-	sql::update( undef, undef, 'papers', "type='Roll'", 'basis_width', 25, 'basis_height', 38 );
-	sql::insert( undef, undef, 'database_info', 'version', 1333, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1333;
-} # end if
-if ( $version < 1334 ) {
-	print "Updating to version 1334\n";
-	my $ac = sql::start_transaction( $dbh );
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM papers LIMIT 1', {} );
-	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
-	sql::insert( undef, undef, 'database_info', 'version', 1334, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1334;
-} # end if
 if ( $version < 1381 ) {
 	print "Updating to version 1381\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_ink_colours LIMIT 1', {} );
@@ -605,7 +582,7 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 		$dbh->do($st);
 	}
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skids LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skids'", 'column_name' );
 	if ( $data ) {
 		if ( ! exists $$data{'type'} ) {
 			$dbh->do('alter table skids add type text');
@@ -621,6 +598,9 @@ if ( ! sets::isin( 'skids', \@tables ) ) {
 			$dbh->do(q{alter table skids alter updated_by SET NOT NULL});
 			$dbh->do(q{alter table skids ADD FOREIGN KEY (updated_by) REFERENCES Users (id)});
 		} # endif
+		if ( ! exists $$data{'deleted'} ) {
+			$dbh->do('alter table skids add deleted BOOLEAN NOT NULL default false');
+		} # end if
 	} # end if
 } # end if 1456
 
@@ -2131,7 +2111,7 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'skid_contents', \@tables ) ) {
-	$dbh->do(misc::load_file( $log, '../openprint/sql/Skids_Contents.sql' ) );
+	$dbh->do(misc::load_file( $log, '../openprint/sql/Skid_Contents.sql' ) );
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
 	if ( ! exists $$data{'id'} ) {

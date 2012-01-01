@@ -13,6 +13,7 @@ CREATE TABLE Skids (
 	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Id),
 	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (Id),
 	type			TEXT,
+	deleted			BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
 );
 
