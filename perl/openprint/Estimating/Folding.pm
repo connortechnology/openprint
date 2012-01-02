@@ -1493,9 +1493,9 @@ sub cut_imposition {
 	my ( $i1, $i2 ) = ( $I->copy(), $I->copy );
 	if ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Horizontal' ) and ( $$I{rows} > 1 ) ) {
 		# For folding purposes, can only fold where spines are aligned
-		return map { $_ = $I->copy(); $_->rows(1); $_; } ( 1 .. $$I{rows} );
+		return map { my $i = $I->copy(); $i->rows(1); $i; } ( 1 .. $$I{rows} );
 	} elsif ( ( $$I{spread_size} >= 4 ) and ( $$I{image_orientation} eq 'Vertical' ) and ( $$I{columns} > 1 ) ) {
-		return map { $_ = $I->copy(); $_->columns(1); $_; } ( 1 .. $$I{columns} );
+		return map { my $i = $I->copy(); $i->columns(1); $i; } ( 1 .. $$I{columns} );
 	} elsif ( $$I{columns} > $$I{rows} ) {
 		$i1->columns(int $$I{columns}/2);
 		$i2->columns( $$I{columns} - $$i1{columns} );
