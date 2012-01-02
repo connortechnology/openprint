@@ -1,8 +1,7 @@
-package openprint::Claim_Content;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+package openprint::Claim_Content;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::Claim_ContentType;

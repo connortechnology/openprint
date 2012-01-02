@@ -18,6 +18,7 @@ require openprint::CIP3_PPF;
 require openprint::Host;
 require openprint::Log;
 require openprint::Asset;
+require openprint::Claim_Content;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -28,7 +29,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $r;
-$log = logger->new('debug');
+$log = logger->new({ level=>'debug'});
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -202,18 +203,21 @@ if ( 0 ) {
 
 my $deleted_skids = 0;
 foreach my $Skid ( openprint::Skid->find(
-			'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
+			'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*-365 ) ),
 			) ) {
 	my $delete = 1;
 	my @Contents = $Skid->Contents();
 	foreach my $C ( @Contents ) {
 		$delete = 0 if $C->quantity();
 	}
+	$delete = 0 if openprint::Claim_Content->find('skid_id'=>$$Skid{id});
+	$delete = 0 if openprint::ManifestContent->find('skid_id'=>$$Skid{id});
 	if ( $delete ) {
 		$Skid->destroy();
 		$deleted_skids += 1;
 	} # end if
 } # end foreach Skid
+$log->warn("Deleted $deleted_skids skids");
 
 
 if ( 0 ) {
@@ -271,6 +275,7 @@ if ( 0 ) {
 	} # end foreach
 } # end if 1
 
+if ( 0 ) {
 if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
@@ -302,30 +307,36 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 		$H->delete();
 	} # end foreach H
 } # end if
+}
 
+if ( 0 ) {
 # Resolve any unresolved IP's
-foreach my $Host ( openprint::Host->find('hostname'=>undef) ) {
+foreach my $Host ( openprint::Host->find('hostname is null'=>1) ) {
 	$Host->resolve() if $Host->ip();
 	$Host->save() if $Host->hostname();
 } # end foreach
+}
 
 # Paper maintenance
 foreach my $Paper ( openprint::Paper->find() ) {
 	my $old_wpsi = $Paper->wpsi();
 	$old_wpsi = '' if ! defined $old_wpsi;
-	if ( $old_wpsi ne $Paper->wpsi(undef) ) {
+	next if ! $Paper->wpsi(undef);
+	if ( $old_wpsi ne $Paper->wpsi() ) {
 $openprint::log->debug("Updating wpsi (old: $old_wpsi, new: $$Paper{wpsi}) for " . $Paper->to_string() );
 		$Paper->save();
 		last if $dbh->errstr();
 	} # end if
 } # end foreach my Paper
 
+if ( 0 ) {
 my $log_count = 0;
 foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
 $log->warn("Deleted $log_count log entries");
+}
 
 if ( $config{'AssetPath'} ) {
 	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {

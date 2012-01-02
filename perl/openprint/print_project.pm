@@ -1,3 +1,4 @@
+use strict;
 package openprint::print_project;
 
 use openprint ();
@@ -9,13 +10,13 @@ use vars qw( $r $log $dbh %session %param %variable );
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-use strict;
 
 require sql;
 require openprint::account;
 require openprint::service;
 require openprint::ServiceType;
 require openprint::ProjectType;
+require openprint::ProjectType_Default;
 require openprint::Project;
 require openprint::Currency;
 require openprint::User;
@@ -28,8 +29,8 @@ require openprint::Estimating::MultiPage;
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
 
-	my ( $project_type_index ) = sql::execute( $log, $dbh, q{SELECT id FROM Project_Types WHERE name=?}, $project_type_id );
-	if ( $project_type_index ) {
+	my $ProjectType = openprint::ProjectType->find_one('name'=>$project_type_id);
+	if ( $ProjectType ) {
 
 		# Make this all one transaction...
 		my $ac = sql::start_transaction( $dbh );
@@ -43,12 +44,12 @@ sub insert_project_type {
 			'lngProjectIndex',	$project_index,
 			'lngServiceIndex',	$service_index,
 			'strName',			'ProjectType',
-			'strValue',		 $project_type_id
+			'strValue',		 $ProjectType->name(),
 			] );
 
-		my @defaults = map { $_->name(), $_->value() } openprint::ProjectType_Default->find(
-				'projecttype_id is null or ='=> $variable{'ProjectType'}->id(), 
-				'order'=>'projectype_id NULLS FIRST' );
+		my @defaults = map { $$_{'name'}, $$_{'value'} } openprint::ProjectType_Default->find(
+				'projecttype_id is null or ='=> $ProjectType->id(), 
+				'order'=>'projecttype_id NULLS FIRST' );
 
 		$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id IS NULL AND user_id=?};
 		push @defaults, sql::execute( $log, $dbh, $_, $session{'user_id'} );
