@@ -47,14 +47,13 @@
 <div class="Conversation"><div class="View">
 	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
 		<input type="hidden" id="last_message_id" value="" />
-		<fieldset><legend>
+		<fieldset>
 <? if ( $$variable{'Conversation'}->id() ) ?>
-Viewing Conversation
+<legend>Viewing Conversation</legend>
 <h1><? echo ( $$variable{'Conversation'}->subject() ) ?></h1>
 <? else ( $$variable{'Conversation'}->id() ) ?>
-Start a New Conversation
+<legend>Start a New Conversation</legend>
 <? endif ( $$variable{'Conversation'}->id() ) ?>
-</legend>
 			<? if ( $$variable{'Conversation'}->deleted() ) ?>
 			<span class="warning">This message has been deleted</span>
 			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
@@ -83,7 +82,7 @@ if ( $$variable{'Conversation'}->id() ) {
 				<? echo (
 					return if ! $$variable{'Conversation'}->id();
 					my $html = '';
-					$html .= ssi::button( 'delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
+					$html .= ssi::button( 'DC', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
 					return $html;
 				) ?>
 			</p>
