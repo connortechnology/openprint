@@ -283,6 +283,7 @@ function cbFillPrintResults( results ) {
 		} // end if
 	} // end for
 	block_calc = false;
+	gettingNewPrice = false;
 
     var addServices = new Array();
     var cancelAddFolding = false;
@@ -408,8 +409,11 @@ function Stock_onchange( element, id ) {
 	if ( form.elements['rdbSuppliedStock'+id] ) {
 		h.set('Supplied', get_value( form.elements['rdbSuppliedStock'+id] ) );
 	} // end if
+	if ( form.elements['projecttype_id'] ) {
+		h.set('projecttype_id', get_value( form.elements['projecttype_id'] ) );
+	} // end if
 
-	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'Size' );
+	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'Size' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		var filter = form.elements['ddmStock'+filters[index]+id];
 		if ( filter ) {
@@ -419,6 +423,7 @@ function Stock_onchange( element, id ) {
 			//alert('filter ' + 'ddmStock'+filters[index]+id );
 		} // end if filter exists
 	} // end for 
+	h.set( 'callback', 'cbStockFillResults' );
 	new Ajax.Request( '/main/project/prin/_paper.json', { parameters: h, evalScripts: true } );
 } // end function Stock_onchange
 
@@ -485,7 +490,7 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var filters = new Array( 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
+	var filters = new Array( 'Brand','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
 			var suffix = suffixes[suffix_index];
@@ -496,5 +501,6 @@ function cbStockFillResults( results ) {
 		} // end foreach suffix
 	} // end for 
 	gettingNewPrice = false;
+    //if ( timeout ) { clearTimeout( timeout ); timeout = null; }
 	calc(form.name);
 } // end function Stock_Fill

@@ -5,6 +5,7 @@ use strict;
 require openprint::main_project;
 require openprint::Project;
 require openprint::ProjectType;
+require openprint::ProjectType_Default;
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );
 *log = \$openprint::log;
