@@ -3,11 +3,9 @@ package openprint::Skid;
 our @ISA = qw( openprint::Object );
 
 use openprint ();
-use vars qw( $log $dbh %variable %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
-*variable = \%openprint::variable;
+use vars qw( $log %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *session = \%openprint::session;
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Location;
@@ -220,7 +218,7 @@ sub find {
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
 	} elsif ( $debug ) {
@@ -259,16 +257,16 @@ sub save {
 } # end sub save
 
 sub destroy {
-	my $self = shift;
+	my $self = $_[0];
 
-	my $ac = sql::start_transaction( $dbh );
+	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{UPDATE manifestcontents SET skid_id=NULL WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_verifications WHERE skid_id=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
-	sql::end_transaction( $dbh, $ac );
+	$self->SUPER::destroy();
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
 sub to_string {
@@ -511,7 +509,7 @@ sub allocate {
 			'quantity',		1*$quantity,
 			'units',		$units,
 			'project_id',	$project_id ? $project_id : undef,
-			'operator_id',	$variable{'user_id'},
+			'operator_id',	$session{'user_id'},
 			);
 	if ( $project_id ) {
 	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
