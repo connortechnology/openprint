@@ -14,6 +14,7 @@ use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fiel
 require openprint::Manifest_Content_Type;
 require openprint::Manifest;
 require openprint::Skid;
+require openprint::SkidContent;
 
 $debug = 0;
 
@@ -76,5 +77,15 @@ sub value {
 	return $_[0]{'value'};
 } # end sub value
 
+sub delete {
+	foreach my $S ( openprint::SkidContent->find('manifestcontent_id'=>$_[0]{'id'}) ) {
+		if ( $S->manifestcontent_id() != $_[0]->id() ) {
+			$log->error("BLAH!");
+			next;
+		} # end if
+		$S->save({'manifestcontent_id'=>undef});
+	} # end foreach
+	$_[0]::SUPER->delete();
+} # end sub delete
 1;
 __END__
