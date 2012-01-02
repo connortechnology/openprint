@@ -1,9 +1,8 @@
-
 <? echo (
 	my $html='';
-	my @Logs = openprint::logRecord::find(
-		'ip_address'=>$$variable{'Host'}->ip(),
-		'action_type in'	=> [ 100, 101, 102 ],
+	my @Logs = openprint::Log->find(
+		'host_id'		=>	$$variable{'Host'}->id(),
+		'action in'	=> [ 'Host online', 'Host offline', 'Host rebooted', 'Long response time' ],
 		ssi::date_filter( '/employee/it/host.html?log_created_on_start', 'date_time >=' ),
 		ssi::date_filter( '/employee/it/host.html?log_created_on_end', 'date_time <=' ),
 		'order'=>'date_time DESC',

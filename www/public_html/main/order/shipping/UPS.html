@@ -24,21 +24,21 @@ function validate_data(formName) {
 		<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 		<!--#include virtual="/includes/main/proj/shipping_address.html"-->
 		<p>
-			<label>Service Type:</label>
+			<label>Service Type</label>
 			<span id="ServiceTypeDiv">
 				Please wait while services types are loaded.
 				<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
 			</span>
 		</p>
 		<p>
-			<label>Pickup Type:</label>
+			<label>Pickup Type</label>
 			<span id="PickupTypeDiv">
 				Please wait while pickup types are loaded.
 				<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
 			</span>
 		</p>
 		<p>
-			<label><b>Price:</b></label>
+			<label><b>Price</b></label>
 			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 			<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>

@@ -12,15 +12,15 @@
 					<div class="content">
 						<ul>
 							<li class="order_id"> 
-								<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
+								<label>Order ID</label><? echo ( $$variable{'Order'}->id() ) ?>
 							</li>
 							<li class="po_id"> 
-								<label>Purchase Order:</label>
+								<label>Purchase Order</label>
 								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 							</li>
 							<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 							<li class="company_id">
-								<label>Company:</label>
+								<label>Company</label>
 								<span id="CompanyDropDown">
 								<!--#include virtual="_company_dropdown.html"-->
 								</span>
@@ -106,7 +106,7 @@
 <div id="Totals">
 	<ul>
 		<li id="SubTotal">
-			<label>Sub Total:</label>
+			<label>Sub Total</label>
 			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
 		</li>
 	</ul>

@@ -56,19 +56,19 @@ function howdidyouhearaboutus_onchange(e) {
 				<div class="content">
 					<ul>
 						<li class="company_name<? echo ( $$variable{'RequiredFields'}{'company_name'} ? ' required' : '' ) ?>"> 
-							<label for="company_name">Company/Billing Name:</label>
+							<label for="company_name">Company/Billing Name</label>
 							<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
 						</li>
 						<li class="address1<? echo ( $$variable{'RequiredFields'}{'address1'} ? ' required' : '' ) ?>"> 
-							<label for="address1">Address Line 1:</label>
+							<label for="address1">Address Line 1</label>
 							<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
 						</li>
 						<li class="address2 <? echo ( $$variable{'RequiredFields'}{'address2'} ? ' required' : '' ) ?>">
-							<label for="address2">Address Line 2:</label>
+							<label for="address2">Address Line 2</label>
 							<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{'address2'}); ) ?>"  />
 						</li>
 						<li class="country <? echo ( $$variable{'RequiredFields'}{'country'} ? ' required' : '' ) ?>"> 
-							<label for="country">Country:</label>
+							<label for="country">Country</label>
 							<select id="country" name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
 							<option value=""> Select </option>
 							<? echo (
@@ -96,7 +96,7 @@ function howdidyouhearaboutus_onchange(e) {
 							</select>
 						</li>
 						<li class="city<? echo ( $$variable{'RequiredFields'}{'city'} ? ' required' : '' ) ?>"> 
-							<label for="city">City:</label>
+							<label for="city">City</label>
 							<input type="text" id="city" name="city" value="<? echo ( ssi::htmlize($param{'city'}); ) ?>"  />
 						</li>
 						<li class="postalcode<? echo ( $$variable{'RequiredFields'}{'postalcode'} ? ' required' : '' ) ?>"> 
@@ -112,15 +112,15 @@ function howdidyouhearaboutus_onchange(e) {
 							<input type="text" id="postalcode" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
 						</li>
 						<li class="phone<? echo ( $$variable{'RequiredFields'}{'phone'} ? ' required' : '' ) ?>"> 
-							<label for="phone">Phone:</label>
+							<label for="phone">Phone</label>
 							<input type="text" id="phone" name="phone" value="<? hecho ( $param{'phone'} ) ?>" />
 						</li>
 						<li class="fax<? echo ( $$variable{'RequiredFields'}{'fax'} ? ' required' : '' ) ?>"> 
-							<label for="fax">Fax:</label>
+							<label for="fax">Fax</label>
 							<input type="text" id="fax" name="fax" value="<? hecho ( $param{'fax'} ) ?>" />
 						</li>
 						<li class="url<? echo ( $$variable{'RequiredFields'}{'url'} ? ' required' : '' ) ?>">
-							<label for="url">Web Site URL:</label>
+							<label for="url">Web Site URL</label>
 							<input type="text" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
 						</li>
 					</ul>
@@ -132,18 +132,18 @@ function howdidyouhearaboutus_onchange(e) {
 			<legend>Miscellaneous Information</legend>
 			<div class="content"><ul>
 			<li class="businesstype<? echo ( $$variable{'RequiredFields'}{'businesstype'} ? ' required' : '' ) ?>">
-				<label for="businesstype">Business Type:</label>
+				<label for="businesstype">Business Type</label>
 				<input type="text" name="businesstype" id="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
 			</li>
 			<li class="reasonforpurchase<? echo ( $$variable{'RequiredFields'}{'reasonforpurchase'} ? ' required' : '' ) ?>"> 
-				<label>Reason For Purchase:</label>
+				<label>Reason For Purchase</label>
 				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseEndUser" value="EndUser" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'EndUser' or ! $param{'reasonforpurchase'} ) ?>  />
 				<label class="radio" for="ReasonForPurchaseEndUser">End User</label>
 				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseReseller" value="Reseller" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'Reseller' ) ?> />
 				<label class="radio" for="ReasonForPurchaseReseller">Reseller</label> 
 			</li>
 			<li class="howdidyouhearaboutus<? echo ( $$variable{'RequiredFields'}{'howdidyouhearaboutus'} ? ' required' : '' ) ?>">
-				<label>How did you hear about us?:</label>
+				<label>How did you hear about us?</label>
 				<select name="howdidyouhearaboutus" id="howdidyouhearaboutus" onchange="howdidyouhearaboutus_onchange(this);">
 <? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please select who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
@@ -172,7 +172,7 @@ function howdidyouhearaboutus_onchange(e) {
 			<div class="content">
 			<ul>
 				<li class="salutation<? echo ( $$variable{'RequiredFields'}{'salutation'} ? ' required' : '' ) ?>">
-					<label>Salutation:</label>
+					<label>Salutation</label>
 					<input type="radio" name="salutation" id="salutationMr" value="Mr."
 					<? echo ( ssi::checked( $param{'salutation'} eq 'Mr.' or ! $param{'salutation'} ); ) ?> />
 					<label class="radio" for="salutationMr">Mr.</label>
@@ -187,29 +187,29 @@ function howdidyouhearaboutus_onchange(e) {
 					<label class="radio" for="salutationMiss">Miss</label>
 				</li>
 				<li class="firstname<? echo ( $$variable{'RequiredFields'}{'firstname'} ? ' required' : '' ) ?>">
-					<label>First Name:</label>
+					<label>First Name</label>
 					<input type="text" name="firstname" value="<? echo ( ssi::htmlize($param{'firstname'}); ) ?>" />
 				</li>
 				<li class="lastname<? echo ( $$variable{'RequiredFields'}{'lastname'} ? ' required' : '' ) ?>">
-					<label>Last Name:</label>
+					<label>Last Name</label>
 					<input type="text" name="lastname" value="<? echo ( ssi::htmlize($param{'lastname'}); ) ?>" />
 				</li>
 				<li class="title<? echo ( $$variable{'RequiredFields'}{'title'} ? ' required' : '' ) ?>">
-					<label>Position:</label>
+					<label>Position</label>
 					<input type="text" name="title" value="<? echo ( ssi::htmlize($param{'title'}); ) ?>" />
 				</li>
 				<li class="email<? echo ( $$variable{'RequiredFields'}{'email'} ? ' required' : '' ) ?>">
-					<label>E-mail:</label>
+					<label>E-mail</label>
 					<input type="email" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</li>
 				<li><!--#include virtual="/includes/password_requirements.html"--></li>
 				<li class="password<? echo ( $$variable{'RequiredFields'}{'password'} ? ' required' : '' ) ?>">
-					<label for="password">Password:</label>
+					<label for="password">Password</label>
 					<input type="password" id="password" name="password" onkeyup="updateStrength(this.value);check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>" />
-					Strength: <span id="psContainer"><span id="psStrength"></span></span>
+					Strength <span id="psContainer"><span id="psStrength"></span></span>
 				</li>
 				<li class="verifypassword<? echo ( $$variable{'RequiredFields'}{'verifypassword'} ? ' required' : '' ) ?>">
-					<label for="verifypassword">Verify Password:</label>
+					<label for="verifypassword">Verify Password</label>
 					<input type="password" id="verifypassword" name="verifypassword" onkeyup="check_passwords(this.form.password, this);" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>" />
 					<span id="password_alert"></span>
 				</li>

@@ -15,7 +15,7 @@
 			<div id="UPSOptions" <? echo ( $$variable{'UPSShipping'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 				<ul>
 					<li class="ToCountry">
-						<label>Country:</label>
+						<label>Country</label>
 						<select id="ToCountry" name="ToCountry" onchange="Country_onchange(this);calc(this.form.name);">
 						<option value=""> Select </option>
 						<? echo ( ssi::return_countries( $$variable{'ToCountry'} ); ) ?>
@@ -25,31 +25,31 @@
 						<label><span id="ToCountry_postal">
 							<? echo (
 							   if ( $$variable{'ToCountry'} eq 'US' ) {
-									   return 'Zip Code:';
+									   return 'Zip Code';
 							   } elsif ( $$variable{'ToCountry'} eq 'CA' ) {
-									   return 'Postal Code:';
+									   return 'Postal Code';
 							   } else {
-									   return 'Zip/Postal Code:';
+									   return 'Zip/Postal Code';
 							   } # end if
 							) ?></span></label>
 						<input type="text" id="ToPostalCode" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
 					</li>
 					<li class="ServiceTypes">
-						<label>Service Type:</label>
+						<label>Service Type</label>
 						<span id="ServiceTypeDiv">
 							Please wait while service types are loaded.
 							<input type="hidden" id="ddmServiceType" name="ddmServiceType" value="<?ddmServiceType?>" />
 						</span>
 					</li>
 					<li class="PickupTypes">
-						<label>Pickup Type:</label>
+						<label>Pickup Type</label>
 						<span id="PickupTypeDiv">
 							Please wait while pickup types are loaded.
 							<input type="hidden" id="ddmPickupType" name="ddmPickupType" value="<?ddmPickupType?>" />
 						</span>
 					</li>
 					<li>UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved</li>
-			</ul>
+				</ul>
 			</div>
 			</div>
 		</div><!--ShippingInformation-->

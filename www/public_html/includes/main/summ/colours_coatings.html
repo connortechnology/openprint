@@ -1,7 +1,7 @@
 
 <? if ( $$variable{'chkBlackSideOne'} or $$variable{'chkProcessColourSideOne'} )?>
 <p>
-	<label>Side one colours:</label>
+	<label>Side one colours</label>
 <!-- The rest is done for each qty -->
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -26,7 +26,7 @@
 
 <? if ( $$variable{'chkSpecialSideOneColour1'} || $$variable{'chkSpecialSideOneColour2'} || $$variable{'chkSpecialSideOneColour3'} || $$variable{'chkSpecialSideOneColour4'} || $$variable{'chkSpecialSideOneColour5'} || $$variable{'chkSpecialSideOneColour6'} || $$variable{'chkSpecialSideOneColour7'} || $$variable{'chkSpecialSideOneColour8'} ) ?>
 <p> 
-	<label>Side one special colours:</label>
+	<label>Side one special colours</label>
 <!-- The rest is done for each qty -->
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -66,7 +66,7 @@
 <? endif ( $$variable{'chkSpecialSideOneColour1'} || $$variable{'chkSpecialSideOneColour2'} || $$variable{'chkSpecialSideOneColour3'} || $$variable{'chkSpecialSideOneColour4'} || $$variable{'chkSpecialSideOneColour5'} || $$variable{'chkSpecialSideOneColour6'} || $$variable{'chkSpecialSideOneColour7'} || $$variable{'chkSpecialSideOneColour8'} ) ?>
 <? if ( $$variable{'chkVarnishOverallGlossSideOne'} || $$variable{'chkVarnishOverallMatteSideOne'} || $$variable{'chkVarnishOverallMatteSideOne'} || $$variable{'chkVarnishSpotGlossSideOne'}  || $$variable{'chkVarnishSpotMatteSideOne'} || $$variable{'chkVarnishDryTrapSideOne'}  ) ?>
 <p> 
-	<label>Varnish for side one:</label>
+	<label>Varnish for side one</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -85,7 +85,7 @@
 
 <? if ( $$variable{'rdbAqueousSideOne'} ne 'None' ) ?>
 <p> 
-	<label>Aqueous coating for side one:</label>
+	<label>Aqueous coating for side one</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -97,7 +97,7 @@
 <? endif ( $$variable{'rdbAqueousSideOne'} ne 'None' ) ?>
 <? if ( $$variable{'chkBlackSideTwo'} or $$variable{'chkProcessColourSideTwo'} )?>
 	  <p> 
-		<label>Side two colours:</label>
+		<label>Side two colours</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -120,7 +120,7 @@
 
 <? if ( $$variable{'chkSpecialSideTwoColour1'} || $$variable{'chkSpecialSideTwoColour2'} || $$variable{'chkSpecialSideTwoColour3'} || $$variable{'chkSpecialSideTwoColour4'} || $$variable{'chkSpecialSideTwoColour5'} || $$variable{'chkSpecialSideTwoColour6'} || $$variable{'chkSpecialSideOneTwoColour7'} || $$variable{'chkSpecialSideTwoColour8'} ) ?>
 	  <p> 
-		<label>Side two special colours:</label>
+		<label>Side two special colours</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -158,7 +158,7 @@
 
 <? if ( $$variable{'chkVarnishOverallGlossSideTwo'} || $$variable{'chkVarnishOverallMatteSideTwo'} || $$variable{'chkVarnishOverallMatteSideTwo'} || $$variable{'chkVarnishSpotGlossSideTwo'}  || $$variable{'chkVarnishSpotMatteSideTwo'} || $$variable{'chkVarnishDryTrapSideTwo'}  ) ?>
 <p> 
-	<label>Varnish for side two:</label>
+	<label>Varnish for side two</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -177,7 +177,7 @@
 
 <? if ( $$variable{'rdbAqueousSideTwo'} ne 'None' ) ?>
 <p>
-	<label>Aqueous coating for side two:</label>
+	<label>Aqueous coating for side two</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>

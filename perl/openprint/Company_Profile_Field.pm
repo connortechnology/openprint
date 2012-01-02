@@ -3,8 +3,8 @@ package openprint::Company_Profile_Field;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $table $serial %fields %transforms %defaults );
-$table = 'user_profile_fields';
-$serial = 'user_profile_fields_id_seq';
+$table = 'company_profile_fields';
+$serial = 'company_profile_fields_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',
@@ -14,12 +14,15 @@ $serial = 'user_profile_fields_id_seq';
 	'sort'			=>	'sort',
 	'values'		=>	'values',
 	'deleted'		=>	'deleted',
+	'searchable'	=>	'searchable',
+	'deleted'		=>	'deleted',
 );
 %transforms = (
 	'sort'	=> [ 's/\D//g' ],
 );
 %defaults = (
 	'required'	=>	0,
+	'searchable'	=>	0,
 	'sort'		=>	'undef',
 	'deleted'	=>	0,
 );

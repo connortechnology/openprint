@@ -32,11 +32,11 @@
 <? if ( $session{'user_id'} ) ?>
 <div class="Timetrack"><div class="History">
 	<form id="f1" name="f1" method="post" action="/timetrack/history.html">
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 			<div class="leftColumn">
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<p>
-				<label>Company:</label>
+				<label>Company</label>
 				<select name="company_id" id="company_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
@@ -46,7 +46,7 @@
 <input type="hidden" name="company_id" value="<? echo ( $session{'company_id'} ) ?>" />
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<p>
-				<label>Dates:</label>
+				<label>Dates</label>
 				<span class="DateSelectorC">
 <? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 				</span>
@@ -56,7 +56,7 @@
 				</span>
 			</p>
 			<p>
-				<label>Service:</label>
+				<label>Service</label>
 				<select name="service_id" id="service_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( openprint::Service->dropdown(), $session{'/timetrack/history.html?service_id'} ); ) ?>
@@ -64,7 +64,7 @@
 			</p>
 			</div>
 			<div class="rightColumn">
-			<p><label>Invoiced?:</label>
+			<p><label>Invoiced?</label>
 				<input type="radio" id="invoiced_1" name="invoiced" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="invoiced_1">Yes</label>
 				<input type="radio" id="invoiced_0" name="invoiced" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
@@ -72,7 +72,7 @@
 				<input type="radio" id="invoiced_01" name="invoiced" value="0,1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0,1' ) ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="invoiced_01">Both</label>
 			</p>
-			<p><label>Paid?:</label>
+			<p><label>Paid?</label>
 				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="paid_1">Yes</label>
 				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
@@ -82,7 +82,7 @@
 			</p>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<p>
-				<label>Employee:</label>
+				<label>Employee</label>
 				<select name="user_id" id="user_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'type'=>['A','E'], 'order'=>'lower(firstname),lower(lastname)') ], $session{'/timetrack/history.html?user_id'} ); ) ?>

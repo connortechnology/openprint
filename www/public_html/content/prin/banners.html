@@ -12,30 +12,48 @@
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
 						<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
-						<!--#include virtual="/includes/sizes.html"-->
-						<p><label>Colours:</label>
-							<select id="Colours" name="Colours" onchange="calc(this.form.name);">
-								<option value="4/0">4 Colour One Side</option>
-								<option value="4/1">4 Colour/Black</option>
-								<option value="4/4">4 Colour Both Sides</option>
-							</select>
-						</p>
-						<br/>
-						<div class="row">
-							<label>Stock Information</label><br/>
-							<!--#include virtual="/includes/paper_dropdowns.html"-->
+						<!--#include virtual="_sizes.html"-->
+						<div class="Colours">
+							<fieldset><legend>Colours</legend>
+								<div class="content">
+		
+							<ul>
+							<li><label>Colours</label>
+								<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+									<option value="4/0">4 Colour One Side</option>
+									<option value="4/1">4 Colour/Black</option>
+									<option value="4/4">4 Colour Both Sides</option>
+								</select>
+							</li>
+							</ul>
 						</div>
+					</fieldset>
+				</div>
+						<div class="Stock">
+							<fieldset><legend>Stock</legend>
+								<div class="content">
+									<!--#include virtual="_paper_dropdowns.html"-->
+								</div>
+							</fieldset>
+						</div>
+<div class="Production">
+                    <fieldset><legend>Production</legend>
+                        <div class="content">
+                            <ul>
+
 						<!--#include virtual="_proofs.html"-->
-						<!--#include virtual="/includes/drilling.html"-->
-						<!--#include virtual="/includes/scoring.html"-->
-						<!--#include virtual="/includes/perfing.html"-->
-						<!--#include virtual="/includes/turnaround.html"-->
+						<!--#include virtual="_drilling.html"-->
+						<!--#include virtual="_scoring.html"-->
+						<!--#include virtual="_perfing.html"-->
+						<!--#include virtual="_turnaround.html"-->
+						<!--#include virtual="_quantity.html"-->
+						<!--#include virtual="_press_type.html"-->
+							</ul>
+						</div>
+					</fieldset>
+				</div>
 						<br class="spacer"/>
-						<!--#include virtual="/includes/quantity.html"-->
-						<br class="spacer"/>
-						<!--#include virtual="/includes/press_type.html"-->
-						<br class="spacer"/>
-						<!--#include virtual="/includes/prices.html"-->
+						<!--#include virtual="_prices.html"-->
 					</div><!--Questions-->
 					<br class="spacer"/>
 				</div>

@@ -44,8 +44,8 @@
 		<input type="hidden" name="action"/>
 	<fieldset><legend>Shift &amp; Operator</legend>
 		<ul>
-			<li><label>Shift:</label><? echo ( $$variable{'Shift'}->to_string() ) ?></li>
-			<li><label>Operator:</label>
+			<li><label>Shift</label><? echo ( $$variable{'Shift'}->to_string() ) ?></li>
+			<li><label>Operator</label>
 				<select name="operator_id" id="operator_id">
 					<option value="">select one</option>
 					<? echo ( 
@@ -78,7 +78,7 @@
 				return $html;
 			) ?>
 		</div>
-			<p><label>New Docket:</label>
+			<p><label>New Docket</label>
 				<input type="number" name="docket-new" id="docket-new" onkeyup="this.value=this.value.replace(/\D/, '');" onkeydown="if(event.keyCode == 13){add_docket();return false;}" />
 				<? echo ( ssi::button( 'AddDocket', { 'onclick'=>'add_docket();', 'text'=>'Add' } ); ) ?></p>
 	</fieldset>

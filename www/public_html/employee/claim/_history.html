@@ -113,7 +113,7 @@
 			$report_total += $total;
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '8' : '7' ).'" style="text-align: right;font-weight: bold;">Total (' . $Currency->name().') :</td><td class="Price" style="font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '8' : '7' ).'" style="text-align: right;font-weight: bold;">Total (' . $Currency->name().') </td><td class="Price" style="font-weight: bold;">';
 		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total,2,2 ) );
 		$html .= '</td></tr>';
 		return $html;

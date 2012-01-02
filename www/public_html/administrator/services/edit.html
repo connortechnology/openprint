@@ -5,20 +5,20 @@
 		<div class="content">
 		<ul>
 		<li> 
-			<label>Category:</label>
+			<label>Category</label>
 			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
 			</select>
 		</li>
-		<li><label>Equipment:</label>
+		<li><label>Equipment</label>
 			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower('.$openprint::Equipment::fields{'name'}.')') ], $param{'equipment_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
 			</select>
 		</li>	
 		<li> 
-			<label>Service:</label>
+			<label>Service</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
@@ -48,11 +48,11 @@
 	<div class="leftColumn">
 	<fieldset><legend>Service Information</legend>
 		<p> 
-			<label>Service Name:</label>
+			<label>Service Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'Service'}->name(); ) ?>" onchange="if(!$('description').value){$('description').value=this.value;}"/>
 		</p>
 		<p> 
-			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category:</label>
+			<label onclick="$('new_category').value='';$('new_category').toggle();$('category_id').selectedIndex=0;$('category_id').toggle()">Category</label>
 			<input style="display:none;" type="text" id="new_category" name="new_category" value=""/>	
 			<select id="category_id" name="category_id">
 				<option value="">Select a category</option>
@@ -60,7 +60,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Description:</label>
+			<label>Description</label>
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{'Service'}->description(); ) ?>" />
 		</p>
 	</fieldset>

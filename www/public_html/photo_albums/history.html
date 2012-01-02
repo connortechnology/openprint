@@ -31,12 +31,12 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Photo_Albums"><div class="History">
 	<form id="f1" name="f1" method="post" action="/photo_albums/history.html">
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 				<ul>
 		<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 <!--
 					<li>
-						<label>Company:</label>
+						<label>Company</label>
 						<select name="company_id" id="company_id" onchange="load_albums(this.form);">
 							<option value="">All</option>
 							<? echo ( openprint::Company::get_dropdown( $session{'/photo_albums/history.html?company_id'} ); ) ?>
@@ -44,19 +44,19 @@
 					</li>
 -->
 					<li>
-						<label>User:</label>
+						<label>User</label>
 						<select name="user_id" id="user_id" onchange="load_albums(this.form);">
 							<option value="">All</option>
 							<? echo ( ssi::make_drop_down( openprint::User->dropdown('company_id'=>$session{'/photo_albums/history.html?company_id'}), $session{'/photo_albums/history.html?user_id'} ); ) ?>
 						</select>
 					</li>
 					<li>
-						<label>Deleted:</label>
+						<label>Deleted</label>
 						<? echo ( ssi::radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/photo_albums/history.html?deleted'}, { 'onclick'=>'load_albums(this.form);'} ); ) ?>
 					</li>
 		<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li>
-						<label>Created:</label>
+						<label>Created</label>
 						<span class="DateSelectorCT">
 						<? echo ( ssi::date_select_session( '/photo_albums/history.html', 'created_on_start', {onchange=>q`load_albums($('f1'));`,'with_clear'=>1,'with_today'=>1} ); ) ?>
 						</span>

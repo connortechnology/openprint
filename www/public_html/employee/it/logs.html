@@ -16,7 +16,7 @@
 			</ul>
 		</p>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, this.form.company_id);" size="4" />
 			<select name="company_id">
 			<option value="">All</option>
@@ -24,7 +24,7 @@
 			</select>
 		</p>			
 		<p>
-			<label>User:</label>
+			<label>User</label>
 			<select name="user_id">
 			<option value="">All</option>
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} ); ) ?>
@@ -42,7 +42,7 @@
 		} # end if
 	) ?>
 		<p>
-			<label>Date:</label>
+			<label>Date</label>
 			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session( '/employee/it/logs.html', 'datetime_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span> to

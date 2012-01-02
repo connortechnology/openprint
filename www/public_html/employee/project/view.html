@@ -233,7 +233,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
 				$html .= '<td class="unprintable">&nbsp;</td>';
 			} # end if
-			$html .= '<td><b>Stock:</b><br/>';
+			$html .= '<td><b>Stock</b><br/>';
 			foreach my $string ( sort keys %totals ) {
 				$html .= $string . '<br/>';
 			} # end foreach string
@@ -265,7 +265,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox">&nbsp;</td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td colspan="2">Add Service:<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ] ); ) ?></select>
+			<td colspan="2">Add Service<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddServiceType', 'add.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Service' ); ) ?></td>
@@ -287,7 +287,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="service"><b>Total:</b></td>
+			<td class="service"><b>Total</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
@@ -296,7 +296,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="service"><b>Originally Ordered Price:</b></td>
+			<td class="service"><b>Originally Ordered Price</b></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
@@ -307,7 +307,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="service"><b>Value for shipping:</b></td>
+			<td class="service"><b>Value for shipping</b></td>
 			<td class="Price"><? echo ( 
 				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
 				$price = 5000 * ( int( $price/5000 ) );
@@ -399,13 +399,13 @@ $log->debug("Have no job: $Job");
 		<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Approve', 'approve.gif', "f1.btnFunction.value='Approve';f1.submit();", '', 'Approve New Charges' ); )?>
 		</span>
-		To approve the additional charges, click Approve:<br class="spacer"/>
+		To approve the additional charges, click Approve<br class="spacer"/>
 		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', new openprint::Order( $$variable{'OrderID'} )->get('firstname','lastname','email') ); ) ?><br/>
 
 		<span style="float: right;">
 	 	<? echo ( ssi::writeButton( $log, $dbh, 'AdditionalChargeNotify', 'additional.gif', "f1.btnFunction.value='AdditionalChargeNotify';f1.submit();", '', 'Send' );) ?>
 		</span>
-		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
+		Additional recipients (separate with a comma)<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
 
 	</fieldset>
 	<? endif ( $$variable{'Project'}->status() eq 'Waiting For Customer Approval' ) ?>
@@ -422,7 +422,7 @@ $log->debug("Have no job: $Job");
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() );
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
-<fieldset><legend>Purchase Orders:</legend>
+<fieldset><legend>Purchase Orders</legend>
 	<table class="List">
 		<tr><th class="po_id">PO</th><th class="description">Description</th><th class="quantity">Quantity</th></tr>
 <? echo (
@@ -501,9 +501,9 @@ $log->debug("Have no job: $Job");
 				$rowclass, new openprint::User( $user_id )->name(), $when, $description );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-		$html .= '<tr class="totals"><td colspan="2">Time spent before prepress action:</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
-		$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
-		$html .= '<tr><td colspan="2">Time spent before last scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
+		$html .= '<tr class="totals"><td colspan="2">Time spent before prepress action</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
+		$html .= '<tr><td colspan="2">Time spent before first scheduled</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
+		$html .= '<tr><td colspan="2">Time spent before last scheduled</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
 		return $html;
 	) ?>
 	</table>

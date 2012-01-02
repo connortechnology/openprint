@@ -33,21 +33,21 @@
 	<fieldset><legend>Please Login</legend>
 		Please enter your e-mail address and password.<br/>
 		<p>
-			<label for="UserID">UserID:</label>
+			<label for="UserID">UserID</label>
 			<input type="number" id="UserID" name="UserID" emptyok="emptyok" format="5N" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
 		</p>
 		<p>
-			<label for="email">E-mail:</label>
+			<label for="email">E-mail</label>
 			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
 			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
 		</p>
 		<p> 
-			<label for="password">Password:</label>
+			<label for="password">Password</label>
 			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
 				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
 		</p>
 		<p>
-			<label>Remember me:</label>
+			<label>Remember me</label>
 			<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
 			<label class="radio" for="rdbRememberMeY">Yes</label>
 			<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
@@ -67,7 +67,7 @@
 	<fieldset><legend>Forget your Password?</legend>
 		To have your password e-mailed to you, please submit your e-mail address below.<br/>
 		<p>
-			<label for="txtEmail2">E-mail:</label>
+			<label for="txtEmail2">E-mail</label>
 			<input type="email" id="txtEmail2" name="txtEmail2" />
 		</p>
 		<p class="buttons">

@@ -1,8 +1,8 @@
 <div class="CreditApplications">
 <form name="f1" method="post">
-	<fieldset class="filters"><legend>Search:</legend>
+	<fieldset class="filters"><legend>Search</legend>
 	<p>
-		<label>Company:</label>
+		<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.ddmCompany);" size="4" />
 		<select name="ddmCompany">
 			<option value=""> All Companies </option>
@@ -12,7 +12,7 @@
 		</select>
 	</p>
 	<p>
-		<label>Status:</label>
+		<label>Status</label>
 		<select name="ddmStatus">
 			<option value="" /> All </option>
 			<? echo (
@@ -21,7 +21,7 @@
 		</select>
 	</p>
 	<p>
-		<label>Application Date:</label>
+		<label>Application Date</label>
 		<span class="DateSelector">
             <? echo ( 
                 ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_start', {'with_today'=>1} );
@@ -68,7 +68,7 @@
 ) ?>
 <? if ( @{$$variable{'CreditApps'}} ) ?>
 <br>
-The following Credit Applications matched your criteria:<br>
+The following Credit Applications matched your criteria<br>
 <br>
 <table class="List sortable">
 	<tr>

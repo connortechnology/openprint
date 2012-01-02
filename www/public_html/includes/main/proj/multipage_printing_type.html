@@ -1,6 +1,6 @@
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 <p>
-	<label>Printing type:</label>
+	<label>Printing type</label>
 	<select name="PrintingType">
 		<? echo (
 			my $html;

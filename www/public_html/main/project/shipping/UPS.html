@@ -38,15 +38,15 @@ function validate_data(formName) {
 		<fieldset><legend>UPS Shipping Services</legend>
 			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p> 
-				<label>Country:</label>
+				<label>Country</label>
 				<select name="ToCountry" onchange="calc(this.form.name);">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_countries( $$variable{'ToCountry'} ? $$variable{'ToCountry'} : $session{'Country'} ); ) ?>
 				</select>
 			</p>
 			<p> 
-				<label>Zip/Postal Code:</label>
-				<input type="text" size="10" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
+				<label>Zip/Postal Code</label>
+				<input type="text" name="ToPostalCode" value="<?ToPostalCode?>" onkeyup="calc(this.form.name);"/>
 			</p>
 			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<div class="leftColumn">
@@ -57,7 +57,7 @@ function validate_data(formName) {
 			</div>
 			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p>
-				<label>Service Type:</label>
+				<label>Service Type</label>
 				<span id="ServiceTypeDiv">
 					Please wait while services types are loaded.
 					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
@@ -66,7 +66,7 @@ function validate_data(formName) {
 			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
 				<p>
-					<label>Pickup Type:</label>
+					<label>Pickup Type</label>
 					<span id="PickupTypeDiv">
 						Please wait while pickup types are loaded.
 						<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
@@ -76,12 +76,12 @@ function validate_data(formName) {
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<p>
-				<label># of items to ship:</label>
+				<label># of items to ship</label>
 				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<span class="<?Columns?>Columns">
-				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+				<input type="number" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
 				</span>
 				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -94,7 +94,7 @@ function validate_data(formName) {
 				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<span class="<?Columns?>Columns">
-				<input type="text" name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+				<input type="number" name="txtPrice<?QTYIndex?>" readonly="readonly" onfocus="this.blur();" />
 				</span>
 				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>

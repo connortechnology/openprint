@@ -18,7 +18,7 @@ $serial= 'usergroups_id_seq';
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//' ],
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );

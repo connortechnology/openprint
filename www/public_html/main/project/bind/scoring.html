@@ -16,10 +16,10 @@
 					Information for <?Reference?>:
 					<? endif ( $$variable{'Reference'} ne '' ) ?>
 					<p>
-						<label>Score Quantity:</label>
-						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+						<label>Score Quantity</label>
+						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="number" onkeyup="calc(this.form.name);" />
 						Vertical +
-						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="text" size="4" onkeyup="calc(this.form.name);" />
+						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="number" onkeyup="calc(this.form.name);" />
 						Horizontal
 			<input type="checkbox" id="chkOverrideQty-<?SignatureIndex?>" name="chkOverrideQty-<?SignatureIndex?>" value="Y" <? echo ( $$variable{"chkOverrideQty-$$variable{'SignatureIndex'}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="chkOverrideQty-<?SignatureIndex?>">Override</label>

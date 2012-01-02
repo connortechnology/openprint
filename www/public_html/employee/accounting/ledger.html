@@ -32,13 +32,13 @@
 <? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
 <form id="f1" name="f1" method="post" action="/employee/accounting/ledger.html">
 	<input type="hidden" name="btnFunction"/>
-	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 		<div class="leftColumn">
 <? eval (
 	ssi::setup_date_select( '/employee/accounting/ledger.html', 'occurred_on', -31, 365 );
 ) ?>
 			<p>
-				<label>Date:</label>
+				<label>Date</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select( 'occurred_on_start', join('-', @session{'/employee/accounting/ledger.html?occurred_on_start_year','/employee/accounting/ledger.html?occurred_on_start_month','/employee/accounting/ledger.html?occurred_on_start_day'} ), 'load_ledgers(this.form);' ); ) ?>
 					to 

@@ -13,7 +13,10 @@ require misc;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
+require openprint::User;
 require openprint::User_Profile_Field;
+require openprint::Company;
+require openprint::Company_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Video_Album;
 require openprint::Event;
@@ -48,7 +51,13 @@ sub registration {
 	# perform input field validation
 	my $error = '';
 	my %required_fields = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
-	$error .= 'Missing company name.<br/>' if $required_fields{'company_name'} and ! $param{'company_name'};
+	if ( ! $param{'company_name'} ) {
+		if ( $required_fields{'company_name'} ) {
+			$error .= 'Missing company name.<br/>';
+		} elsif ( $param{'firstname'} or $param{'lastname'} ) {
+			$param{'company_name'} = $param{'firstname'} . ' ' . $param{'lastname'};
+		} # end if
+	} # end if
 	$error .= 'Missing contact first name.<br/>' if $required_fields{'firstname'} and ! $param{'firstname'};
 	$error .= 'Missing contact last name.<br/>' if $required_fields{'lastname'} and ! $param{'lastname'};
 	$error .= 'Missing Salutation.<br/>' if $required_fields{'salutation'} and ! $param{'salutation'};
@@ -57,16 +66,18 @@ sub registration {
 	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
 	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
 	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
-	$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
-	if ( $required_fields{'postalcode'} ) {
-		$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
-		$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
-	} # en dif
-	$error .= 'Missing Phone Number.<br/>' if $required_fields{'phone'} and ! $param{'phone'};
-	if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
-		$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
-		$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
-		$error .= 'Please tell us which csr referred you.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'CSR' ) and ! ( $param{'howdidyouhearaboutusother'} or $param{'salesrep_id'} );
+	if ( ! $session{'company_id'} ) {
+		$error .= 'You must agree to the terms.<br/>' if $required_fields{'agree_terms'} and ! $param{'agree_terms'};
+		if ( $required_fields{'postalcode'} ) {
+			$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
+			$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
+		} # en dif
+		$error .= 'Missing Phone Number.<br/>' if $required_fields{'phone'} and ! $param{'phone'};
+		if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
+			$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
+			$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
+			$error .= 'Please tell us which csr referred you.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'CSR' ) and ! ( $param{'howdidyouhearaboutusother'} or $param{'salesrep_id'} );
+		} # end if
 	} # end if
 	$error .= 'Missing E-mail Address.<br/>' if ! $param{'email'};
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
@@ -75,7 +86,7 @@ sub registration {
 	if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
 		$error .= "Password not good enough.  $reason<br/>";
 	} # end if
-	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
+	if ( ( ! $session{'company_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
 		} elsif ( ! $param{'MD5SUM'} ) {
@@ -98,11 +109,11 @@ sub registration {
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find('email lc'=>lc $param{email} ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
-	if ( openprint::User->find('email lc'=>$param{email},'deleted'=>1 ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email},'deleted'=>1 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
@@ -125,69 +136,95 @@ sub registration {
 		$param{'postalcode'} = uc $param{'postalcode'};
 	} # end if
 
+	my @Users;
 	# if Company already exists in the DB, then just add the user to that company.	Otherwise, add the company
-	my $Company = openprint::Company->find_one( 'name lc'=>lc $param{'company_name'}, 
+	my $Company;
+	if ( $param{'company_name'} ) {
+		$Company = openprint::Company->find_one( 'name lc'=>lc openprint::Company->transform('name',$param{'company_name'}),
 			( exists $param{'postalcode'} ? ( 'postalcode uc'=>$param{'postalcode'} ) : () )
 			);
-	if ( ! $Company ) {
-		$param{'name'} = $param{'company_name'};
 
-		$Company = new openprint::Company();
-		$Company->set( \%param );
-		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
-		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
-		$Company->activation( $config{'NewCustomerAccountActivation'} );
-		if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) and ! $Company->salesrep_id() ) {
-			$Company->salesrep_id( $session{'user_id'} );
+		if ( ! $Company ) {
+			$param{'name'} = $param{'company_name'};
+
+			$Company = new openprint::Company();
+			$Company->set( \%param );
+			$Company->activation( $config{'NewCustomerAccountActivation'} );
+			if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ! $Company->salesrep_id() ) {
+				$Company->salesrep_id( $session{'user_id'} );
+			} # end if
+			if ( my $error = $Company->save() ) {
+				$variable{'error'} .= $error;
+				return;
+			} # end if
+		} else {
+			if ( $config{'Require Unique Company'} eq 'Y' ) {
+				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
+				return;
+			} # end if
 		} # end if
+	} elsif ( $session{'company_id'} ) {
+		$Company = new openprint::Company( $session{'company_id'} );
+		@Users = openprint::User->find('company_id'=>$Company->id());
+
+	} else {
+		# Don't know what company to assign
+		$Company = new openprint::Company( );
+		$Company->save();
+		$Company->name( $Company->id() );
+		$Company->set( \%param );
+		$Company->activation( $config{'NewCustomerAccountActivation'} );
 		if ( my $error = $Company->save() ) {
 			$variable{'error'} .= $error;
 			return;
 		} # end if
+	} # end if
 
-		# Setup default Credit
-		my $customer_credit = new openprint::customer_credit( $Company->id() );
-		my %params = (
-				'WarnDays'	=>	1*$config{'DefaultWarnDays'},
-				'DenyDays'	=>	1*$config{'DefaultDenyDays'},
-				'Limit'	=>	1*$config{'DefaultCreditLimit'},
-				'Hold'	=>	$config{'DefaultCreditHold'},
-				'Downpayment'	=>	1*$config{'DefaultDownpayment'},
-				);
-		$customer_credit->set( \%params );
+	my $User = new openprint::User();
+	$User->set( \%param );
+	$User->company_id( $Company->id() );
+	$User->ftp_active( 'Y' );
+	$User->type( 'C' );
+	$User->change_password( 'N' );
+	$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
+	$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
+	$info{'Company'} = $Company;
+	$info{'User'} = $User;
 
-		my $User = new openprint::User();
-		$User->set( \%param );
-		$User->company_id( $Company->id() );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+	if ( ! @Users ) {
 		$User->web_active( $config{'NewFirstUserAccountActivation'} );
-		$User->ftp_active( 'Y' );
 		$User->administrator( 'Y' );
-		$User->type( 'C' );
-		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
-		$variable{'error'} .= $User->save();		
+		$variable{'error'} .= $User->save();
 		return if $variable{'error'};
+		$variable{'information'} .= 'Registration was successful.<br/><br/>';
+		$variable{'success'} = 1;
 		$variable{'error'} .= $User->Profile()->save(\%param);
+		$variable{'error'} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
 
-		$info{'Company'} = $Company;
-		$info{'User'} = $User;
+		# Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
+		if ( $param{'promo_code'} ) {
+			require openprint::Promo_Code;
+			if ( my $Promo = openprint::Promo_Code->find_one('code'=>$param{'promo_code'}) ) {
+				$log->debug("Found promo code $$Promo{effect}");
+				eval $$Promo{'effect'};
+				$log->error( "Eval error of promo code $param{'promo_code'}, Reason: " . $@ ) if $@;
+			} else {
+				$variable{'information'} .= 'Promo code not found.';
+			} # end if
+		} # end if
 
 		# Send confirmation
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		new openprint::Email()->send(
 				FROM	=> $agent,
-				TO	=> $User,
+				TO		=> $User,
 				SUBJECT => 'New Login Application',
 				ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 				);
 
-		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			# If I'm a salesrep, then only change my company, not the user.
-			$session{'company_id'} = $Company->id();
-		} else { 
+		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 # send notification
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -200,51 +237,51 @@ sub registration {
 						ATTACHMENTS	=>	[ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
-			if ( $config{'NewFirstUserAccountActivation'} eq 'Y' and $config{'NewCustomerAccountActivation'} eq 'Y') {
-				# auto log in.
-				@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
-			} # end if
+		} # end if
+
+		# Can only do the additional user thing if it's the initial couple creation
+		if ( exists $param{'additional_user'} ) {
+			$variable{'additional_user'} = $param{'additional_user'};
+			$session{'company_id'} = $Company->id();
+			%param = ();
 		} # end if
 	} else {
-		if ( $config{'Require Unique Company'} ) {
-			$variable{'error'} .= $param{'company_name'} . ' is already taken.';
-			return;
-		} # end if
 
-		my $User = new openprint::User();
-		$User->set( \%param );
-		$User->company_id( $Company->id() );
-		$User->web_active( $config{'NewNonFirstUserAccountActivation'} );
-		$User->ftp_active( 'Y' );
+#FIXME
+		$User->web_active( $session{'company_id'} ? 'Y' : $config{'NewNonFirstUserAccountActivation'} );
 		$User->administrator( 'N' );
-		$User->type( 'C' );
-		$User->change_password( 'N' );
-		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
-		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
 		$variable{'error'} .= $User->save();		
 		return if $variable{'error'};
+		$variable{'information'} .= 'Registration was successful.<br/><br/>';
+		$variable{'success'} = 1;
 		$variable{'error'} .= $User->Profile()->save(\%param);
+		$variable{'error'} .= ( new openprint::Log())->save({'action'=>'Create User', 'company_id'=>$Company->id(), 'user_id'=>$User->id()});
 
-		$info{'Company'} = $Company;
-		$info{'User'} = $User;
-
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-
-		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
+		if ( $User->web_active ne 'Y') {
 			# send notifications
-			foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'type'=>'Y' ) ) {
+			foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'administrator'=>'Y' ) ) {
 				@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_company_admin.html' );
 				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-				new openprint::Email()->send(
+				(new openprint::Email())->send(
 						FROM	=> $agent,
-						TO	=> $Notification,
+						TO		=> $Notification,
 						SUBJECT => 'New Login Application',
 						ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
-		} # end if
+
+			# Send confirmation to the newly added user
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			(new openprint::Email())->send(
+					FROM	=> $agent,
+					TO		=> $User,
+					SUBJECT => 'New Login Application',
+					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+					);
+		} # end if User not activated
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_site_admin.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
@@ -258,40 +295,36 @@ sub registration {
 					);
 		} # end foreach
 
-		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
-			# Send confirmation
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_confirmation.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			new openprint::Email()->send(
-					FROM	=> $agent,
-					TO	=> $User,
-					SUBJECT => 'New Login Application',
-					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
-					);
-		} # end if
-
 		if ( $param{'rdbReasonForPurchase'} eq 'Reseller' ) {
 			if ( $Company->reseller() ne 'Y' ) {
 				$variable{'Redirect'} = '/account/reseller_application.html';
 			} # end if
 		} # end if
+	} # end if Company has users or not
 
-		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
-			# If I'm a salesrep, then only change my company, not the user.
-			$session{'company_id'} = $Company->id();
-		} else { 
-			if ( $config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
-				# auto log in.
-				if ( $Company->activation() eq 'Y' ) {
-					@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
-					(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
-				} # end if
-			} # end if
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+		# If I'm a salesrep, then only change my company, not the user.
+		$session{'company_id'} = $Company->id();
+		$variable{'information'} .= 'You are now representing '.$Company->name().'<br/>';
+	} elsif ( 
+			( (! $session{'company_id'} ) or ( $session{'company_id'} == $Company->id() ) )
+			and ( ! $session{'user_id'} ) 
+			) { 
+$log->debug('U ' . $User->web_active(). ' C' . $Company->activation() );
+		# auto log in.
+		if ( $User->web_active() eq 'Y' and $Company->activation() eq 'Y') {
+			@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+			(new openprint::Log())->save({'action'=>'Login', 'note'=>'Automatic login after registration.'});
+			$variable{'information'} .= '<p>Your account has been activated and you have been automatically logged in.</p>';
+		} else {
+			$variable{'information'} .= 'At this time your login remains inactive.<br/><br/>You will be notified via email when your account is activated.<br/>';
 		} # end if
-
 	} # end if
 
 } # end sub registration
+
+sub _check_company_name {
+} # end sub _check_company_name
 
 sub login_password {
 	$_ = $config{'customerlogin'};
@@ -336,27 +369,17 @@ sub company_profile {
 } # end sub company_profile
 
 sub user_profile {
-	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = $variable{'Me'} = new openprint::User( $session{'user_id'} );
+	my $User;
+# IF it's empty, then we are adding a new user! Otherwise editing one
+	if ( exists $param{'ddmUser'} ) {
+		$User = openprint::User->find_one('id'=>$param{'ddmUser'} );
+	} else {
+		$User = new openprint::User();
+	} # end if
 
-	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
-		# IF it's empty, then we are adding a new user! Otherwise editing one
-		if ( exists $param{'ddmUser'} ) {
-			$User = new openprint::User( $param{'ddmUser'} );
-		} elsif ( $session{'company_id'} != $Me->company_id() ) {
-			my @Users = openprint::User->find('company_id'=>$session{'company_id'} );
-			if ( @Users == 1 ) {
-				$User = $Users[0];
-			} # end if
-		} # end if
-		if ( $param{'ddmUser'} ) {
-# Enforce that we can only edit users from our company
-			if ( $User->company_id() != $session{'company_id'} ) {
-				$User = new openprint::User( $session{'user_id'} );
-			} # end if
-		} # end if
-
+	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
 			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
 		} elsif ( $param{'btnFunction'} eq '>>' ) {
@@ -364,91 +387,91 @@ sub user_profile {
 		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 			$User->delete();
 			$User = $User->Next( 'company_id'=>$session{'company_id'} );
-		} # end if
-	} # end if Company Admin
+		} elsif ( $param{'btnFunction'} eq 'Save' ) {
+			my $error = '';
+			if ( $param{'password'} ne $User->password() ) {
+				if ( ! $param{'verifypassword'} ) {
+					$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+					delete $param{'password'};
+				} else {
+					$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+				} # end if
+			} # end if
 
-# options available to non-company administrators
-	if ( $param{'btnFunction'} eq 'Save' ) {
+			$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
+			if ( $config{'UserProfileRequiredFields'} ) {
+				foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
+					$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
+				} # end foreach required field
+			} else {
+				$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
+				$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
+				$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
+				$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
+			} # end if
+			if ( $error ne '' ) {
+				$variable{'error'} = 'Bad Field';
+				$variable{'information'} = $error;
+				$variable{'User'} = $User;
+				return;
+			} # end if
 
-		my $error = '';
-        if ( $param{'password'} ne $User->password() ) {
-            if ( ! $param{'verifypassword'} ) {
-                $variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
-                delete $param{'password'};
-            } else {
-                $error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
-            } # end if
-        } # end if
-
-		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
-		if ( $config{'UserProfileRequiredFields'} ) {
-			foreach my $field ( split(',',$config{'UserProfileRequiredFields'} ) ) {
-				$error .= $field . ' cannot be blank.<br/>' if ! $param{$field};
-			} # end foreach required field
-		} else {
-			$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
-			$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
-			$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
-			$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
-		} # end if
-		if ( $error ne '' ) {
-			$variable{'error'} = 'Bad Field';
-			$variable{'information'} = $error;
-			$variable{'User'} = $User;
-			return;
-		} # end if
-
-		foreach my $U ( openprint::User->find('email lc'=>lc $param{'email'}) ) {
-			if ( $U->id() != $User->id() ) {
+			if ( openprint::User->find_one( 'email lc'=>lc $param{'email'}, 'id !='=>$User->id() ) ) {
 				$variable{'error'} = 'User already exists.';
 				$variable{'information'} = $param{'email'} . ' is already a user.';
 				$variable{'User'} = $User;
 				return;
+			} # end foreach
+
+			if ( ! $param{'ddmUser'} ) { # add
+				$User->company_id( $session{company_id} ) if ! $User->company_id();
 			} # end if
-		} # end foreach
-		if ( ! $param{'ddmUser'} ) { # add
-			$User->company_id( $session{company_id} ) if ! $User->company_id();
-		} # end if
-		my $oldpassword = $User->password();
-        if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
-            # Are changing passwords
-			if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
-				return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+
+			my $oldpassword = $User->password();
+			if ( $param{'password'} and ( $oldpassword ne $param{'password'} ) ) {
+				# Are changing passwords
+				if ( my $reason = openprint::login::check_password( $param{'password'} ) ) {
+					return misc::error( $log, $dbh, \%variable, 'Bad Field', "The new password you entered was not good enough: $reason.<br/>" );
+				} # end if
+				$param{'change_password'} = 'N';
+				$param{'password_changed_on'} = 'NOW()';
 			} # end if
-            $param{'change_password'} = 'N';
-			$param{'password_changed_on'} = 'NOW()';
-        } # end if
 
-		$variable{'error'} .= $User->save( \%param );
+			$variable{'error'} .= $User->save( \%param );
 
-		$User->Profile()->save( \%param );
+			$User->Profile()->save( \%param );
+$log->debug("Back from profile sae");
 
-		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+			if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
+$log->debug("Sending password change");
 # Send password change email
-			if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
-				my %info = (
-						'User' =>$User,
-					   );
+				if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
+					my %info = (
+							'User' =>$User,
+						   );
 
-				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
-				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+					$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/changed_password.html' );
+					$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-				new openprint::Email()->send(
-						FROM    => $config{'AdministratorEmail'},
-						TO      => $User,
-						SUBJECT => 'Password Changed',
-						ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
-						);
-				$variable{'information'} = 'The user has been notified by email of the password change.';
-			} else {
-				$variable{'error'} = 'We were unable to email the new password. Please contact support.';
-			} # end if
-		} # end if to send changed password notification
+					(new openprint::Email())->send(
+							FROM    => $config{'AdministratorEmail'},
+							TO      => $User,
+							SUBJECT => 'Password Changed',
+							ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+							);
+					$variable{'information'} = 'The user has been notified by email of the password change.';
+				} else {
+					$variable{'error'} = 'We were unable to email the new password. Please contact support.';
+				} # end if
+			} # end if to send changed password notification
+		} # end if btnFunction
+	} # end if can_edit
 
-	} # end if
-
-	if ( $User->company_id() != $session{'company_id'} ) {
-		$User = new openprint::User();
+	if ( (!$User->id()) and ( $session{'company_id'} != $Me->company_id() ) ) {
+		$User = openprint::User->find_one('company_id'=>$session{'company_id'} );
+	} # end if 
+	if ( ! ($User and $User->id()) ) {
+		$User = $Me;
 	} # end if
 	$variable{'User'} = $User;
 } # end sub user_profile
@@ -663,12 +686,30 @@ sub view {
 	} # end if
 } # end sub view
 
+sub couple_search {
+	_couple_search();
+	ssi::setup_date_select( '/account/couple_search.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
+} # end sub search
+
+sub _couple_search {
+	ssi::save_params( '/account/couple_search.html', ( 
+				'created_on_start_year', 'created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'last_online_start_year', 'last_online_start_month','last_online_start_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day',
+				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
+				) );
+} # end sub _search
 sub search {
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
+	$session{'/account/search.html?paging_per_page'} = 5;
 } # end sub search
 
 sub _search {
@@ -677,8 +718,16 @@ sub _search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
-				map { 'field-'.$_->id() } openprint::User_Profile_Field->find('order'=>'sort,name') 
+				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
+				'paging_page',
 				) );
+	# Special case for checkboxes because they don't get passed if nothing is checked
+	foreach my $F ( openprint::User_Profile_Field->find( ) ) {
+		if ( ! $param{'field-'.$F->id()} ) {
+			delete $session{'/account/search.html?field-'.$F->id()};
+		} # end if
+	} # end foreach Field
+
 } # end sub _search
 
 sub _wall { 
@@ -689,6 +738,11 @@ sub _wall {
 			'author_id'	=>	$session{'user_id'},
 			'message'	=>	$param{'message'},
 			});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Wall = openprint::Wall->find_one('id'=>$param{'wall_id'});
+		if ( $Wall and $Wall->can_edit() ) {
+			$Wall->delete();
+		} # end if
 	} # end if
 } # end sub _wall
 
@@ -709,10 +763,22 @@ sub _relationships {
 		} # end if
 	} elsif ( $param{'action'} eq 'approve' ) {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
-		$variable{'error'} .= $R->save({'approved'=>1});
+		if ( $R->user_id2() != $session{'user_id'} ) {
+			$variable{'error'} .= 'You cannot approve that relationship.';
+			$log->error("Invalid attempt to approve relationship");
+		} else {
+			if ( $R->approved() ) {
+				$log->warn('Relationship already approved.');
+			} else {
+				$variable{'error'} .= $R->save({'approved'=>1});
+			} # end if
+		} # end if
 	} elsif ( $param{'action'} eq 'add' ) {
+		if ( $param{'company_id'} ) {
+		} else {
 		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
 		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+		} # end if
 	} # end if
 	$variable{'User'} = new openprint::User( $param{'user_id'} );
 } # end sub _relationships
@@ -722,9 +788,7 @@ sub relationships {
 
 # Assume that user_id2 is session{user_id}
 sub _unapproved_relationships {
-$log->debug("In unapproved");
 	if ( $param{'action'} eq 'delete' ) {
-$log->debug("delete");
 		my $R = new openprint::User_Relationship( { 'user_id1' => $param{'user_id1'},'user_id2'=>$session{'user_id'},'type_id'=>$param{'type_id'} } );
 		if ( $R->user_id2() == $session{'user_id'} ) {
 			$variable{'error'} .= $R->delete();
@@ -742,6 +806,11 @@ $log->debug("delete");
 		} # end if
 	} # end if
 } # end sub _unapproved_relationships
+
+sub couple_view {
+	my $Company = $variable{'Company'} = new openprint::Company( $param{'company_id'} );
+	$variable{'Me'} = new openprint::User( $session{'user_id'} );
+} # end sub couple_view
 
 1;
 __END__

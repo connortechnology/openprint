@@ -39,21 +39,21 @@
 					<li><label></label>
 				<img src="<? echo ( $$variable{'Asset'}->url() ) ?>"/>
 					</li>
-					<li><label>Name:</label>
+					<li><label>Name</label>
 						<input type="text" name="name" id="name" value="<? echo ( $$variable{'Asset'}->name() ) ?>" />
 					</li>
-					<li><label>Description:</label>
+					<li><label>Description</label>
 						<textarea name="description" id="description"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
 					</li>
 <? if ( ! $$variable{'Asset'}->filename() ) ?>
-					<li><label>File:</label>
+					<li><label>File</label>
 						<input type="file" id="filename" name="filename"/>
 					</li>
 <? endif ( ! $$variable{'Asset'}->filename() ) ?>
-					<li><label>Attribution:</label>
+					<li><label>Attribution</label>
 						<input type="text" name="attribution" id="attribution" value="<? echo ( $$variable{'Asset'}->attribution() ) ?>" />
 					</li>
-					<li><label>License:</label>
+					<li><label>License</label>
 						<textarea name="license" id="license"><? hecho ( $$variable{'Asset'}->description() ) ?></textarea>
 					</li>
 				</ul>

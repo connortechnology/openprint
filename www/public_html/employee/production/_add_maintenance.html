@@ -1,24 +1,24 @@
 <form id="AddDocketForm" name="AddDocketForm" action="<?referer?>" method="post">
 	<input type="hidden" name="btnFunction" value="Add Docket" />
 	<fieldset><legend>Add Maintenance</legend>
-		<p><label>Comment:</label>
+		<p><label>Comment</label>
 			<textarea name="comment" rows="5"></textarea>
 		</p>
-		<p><label>Press:</label>
+		<p><label>Press</label>
 			<select name="press_id">
 			
 		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
 			</select>
 		</p>
 		<p>
-			<label>Locked:</label>
+			<label>Locked</label>
 			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( 1 ); ) ?> onclick="$('StartTime').show();" />
 			<label class="radio" for="locked1">Yes</label>
 			<input type="radio" id="locked0" name="locked" value="0" onclick="$('StartTime').hide();" />
 			<label class="radio" for="locked0">No</label>
 		</p>
 		<p id="StartTime">
-			<label>Start Time:</label>
+			<label>Start Time</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
 				my $html = ssi::datetime_select( 'starttime', ( $$variable{'Job'}{'starttime'} ? $$variable{'Job'}{'starttime'} : ''), { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
@@ -27,7 +27,7 @@
 			) ?>
 			</span>
 		</p>
-		<p><label>Runtime:</label>
+		<p><label>Runtime</label>
 			<input type="text" name="runtime" value="" size="7" />
 		</p>
 		<p class="buttons">

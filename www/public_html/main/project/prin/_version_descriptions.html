@@ -39,7 +39,7 @@
 		} # end foreach qty_index
 		$html .= '</tr>';
 	} # end foreach version
-	$html .= '<tr class="totals"><td>&nbsp;</td><td>Remaining:</td>';
+	$html .= '<tr class="totals"><td>&nbsp;</td><td>Remaining</td>';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 	#if ( $total_qty{$qty_index} < $$variable{'Project'}->quantity( $qty_index ) ) {
 		$html .= '<td>'.($$variable{'Project'}->quantity( $qty_index ) - $total_qty{$qty_index}).'</td>';

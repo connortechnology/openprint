@@ -88,7 +88,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4" align="right"><b>Totals:</b></td>
+				<td colspan="4" align="right"><b>Totals</b></td>
 				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></b></td>
 			</tr>
 		</table>
@@ -121,7 +121,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4" align="right"><b>Totals:</b></td>
+				<td colspan="4" align="right"><b>Totals</b></td>
 				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
 			</tr>
 		</table>
@@ -132,11 +132,11 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
-            <tr><td class="Date">Created On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
-            <tr><td>Posted On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
-            <tr><td><b>Due On:</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></b></td></tr>
-            <tr><td>Notes:</td><td><? echo ( $$variable{'Invoice'}->external_notes() ) ?></td></tr>
-            <tr><td><b>Invoice Terms:</b></td><td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{'Invoice'}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>
+            <tr><td class="Date">Created On</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
+            <tr><td>Posted On</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
+            <tr><td><b>Due On</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></b></td></tr>
+            <tr><td>Notes</td><td><? echo ( $$variable{'Invoice'}->external_notes() ) ?></td></tr>
+            <tr><td><b>Invoice Terms</b></td><td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{'Invoice'}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>
         </table>
     </fieldset>
 </div>
@@ -166,7 +166,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td align="right" colspan="4">Total:</td>
+				<td align="right" colspan="4">Total</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
 		</table>

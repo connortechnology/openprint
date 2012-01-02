@@ -1,4 +1,4 @@
-<fieldset class="Signature"><legend>Information for form <?SignatureIndex?>:</legend>
+<fieldset class="Signature"><legend>Information for form <?SignatureIndex?></legend>
 	<p>
 <? echo ( my $html = '';
 	$html .= openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'} ) . '<br/>';
@@ -14,8 +14,8 @@
 				my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 				my $I = new openprint::Imposition();
 				$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
-				$html .= '<p><label>RunStyle:</label>'.$I->runstyle(). '</p>';
-				$html .= '<p><label>Imposition:</label>'.$I->to_string().'</p>';
+				$html .= '<p><label>RunStyle</label>'.$I->runstyle(). '</p>';
+				$html .= '<p><label>Imposition</label>'.$I->to_string().'</p>';
 				return $html;
 			) ?>
 		</div><div class="rightColumn">

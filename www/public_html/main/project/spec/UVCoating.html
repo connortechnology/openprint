@@ -24,22 +24,22 @@
 			) ?>
 			<? if ( $$variable{'FrontCoatings'} ne 'None' or $$variable{'BackCoatings'} ne 'None' ) ?>
 			<fieldset><legend>Signature <? echo ( $$variable{'sig_specs'}{'SignatureIndex'} ) ?></legend>
-				Information for <?Reference?>:<br/><br/>
+				Information for <?Reference?><br/><br/>
 				<div class="Front leftColumn">
 					<p>
-						<label>Coatings on Front:</label>
+						<label>Coatings on Front</label>
 						<?FrontCoatings?>
 					</p>
 				</div>
 				<div class="Back rightColumn">
 					<p>
-						<label>Coatings on Back:</label>
+						<label>Coatings on Back</label>
 						<?BackCoatings?>
 					</p>
 				</div>
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
-					<p><label>Make Ready (<?CurrencySymbol?>):</label>
+					<p><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -52,7 +52,7 @@
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>
-					<p><label>Blanket (<?CurrencySymbol?>):</label>
+					<p><label>Blanket (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -65,7 +65,7 @@
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>
-					<p><label>Service (<?CurrencySymbol?>):</label>
+					<p><label>Service (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -79,7 +79,7 @@
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 
 					</p>
-					<p><label>Material (<?CurrencySymbol?>):</label>
+					<p><label>Material (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -92,7 +92,7 @@
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>
-					<p><label>Signature Price (<?CurrencySymbol?>):</label>
+					<p><label>Signature Price (<?CurrencySymbol?>)</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

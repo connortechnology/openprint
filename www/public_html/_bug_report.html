@@ -9,12 +9,12 @@
 			
 		my @body = ('', "
 			<fieldset><legend>Bug Report</legend>
-				<p><label>Server:</label>$param{'server'}</p>
-				<p><label>Page:</label>$param{'page'}</p>
-				<p><label>When:</label> $param{'when'}</p>
-				<p><label>Name:</label> $param{'user'}</p>
-				<p><label>Company:</label> $param{'company'}</p>
-				<p><label>Comment:</label> $param{'comment'}</p>
+				<p><label>Server</label>$param{'server'}</p>
+				<p><label>Page</label>$param{'page'}</p>
+				<p><label>When</label> $param{'when'}</p>
+				<p><label>Name</label> $param{'user'}</p>
+				<p><label>Company</label> $param{'company'}</p>
+				<p><label>Comment</label> $param{'comment'}</p>
 			</fieldset>
 		", 'text/html', 'quoted-printable');
 
@@ -34,27 +34,27 @@
 	<form name="bug_report" id="bug_report">
 		<fieldset><legend>Bug Report</legend>
 			<p>
-				<label>Server:</label>
+				<label>Server</label>
 				<input type="text" name="server" value="<? echo ( $ENV{'SERVER_NAME'} ) ?>" />
 			</p>
 			<p>
-				<label>Page:</label>
+				<label>Page</label>
 				<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
 			</p>
 			<p>
-				<label>When:</label>
+				<label>When</label>
 				<input type="text" name="when" value="<? echo ( localtime ) ?>" />
 			</p>
 			<p>
-				<label>Name:</label>
+				<label>Name</label>
 				<input type="text" name="user" value="<? echo ( join(' ', new openprint::User( $session{user_id} )->get( 'firstname','lastname' ) ); ) ?>" />
 			</p>
 			<p>
-				<label>Company:</label>
+				<label>Company</label>
 				<input type="text" name="company" value="<? echo ( new openprint::Company( $session{company_id} )->name(); ) ?>" />
 			</p>
 			<p>
-				<label>Description:</label>
+				<label>Description</label>
 				<textarea name="comment" rows="10" wrap="virtual">
 				<? if ( $session{'project_id'} ) ?>
 				Current Project ID: <? echo ( $session{'project_id'} ) ?>

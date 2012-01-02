@@ -1,9 +1,10 @@
-package openprint::StockBrand;
-@ISA = qw(openprint::Object);
-
 use strict;
-use vars qw( $table $serial %fields %transforms %defaults );
+package openprint::StockBrand;
+our @ISA = qw(openprint::Object);
 
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
+$debug = 1;
 $table = 'stockbrands';
 $serial= 'stockbrands_id_seq';
 %fields = (

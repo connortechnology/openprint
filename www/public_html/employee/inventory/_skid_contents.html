@@ -4,9 +4,10 @@
 <? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <table class="List">
 	<tr>
-		<th align="left">Owner</th><th class="StockQuantity">Quantity</th><th class="StockQuality">Quality</th><th align="right" width="60">Inches</th>
+		<th class="Owner">Owner</th><th class="Quantity">Quantity</th><th class="Condition">Condition</th><th class="inches">Inches</th>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
-		<th>Cost</th>
+		<th class="Price">Cost</th>
+		<th class="Price">Value</th>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( 
@@ -22,16 +23,21 @@
 		} # end foreach
 
 		$html .= '<tr>';
-		$html .= sprintf('<td colspan="4"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
-		$html .= '</tr><tr>';
-		$html .= '<td>'.$Paper->Owner()->name().'</td>';
-		$html .= sprintf('<td class="StockQuantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), Number::Format::format_number($C->quantity()).$Paper->units() );
-		$html .= sprintf('<td class="StockQuality">%s</td>', $C->quality() );
-		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
 		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
-			$html .= '<td>' . openprint::Currency::format( $C->cost() ) . '/100lb</td>';
+		$html .= sprintf('<td colspan="6"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} else {
+		$html .= sprintf('<td colspan="4"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
+		} # end if
+		$html .= '</tr><tr>';
+		$html .= '<td class="Owner">'.$Paper->Owner()->name().'</td>';
+		$html .= sprintf('<td class="Quantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), Number::Format::format_number($C->quantity()).$Paper->units() );
+		$html .= sprintf('<td class="Condition">%s</td>', $C->condition() );
+		$html .= sprintf('<td class="inches"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+			$html .= '<td class="Price">' . openprint::Currency::format( 1*$C->cost() ) . '/100lb</td>';
+			$html .= '<td class="Price">' . openprint::Currency::format( 1*$C->value() ).'</td>';
 			$html .= '</tr><tr>';
-			$html .= '<td colspan="5">';
+			$html .= '<td colspan="6">';
 		} else {
 		$html .= '</tr><tr>';
 		$html .= '<td colspan="4">';

@@ -22,8 +22,8 @@
 							</td>
 						</tr>
 						<tr>
-							<td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-							<td>Fax:<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+							<td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+							<td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
 						</tr>
 					</table>
 				</div>
@@ -36,7 +36,7 @@
 			</div>
 			<div class="Vendor">
 			<p>
-				<label>VENDOR:</label>
+				<label>VENDOR</label>
 		<? echo (
 		my $html = '';
 		$html .= $$variable{'PurchaseOrder'}->vendor_contact().'<br/>' if $$variable{'PurchaseOrder'}->vendor_contact();
@@ -53,7 +53,7 @@
 			</div>
 			<div class="ShipTo">
 				<p>
-					<label>SHIP TO:</label>
+					<label>SHIP TO</label>
 		<? echo (
 		my $html = '';
 		$html .= $$variable{'PurchaseOrder'}->shipto_contact().'<br/>' if $$variable{'PurchaseOrder'}->shipto_contact();
@@ -108,20 +108,20 @@
 		return $html;
 		) ?>
 		<tr>
-			<td colspan="5" class="totals">SUBTOTAL:</td>
+			<td colspan="5" class="totals">SUBTOTAL</td>
 			<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 		</tr>
 		<? echo ( 
 			my $html;
 			foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
+				$html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%)</td><td class="total">%s</td></tr>',
 					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 					);
 			} # end foreach Tax
 			return $html;
 		) ?>
 		<tr>
-			<td colspan="5" class="totals">TOTAL:</td>
+			<td colspan="5" class="totals">TOTAL</td>
 			<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 		</tr>
 		</table>

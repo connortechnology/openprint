@@ -17,6 +17,8 @@ CREATE TABLE Surveys (
 	id			SERIAL,
 	name		TEXT,
 	description	TEXT,
+	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	created_by	INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
 	PRIMARY KEY (id)
 );
 
@@ -25,6 +27,7 @@ CREATE SEQUENCE survey_question_category_id_seq;
 CREATE TABLE survey_question_categories (
 	id		SERIAL,
 	name	TEXT NOT NULL,
+	sorting	INTEGER,
 	PRIMARY KEY (id)
 );
 
@@ -35,6 +38,7 @@ CREATE TABLE survey_questions (
 	text		TEXT,
 	type		TEXT,
 	sorting		INTEGER,
+	alignment	BOOLEAN,
 	PRIMARY KEY (id)
 );
 
@@ -50,9 +54,12 @@ CREATE TABLE survey_responses (
 	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
-	answer_id	INTEGER, FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
+	answer_id	INTEGER[],
+/* FOREIGN KEY (answer_id) REFERENCES Survey_Answers (id),
+*/
 	answer		TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	public		BOOLEAN,
 	PRIMARY KEY (id)
 );
 CREATE INDEX Survey_Responses_idx on Survey_Responses (question_id,user_id);

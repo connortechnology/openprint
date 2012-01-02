@@ -1,4 +1,5 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript" src="/javascripts/location.js"></script>
 
 <script type="text/javascript">
 <!--
@@ -6,11 +7,6 @@
 		mode : "textareas",
 		theme : "advanced"
 	});
-	function getSelectionId(text, li) {
-		if ( li.id ) {
-			new Ajax.Request( '_load_location.json', { parameters: { location_id: li.id } } );
-		} // end if
-	}
 -->
 </script>
 <div class="Event"><div class="Edit">
@@ -26,36 +22,36 @@
 				<div class="content">
 					<ul>
 						<li>
-							<label>All day:</label>
+							<label>All day</label>
 							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated0">Yes</label>
 							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated1">No</label>
 						</li>
-						<li><label>Start:</label>
+						<li><label>Start</label>
 							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{'Event'}->starting_on(),
 										{
 										'onchange'	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
-										'showtime'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+										'with_time'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
 										'with_today'	=>	1,
 										} ); ) ?>
 							</span>
 						</li>
-						<li><label>End:</label>
+						<li><label>End</label>
 							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{'Event'}->ending_on(), 
 										{
 											'onchange'	=>	q`update_duration(this.form,'starting_on','ending_on');`,
-											'showtime'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+											'with_time'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
 											'with_today'	=>	1,
 							} ); ) ?>
 							</span>
 						</li>
-						<li><label>Duration:</label>
+						<li><label>Duration</label>
 							<span id="duration">
 							</span>
 							<script type="text/javascript">update_duration(document.forms['f1'],'starting_on','ending_on');</script>
 						</li>
-						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
 							<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 							<select name="category_id" id="category_id" onchange="$('category').value='';">
 								<option value="">select</option>
@@ -64,53 +60,19 @@
 								) ?>
 							</select>
 						</li>
-						<li><label>Name:</label>
+						<li><label>Name</label>
 							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Event'}->name() ) ?>" />
 						</li>
 						<li>
-							<label for="info">More info:</label>
+							<label for="info">More info</label>
 							<textarea cols="" id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Event'}->info() ) ?></textarea>
 						</li>
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
-				<div class="content">
-					<ul>
-						<li><label>Location:</label>
-							<input type="text" name="location" id="location" value="<? echo ( $$variable{'Event'}->Location()->name() ) ?>" />
-							<div id="location_autocomplete" class="autocomplete" style="display: none;"></div>
-							<script type="text/javascript">
-								new Ajax.Autocompleter('location','location_autocomplete', '_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectionId } );
-							</script>
-						</li>
-						<li><label>Address:</label>
-							<input type="text" name="address" id="address" value="<? echo ( $$variable{'Event'}->Location()->address() ) ?>" />
-						</li>
-						<li><label>Postal Code:</label><input type="text" name="postalcode" id="postalcode" value="<? echo ( $$variable{'Event'}->Location()->postalcode() ) ?>"/></li>
-						<li><label>Country:</label>
-							<input type="text" name="country" id="country" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>'country') ) ? $_->name() : '' ); ) ?>"/>
-							<div id="country_autocomplete" class="autocomplete" style="display: none;"></div>
-							<script type="text/javascript">
-								new Ajax.Autocompleter('country','country_autocomplete', '_locations.html?type=country', { minChars: 2,afterUpdateElement : getSelectionId } );
-							</script>
-						</li>
-						<li><label>State/Province:</label>
-							<input type="text" name="state" id="state" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>['state','province']) ) ? $_->name() : '' ); ) ?>"/>
-							<div id="state_autocomplete" class="autocomplete" style="display: none;"></div>
-							<script type="text/javascript">
-								new Ajax.Autocompleter('state','state_autocomplete', '_locations.html?type=state', { minChars: 2,afterUpdateElement : getSelectionId } );
-							</script>
-						</li>
-						<li><label>City:</label>
-							<input type="text" name="city" id="city" value="<? echo ( ( ( $_ = $$variable{'Event'}->Location()->ancestor('type'=>'city') ) ? $_->name() : '' ); ) ?>" />
-							<div id="city_autocomplete" class="autocomplete" style="display: none;"></div>
-							<script type="text/javascript">
-								new Ajax.Autocompleter('city','city_autocomplete', '_locations.html?type=city', { minChars: 2,afterUpdateElement : getSelectionId } );
-							</script>
-						</li>
-					</ul>
-				</div>
+<? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();) ?>
+<!--#include virtual="/location/_location_fields.html"-->
 			</fieldset>
 			<p class="buttons">
 				<? echo (

@@ -8,26 +8,20 @@
 		$('MessageList').innerHTML = 'Please wait...';
 		new Ajax.Updater('MessageList','_list.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
-	function delete_message( message_id ) {
-		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', message_id: message_id } } );
+	function delete_conversation( conversation_id ) {
+		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', conversation_id: conversation_id, user_id: '<? echo ( $session{user_id} ) ?>' } } );
 	} // end function delete_message
 -->
 </script>	 
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 <div class="Messaging"><div class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>">
-	<? echo ( join('',
-			( $session{'/messaging/list.html?folder'} ne 'Inbox' ? ssi::button( 'Inbox', { 'href'=>'/messaging/list.html?folder=Inbox' } ) : '' ),
-			( $session{'/messaging/list.html?folder'} ne 'Drafts' ? ssi::button( 'Drafts', { 'href'=>'/messaging/list.html?folder=Drafts' } ) : '' ),
-			( $session{'/messaging/list.html?folder'} ne 'Sent' ? ssi::button( 'Sent', { 'href'=>'/messaging/list.html?folder=Sent' } ) : '' ),
-			); ) ?>
-	
 	<form id="f1" name="f1" method="post" action="/messaging/list.html">
 		<fieldset class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>"><legend><? echo ( $session{'/messaging/list.html?folder'} ) ?></legend>
-			<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+			<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
 				<ul>
 					<li>
-						<label>When:</label>
+						<label>When</label>
 						<span class="DateSelector">
 		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
 						</span>
@@ -41,8 +35,8 @@
 				<p class="buttons">
 					<? echo ( join('',
 						ssi::button( 'ShowResults', { 'onclick'=>'load_messages(f1);', 'text'=>'Show Results' } ),
-						ssi::button( 'Reset', { 'href'=>'/messaging/sent.html?action=reset', 'text'=>'Reset' } ),
-						ssi::button( 'New', { 'href'=>'/messaging/edit.html', 'text'=>'New Message' } ),
+						ssi::button( 'Reset', { 'href'=>'/messaging/list.html?action=reset', 'text'=>'Reset' } ),
+						ssi::button( 'New', { 'href'=>'/messaging/view.html', 'text'=>'New Message' } ),
 						); ) ?>
 				</p>
 			</fieldset>

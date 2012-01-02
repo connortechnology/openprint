@@ -23,6 +23,7 @@ require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
 require openprint::User_Profile_Field;
+require openprint::Company_Profile_Field;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -66,8 +67,16 @@ sub configuration {
 
 		# Add record to audit log - action "Update Configuration".
 		new openprint::Log()->save({'action'=>'Update Configuration'});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
 	} # end if
 } # end sub configuration
+
+sub _configuration {
+	if ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM Configuration WHERE name=?', $param{'name'} );
+	} # end if
+} # end sub _configuration
 
 sub _configuration_popup {
 	my $Entry = {};
@@ -285,6 +294,7 @@ sub user_profiles {
 	my @Users = openprint::User->find( 
 		( $cust_id ? ( 'company_id'=>$cust_id ) : () ), 
 		( $user_role ? ( 'type'=>$user_role ) : () ),
+		( $param{'deleted'} ne '' ? ( 'deleted'=>$param{'deleted'} ) : () ),
 		'order'=>'lower(firstname),lower(lastname)'
 		);
 
@@ -432,6 +442,8 @@ sub company_profiles {
 		$index = $Company->id();
 
 		if ( $index > 0 ) {
+			$Company->Profile()->save( \%param );
+			$log->debug("Back from profile sae");
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.	Then it occurred to me: Just delete them all from the table, and add back in the ones we want.	
@@ -465,6 +477,12 @@ sub company_profiles {
 		$Company = new openprint::Company( $param{'company_id'} );
 		$index = $Company->next();
 		$Company->delete();
+		$Company = new openprint::Company( $index );
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		$Company = new openprint::Company( $param{'company_id'} );
+		if ( ! $Company->destroy() ) {
+			$index = $Company->next();
+		} # end if
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
 		$index = $param{'company_id'};
@@ -714,14 +732,25 @@ sub user_profile_fields {
 	} # end if
 } # end sub user_profile_fields
 sub _field_tr {
-	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
+	my $object_name;
+	if ( $ENV{'HTTP_REFERER'} =~ /user_profile_fields/ ) {
+		$object_name = 'openprint::User_Profile_Field';
+	} elsif ( $ENV{'HTTP_REFERER'} =~ /company_profile_fields/ ) {
+		$object_name = 'openprint::Company_Profile_Field';
+	} # end if
+	if ( ! $object_name ) {
+		$log->error("Unknown referrer: $ENV{'HTTP_REFERER'}");
+		return;
+	} # end if
+	
+	$variable{'Field'} = $object_name->new( $param{'field_id'} );
 	if ( $param{'action'} eq 'Add' ) {
 		$variable{'error'} .= $variable{'Field'}->save({
 			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $variable{'Field'}->delete();
-		$variable{'Field'} = new openprint::User_Profile_Field() if ! $variable{'error'};
+		$variable{'Field'} = $object_name->new() if ! $variable{'error'};
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Field'} = $variable{'Field'}->copy();
 		$variable{'error'} .= $variable{'Field'}->save( \%param );
@@ -756,6 +785,21 @@ sub _user_fields_tbody {
 		} # end foreach $feild_id
 	} # end if
 } # end sub _user_fields_tbody
+
+sub company_profile_fields {
+	if ( $param{'action'} eq 'Save' ) {
+		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
+			$variable{'error'} .= $Field->save({
+				'name'	=>	$param{'name-'.$Field->id()},
+				'description'	=>	$param{'description-'.$Field->id()},
+				'type'	=>	$param{'type-'.$Field->id()},
+				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'required'	=>	$param{'required-'.$Field->id()},
+				'searchable'	=>	$param{'searchable-'.$Field->id()},
+			});
+		} # end foreach Field
+	} # end if
+} # end sub company_profile_fields
 
 sub _company_fields_tbody {
 	if ( $param{'action'} eq 'up' ) {
@@ -819,6 +863,15 @@ sub user_relationships {
 				'text3'	=>	$param{'text3-'.$URT->id()},
 			});
 		} # end foreach URT
+		if ( $param{'name-new'} ) {
+			my $URT = new openprint::User_Relationship_Type();
+			$variable{'error'} .= $URT->save({
+				'name'	=>	$param{'name-new'},
+				'text1'	=>	$param{'text1-new'},
+				'text2'	=>	$param{'text2-new'},
+				'text3'	=>	$param{'text3-new'},
+			});
+		} # end if
 	} # end if
 } # end sub user_relationships
 sub upload_log {
@@ -831,6 +884,44 @@ sub upload_log {
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_start', -7 );
 	ssi::setup_date_select( '/administrator/managerial/upload_log.html', 'uploaded_on_end', '' );
 } # end sub upload_log
+
+sub promo_codes {
+	require openprint::Promo_Code;
+	if ( $param{'action'} eq 'save' ) {
+		foreach my $PC ( openprint::Promo_Code->find() ) {
+			if ( ! $param{'code-'.$PC->code()}  ) {
+				$PC->delete();
+			} elsif ( 
+					( $PC->code() ne $param{'code-'.$PC->code()} ) or 
+					( $PC->name() ne $param{'name-'.$PC->id()} ) or 
+					( $PC->effect() ne $param{'effect-'.$PC->id()} )
+				) {
+				$variable{'error'} .= $PC->save({
+						'code'=>$param{'code-'.$$PC{code}},
+						'name'=>$param{'name-'.$$PC{code}},
+						'effect'=>$param{'effect-'.$$PC{code}},
+						});
+			} # end if need to save
+		} # end foreach PC
+		if ( $param{'code-new'} ) {
+			my $PC = new openprint::Promo_Code();
+			$variable{'error'} .= $PC->save({
+					'code'=>$param{'code-new'},
+					'name'=>$param{'name-new'},
+					'effect'=>$param{'effect-new'},
+					});
+		} # end if
+	} # end if
+} # end sub promo_codes
+
+sub logs {
+} # end sub logs
+sub _logs {
+	if ( $param{'action'} eq 'delete' ) {
+		my $Log = new openprint::Log( $param{'log_id'} );
+		$Log->delete();
+	} # end if
+} # end sub _logs
 
 1;
 __END__

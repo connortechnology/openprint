@@ -44,7 +44,7 @@ Please select a CAR to view/edit.<br>
 	<input type="hidden" name="btnFunction" />
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
-			<label>Date Issued:</label>
+			<label>Date Issued</label>
 			<span class="DateSelectorCT">
 			<? echo ( ssi::date_select_session( '/employee/iso/cars.html', 'issued_on_start',  { 'onchange'=> "load_cars(\$('f2'));",'with_today'=>1,'with_clear'=>1 } ); ) ?>
 			</span>
@@ -54,14 +54,14 @@ Please select a CAR to view/edit.<br>
 			</span>
 		</p>
 		<p>
-			<label>Status:</label>
+			<label>Status</label>
 			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( ssi::checked( sets::isin( 'Open', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusOpen">Open</label>
 			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( ssi::checked( sets::isin( 'Closed', split(',',$session{'/employee/iso/cars.html?status'}) ) ); ) ?>
 			<label class="radio" for="statusClosed">Closed</label>
 		</p>
 		<p>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input type="number" name="docket" value="<? echo ( $session{'/employee/iso/cars.html?docket'} ) ?>" onkeydown="if(event.keyCode == 13){load_cars( $('f1') );}" />
 		</p>
 		<p class="buttons">

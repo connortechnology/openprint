@@ -9,7 +9,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
     <fieldset class="filters"><legend>Search Criteria</legend>
         <div class="leftColumn">
             <p>
-                <label>Owner:</label>
+                <label>Owner</label>
                 <select name="Owner" size="1" onchange="f1.submit();">
                 <option value=""> All </option>
                 <? echo ( 
@@ -18,7 +18,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                 </select>
             </p>
             <p>
-                <label>Last seen:</label>
+                <label>Last seen</label>
                 <select name="last_seen" onchange="f1.submit();">
                     <? echo (
                         #$session{'/employee/reports/stock.html?last_seen'} = 31 if ! defined $session{'/employee/reports/stock.html?last_seen'};
@@ -37,7 +37,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </p>
         </div>
         <div class="rightColumn">
-            <p><label>Type:</label>
+            <p><label>Type</label>
     <? eval (
         $session{'/employee/reports/stock.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock.html?Type'};
     ) ?>
@@ -51,7 +51,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
         <hr/>
         <div class="leftColumn">
         <p>
-            <label>Manufacturer:</label>
+            <label>Manufacturer</label>
             <select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -68,7 +68,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </select>
         </p>
         <p>
-            <label>Brand:</label>
+            <label>Brand</label>
             <select name="Name" size="1" onchange="Name_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo ( 
@@ -86,7 +86,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </select>
         </p>
         <p>
-            <label>Finish:</label>
+            <label>Finish</label>
             <select name="Finish" size="1" onchange="Finish_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -105,7 +105,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </select>
         </p>
         <p>
-            <label>Colour:</label>
+            <label>Colour</label>
             <select name="Colour" size="1" onchange="Colour_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -125,7 +125,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </select>
         </p>
         <p>
-            <label>Weight:</label>
+            <label>Weight</label>
             <select name="Weight" size="1" onchange="Weight_onChange(this,'');">
                 <option value="">Please select one</option>
             <? echo (
@@ -148,7 +148,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
         </div>
         <div class="rightColumn">
         <p>
-            <label>Size:</label>
+            <label>Size</label>
             <select name="width" size="1" onchange="" >
                 <option value="">All</option>
             <? echo ( 
@@ -190,11 +190,11 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             <input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="" /><label class="radio" for="OrLarger">or larger</label>
         </p>
         <p>
-            <label>FSC Code:</label>
+            <label>FSC Code</label>
             <input type="text" name="fsc_code" style="width: auto;" size="13" onkeyup=""/>
         </p>
         <p>
-            <label>Location:</label>
+            <label>Location</label>
             <select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
                 <? echo ( 
                     my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );

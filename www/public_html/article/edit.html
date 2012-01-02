@@ -14,7 +14,7 @@
 </script>
 <div class="Article"><div class="Edit">
 	<!--#include virtual="/includes/error_reporting.html"-->
-	<form name="f1" id="f1" action="/article/history.html" method="post" enctype="multipart/form-data">
+	<form name="f1" id="f1" action="/article/edit.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{'Article'}->deleted() ) ?>
 			<span class="warning">This article has been deleted</span>
@@ -83,9 +83,9 @@
 					if ( $$variable{'Article'}->id() ) {
 						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
 						$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}" } );
-						$html .= ssi::button( 'Copy', { 'onclick'=> "f1.action='edit.html';f1.func.value='Copy';f1.submit();" } );
+						$html .= ssi::button( 'Copy', { 'onclick'=> "f1.func.value='Copy';f1.submit();" } );
 						if ( $$variable{'Article'}->source() ) {
-							$html .= ssi::button( 'Reload', { 'onclick'=> "f1.action='edit.html';f1.func.value='Reload';f1.submit();" } );
+							$html .= ssi::button( 'Reload', { 'onclick'=> "f1.func.value='Reload';f1.submit();" } );
 						} # end if
 						$html .= ssi::button( 'View', { 'href'=>'/article/view.html?article_id='.$$variable{'Article'}->id(), 'target'=>'_blank' } );
 					} # end if

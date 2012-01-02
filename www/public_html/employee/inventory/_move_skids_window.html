@@ -7,7 +7,7 @@
 <fieldset><legend>Move Skids/Rolls To</legend>
 	You are moving <? echo ( @{$$variable{'skids'}} ) ?> skids/rolls.
 	<p>
-		<label>Location:</label>
+		<label>Location</label>
 		<select name="location_id">
 			<? echo ( 
 				my @options = map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)');

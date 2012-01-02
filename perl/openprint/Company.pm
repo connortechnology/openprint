@@ -13,6 +13,7 @@ require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
 require openprint::address;
+require openprint::Company_Profile;
 
 $debug = 1;
 $table = 'companies';
@@ -67,7 +68,7 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		);
 %find_fields = (
-	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE company_id=companies.id)',
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
 );
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
@@ -103,12 +104,13 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Addresses WHERE company_id=?', $$self{'id'} );
 	foreach my $Payment ( openprint::Payment->find('recipient_id'=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM logs WHERE company_id=?', $$self{'id'} );
 
 	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->delete();
@@ -126,8 +128,8 @@ sub destroy {
 		last if $dbh->errstr();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'} ) ) {
-		$User->delete();
+	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'}, 'deleted'=>[0,1] ) ) {
+		$User->destroy();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
 
@@ -237,9 +239,9 @@ sub Credit {
 	
 	return new openprint::customer_credit( $$self{id}, $supplier );
 } # end sub Credit
-sub get_dropdown {
-	my $selected = shift;
-	my $params = shift;
+
+sub dropdown {
+	shift @_ if $_[0] eq 'openprint::Company';
 
 	my $sql = 'SELECT id, name FROM Companies WHERE (deleted=false or deleted IS NULL)';
 	my @values;
@@ -248,18 +250,31 @@ sub get_dropdown {
 		$sql .= ' AND id=(SELECT company_id FROM users WHERE id=?) OR salesrep_id IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
-	if ( $params ) {
-		if ( $$params{'id'} ) {
-			if ( ref $$params{'id'} eq 'ARRAY' ) {
-				$sql .= ' AND id IN ( '.join(',', @{$$params{'id'}} ).' )';
+
+	if ( @_ ) {
+		my %params;
+		if ( ref $_[0] eq 'HASH' ) {
+		%params = %{$_[0]};
+		} elsif ( ref $_[0] eq 'ARRAY' ) {
+		%params = @{$_[0]};
+		} else {
+		%params = @_;
+		} # end if
+		if ( $params{'id'} ) {
+			if ( ref $params{'id'} eq 'ARRAY' ) {
+				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
 			} # en dif
 		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 
 	my @company = sql::execute( undef, undef, $sql, @values );
+	return \@company;
+} # end sub dropdown
 
-    return ssi::make_drop_down( \@company, $selected );
+sub get_dropdown {
+	my $companies = dropdown( $_[1] ? $_[1] : () );
+	return ssi::make_drop_down( $companies, $_[0] );
 } # sub get_dropdown
 
 sub CSR {
@@ -331,5 +346,36 @@ sub load_shipping {
 sub Profile {
 	return new openprint::Company_Profile( $_[0]{'id'} );
 }
+
+sub location {
+	return misc::build_city_prov_country( $_[0]->get('city','state','country') );
+} # end sub location
+
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]->salesrep_id() == $openprint::session{'user_id'};
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if $_[0]{'id'} == $$Me{'company_id'} and $$Me{'administrator'} eq 'Y';
+} # end sub can_edit
+
+sub taxexempt1 {
+	if ( @_ > 1 ) {
+		$_[0]{'taxexempt1'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'taxexempt1'} ) {
+		$_[0]{'taxexempt1'} = $_[0]{'gstnumber'} ? 'Y' : 'N';
+	} # end if
+	return $_[0]{'taxexempt1'};
+} # end sub taxexempt1
+
+sub taxexempt2 {
+	if ( @_ > 1 ) {
+		$_[0]{'taxexempt2'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'taxexempt2'} ) {
+		$_[0]{'taxexempt2'} = $_[0]{'pstnumber'} ? 'Y' : 'N';
+	} # end if
+	return $_[0]{'taxexempt2'};
+} # end sub taxexempt2
 1;
 __END__

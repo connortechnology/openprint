@@ -4,11 +4,11 @@
 	<fieldset class="filter"><legend>Select Price List</legend>
 	<ul>	
 		<li> 
-			<label>Price List:</label>
+			<label>Price List</label>
 			<select name="ddmPriceList" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
 			<option value="">select</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find( 'order' => 'lower(name)' ) ], $$variable{'Pricelist'}->id() );
+return ssi::make_drop_down( openprint::Pricelist->dropdown( 'order' => 'lower(name)' ), $$variable{'Pricelist'}->id() );
 ) ?>
 			</select>
 		</li>
@@ -22,7 +22,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
 				ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset'),
 				); ) ?>
-			<span class="ApplyMarkup"><input type="text" id="Markup" name="Markup" />
+			<span class="ApplyMarkup"><input type="number" id="Markup" name="Markup" />%
 				<? echo ( ssi::writeButton($log, $dbh, 'ApplyMarkup','copy.gif',"f1.btnFunction.value='Markup';f1.submit();",'','Apply Markup'); ) ?>
 			</span>
 		</li>
@@ -32,15 +32,15 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 		<div class="leftColumn">
 			<ul>
 				<li> 
-					<label>Name:</label>
+					<label>Name</label>
 					<input type="text" id="name" name="name" value="<? echo ( $$variable{'Pricelist'}->name(); ) ?>">
 				</li>
 				<li> 
-					<label>Description:</label>
+					<label>Description</label>
 					<textarea id="description" name="description" rows="<? echo ( ssi:count_lines($$variable{'Pricelist'}->description()); ) ?>" cols="" onchange="textarea_resize(this);"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
 				</li>
 				<li> 
-					<label>Currency:</label>
+					<label>Currency</label>
 					<select name="currency_id" id="currency_id">
 						<option value=""> select </option>
 						<? echo ( 
@@ -54,19 +54,19 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 		<div class="rightColumn">
 			<ul>
 				<li> 
-					<label># of Service prices:</label>
+					<label># of Service prices</label>
 					<? echo ( scalar openprint::ServicePrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
-					<label># of Material prices:</label>
+					<label># of Material prices</label>
 					<? echo ( scalar openprint::MaterialPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
-					<label># of Paper prices:</label>
+					<label># of Paper prices</label>
 					<? echo ( scalar openprint::PaperPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
-					<label># of Product prices:</label>
+					<label># of Product prices</label>
 					<? echo ( scalar openprint::ProductPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 			</ul>
@@ -76,7 +76,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 		<p> 
 			Price list files <b>must</b> be in a comma 
 				separated values (CSV) format and the columns must be in the following 
-				order:<br>
+				order<br>
 				<br>
 				MaterialID, EquipmentID, Min, Max, Units, Material Cost, Material Markup, 
 				Material Sale Price, Discountable<br>
@@ -90,7 +90,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				<br>
 		</p>
 		<p> 
-			<label><b>CSV File:</b></label>
+			<label><b>CSV File</b></label>
 			<input type="file" name="filePrices"/>
 		</p>
 		<p class="buttons">

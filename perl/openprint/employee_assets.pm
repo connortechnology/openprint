@@ -100,5 +100,15 @@ sub edit {
 	} # end if
 } # end sub edit
 
+sub stream {
+	if ( $param{'action'} eq 'Do' ) {
+		my $Asset = new openprint::Asset($param{'asset_id'});
+		$Asset->like();
+	} elsif ( $param{'action'} eq 'Dont' ) {
+		my $Asset = new openprint::Asset($param{'asset_id'});
+		$Asset->dislike();
+	} # end if
+} # end sub stream
+
 1;
 __END__

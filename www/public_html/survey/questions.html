@@ -10,11 +10,13 @@
 				my $Response = $Responses{$Question->id()};
 				$Response = new openprint::Survey_Response() if ! $Response;
 				$html .= '<div class="answers">';
-				$html .= ssi::radio( 'answer-'.$Question->id(), 
+				$html .= ssi::radio( 'answer_id-'.$Question->id(), 
 					[ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], 
 					( $Response->answer_id() ? $Response->answer_id() : $Response->answer() ),
 					);
-				$html .= '</div></div>';
+				$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
+				<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
+				</div>', $Question->id() );;
 			} # end foreach Question
 			return $html;
 		) ?>

@@ -66,10 +66,10 @@ sub rfidtag_details {
 				} # end if
 			} # end if
 			foreach my $C ( $Skid->Contents() ) {
-				if ( ( $param{"in_stock-$$C{id}"} != $C->quantity() ) or ( $param{"quality_id-$$C{id}"} != $C->quality_id() ) ) {
+				if ( ( $param{"in_stock-$$C{id}"} != $C->quantity() ) or ( $param{"condition_id-$$C{id}"} != $C->condition_id() ) ) {
 					$variable{'error'} .= $C->save({
 							'quantity'		=>	$param{"in_stock-$$C{id}"},
-							'quality_id'	=>	$param{"quality_id-$$C{id}"},
+							'condition_id'	=>	$param{"condition_id-$$C{id}"},
 							});
 				} # end if
 			} # end foreach paper on skid

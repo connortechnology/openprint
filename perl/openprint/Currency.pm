@@ -1,7 +1,7 @@
-package openprint::Currency;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::Currency;
+our @ISA = qw(openprint::Object);
+
 use Number::Format;
 use openprint ();
 use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );

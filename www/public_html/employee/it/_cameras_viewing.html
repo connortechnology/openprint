@@ -25,7 +25,8 @@ Click on the image to stop streaming.
 			} # end if
 			$html .= sprintf('<li id="camera_%1$d"><img src="%3$s" id="stream_%1$d" class="stream" alt="%2$s" style="width:%4$dpx; height: %5$dpx;" onclick="stop_stream( %1$d );" /><br/>
 				Size: <select onchange="resize_image( %1$d, this.getValue() );">%6$s</select>
-				</li>',
+				</li>
+				',
 				$Monitor->id(), $Monitor->name(), $Monitor->source_stream_url(),
 				$Monitor->get('width','height'),
 				ssi::make_drop_down( [ map { $_, $_ } @size_options ], $selected ),

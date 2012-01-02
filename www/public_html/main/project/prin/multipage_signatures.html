@@ -23,17 +23,21 @@ function calc( formName, force ) {
 <? if ( $$variable{'Group'} == 1 ) ?>
 			<div class="leftColumn">
 <? endif ( $$variable{'Group'} == 1 ) ?>
-				<p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
-				<p>
-					<label>Spread dimensions:</label>
-						<input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x 
-						<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
-						<input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-						<input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-					<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( ssi::checked( $$variable{'chkOverrideDimensions'} ); ) ?> />
-					<label class="radio" for="chkOverrideDimensions">Override</label>
-					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+				<p><label>Description</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+				<p class="dimensions">
+					<label>Spread dimensions</label>
+					<? echo (
+						my $html = sprintf('%s x %s => %s x %s',
+							ssi::input( type=>"number", name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>"number", name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							);
+						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', 'calc(this.form.name);' );
+						} # end if
+						return $html;
+					) ?>
 				</p>
 <? if ( $$variable{'Group'} == 1 ) ?>
 			</div>

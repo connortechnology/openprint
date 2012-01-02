@@ -2,9 +2,9 @@
 	a banner. <br/>
 </p>
 <form name="f1;" method="post" enctype="multipart/form-data" onSubmit="return fmCheck();">
-	<fieldset><legend>Search:</legend>
+	<fieldset><legend>Search</legend>
 	<p>
-		<label>Banner:</label>
+		<label>Banner</label>
 			<select name="ddmBanner" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value="">Select a Banner</option>
 				<?FILL_BANNER_NAME?>
@@ -21,25 +21,25 @@
 			</script>
 	</p>
 	<p> 
-		<label>Name:</label>
+		<label>Name</label>
 			<input type="text" name="txtBannerName" value="<?BANNER_NAME?>" />
 	</p>
 	<p> 
-		<label>Banner Link:</label>
+		<label>Banner Link</label>
 			<input type="text" name="txtBannerURL"  value="<?BANNER_URL?>" />
 	</p>
 	<p> 
-		<label>Apply to Category:</label>
+		<label>Apply to Category</label>
 			<select name="selectCategories" size="4" multiple >
 				<?FILL_CUSTOMER_CATEGORIES?>
 			</select>
 	</p>
 	<p> 
-		<label>Upload Image:</label>
+		<label>Upload Image</label>
 			<input type="file" name="fileBannerImage" enctype="multipart/form-data"  />
 	</p>
 	<p> 
-		<label>Current Image:</label>
+		<label>Current Image</label>
 			<? if ( $$variable{'BANNER_IMAGE'} ) ?>
 			<img src="/images/banners/<?BANNER_IMAGE?>"/>
 			<? else ( $$variable{'BANNER_IMAGE'} ) ?>

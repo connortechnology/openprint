@@ -64,12 +64,12 @@
 			<br class="spacer"/>
 			<fieldset><legend>Pad Specifications</legend>
 				<p id="NotepadPages">
-					<label># of pages per pad:</label>
-					<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+					<label># of pages per pad</label>
+					<input type="number" name="PageQuantity" value="<?PageQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 				</p>
 <input type="hidden" name="txtTotalPageQuantity" value="2" />
 				<p>
-					<label>Backing:</label>
+					<label>Backing</label>
 					<input type="radio" id="BackingCardboard" name="Backing" value="Cardboard" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Cardboard' ); ) ?> />
 					<label class="radio" for="BackingCardboard">Cardboard</label>
 					<input type="radio" id="BackingPrinted" name="Backing" value="Printed" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'Printed' ); ) ?> />

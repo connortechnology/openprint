@@ -8,16 +8,11 @@
 	my $Profile = $$variable{'Company'}->Profile();
 	
 	foreach my $Field ( @{$$variable{'Fields'}} ) {
-		$html .= '<li><label>'.$Field->name().':</label><span id="field-'.$Field->id().'_container">';
+		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 		my $value = $Profile->value( $Field->name() );
 
 		if ( $Field->type() eq 'checkbox' ) {
-			foreach my $value ( ref $Field->values() eq 'ARRAY' ? @{$Field->values()} : () ) {
-				$html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label class="radio" for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $value, ssi::checked( sets::isin( $value, [ split(',', $value ) ] ) )
-					);
-			} # end foreach value
+			$html .= ssi::checkboxes( 'field-'.$Field->id(), $Field->values(), [ split(',', $value ? $value : $Field->default() ) ] );
 		} elsif ( $Field->type() eq 'date' ) {
 			my ( $start, $end ) = @{$Field->values()} if $Field->values();
 			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), ( $value ? $value : $Field->default() ), { 'start'=>$start, 'end'=>$end } ) . '</span>';
@@ -42,11 +37,7 @@
 		} elsif ( $Field->type() eq 'text' ) {
 			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
 		} elsif ( $Field->type() eq 'radio' ) {
-			foreach my $v ( ref $Field->values() ? $Field->values() : () ) {
-				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label class="radio" for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $v, $v ? ssi::checked( $v eq $value ) : ssi::checked( $v eq $Field->default() ) );
-			} # end foreach value
+			$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value ? $value : $Field->default() );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field

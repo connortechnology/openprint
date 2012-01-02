@@ -6,20 +6,6 @@
 	} // end function
 -->
 </script>	 
-<? eval (
-	@{$$variable{'Articles'}} = ();
-	foreach my $Article ( openprint::Article->find( 
-		'published'			=>	1,
-		'category_id'		=>	$param{'category_id'},
-		'order'				=> 'published_on DESC',
-		'limit'				=>	10,
-		) ) {
-		push @{$$variable{'Articles'}}, $Article;
-	} # end foreach Article
-	if ( $param{'category_id'} ) {
-		$$variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
-	} # end if
-) ?>
 <div class="Article"><div class="List">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
@@ -34,19 +20,12 @@
 	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
 </div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>
-<div class="Articles">
-
-<? if ( @{$$variable{'Articles'}} == 0 ) ?>
-	There are no articles which match your search criteria. 
-<? else ( @{$$variable{'Articles'}} == 0 ) ?>
-		<? echo ( 
-			my $html;
-			foreach my $Article ( @{$$variable{'Articles'}} ) {
-				next if ! $Article->can_view();
-				$html .= $Article->html();
-			} # end foreach Article
-			return $html;
-		) ?>
-<? endif ( @{$$variable{'Articles'}} == 0 ) ?>
-</div>
+<form id="f1" name="f1" method="post" action="list.html" onsubmit="load_articles(this);return false;">
+	<fieldset class="filters">
+	<ul>
+		<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>"/></li>
+	</ul>
+	</fieldset>
+</form>
+<div id="Articles"><!--#include virtual="_list.html"--></div>
 </div></div><!--Article-->

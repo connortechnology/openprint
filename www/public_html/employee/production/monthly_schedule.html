@@ -66,7 +66,7 @@ a.buttonImageOn .c {
 	<fieldset class="filters"><legend>Display Criteria</legend>
         <div style="float: left; width: 47%;">
         <p>
-            <label>Press:</label>
+            <label>Press</label>
 			<select name="Press" onchange="this.form.submit();">
 				<option value=""> select </option>
 <? echo (
@@ -133,7 +133,7 @@ return $html;
 			<input type="hidden" name="btnFunction" value="MakeReservation"/>
 			<input type="hidden" name="Press" value="<? echo ( $openprint::session{'/employee/production/monthly_schedule.html?Press'} ) ?>"/>
 		<p>
-			<label>Date:</label>
+			<label>Date</label>
 <? eval (
 @$variable{'Years','Months','Days'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 ) ?>
@@ -144,7 +144,7 @@ return $html;
             </span>
 		</p>
 		<p>
-			<label>Duration (hours):</label>
+			<label>Duration (hours)</label>
 			<input type="text" name="hours" />
 		</p>
 		<p>

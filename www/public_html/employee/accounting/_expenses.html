@@ -105,7 +105,7 @@ $Expense->category(),
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td colspan="7">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows):</td>
+			<td colspan="7">Totals (<? echo ( scalar @{$$variable{'Expenses'}} ) ?> rows)</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?><br/>
 			<? echo ( openprint::Currency::format( $$variable{'business_subtotal'} ); ) ?></td>	
 <? echo (

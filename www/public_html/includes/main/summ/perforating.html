@@ -7,19 +7,19 @@
 		if ( $$sig_specs{'txtServiceDescription'} ) {
 			$html .= '<div class="row"> Information for <b>'.$$sig_specs{'txtServiceDescription'}.'</b> </div>';
 		} # end if
-		$html .= '<div class="row"><span class="label">Number of Perforations per item:</span>';
+		$html .= '<div class="row"><span class="label">Number of Perforations per item</span>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= sprintf('<span class="value">%d Vertical %d Horizontal</span>', @$variable{"txtVerticalQty-$signature_index","txtHorizontalQty-$signature_index"} );
 		} # end foreach
 		$html .= '</div>
 		<div class="row">
-			<span class="label">Imposition:</span>';
+			<span class="label">Imposition</span>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= qq`<span class="value">$$variable{"txtImposition-$signature_index-$qty_index"}out $$variable{'txtLayoutWidth'.$qty_index} x $$variable{'txtLayoutHeight'.$qty_index}</span>`;
 		} # end foreach
 		$html .= '</div>
 		<div class="row">
-			<span class="label">Equipment:</span>';
+			<span class="label">Equipment</span>';
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= qq`<span class="value">$$variable{"ddmEquipment-$signature_index-$qty_index"}</span>`;
 		} # end foreach

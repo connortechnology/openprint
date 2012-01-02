@@ -9,7 +9,7 @@
 ) ?>
 	
 <li class="RequiredBy">
-	<label>Required By:</label>
+	<label>Required By</label>
 	<span class="DateSelector">
 	<select name="ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>" size="1" onchange="setDaysDropDown(this.form.ddmDueDateYear<? echo ( $$variable{'Project'}->id(); ) ?>.value,this.form.ddmDueDateMonth<? echo ( $$variable{'Project'}->id(); ) ?>.value, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>, this.form.ddmDueDateDay<? echo ( $$variable{'Project'}->id(); ) ?>.value);">
     <? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'.$$variable{'Project'}->id()} ); ) ?>

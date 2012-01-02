@@ -15,10 +15,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
+use openprint ();
 package openprint::survey;
 
 require openprint::Survey;
 require openprint::Survey_Question;
+require openprint::Survey_Question_Category;
 require openprint::Survey_Answer;
 require openprint::Survey_Response;
 
@@ -32,29 +34,68 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub view {
+$log->debug("In survey view");
 	$param{'survey_id'} =~ s/\D//g;
-    $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+    my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
     if ( $param{'btnFunction'} eq 'Save' ) {
-        $variable{'error'} = $variable{'Survey'}->save( \%param );
-    } elsif ( $param{'btnFunction'} eq 'Delete' ) {
-        $variable{'error'} = $variable{'Survey'}->delete( );
+        $variable{'error'} = $Survey->save( \%param );
+    } elsif ( $param{'action'} eq 'delete' ) {
+        $variable{'error'} = $Survey->delete( );
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			%param = ();
+		} # end if
+    } elsif ( $param{'action'} eq 'submit' ) {
+		my %Responses = map { $_->question_id(), $_ } openprint::Survey_Response->find('survey_id'=>$Survey->id(),'user_id'=>$session{'user_id'});
+		foreach my $Question ( $Survey->Questions() ) {
+			my $Response = $Responses{$$Question{id}};
+			$Response = new openprint::Survey_Response() if ! $Response;
+			if ( 
+					( ( ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ) and ( $Response->answer_id() ne join(',',@{$param{'answer_id-'.$$Question{'id'}}}) ) ) or
+					( ( ref $param{'answer_id-'.$Question->id()} ne 'ARRAY' ) and ( $Response->answer_id() != $param{'answer_id-'.$$Question{'id'}} ) ) or
+					( $Response->answer() ne $param{'answer-'.$$Question{'id'}} ) 
+			   ) {
+
+				$variable{'error'} .= $Response->save({
+						'company_id'	=>	$session{'company_id'},
+						'user_id'		=>	$session{'user_id'},
+						'survey_id'		=>	$$Survey{'id'},
+						'question_id'	=>	$$Question{'id'},
+						'answer_ids'	=>	(ref $param{'answer_id-'.$Question->id()} eq 'ARRAY' ? $param{'answer_id-'.$Question->id()} : [ $param{'answer_id-'.$Question->id()} ] ),
+						'answer'		=>	$param{'answer-'.$Question->id()},
+						});
+			} # end nif answer has changed
+		} # end foreach Question
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			%param = ();
+		} # end if
     } # end if
-} # end sub history
+} # end sub view
+
 
 sub edit {
 	$param{'survey_id'} =~ s/\D//g;
 	my $Survey = $variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
-	if ( $param{'btnFunction'} eq 'Copy' ) {
+	if ( $param{'action'} eq 'Copy' ) {
 		$variable{'Survey'} = $variable{'Survey'}->copy();
 		$variable{'error'} = $variable{'Survey'}->save( );
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{'action'} eq 'Save' ) {
 		$variable{'error'} = $variable{'Survey'}->save( \%param );
 		foreach my $Question ( $Survey->Questions() ) {
 			$variable{'error'} .= $Question->save({
-					'text'=>$param{'text-'.$Question->id()},
-					'type'=>$param{'type-'.$Question->id()},
+					'text'		=>	$param{'text-'.$Question->id()},
+					'type'		=>	$param{'type-'.$Question->id()},
+					'alignment'	=>	$param{'alignment-'.$Question->id()},
 					});
 		} # end foreach Question
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Survey->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/survey/history.html';
+			$variable{'information'} .= 'Survey successfully deleted.';
+			%param = ();
+		} # end if
 	} # end if
 } # end sub edit
 
@@ -80,19 +121,37 @@ sub _history {
 		) );
 } # end sub _history
 
-sub view {
-} # end sub view
-
 sub _questions_edit {
 	$param{'survey_id'} =~ s/\D//g;
 	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Question = openprint::Survey_Question->find_one('id'=>$param{'question_id'} );
+		if ( $Question ) {
+			$variable{'error'} .= $Question->delete();
+		} else {
+			$log->error("attempt to delete unfound question $param{question_id}");
+		} # end if
+	} # end if
+} # end sub _questions_edit
+
+sub _question_edit_line {
+	$param{'survey_id'} =~ s/\D//g;
+	$variable{'Survey'} = new openprint::Survey( $param{'survey_id'} );
 	if ( $param{'action'} eq 'new' ) {
-		my $Question = new openprint::Survey_Question();
+		my $Question = $variable{'Question'} = new openprint::Survey_Question();
 		$variable{'error'} .= $Question->save({
 			'survey_id'	=>	$param{'survey_id'},	
 			});
-	} # end if
-} # end sub _questions_edit
+	} elsif ( $param{'action'} eq 'sort' ) {
+		my $order = $param{'order'};
+		$order =~ s/Questions\[\]=//g;
+		my @Order = split '&', $order;
+		foreach my $i ( 0 .. @Order ) {
+			my $Q = openprint::Survey_Question->find_one('question_id'=>$Order[$i]);
+			$variable{'error'} .= $Q->save({'sorting'=>$i}) if $Q;
+		} # end foreach
+	} # en dif
+} # end sub _question_edit_line
 
 sub _answers_edit {
 	$param{'question_id'} =~ s/\D//g;
@@ -119,11 +178,73 @@ sub _answers_edit {
 					'question_id'	=>	$param{'question_id'},
 					'answer_id'		=>	$$Answer{'id'},
 					});
+	} elsif ( $param{'action'} eq 'sort' ) {
+		my $order = $param{'order'};
+		$order =~ s/answers-(\d+)\[\]=//g;
+		my $question_id = $1;
+		my @Order = split '&', $order;
+		foreach my $i ( 0 .. @Order ) {
+			my $A = openprint::Survey_Question_Available_Answer->find_one('question_id'=>$question_id, 'answer_id'=>$Order[$i]);
+			$variable{'error'} .= $A->save({'sorting'=>$i}) if $A;
+		} # end foreach
+		my $Question = $variable{'Question'} = new openprint::Survey_Question( $question_id );
 	} # end if
 } # end sub _answers_edit
 
 sub questions {
 } # end sub questions
 
+sub _comments {
+	my $Survey = $variable{'Survey'} = openprint::Survey->find_one( 'id'=>$param{'survey_id'} );
+	if ( ! $Survey ) {
+		$variable{'error'} .= 'Survey not found.';
+		return;
+	} # end if
+	if ( $param{'text'} =~ /\S/ ) {
+		if ( ! openprint::Comment->find_one(
+			'user_id'	=>	$session{'user_id'},
+			'text'		=>	$param{'text'},
+			'object_id'	=>	$Survey->id(),
+			'object_type'	=>	ref $Survey,
+			) ) {
+
+			my $approved = 0;
+			if ( $session{'user_type'} eq 'A' or $session{'user_id'} == $Survey->created_by() ) {
+				$approved = 1;
+			} # endif
+
+			$variable{'error'} .= new openprint::Comment()->save({
+					'text'			=>	$param{'text'},
+					'object_type'	=>	ref $Survey,
+					'object_id'		=>	$Survey->id(),
+					'approved'		=>	$approved,
+					});
+		} # end if comment already exists
+	} elsif ( $param{'action'} eq 'approve' ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Survey{'id'}, 'object_type'=>ref $Survey, 'id'=>$param{'comment_id'} );
+		if ( $Comment ) {
+			if ( $Comment->can_approve() ) {
+				$Comment->save({'approved'=>1});
+			} else {
+				$variable{'error'} .= 'You do not have rights to approve that comment.';
+$log->error("Attempt to approve a comment without rights");
+			} # end if
+		} else {
+			$variable{'error'} .= 'Comment not found.';
+		} # end if
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $Comment = openprint::Comment->find_one('object_id'=>$$Survey{'id'}, 'object_type'=>ref $Survey, 'id'=>$param{'comment_id'} );
+		if ( $Comment ) {
+			if ( $Comment->can_delete() ) {
+				$variable{'error'} .= $Comment->delete();
+			} else {
+				$variable{'error'} .= 'You do not have rights to delete that comment.';
+$log->error("Attempt to delete a comment without rights");
+			} # end if
+		} else {
+			$variable{'error'} .= 'Comment not found or you do not have rights to delete.';
+		} # end if
+	} # end if
+} # end sub _comments
 1;
 __END__

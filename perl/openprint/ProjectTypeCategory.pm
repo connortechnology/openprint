@@ -1,17 +1,20 @@
+use strict;
 package openprint::ProjectTypeCategory;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 require openprint::ProjectType;
 
-use vars qw( %fields %transforms %defaults $table $serial );
+use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$table =  'ProjectType_Categories';
-$serial = 'ProjectType_Categories_id_seq';
+$debug = 1;
+$table =  'projecttype_categories';
+$serial = 'projecttype_categories_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',
 	'sort'	=>	'sort',
 );
 %transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'sort'	=>	undef,
@@ -28,6 +31,7 @@ sub ProjectTypes {
 		@{$$self{'ProjectTypes'}} = openprint::ProjectType->find( 'category_id'=>$$self{'id'} );
 	} # end if
 	return @{$$self{'ProjectTypes'}};
-} # end sub project_types
+} # end sub ProjectTypes
+
 1;
 __END__

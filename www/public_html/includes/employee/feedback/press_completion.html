@@ -1,6 +1,6 @@
 <div class="Press">
 	<p>
-		<label>Press:</label>
+		<label>Press</label>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 		<select name="UsePress-<?SignatureIndex?>">
 			<option value=""> select </option>
@@ -13,7 +13,7 @@
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 	</p>
 	<p>
-		<label>Operator:</label>
+		<label>Operator</label>
 		<? echo (
 			my $sig_id = $$variable{'ServiceIndex'};
 			if ( ! $sig_id ) {
@@ -40,11 +40,11 @@
 		) ?>
 	</p>
 	<p>
-		<label>Comments:</label>
+		<label>Comments</label>
 		<textarea name="txtEmployeeComments-<?SignatureIndex?>" cols="41" rows="5" wrap="VIRTUAL"><? echo ( $$variable{"txtEmployeeComments-$$variable{'SignatureIndex'}"} ) ?></textarea>
 	</p>
 	<p>
-		<label>Completed:</label>
+		<label>Completed</label>
 
 		<? eval ( 
 		my ( $y, $m, $d ) = Date::Calc::Today();
@@ -69,13 +69,13 @@
 	} # end if
 ) ?>
 	<p>
-		<label>Complete:</label>
+		<label>Complete</label>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? checked ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>Y">Yes</label>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? checked ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>N">No</label>
 	</p>
-	<p><label>Schedule:</label>
+	<p><label>Schedule</label>
 <? echo ( 
 	my @schedule = openprint::ScheduledJob->find('project_id'=>$$variable{'Project'}->id(), 'service_id any'=>$$variable{'ServiceIndex'} );
 	if ( @schedule ) {

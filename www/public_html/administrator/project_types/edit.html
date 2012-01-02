@@ -3,7 +3,7 @@
 		<div class="content">
 			<ul>
 				<li>
-					<label>Category:</label>
+					<label>Category</label>
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
 						<option value=""> All </option>
 						<? echo ( 
@@ -13,7 +13,7 @@
 				
 				</li>
 				<li>
-					<label>Project Type:</label>
+					<label>Project Type</label>
 					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
 						<option value="">select one</option>
 						<? echo ( 
@@ -36,7 +36,7 @@
 	); ) ?>
 		</p>
 		<p class="buttons">
-			<b>CSV File:</b>
+			<b>CSV File</b>
 			<input type="file" name="fileImport" />
 <? echo ( join('',
 			ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();",'','Import'),
@@ -45,56 +45,56 @@
 		</p>
 	</fieldset>
 	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->description() : 'New Project Type' ) ?></legend>
-		<p> 
-			<label>Name:</label>
+		<ul>
+		<li> 
+			<label>Name</label>
 			<input type="text" id="name" name="name" value="<? echo ( $$variable{'ProjectType'}->name(); ) ?>" /> 
-		</p>
-		<p> 
-			<label>Description:</label>
+		</li>
+		<li> 
+			<label>Description</label>
 			<input type="text" id="description" name="description" value="<? echo ( $$variable{'ProjectType'}->description(); ) ?>" /> 
-		</p>
-		<p>
-			<label>Category:</label>
+		</li>
+		<li>
+			<label>Category</label>
 			<select id="category_id" name="category_id">
 				<option value=""> none </option>
 				<? echo (
 					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $$variable{'ProjectType'}->category_id() );
 			) ?>
 			</select>
-		</p>
+		</li>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
-		<p> 
-			<label>Type:</label>
+		<li> 
+			<label>Type</label>
 			<input type="text" name="type" value="<? echo ( $$variable{'ProjectType'}->type() ) ?>" /> 
-		</p>
-		<p> 
-			<label>URL:</label>
+		</li>
+		<li> 
+			<label>URL</label>
 			<input type="url" id="url" name="url" value="<? echo ( $$variable{'ProjectType'}->url(); ) ?>" />
-		</p>
+		</li>
 <? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
-		<p> 
-			<label>Sort:</label>
+		<li> 
+			<label>Sort</label>
 			<input type="number" id="sorting" name="sorting" value="<? echo ( $$variable{'ProjectType'}->sorting(); ) ?>" />
-		</p>
-		<p> 
-			<label>Show please call:</label>
+		</li>
+		<li> 
+			<label>Show please call</label>
 			<input type="radio" id="please_call1" name="please_call" value="1" <? echo ( ssi::checked( $$variable{'ProjectType'}->please_call() ); ) ?>" />
 			<label for="please_call1" class="radio">Yes</label>
 			<input type="radio" id="please_call0" name="please_call" value="0" <? echo ( ssi::checked( ! $$variable{'ProjectType'}->please_call() ); ) ?>" />
 			<label for="please_call0" class="radio">No</label>
-		</p>
+		</li>
+		</ul>
 	</fieldset><!-- Column -->
-	<fieldset class="rightColumn"> 
-		<legend>Required Services:</legend>
+	<fieldset class="rightColumn RequiredServices"> 
+		<legend>Required Services</legend>
 		<p> 
-			<select multiple="multiple" id="required_services" name="required_services" size="4">
 <? echo (
-		return ssi::make_drop_down(
-			[ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
+		return ssi::checkboxes('required_services', 
+			[ map { $_->id(), $_->name().'<br/>' } openprint::ServiceType->find('order'=>'lower(name)') ],
 			[ $$variable{'ProjectType'}->required_services() ]
 			);
 ) ?>
-			</select>
 		</p>
 	</fieldset><!-- Column -->
 	<br class="spacer"/>

@@ -31,18 +31,18 @@
 	<div class="PO_Item">
 		<fieldset><legend>Editing Item <? echo ( $$variable{'Item'}->id() ) ?></legend>
 			<ul>
-				<li><label>Vendor:</label><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<? echo ( $$variable{'Item'}->vendor_id() ) ?>"><? echo ( $$variable{'Item'}->Vendor()->name() ) ?></a></li>
-				<li><label>Type:</label>
+				<li><label>Vendor</label><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<? echo ( $$variable{'Item'}->vendor_id() ) ?>"><? echo ( $$variable{'Item'}->Vendor()->name() ) ?></a></li>
+				<li><label>Type</label>
 					<select name="type_id" id="type_id">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( openprint::PurchaseOrder_ContentType->dropdown(), $$variable{'Item'}->type_id() ); ) ?>
 					</select>
 				</li>
-				<li><label>Name:</label><input type="text" name="name" id="name" value="<? hecho ( $$variable{'Item'}->name() ) ?>"/></li>
-				<li><label>Product #:</label><input type="text" name="product" id="product" value="<? hecho ( $$variable{'Item'}->product() ) ?>"/></li>
-				<li><label>Price:</label><input type="number" name="price" id="price" value="<? echo ( $$variable{'Item'}->price() ) ?>"/></li>
-				<li><label>Description:</label><? echo ( $$variable{'Item'}->description() ) ?></li>
-				<li><label>POs:</label>
+				<li><label>Name</label><input type="text" name="name" id="name" value="<? hecho ( $$variable{'Item'}->name() ) ?>"/></li>
+				<li><label>Product #</label><input type="text" name="product" id="product" value="<? hecho ( $$variable{'Item'}->product() ) ?>"/></li>
+				<li><label>Price</label><input type="number" name="price" id="price" value="<? echo ( $$variable{'Item'}->price() ) ?>"/></li>
+				<li><label>Description</label><? echo ( $$variable{'Item'}->description() ) ?></li>
+				<li><label>POs</label>
 					<? echo ( 
 						my $html;
 						foreach my $PO ( $$variable{'Item'}->PurchaseOrders() ) {

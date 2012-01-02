@@ -92,6 +92,9 @@ sub colorize_string($) {
 	$_[0] =~ s/^\[\w{3} \w{3} \d{2} \d\d:\d\d:\d\d \d{4}\] //;
 	$_[0] =~ s/, referer: .*$//;
 	$_[0] =~ s/\[client [\d\.]+\] //;
+	
+	return if $_[0] =~ /^\[debug\] mod_headers/;
+	return if $_[0] =~ /^\[debug\] mod_deflate/;
 
 	if ($_[0] =~ m/$errors/) {
 		return color_message("ERROR: " . $_[0], $error_color);

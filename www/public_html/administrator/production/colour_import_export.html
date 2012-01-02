@@ -6,7 +6,7 @@
 	} // end function load_ddm
 </script>
 <form id="f1" name="f1" method="post" action="colour_import_export.html" enctype="multipart/form-data">
-	<fieldset><legend>Colour Definitions:</legend>
+	<fieldset><legend>Colour Definitions</legend>
 		<? eval ( 
 			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)');
 			@{$$variable{'Services'}} = map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)');
@@ -72,7 +72,7 @@
 	<p>
 	Colour definition files <b>must</b> be in 
 	a comma separated values (CSV) format and the columns must be in the 
-	following order:</p>
+	following order</p>
 	<p>
 	PMSID, ServiceID, MaterialID, Colour Name, Washes, Equipment, Service Cost, Service Markup, Material Cost, Material Markup, Gloss Coverage, Matte Coverage, Uncoated Coverage
 	</p>
@@ -91,7 +91,7 @@
 	You can then open this in a spreadsheet program such as Microsoft Excel.
 </p>
 	<p>
-		<label><b>File:</b></label>
+		<label><b>File</b></label>
 			<input type="file" name="fileColour"  />
 	</p>
 	<p class="buttons">

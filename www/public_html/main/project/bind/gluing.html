@@ -20,8 +20,8 @@
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
 				<p>
-					<label>Glued Area (square inches):</label>
-					<input type="text" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{'SignatureIndex'}} ) ?>" size="8" onkeyup="calc(this.form.name);"/>
+					<label>Glued Area (square inches)</label>
+					<input type="number" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);"/>
 					<input type="checkbox" id="chkOverrideArea-<?SignatureIndex?>" name="chkOverrideArea-<?SignatureIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" 
 					<? echo ( $$variable{'chkOverrideArea-'.$$variable{'SignatureIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
 					/>

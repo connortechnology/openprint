@@ -1,6 +1,6 @@
 <div class="ProjectType">
 	<fieldset>
-		<legend>Please select the project type:</legend>
+		<legend>Please select the project type</legend>
 		<ul>
 		<? while ( @$variable{'index','name'} = splice @{$$variable{'ProjectTypes'}},0,2; ) ?>
 			<li>
@@ -18,15 +18,15 @@
 	<legend>What quantities would you like to calculate pricing for?</legend>
 	<ul>
 		<li>
-			<label for="Quantity1">Quantity 1:</label>
+			<label for="Quantity1">Quantity 1</label>
 			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 		<li>
-			<label for="Quantity2">Quantity 2:</label>
+			<label for="Quantity2">Quantity 2</label>
 			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 		<li>
-			<label for="Quantity3">Quantity 3:</label>
+			<label for="Quantity3">Quantity 3</label>
 			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 	</ul>
@@ -66,7 +66,7 @@
 
 <? eval (  @{$$variable{'OptionServiceTypes'}} = openprint::ServiceType->find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
 <? if ( @{$$variable{'OptionServiceTypes'}} ) ?>
-<fieldset><legend>Options:</legend>
+<fieldset><legend>Options</legend>
 	<ul>
 		<? echo ( 
 			my $html = '';
@@ -162,7 +162,7 @@
 	my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping','create_visible'=>1,'order'=>'sorting,lower(description)');
 	
 	if ( @ServiceTypes ) {
-		$html .= '<fieldset><legend>Please select your delivery method:</legend><ul>';
+		$html .= '<fieldset><legend>Please select your delivery method</legend><ul>';
 
 		foreach my $ServiceType ( @ServiceTypes ) {
 			$html .= sprintf(q`
@@ -194,11 +194,11 @@
 		<input type="hidden" name="ddmDesign" value="ElectronicFile" />
 	<? endif ( @{$$variable{'design_options'}} > 2 ) ?>
 		<li class="reference"> 
-			<label>Please provide a reference:</label>
+			<label>Please provide a reference</label>
 			<textarea id="reference" name="txtProjectReference" rows="1" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
 		</li>
 		<li class="comments">
-			<label>Additional comments or instructions:</label>
+			<label>Additional comments or instructions</label>
 			<textarea id="comments" name="txtComments" rows="1" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
 		</li>
 	</ul>
@@ -216,7 +216,7 @@
 			<label for="reprintN" class="radio">No</label>
 		</li>
 		<li id="reprintReasonSection" style="display: none;">
-			<label>Reason:</label>
+			<label>Reason</label>
 			<select name="reprint_reason">
 				<option value=""> select </option>
 			<? echo ( ssi::make_drop_down( [

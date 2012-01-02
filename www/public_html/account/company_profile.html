@@ -15,14 +15,14 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</fieldset>
 		<div class="CompanyInformation">
 			<fieldset>
-				<legend>Company Information:</legend>
+				<legend>Company Information</legend>
 				<ul>
 					<li> 
-						<label for="companyname">Company Name:</label>
+						<label for="companyname">Company Name</label>
 						<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>" />
 					</li>
 					<li> 
-						<label for="address1">Address:</label>
+						<label for="address1">Address</label>
 						<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>" />
 					</li>
 					<li> 
@@ -30,7 +30,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>" />
 					</li>
 					<li> 
-						<label>Country:</label>
+						<label>Country</label>
 						<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
 							<option value=""> Select </option>
 							<? echo ( ssi::make_drop_down( \@countries::countries, $$variable{'Company'}->country() ); ) ?>
@@ -55,7 +55,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						</select>
 					</li>
 					<li> 
-						<label for="city">City:</label>
+						<label for="city">City</label>
 						<input type="text" id="city" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>" />
 					</li>
 					<li> 
@@ -71,11 +71,11 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 						<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>" />
 					</li>
 					<li> 
-						<label for="phone">Phone:</label>
+						<label for="phone">Phone</label>
 						<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
 					</li>
 					<li> 
-						<label for="fax">Fax:</label>
+						<label for="fax">Fax</label>
 						<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
 					</li>
 				</ul>
@@ -83,26 +83,26 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</div>
 		<!--#include virtual="_business_information.html"-->
 		<div class="CreditInformation">
-			<fieldset><legend>Credit Information:</legend>
+			<fieldset><legend>Credit Information</legend>
 				<ul>
 					<li>
-						<label>Terms:</label>
+						<label>Terms</label>
 						<? echo ( $$variable{'Company'}->Credit()->get('DenyDays'); ) ?> Days
 					</li>
 					<li>
-						<label>Credit Account Limit:</label>
+						<label>Credit Account Limit</label>
 						$ <? echo ( $$variable{'Company'}->Credit()->get('Limit'); ) ?>
 					</li>
 					<li>
-						<label>Current Credit Balance:</label>
+						<label>Current Credit Balance</label>
 						<? echo ( $$variable{'Company'}->Credit()->debt() ) ?>
 					</li>
 					<li>
-						<label>Remaining Credit:</label>
+						<label>Remaining Credit</label>
 						<? echo ( $$variable{'Company'}->Credit()->remaining(); ) ?>
 					</li>
 					<li>
-						<label>Required Downpayment:</label>
+						<label>Required Downpayment</label>
 						<? echo ( $$variable{'Company'}->Credit()->get('Downpayment') ) ?>
 					</li>
 				</ul>
@@ -114,7 +114,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			<fieldset><legend>Preferences</legend>
 			<ul>
 				<li>
-					<label for="currency_id">Preferred Currency:</label>
+					<label for="currency_id">Preferred Currency</label>
 					<select id="currency_id" name="currency_id">
 						<option value=""> Please select a Currency </option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
@@ -122,7 +122,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				</li>
 	<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
 				<li>
-					<label>Include project breakdown with quote?:</label>
+					<label>Include project breakdown with quote?</label>
 					<input type="radio" id="quote_project_breakdownY" name="quote_project_breakdown" value="Y" <? echo ( ssi::checked( $$variable{'Company'}->quote_project_breakdown() eq 'Y' ); ) ?> />
 					<label class="radio" for="quote_project_breakdownY">Yes</label>
 					<input type="radio" id="quote_project_breakdownN" name="quote_project_breakdown" value="N" <? echo ( ssi::checked( $$variable{'Company'}->quote_project_breakdown() ne 'Y' ); ) ?> />

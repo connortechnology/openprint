@@ -32,8 +32,8 @@
 						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
 					</tr>
 					<tr>
-						<td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
-						<td>Fax:<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+						<td>Phone<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+						<td>Fax<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
 					</tr>
 				</table>
 			</div>
@@ -47,7 +47,7 @@
 		<div class="Information">
 			<div class="Vendor">
 				<p>
-					<label>Vendor:</label>
+					<label>Vendor</label>
 <? echo (
 	my $html = '';
 	$html .= $$variable{'Claim'}->Contact()->name().'<br/>' if $$variable{'Claim'}->contact_id();
@@ -64,7 +64,7 @@
 				</p>
 			</div>
 			<div class="Sender">
-				<p><label>Sender:</label>
+				<p><label>Sender</label>
 				<? echo ( 
 					my $html;
 					$html .= $$variable{'Claim'}->Creator()->name().'<br/>';
@@ -76,27 +76,27 @@
 				</p>
 			</div>
 			<div class="Dates">
-				<p class="filed_on"><label>Filed On:</label>
+				<p class="filed_on"><label>Filed On</label>
 				<? echo ( 
 					$$variable{'Claim'}->filed_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->filed_on() ) ) : '';
 					) ?>
 				</p>
-				<p class="sent_to"><label>Sent To Accounts:</label>
+				<p class="sent_to"><label>Sent To Accounts</label>
 				<? echo ( 
 					$$variable{'Claim'}->sent_to_accounts_on() ?  Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->sent_to_accounts_on() ) ) : '';
 				) ?>
 				</p>
-				<p class="invoiced_on"><label>Invoiced On:</label>
+				<p class="invoiced_on"><label>Invoiced On</label>
 				<? echo ( 
 					$$variable{'Claim'}->invoiced_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ) : '';
 				) ?>
 				</p>
 	<? if ( $$variable{'Claim'}->invoiced_on() ) ?>
-				<p class="invoice_no"><label>Invoice #:</label>
+				<p class="invoice_no"><label>Invoice #</label>
 				<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
 				</p>
 	<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
-				<p class="cancelled_on"><label>Cancelled On:</label>
+				<p class="cancelled_on"><label>Cancelled On</label>
 				<? echo ( 
 	$$variable{'Claim'}->cancelled_on() ?
 	Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->cancelled_on() ) )
@@ -105,7 +105,7 @@
 				</p>
 			</div>
 			<div class="Dockets">
-				<p class="docket"><label>Dockets:</label><? echo ( 
+				<p class="docket"><label>Dockets</label><? echo ( 
 join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ );} $$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : () );) ?></p>
 			</div>
 		</div>
@@ -152,7 +152,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 	<? echo ( 
 			my $html;
 			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
-				$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+				$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%)</td><td class="Price">%s</td></tr>',
 					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
 					);
 			} # end foreach Tax
@@ -165,7 +165,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
 		</div><!--Contents-->
-		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
+		<div id="Remarks"> <h3>Remarks</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
 		<div id="Payments"><!--#include virtual="_payments.html"-->
 		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"-->
 		 </div>

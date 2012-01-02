@@ -48,7 +48,7 @@
 			return $html;
 		) ?>
 	</p>
-<b>Attention:</b> <br/>
+<b>Attention</b> <br/>
 Projects listed in red have changed price from the time this order was originally generated.<br/>
 <br/>
 	<div class="Order"><div class="View">
@@ -61,10 +61,10 @@ Projects listed in red have changed price from the time this order was originall
 		<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
 		<div id="AdminOptions"><ul>
 			<? if ( $$variable{'Order'}->administrator_name() ) ?>
-			<li><label>Representative:</label><? echo ( $$variable{'Order'}->administrator_name() ) ?></li>
+			<li><label>Representative</label><? echo ( $$variable{'Order'}->administrator_name() ) ?></li>
 			<? endif ( $$variable{'Order'}->administrator_name() ) ?>
 			<? if ( $$variable{'Order'}->administrator_comments() ) ?>
-			<li><label>Representative Comments:</label><? echo ( $$variable{'Order'}->administrator_comments() ) ?></li>
+			<li><label>Representative Comments</label><? echo ( $$variable{'Order'}->administrator_comments() ) ?></li>
 			<? endif ( $$variable{'Order'}->administrator_comments() ) ?>
 		</ul></div>
 		<!--#include virtual="_totals.html" -->

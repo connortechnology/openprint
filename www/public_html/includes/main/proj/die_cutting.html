@@ -1,5 +1,5 @@
 <p> 
-	<label>Will you be supplying the die:</label>
+	<label>Will you be supplying the die</label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y">Yes</label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( ssi::checked( (exists $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ) and ($$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ) ); ) ?> />
@@ -13,7 +13,7 @@
 		<label class="radio" for="chkOverrideDimensions">Override</label>
 	</p>
 	<p> 
-		<label>Die Type:</label>
+		<label>Die Type</label>
 		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Simple" name="rdbDieCutting-<?SignatureIndex?>" value="Simple" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbDieCutting-'.$$variable{'SignatureIndex'}} eq 'Simple' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Simple">Simple</label>
 		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Average" name="rdbDieCutting-<?SignatureIndex?>" value="Average" onclick="calc(this.form.name);" <? echo ( 'checked' if $$variable{'rdbDieCutting'.$$variable{'SignatureIndex'}} eq 'Average' ? 'checked="checked"' : '' ) ?> />
@@ -46,6 +46,6 @@
 -->
 </div>
 <p> 
-	<label># of holes to clear:</label>
+	<label># of holes to clear</label>
 	<input name="txtHoleClearingHoles-<?SignatureIndex?>" size="4" value="<? echo ( $$variable{'txtHoleClearingHoles-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
 </p>

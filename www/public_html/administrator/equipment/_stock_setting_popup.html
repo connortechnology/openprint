@@ -9,7 +9,7 @@
 		<div class="leftColumn">
 <? if ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)'); ) ?>
 		<p>
-			<label>Group:</label>
+			<label>Group</label>
 			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
@@ -19,7 +19,7 @@
 		</p>
 <? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)'); ) ?>
 		<p>
-			<label>Manufacturer:</label>
+			<label>Manufacturer</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
@@ -28,7 +28,7 @@
 			</select>
 		</p>
 		<p>
-			<label>Brand:</label>
+			<label>Brand</label>
 			<select name="Brand" onchange="Brand_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
@@ -37,7 +37,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Finish:</label>
+			<label>Finish</label>
 			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
 				<option value=""> select one </option>
 			<? echo (
@@ -54,7 +54,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Colour:</label>
+			<label>Colour</label>
 			<select name="Colour" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
@@ -71,7 +71,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Weight:</label>
+			<label>Weight</label>
 			<select name="Weight" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
@@ -89,7 +89,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Material:</label>
+			<label>Material</label>
 			<select name="material_id" size="1" onchange="calc(this.form.name);">
 				<option value=""> select one </option>
 			<? echo (
@@ -110,7 +110,7 @@
 		</div>
 		<div class="rightColumn">
 		<p> 
-			<label>Type:</label>
+			<label>Type</label>
 			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split(',', $session{'/administrator/equipment/edit.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesSheet">Sheet</label>
 			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split(',', $session{'/administrator/equipment/edit.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />

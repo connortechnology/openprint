@@ -7,11 +7,11 @@
 	} # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?> Services</legend>
 			<p>
-				<label># of Grommets:</label>
-				<input type="text" name="Quantity" value="<?Quantity?>" size="4"  onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);"/>
+				<label># of Grommets</label>
+				<input type="number" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);"/>
 			</p>
 		</fieldset>
 		<fieldset><legend>Results</legend>

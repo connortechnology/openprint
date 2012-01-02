@@ -1416,7 +1416,17 @@ sub _li_change {
 	} # end if
 	my $Equipment = $Job->Equipment();
 
-	if ( $param{'action'} eq 'start' ) {
+	if ( $param{'action'} eq 'setduedate' ) {
+		if ( $$Job{'project_id'} ) {
+			my $Project = $Job->Project();
+			$Project->due_date( $param{duedate} );
+			if ( ! $variable{'error'} .= $Project->save() ) {
+				$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+			} # end if
+		} else {
+			$variable{'error'} .= 'Cant set duedate without project.';
+		} # end if
+	} elsif ( $param{'action'} eq 'start' ) {
 
 		# Stop any currently running jobs, which will be the first job on the schedule, right?
 		foreach my $J ( openprint::ScheduledJob->find('equipment_id'=>$Job->equipment_id(),'order'=>'starttime','starttime is null'=>0,'limit'=>1) ) {
@@ -1663,8 +1673,8 @@ sub _shift_change {
 
 		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift->find(
-					'starttime_<='	=>	$parser->format_datetime( $new_start_datetime ), 
-					'endtime_>'		=>	$parser->format_datetime( $new_start_datetime ),
+					'starttime <='	=>	$parser->format_datetime( $new_start_datetime ), 
+					'endtime >'		=>	$parser->format_datetime( $new_start_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_start_datetime = $parser->parse_datetime( $S->endtime() );
@@ -1673,8 +1683,8 @@ sub _shift_change {
 			last;
 		} # end foreach
 		foreach my $S ( openprint::Shift->find(
-					'starttime_>='	=>	$parser->format_datetime( $new_start_datetime ),
-					'starttime_<'	=>	$parser->format_datetime( $new_end_datetime ),
+					'starttime >='	=>	$parser->format_datetime( $new_start_datetime ),
+					'starttime <'	=>	$parser->format_datetime( $new_end_datetime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_end_datetime = $parser->parse_datetime( $S->starttime() );

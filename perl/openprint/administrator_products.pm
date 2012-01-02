@@ -1,6 +1,5 @@
-package openprint::administrator_products;
-
 use strict;
+package openprint::administrator_products;
 
 use openprint ();
 use vars qw($r $log $dbh %variable %param);
@@ -9,7 +8,6 @@ use vars qw($r $log $dbh %variable %param);
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-
 
 require openprint::Product;
 require openprint::ProductCategory;
@@ -20,13 +18,15 @@ sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'btnFunction'} = '';
 		if ( (! $param{'product_id'}) and openprint::Product->find( 'name' => $param{'name'} ) ) {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 			
 		$variable{'error'} = $Product->save( \%param );
+		# Save the prices
+		_prices() if $param{'product_id'};
+		$param{'btnFunction'} = '';
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
@@ -145,7 +145,8 @@ sub _prices {
 		foreach my $Pricelist ( openprint::Pricelist->find() ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-			foreach my $Price ( openprint::ProductPrice->find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
+			foreach my $Price ( openprint::ProductPrice->find( 
+						'product_id' => $$Product{'id'}, 'pricelist_id' => $$Pricelist{'id'} ) ) {
 				if ( $param{'chk-'.$Price->id()} ) {
 					$variable{'error'} .= $Price->save({
 							'min'			=>	$param{'min-'.$Price->id()},
@@ -179,6 +180,26 @@ sub _prices {
 	} # end if
 } # end sub _prices
 
-1;
+sub _specifications {
+	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
+	if ( $param{'btnFunction'} eq 'SaveSpecifications' ) {
+		foreach my $spec ( keys %{$Product->specifications()} ) {
+			if ( $param{'Name'.$spec} ) {
+				if ( $param{'Name'.$spec} ne $spec ) {
+					$Product->del_specification( $spec );
+				} # end if
+				$Product->add_specification( @param{'Name'.$spec, 'Value'.$spec} );
+			} else {
+				$Product->del_specification( $spec );
+            } # end if
+        } # end foreach spec
+        if ( $param{'NameNew'} ) {
+            $Product->add_specification( @param{'NameNew', 'ValueNew'} );
+        } # end if
+        $variable{'error'} .= $Product->save();
+    } # end if
 
+} # end sub _specifications
+
+1;
 __END__

@@ -17,6 +17,8 @@ CREATE TABLE Logs (
 	url			TEXT,
 	note		TEXT,
 	host_id		INTEGER NOT NULL, FOREIGN KEY (host_id) REFERENCES Hosts (id),
+	object_id	INTEGER,
+	object_type_id	INTEGER, FOREIGN KEY (object_Type_id) REFERENCES Object_Types (id),
 	PRIMARY KEY (id)
 );
 

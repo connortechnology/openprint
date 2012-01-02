@@ -1,0 +1,50 @@
+<? echo (
+	my @Articles = ();
+	if ( $param{'search'} ) {
+		my @keywords = split(/\s/, lc $param{'search'});
+		#$log->debug("Keywords: @keywords");
+		my %counts;
+		foreach my $Article ( openprint::Article->find( 
+			'published'			=>	1,
+			'category_id'		=>	$session{'/article/list.html?category_id'},
+			) ) {
+			my @name_keywords = split(/\s/, lc $Article->name() );
+			my @body_keywords = split(/\s/, lc $Article->body() );
+			#$log->debug("name: @name_keywords , body: @body_keywords");
+			my $count = sets::intersection( @keywords, sets::union( @name_keywords, @body_keywords ) );
+			push @{$counts{$count}}, $Article;
+		} # end foreach Article
+		foreach my $k ( keys %counts ) {
+			next if $k == 0;
+#$log->debug("$k => " . @{$counts{$k}} );
+			push @Articles, sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}};
+		} # end foreach
+	} else {
+		foreach my $Article ( openprint::Article->find( 
+			'published'			=>	1,
+			'category_id'		=>	$session{'/article/list.html?category_id'},
+			'order'				=> 'published_on DESC',
+			'limit'		=>	$session{'/article/list.html?paging_per_page'}+1,
+			'offset'	=>	$session{'/article/list.html?paging_per_page'} * $session{'/article/list.html?paging_page'},
+			) ) {
+			push @Articles, $Article;
+		} # end foreach Article
+	} # end if
+
+	if ( @Articles == 0 ) {
+		return 'There are no articles which match your search criteria.';
+	} # end if
+
+	my $html;
+
+	my $Extra = pop @Articles if @Articles > $session{'/article/list.html?paging_per_page'};
+	foreach my $Article ( @Articles ) {
+		next if ! $Article->can_view();
+		$html .= $Article->html();
+	} # end foreach Article
+
+	if ( $Extra ) {
+		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Articles','_list.html', { parameters: { paging_page: `.($session{'/article/list.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+	} # end if
+	return $html;
+) ?>

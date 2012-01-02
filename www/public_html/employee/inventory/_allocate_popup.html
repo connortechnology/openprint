@@ -26,17 +26,17 @@
 			) ?>
 			</p>
 			<p>
-				<label>Docket:</label>
+				<label>Docket</label>
 				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Project:</label>
+				<label>Project</label>
 				<input type="text" name="Project" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
-				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+				<label>Quantity ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
 				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
 				<input type="hidden" name="available_quantity" value="<?available?>"/>
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D\-/g,'');"/>
@@ -44,7 +44,7 @@
 				
 			</p>
 			<p>
-				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids</label>
 				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
 			</p>
 			<hr/>

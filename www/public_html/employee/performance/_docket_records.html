@@ -31,7 +31,7 @@
 			$docket_total += $Record->total();
 
 		} # end foreach Type
-		$html .= '<tr class="totals"><td colspan="4">Docket Total:</td><td id="total-'.$variable{'docket'}.'" class="total">'.$docket_total.'</td></tr></table>';
+		$html .= '<tr class="totals"><td colspan="4">Docket Total</td><td id="total-'.$variable{'docket'}.'" class="total">'.$docket_total.'</td></tr></table>';
 		$html .= '</fieldset>';
 	} else {
 		$log->warn("No docket");

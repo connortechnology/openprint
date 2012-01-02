@@ -1,7 +1,7 @@
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="ink.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p> 
-			<label>Ink:</label>
+			<label>Ink</label>
 			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select an Ink</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{'Ink'}->id() ); ) ?>
@@ -25,29 +25,29 @@
 	</fieldset>
 	<fieldset><legend>Ink Information</legend>
 		<p> 
-			<label>PMS ID:</label>
+			<label>PMS ID</label>
 			<input type="text" name="pmsid" value="<? echo ( $$variable{'Ink'}->pmsid(); ) ?>" />
 		</p>
 		<p> 
-			<label>Name:</label>
+			<label>Name</label>
 			<input type="text" name="name" value="<? echo ( $$variable{'Ink'}->name(); ) ?>" />
 		</p>
 		<p> 
-			<label>Material:</label>
+			<label>Material</label>
 			<select name="material_id">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)') ], $$variable{'Ink'}->material_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
-			<label>Service:</label>
+			<label>Service</label>
 			<select name="service_id">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{'Ink'}->service_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
-			<label>Washups:</label>
+			<label>Washups</label>
 			<input type="text" name="washups" value="<? echo ( $$variable{'Ink'}->washups(); ) ?>" />
 		</p>
 	</fieldset>

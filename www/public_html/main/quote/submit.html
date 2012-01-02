@@ -15,11 +15,11 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			<br/>
 			<fieldset id="SalesRepComments">
-				<p><label>Administrator Name:</label>
+				<p><label>Administrator Name</label>
 					<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
 				</p>
 				<p>
-					<label>Administrator Comments:</label>
+					<label>Administrator Comments</label>
 					<textarea name="AdministratorComments" rows="<? echo ( scalar split("\n", $$variable{'AdministratorComments'}) ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 				</p>
 			</fieldset>

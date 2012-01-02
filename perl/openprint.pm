@@ -4,22 +4,6 @@ use strict;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 
-sub store_session {
-	my ( $uri, $params, @keys ) = @_;
-	foreach my $key ( @keys ) {
-		if ( ref $$params{$key} eq 'ARRAY' ) {
-			$session{$uri.'?'.$key} = join('|', @{$$params{$key}} );
-		} else {
-			$session{$uri.'?'.$key} = $$params{$key};
-		} # end if
-	} # end foreach
-	$session{$uri.'?'.'lastupdated'} = time;
-}
-sub load_session {
-	my ( $uri, $hash ) = @_;
-	
-}
-
 sub session_init {
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie = $$cookies{'_session_id'};
@@ -54,19 +38,19 @@ sub session_init {
 	} # end if
 
 	if ( $r->param('Currency') ) {
-		my @currencies = openprint::Currency->find( 'short' => $r->param('Currency') );
-		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
-	} elsif ( $openprint::param{'select_currency_id'} ) {
-		my $Currency = new openprint::Currency( $openprint::param{'select_currency_id'} );;
+		$_ = openprint::Currency->find_one( 'short' => $r->param('Currency') );
+		$session{'Currency_id'} = $_->id() if $_;
+	} elsif ( $param{'select_currency_id'} ) {
+		my $Currency = new openprint::Currency( $param{'select_currency_id'} );
 		$session{'Currency_id'} = $Currency->id();
 	} elsif ( ! $session{'Currency_id'} ) {
-		my @currencies = openprint::Currency->find( 'short' => $r->dir_config('Currency') );
-		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
+		$_ = openprint::Currency->find_one( 'short' => $r->dir_config('Currency') );
+		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
 
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		if ( $r->param('btnFunction') eq 'SelectCompany' ) {
-			if ( $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
+			if ( $r->param('ddmCompany') != $session{'company_id'} ) {
 				my $Company = new openprint::Company( $r->param('ddmCompany') );
 				if ( ! $Company->id() ) {
 					$variable{'error'} .= 'Unknown company selected.  Please try again.';
@@ -75,11 +59,8 @@ sub session_init {
 				} # end if
 			} # end if
 		} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
-$log->debug("Selecting Pricelist $param{'pricelist_id'}");
 			my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
-$log->debug("Selecting Pricelist got " . $Pricelist->id() );
 			if ( ! $Pricelist->id() ) {
-$log->debug("Selecting Pricelist default"  );
 				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh ) );
 			} # end if
 			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
@@ -94,17 +75,17 @@ $log->debug("Selecting Pricelist default"  );
 	} # end if
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {
-			my @pricelists = openprint::Pricelist->find( 'name' => $config{'Pricelist'} );
-			$session{'Pricelist_id'} = (shift @pricelists)->id() if @pricelists;
+			$_ = openprint::Pricelist->find_one( 'name' => $config{'Pricelist'} );
+			$session{'Pricelist_id'} = $_->id() if $_;
 		} # end if
 	} # end if
 	if ( ! $session{'Pricelist_id'} ) {
-		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh ) );
+		my $Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
 		$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 	} else {
 		my $Pricelist = new openprint::Pricelist( $session{'Pricelist_id'} );
 		if ( ! $Pricelist->id() ) {
-			$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh ) );
+			$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
 			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
@@ -119,11 +100,11 @@ sub switch_company {
 	if ( $Company->currency_id() ) {
 		$session{'Currency_id'} = $Company->currency_id();
 	} elsif ( $Company->country() eq 'US' ) {
-		my @currencies = openprint::Currency->find('short'=>'USD');
-		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+		$_ = openprint::Currency->find_one('short'=>'USD');
+		$session{'Currency_id'} = $_->id() if $_;
 	} elsif ( $Company->country() eq 'CA' ) {
-		my @currencies = openprint::Currency->find('short'=>'CAD');
-		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+		$_ = openprint::Currency->find_one('short'=>'CAD');
+		$session{'Currency_id'} = $_->id() if $_;
 	} # end if
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
 	delete @session{@keys};

@@ -1,8 +1,8 @@
+use strict;
 package openprint::ManifestContent;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use Math::Round qw( nearest );
 use openprint ();
 use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
@@ -12,6 +12,8 @@ use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fiel
 *config = \%openprint::config;
 
 require openprint::Manifest_Content_Type;
+require openprint::Manifest;
+require openprint::Skid;
 
 $debug = 0;
 
@@ -58,9 +60,20 @@ sub units {
 } # end sub units
 
 sub value {
-	my $Type = $_[0]->Type();
-	my $cost = $Type->cost() ? $Type->cost() : $Type->cost_from_po();
-	return Math::Round::nearest( .01, $cost * $_[0]{'quantity'}/100 );
+	if ( @_ > 1 ) {
+		$_[0]{'value'} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{'value'} ) {
+		my $Type = $_[0]->Type();
+		if ( $Type->cost() ) {
+			$_[0]{'value'} = Math::Round::nearest( .01, $Type->cost() * $_[0]{'quantity'}/100 );
+		} elsif ( my $POC = $Type->PurchaseOrder_Content() ) {
+			$_[0]{'value'} = Math::Round::nearest( .01, $POC->price() * $_[0]{'quantity'}/100 );
+		} else {
+			$_[0]{'value'} = 0;
+		} # end if	
+	} # end if	
+	return $_[0]{'value'};
 } # end sub value
 
 1;

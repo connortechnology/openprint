@@ -22,7 +22,8 @@ $serial = 'logs_id_seq';
 	'host_id'		=>	'host_id',
 	'ip_address'	=>	undef,
 	'url'			=>	'url',
-	'object'		=>	'object',
+	'object_type_id'		=>	'object_type_id',
+	'object_type'	=>	undef,
 	'object_id'		=>	'object_id',
 );
 %find_fields = (
@@ -34,7 +35,7 @@ $serial = 'logs_id_seq';
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'url'           =>  q`$ENV{SERVER_NAME} . $ENV{REQUEST_URI}`,
 	'host_id'		=>	q`$self->ip_address( $ENV{REMOTE_ADDR} );return $$self{'host_id'};`,
-	'object'		=>	q`undef`,
+	'object_type_id'		=>	q`undef`,
 	'object_id'		=>	q`undef`,
 );
 
@@ -81,7 +82,7 @@ sub ip_address {
 } # end sub ip_address
 
 sub Host {
-	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]=>$_[0]{'ip_address'} ) ) {
+	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]{'ip_address'} ) ) {
 		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
@@ -107,6 +108,7 @@ sub action {
 	} # end if
 	return $_[0]->Action()->name();
 } # end sub action
+
 
 1;
 __END__

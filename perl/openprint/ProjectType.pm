@@ -44,6 +44,7 @@ sub save {
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		# The union gets rid of duplicates
 		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
+			next if ! $servicetype_id;
 			sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );
 		} # end foreach
 	} # end if
@@ -73,10 +74,9 @@ sub required_services {
 	if ( @_ > 1 ) {
 		@{$$self{'required_services'}} = @_;
 	} elsif ( @_ ) {
-		if ( $_[0] ) {
-		} elsif ( ref $_[0] eq 'ARRAY' ) {
+		if ( ref $_[0] eq 'ARRAY' ) {
 			@{$$self{'required_services'}} = @{$_[0]};
-		} elsif ( $_ ) {
+		} elsif ( $_[0] ) {
 			@{$$self{'required_services'}} = ($_[0]);
 		} # end if
 	} # end if
@@ -99,8 +99,8 @@ sub delete {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, q{DELETE FROM tbl_projecttype_defaults WHERE lngProjectTypeIndex=?}, $$self{'id'} );
-	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE ProjectType_Id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM projecttype_defaults WHERE projecttype_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE projecttype_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{'id'}], 'type_id', undef );

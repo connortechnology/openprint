@@ -2,6 +2,7 @@ package openprint::article;
 
 use strict;
 use LWP::UserAgent;
+use HTML::LinkExtractor;
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -16,121 +17,132 @@ require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
 
-sub history {
-	if ( $param{'func'} eq 'Save' ) {
-		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
-		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
-		my $Article = new openprint::Article( $param{'article_id'} );
-		if ( ! $Article->can_edit() ) {
-			$variable{'error'} .= 'You do not have rights to edit this article.';
-			return;
-		} # end if
-		if ( $param{'category_id'} ) {
-			delete $param{'category'};
-		} else {
-			delete $param{'category_id'};
-		} # end if
-		if ( $param{'source'} ) {
-			if ( $param{'source'} =~ /epicurious\.com/ ) {
-				my $ua = LWP::UserAgent->new;
-				$ua->agent("MyApp/0.1 ");
+sub save_article {
+	my $Article = new openprint::Article( $param{'article_id'} );
+	if ( ! $Article->can_edit() ) {
+		$variable{'error'} .= 'You do not have rights to edit this article.';
+		return;
+	} # end if
+	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+	$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+	if ( $param{'category_id'} ) {
+		delete $param{'category'};
+	} elsif ($param{'category'}) {
+		delete $param{'category_id'};
+	} # end if
+	if ( $param{'source'} ) {
+		if ( $param{'source'} =~ /epicurious\.com/ ) {
+			my $ua = LWP::UserAgent->new;
+			$ua->agent("MyApp/0.1 ");
 # Create a request
-				my $req = HTTP::Request->new(GET => $param{'source'} );
+			my $req = HTTP::Request->new(GET => $param{'source'} );
 # Pass request to the user agent and get a response back
-				my $res = $ua->request($req);
+			my $res = $ua->request($req);
 # Check the outcome of the response
-				if ($res->is_success) {
-					$log->debug("Content: " . $res->content );
-					my $content = $res->content;
-					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
-					$content =~ s/\n\r//g;
-					$content =~ s/\n//g;
-					# Turn relative links into absolute
-					$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
-					$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
-					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
-					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
-					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
-					
-					$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
-				} else {
-					$log->error("Bad status" . $res->status_line );
-					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
-				} # end if
-			 } elsif ( $param{'source'} =~ /glittermuff.tumblr.com/ ) {
-				 my $ua = LWP::UserAgent->new;
-				 $ua->agent("MyApp/0.1 ");
-# Create a request
-				 my $req = HTTP::Request->new(GET => $param{'source'} );
-# Pass request to the user agent and get a response back
-				 my $res = $ua->request($req);
-# Check the outcome of the response
-				 if ($res->is_success) {
-					 $log->debug("Content: " . $res->content );
-					 my $content = $res->content;
-#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
-					 $content =~ s/\n\r//g;
-					 $content =~ s/\n//g;
-# Turn relative links into absolute
-					 $content =~ s/src="\//src="http:\/\/glittermuff.tumblr.com\//g;
-					 $content =~ s/href="\//href="http:\/\/glittermuff.tumblr.com\//g;
-
-					 my ( $source_content ) = $content =~ /(<div class="photo">.+)<!\-\- end single post \-\->/m;
-					 $source_content =~ s/<script.*?<\/script>//g;
-					 $source_content =~ s/<noscript.*?<\/noscript>//g;
-					 $source_content =~ s/<a href="http:\/\/disqus.com" class="dsq-brlink".*<\/a>//g;
-					 $source_content =~ s/<div id="disqus_thread"><\/div>//;
-					 $source_content =~ s/<div class="notecontainer">.*?<\/ol><\/div>//g;	
-					 $source_content =~ s/(\s)\s+/$1/g;
-					 $source_content =~ s/<div id="post-id">.*?<\/div>//g;
-					 $source_content =~ s/<span class="arrow">.*?<\/span>//g;
-					 $source_content =~ s/<span class="reblog">.*?<\/span>//g;
-					 $source_content =~ s/<span class="tags">.*?<\/span>//g;
-					 $source_content =~ s/<span class="notes">.*?<\/span>//g;
-					 $source_content =~ s/<img src="http:\/\/static.tumblr.com\/xequfu2\/eXXkpzidm\/post_bottom.png" style="margin-bottom:-68px; margin-left:-10px;">//g;
-					 $source_content =~ s/<div style="text-align:right;">\s+<span class="when">Date:<\/span> (\d\d)\.(\d\d)\.(\d\d)\s+<span class="when">Time:<\/span>\s+(\d\d):(\d\d) (\w\w)\s+<\/div>//mg;
-					 $param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', 2000+$3, $1, $2, $4 + ( $6 eq 'PM' ? 12 : 0 ), $5 );
-					 $param{'source_content'} = qq`<div class="Muffy">$source_content</div>`;
-				 } else {
-					 $log->error("Bad status" . $res->status_line );
-					 $variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
-				 } # end if
-			} # end if
-		} # end if source
-if ( 0 ) {
-		my $body = '';
-		my $remainder = $param{'body'};
-		my $pre;
-		my $a1;
-		my $a2;
-		while ( $remainder ) {
-			if ( ( $pre, $a1, $a2, $remainder ) =~ /^(.*?)<a(.+?)>(.+?)<\/a>(.*)$/ims ) {
-$log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
-				$body .= $pre;
-				# Do stuff to a
-				$body .= '<a'.$a1.'>'.$a2.'</a>';
+			if ($res->is_success) {
+				$log->debug("Content: " . $res->content );
+				my $content = $res->content;
+				#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
+				$content =~ s/\n\r//g;
+				$content =~ s/\n//g;
+				# Turn relative links into absolute
+				$content =~ s/src="\//src="http:\/\/www.epicurious.com\//g;
+				$content =~ s/href="\//href="http:\/\/www.epicurious.com\//g;
+				my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
+				my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
+				my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
+				
+				$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
 			} else {
-				$body .= $remainder;
-				$remainder = '';
-			} 
-		} # end while
-		$param{'body'} = $body;
-} 
-		if ( ! $Article->id() ) {
-			$variable{'error'} .= $Article->save(\%param);
-			new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});
-		} else {
-			$variable{'error'} .= $Article->save(\%param);
+				$log->error("Bad status" . $res->status_line );
+				$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+			} # end if
+		 } elsif ( $param{'source'} =~ /glittermuff.tumblr.com/ ) {
+			 my $ua = LWP::UserAgent->new;
+			 $ua->agent("MyApp/0.1 ");
+# Create a request
+			 my $req = HTTP::Request->new(GET => $param{'source'} );
+# Pass request to the user agent and get a response back
+			 my $res = $ua->request($req);
+# Check the outcome of the response
+			 if ($res->is_success) {
+				 $log->debug("Content: " . $res->content );
+				 my $content = $res->content;
+#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
+				 $content =~ s/\n\r//g;
+				 $content =~ s/\n//g;
+# Turn relative links into absolute
+				 $content =~ s/src="\//src="http:\/\/glittermuff.tumblr.com\//g;
+				 $content =~ s/href="\//href="http:\/\/glittermuff.tumblr.com\//g;
+
+				 my ( $source_content ) = $content =~ /(<div class="photo">.+)<!\-\- end single post \-\->/m;
+				 $source_content =~ s/<script.*?<\/script>//g;
+				 $source_content =~ s/<noscript.*?<\/noscript>//g;
+				 $source_content =~ s/<a href="http:\/\/disqus.com" class="dsq-brlink".*<\/a>//g;
+				 $source_content =~ s/<div id="disqus_thread"><\/div>//;
+				 $source_content =~ s/<div class="notecontainer">.*?<\/ol><\/div>//g;	
+				 $source_content =~ s/(\s)\s+/$1/g;
+				 $source_content =~ s/<div id="post-id">.*?<\/div>//g;
+				 $source_content =~ s/<span class="arrow">.*?<\/span>//g;
+				 $source_content =~ s/<span class="reblog">.*?<\/span>//g;
+				 $source_content =~ s/<span class="tags">.*?<\/span>//g;
+				 $source_content =~ s/<span class="notes">.*?<\/span>//g;
+				 $source_content =~ s/<img src="http:\/\/static.tumblr.com\/xequfu2\/eXXkpzidm\/post_bottom.png" style="margin-bottom:-68px; margin-left:-10px;">//g;
+				 $source_content =~ s/<div style="text-align:right;">\s+<span class="when">Date:<\/span> (\d\d)\.(\d\d)\.(\d\d)\s+<span class="when">Time:<\/span>\s+(\d\d):(\d\d) (\w\w)\s+<\/div>//mg;
+				 $param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', 2000+$3, $1, $2, $4 + ( $6 eq 'PM' ? 12 : 0 ), $5 );
+				 $param{'source_content'} = qq`<div class="Muffy">$source_content</div>`;
+			 } else {
+				 $log->error("Bad status" . $res->status_line );
+				 $variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+			 } # end if
 		} # end if
-		%param = ();
-	} elsif ( $param{'func'} eq 'Destroy' ) {
+	} # end if source
+
+if ( 0 ) {
+	my $body = '';
+	my $remainder = $param{'body'};
+	my $pre;
+	my $a1;
+	my $a2;
+	while ( $remainder ) {
+		if ( ( $pre, $a1, $a2, $remainder ) =~ /^(.*?)<a(.+?)>(.+?)<\/a>(.*)$/ims ) {
+$log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
+			$body .= $pre;
+			# Do stuff to a
+			$body .= '<a'.$a1.'>'.$a2.'</a>';
+		} else {
+			$body .= $remainder;
+			$remainder = '';
+		} 
+	} # end while
+	$param{'body'} = $body;
+} 
+	if ( ! $Article->id() ) {
+		$variable{'error'} .= $Article->save(\%param);
+		new openprint::Log()->save({'action'=>'Create Article', 'object'=>'Article', 'object_id'=>$Article->id()});
+	} else {
+		$variable{'error'} .= $Article->save(\%param);
+	} # end if
+	my $LX = new HTML::LinkExtractor();
+	$LX->parse( \$$Article{'body'} );
+	if ( $LX->links ) {
+	foreach my $Link ( @{$LX->links} ) {
+		next if $$Link{'tag'} ne 'a';
+		next if $$Link{'target'} eq '_blank';	
+		$variable{'warning'} .= 'The link ' . $$Link{'_TEXT_'} . ' does not have a target="_blank" on it<br/>.';
+	} # end foreach  Link
+	} # end if links
+	undef $LX;
+} # end sub save_article
+
+sub history {
+	if ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );
 		if ( ! $Article->can_edit() ) {
 			$variable{'error'} .= 'You do not have rights to destroy this article.';
 			return;
 		} # end if
 		$variable{'error'} .= $Article->destroy();
-	} elsif ( ! $param{'func'} ) {
 	} # end if
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -163,8 +175,19 @@ sub _history {
 sub edit {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'func'} eq 'Save' ) {
-		$variable{'error'} .= $Article->save(\%param);
-		$variable{'Redirect'} = '/article/history.html';
+		save_article();
+		if ( $variable{'error'} or $variable{'warning'} ) {
+		} else {
+			%param = ();
+			$variable{'Redirect'} = '/article/history.html';
+		} # end if
+	} elsif ( $param{'func'} eq 'Destroy' ) {
+		my $Article = new openprint::Article( $param{'article_id'} );
+		if ( ! $Article->can_edit() ) {
+			$variable{'error'} .= 'You do not have rights to destroy this article.';
+			return;
+		} # end if
+		$variable{'error'} .= $Article->destroy();
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
@@ -189,7 +212,15 @@ sub edit {
 } # end sub edit
 
 sub list {
+	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	_list();
+	$session{'/article/list.html?paging_per_page'} = 5;
+	$session{'/article/list.html?paging_page'} = 0;
 } # end sub list
+
+sub _list {
+	ssi::save_params('/article/list.html', 'paging_page','category_id' );
+} # end sub _list
 
 sub category {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
@@ -275,12 +306,33 @@ sub _assets {
 sub _category_photos {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		my $Asset = openprint::Photo_in_Album->find_one('album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'});
-		if ( ! $Asset ) {
-			$variable{'error'} .= 'Asset not found.';
+		my $Photo = openprint::Photo_in_Album->find_one('album_id'=>$param{'album_id'}, 'asset_id'=>$param{'asset_id'});
+		if ( ! $Photo ) {
+			$variable{'error'} .= 'Photo not found.';
 		} else {
-			$variable{'error'} .= $Asset->delete();
+			$variable{'error'} .= $Photo->delete();
 		} # end if
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $Album = $Category->Photo_Album();
+		if ( ! $Album ) {
+			$variable{'error'} .= 'WTF Album not found.';
+			return;
+		} # end if
+		if ( ! $Album->id() ) {
+			$variable{'error'} .= $Album->save({'name'=>'Images for article category: ' . $Category->name()});
+			$variable{'error'} .= $Category->save({'album_id'=>$Album->id()});
+		} # end if
+		
+		my $Asset = new openprint::Asset( $param{'asset_id'} );
+		if ( ! $Asset->id() ) {
+			$variable{'error'} .= 'Asset not found.';
+			return;
+		} # end if
+		my $Photo = new openprint::Photo_in_Album();
+		$variable{'error'} .= $Photo->save({
+				'album_id'	=>	$Album->id(),
+				'asset_id'	=>	$Asset->id(),
+		});
 	} else {
 		$log->error("article/_category_photos: Uknown function");
 	} # end if

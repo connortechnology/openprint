@@ -1,9 +1,9 @@
 <form id="f1" name="f1" action="history_details.html">
 	<fieldset class="Popup"><legend>Payment Options</legend>
-		Please select your payment type:<br/>
+		Please select your payment type<br/>
 		<!--#include virtual="_payment_options.html"-->
 
-		<p><label>Amount:</label>
+		<p><label>Amount</label>
 			<input type="text" name="amount" id="amount" value="<? echo ( $param{'amount'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');"/>
 		</p>
 		<p class="buttons">

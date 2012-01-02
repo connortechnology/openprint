@@ -18,7 +18,7 @@ require openprint::EmailTemplate;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 $table = 'emailcampaigns';
-$serial = 'emailcampaign_id_seq';
+$serial = 'emailcampaigns_id_seq';
 
 %fields = (
 	'id'	=>	'id',
@@ -137,9 +137,9 @@ sub send_email {
 
 	# Setup the mail message
 	my %mail = (
-			SMTP => $openprint::config{'Mail Server'},
-			FROM => $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
+			SMTP	=> $openprint::config{'Mail Server'},
+			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
+			TO		=> sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
 			SUBJECT => $$self{'email_subject'}
 		);
 

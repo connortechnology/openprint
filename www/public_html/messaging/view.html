@@ -1,36 +1,93 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "simple"
+	});
+	function add_to_id( input, query ) {
+		var to_id = get_form_element_array( input.form, 'to_id' );
+		query += '&to_id=' + to_id.join('&to_id=');
+		return query;
+	}
+
+	// delete goes to server mainly to update the dropdown
+	function delete_to( user_id ) {
+		var form = $('f1');
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'remove' );
+		params.set('user_id', user_id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
+	} // end function delete_to
+	function add_to( input, li ) {
+		var form = input.form;
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'add' );
+		params.set('user_id', li.id );
+
+		new Ajax.Updater( 'To', '_to.html', { parameters: params, evalScripts: true } );
+	} // end function add_to
+	function reply_to( form ) {
+		tinyMCE.triggerSave();
+		var params = $H(Form.serializeElements( form.getInputs('hidden','to_id'), true ));
+		params.set('conversation_id', '<? echo ( $$variable{'Conversation'}->id() ) ?>' );
+		params.set('action', 'reply' );
+		params.set('message_id', form.last_message_id.value );
+		params.set('body', form.elements['body'].value );
+
+		new Ajax.Request( '_view.json', { parameters: params } );
+	} // end function reply_to
+-->
+</script>
 <!--#include virtual="/includes/error_reporting.html"-->
-<div class="Message"><div class="View">
-	<fieldset><legend>Viewing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
-		<? if ( $$variable{'Message'}->deleted() ) ?>
-		<span class="warning">This message has been deleted</span>
-		<? endif ( $$variable{'Message'}->deleted() ) ?>
-		<fieldset><legend></legend>
-			<? echo ( $$variable{'Message'}->From()->html() ) ?>
-			<div class="content">
-				<ul>
-					<li><label>Sent:</label>
-						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time ( $$variable{'Message'}->sent_on() ) ); ) ?>
-					</li>
-					<li><label>From:</label>
-						<? echo ( $$variable{'Message'}->From()->name ) ?>
-					</li>
-					<li><label>Subject:</label>
-						<? echo ( $$variable{'Message'}->subject() ) ?>
-					</li>
-					<li>
-						<label for="info">Body:</label>
-						<? echo ( $$variable{'Message'}->body() ) ?>
-					</li>
-				</ul>
+<div class="Conversation"><div class="View">
+	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
+		<input type="hidden" id="last_message_id" value="" />
+		<fieldset><legend>
+<? if ( $$variable{'Conversation'}->id() ) ?>
+Viewing Conversation
+<h1><? echo ( $$variable{'Conversation'}->subject() ) ?></h1>
+<? else ( $$variable{'Conversation'}->id() ) ?>
+Start a New Conversation
+<? endif ( $$variable{'Conversation'}->id() ) ?>
+</legend>
+			<? if ( $$variable{'Conversation'}->deleted() ) ?>
+			<span class="warning">This message has been deleted</span>
+			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
+			<div id="Messages"><!--#include virtual="_messages.html"--></div>
+			<div class="Message Reply">
+				<div id="To"><!--#include virtual="_to.html"--></div>
+				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
+<? if ( ! $$variable{'Conversation'}->id() ) ?>
+				<div id="Subject"><label>Subject</label>
+					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" />
+				</div>
+<? endif ( ! $$variable{'Conversation'}->id() ) ?>
+				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>
+				<span class="buttons">
+				<? echo (
+if ( $$variable{'Conversation'}->id() ) {
+	return ssi::button( 'Reply', { 'onclick'=>q`reply_to( $('f1') );` } );
+} else {
+	return ssi::button( 'Send', { 'onclick'=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
+} # end if
+) ?>
+				</span>
 			</div>
+
+			<p class="buttons">
+				<? echo (
+					return if ! $$variable{'Conversation'}->id();
+					my $html = '';
+					$html .= ssi::button( 'delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
+					return $html;
+				) ?>
+			</p>
 		</fieldset>
-		<p class="buttons">
-			<? echo (
-				my $html = '';
-				$html .= ssi::button( 'delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", 'text'=>'Delete' } );
-				$html .= ssi::button( 'reply', { 'href'='edit.html?reply_to='.$$variable{'Message'}->id(), 'text'=>'Reply' } );
-				return $html;
-			) ?>
-		</p>
-	</fieldset>
+		<input type="hidden" name="action"/>
+	</form>
 </div></div>

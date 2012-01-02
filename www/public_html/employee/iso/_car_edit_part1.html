@@ -15,7 +15,7 @@
 		<th></th>
 	</tr>
 	<tr>
-		<td colspan="1">Assigned To:</td>
+		<td colspan="1">Assigned To</td>
 		<td colspan="4">
 <? if ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <select id="issued_to_id" name="issued_to_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'CAR'}->issued_to_id() ); ) ?></select>
@@ -24,11 +24,11 @@
 <? endif ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 
 		</td>
-		<td colspan="1">Issued By:</td>
+		<td colspan="1">Issued By</td>
 		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'CAR'}->issued_by_id() ? $$variable{'CAR'}->issued_by_id() : $openprint::session{'user_id'} ); ) ?></select></td>
 	</tr>
 	<tr>
-		<td colspan="1">Issue Date:</td>
+		<td colspan="1">Issue Date</td>
 		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->issued_on() ) {
@@ -41,7 +41,7 @@
             <select name="issued_on_month" onchange="setDaysDropDown(this.form.issued_on_year.value,this.value,this.form.issued_on_day,this.form.issued_on_day.value);"><?issued_on_months?></select>
             <select name="issued_on_day"><?issued_on_days?></select>
 </td>
-		<td colspan="1">Reply By:</td>
+		<td colspan="1">Reply By</td>
 		<td colspan="4">
 <? if ( openprint::usergroup::is_user_in( ['Quality Control'], $openprint::session{'user_id'} ) ) ?>
 <? eval (
@@ -60,9 +60,9 @@
 		</td>
 	</tr>
 	<tr>
-		<td colspan="1">Docket No:</td>
+		<td colspan="1">Docket No</td>
 		<td colspan="1"><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
-		<td colspan="1">Customer:</td>
+		<td colspan="1">Customer</td>
 		<td colspan="7">
 <select id="company_id" name="company_id" style="width: 100%;">
 <? echo ( openprint::Company::get_dropdown( $$variable{'CAR'}->company_id() ) ) ?>
@@ -70,14 +70,14 @@
 		</td>
 	</tr>
 	<tr>
-		<td colspan="1">Problem Identified By:</td>
+		<td colspan="1">Problem Identified By</td>
 		<td colspan="4">
 			<input type="radio" id="identified_byInternal" name="identified_by" value="Internal" <? echo ( $$variable{'CAR'}->identified_by() eq 'Internal' ? 'checked="checked"' : '' ) ?> />
 			<label for="identified_byInternal">Internal</label>
 			<input type="radio" id="identified_byCustomer" name="identified_by" value="Customer" <? echo ( $$variable{'CAR'}->identified_by() eq 'Customer' ? 'checked="checked"' : '' ) ?> />
 			<label for="identified_byCustomer">Customer</label>
 		</td>
-		<td colspan="1">Printed On:</td>
+		<td colspan="1">Printed On</td>
 		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->printed_on() ) {
@@ -90,7 +90,7 @@
 	</tr>
 	<tr><td colspan="10">PROBLEM/NONCONFORMANCE DESCRIPTION</td></tr>
 	<tr>
-		<td colspan="1">Area:</td>
+		<td colspan="1">Area</td>
 		<td colspan="4">
 			<select name="area_id" onchange="area_id_onchange(this);">
 				<option value="">select</option>
@@ -100,7 +100,7 @@
 				) ?>
 			</select>
 		</td>
-		<td colspan="1">Reason:</td>
+		<td colspan="1">Reason</td>
 		<td colspan="4">
 			<select name="reason_id">
 				<option value="">select</option>
@@ -111,7 +111,7 @@
 		</td>
 	</tr>
 	<tr><td colspan="10"><textarea name="problem" rows="5" onkeyup="textarea_resize(this);"><? echo ( $$variable{'CAR'}->problem() ) ?></textarea></td></tr>
-	<tr><td colspan="1">Press:</td><td colspan="9">
+	<tr><td colspan="1">Press</td><td colspan="9">
 <? echo ( 
 	my $html = '';
 	my @presses = split(',', $$variable{'CAR'}->presses());
@@ -122,14 +122,14 @@
 ) ?>
 	</td></tr>
 	<tr>
-		<td colspan="1">Reprint Req:</td>
+		<td colspan="1">Reprint Req</td>
 		<td colspan="2">
 			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').show();"/>
 			<label class="radio" for="reprintYes">Yes</label>
 			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').hide();"/>
 			<label class="radio" for="reprintNo">No</label>
 		</td>
-		<td width="10%" colspan="1">Art Work:</td>
+		<td width="10%" colspan="1">Art Work</td>
 		<td width="30%" colspan="2">
 			<input type="radio" name="artwork" value="Change" id="artworkChange" <? echo ( $$variable{'CAR'}->artwork() eq 'Change' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="artworkChange">Change</label>
@@ -173,14 +173,14 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		<th></th>
 	</tr>
 	<tr>
-		<td colspan="2">Re-print Approved:</td>
+		<td colspan="2">Re-print Approved</td>
 		<td colspan="3">
 			<input type="radio" name="reprint_approval" value="Yes" id="reprint_approvalYes" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'Yes' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_approvalYes">Yes</label>
 			<input type="radio" name="reprint_approval" value="No" id="reprint_approvalNo" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'No' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_approvalNo">No</label>
 		</td>
-		<td colspan="2">Reprint Charge:</td>
+		<td colspan="2">Reprint Charge</td>
 		<td colspan="3">
 			<input type="radio" name="reprint_charge" value="Yes" id="reprint_chargeYes" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="reprint_chargeYes">Yes</label>
@@ -191,17 +191,17 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		</td>
 	</tr>
 	<tr>
-		<td colspan="2">Reprint Quantity:</td>
+		<td colspan="2">Reprint Quantity</td>
 		<td colspan="3"><input type="text" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
-		<td colspan="2">Reprint Value (CAD):</td>
+		<td colspan="2">Reprint Value (CAD)</td>
 		<td colspan="3"><input type="text" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
 	</tr>
 	<tr>
-		<td colspan="2">Approved by:</td>
+		<td colspan="2">Approved by</td>
 		<td colspan="3">
 			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(firstname),lower(lastname)') ], $openprint::session{'user_id'} ); ) ?></select>
 		</td>
-		<td colspan="1">Approved on:</td>
+		<td colspan="1">Approved on</td>
 		<td colspan="4">
 <? eval (
 	if ( $$variable{'CAR'}->approved_on() ) {
@@ -219,15 +219,15 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 <? else ( openprint::usergroup::is_user_in( ['Reprint Approvals'], $openprint::session{'user_id'} ) ) ?>
 <? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
     <tr>
-        <td colspan="2">Reprint Approved:</td>
+        <td colspan="2">Reprint Approved</td>
         <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
-        <td colspan="2">Charge:</td>
+        <td colspan="2">Charge</td>
         <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_charge() ) ?></td>
     </tr>
     <tr>
-        <td colspan="2">Approved by:</td>
+        <td colspan="2">Approved by</td>
         <td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
-        <td colspan="2">Approved on:</td>
+        <td colspan="2">Approved on</td>
         <td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
     </tr>
 </table>

@@ -9,7 +9,7 @@
 	<input type="hidden" name="btnFunction" value="BumpJob" />
 	<h3>Bump Docket <? echo ( $$variable{'Job'}->Project()->docket() ) ?> Form <?Form?></h3>
 	<p>
-		<label>Press:</label>
+		<label>Press</label>
 		<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
 			<option value="">Unknown</option>
 			<? echo ( 

@@ -50,19 +50,19 @@ function validate_data(formName) {
 					<span class="TwoColumns">Actual</span>
 				</p>
 				<p>
-					<label># of items to ship:</label>
+					<label># of items to ship</label>
 					<span class="TwoColumns"><? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?></span>
 					<span class="TwoColumns">
-					<input type="text" name="txtQuantityUsed" value="<? echo ( $$variable{'txtQuantityUsed'} ) ?>" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
+					<input type="text" name="txtQuantityUsed" value="<? echo ( $$variable{'txtQuantityUsed'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
 					</span>
 				</p>
 				<!--#include virtual="_shipping_packages.html"-->
 				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 				<p>
-					<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>):</b></label>
+					<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
 					<span class="TwoColumns"><? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?></span>
 					<span class="TwoColumns">
-					<input type="text" name="txtPriceUsed" size="9" value="<? echo ( $$variable{'txtPriceUsed'} ) ?>" />
+					<input type="text" name="txtPriceUsed" value="<? echo ( $$variable{'txtPriceUsed'} ) ?>" />
 					</span>
 				</p>
 				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

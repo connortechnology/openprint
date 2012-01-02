@@ -5,11 +5,11 @@
 <!--#include virtual="/email_content/_bank_information.html"-->
 <!--#include virtual="/email_content/_trade_references.html"-->
 <fieldset><legend>Credit Application</legend>
-	<p><label>Date of application:</label><? echo ( localtime ) ?></p>
-	<p><label>Value of first order (est):</label><? hecho ( $param{FirstOrderValue} ) ?></p>
-	<p><label>Annual Purchases (est):</label><? hecho ( $param{AnnualPurchases} ) ?></p>
-	<p><label>Credit Limit Desired:</label><? hecho ( $param{DesiredCreditLimit} ) ?></p>
-	<p><label>Terms Desired:</label><? hecho ( $param{DesiredTerms} ) ?></p>
-	<p><label>Accounts Payable Contact:</label><? hecho ( $param{AccountsPayableContact} ) ?></p>
-	<p><label>Financial Statement Available?:</label><? echo ( $param{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No' ) ?></p>
+	<p><label>Date of application</label><? echo ( localtime ) ?></p>
+	<p><label>Value of first order (est)</label><? hecho ( $param{FirstOrderValue} ) ?></p>
+	<p><label>Annual Purchases (est)</label><? hecho ( $param{AnnualPurchases} ) ?></p>
+	<p><label>Credit Limit Desired</label><? hecho ( $param{DesiredCreditLimit} ) ?></p>
+	<p><label>Terms Desired</label><? hecho ( $param{DesiredTerms} ) ?></p>
+	<p><label>Accounts Payable Contact</label><? hecho ( $param{AccountsPayableContact} ) ?></p>
+	<p><label>Financial Statement Available?</label><? echo ( $param{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No' ) ?></p>
 </fieldset>

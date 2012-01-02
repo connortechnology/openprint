@@ -1,23 +1,36 @@
 
+var filters = new Array( 'Owner', 'Group', 'Manufacturer', 'Brand','Finish','Colour','Weight','Quality', 'Size','Material','type','width','height' );
+
 function filter_onChange( element, id, selected ) {
 	var form = element.form;
 	var h = new Hash();
 	h.set('form', element.form.name);
 	h.set('selected', element.name);
-    var filters = new Array( 'Group', 'Manufacturer', 'Name','Finish','Colour','Weight','Quality', 'Size','Material' );
     for ( var index = 0, len = filters.length; index < len; ++index ) {
         var filter = form.elements[filters[index]+id];
         if ( filter ) {
-            h.set(filters[index], filter.getValue() );
+            h.set(filters[index], get_value( filter ) );
+			if ( filter.type == 'select-one' ) {
             filter.disabled = true;
-        //} else {
-            //alert('filter ' + 'ddmStock'+filters[index]+id );
+			} // end if
+			filter = form.elements[filters[index]+'_exclude'+id];
+			if ( filter ) {
+				h.set(filter.name, get_value( filter ) );
+			} // end if
+		} // end if filter exists
+        var filter = form.elements[filters[index].toLowerCase()+'_id'+id];
+        if ( filter ) {
+            h.set(filter.name, get_value( filter ) );
+			if ( filter.type == 'select-one' ) {
+				filter.disabled = true;
+			} // end if
+			filter = form.elements[filters[index].toLowerCase()+'_id_exclude'+id];
+			if ( filter ) {
+				h.set(filter.name, get_value( filter ) );
+			} // end if
         } // end if filter exists
     } // end for 
     new Ajax.Request( '/administrator/stock/_stock.json', { parameters: h, evalScripts: true } );
-
-	//jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(form, id, selected ) );
-
 } // end function Name_onChange()
 
 function cbStockFillResults( results ) {
@@ -37,6 +50,12 @@ function cbStockFillResults( results ) {
 		options[0] = create_option( '', 'select one' );
 		var ddm = form.elements[key];
 		if ( ! ddm ) {
+		ddm = form.elements[key+'_id'];
+		} // end if
+		if ( ! ddm ) {
+		ddm = form.elements[key.toLowerCase()+'_id'];
+		} // end if
+		if ( ( ! ddm ) || ( ddm.type != 'select-one' ) ) {
 //alert('No ddmStock'+key+suffix);
 			continue;
 		} // end if
@@ -54,11 +73,16 @@ function cbStockFillResults( results ) {
 	} // end for each key
 
 	// turn drop downs back on
-	var filters = new Array( 'Manufacturer', 'Name','Finish','Colour','Weight','Quality', 'Group', 'SheetSize', 'Size','Material' );
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		var filter = form.elements[filters[index]];
 		if ( filter ) {
 			filter.disabled = false;
+			continue;
+		} // end if filter exists
+		var filter = form.elements[filters[index].toLowerCase()+'_id'];
+		if ( filter ) {
+			filter.disabled = false;
+			continue;
 		} // end if filter exists
 	} // end for 
 	calc(form.name);

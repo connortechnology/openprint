@@ -77,7 +77,7 @@
  ) ?>
 	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 	<tr class="totals"> 
-		<td colspan="7" align="right"><b>Report Total:</b></td>
+		<td colspan="7" align="right"><b>Report Total</b></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 	</tr>

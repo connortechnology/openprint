@@ -29,14 +29,14 @@ function check_input( form, signature_index ) {
 			<!--#include virtual="/includes/employee/feedback/employee.html"-->
 			<!--#include virtual="/includes/employee/feedback/comments.html"-->
 			<p>
-				<label>Proofs Ready:</label>
+				<label>Proofs Ready</label>
 				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
 				<label class="radio" for="rdbCompleteY">Yes</label>
 				<input type="radio" id="rdbCompleteN" name="rdbComplete" value="No" <? echo ( $$variable{'rdbComplete'} ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').hide();$('QAApproved').hide();" />
 				<label class="radio" for="rdbCompleteN">No</label>
 			</p>
 			<p>
-				<label>Ready Date:</label>
+				<label>Ready Date</label>
 				<? if ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
 				<? eval ( $$variable{'CompletionDate'} = Date::Format::time2str( '%Y-%m-%d %H:%M', time ); ) ?>
 					<input type="text" size="18" name="CompletionDate" id="CompletionDate" value="<?CompletionDate?>"/>
@@ -57,7 +57,7 @@ function check_input( form, signature_index ) {
 				<? endif ( $$variable{'rdbComplete'} ne 'Yes' ) ?>
 			</p>
 			<p id="ClientApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
-				<label>Client Approved?:</label>
+				<label>Client Approved?</label>
 					<input type="radio" id="rdbClientApprovedY" name="rdbClientApproved" value="Y" <? echo ( ssi::checked( $$variable{'rdbClientApproved'} eq 'Y' ); ) ?> />
 					<label class="radio" for="rdbClientApprovedY">Yes</label>
 					<input type="radio" id="rdbClientApprovedN" name="rdbClientApproved" value="N" <? echo ( ssi::checked( $$variable{'rdbClientApproved'} ne 'Y' ); ) ?> />
@@ -67,7 +67,7 @@ function check_input( form, signature_index ) {
 				<? endif ( $$variable{'rdbClientApproved'} eq 'Y' ) ?>
 			</p>
 			<p id="QAApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
-				<label>QA Approved?:</label>
+				<label>QA Approved?</label>
 					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{'rdbApproved'} eq 'Y' ); ) ?> />
 					<label class="radio" for="rdbApprovedY">Yes</label>
 					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{'rdbApproved'} ne 'Y' ); ) ?> />
@@ -78,7 +78,7 @@ function check_input( form, signature_index ) {
 			</p>
 			<p id="DueDate" <? echo ( $$variable{'rdbApproved'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 <? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
-				<label>Due Date:</label>
+				<label>Due Date</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
 				</span>

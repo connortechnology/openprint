@@ -5,17 +5,17 @@
 <form name="f1" method="post" action="orders.html">
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
 		<p>
-			<label for="OrderID">Order ID:</label>
+			<label for="OrderID">Order ID</label>
 			<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
-			<label>Docket:</label>
+			<label>Docket</label>
 			<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
@@ -25,16 +25,16 @@
 			</select>
 		</p>
 		<p>
-			<label>Status:</label>
+			<label>Status</label>
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 				<? echo (
-						ssi::fill_drop_down( $log, $dbh, q{SELECT DISTINCT strStatus, strStatus FROM Orders ORDER BY strStatus}, $param{'ddmStatus'} );
+						ssi::fill_drop_down( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY name}, $param{'ddmStatus'} );
 						) ?>
 			</select>
 		</p>
 		<p>
-			<label>Currency:</label>
+			<label>Currency</label>
 			<select name="ddmCurrency" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
@@ -43,7 +43,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 			</select>
 		</p>
 		<p>
-			<label>Marketing Category:</label>
+			<label>Marketing Category</label>
 			<select name="ddmMarketingCategory" size="1">
 			<option value="">All Categories</option>
 <? echo (
@@ -52,7 +52,7 @@ ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory
 			</select>
 		</p>
 		<p>
-			<label>Sales Reps:</label>
+			<label>Sales Reps</label>
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
@@ -72,7 +72,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 	} # end if
 ) ?>
 		<p> 
-			<label>Date:</label>
+			<label>Date</label>
 			<span class="DateSelector">
 				<select name="StartYear" onchange="setDaysDropDown(this.value,this.form.StartMonth.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?StartYear'} ); ) ?></select>
 				<select name="StartMonth" onchange="setDaysDropDown(this.form.StartYear.value,this.value,this.form.StartDay,this.form.StartDay.value);"><? echo ( ssi::getmonths( $session{$r->uri().'?StartMonth'} ); ) ?></select>
@@ -86,7 +86,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 			</span>
 		</p>
 		<p> 
-			<label>Total Range:</label>
+			<label>Total Range</label>
 			<input type="text" name="TotalStart" size="12" style="width: auto;" value="<? echo ( $param{'TotalStart'} ) ?>" />
 			to 
 			<input type="text" name="TotalEnd" size="12" style="width: auto;" value="<? echo ( $param{'TotalEnd'} ) ?>" />
@@ -156,7 +156,7 @@ if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
 		 ) ?>
 		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 		<tr class="totals"> 
-			<td colspan="6" align="right"><b>Report Total:</b></td>
+			<td colspan="6" align="right"><b>Report Total</b></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>

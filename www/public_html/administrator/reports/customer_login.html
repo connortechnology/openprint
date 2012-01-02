@@ -3,7 +3,7 @@ Choose report criteria and click show results. You may the download the the resu
 <form name="f1" method="post" action="customer_login.html">
 	<fieldset class="filters">
 		<p>
-			<label>Sales Reps:</label>
+			<label>Sales Reps</label>
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
@@ -12,7 +12,7 @@ Choose report criteria and click show results. You may the download the the resu
 			</select>
 		</p>
 		<p> 
-			<label>Registration Date:</label>
+			<label>Registration Date</label>
 			<select name="ddmStartMonth"><?startmonths?></select>
 			<select name="ddmStartDay"><?startdays?></select>
 			<select name="ddmStartYear"><?startyears?></select>
@@ -22,7 +22,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="ddmEndYear"><?endyears?></select>
 		</p>
 		<p>
-			<label>Last Project:</label>
+			<label>Last Project</label>
 			<select name="ddmLastProjectStartMonth">
 			<option value=""></option>
 			<?LastProjectStartMonths?>
@@ -50,7 +50,7 @@ Choose report criteria and click show results. You may the download the the resu
 			</select>
 		</p>
 		<p>
-			<label>Last Order:</label>
+			<label>Last Order</label>
 				<select name="ddmLastOrderStartMonth">
 				<option value=""></option>
 				<?LastOrderStartMonths?>
@@ -78,7 +78,7 @@ Choose report criteria and click show results. You may the download the the resu
 				</select>
 		</p>
 		<p>
-			<label>Last Login:</label>
+			<label>Last Login</label>
 			<? echo ( ssi::date_select( 'lastlogin_start', [@param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'}], { 'order'=>'m,d,y' } ); ) ?>
 			to
 			<? echo ( ssi::date_select( 'lastlogin_end', [@param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'}], { 'order'=>'m,d,y' } ); ) ?>

@@ -31,7 +31,7 @@
 				$html .= sprintf('<td class="buttons">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
 				$html .= '</tr>';
 			} # end foreach $I
-			$html .= sprintf('<tr class="totals"><td>Totals:</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
+			$html .= sprintf('<tr class="totals"><td>Totals</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
 				openprint::Currency::format($total_total),
 				openprint::Currency::format($owing_total),
 				);

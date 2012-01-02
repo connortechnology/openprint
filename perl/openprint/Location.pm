@@ -4,6 +4,10 @@ require openprint::Location_Type;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 
+use JSON;
+use LWP::UserAgent;
+use HTTP::Request;
+
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
 $table = 'locations';
@@ -22,13 +26,18 @@ $serial = 'locations_id_seq';
 	'created_by'	=>	'created_by',
 	'postalcode'	=>	'postalcode',
 	'address'		=>	'address',
+	'latitude'		=>	'latitude',
+	'longitude'		=>	'longitude',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
+	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
+	'latitude'		=>	[ 's/[^\d\.]//g' ],
+	'longitude'		=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
@@ -36,6 +45,8 @@ $serial = 'locations_id_seq';
 	'updated_on'	=>	q`'NOW()'`,
 	'parent_id'		=>	undef,
 	'type_id'		=>	undef,
+	'latitude'		=>	undef,
+	'longitude'		=>	undef,
 );
 
 sub children {
@@ -87,36 +98,41 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Location_Type->find_one('name_lc'=>lc $_[1]);
+		my $Type = openprint::Location_Type->find_one('name_lc'=>lc openprint::Location_Type->transform('name',$_[1]));
 		if ( ! $Type ) {
 			$Type = new openprint::Location_Type();
 			$Type->save({'name'=>$_[1]});
 		} # end if
+$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
-	} # end if
-	if ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
+	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
+$openprint::log->debug("Location::type " . $_[0]->to_string() );
 	return $_[0]{'type'};
 } # end sub type
 
 # find an ancestor that fits some criteria, so if we wanted to find the city that something is located in, we could call this with a tpye of city
+# It's recursive of course
 sub ancestor {
 	my $self = shift;
 	return if ! @_;
 	my ( $value ) = $self->get( $_[0] );
 	if ( sets::isin( $value, $_[1] ) ) {
+		$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
 		return $self;
 	} else {
-		$openprint::log->debug( "Location: $_[0] ($_[0]) ($value) != $_[1]($$self{$_[1]})");
+		$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
 	} # end if
 	if ( $$self{'parent_id'} ) {
+$openprint::log->debug("Recursing" );
 		return $self->Parent()->ancestor( @_ );
 	} # end if
 	return;
 } # end sub ancestor
 
+# Figures out a given type's parent type should be, so city->state, etc.
 sub parent_type {
 	my $type;
 	if ( $_[0] eq 'openprint::Location' ) {
@@ -152,6 +168,27 @@ sub child_type {
 		return undef;
 	} # end if
 } # end sub child_type
+
+sub get_latitude_and_longitude {
+	my $ua = LWP::UserAgent->new;
+	$ua->agent("IntelligentQuote/0.1 ");
+# Create a request
+$openprint::log->debug('Get: ' . join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()));
+	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()) );
+# Pass request to the user agent and get a response back
+	my $res = $ua->request($req);
+	my $json = JSON::decode_json( $res->content );
+$openprint::log->debug( $json );
+	if ( $$json{'PlaceMark'} ) {
+$openprint::log->debug( 'PlaceMark'.$$json{'PlaceMark'} );
+	} else {
+		$openprint::log->warn("No placemrk");
+	foreach my $k ( keys %{$json} ) {
+$openprint::log->debug("$k => $$json{$k}");
+	} # end foreach
+	} # end if
+
+} # end sub get_latitude_longitude
 
 1;
 __END__

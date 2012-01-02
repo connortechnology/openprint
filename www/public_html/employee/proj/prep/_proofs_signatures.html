@@ -123,7 +123,7 @@
 		 	return $html;
 		) ?>
 		<p>
-			<label>Press:</label>
+			<label>Press</label>
 			<? eval ( @{$$variable{'tempPresses'}} = @{$$variable{'Presses'}} ) ?>
 			<? while ( @$variable{'id','name'} = splice @{$$variable{'tempPresses'}},0,2; ) ?>
 			<input type="radio" id="UsePress-<?SignatureServiceIndex?>-<?id?>" name="UsePress-<?SignatureServiceIndex?>" value="<?id?>" <? echo ( 'checked="checked"' if $$variable{'SignatureSpecs'}{'UsePress'} eq $$variable{'id'} ) ?> />
@@ -131,7 +131,7 @@
 			<? endwhile ( @$variable{'id','name'} = splice @{$$variable{'tempPresses'}},0,2; ) ?>
 		</p>
 		<p>
-			<label>Proofs:</label>
+			<label>Proofs</label>
 			<table class="List" style="table-layout: auto;">
 				<tr>
 					<th width="70" align="left">Quantity</th>

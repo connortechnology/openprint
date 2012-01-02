@@ -30,9 +30,9 @@
 	}
 </script>	
 <form name="f1" method="post" action="mail_confirmation.html" enctype="multipart/form-data">
-	<fieldset><legend>Filter By:</legend>
+	<fieldset><legend>Filter By</legend>
 		<p> 
-			<label>Mailing List:</label>
+			<label>Mailing List</label>
 			<input type="radio" id="rdbMailingListY" name="rdbMailingList" value="Y" onClick="fill_users(f1);" /> 
 			<label class="radio" for="rdbMailingListY">Yes</label>
 			<input type="radio" id="rdbMailingListN" name="rdbMailingList" value="N" onClick="fill_users(f1);" />
@@ -41,7 +41,7 @@
 			<label class="radio" for="rdbMailingListB">Both</label>
 		</p>
 		<p> 
-			<label>Active:</label>
+			<label>Active</label>
 			<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" onClick="fill_users(f1);" checked />
 			<label class="radio" for="rdbActiveY">Yes</label>
 			<input type="radio" id="rdbActiveN" name="rdbActive" value="N" onClick="fill_users(f1);" />
@@ -50,7 +50,7 @@
 			<label class="radio" for="rdbActiveB">Both</label>
 		</p>
 		<p> 
-			<label>Marketing Categories:<br>
+			<label>Marketing Categories<br>
 				<span class="smTbl">Ctrl+click to select or deselect multiple values.<br>Use to narrow selections</span>
 			</label>
 			<select multiple name="selectMarketingCategory" size="5" onChange="fill_users(f1);" />
@@ -58,7 +58,7 @@
 			</select>
 		</p>
 		<p> 
-			<label>Sales Rep:<br><span class="smTbl">Ctrl+click to select or deselect multiple values.<br>Use to narrow selections</span></label>
+			<label>Sales Rep<br><span class="smTbl">Ctrl+click to select or deselect multiple values.<br>Use to narrow selections</span></label>
 			
 			<select multiple name="selectSalesRep" size="5" onChange="fill_users(f1);" />
 			<? echo ( 
@@ -67,20 +67,20 @@
 			</select>
 		</p>
 		<p> 
-			<label>Send To:<br><span class="smTbl">Ctrl+click to select or deselect multiple values.</span></label>
+			<label>Send To<br><span class="smTbl">Ctrl+click to select or deselect multiple values.</span></label>
 			<select multiple name="selectSpecificCustomers" size="5" />
 			</select>
 		</p>
 		<p> 
-			<label>E-mail Template:</label>
+			<label>E-mail Template</label>
 			<input type="file" name="txtEmailTemplateFile" />
 		</p>
 		<p> 
-			<label>E-mail Subject:</label>
+			<label>E-mail Subject</label>
 			<input type="text" name="txtSubject" />
 		</p>
 		<p> 
-			<label>E-mail Body:</label>
+			<label>E-mail Body</label>
 			<textarea name="txtBody" rows="10" cols="27" /></textarea>
 		</p>
 		<p class="buttons">

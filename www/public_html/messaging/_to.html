@@ -1,28 +1,41 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<ul>
 <? echo ( 
 	my $html;
-	foreach my $To ( $$variable{'Message'}->To() ) {
-		my $User = $To->User();
-		$html .= sprintf('<li><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
-			$User->id(), $User->name(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X' } ) );
-	} # end foreach user
+	my @To = $$variable{'Conversation'}->To();
+	if ( @To ) {
+		$html .= '<ul>';
+		foreach my $To ( $$variable{'Conversation'}->To() ) {
+			next if $$To{user_id} == $session{user_id};
+			my $User = $To->User();
+			$html .= sprintf('<li id="to_id-%1$d"><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
+				$User->id(), $User->icon(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X', 'title'=>'Remove' } ) );
+		} # end foreach user
+		$html .= '</ul>';
+	} # end if @To
 	return $html;
 ) ?>
-</ul>
 <!--
 <input type="text" id="to_filter" name="to_filter"/>
 -->
-<select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
+	<input type="text" id="new_to" name="new_to" placeholder="enter name of new person to add"/>
+		<div id="new_to_autocomplete" class="autocomplete" style="display:none;"></div>
+		<script type="text/javascript">
+		new Ajax.Autocompleter('new_to','new_to_autocomplete', '/messaging/_users.html', { minChars: 3,afterUpdateElement : add_to, callback: add_to_id } );
+		</script>
+<!--
+<select name="new_to_id" id="new_to_id" onchange="add_to(this.getValue());">
 	<option value="">select</option>
 	<? echo ( 
+return '';
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
-			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Message'}->To() ],
+			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
+			'user_id1 not in' => [ map { $_->user_id() } $$variable{'Conversation'}->To() ],
 			'distinct' => 1,
 			);
 		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
 	) ?>
 </select>
+-->

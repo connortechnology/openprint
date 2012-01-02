@@ -21,13 +21,14 @@ BEGIN {
 	use Apache::DBI ();
 	use URI::Escape;
 	use HTML::Entities;
+	use Data::Dumper;
 #
 	use MIME::QuotedPrint;
 	use MIME::Base64;
 	use Mail::Sendmail;
 	use Text::CSV_XS;
 	use	Authen::Captcha;
-	use GD::Barcode;
+	#use GD::Barcode;
 	use Encode;
 	use JSON;
 	use JSON::XS;
@@ -39,6 +40,7 @@ BEGIN {
 	use misc;
 	use ssi;
 	use configuration;
+	use pagination;
 
 	use openprint::www;
 	use openprint::upload_handler;
@@ -55,26 +57,29 @@ BEGIN {
 	use openprint::User;
 	use openprint::User_Type;
 	use openprint::User_Notification;
-	use openprint::Service;
-	use openprint::Paper;
-	use openprint::Material;
+	#use openprint::Service;
+	#use openprint::Paper;
+	#use openprint::Material;
 	use openprint::Product;
 	use openprint::ProductPrice;
 	use openprint::Pricelist;
-	use openprint::ProjectType;
-	use openprint::ProjectTypeCategory;
+	#use openprint::ProjectType;
+	#use openprint::ProjectTypeCategory;
 	use openprint::Order;
 	use openprint::Quote;
-	use openprint::JDF;
+	#use openprint::JDF;
 	use	openprint::Timetrack;
 	use	openprint::Currency;
 	use	openprint::Ledger;
-	use openprint::Project_Service;
+	#use openprint::Project_Service;
 	use openprint::Article;
 	use openprint::Article_Category;
 	use openprint::Host;
 	use openprint::Log;
 	use openprint::Like;
+	use openprint::Page_Setting;
+	use openprint::Survey;
+	use openprint::Event;
 
 #use MapImage;
 

@@ -1,12 +1,12 @@
 <div class="BusinessInformation">
-	<fieldset><legend>Business Information:</legend>
+	<fieldset><legend>Business Information</legend>
 		<ul>
 			<li class="required"> 
-				<label for="businessname">Legal Name:</label>
+				<label for="businessname">Legal Name</label>
 				<input type="text" id="businessname" name="business_name" value="<? hecho ( $$variable{'Company'}->business_name() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label>Legal Form:</label>
+				<label>Legal Form</label>
 				<input type="radio" id="business_formCorporation" name="business_form" value="Corporation" <? echo ( 'checked="checked"' if $$variable{'Company'}->business_form() eq 'Corporation' ) ?> />
 				<label class="radio" for="business_formCorporation">Corporation</label>
 				<input type="radio" id="business_formSoleProprietor" name="business_form" value="SoleProprietor" <? echo ( 'checked="checked"' if $$variable{'Company'}->business_form() eq 'SoleProprietor' ) ?> />
@@ -15,11 +15,11 @@
 				<label class="radio" for="business_formPartnership">Partnership</label>
 			</li>
 			<li class="required"> 
-				<label for="business_type">Business Type:</label>
+				<label for="business_type">Business Type</label>
 				<input type="text" id="business_type" name="business_type" value="<? hecho ( $$variable{'Company'}->business_type() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="StartYear">Year Established:</label>
+				<label for="StartYear">Year Established</label>
 				<input type="text" id="StartYear" name="StartYear" value="<? echo ( 
 					if ( $$variable{'Company'}->established() ) {
 					$$variable{'Company'}->established() =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
@@ -28,18 +28,18 @@
 				) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="president_owner">President/CEO/Owner:</label>
+				<label for="president_owner">President/CEO/Owner</label>
 				<input type="text" id="president_owner" name="president_owner" value="<? hecho ( $$variable{'Company'}->president_owner() ) ?>" />
 			</li>
 			<li class="required"> 
-				<label for="employees">Number of Employees:</label>
+				<label for="employees">Number of Employees</label>
 				<select size="1" id="employees" name="employees">
 					<option value="input"> Select </option>
 					<? echo ( ssi::getemployee_numbers( $r, $log, $dbh, $$variable{'Company'}->employees() ); ) ?>
 				 </select>
 			</li>
 			<li class="required"> 
-				<label for="annual_sales">Annual Sales:</label>
+				<label for="annual_sales">Annual Sales</label>
 				<select size="1" id="annual_sales" name="annual_sales">
 					<option value=""> Select </option>
 					<? echo ( ssi::getannual_sales( $r, $log, $dbh, $$variable{'Company'}->annual_sales() ); ) ?>
@@ -47,8 +47,8 @@
 			</li>
 			<li class="required"> 
 				<label for="gst_number">
-					<? if ( $openprint::session{'Country'} eq 'US' ) ?>Federal ID #/SSN #:<? endif ( $openprint::session{'Country'} eq 'US' ) ?>
-					<? if ( $openprint::session{'Country'} eq 'CA' ) ?>GST #:<? endif ( $openprint::session{'Country'} eq 'CA' ) ?>
+					<? if ( $openprint::session{'Country'} eq 'US' ) ?>Federal ID #/SSN #<? endif ( $openprint::session{'Country'} eq 'US' ) ?>
+					<? if ( $openprint::session{'Country'} eq 'CA' ) ?>GST/HST #<? endif ( $openprint::session{'Country'} eq 'CA' ) ?>
 				</label>
 				<input type="text" id="gst_number" name="gst_number" value="<? hecho ( $$variable{'Company'}->gst_number() ) ?>" />
 			</li>

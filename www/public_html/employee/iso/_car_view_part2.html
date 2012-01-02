@@ -4,9 +4,9 @@
 	<tr><td colspan="10">ROOT CAUSE OF PROBLEM (Why did the problem occur?)</td></tr>
 	<tr><td colspan="10"><? hecho ( $$variable{'CAR'}->cause() ) ?></td></tr>
 	<tr>
-		<td colspan="1">Recipient:</td>
+		<td colspan="1">Recipient</td>
 		<td colspan="4"><? hecho ( new openprint::User( $$variable{'CAR'}->part2_user_id())->name() ) ?></td>
-		<td colspan="1">Date:</td>
+		<td colspan="1">Date</td>
 		<td colspan="4"><? hecho ( $$variable{'CAR'}->part2_signed_on() ) ?></td>
 	</tr>
 </table>
@@ -17,6 +17,6 @@
 <? endif ( ($$variable{'CAR'}->issued_to_id() == $session{'user_id'} ) or ($$variable{'CAR'}->part2_user_id() == $session{'user_id'}) or openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>
 <? if ( ( ! $$variable{'CAR'}->part2_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
-	new Ajax.Updater( 'Part3', '/employee/iso/_car_edit_part3.html', { method: 'get', parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );
+	new Ajax.Updater( 'Part3', '/employee/iso/_car_edit_part3.html', { method: 'get', parameters: {car_id<? echo ( $$variable{'CAR'}->id() ) ?>} } );
 </script>
 <? endif ( ( ! $$variable{'CAR'}->part2_user_id() ) and openprint::usergroup::is_user_in( ['Quality Control'], $session{'user_id'} ) ) ?>

@@ -239,7 +239,7 @@
 ) ?>
 <? if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 			<tr class="Prices"> 
-				<td>Unit Prices:</td>
+				<td>Unit Prices</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 						$html .= '<td class="price">'.openprint::Currency::format($$variable{'Project'}->unit_price($qty_index)).'</td>';
@@ -252,7 +252,7 @@
 				<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			<tr> 
-				<td>Total Before Taxes:</td>
+				<td>Total Before Taxes</td>
 				<? echo ( 
 					my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -268,7 +268,7 @@
 <? endif ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 <? if ( $$variable{'Project'}->Ordered_Product() ) ?>
         <tr class="totals">
-            <td>Ordered Price:</td>
+            <td>Ordered Price</td>
             <td class="price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Ordered_Product()->price() ); ) ?></td>
             <td class="status">&nbsp;</td>
 			<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>

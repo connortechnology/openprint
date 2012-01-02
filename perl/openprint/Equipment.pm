@@ -1,6 +1,6 @@
-package openprint::Equipment;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Equipment;
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
@@ -50,7 +50,7 @@ $debug = 0;
 %defaults = (
 	'location_id'		=>	undef,
 	'servicetype_id'	=>	undef,
-	'sorting'		=>	undef,
+	'sorting'			=>	undef,
 );
 
 sub cache_field {

@@ -1,7 +1,7 @@
-package openprint::Skid;
-@ISA = qw( openprint::Object );
-
 use strict;
+package openprint::Skid;
+our @ISA = qw( openprint::Object );
+
 use openprint ();
 use vars qw( $log $dbh %variable %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *variable = \%openprint::variable;
@@ -20,6 +20,7 @@ require openprint::Project;
 require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
+require openprint::InventoryCondition;
 
 $debug = 0;
 
@@ -54,7 +55,8 @@ $serial = 'skid_id_seq';
 );
 
 sub find {
-	my $self = shift;
+	shift @_ if $_[0] eq 'openprint::Skid';
+	shift @_ if ref $_[0] eq 'openprint::Skid';
 	my %params = @_;
 	my @values;
 
@@ -82,14 +84,17 @@ sub find {
 		} # end if
 	} # end if
 
-	if ( $params{'paper_id'} ) {
+	if ( $params{'paper_id'} and $params{'quantity >='} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity >= ?)';
+		push @values, $params{'paper_id'}, $params{'quantity >='};
+	} elsif ( $params{'paper_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
 		push @values, $params{'paper_id'};
-	} # end if
-	if ( $params{'quantity >='} ) {
+	} elsif ( $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity >='};
 	} # end if
+
 	if ( $params{'quality_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
 		push @values, $params{'quality_id'};
@@ -112,6 +117,15 @@ sub find {
 		$sql .= ' AND created_on <= ?';
 		push @values, $params{'created_on_end'};
 	} # end if
+
+	if ( $params{'created_on >='} ) {
+		$sql .= ' AND created_on >= ?';
+		push @values, $params{'created_on >='};
+	} 
+	if ( $params{'created_on <='} ) {
+		$sql .= ' AND created_on <= ?';
+		push @values, $params{'created_on <='};
+	} # end if
 	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
 		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
 		push @values, @params{'updated_on_start','updated_on_end'};
@@ -122,6 +136,15 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+
+	if ( $params{'updated_on >='} ) {
+		$sql .= ' AND updated_on >= ?';
+		push @values, $params{'updated_on >='};
+	} # end if
+	if ( $params{'updated_on <='} ) {
+		$sql .= ' AND updated_on <= ?';
+		push @values, $params{'updated_on <='};
+	} # end if
 	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
 		push @values, @params{'last_seen_start','last_seen_end'};
@@ -131,6 +154,14 @@ sub find {
 	} elsif ( $params{'last_seen_end'} ) {
 		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
 		push @values, $params{'updated_on_end'};
+	} # end if
+	if ( $params{'last_seen >='} ) {
+		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
+		push @values, $params{'last_seen >='};
+	} # end if
+	if ( $params{'last_seen <='} ) {
+		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
+		push @values, $params{'updated_on <='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM Projects WHERE lngDocketNumber=?))';
@@ -231,10 +262,11 @@ sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, q{DELETE FROM manifestcontents WHERE skid_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{UPDATE manifestcontents SET skid_id=NULL WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
+	sql::execute( undef, undef, q{DELETE FROM skid_verifications WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skids WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete
@@ -245,16 +277,16 @@ sub to_string {
 } # end sub
 
 sub add {
-	my ( $self, $Paper, $quantity, $quality ) = @_;
-	my $Quality;
-	if ( ref $quality eq 'openprint::StockQuality' ) {
-		$Quality = $quality;
-	} elsif ( ! $quality ) {
+	my ( $self, $Paper, $quantity, $condition ) = @_;
+	my $Condition;
+	if ( ref $condition eq 'openprint::InventoryCondition' ) {
+		$Condition = $condition;
+	} elsif ( ! $condition ) {
 		# Default to new
-		$Quality = openprint::StockQuality->find_one('name'=>'new');
+		$Condition = openprint::InventoryCondition->find_one('name'=>'new');
 	} # end if
-	if ( ! $Quality ) {
-		$log->error("Must specify quality");
+	if ( ! $Condition ) {
+		$log->error("Must specify condition");
 		return 0;
 	} # end if
 	if ( ! $Paper ) {
@@ -285,7 +317,7 @@ sub add {
 	$C->save({
 			'skid_id' => $$self{'id'},
 			'paper_id'	=>	$Paper->id(),
-			'quality_id'	=>	$Quality->id(),
+			'condition_id'	=>	$Condition->id(),
 			'quantity'=>$quantity,
 			});
 	return $quantity - $old_quantity;
@@ -380,7 +412,7 @@ sub Content {
 
 sub Contents {
     my $self = shift;
-	return if ! $$self{'id'};
+	return () if ! $$self{'id'};
 
 	if ( @_ ) {
 		my %params = @_;
@@ -505,18 +537,16 @@ sub contents {
 } # end sub contents
 
 sub rfidtag_id {
-	my $self = shift;
-
-	if ( @_ ) {
-		my $rfidtag_id = shift;	
+	if ( @_ > 1 ) {
+		my $rfidtag_id = $_[1];
 		if ( $rfidtag_id ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
 			$log->error( $error ) if $error;
 		} # end if
-		$$self{'rfidtag_id'} = $rfidtag_id;
+		$_[0]{'rfidtag_id'} = $rfidtag_id;
 	} # end if
-	return $$self{'rfidtag_id'};
+	return $_[0]{'rfidtag_id'};
 } # end sub rfidtag_id
 
 sub RFIDTag {
@@ -552,29 +582,60 @@ sub is_empty {
 } # end sub is_empty
 
 sub last_seen_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+	if ( ! exists $_[0]{last_seen_days} ) {
+		$_[0]{last_seen_days} = int( (time - Date::Parse::str2time($_[0]{'updated_on'})) / 86400 );
+	} # end if
+	return $_[0]{last_seen_days};
 }
 sub age_days {
-	my $self = $_[0];
-	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+	return int( (time - Date::Parse::str2time($_[0]{'created_on'})) / 86400 );
 }
 
 sub Manifest {
-	my $self = $_[0];
-	foreach my $MC ( openprint::ManifestContent->find_one('skid_id'=>$$self{id}) ) {
+	if ( my $MC = $_[0]->ManifestContent() ) {
 		return $MC->Manifest();
-	} # end foreach MC
+	} # end if
 	return new openprint::Manifest();
 } # end sub Manifest
 
-sub ManifestContents {
-	return openprint::ManifestContent->find('skid_id'=>$_[0]{id});
+sub ManifestContent {
+	if ( ! $_[0]{'ManifestContent'} ) {
+		$_[0]{'ManifestContent'} = openprint::ManifestContent->find_one('skid_id'=>$_[0]{id});
+	} # end if
+	return $_[0]{'ManifestContent'};
 } # end sub ManifestContents
 
 sub manifest_id {
-	return $_[0]->Manifest()->id();
+	return $_[0]->ManifestContent()->manifest_id();
 } # end sub manifest_id
+
+sub value {
+	my $self = $_[0];
+	if ( ! $$self{'value'} ) {
+		$$self{'value'} = misc::sum( map { $_->value() } ($self->Contents()) );
+	} # end if
+	return $$self{'value'};
+} # end sub value
+
+sub cost {
+	if ( ! $_[0]{'cost'} ) {
+		my $ManifestContent = $_[0]->ManifestContent();
+		return undef if ! $ManifestContent;
+		my $ManifestType = $ManifestContent->Type();
+		my ( $cost, $units );
+		if ( $ManifestType->cost() ) {
+			$cost = $ManifestType->cost();
+			$units = $ManifestType->cost_units();
+		} else {
+			my $POC = $ManifestType->PurchaseOrder_Content();
+			return undef if ! $POC;
+			$cost = $POC->price();
+			$units = $POC->price_units();
+		} # end if
+		$_[0]{'cost'} = $cost.$units;
+	} # end if
+	return $_[0]{'cost'};
+} # end sub cost
 
 1;
 __END__

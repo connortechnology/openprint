@@ -34,14 +34,10 @@ $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
 foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
-	sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+	sql::update( undef, undef, 'ProjectType_Defaults', ['name=?', 'chkBleed'.$bleed], 'name', 'Bleed'.$bleed );
 	sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
-if ( ! $ServiceType ) {
-	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
-}
 if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
 	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
@@ -339,11 +335,11 @@ if ( 1 ) {
 	} # end if Type
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 }
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideOne'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideTwo'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripHeight'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripWidth'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbWaxFree'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbWaxFree'`);
 require openprint::ProjectType_Default;
 require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');

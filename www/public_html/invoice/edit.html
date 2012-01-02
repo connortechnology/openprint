@@ -7,13 +7,13 @@
         new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
                 method:'get',
                 parameters: {
-                    invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
                         method:'get',
-                        parameters: { invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?> }
                         } );
                 },
                 onFailure: function(transport) {
@@ -25,13 +25,13 @@
         new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
                 method:'get',
                 parameters: {
-                    invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
                         method:'get',
-                        parameters: { invoice_id:<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?> }
                         } );
                 },
                 onFailure: function(transport) {
@@ -48,35 +48,35 @@
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
 	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
-			<p><label for="invoicee_id">Company:</label>
+			<p><label for="invoicee_id">Company</label>
 				<select id="invoicee_id" name="invoicee_id">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
 				</select>
 			</p>
 <!--
-			<p><label>Created On:</label>
+			<p><label>Created On</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
 			</p>
 -->
-			<p><label>Due On:</label>
+			<p><label>Due On</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
 			</p>
-			<p><label for="monthly_interest">Interest Rate:</label>
+			<p><label for="monthly_interest">Interest Rate</label>
 				<input type="text" name="monthly_interest" id="monthly_interest" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->monthly_interest() : $config{'Default Interest'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
 			</p>
 		</div>
 		<div class="rightColumn">
 			<p>
-				<label for="external_notes">External Notes:</label>
+				<label for="external_notes">External Notes</label>
 				<textarea cols="" id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
 			</p>
 			<p>
-				<label for="internal_notes">Internal Notes:</label>
+				<label for="internal_notes">Internal Notes</label>
 				<textarea cols="" id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
 			</p>
 			<p>
-				<label>Bad Debt?:</label>
+				<label>Bad Debt?</label>
 				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( ssi::checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
 				<label class="radio" for="bad_debt1">Yes</label>
 				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( ssi::checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
@@ -142,7 +142,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td align="right" colspan="4">Total:</td>
+				<td align="right" colspan="4">Total</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
 		</table>

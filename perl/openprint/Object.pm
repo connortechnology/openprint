@@ -6,6 +6,8 @@ use strict;
 use openprint ();
 require sets;
 require openprint::Like;
+require openprint::Comment;
+require openprint::Privacy;
 require openprint::Object_Type;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
@@ -50,9 +52,11 @@ sub new {
 	my $ref = ref $id;
 	if ( ! $ref ) {
 		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+#$log->debug("Loading from cache $parent $id");
 			# If the object is cached
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
+$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
@@ -169,7 +173,8 @@ $log->debug("No serial") if $debug;
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
 			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
 			if ( ! ( ( $_ = $local_dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
-				$log->error('Error deleting: ' . $dbh->errstr);
+				$where =~ s/\?/\%s/g;
+				$log->error("Error deleting: DELETE FROM $table WHERE " .  sprintf($where, map { defined $_ ? $_ : 'undef' } ( @$self{@identified_by}) ).'):' . $local_dbh->errstr);
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $local_dbh->errstr;
@@ -213,7 +218,7 @@ $log->debug("No serial") if $debug;
 				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
-	} else {
+	} else { # not identified_by
 		if ( ! $$self{'id'} ) {
 			my $serial = eval '$'.$type.'::serial';
 			if ( $serial ) {
@@ -247,7 +252,7 @@ $log->debug("No serial") if $debug;
 			} # end if
 			if ( $debug or $debug_all ) {
 				$command =~ s/\?/\%s/g;
-				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' );
+				$log->debug('SQL DEBUG: ('.sprintf($command, map { defined $_ ? ( ref $_ eq 'ARRAY' ? join(',',@{$_}) : $_ ) : 'undef' } ( @sql{@keys}, $$self{'id'} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
@@ -423,6 +428,9 @@ sub find_operators {
 	if ( exists $$params{$k.'_null_or_>='} ) {
 		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
 	} # end if
+	if ( exists $$params{$k.'_null_or_>'} ) {
+		push @{$results{'_null_or_>'}}, "( $f > ? OR $f IS NULL )", $$params{$k.'_null_or_>'};
+	} # end if
 	if ( exists $$params{$k.' is null or ='} ) {
 		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
 	} # end if
@@ -434,6 +442,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.' !='} ) {
 		push @{$results{' !='}}, $f.' != ?', $$params{$k.' !='};
+	} # end if
+	if ( exists $$params{$k.' <<='} ) {
+		push @{$results{' <<='}}, "$f <<= ?", $$params{$k.' <<='};
 	} # end if
 	if ( exists $$params{$k.' &&'} ) {
 		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
@@ -480,6 +491,8 @@ sub find_operators {
 			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
+		} else {
+			push @{$results{' not in'}}, ();
 		} # end if
 	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
@@ -492,7 +505,11 @@ sub find_operators {
 		push @{$results{' uc'}}, "upper($f) = ?", $$params{$k.' uc'};
 	} # end if
 	if ( exists $$params{$k.' any'} ) {
-		push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+		if ( ref $$params{$k.' any'} eq 'ARRAY' ) {
+			push @{$results{' any'}}, '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", @{$$params{$k.' any'}};
+		} else {
+			push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+		} # end if
 	} # end if
 	if ( exists $$params{$k.' is null'} ) {
 		if ( $$params{$k.' is null'} ) {
@@ -501,6 +518,7 @@ sub find_operators {
 			push @{$results{' is null'}}, "$f IS NOT NULL";
 		} # end if
 	} # end if
+
 	return \%results;
 } # end sub
 
@@ -568,13 +586,14 @@ sub find {
 	# no operators, just which fields are being searched on. Mostly just useful for detetion of the deleted field.
 	my @used_fields;
 
+	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
+
 	foreach ( 'find_fields', 'fields' ) {
 		my $f = eval '\%'.$type.'::'.$_;
 		next if ! $f;
 
-		foreach my $k ( keys %$params ) {
+		foreach my $k ( @param_keys ) {
 			next if ! $$f{$k};
-			next if sets::isin( $k,[ 'order','limit','or' ] );
 
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
@@ -659,7 +678,7 @@ Carp::cluck("Use of deprecated Object ref in find");
 			} # end if
 		} # end foreach
 	} # end if
-	if ( $$fields{'deleted'} and ! sets::isin( @used_fields, 'deleted') ) {
+	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
@@ -687,15 +706,19 @@ Carp::cluck("Use of deprecated Object ref in find");
 		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
 		delete $$params{'limit'};
 	} # end if
+	if ( exists $$params{'offset'} ) {
+		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
+		delete $$params{'offset'};
+	} # end if
 	foreach my $k ( keys %$params ) {
 		$log->error("Extra parameters in $type ::find $k => $$params{$k}");
 		Carp::cluck("Extra parameters in $type ::find $k => $$params{$k}");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->debug('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
@@ -734,7 +757,7 @@ sub find_one {
 		%{$params} = @_;
 	} # end if
 	$$params{'limit'}=1;
-	my @Results = eval($type.'->find($params);');
+	my @Results = $type->find($params);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -794,6 +817,7 @@ sub transform {
 
 		foreach my $transform ( @transforms ) {
 			eval '$_[2] =~ ' . $transform;
+$openprint::log->debug("After $transform: $_[2]") if $debug;
 		} # end foreach
 	} else {
 		$openprint::log->error("Object::transform $_[1] not in fields for $type");
@@ -844,10 +868,18 @@ sub like_button {
 sub like {
 	my $Like = $_[0]->Like();
 	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}});
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>1});
 		$_[0]{'Like'} = $Like;
 	} # end if
 } # end sub like
+
+sub dislike {
+	my $Like = $_[0]->Like();
+	if ( ! $Like ) {
+		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>0});
+		$_[0]{'Like'} = $Like;
+	} # end if
+} # end sub dislike
 
 sub unlike {
 	my $Like = $_[0]->Like();
@@ -879,6 +911,56 @@ $log->debug("Object: Object_Type: No id, looking up by name" . ref $_[0] );
 	} # end if
 	return $_[0]{'Object_Type'};
 } # end sub Object_Type
+
+sub object_type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::Object_Type->find_one('name'=> $_[1] );
+		if ( ! $Type ) {
+			$Type = new openprint::Object_Type();
+			$Type->save({'name'=>$_[1], 'human'=>$_[1]});
+		} # end if
+		$_[0]{'object_type'} = $Type->name();
+		$_[0]{'object_type_id'} = $Type->id();
+	} # end if
+	if ( ! $_[0]{'object_type'} ) {
+		$_[0]{'object_type'} = new openprint::Object_Type( $_[0]{'object_type_id'} )->name();
+	} # end if
+	return $_[0]{'object_type'};
+} # end sub object_type
+
+sub date_format {
+	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+} # end sub date_format 
+sub datetime_format {
+	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+} # end sub datetime_format 
+
+sub Comments {
+	if ( $_[1] ) {
+		$_[1]{'object_id'} = $_[0]{'id'};
+		$_[1]{'object_type'} = ref $_[0],
+		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+
+		return openprint::Comment->find($_[1]);
+	} # end if
+
+	if ( ! defined $_[0]{'Comments'} ) {
+		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	} # end if
+	return @{$_[0]{'Comments'}};
+} # end sub Comments
+
+sub Privacy {
+	if ( ! exists $_[0]{'Privacy'} ) {
+		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'} );
+		if ( ! $_[0]{'Privacy'} ) {
+			$_[0]{'Privacy'} = new openprint::Privacy();
+			$_[0]{'Privacy'}->object_type( ref $_[0] );
+			$_[0]{'Privacy'}{'object_id'} = $_[0]{'id'};
+		} # end if
+	} # end if
+	return $_[0]{'Privacy'};
+} # end sub Privacy
 
 1;
 __END__

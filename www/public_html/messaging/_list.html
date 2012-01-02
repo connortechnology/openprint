@@ -1,64 +1,59 @@
 <? eval (
-	@{$$variable{'Messages'}} = ();
-	foreach my $Message ( openprint::Message->find( 
-			ssi::date_filter( '/messaging/sent.html?sent_on_start', 'sent_on >=' ),
-			ssi::date_filter( '/messaging/sent.html?sent_on_end', 'sent_on <=' ),
-			( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
-			( $session{'/messaging/list.html?folder'} eq 'Inbox' ? (
-				'to_id'			=>	$session{'user_id'},
-				'sent_on is null'	=>	0,
-			) : () ),
-			( $session{'/messaging/list.html?folder'} eq 'Drafts' ? (
-				'from_id'			=>	$session{'user_id'},
-				'sent_on is null'	=>	1,
-			) : () ),
-			( $session{'/messaging/list.html?folder'} eq 'Sent' ? (
-				'from_id'			=>	$session{'user_id'},
-				'sent_on is null'	=>	0,
-			) : () ),
-			'order'				=> 'created_on',
-		) ) {
-		push @{$$variable{'Messages'}}, $Message;
-	} # end foreach Messages
+	@{$$variable{'Conversations'}} = ();
+
+	# Gets every message to me, which will be a lot. Need to trim this to active conversations
+	my @Message_Tos = openprint::Message_To->find('user_id'=>$session{'user_id'});
+	my @message_ids = sets::union( map { $$_{'message_id'} } @Message_Tos );
+	my @Messages = openprint::Message->find('id'=>\@message_ids);
+	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] );
+	@{$$variable{'Conversations'}} = @Conversations;
+
+#if ( 0 ) {
+	#foreach my $Message ( openprint::Conversation->find( 
+			#ssi::date_filter( '/messaging/sent.html?created_on_start', 'sent_on >=' ),
+			#ssi::date_filter( '/messaging/sent.html?created_on_end', 'sent_on <=' ),
+			#( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
+			#( $session{'/messaging/list.html?folder'} eq 'Inbox' ? (
+				#'to_id'			=>	$session{'user_id'},
+				#'sent_on is null'	=>	0,
+			#) : () ),
+			#'order'				=> 'created_on',
+		##) ) {
+		#push @{$$variable{'Conversations'}}, $Message;
+	#} # end foreach Conversations
+#}
 ) ?>
 
-<? if ( @{$$variable{'Messages'}} == 0 ) ?>
+<? if ( @{$$variable{'Conversations'}} == 0 ) ?>
 	There are no messages which match your search criteria. 
-<? else ( @{$$variable{'Messages'}} == 0 ) ?>
-	<table>
-		<tr class="Message">
-			<th class="actions"></th>
-			<th class="To">To</th>
-			<th class="From">From</th>
-			<th class="DateTime">Created On</th>
-			<th class="Subject">Subject</th>
-			<th class="Where">Where</th>
-		</tr>
+<? else ( @{$$variable{'Conversations'}} == 0 ) ?>
 		<? echo ( 
 			my $html;
-			foreach my $Message ( @{$$variable{'Messages'}} ) {
+			foreach my $Conversation ( @{$$variable{'Conversations'}} ) {
+
+				# Get last message
+				my $Message = openprint::Message->find_one('conversation_id'=>$$Conversation{'id'},'to_id any'=>$session{'user_id'}, 'order'=>'sent_on DESC');
+				next if ! $Message;
 				$html .= sprintf(q` 
-					<tr class="Message"> 
-						<td class="actions">%7$s</td>
-						<td class="To"><a href="/messaging/%8$s.html?message_id=%1$d">%2$s</a></td>
-						<td class="From"><a href="/messaging/%8$s.html?message_id=%1$d">%3$s</a></td>
-						<td class="DateTime"><a href="/messaging/%8$s.html?message_id=%1$d">%5$s</a></td>
-						<td class="Subject"><a href="/messaging/%8$s.html?message_id=%1$d">%4$s</a></td>
-						<td class="Where"><a href="/messaging/%8$s.html?message_id=%1$d">%6$s</a></td>
-					</tr>
-					`, $Message->id(), 
-					join( ',', map { $_->User()->name() } $Message->To() ),
-					$Message->From()->name(),
-					ssi::html_escape($Message->subject()),
+					<div class="Conversation"> 
+						<a href="/messaging/view.html?conversation_id=%1$d">
+						<div class="from thumbnail"><img src="%6$s" alt=""/></div>
+						<div class="subject">%2$s</div>
+						<div class="last_sent">%3$s</div>
+						<div class="who">%4$s</div>
+						</a>
+						<div class="buttons">%5$s</div>
+					</div>
+					`, $Conversation->id(), 
+					ssi::html_escape($Conversation->subject()),
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
-					$Message->where(),
+					join( ', ', map { $$_{user_id} == $session{user_id} ? () : sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$_{user_id}, $_->User()->name() ) } $Message->To() ),
 					join('', 
-						ssi::button( 'delete'.$Message->id(), {'onclick'=> 'delete_message( '.$Message->id().');', 'text'=>'X' } ),
+						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),
 						),
-					( $session{'/messaging/list.html?folder'} eq 'Drafts' ? 'edit' : 'view' ),
+					$Message->From()->Asset()->thumbnail_url(),
 				);
-			} # end foreach Messages
+			} # end foreach Conversations
 			return $html;
 		) ?>
-		</table>
-<? endif ( @{$$variable{'Messages'}} == 0 ) ?>
+<? endif ( @{$$variable{'Conversations'}} == 0 ) ?>

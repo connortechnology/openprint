@@ -2,13 +2,13 @@
 	<div class="content">
 	<ul>
 		<li id="SubTotal">
-			<label>Sub Total:</label>
+			<label>Sub Total</label>
 			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
 		</li>
                 <? echo ( 
                     my $html;
                     foreach my $Tax ( $$variable{'Order'}->Taxes() ) {
-                        $html .= sprintf('<li class="tax"><label>%s (%d%):</label>%s</li>',
+                        $html .= sprintf('<li class="tax"><label>%s (%d%)</label>%s</li>',
                             $Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $Tax->amount() ) ),
                             );
                     } # end foreach Tax
@@ -16,24 +16,24 @@
                 ) ?>
 		<? if ( $$variable{'Order'}->total() ) ?>
 		<li id="Total">
-			<label>Total:</label>
+			<label>Total</label>
 			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->total() ) ?>
 		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 		<li>
-			<label>Amount Paid:</label>
+			<label>Amount Paid</label>
             <? echo ( openprint::Currency::format( $$variable{'AmountPaid'} ); ) ?>
 		</li>
         <? if ( $$variable{'DepositDue'} ) ?>
         <li>
-            <label>Deposit Due:</label>
+            <label>Deposit Due</label>
             <? echo ( openprint::Currency::format( $$variable{'DepositDue'} ); ) ?>
         </li>
         <? endif ( $$variable{'DepositDue'} ) ?>
         <? if ( $$variable{'AmountOutstanding'} ) ?>
         <li>
-            <label>Amount Owing:</label>
+            <label>Amount Owing</label>
             <? echo ( openprint::Currency::format( $$variable{'AmountOutstanding'} ); ) ?>
         </li>
         <? endif ( $$variable{'AmountOutstanding'} ) ?>

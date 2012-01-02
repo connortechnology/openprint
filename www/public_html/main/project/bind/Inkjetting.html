@@ -9,10 +9,10 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-				<p>
-					<label>Colours:</label>
-					<input type="text" name="Colours" value="<?Colours?>" size="4" onkeyup="this.value=this.value.replace(/\D/, '' );calc(this.form.name);" />
-				</p>
+			<p>
+				<label>Colours</label>
+				<input type="text" name="Colours" value="<?Colours?>" onkeyup="this.value=this.value.replace(/\D/, '' );calc(this.form.name);" />
+			</p>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>
 		<hr/>

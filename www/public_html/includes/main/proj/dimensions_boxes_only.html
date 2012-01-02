@@ -1,6 +1,6 @@
 <div class="Dimensions"> 
 <p>
-	<label>Dimensions:</label>
+	<label>Dimensions</label>
 	<input type="number" name="txtFinalWidth" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" /> x
 	<input type="number" name="txtFinalHeight" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/, '');calc(this.form.name);" />
 	<span class="smTbl">(<? echo ( ssi::writeTip('Finished'); ) ?> - W x H in inches)</span><br>

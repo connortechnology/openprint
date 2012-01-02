@@ -10,7 +10,7 @@
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<fieldset>
 		<p>
-			<label>Project:</label>
+			<label>Project</label>
 			<textarea name="Reference<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></textarea>
 		</p>
 		<!--#include virtual="_required_by.html"-->

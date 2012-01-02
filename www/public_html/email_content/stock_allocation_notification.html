@@ -1,4 +1,4 @@
-The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b>:<br/>
+The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b><br/>
 
 <? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><p>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?></p>
 
@@ -64,7 +64,7 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 		} # end foreach Skid
 	} # end if
 	$html .= '<tr class="totals">';
-	$html .= '<td colspan="4" style="text-align: right;">Total:</td>';
+	$html .= '<td colspan="4" style="text-align: right;">Total</td>';
 	$html .= '<td style="text-align: right;">' .Number::Format::format_number($$variable{'Allocation'}->quantity()).$units.'</td>';
 	$html .= '</tr>';
 	return $html;

@@ -68,10 +68,10 @@ sub handler {
 		next unless scalar @values;
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
+			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
+			#$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
@@ -99,15 +99,15 @@ sub handler {
 	} # end if
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $log, $dbh, $r->dir_config() );
+	configuration::init_cache( $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
-$log->debug("Page Settings not found in cache for $page");
+#$log->debug("Page Settings not found in cache for $page");
 			# First step, reload page settings
 			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
 			if ( ! $page_settings{$page} ) {
-$log->debug("Page Settings not found for $page");
+#$log->debug("Page Settings not found for $page");
 				# Need to create one.
 				my @chunks = split('/', $page );
 				while ( @chunks ) {
@@ -119,7 +119,7 @@ $log->debug("Page Settings not found for $page");
 					$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 		
 					if ( $page_settings{$chunk} ) {
-$log->debug("Using page settings for $chunk");
+#$log->debug("Using page settings for $chunk");
 						#my $NewPageSettings = $page_settings{$chunk}->copy();
 						#$NewPageSettings->save({'url'=>$page});
 						#$page_settings{$page} = $NewPageSettings;
@@ -127,8 +127,8 @@ $log->debug("Using page settings for $chunk");
 						# Why stuff up the db with entries, just fill the hash with copies.
 						$page_settings{$page} = $page_settings{$chunk};
 						last;
-} else {
-$log->debug("No page settings for $chunk");
+#} else {
+#$log->debug("No page settings for $chunk");
 					} # end if
 				} # end while chunks
 
@@ -141,7 +141,7 @@ $log->debug("No page settings for $chunk");
 
 		# if not logged in, determine if they are allowed to see this page or not.
 		if ( $page_settings{$page}->user_level() ) {
-$log->debug("Checking user level, need : " . $page_settings{$page}->user_level() . ' session is: ' . $session{'user_type'} );
+#$log->debug("Checking user level, need : " . $page_settings{$page}->user_level() . ' session is: ' . $session{'user_type'} );
 			if ( 
 					( $page_settings{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
 					or
@@ -149,7 +149,7 @@ $log->debug("Checking user level, need : " . $page_settings{$page}->user_level()
 					or
 					( $page_settings{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
 			   ) {
-$log->debug("No good, need login");
+#$log->debug("No good, need login");
 				$page = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 			} # end if
@@ -237,7 +237,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
+			$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -300,11 +300,13 @@ $openprint::log->debug("Getfile");
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 		} elsif ( $first ) {
-			eval( 'require openprint::'.join('_', @path ) );
+			my $path = 'openprint::'.join('_',@path);
+			eval( "require $path;");
 $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+			$log->debug("Calling $path :: $proc");
+			$path->$proc( $r, $log, $dbh, \%variable );
+#$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -408,7 +410,7 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		if ( $second eq 'project' ) {
 			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
-				if ( ! $variable{'ServiceIndex'} ) {
+				if ( $param{'ServiceIndex'} and ! $variable{'ServiceIndex'} ) {
 					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
 					$variable{'ServiceIndex'} = $service_ids[0];
 				} # end if
@@ -520,6 +522,7 @@ $openprint::log->debug("$1");
 					} # end if
 				} # end if main:proj:$third
 			} # end if defined third
+$log->debug("after third");
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
 			openprint::main_project::history()			if $filename eq 'history.html';

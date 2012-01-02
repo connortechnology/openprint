@@ -4,27 +4,27 @@
 		<div class="leftColumn">
 		<ul>
 			<li> 
-				<label>Submission Date:</label>
+				<label>Submission Date</label>
 				<?sub_date?>
 			</li>
 			<li> 
-				<label>Title:</label>
+				<label>Title</label>
 				<?title?>
 			</li>
 			<li> 
-				<label>First Name:</label>
+				<label>First Name</label>
 				<?firstname?>
 			</li>
 			<li> 
-				<label>Last Name:</label>
+				<label>Last Name</label>
 				<?lastname?>
 			</li>
 			<li> 
-				<label>Phone:</label>
+				<label>Phone</label>
 				<?phone?><? if ( $$variable{'extension'} ) ?>x<?extension?><? endif ( $$variable{'extension'} ) ?>
 			</li>
 			<li> 
-				<label>E-mail Address:</label>
+				<label>E-mail Address</label>
 				<?email?>
 			</li>
 			</ul>
@@ -32,11 +32,11 @@
 		<div class="rightColumn">
 			<ul>
 			<li> 
-				<label>Company Name:</label>
+				<label>Company Name</label>
 				<?company_name?>
 			</li>
 			<li> 
-				<label>Address:</label>
+				<label>Address</label>
 				<?address_one?>
 			</li>
 	<? if ( $$variable{'address_two'} ) ?>
@@ -46,19 +46,19 @@
 			</li>
 	<? endif ( $$variable{'address_two'} ) ?>
 			<li> 
-				<label>Country:</label>
+				<label>Country</label>
 				<?country?>
 			</li>
 			<li> 
-				<label>State/Province:</label>
+				<label>State/Province</label>
 				<?state?>
 			</li>
 			<li> 
-				<label>City:</label>
+				<label>City</label>
 				<?city?>
 			</li>
 			<li> 
-				<label>Zip/Postal Code:</label>
+				<label>Zip/Postal Code</label>
 				<?postal_code?>
 			</li>
 			</ul>
@@ -66,19 +66,19 @@
 		<br class="spacer"/>
 		<ul>
 		<li> 
-		<label><b>Question or Comment:</b></label>
+		<label><b>Question or Comment</b></label>
 			<?question?>
 		</li>
 		<li> 
-			<label><b>Response Type:</b></label>
+			<label><b>Response Type</b></label>
 			<?response_type?>
 		</li>
 		<li> 
-			<label><b>Customer Service Response:</b></label>
+			<label><b>Customer Service Response</b></label>
 			<textarea name="txtQuestion-Quote" rows="2" onkeyup="textarea_resize(this);"><?response?></textarea>
 		</li>
 		<li> 
-			<label>Mark as reviewed:</label>
+			<label>Mark as reviewed</label>
 			<? echo ( ssi::radio( 'rdbReviewed', ['Y','Yes','N','No'], $$variable{'rdbReviewed'} ? $$variable{'rdbReviewed'} : 'Y' ); ) ?>
 		</li>
 		</ul>

@@ -1,23 +1,23 @@
 Choose report criteria and click submit. <br/>
 <br/>
 <form name="f1" method="post" action="returns.html">
-	<fieldset class="filters"><legend>Search:</legend>
+	<fieldset class="filters"><legend>Search</legend>
 		<p>
-			<label>Customers:</label>
+			<label>Customers</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4"/>
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
 				<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomers'} ); ) ?>
 			</select>
 		</p><p>
-			<label>Review Status:</label>
+			<label>Review Status</label>
 			<select name="ddmReviewed" size="1">
 				<option value="">All</option>
 				<option value="Y" <?ddmReviewedY?>>Only Reviewed</option>
 				<option value="N" <?ddmReviewedN?>>Only Non-Reviewed</option>
 			</select>
 		</p><p>
-			<label>Start Date:</label>
+			<label>Start Date</label>
 			<select name="ddmStartMonth" > <?startmonths?> </select>
 			<select name="ddmStartDay" > <?startdays?> </select>
 			<select name="ddmStartYear" > <?startyears?> </select>

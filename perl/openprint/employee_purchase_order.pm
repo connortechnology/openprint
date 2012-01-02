@@ -4,7 +4,6 @@ use Text::CSV_XS;
 use strict;
 require sql;
 require misc;
-require openprint::paper;
 
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
@@ -475,8 +474,12 @@ sub history {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->send_to_vendor();
 		delete $param{'po_id'};
+	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
+		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+		$variable{'error'} = $PO->send_to_me();
+		delete $param{'po_id'};
 	} # end if
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled' ) );
+	_history();
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_end', '' );
 	$session{'/employee/purchase_order/history.html?cancelled'} = '0' if ! exists $session{'/employee/purchase_order/history.html?cancelled'};
@@ -520,9 +523,12 @@ sub _po_content_line {
 		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
-		$PO = $PO_Content->PurchaseOrder();
-		$PO_Content->delete();
-		$variable{'error'} .= $PO->save();
+		if ( $PO_Content->id() ) {
+			# Might have already been deleted
+			$PO = $PO_Content->PurchaseOrder();
+			$PO_Content->delete();
+			$variable{'error'} .= $PO->save();
+		} # end if
 	} # end if
 } # end sub _purchase_order_content_line
 
@@ -614,6 +620,9 @@ sub item {
 		$variable{'ExternalRedirect'} = '/employee/purchase_order/items.html';
 	} # end if
 } # end sub item
+
+sub _po_created_by_options {
+} # end sub _po_created_by_options
 
 1;
 __END__

@@ -3,7 +3,7 @@
 <h2>User Profile</h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $session{'user_id'} ) ?>
+	<div class="disclaimer"><? echo ( $config{'UserProfileDisclaimer'} ) ?></div>
 	<div class="UserProfile">
 		<p class="buttons">
 			<? echo ( 
@@ -14,7 +14,7 @@
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html?ddmUser='.$$variable{'User'}->id() } );
 				} # end if
 				if ( $$variable{'User'}->id() and ( $session{'user_id'} != $$variable{'User'}->id() ) ) {
-					$html .= ssi::button( 'Message', { 'href'=>'/messaging/edit.html?to_id='.$$variable{'User'}->id() } );
+					$html .= ssi::button( 'Message', { 'href'=>'/messaging/view.html?to_id='.$$variable{'User'}->id() } );
 				} # end if
 				return $html;
 			) ?>
@@ -23,11 +23,15 @@
 		<div class="leftColumn">
 		<div id="ProfilePicture">
 			<? echo (
+				my $html;
 				my $Asset = $$variable{'User'}->Asset();
-				if ( ! ( $Asset and $Asset->id() ) ) {
-					return 'No profile picture set.';
+				if ( $Asset->id() ) {
+					$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
 				} # end if
-				return sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
+				if ( ! $$variable{'User'}->asset_id() ) {
+					$html .= 'No profile picture set.';
+				} # end if
+				return $html;
 			) ?>
 		</div><!--ProfilePicture-->
 		<div id="Albums">
@@ -40,6 +44,7 @@
 					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
+						next if ! $Album->can_view();
 						
 						my $Photo = $Album->Thumbnail();
 						if ( $Photo->asset_id() ) {
@@ -59,6 +64,7 @@
 					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
+						next if ! $Album->can_view();
 						
 						my $Video = $Album->Thumbnail();
 						if ( $Video->asset_id() ) {
@@ -79,21 +85,16 @@
 				</div>
 			</fieldset>
 		</div>
-		<div id="Statistics">
-			<fieldset><legend>Statistics</legend>
-				<div class="content">
-					<ul>
-						<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
-						<li class="updated_on"><label>Updated on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
-						<li class="last_online"><label>Last Online</label><? echo ( $$variable{'User'}->last_logged_in() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->last_logged_in() ) ) : 'never'; ) ?></li>
-					</ul>
-				</div>
-			</fieldset>
-		</div>
+		<!--#include virtual="_statistics.html"-->
 		<!--#include virtual="_user_profile_view.html"-->
 		</div>
 				
 		<div class="rightColumn">
+			<div class="Relationships">
+				<fieldset><legend>Relationships</legend>
+					<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
+				</fieldset>
+			</div>
 			<div id="Events">
 				<fieldset><legend>Events</legend>
 					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
@@ -110,11 +111,12 @@
 								} # end if
 								my $html;
 								foreach my $Event ( @Events ) {
-									$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+									$html .= sprintf(q`<li><a class="thumbnail" href="/event/view.html?event_id=%1$d"><img src="%4$s" alt="%5$s"/></a><a href="/event/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
 										$Event->id(), $Event->name(), 
 										Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
 										$Event->Asset()->thumbnail_url(),
-	);
+										( $Event->Asset()->caption() ? $Event->Asset()->caption() : $Event->name() ),
+										);
 								} # end foreach Event
 								return $html;
 							) ?>
@@ -122,14 +124,6 @@
 					</div>
 				</fieldset>
 			</div>
-			<div class="Relationships">
-				<fieldset><legend>Relationships</legend>
-					<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>
-				</fieldset>
-			</div>
 		</div>
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 	</div><!--UserProfile-->
-<? else ( $session{'user_id'} ) ?>
-You must be logged in to view user profiles.<br/>
-<? endif ( $session{'user_id'} ) ?>

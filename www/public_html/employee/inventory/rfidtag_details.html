@@ -43,7 +43,7 @@
 		<? echo (
 		my $html = '';
 		if ( $$variable{'Tags'} and @{$$variable{'Tags'}} ) {
-			$html .= 'The following tags matched the given id:<br/>';
+			$html .= 'The following tags matched the given id<br/>';
 			foreach my $Tag ( @{$$variable{'Tags'}} ) {
 				$html .= sprintf('<a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $Tag->id() );
 			} # end foreach Tag
@@ -67,7 +67,7 @@
 		<? if ( $$variable{'RFIDTag'}->id() ) ?>
 			<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 			<p>
-				<label>Created:</label>
+				<label>Created</label>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'RFIDTag'}->created_on() ) {
@@ -77,7 +77,7 @@
 				) ?>
 			</p>
 			<p>
-				<label>Last Updated:</label>
+				<label>Last Updated</label>
 				<? echo (
 					my $html;
 					if ( $$variable{'RFIDTag'}->updated_on() ) {
@@ -88,11 +88,11 @@
 			</p>
 		<? else ( $$variable{'RFIDTag'}->id() ) ?>
 			<p>
-				<label>ID:</label>
+				<label>ID</label>
 				<input type="text" name="rfidtag_id" />
 			</p>
 		<? endif ( $$variable{'RFIDTag'}->id() ) ?>
-			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type:</label>
+			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type</label>
 				<select id="type_id" name="type_id" onchange="$('type').value='';">
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType->find('order'=>'lower(name)' ) ], $$variable{'RFIDTag'}->type_id() ); ) ?>
@@ -101,7 +101,7 @@
 			</p>
 			<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 			<p>
-				<label for="skid_id">Skid #:</label>
+				<label for="skid_id">Skid #</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
 					my @Skids = openprint::Skid->find('rfidtag_id'=>$$variable{'RFIDTag'}->id(),'deleted'=>[0,1]);
@@ -122,7 +122,7 @@
 			</p>
 			<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 			<p>
-				<label>Location:</label>
+				<label>Location</label>
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
@@ -155,7 +155,7 @@
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 	<fieldset><legend>Location Log</legend>
 		<p>
-			<label>Date Filter:</label>
+			<label>Date Filter</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'start', sprintf('%.4d-%.2d-%.2d', @param{'start_year','start_month','start_day'} ),  q`LoadContent('Log','_rfidtag_log.html', $('f2').serialize() );` ); ) ?>
 			to 

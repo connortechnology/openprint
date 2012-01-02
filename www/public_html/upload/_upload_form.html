@@ -16,11 +16,11 @@
 			<hr class="legendUnderline" />
 			<div style="width: 48%; float: left;">
 				<p>
-					<label for="txtCompanyName">Company:</label>
+					<label for="txtCompanyName">Company</label>
 					<input type="text" id="txtCompanyName" name="txtCompanyName" />
 				</p>
 				<p>
-					<label for="txtAddress1">Address:</label>
+					<label for="txtAddress1">Address</label>
 					<input type="text" id="txtAddress1" name="txtAddress1" />
 				</p>
 				<p>
@@ -28,21 +28,21 @@
 					<input type="text" id="txtAddress2" name="txtAddress2" />
 				</p>
 				<p>
-					<label>Postal Code:</label>
+					<label>Postal Code</label>
 					<input type="text" id="txtPostalCode" name="txtPostalCode" />
 				</p>
 			</div>
 			<div style="width: 48%; float: right;">
 				<p>
-					<label for="txtContactName">Name:</label>
+					<label for="txtContactName">Name</label>
 					<input type="text" id="txtContactName" name="txtContactName" />
 				</p>
 				<p>
-					<label for="txtEmailAddress">E-mail:</label>
+					<label for="txtEmailAddress">E-mail</label>
 					<input type="text" id="txtEmailAddress" name="txtEmailAddress" />
 				</p>
 				<p>
-					<label for="txtPhoneNumber">Phone #:</label>
+					<label for="txtPhoneNumber">Phone #</label>
 					<input type="text" id="txtPhoneNumber" name="txtPhoneNumber" />
 				</p>
 			</div>
@@ -97,44 +97,44 @@ $log->debug("SEssion: $session{'project_id'} ");
 	} # end if
 ) ?>
 			<p>
-				<label for="txtQuoteNumber">Quote #:</label>
+				<label for="txtQuoteNumber">Quote #</label>
 				<input type="text" id="txtQuoteNumber" name="txtQuoteNumber" value="<?txtQuoteNumber?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
-				<label for="txtQuotedPrice">Quoted Price:</label>
+				<label for="txtQuotedPrice">Quoted Price</label>
 				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
 			<p>
-				<label>Due Date:</label>
+				<label>Due Date</label>
 				<span class="DateSelector">
 					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
 				</span>
 			</p>
 			<p>
-				<label>Size:</label>
+				<label>Size</label>
 				<input type="text" id="Size" name="Size" value="<?Size?>" />
 			</p>
 			<p>
-				<label>Qty:</label>
+				<label>Qty</label>
 				<input type="text" id="Quantity" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 			</p>
 			<p>
-				<label>Stock:</label>
+				<label>Stock</label>
 				<textarea id="Stock" name="Stock" rows="1" cols="" onkeyup="textarea_resize(this);"><?Stock?></textarea>
 			</p>
 			<? if ( $$variable{'txtQuoteNumber'} ) ?>
-				<p><label>Summary:</label>
+				<p><label>Summary</label>
 				<? echo (
 					new openprint::Project( $$variable{'txtQuoteNumber'} )->summary();
 				) ?>
 				</p>
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
-				<label for="txtJobDescription">Description:</label>
+				<label for="txtJobDescription">Description</label>
 				<textarea name="txtJobDescription" rows="1" cols="" onkeyup="textarea_resize(this);"></textarea>
 			</p>
 			<p class="proof_type">
-				<label>Proof Required:</label>
+				<label>Proof Required</label>
 				<select name="proof_type">
 				<option value="">please select proof type</option>
 				<option value="No Proof Required">No Proof Required</option>
@@ -160,7 +160,7 @@ $log->debug("SEssion: $session{'project_id'} ");
 			<table id="fileSelection">
 				<tr>
 					<th width="20">&nbsp;</th>
-					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload:</th>
+					<th width="200" nowrap="nowrap" align="left">Select file(s) to upload</th>
 					<th>Description (optional)</th>
 				</tr>
 				<tr>

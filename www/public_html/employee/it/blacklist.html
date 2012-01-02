@@ -24,7 +24,7 @@ function load_content( form, options ) {
 <form id="f2" name="f2" method="post" action="blacklist.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p>
-			<label>Date Added:</label>
+			<label>Date Added</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/it/blacklist.html', 'created_on_start', { 'with_today' => 1 } ); ) ?>
 			to 
@@ -34,7 +34,7 @@ function load_content( form, options ) {
 			</span>
 		</p>
 		<p>
-			<label>Last Updated:</label>
+			<label>Last Updated</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/employee/it/blacklist.html', 'updated_on_start', { 'with_today' => 1 } ); ) ?>
 			to 

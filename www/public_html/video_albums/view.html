@@ -1,5 +1,6 @@
 <div class="VideoAlbum">
 	<div class="View">
+<? if ( $$variable{'Album'}->can_view() ) ?>
 		<form id="f1" name="f1" action="/video_albums/list.html" enctype="multipart/form-data" method="post">
 			<input type="hidden" name="album_id" value="<? echo ( $$variable{'Album'}->id() ) ?>" />
 			<input type="hidden" name="btnFunction" />
@@ -16,7 +17,7 @@
 			<fieldset>
 				<div class="content">
 					<ul>
-						<li><label>Name:</label><? echo ( $$variable{'Album'}->name() ) ?></li>
+						<li><label>Name</label><? echo ( $$variable{'Album'}->name() ) ?></li>
 					</ul>
 				</div>
 			</fieldset>
@@ -24,5 +25,8 @@
 				<div id="Videos"><!--#include virtual="_videos.html"--></div>
 			</fieldset>
 		</form>
+<? else ( $$variable{'Album'}->can_view() ) ?>
+	You don't have rights to view this album.
+<? endif ( $$variable{'Album'}->can_view() ) ?>
 	</div>
 </div>

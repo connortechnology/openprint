@@ -20,6 +20,8 @@ CREATE TABLE Locations (
 	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),
 	postalcode	text,
 	address		text,
+	latitude	float,
+	longitude	float,
 	PRIMARY KEY (id)
 );
 

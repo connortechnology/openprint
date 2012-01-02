@@ -28,18 +28,13 @@ sub history {
 		$variable{'error'} .= $Event->destroy();
 	} # end if
 
+	_history();
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/event/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/event/history.html', 'created_on_end', '' );
 		ssi::setup_date_select( '/event/history.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
 	} # end if
-	ssi::save_params( '/event/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'company_id', 'category_id' ) );
 } # end sub history
 
 sub _history {
@@ -54,12 +49,7 @@ sub _history {
 } # end sub _history
 
 sub search {
-	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/event/search.html', ( 
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'user_id', 'category_id' ) );
-	} # end if
+	_search();
 	if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
@@ -134,6 +124,8 @@ sub view {
 				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
 			} # end if
 			$parent_id = $param{'country_id'} = $Country->id();
+		} elsif ( $param{'country_id'} ) {
+			$parent_id = $param{'country_id'};
 		} # end if
 		if ( $param{'state'} ) {
 			my $State = openprint::Location->find_one('name_lc'=> lc $param{'state'}, 'type'=>['state','province']);
@@ -142,6 +134,8 @@ sub view {
 				$variable{'error'} .= $State->save({'name'=>$param{'state'}, 'type'=>'state', 'parent_id'=>$param{'country_id'}});
 			} # end if
 			$parent_id = $param{'state_id'} = $State->id();
+		} elsif ( $param{'state_id'} ) {
+			$parent_id = $param{'state_id'};
 		} # end if
 		if ( $param{'city'} ) {
 			my $City = openprint::Location->find_one('name_lc'=> lc $param{'city'}, 'type'=>'city');
@@ -150,9 +144,13 @@ sub view {
 				$variable{'error'} .= $City->save({'name'=>$param{'city'}, 'type'=>'city', 'parent_id'=>$param{'state_id'}});
 			} # end if
 			$parent_id = $param{'city_id'} = $City->id();
+		} elsif ( $param{'city_id'} ) {
+			$parent_id = $param{'city_id'};
 		} # end if
 		if ( $param{'location'} ) {
-			my $Location = openprint::Location->find_one('name_lc'=> lc $param{'location'} );
+			my $Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$param{'location'}),
+				( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
+				);
 			if ( ( ! $Location ) or 
 					( $Location->address() and $param{'address'} and ( $Location->address() ne $param{'address'} ) ) or
 					( $Location->postalcode() and $param{'postalcode'} and ( $Location->postalcode() ne $param{'postalcode'} ) ) or

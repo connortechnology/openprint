@@ -8,13 +8,13 @@
 	<!--#include virtual="/includes/error_reporting.html"-->
 <div class="Performance"><div class="History">
 <form id="f1" name="f1" action="history.html" method="post">
-	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
-			<li><label>Docket:</label>
+			<li><label>Docket</label>
 				<input type="number" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
 			</li>
 			<li>
-                <label>Category:</label>
+                <label>Category</label>
                 <select name="category" id="category" onchange="f1.submit();">
                     <option value="">All</option>
                 <? echo (
@@ -22,7 +22,7 @@
 						) ?>
                 </select>
             </li>
-			<li><label>Equipment:</label>
+			<li><label>Equipment</label>
 			<? echo ( 
 				@{$$variable{'Equipment'}} = ();
 				my @presses = openprint::Equipment->find('category'=>$session{'/employee/performance/history.html?category'},'useinscheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
@@ -41,7 +41,7 @@
 			) ?>
 				</select>
 			</li>
-			<li><label>Operator:</label>
+			<li><label>Operator</label>
 				<select name="operator_id" onchange="load('Results',$('f1'));">
 					<option value="">All</option>
 					<? echo ( 
@@ -54,7 +54,7 @@
 				</select>
 			</li>
 			<li>
-				<label>Shift Start:</label>
+				<label>Shift Start</label>
 				<span class="DateSelectorCT">
 				<? echo ( 
 					ssi::date_select_session( '/employee/performance/history.html', 'starttime_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1,'with_clear'=>1} );
@@ -67,7 +67,7 @@
 				</span>
 			</li>
 			<li>
-			<label>Unreported Shifts:</label>
+			<label>Unreported Shifts</label>
 			<? echo ( ssi::radio( 'unreported', [ 'Y', 'Yes','N', 'No', '', 'Both' ], $session{'/employee/performance/history.html?unreported'}, { 'onclick'=>q`load('Results', $('f1'));` } ); ) ?>
 			</li>
 		</ul>

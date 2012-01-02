@@ -41,13 +41,13 @@
 			$html .= $paper_details;
 		} # end if
 		$html .= '</td>';
-		$html .= '<td width="23%">ID:</td><td width="37%">';
+		$html .= '<td width="23%">ID</td><td width="37%">';
 		$html .= sprintf('<img src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/>', $Paper->id() );
 		$html .= '</td></tr>';
 	} else {
 		$html .= '</td><td width="23%">&nbsp;</td><td width="37%">&nbsp;</td></tr>';
 	} # end if
-	$html .= '<tr height="50%"><td>Total Qty:</td><td style="border: 1px solid black;">';
+	$html .= '<tr height="50%"><td>Total Qty</td><td style="border: 1px solid black;">';
 	if ( my $C = $Skid->Content( new openprint::Paper( $$variable{'paper_id'} ) ) ) {
 		$html .= $$variable{'total_quantity'};
 		$html .= 'lbs' if $Paper->type() eq 'Roll';
@@ -61,7 +61,7 @@
 <? echo ( 
 	my $html;
 	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">` if $param{'docket'};
-	$html .= '<b>Docket:</b>';
+	$html .= '<b>Docket</b>';
 	$html .= qq`<b>$param{docket}</b><br/>`;
 	return $html;
 ) ?>
@@ -73,9 +73,9 @@
 	foreach my $skid_id ( @skids ) {
 		my $Skid = new openprint::Skid( $skid_id );
 		$html .= '<table style="width:100%;">';
-		$html .= qq`<tr><td width="17%"><b>Skid #:</b></td><td width="33%">$skid_id</td>`;
+		$html .= qq`<tr><td width="17%"><b>Skid #</b></td><td width="33%">$skid_id</td>`;
 		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;
-		$html .= '<tr><td style="border: 1px solid black;">Qty:</td><td style="border: 1px solid black;">';
+		$html .= '<tr><td style="border: 1px solid black;">Qty</td><td style="border: 1px solid black;">';
 		if ( my $C = $Skid->Content( $Paper ) ) {
 			$html .= $C->quantity();
 			$html .= 'lbs' if $Paper->type() eq 'Roll';

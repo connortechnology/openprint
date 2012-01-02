@@ -160,21 +160,6 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Assets WHERE id=?', $_[0]{'id'} );
 } # end sub destroy
 
-sub Comments {
-	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = 'openprint::Asset';
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
-
-		return openprint::Comment->find($_[1]);
-	} # end if
-
-	if ( ! defined $_[0]{'Comments'} ) {
-		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>'openprint::Asset', 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
-	} # end if
-	return @{$_[0]{'Comments'}};
-} # end sub Comments
-
 # What gets passed in the form element name
 sub upload {
 	my $upload = $openprint::r->upload($_[0]);

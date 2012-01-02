@@ -99,5 +99,7 @@ CREATE TABLE Papers (
 	fsc_code		text,
 	message			text,
 	parts			integer,
+	in_stock		INTEGER,
+	allocated		INTEGER,
 	PRIMARY KEY (id)
 );

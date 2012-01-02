@@ -10,7 +10,7 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<p id="Turnaround">
-				<label>Turnaround:</label>
+				<label>Turnaround</label>
 				<select name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');">
 			<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 					<option value="5">5 days after approval</option>

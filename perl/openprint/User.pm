@@ -32,6 +32,7 @@ $debug = 1;
 	'lastname'			=>	'lastname',
 	'email'				=>	'email',
 	'phone'				=>	'phone',
+	'extension'			=>	'extension',
 	'mobile'			=>	'mobile',
 	'sms'				=>	'sms',
 	'fax'				=>	'fax',
@@ -175,6 +176,7 @@ sub destroy {
 	sql::execute( $log, $dbh, 'DELETE FROM Project_Log WHERE user_id=?', $$self{'id'} );
 	sql::update( undef, undef, 'barcode_log', ['operator_id=?', $$self{'id'} ], 'operator_id', undef );
 	sql::update( undef, undef, 'barcode_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
+	sql::update( undef, undef, 'skids', ['created_by_id=?',$$self{'id'}], 'created_by_id', undef );
 
 	sql::execute( $log, $dbh, 'DELETE FROM creditapplications WHERE user_id=?', $$self{'id'} );
 	sql::execute( $log, $dbh, 'DELETE FROM helpdesk WHERE user_id=?', $$self{'id'} );
@@ -182,13 +184,17 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM user_profiles WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Message_to WHERE user_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Messages WHERE from_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM User_Relationships WHERE user_id1=? OR user_id2=?', @$self{'id','id'} );
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
-	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
-} # end sub delete
+	(new openprint::Log())->save({'action'=>'Destroy User','note'=>"User ID: " . $$self{'id'}});
+} # end sub destroy
 
 sub next {
 	my $self = shift;
@@ -234,13 +240,11 @@ sub prev {
 	return $_;
 }
 sub Prev {
-	my $self = shift;
-	return new openprint::User( $self->prev(@_) );
+	return new openprint::User( $_[0]->prev(@_) );
 } # end sub Nex
 
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
 sub name {
@@ -284,7 +288,7 @@ sub csr_ids {
 
 sub Groups {
 	if ( $_[0]{'id'} ) {
-    return openprint::UserGroup->find('user_id in'=>$_[0]{id} );
+		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
 	} # end if
 	return ();
 } # end sub Groups
@@ -349,13 +353,20 @@ sub Asset {
 			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
-				$openprint::log->debug("Loading by gender");
+				#$openprint::log->debug("Loading by gender");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile ' . $_[0]->Profile()->Gender() );
 			} # end if
 			if ( ! $_[0]{'Asset'} ) {
-				$openprint::log->debug("Loading by default");
+				#$openprint::log->debug("Loading by default");
 				$_[0]{'Asset'} = openprint::Asset->find_one('name'=>'Default Profile' );
 			} # end if
+			my @Albums = openprint::Photo_Album->find('user_id'=>$_[0]{'id'});
+			foreach my $Album ( @Albums ) {
+				my @Photos = $Album->Photos();
+				if ( @Photos ) {
+					$_[0]{'Asset'} = $Photos[0]->Asset();
+				} # end if
+			} # end foreach Album
 			if ( ! $_[0]{'Asset'} ) {
 				$_[0]{'Asset'} = new openprint::Asset( );
 			} # end if
@@ -365,34 +376,53 @@ sub Asset {
 } # end sub Asset
 
 sub Profile {
-	return new openprint::User_Profile( $_[0]{'id'} );
-}
+	if ( ! exists $_[0]{'Profile'} ) {
+		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
+	} # end if
+	return $_[0]{'Profile'};
+} # end sub Profile
+
+sub icon {
+	if ( ! $_[0]{'icon'} ) {
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->name() );
+	} # end if
+	return $_[0]{'icon'};
+} # end sub icon
 
 sub html {
+	if ( ! $_[0]{'id'} ) {
+		$log->error("called html on user without id".$_[0]->to_string() );
+		return '';
+	} # end if
 	my $User = $_[0];
 	my $Profile = $_[1] ? $_[1] : $_[0]->Profile();
 
 	my $age = 0;
-	if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
-		my @Birthday = split('-', $Profile->Birthday() );
+	my $birthday = $Profile->date_of_birth();
+	if ( $birthday and $birthday ne '--' ) {
+		my @Birthday = split('-', $birthday );
 		$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
 	} # end if
 
 	my $Asset = $User->Asset();
-	$openprint::log->error($Asset->to_string() );
+	my $thumbnail_url = $Asset->thumbnail_url();
 
 	return sprintf(q`
 				<div class="User">
-					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" />
+					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%3$s" alt="%4$s" /></a>
+					<a href="/account/view.html?user_id=%1$d">
 					<div class="Name">%2$s</div>
 					<div class="Details">%5$s %6$s</div>
+					<div class="Tagline">%7$s</div>
 					</a>
 				</div>`,
 				$User->id(), $User->name(),
-				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
 				$age ? $age.' year old' : '',
 				$Profile->Gender() ? $Profile->Gender() : '',
-);
+				$Profile->Tagline(),
+			);
 	return sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%3$s" alt="%4$s" /></a>
@@ -432,18 +462,26 @@ sub AUTOLOAD {
 		} else {
 			return $_[0]{$name};
 		} # end if
-	} else {
+	} elsif ( ! sets::isin( $name, [ 'DESTROY' ] ) ) {
 		my $Profile = $_[0]->Profile();
 		if ( exists $$Profile{'fields'}{$name} ) {
 			if ( @_ > 1 ) {
 				$$Profile{'fields'}{$name} = $_[1];
 			} # end if
 			return $$Profile{'fields'}{$name};
-		} else {
-			$openprint::log->warn("Unknown field in User AUTOLOAD $name");
+		#} else {
+			#$openprint::log->warn("Unknown field in User::AUTOLOAD $name");
 		} # end if
 	} # end if
 } # end sub AUTOLOAD
+
+sub can_edit {
+	return 1 if $openprint::session{'user_id'} == $_[0]{id};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if ( new openprint::User( $openprint::session{'user_id'} )->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	return 1 if new openprint::Company( $_[0]{'company_id'} )->salesrep_id() == $openprint::session{'user_id'};
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

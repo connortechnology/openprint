@@ -1,13 +1,10 @@
-package openprint::QuotedProject;
-@ISA = qw(openprint::Object);
-
 use strict;
-use openprint ();
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+package openprint::QuotedProject;
+our @ISA = qw(openprint::Object);
 
-require sql;
+use openprint ();
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
 require openprint::QuoteLevel;
 
 $debug = 1;
@@ -45,10 +42,6 @@ $serial = 'tbl_quote_details_id_seq';
 	'price3'	=> undef,
 );
 
-sub delete {
-	sql::execute( undef, undef, 'DELETE FROM tbl_quote_details WHERE quote_id=? AND project_id=?', $_[0]{'quote_id'}, $_[0]{'project_id'} );
-} # end sub delete
-
 sub template_id {
 	if ( @_ > 1 ) {
 		$_[0]{'template_id'} = $_[1];
@@ -72,12 +65,11 @@ sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
 sub markup {
-	my ( $self, $qty_index, $new_value ) = @_;
 	if ( @_ == 3 ) {
-		$$self{'markup'.$qty_index} = $new_value;
-		$self->price($qty_index, undef );
+		$_[0]{'markup'.$_[1]} = $_[2];
+		$_[0]->price($_[1], undef );
 	} # end if
-	return $$self{'markup'.$qty_index};
+	return $_[0]{'markup'.$_[1]};
 } # end sub total
 sub price {
 	my ( $self, $qty_index, $new_value ) = @_;

@@ -4,9 +4,9 @@
 	<fieldset><legend>Blacklist Entry</legend>
 		<div class="content">
 			<ul>
-				<li><label>IP:</label> <input type="text" name="ip" id="ip" value="<? echo ( $$variable{'Blacklist'}->ip() ) ?>" /> </li>
-				<li><label>MAC:</label> <textarea name="mac" id="mac"><? echo ( $$variable{'Blacklist'}->mac() ? join("\n", @{$$variable{'Blacklist'}->mac()} ) : '' ) ?></textarea></li>
-				<li><label>Count:</label> <input type="text" name="count" id="count" value="<? echo ( $$variable{'Blacklist'}->count() ) ?>" /> </li>
+				<li><label>IP</label> <input type="text" name="ip" id="ip" value="<? echo ( $$variable{'Blacklist'}->ip() ) ?>" /> </li>
+				<li><label>MAC</label> <textarea name="mac" id="mac"><? echo ( $$variable{'Blacklist'}->mac() ? join("\n", @{$$variable{'Blacklist'}->mac()} ) : '' ) ?></textarea></li>
+				<li><label>Count</label> <input type="text" name="count" id="count" value="<? echo ( $$variable{'Blacklist'}->count() ) ?>" /> </li>
 			</ul>
 		</div>
 		<p class="buttons">

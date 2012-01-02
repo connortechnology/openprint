@@ -1,7 +1,6 @@
-package openprint::StockGroup;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::StockGroup;
+our @ISA = qw(openprint::Object);
 
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'stockgroups';
@@ -11,7 +10,9 @@ $serial = 'stockgroups_id_seq';
 	'id'	=>	'id',
 	'name'=>'name',
 );
-%transforms = ();
+%transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 %defaults = ();
 
 1;

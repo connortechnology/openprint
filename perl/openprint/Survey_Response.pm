@@ -14,18 +14,21 @@ $table = 'survey_responses';
 		'user_id'		=>	'user_id',
 		'question_id'	=>	'question_id',
 		'answer'		=>	'answer',
-		'answer_id'		=>	'answer_id',
+		'answer_ids'		=>	'answer_ids',
 		'created_on'	=>	'created_on',
 );
 
 %defaults = (
-	'created_on'	=>	q`NOW()`,
-	'answer_id'		=>	q`undef`,
+	'created_on'	=>	q`'NOW()'`,
+	'answer_ids'	=>	q`undef`,
 	'company_id'	=>	q`undef`,
 	'survey_id'		=>	q`undef`,
 	'answer'		=>	q`undef`,
-	
 );
+
+sub Answers {
+	return map { $_ ? new openprint::Survey_Answer( $_ ) : () } ( $_[0]{'answer_ids'} ? @{$_[0]{'answer_ids'}} : () );
+} # end sub Answers
 
 1;
 __END__

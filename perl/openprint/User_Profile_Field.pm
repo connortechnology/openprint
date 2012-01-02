@@ -10,11 +10,11 @@ $serial = 'user_profile_fields_id_seq';
 	'id'	=>	'id',
 	'name'	=>	'name',
 	'required'	=>	'required',
-	'searchable'	=>	'searchable',
 	'description'	=>	'description',
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
 	'values'		=>	'values',
+	'searchable'	=>	'searchable',
 	'deleted'		=>	'deleted',
 );
 %transforms = (
@@ -80,25 +80,43 @@ $openprint::log->debug("Done");
 	} elsif ( $Field->type() eq 'state' ) {
 		my $CityField = openprint::User_Profile_Field->find_one('type'=>'city');
 		if ( $CityField ) {
-		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'city' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
-		or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
-			`, $Field->id(),
-			ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>['state','province']), $value ),
-			$CityField->id(),
-			);
+			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'city' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
+					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
+					`, $Field->id(),
+					ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>['state','province']), $value ),
+					$CityField->id(),
+					);
 		} else {
-		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>%2$s</select>
-		or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" />
-			`, $Field->id(),
-			ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>['state','province']), $value ),
-			);
+			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>%2$s</select>
+					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" />
+					`, $Field->id(),
+					ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>['state','province']), $value ),
+					);
 		} # end if
 	} elsif ( $Field->type() eq 'city' ) {
 		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
-		 or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
-`, $Field->id(),
-		ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $value ),
-);
+				or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
+				`, $Field->id(),
+				ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $value ),
+				);
+	} elsif ( $Field->type() eq 'place' ) {
+
+		$openprint::log->debug("Value for place: $value");
+if ( 1 ) {
+		$html .= sprintf(q`<input type="text" id="field-%1$d" name="field-%1$d" value="%2$s"/>
+				<div id="field-%1$d_autocomplete" class="autocomplete" style="display:none;">
+				<script type="text/javascript">
+new Ajax.Autocompleter('field-%1$d','field-%1$d_autocomplete', '_locations.html?type=place', { minChars: 2,afterUpdateElement : getSelectionId } );
+</script>
+`, $Field->id(), new openprint::Location($value)->name() );
+} else {
+
+		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
+				or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );" />
+				`, $Field->id(),
+				ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'place'), $value ),
+				);
+}
 
 	} elsif ( $Field->type() eq 'select-one' ) {
 		$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
@@ -111,7 +129,7 @@ $openprint::log->debug("Done");
 	} elsif ( $Field->type() eq 'number' ) {
 		$html .= sprintf( q`<input type="number" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value );
 	} elsif ( $Field->type() eq 'radio' ) {
-		$html .= ssi::radio( 'field-'.$Field->id(), $Field->values() );
+		$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value );
 	} # end if
 	$html .= "</span></li>\n";
 	return $html;
