@@ -1,10 +1,11 @@
+use strict;
 package openprint::MXML;
 
+require Math::Calc::Units;
 require XML::DOM;
 require openprint::Paper;
 require openprint::Imposition;
 require openprint::Estimating::Printing;
-use strict;
 
 my %runstyles = (
     'Sheet Work', 'Sheetwise',
@@ -56,8 +57,8 @@ sub new {
 	} else {
 	$Product->setAttribute('Type', 'Flat');
 	} # end if
-	$Product->setAttribute('FinishedTrimWidth',Math::Units::convert($$printing_specs{'txtFinalWidth'},'in',$units));
-	$Product->setAttribute('FinishedTrimHeight',Math::Units::convert($$printing_specs{'txtFinalHeight'},'in',$units));
+	$Product->setAttribute('FinishedTrimWidth',Math::Calc::Units::convert($$printing_specs{'txtFinalWidth'}.'in',$units));
+	$Product->setAttribute('FinishedTrimHeight',Math::Calc::Units::convert($$printing_specs{'txtFinalHeight'}.'in',$units));
 	$Product->setAttribute('RequiredQuantity',$P->ordered_quantity());
 
 	my $RGBColor = $ResourcePool->appendChild( $doc->createElement('RGBColor') );
@@ -149,7 +150,7 @@ sub new {
 			$StockNode->setAttribute('Name',$Paper->name());
 			$StockNode->setAttribute('Weight',int($Paper->gsm()));
 			$StockNode->setAttribute('WeightUnit','gsm');
-			$StockNode->setAttribute('Thickness',Math::Units::convert( $Paper->calliper(), 'in', $units) );
+			$StockNode->setAttribute('Thickness',Math::Calc::Units::convert( $Paper->calliper().'in', $units) );
 			$StockNode->setAttribute('Grade',1);
 		} # end if
 
@@ -161,12 +162,12 @@ sub new {
 			$StockSheetNode = $StockNode->appendChild( $doc->createElement( 'StockSheet' ) );
 			$StockSheetNode->setAttribute('ID', 'StockSheet'.$Paper->id() );
 			if ( $Paper->width() > $Paper->height() ) {
-			$StockSheetNode->setAttribute('Width',Math::Units::convert($Paper->width(),'in',$units) );
-			$StockSheetNode->setAttribute('Height',Math::Units::convert($Paper->height(),'in',$units) );
+			$StockSheetNode->setAttribute('Width',Math::Calc::Units::convert($Paper->width().'in',$units) );
+			$StockSheetNode->setAttribute('Height',Math::Calc::Units::convert($Paper->height().'in',$units) );
 			$StockSheetNode->setAttribute('Grain', 'Vertical' );
 			} else {
-			$StockSheetNode->setAttribute('Width',Math::Units::convert($Paper->height(),'in',$units) );
-			$StockSheetNode->setAttribute('Height',Math::Units::convert($Paper->width(),'in',$units) );
+			$StockSheetNode->setAttribute('Width',Math::Calc::Units::convert($Paper->height().'in',$units) );
+			$StockSheetNode->setAttribute('Height',Math::Calc::Units::convert($Paper->width().'in',$units) );
 			$StockSheetNode->setAttribute('Grain', 'Horizontal' );
 			} # end if
 		} # end if
@@ -194,7 +195,7 @@ sub new {
 		} else {
 		$Layout->setAttribute('PrintingMethod', 'OneSided' );
 		} # end if
-		$Layout->setAttribute('PageToBleedGap', Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units ) );
+		$Layout->setAttribute('PageToBleedGap', Math::Calc::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()}.'in',$units ) );
 		$$sig_specs{'txtPressSheetQty'.$P->ordered_quantity_index()} =~ s/(\d*).*/$1/g;
 		$Layout->setAttribute('SheetsRequired', $$sig_specs{'txtPressSheetQty'.$P->ordered_quantity_index()} );
 		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$P->ordered_quantity_index()}, ['Work & Turn','Work & Tumble','Perfecting'] ) ) {
@@ -285,7 +286,7 @@ sub addPage {
 	$Page->setAttribute('Number',$page);
 	$Page->setAttribute('Folio',$page);
 	foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
-		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'Bleed'.$bleed} ? Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units) : 0 );
+		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'Bleed'.$bleed} ? Math::Calc::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()}.'in',$units) : 0 );
 	} # end foreach bleed
 	foreach my $colour ( @{$$Colors{$side}} ) {
 		my $InkNode = openprint::JDF::getNode( $doc, 'Ink', 'ID'=>'Ink'.$colour );

@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
+use strict;
 
 package openprint::Estimating::Printing;
 my $threading = 0;
@@ -31,7 +32,6 @@ my $use_filtered_imposition_cache = 0;
 
 my %stitching_cache;
 
-use strict;
 #use warnings;
 use POSIX qw(ceil);
 use openprint ();

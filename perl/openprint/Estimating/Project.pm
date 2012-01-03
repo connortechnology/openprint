@@ -1,3 +1,4 @@
+use strict;
 package openprint::Estimating::Project;
 
 use openprint ();
@@ -7,7 +8,6 @@ use vars qw( $r $log $dbh %session );
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
-use strict;
 
 require sql;
 require openprint::account;

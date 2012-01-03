@@ -1,39 +1,27 @@
+use strict;
 package openprint::www;
 
 #use Benchmark;
 #use diagnostics;
 
-use strict;
 use Apache2::Request ();
 use Apache2::RequestRec ();
 use APR::URI ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log ();
-use Apache2::ServerUtil ();
-use Apache2::RequestIO ();
-use Apache::Session::Postgres ();
-use Apache2::Cookie ();
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-require openprint::quote;
-require openprint::main_quote;
 require openprint::login;
-
-require openprint::print;
-require openprint::print_project;
-require openprint::Estimating::Proofs;
 require openprint::usergroup;
 require openprint::Page_Setting;
-
-require openprint::logs;
 
 require sql;
 require misc;
 require ssi;
 require configuration;
 
-use openprint::Object ();
-use openprint::Currency ();
+require openprint::Object;
+require openprint::Currency;
 
 use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
@@ -46,12 +34,9 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
 *r = \$openprint::r;
 
 sub handler {
-	%variable = ();
-	%param = ();
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
@@ -62,9 +47,10 @@ sub handler {
 	$log	= $r->log;
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
-	foreach my $key ( sort sets::union( $r->param ) ) {
+	foreach my $key ( $r->param ) {
+	#foreach my $key ( sets::union( $r->param ) ) {
 		my @values = $r->param($key);
-		next unless scalar @values;
+		#next unless scalar @values;
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
 			#$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
@@ -91,10 +77,10 @@ sub handler {
 
 	my $lastpage = '';
 	my $page = $r->uri();
-	if ( $page =~ /.html/ ) {
-		$r->content_type('text/html');
-	} elsif ( $page =~ /.json/ ) {
-		$r->content_type('text/javascript');
+	if ( $page =~ /\.html/ ) {
+		$r->content_type(q{text/html; charset=utf-8});
+	} elsif ( $page =~ /\.json/ ) {
+		$r->content_type(q{text/javascript; charset=utf-8});
 	} # end if
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
@@ -241,22 +227,18 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if
 	} # end if
 
-	if ( 0 ) {
-		foreach my $key ( keys %openprint::session ) {
-			$log->debug("Session $key => $openprint::session{$key}");
-		} # end foreach
-	} # end if
-
 	if ( $dbh ) {
 		$session{'lastupdated'} = time;
 		untie %session;
 		$dbh->disconnect();
 	} # end if
-	$log->debug( "Elapsed seconds: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::pricing::clear_cache();
 	openprint::service::init_cache();
 	openprint::Object::init_cache();
+	%variable = ();
+	%param = ();
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -299,13 +281,15 @@ $openprint::log->debug("Getfile");
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 		} elsif ( $first ) {
-			my $path = 'openprint::'.join('_',@path);
-			eval( "require $path;");
-$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			$log->debug("Calling $path :: $proc");
-			$path->$proc( $r, $log, $dbh, \%variable );
-#$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+			if ( $proc ) {
+				my $module = join('_',@path);
+				eval {
+					require "openprint/$module.pm";
+					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
+				};
+				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+			} # end if
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -315,6 +299,8 @@ $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 		} # end if
 
 		if ( $second eq 'proj' ) {
+			require openprint::print;
+			require openprint::print_project;
 			require openprint::employee_production;
 			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
 			@variable{'ProjectIndex','ServiceIndex','OrderID'} = @param{'ProjectIndex','ServiceIndex','OrderID'};
@@ -384,30 +370,32 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 			$variable{'Redirect'} = $config{'errorpage'};
 			return;
 		} else {
-			eval( 'require openprint::'.join('_', @path ) );
-$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+			if ( $proc ) {
+				my $module = join('_',@path);
+				eval {
+					require "openprint/$module.pm";
+					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
+				};
+				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+			} # end if
 		} # end if
-	} elsif ( $first eq 'content' ) { # main
-		eval( 'require openprint::'.join('_', @path ) );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
-	} elsif ( $first eq 'account' ) {
-		eval( 'require openprint::'.join('_', @path ) );
-		if ( $@ ) {
-		$log->error( "www.pm[397] Eval error of require, Reason: " . $@ );
-		$log->error( "Of: " . 'require openprint::'.join('_', @path ) );
-		} # end if
-		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-		eval( 'openprint::'.join('_',@path).'::'.$proc.'();' );
-		$log->error( "www.pm[400] Eval error of ($proc), Reason: " . $@ ) if $@;
+	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			if ( $proc ) {
+				my $module = join('_',@path);
+				$log->debug("Calling $module :: $proc");
+				eval {
+					require "openprint/$module.pm";
+					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
+				};
+				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+			} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
+			require openprint::print;
 			require openprint::main_project;
+			require openprint::print_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( $param{'ServiceIndex'} and ! $variable{'ServiceIndex'} ) {
 					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
@@ -464,6 +452,7 @@ $variable{'ServiceIndex'} = $service_index;
 					if ( $filename eq 'scanning.html' ) {
 						openprint::Estimating::Scanning::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename eq 'proofs.html' ) {
+						require openprint::Estimating::Proofs;
 						openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 
@@ -532,26 +521,28 @@ $log->debug("after third");
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'docket_sheet.html';
 			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 	if $filename eq 'reuse.html';
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
-			my $module = 'openprint::' . join('_', ($first, $second )	);
-			eval( "require $module;" );
-			$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			if ( $proc ) {
-				eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-				$log->error( "Eval error of ($proc), Reason: " . $@ )  if $@;
+				my $module = 'openprint::' . join('_', ($first, $second));
+				eval{ 
+					require "$module";
+					$module->$proc( $r, $log, $dbh, \%variable );
+				};
+				$log->error( "Eval error of ($module $proc), Reason: " . $@ )  if $@;
 			} # end if
 		} # end if main:$second
 
 	} else {
 		if ( $first and -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
-			my $module = 'openprint::' . lc $first;
-			$module .= '_'.$second if $second;
-			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
 			if ( $proc ) {
-				eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-				$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+				my $module = 'openprint::' . lc $first;
+				$module .= '_'.$second if $second;
+				eval{
+					require $module; 
+					$module->$proc( $r, $log, $dbh, \%variable );
+				};
+				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 	} # end if $first

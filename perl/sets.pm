@@ -19,7 +19,7 @@ sub isin {
 			return 1 if $thing eq $var;
 		} # end if
 	} elsif ( @_ > 1 ) {
-		foreach $_ (@_) {
+		foreach (@_) {
 			return 1 if $_ eq $var;
 		} # end foreach
 	} # end if
