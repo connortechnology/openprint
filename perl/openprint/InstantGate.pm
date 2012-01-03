@@ -1,6 +1,7 @@
 use strict;
 package openprint::InstantGate;
 
+use Math::Calc::Units ();
 use openprint ();
 my $debug = 1;
 
@@ -69,12 +70,12 @@ sub create_job_file {
 		print FH "\n";
 		print FH sprintf("[Prod%3d]\n", $prod_id );
 		#print FH, sprintf("ProdNo=\%d\n", $Project->id() );
-		print FH sprintf("Width=\%d\n", Math::Units::convert($Paper->width(),'in','mm') );
-		print FH sprintf("Height=\%d\n", Math::Units::convert($Paper->height(),'in','mm') );
+		print FH sprintf("Width=\%d\n", Math::Calc::Units::convert($Paper->width().'in','mm') );
+		print FH sprintf("Height=\%d\n", Math::Calc::Units::convert($Paper->height().'in','mm') );
 		print FH sprintf("PaperNameShort=\%s\n", $Paper->name() );
 		print FH sprintf("PaperTypeName=\%s\n", $Paper->finish() );
 		print FH sprintf("PaperGrammage=\%d\n", $Paper->gsm() );
-		print FH sprintf("PaperVolume=\%s\n", (Math::Units::convert($Paper->calliper(),'in','mm')/$Paper->gsm())*1000 );
+		print FH sprintf("PaperVolume=\%s\n", (Math::Calc::Units::convert($Paper->calliper().'in','mm')/$Paper->gsm())*1000 );
 		print FH "\n";
 		print FH sprintf("[Job%3d]\n", $prod_id );
 		print FH sprintf("JobNo\n", $prod_id );
