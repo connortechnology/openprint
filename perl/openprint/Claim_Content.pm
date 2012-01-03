@@ -1,8 +1,7 @@
-package openprint::Claim_Content;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+package openprint::Claim_Content;
+our @ISA = qw(openprint::Object);
+
 use openprint ();
 use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -55,6 +54,8 @@ $serial = 'claim_contents_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::Claim_Content';
+	shift @_ if ref $_[0] eq 'openprint::Claim_Content';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

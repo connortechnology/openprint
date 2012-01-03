@@ -85,7 +85,7 @@ sub delete {
 		} # end if
 		$S->save({'manifestcontent_id'=>undef});
 	} # end foreach
-	$_[0]::SUPER->delete();
+	$_[0]->SUPER::delete();
 } # end sub delete
 1;
 __END__

@@ -53,6 +53,13 @@ require openprint::Payment;
 	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
 	);
+
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	if ( $_[0] eq 'openprint::Order' ) {
 		shift;

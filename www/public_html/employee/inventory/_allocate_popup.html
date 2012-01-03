@@ -11,7 +11,7 @@
 				if ( $param{'skid_id'} ) {
 					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 						my $Skid = new openprint::Skid( $skid_id );
-						if ( my $C = $Skid->Content( $$variable{'Paper'}) ) {
+						if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
 							$$variable{'available'} += $C->allocateable();
 							$html .= sprintf('skid %d contains: %s available: %s<br/>', $skid_id, 
 								Number::Format::format_number($C->quantity()).$$variable{'Paper'}->units(), 
@@ -27,19 +27,19 @@
 			</p>
 			<p>
 				<label>Docket:</label>
-				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+				<input type="number" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
 				<label>Project:</label>
-				<input type="text" name="Project" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+				<input type="number" name="Project" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 			</p>
 			<p>
 				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
 				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
 				<input type="hidden" name="available_quantity" value="<?available?>"/>
-				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D\-/g,'');"/>
+				<input type="number" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>
