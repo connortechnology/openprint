@@ -24,7 +24,7 @@ require openprint::Object;
 require openprint::Currency;
 
 use openprint ();
-use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
+use vars qw( $r %variable %session %param %config $log $dbh %page_settings $starttime );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
@@ -41,7 +41,7 @@ sub handler {
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
 
-	my $starttime = gettimeofday();
+	$starttime = gettimeofday();
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;

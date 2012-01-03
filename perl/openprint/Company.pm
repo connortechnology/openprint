@@ -268,13 +268,13 @@ sub dropdown {
 	} # end if
 	$sql .= ' ORDER BY lower(name)';
 
-	my @company = sql::execute( undef, undef, $sql, @values );
-	return \@company;
+	my $companies = sql::execute_array( undef, undef, $sql, @values );
+	return $companies;
 } # end sub dropdown
 
 sub get_dropdown {
 	my $companies = dropdown( $_[1] ? $_[1] : () );
-	return ssi::make_drop_down( $companies, $_[0] );
+	return $companies ? ssi::make_drop_down( $companies, $_[0] ) : '';
 } # sub get_dropdown
 
 sub CSR {

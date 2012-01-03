@@ -1,13 +1,10 @@
+use strict;
 package sql;
-require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw(open_sql sql_statement update insert run_query execute );
 
 # Provides some utility functions for doing SQL queries
 
-use DBI;
+use DBI ();
 use Time::HiRes qw{ gettimeofday tv_interval }; 
-use strict;
 
 use vars qw( $log $dbh $debug $timing );
 use openprint ();
@@ -34,7 +31,7 @@ sub open_sql {
 	return $new_dbh;
 } # end sub open_sql
 
-sub execute {
+sub execute_array {
 	my ( $l, $d, $sql, @values ) = @_;
 	my @return_array = ();
 	my $print_sql = $sql;
@@ -77,8 +74,13 @@ sub execute {
 		} # end if
 	} # end if
 
-	return @return_array;
-} # end sub execute
+	return \@return_array;
+} # end sub execute_array
+
+sub execute {
+	my $results = execute_array(@_);
+	return $results?@{$results}:();
+}
 
 
 sub run_query {

@@ -16,8 +16,8 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-my $debug = 0;
-my $debug_all = 0;
+my $debug = 1;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -100,6 +100,7 @@ sub load {
 	my $fields = eval '\%'.$type.'::fields';
 	my $debug = eval '$'.$type.'::debug';
 	$debug = $debug_all if ! $debug;
+	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
 		my $table = eval '$'.$type.'::table';
 		if ( ! $table ) {
@@ -122,8 +123,8 @@ sub load {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
-		#} elsif ( $debug ) {
-			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
+		} elsif ( $debug ) {
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
