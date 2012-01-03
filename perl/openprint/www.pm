@@ -4,20 +4,19 @@ package openprint::www;
 #use diagnostics;
 
 use strict;
-use Apache2::Request;
+use Apache2::Request ();
 use Apache2::RequestRec ();
-use APR::URI;
+use APR::URI ();
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
-use Apache2::Log;
+use Apache2::Log ();
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
-use Apache::Session::Postgres;
-use Apache2::Cookie;
+use Apache::Session::Postgres ();
+use Apache2::Cookie ();
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 require openprint::quote;
 require openprint::main_quote;
-
 require openprint::login;
 
 require openprint::print;
@@ -33,10 +32,10 @@ require misc;
 require ssi;
 require configuration;
 
-use openprint::Object;
-use openprint::Currency;
+use openprint::Object ();
+use openprint::Currency ();
 
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh %page_settings );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
