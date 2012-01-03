@@ -9,13 +9,12 @@ use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %trans
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-use openprint::Currency;
-use openprint::ProjectType;
-use openprint::Company;
-use openprint::Order;
-use openprint::logs;
+require openprint::Currency;
+require openprint::ProjectType;
+require openprint::Company;
+require openprint::Order;
+require openprint::logs;
 require openprint::print;
-require Math::Units;
 
 require sql;
 require openprint::JDF;

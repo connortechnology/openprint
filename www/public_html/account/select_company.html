@@ -35,42 +35,7 @@
 			</table>
 		</fieldset>
 	<? else ( $param{'ddmCompany'} ) ?>
-	<br/>
-	You are currently representing <? echo ( $$variable{'Company'}->name(); ) ?>.<br/>
-	To represent another company, please select it from the dropdown and click submit. <br/>
-	Any orders or quotes you make will be recorded in the selected company's history.<br/>
-	<form id="f1" name="f1" action="select_company.html" method="post">
-		<fieldset class="SelectCompany">
-			<ul>
-			<li>
-				<label>Company</label>
-				<input name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
-				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-					<option value="">Select a Company</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
-				</select>
-				<? echo ( ssi::button( 'Submit', { 'onclick'=>'f1.submit();' } ); ) ?>
-			</li>
-			<li><label>Last 10</label>
-		<? echo ( 
-			my $html = '';
-			my @Entries = openprint::Log->find('user_id'=>$session{'user_id'}, 'action'=>'Select Company', 'order'=>'date_time DESC','date_time >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 ) ) );
-			my @companies;
-			foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {
-				next if sets::isin( $Log->company_id(), \@companies );
-				push @companies, $Log->company_id();
-				$html .= sprintf('<a href="/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
-					$Log->company_id(), $Log->Company()->name(),
-				);
-			} # end foreach
-			return $html;
-			) ?>
-			</li>
-			</ul>
-		</fieldset>
-		<input type="hidden" name="btnFunction" value="SelectCompany"/>
-	</form>
-	<script type="text/javascript">document.f1.CompanyFilter.focus();</script>
+	<!--#include virtual="_select_company.html"-->
 	<? endif ( $param{'ddmCompany'} ) ?>
 <? endif ( sets::isin( $session{'user_type'},['E','A'] ) ) ?>
 
