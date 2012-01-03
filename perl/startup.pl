@@ -1,7 +1,7 @@
 #!/usr/bin/perl 
-use 5.10.0;
 
 BEGIN {
+	use 5.10.0;
 	use utf8;
 	use threads;
 	use threads::shared;
