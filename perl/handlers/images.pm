@@ -64,14 +64,14 @@ sub handler {
 					if ( $can_view ) {
 						$r->sendfile( $Asset->on_disk_path() );
 					} else {
-						$return_code = Apache2::Const::FORBIDDEN;
+						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
 					# No album means has to be an article image, or a generic site image.
 					$r->sendfile( $Asset->on_disk_path() );
 				} # end if
 			} else {
-				$return_code = Apache2::Const::NOT_FOUND;
+				$return_code = Apache2::Const::HTTP_NOT_FOUND;
 			} # end if
 		} # end if
 

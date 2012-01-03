@@ -45,10 +45,7 @@ sub edit {
 		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
-		if ( $variable{'error'} .= $variable{'Payment'}->save(\%param) ) {
-			$variable{'Redirect'} = '/payment/history.html';
-			delete $param{'btnFunction'};
-		} # end if
+		$variable{'error'} .= $variable{'Payment'}->save(\%param);
 	} # end if
 } # end sub edit
 

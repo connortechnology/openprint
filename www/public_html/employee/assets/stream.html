@@ -23,18 +23,18 @@ Vote on these pictures to say whether you think each one is a &quot;do&quot; or 
 				'id not in'=>[ map { $_->object_id() } @Likes ],
 				'id in' => [ map { $_->asset_id() } $DoDont->Photos() ],
 			);
+		if ( $Asset ) {
 
-		my $html .= sprintf('<input type="hidden" name="asset_id" value="%d"/><img src="%s" alt=""/>', $Asset->id(), $Asset->url(), $Asset->caption() );
-		return $html;
-	) ?>
-	<p class="buttons">
-		<? echo ( 
+		return sprintf('<input type="hidden" name="asset_id" value="%d"/><img src="%s" alt=""/><p class="buttons">%s</p>',
+			$Asset->id(), $Asset->url(), $Asset->caption(),
 			join('',
 				ssi::button( 'Do', { 'onclick'=>q`f1.elements['action'].value='Do';f1.submit();` } ),
 				ssi::button( 'Dont', { 'onclick'=>q`f1.elements['action'].value='Dont';f1.submit();` } ),
-			);
-		) ?>
-	</p>
+			) );
+		} else {
+		return 'No more images to rate.';
+		} # end if
+	) ?>
 </form>
 </div>
 </div>
