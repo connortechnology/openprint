@@ -3,8 +3,6 @@ package openprint::Claim_Content;
 our @ISA = qw(openprint::Object);
 use Math::Calc::Units ();
 
-require openprint::Object;
-
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::Claim_ContentType;

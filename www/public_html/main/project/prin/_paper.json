@@ -6,7 +6,7 @@
 	my $ProjectType = $param{'projecttype_id'} ? new openprint::ProjectType( $param{'projecttype_id'} ) : $Project->Type();
 	my @options = misc::trim( split(',', $config{$ProjectType->name().'StockOptions'} ));
 	@options = misc::trim( split(',', $config{'StockOptions'} )) if ! @options;
-	@options = ( 'Name','Finish','Colour','Weight' ) if ! @options;
+	@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 
 	my %find = (
 		'width is null' => 0,

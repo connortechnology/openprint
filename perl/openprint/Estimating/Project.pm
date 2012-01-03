@@ -208,7 +208,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 	my @StockOptions = misc::trim(split (',', $openprint::config{$Project->Type()->name().'StockOptions'} ) );
 	@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
-	@StockOptions = ( 'Name','Finish','Colour','Weight' ) if ! @StockOptions;
+	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {

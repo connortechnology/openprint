@@ -40,9 +40,11 @@ function calc( formName, force ) {
 	} // end if
 
 	if ( gettingNewPrice && ! force ) {
-		setTimeout("calc('"+formName+"');", 1000 );
+		if ( timeout ) clearTimeout( timeout );
+		timeout = setTimeout("calc('"+formName+"');", 1000 );
 		return;
 	} // end if
+	timeout = null;
 	gettingNewPrice = true;
 	var h = $H(form.serialize(true));
 	h.set( 'ServiceType', 'Project' );
