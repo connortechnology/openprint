@@ -18,7 +18,11 @@ table .inventory {
 	text-align: left;
 	width: 200px;
 }
-table .buttons {
+table .condition {
+	text-align: left;
+	width: 100px;
+}
+table.List .buttons {
 	width: 60px;
 }
 table .mweight, table .gsm {
