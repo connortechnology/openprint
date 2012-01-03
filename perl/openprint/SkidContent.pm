@@ -145,6 +145,10 @@ sub condition {
     return $$self{'condition'};
 } # end sub condition
 
+sub Condition {
+	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
+} # end sub Condition
+
 # Looks to find a PO matching this stock and pulls the value from it.
 sub cost {
 	my $self = $_[0];

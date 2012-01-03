@@ -6,7 +6,23 @@
 		<fieldset><legend>Allocate Paper</legend>
 			<p>
 			<? echo ( 
+				require openprint::Claim_Content;
 				my $html = '';
+				if ( $$variable{'Paper'}->Quality()->message() ) {
+					$html .= '<div class="warning">'.$$variable{'Paper'}->Quality()->message().'</div>';
+				} # end if
+				my @SkidContents = openprint::SkidContent->find('paper_id'=>$$variable{'Paper'}{'id'}, 'quantity >'=>1 );
+				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{'id'} } @SkidContents ] );
+				if ( @ClaimContents ) {
+					$html .= join('', 
+						map { 
+						sprintf('skid %d is included in <a href="/employee/claims/view.html?claim_id=%d">claim %d</a>', @$_{'skid_id','claim_id','claim_id'} );
+						} @ClaimContents
+						);
+				} # end if
+				foreach my $SkidContent ( @SkidContents ) {
+					$html .= 'Skid '.$$SkidContent{'skid_id'}.' is in ' . $SkidContent->Condition()->name() . ' condition. ' . $SkidContent->Condition()->message().'<br/>';
+				} # end foreach
 				$$variable{'available'} = 0;
 				if ( $param{'skid_id'} ) {
 					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {

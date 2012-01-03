@@ -22,7 +22,7 @@ table .condition {
 	text-align: left;
 	width: 100px;
 }
-table .buttons {
+table.List .buttons {
 	width: 60px;
 }
 table .mweight, table .gsm {
