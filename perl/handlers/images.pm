@@ -1,23 +1,19 @@
+use strict;
 package handlers::images;
 
-use strict;
-use Apache2::Request;
+use Apache2::Request ();
 use Apache2::RequestRec ();
-use APR::URI;
 use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
-use Apache2::Log;
-use Apache2::ServerUtil ();
-use Apache2::RequestIO ();
+use Apache2::Log ();
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 require sql;
 require configuration;
 require openprint::Photo_in_Album;
 require openprint::Asset;
+require openprint::Object;
 
-use openprint::Object;
-
-use openprint;
+use openprint ();
 use vars qw( $r %session %config $log $dbh );
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -79,7 +75,7 @@ sub handler {
 		untie %session;
 		$dbh->disconnect();
 	} # end if
-	$log->debug( "Elapsed seconds: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	return $return_code;
 } # end sub handler
