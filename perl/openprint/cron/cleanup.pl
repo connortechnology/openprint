@@ -27,7 +27,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $r;
-$log = logger->new('warn');
+$log = logger->new('debug');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -80,7 +80,6 @@ if ( 1 ) {
 			'limit'		=>	1000,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'uncalculated' ) {
@@ -101,12 +100,11 @@ if ( 1 ) {
 			} # end if
 			$Project->delete();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 
 	@Projects = openprint::Project::find(
 			'status'=>'Unordered',
-			'order'=>'index',
+			'order'=>'index desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'limit'		=>	1000,
@@ -114,7 +112,6 @@ if ( 1 ) {
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
 				$log->error('Quoted!' . $Project->id());
@@ -134,7 +131,6 @@ if ( 1 ) {
 			} # end if
 			$Project->delete();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project::find(
 			'status'=>'Deleted','order'=>'index desc',
@@ -144,7 +140,6 @@ if ( 1 ) {
 			'quote_id exists'	=>	0,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Deleted' ) {
@@ -158,7 +153,6 @@ if ( 1 ) {
 			} # end if
 			$Project->destroy();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
 } # end if 1
 if ( 1 ) {
