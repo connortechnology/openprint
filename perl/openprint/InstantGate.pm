@@ -1,5 +1,5 @@
-package openprint::InstantGate;
 use strict;
+package openprint::InstantGate;
 
 use openprint ();
 my $debug = 1;

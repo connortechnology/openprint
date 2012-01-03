@@ -1,15 +1,13 @@
 package misc;
+use strict;
 require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
+our @ISA = qw(Exporter);
+our @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
 
-use Text::CSV_XS;
+use Text::CSV_XS ();
 use Date::Calc qw(Add_Delta_Days);
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
-
-use strict;
+use Mail::Sendmail ();
 use openprint ();
 
 sub send_email_with_attached_files {
@@ -68,7 +66,7 @@ sub send_email_with_attachment {
 
 	# Signal end of attachments
 	$$mail{BODY} .= "$boundary--\n\n";
-	sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
 } # end sub send_email_with_attachment
 
 # Loads the specified file and returns it.	Returns undef on failure.
@@ -200,7 +198,7 @@ sub get_url {
 
 sub sum {
 	my $sum = 0;
-	foreach $_ ( @_ ) {
+	foreach ( @_ ) {
 		$sum += $_;
 	} # end foreach
 	return $sum;
