@@ -7,13 +7,13 @@
         new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
                 method:'get',
                 parameters: {
-                    invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
                         method:'get',
-                        parameters: { invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
                         } );
                 },
                 onFailure: function(transport) {
@@ -25,13 +25,13 @@
         new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
                 method:'get',
                 parameters: {
-                    invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?>,
+                    invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
                         method:'get',
-                        parameters: { invoice_id<? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
                         } );
                 },
                 onFailure: function(transport) {

@@ -51,34 +51,37 @@ function SpecialColour_onchange( element, side, index, signature ) {
 					}
 			} );
 		} else {
-			filter_colours(side,signature);
+			if ( type != 'PMS' ) {
+				// Remove the selected type from the dropdodwns of the other special colours
+				filter_colours(side,signature);
+			} // end if
 		} // end if
-	} else {
-		element.form.elements['chk'+spec].checked=false;
+	} else { // type == ''
+		if ( element.name != 'chk'+spec ) 
+			element.form.elements['chk'+spec].checked=false;
 
-		if ( type != 'PMS' ) {
-			for ( var i = 1; i < 10; i += 1 ) {
-				if ( i == index ) continue;
+		// Nothing is selected for type, so if we just switched off AQ, then we need to add it back to the other 
+		// type dropdowns
+		for ( var i = 1; i < 10; i += 1 ) {
+			if ( i == index ) continue;
 
-				// if the colour exists
-				var t = $('ColourCoatingType'+i+side+signature);
-				if ( t ) {
+			// if the colour exists
+			var t = $('ColourCoatingType'+i+side+signature);
+			if ( ! t ) continue;
 
-					for ( var m = 0; m < type_element.options.length; m += 1 ) {
-						var v = type_element.options[m].value;
-						// see if it is in there
-						if ( ! isin_ddm( t, v ) ) {
-							add_option( t, v, type_element.options[m].text );
-							sort_ddm( t );
-							// need tos ort, add later FIXME
-						} // end if
-					} // end for each colour
+			for ( var m = 0; m < type_element.options.length; m += 1 ) {
+				var v = type_element.options[m].value;
+				// see if it is in there
+				if ( ! isin_ddm( t, v ) ) {
+					add_option( t, v, type_element.options[m].text );
+					sort_ddm( t );
+					// need tos ort, add later FIXME
 				} // end if
-			} // end for each option in type_element
-		} // end if
+			} // end for each colour
+		} // end for each option in type_element
 	} // end if
 
-	if ( (!type) || ( -1 != type.indexOf('Overall') ) ) {
+	if (  -1 != type.indexOf('Overall') ) {
 		$('ColourCoatingCoverage'+index+side+signature).hide();
 	} else {
 		$('ColourCoatingCoverage'+index+side+signature).show();
