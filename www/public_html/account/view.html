@@ -1,3 +1,14 @@
+<script type="text/javascript">
+	function delwall( wall_id ) {
+		new Ajax.Request('_wall.json', { parameters: { wall_id: wall_id, action: 'delete' } } );
+	} // end function delwall
+	function replywall( wall_id ) {
+		var div = $('reply-'+wall_id);
+		if ( ! div ) {
+		new Ajax.Updater('wall-'+wall_id, '_wall_reply.html', { parameters: { user_id: <? echo ( $$variable{'User'}{'id'} ) ?>, wall_id: wall_id }, insertion: Insertion.Bottom } );
+		} // end if
+	} // end function replywall
+</script>
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>

@@ -20,9 +20,11 @@
 			$Wall->datetime_format( 'created_on' ),
 			join('',
 				( $Wall->can_edit() ? (
-				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`new Ajax.Request('_wall.html', { parameters: { wall_id: $$Wall{id}, action: 'delete' }, onSuccess: function() { \$('wall-$$Wall{id}').remove(); } } );`, 'text'=>'X' } ),
+				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`delwall($$Wall{id});`, 'text'=>'X', 'title'=>'Delete' } ),
 				) : () ),
+				ssi::button('replywall'.$Wall->id(), { 'onclick'=>qq`replywall($$Wall{id});`, 'text'=>'R', 'title'=>'Reply' } ),
 			),
+			
 			);
 	} # end foreach Wall
 	return $html;

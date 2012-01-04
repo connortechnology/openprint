@@ -746,6 +746,10 @@ sub _wall {
 	} # end if
 } # end sub _wall
 
+sub _wall_reply {
+	$variable{'User'} = new openprint::User( $param{'user_id'} );
+} # end sub _wall_reply
+
 sub forgotten_password {
 } # end sub forgotten_password
 
