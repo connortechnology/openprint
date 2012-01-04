@@ -737,7 +737,14 @@ sub _wall {
 		$variable{'error'} = $Wall->save({'user_id'=>$param{'user_id'},
 			'author_id'	=>	$session{'user_id'},
 			'message'	=>	$param{'message'},
+			( $param{'reply_to'} ? ('reply_to'=>$param{'reply_to'}) : () ),
 			});
+		if ( $param{'reply_to'} ) {
+			my $Parent = new openprint::Wall( $param{'reply_to'} );
+			if ( ! $Parent->has_replies() ) {
+				$Parent->save({'has_replies'=>1});
+			} # end if
+		} # end if
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $Wall = openprint::Wall->find_one('id'=>$param{'wall_id'});
 		if ( $Wall and $Wall->can_edit() ) {
