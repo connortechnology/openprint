@@ -20,9 +20,24 @@
 						} @ClaimContents
 						);
 				} # end if
+
+				my %Conditions;
 				foreach my $SkidContent ( @SkidContents ) {
-					$html .= 'Skid '.$$SkidContent{'skid_id'}.' is in ' . $SkidContent->Condition()->name() . ' condition. ' . $SkidContent->Condition()->message().'<br/>';
-				} # end foreach
+					push @{$Conditions{$$SkidContent{'condition_id'}}}, $SkidContent if $SkidContent->Condition()->message();
+				} # end foreach SkidContent
+
+				if ( %Conditions ) {
+					$html .= '<div class="warning">';
+					foreach my $condition_id ( keys %Conditions ) {
+						my $Condition = new openprint::InventoryCondition($condition_id);
+						
+						$html .= @{$Conditions{$condition_id}}.
+							($$variable{'Paper'}->type() eq 'Roll' ? ' Roll' : ' Skid').
+							(@{$Conditions{$condition_id}}==1?' is':'s are').' in ' . $Condition->name() . ' condition.<br/>' . $Condition->message().'<br/>';
+					} # end foreach
+					$html .= '</div>Do you still wish to allocate this stock?';
+					$html .= '<div id="Captcha">'.ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ).'</div>';
+				} # end if
 				$$variable{'available'} = 0;
 				if ( $param{'skid_id'} ) {
 					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
@@ -41,28 +56,29 @@
 				return $html;
 			) ?>
 			</p>
-			<p>
+			<ul>
+			<li>
 				<label>Docket:</label>
 				<input type="number" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Project:</label>
 				<input type="number" name="Project" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
-			</p>
-			<p>
-				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+			</li>
+			<li>
+				<label>Quantity: (<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>)</label>
 				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
 				<input type="hidden" name="available_quantity" value="<?available?>"/>
 				<input type="number" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
-				
-			</p>
-			<p>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Quantity.value='';", '', 'Clear' ); ) ?>
+			</li>
+			<li>
 				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
 				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
-			</p>
+			</li>
+</ul>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 

@@ -28,7 +28,7 @@ require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -43,6 +43,7 @@ my @fields = (
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::Paper';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

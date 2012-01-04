@@ -57,3 +57,28 @@ table .RFIDScanner {
 	width: 140px;
 	text-align: left;
 }
+#Allocate fieldset p {
+	padding: 0;
+}
+#Allocate fieldset li {
+padding-left: 100px;
+}
+#Allocate fieldset li label {
+	margin-left: -100px;
+	width: 100px;
+}
+#Allocate fieldset li label.radio {
+	margin-left: 0;
+	width: auto;
+}
+#Allocate input {
+	width: 60px;
+}
+.captcha input {
+	width: 40px;
+}
+.captcha img {
+	height: 24px;
+	vertical-align: middle;
+}
+
