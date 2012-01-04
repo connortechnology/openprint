@@ -86,3 +86,11 @@
     border: 1px solid black;
         }
 
+#send_email_form input,
+#send_email_form textarea {
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	resize: vertical;
+}

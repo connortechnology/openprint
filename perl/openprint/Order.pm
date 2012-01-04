@@ -55,6 +55,7 @@ require openprint::Payment;
 	);
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Order';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
