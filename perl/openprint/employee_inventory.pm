@@ -29,6 +29,7 @@ require openprint::PurchaseOrder_Item;
 require openprint::Label;
 require openprint::Skid;
 require openprint::SkidContent;
+require openprint::Claim_Content;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;

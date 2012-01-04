@@ -6,10 +6,12 @@
 		<fieldset><legend>Allocate Paper</legend>
 			<p>
 			<? echo ( 
-				require openprint::Claim_Content;
 				my $html = '';
+				my $captcha = 0;
+
 				if ( $$variable{'Paper'}->Quality()->message() ) {
 					$html .= '<div class="warning">'.$$variable{'Paper'}->Quality()->message().'</div>';
+					$captcha = 1;
 				} # end if
 				my @SkidContents = openprint::SkidContent->find('paper_id'=>$$variable{'Paper'}{'id'}, 'quantity >'=>1 );
 				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{'id'} } @SkidContents ] );
@@ -35,7 +37,11 @@
 							($$variable{'Paper'}->type() eq 'Roll' ? ' Roll' : ' Skid').
 							(@{$Conditions{$condition_id}}==1?' is':'s are').' in ' . $Condition->name() . ' condition.<br/>' . $Condition->message().'<br/>';
 					} # end foreach
-					$html .= '</div>Do you still wish to allocate this stock?';
+					$html .= '</div>';
+					$captcha = 1;
+				} # end if
+				if ( $captcha ) {
+					$html .= 'Do you still wish to allocate this stock?';
 					$html .= '<div id="Captcha">'.ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ).'</div>';
 				} # end if
 				$$variable{'available'} = 0;
