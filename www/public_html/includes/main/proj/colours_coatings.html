@@ -4,7 +4,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-				$html .= sprintf('<span id="%sSpotColourSideOne%s" class="SpotColour"%s>', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? ' style="display:none;"' :'') );
+				$html .= sprintf('<span id="%1$sSpotColourSideOne%2$ss" class="SpotColour %1$s"%3$s>', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? ' style="display:none;"' :'') );
 				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideOne%2$s" name="chk%1$sSideOne%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideOneCoverages%2$s').show() } else { $('%1$sSpotSideOneCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{'Signature'}, $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? 'checked="checked"' : '' );
 				$html .= sprintf('<label for="chk%1$sSideOne%2$s">', $colour, $$variable{'Signature'} ) . ssi::writeTip($colour) . '</label>';
 				$html .= sprintf('<span id="%1$sSpotSideOneCoverages%2$s" %4$s ><input type="number" id="%1$sSpotSideOneCoverage%2$s" name="%1$sSpotSideOneCoverage%2$s" value="%3$s" onkeyup="calc(this.form.name);" />%</span>', $colour, $$variable{'Signature'}, $$variable{$colour.'SpotSideOneCoverage'.$$variable{'Signature'}}, $$variable{'chk'.$colour.'SideOne'.$$variable{'Signature'}} eq $colour ? '' : 'style="display:none;"'  );
@@ -53,7 +53,7 @@ same as front?
 		<? echo (
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-				$html .= sprintf('<span id="%sSpotColourSideTwo%s" class="SpotColour" style="%s">', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? 'display:none;' :'') );
+				$html .= sprintf('<span id="%1$sSpotColourSideTwo%2$s" class="SpotColour %1$s"%3$s>', $colour, $$variable{'Signature'},($$variable{'PrintingType'} eq 'Digital' ? ' style="display:none;"' :'') );
 				$html .= sprintf(q`<input type="checkbox" id="chk%1$sSideTwo%2$s" name="chk%1$sSideTwo%2$s" value="%1$s" onclick="if ( this.checked ) { $('%1$sSpotSideTwoCoverages%2$s').show() } else { $('%1$sSpotSideTwoCoverages%2$s').hide() } calc(this.form.name);" %3$s />`, $colour, $$variable{'Signature'}, $$variable{'chk'.$colour.'SideTwo'.$$variable{'Signature'}} eq $colour ? 'checked="checked"' : '' );
 				$html .= sprintf('<label for="chk%1$sSideTwo%2$s">', $colour, $$variable{'Signature'} ) . ssi::writeTip($colour) . '</label>';
 				$html .= sprintf('<span id="%1$sSpotSideTwoCoverages%2$s" %4$s ><input type="number" id="%1$sSpotSideTwoCoverage%2$s" name="%1$sSpotSideTwoCoverage%2$s" value="%3$s" onkeyup="calc(this.form.name);" />%</span>', $colour, $$variable{'Signature'}, $$variable{'CyanSpotSideTwoCoverage'.$$variable{'Signature'}}, $$variable{'chk'.$colour.'SideTwo'.$$variable{'Signature'}} eq $colour ? '' : 'style="display:none;"'  );
