@@ -536,11 +536,11 @@ $log->debug("after third");
 		if ( $first and -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
 			if ( $proc ) {
-				my $module = 'openprint::' . lc $first;
+				my $module = lc $first;
 				$module .= '_'.$second if $second;
 				eval{
-					require $module; 
-					$module->$proc( $r, $log, $dbh, \%variable );
+					require "openprint/$module.pm"; 
+					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
 				};
 				$log->warn( "Eval error of ($module $proc), Reason: " . $@ ) if $@;
 			} # end if
