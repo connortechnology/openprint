@@ -1,7 +1,7 @@
-package openprint::employee_inventory;
-use MIME::QuotedPrint;
-use Text::CSV_XS;
 use strict;
+package openprint::employee_inventory;
+use MIME::QuotedPrint ();
+use Authen::Captcha ();
 require sql;
 require misc;
 require openprint::paper;
@@ -115,12 +115,20 @@ sub skids {
 			} # end foreach
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		if ( $param{'skid_id'} ) {
 			$param{'skid_id'} =~ s/[^\d\,]//g;
 			$param{Project} =~ s/\D//g;
 			$param{Docket} =~ s/\D//g;
 			my $Project = openprint::Project->find_one( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
-
 			if ( ! $Project ) {
 				$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 				return;
@@ -415,6 +423,15 @@ sub paper_details {
 			$variable{'information'} .= 'Paper successfully deleted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
@@ -808,6 +825,15 @@ $log->debug("Entering skid $skid_count");
 			$Skid->print_label();
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		foreach my $skid_id ( @skid_ids ) {
 			allocate( $skid_id, @param{'paper_id', 'Quantity','Project','Docket'} );
 		} # end foreach
@@ -1075,7 +1101,7 @@ sub send_paper_arrival_notification {
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
@@ -1565,6 +1591,15 @@ sub available_paper {
 	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
 } # end sub available_paper

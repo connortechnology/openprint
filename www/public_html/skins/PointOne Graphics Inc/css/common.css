@@ -358,6 +358,14 @@ fieldset ul li input[type="text"] {
 	margin-left: -80px;
 	width: 75px;
 }
+.dialog input,
+.dialog textarea {
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	resize: vertical;
+}
 
 fieldset.filters {
 	margin-left: 0px;
