@@ -25,6 +25,8 @@
 				</li>';
 				} 	
 			) ?>
+			<? else ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
+					<input type="hidden" name="ddmUser" value="<? echo ( $session{'user_id'} ) ?>"/>
 			<? endif ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				</ul>
 				<p class="buttons">
