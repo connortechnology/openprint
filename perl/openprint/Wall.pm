@@ -14,11 +14,15 @@ $serial = 'wall_id_seq';
 	'user_id'		=>	'user_id',
 	'author_id'		=>	'author_id',
 	'message'		=>	'message',
+	'reply_to'		=>	'reply_to',
+	'has_replies'	=>	'has_replies',
 );
 
 %defaults = (
+	'reply_to'		=>	q`undef`,
 	'created_on'	=>	q`'NOW()'`,
 	'user_id'		=>	q`$openprint::session{'user_id'}`,
+	'has_replies'	=>	'0',
 );
 
 sub Author {

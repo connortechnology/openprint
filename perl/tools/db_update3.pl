@@ -775,6 +775,19 @@ if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventoryconditions'", 'column_name');
 }
+if ( ! sets::isin( 'wall', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Wall.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='wall'", 'column_name');
+	if ( ! exists $$data{'reply_to'} ) {
+		$dbh->do('ALTER TABLE wall ADD reply_to INTEGER');
+		$dbh->do('ALTER TABLE wall ADD FOREIGN KEY (reply_to) REFERENCES Wall (id)');
+	} 
+	if ( ! exists $$data{'has_replies'} ) {
+		$dbh->do('ALTER TABLE wall ADD has_replies BOOLEAN NOT NULL default false');
+	} 
+}
 $dbh->disconnect();
 1;
 __END__

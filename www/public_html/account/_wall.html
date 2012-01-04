@@ -6,13 +6,13 @@
 	<ul>
 <? echo (
 	my $html = '';
-	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC' ) ) {
+	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to is null'=>1 ) ) {
 		my $Author = $Wall->Author();
 		$html .= sprintf(q`<li id="wall-%1$d">
 <span class="buttons">%7$s</span>
 <a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
 <a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>
- <span class="message">%5$s</span><span class="when">%6$s</span></li>`, 
+ <span class="message">%5$s</span><span class="when">%6$s</span>`,
 			$Wall->id(),
 			$Author->id(), $Author->name(), 
 			$Author->Asset()->thumbnail_url(),
@@ -20,10 +20,36 @@
 			$Wall->datetime_format( 'created_on' ),
 			join('',
 				( $Wall->can_edit() ? (
-				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`new Ajax.Request('_wall.html', { parameters: { wall_id: $$Wall{id}, action: 'delete' }, onSuccess: function() { \$('wall-$$Wall{id}').remove(); } } );`, 'text'=>'X' } ),
+				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`delwall($$Wall{id});`, 'text'=>'X', 'title'=>'Delete' } ),
 				) : () ),
+				ssi::button('replywall'.$Wall->id(), { 'onclick'=>qq`replywall($$Wall{id});`, 'text'=>'R', 'title'=>'Reply' } ),
 			),
+			
 			);
+		if ( $Wall->has_replies() ) {
+			foreach my $Reply ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to'=>$Wall->id() ) ) {
+				my $Author = $Reply->Author();
+				$html .= sprintf(q`<div id="wall-%1$d">
+						<span class="buttons">%7$s</span>
+						<a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
+						<a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>
+						<span class="message">%5$s</span><span class="when">%6$s</span>`,
+						$Reply->id(),
+						$Author->id(), $Author->name(),
+						$Author->Asset()->thumbnail_url(),
+						$Reply->message(),
+						$Reply->datetime_format( 'created_on' ),
+						join('',
+							( $Reply->can_edit() ? (
+													ssi::button('delwall'.$Reply->id(), { 'onclick'=>qq`delwall($$Reply{id});`, 'text'=>'X', 'title'=>'Delete' } ),
+												   ) : () ),
+							ssi::button('replywall'.$Reply->id(), { 'onclick'=>qq`replywall($$Reply{id});`, 'text'=>'R', 'title'=>'Reply' } ),
+							),
+
+						);
+			} # end foreach Reply	
+		} # end if
+		$html .= '</li>';
 	} # end foreach Wall
 	return $html;
 ) ?>
