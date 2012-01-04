@@ -21,6 +21,7 @@ $serial= 'paperweight_id_seq';
 require sql;
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::StockWeight';
 	my %params = @_;
 
 	my $sql = 'SELECT * FROM PaperWeights WHERE 1>0';
@@ -43,6 +44,9 @@ sub find {
 	} # end if
 } # end sub find
 
+sub name {
+	return $_[0]{'shortname'};
+}
 1;
 
 __END__

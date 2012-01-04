@@ -550,8 +550,8 @@ sub to_string {
 
 sub dropdown {
     my $type = shift;
-$log->debug("dropdown");
-    return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+$log->debug("dropdown $type");
+    return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub transform {
