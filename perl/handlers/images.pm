@@ -61,7 +61,6 @@ sub handler {
 					if ( $can_view ) {
 						$r->sendfile( $Asset->on_disk_path() );
 					} else {
-$log->warn("Acess Denied $$Asset{id} $session{'user_id'} ");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {

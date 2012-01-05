@@ -92,7 +92,6 @@ sub can_view {
 		return 1;
 	} elsif ( $_[0]{'mode'} eq 'logged_in' ) {
 		return 1 if $openprint::session{'user_id'};
-$openprint::log->warn("Mode is logged_in but no session user_id");
 	} elsif ( $_[0]{'mode'} eq 'specific' ) {
 		if ( @{$_[0]->usergroup_id()} ) {
 			my @Groups = openprint::UserGroup->find('user_id any'=>$openprint::session{'user_id'} );
