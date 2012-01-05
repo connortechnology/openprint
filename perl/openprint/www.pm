@@ -231,15 +231,11 @@ $openprint::log->debug("Getfile");
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 		} elsif ( $first ) {
-            my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-            if ( $proc ) {
-                my $module = join('_',@path);
-                eval {
-                    require "openprint/$module.pm";
-                    ('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-                };
-                $log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
-            } # end if
+			eval( 'require openprint::'.join('_', @path ) );
+$log->error( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
