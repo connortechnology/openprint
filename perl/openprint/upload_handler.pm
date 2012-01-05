@@ -1,19 +1,12 @@
+use strict;
 package openprint::upload_handler;
 
-use Apache2::Request;    # instead of CGI, it's MUCH faster, and does nice things.
+use Apache2::Request ();    # instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
-use APR::URI;
-use APR::Request;
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
-use Apache2::Log;
+use Apache2::Log ();
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
-use Apache2::Cookie;
-use Apache::Session::Postgres;
-
-use Date::Calc qw(Add_Delta_Days);
-
-use strict;
 
 require sql;
 require ssi;
@@ -27,7 +20,7 @@ require openprint::User;
 require openprint::User_Notification;
 require openprint::Email;
 
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -137,7 +130,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 			} # end if
 		} else {
 $log->debug("Doing standrad upload");
-			upload_files( $r, $log, $dbh, \%variable );
+			upload_files();
 			my $page = '/upload/_upload_complete.html';
 			my @page_path = split('/', $page );
 			my $content;
@@ -232,8 +225,6 @@ sub get_destdir {
 } # end sub get_destdir
 
 sub upload_files {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	if ( $param{'project_id'} ) {
 		$param{'project_id'} =~ s/\D//g;
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
@@ -245,7 +236,7 @@ sub upload_files {
 
 	my $destdir = get_destdir();
 	if ( ! $destdir ) {
-		$$variable{'error'} .= 'There was an error saving your upload!<br/>';
+		$variable{'error'} .= 'There was an error saving your upload!<br/>';
 $log->error("No destdir");
 		return;
 	} # end if
@@ -263,17 +254,17 @@ $log->error("No destdir");
 				my $upload = $r->upload( 'fileUpload'.$index );
 				if ( ! $upload->link( "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
 					$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
-					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
+					$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
 					next;
 				} else {
-					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
+					$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
                 foreach my $File ( openprint::File->find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
                     $File->delete();
                 } # end foreach
                 my $File = new openprint::File();
-                $$variable{'error'} .= $File->save({
+                $variable{'error'} .= $File->save({
                         'project_id'    =>  ( $param{'project_id'} ? $param{'project_id'} : undef ),
                         'filename'      =>  $destdir.$filename,
                         'description'   =>  $param{'txtDescription'.$index},
@@ -285,14 +276,14 @@ $log->error("No destdir");
 		if ( $files ) {
 # Notify CSR, and Customer of upload
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
-			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
+			$variable{'SiteTitle'} = $config{'SiteTitle'};
+			if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
+				$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
 			} else {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
+				$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
-			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			my $body = ssi::variable_substitution( \$email_template, $variable );
+			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
+			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my $Mail = new openprint::Email();
 			my @to;
 			my $from;
@@ -318,21 +309,20 @@ $log->error("No destdir");
 			if ( @to ) {
 
 				$_ = $Mail->send(
-						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
 						TO		=> \@to,
 #BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ],
 						);
 
 # Send transcript to uploader
-				if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
-					$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
+				if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
+					$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
 				} else {
-					$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+					$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 				} # end if
-				$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
+				$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			} # end if
 
 			if ( @to == 1 ) {
@@ -347,9 +337,8 @@ $log->error("No destdir");
 			} else {
 				@to = ( $param{'txtEmailAddress'} );
 			} # end if
-			my $body = ssi::variable_substitution( \$email_template, $variable );
+			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			$_ = $Mail->send(
-					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
@@ -362,9 +351,7 @@ $log->error("No destdir");
 } # end sub upload_files
 
 sub get_files {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	my $destdir = $openprint::config{'ProjectFilesPath'} . get_destdir();
+	my $destdir = $config{'ProjectFilesPath'} . get_destdir();
 	my $company_name;
 	my $company_dir;
 	my $docket;
@@ -374,7 +361,7 @@ sub get_files {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} # end if
-	@{$$variable{'PROJECT_FILES'}} = ();
+	@{$variable{'PROJECT_FILES'}} = ();
 	foreach my $file ( @filenames ) {
 		next if substr($file,0,1) eq '.';
 		my $description;
@@ -382,9 +369,9 @@ sub get_files {
 			$_ = q{SELECT description FROM project_files WHERE project_id=? AND filename =?};
 			( $description ) = sql::execute( $log, $dbh, $_, $r->param('project_id'), $file );
 		} # end if project_id
-		push @{$$variable{'PROJECT_FILES'}}, "$company_name/$docket", $file, $description;
+		push @{$variable{'PROJECT_FILES'}}, "$company_name/$docket", $file, $description;
 	} # end foreach
-	return @{$$variable{'PROJECT_FILES'}};
+	return @{$variable{'PROJECT_FILES'}};
 } # end sub get_Files
 
 1;
