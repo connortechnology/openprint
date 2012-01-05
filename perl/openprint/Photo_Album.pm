@@ -1,5 +1,5 @@
 use strict;
-use Digest::MD5;
+require Digest::MD5;
 require openprint::Asset;
 require openprint::Privacy;
 require openprint::Photo_in_Album;
@@ -8,7 +8,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -95,6 +95,7 @@ sub can_view {
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
 	my $Privacy = $_[0]->Privacy();
+$openprint::log->debug($Privacy->to_string());
 		
 	return 1 if ! $$Privacy{'id'};
 	return $Privacy->can_view();

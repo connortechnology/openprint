@@ -42,7 +42,8 @@ sub handler {
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $r->dir_config() );
 	if ( $dbh ) {
-		#openprint::session_init();
+		# Need session, have to know who we are!
+		openprint::session_init();
 
 		# The asset filename form is id_title.extension
 		my ( $id ) = $r->uri() =~ /(\d+)_.+$/;
@@ -60,6 +61,7 @@ sub handler {
 					if ( $can_view ) {
 						$r->sendfile( $Asset->on_disk_path() );
 					} else {
+$log->warn("Acess Denied $$Asset{id} $session{'user_id'} ");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {

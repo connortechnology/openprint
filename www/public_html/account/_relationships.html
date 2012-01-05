@@ -12,7 +12,7 @@
 		my @Relationships = openprint::User_Relationship->find({ 
 			'custom'=>['user_id1 IN ('.join(',',map { '?' } @ids ).') OR user_id2 IN ('.join(',', map { '?' } @ids ).')',@ids,@ids],
 			} );
-		if ( ! @Relationships ) {
+		if ( $$variable{'User'} == $session{'user_id'} and ! @Relationships ) {
 			return q`You have no relationships.  Visit another user's profile to request a relationship with them.`;
 		} # end if
 		my @Types = openprint::User_Relationship_Type->find('id'=>[sets::union( map { $_->type_id() } @Relationships )], 'order'=>'lower(name)' );
