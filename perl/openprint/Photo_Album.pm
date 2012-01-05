@@ -1,5 +1,4 @@
 use strict;
-require Digest::MD5;
 require openprint::Asset;
 require openprint::Privacy;
 require openprint::Photo_in_Album;
@@ -95,8 +94,6 @@ sub can_view {
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
 	my $Privacy = $_[0]->Privacy();
-$openprint::log->debug($Privacy->to_string());
-		
 	return 1 if ! $$Privacy{'id'};
 	return $Privacy->can_view();
 } # end sub can_view

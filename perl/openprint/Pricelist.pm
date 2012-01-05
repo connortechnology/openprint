@@ -9,13 +9,13 @@ require openprint::ServicePrice;
 require openprint::PaperPrice;
 require openprint::Currency;
 require openprint::logs;
-use openprint ();
+require openprint;
 
 use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 $table = 'pricelists';
 $serial = 'pricelists_id_seq';
 %fields = (
@@ -42,7 +42,7 @@ sub destroy {
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Material_Prices WHERE lngListIndex=?}, $$self{id} );
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Paper_Prices WHERE lngListIndex=?}, $$self{id} ) if @PaperPrices;
     sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Product_Prices WHERE pricelist_id=?}, $$self{id} );
-    sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Pricelists WHERE id=?}, $$self{id} );
+	$self->SUPER::destroy();
 	sql::end_transaction( $openprint::dbh, $ac );
 	openprint::logs::insertLogRecord('9', "Price List Index: " . $$self{id},);
 } # end sub delete
@@ -105,8 +105,7 @@ sub Previous {
 } # end sub prev
 
 sub Currency {
-	my $self = shift;
-	return new openprint::Currency( $$self{'currency_id'} );
+	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub Currency
 
 1;

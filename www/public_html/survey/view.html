@@ -7,11 +7,20 @@
 
 <? if ( $session{'user_id'} ) ?>
 <div id="Likes"><? echo ( $$variable{'Survey'}->likes('Likes') ) ?></div>
-<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
 <? endif ( $session{'user_id'} ) ?>
 	
 	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
 		<input type="hidden" name="action" />
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::button( 'Submit', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
+( $$variable{'Survey'}->can_edit() ? (
+	ssi::button( 'Delete', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'Edit', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'Responses', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id() } ),
+) : () ),
+			); ) ?>
+		</p>
 		<? echo (
 			my $html = '';
 			my @Questions = openprint::Survey_Question->find( 'survey_id'=>$$variable{'Survey'}->id(), 'order'=>'sorting' );
@@ -90,6 +99,9 @@ foreach my $A ( $Response->Answers() ) {
 ) : () ),
 			); ) ?>
 		</p>
+<? if ( $session{'user_id'} ) ?>
+<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
+<? endif ( $session{'user_id'} ) ?>
 	</form>
 </div>
 </div>
