@@ -1,11 +1,7 @@
+use strict;
 package openprint::account;
 
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Email::Valid;
-
-use strict;
-
+require Email::Valid;
 require sql;
 require ssi;
 require misc;
@@ -221,7 +217,7 @@ sub registration {
 				FROM	=> $agent,
 				TO		=> $User,
 				SUBJECT => 'New Login Application',
-				ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 				);
 
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
@@ -234,7 +230,7 @@ sub registration {
 						TO	=> $to,
 						SUBJECT => 'New Login Application',
 						'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
-						ATTACHMENTS	=>	[ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
 		} # end if
@@ -268,7 +264,7 @@ sub registration {
 						FROM	=> $agent,
 						TO		=> $Notification,
 						SUBJECT => 'New Login Application',
-						ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 						);
 			} # end foreach
 
@@ -279,7 +275,7 @@ sub registration {
 					FROM	=> $agent,
 					TO		=> $User,
 					SUBJECT => 'New Login Application',
-					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 					);
 		} # end if User not activated
 
@@ -291,7 +287,7 @@ sub registration {
 					TO	=> $to,
 					'Reply-To' => sprintf('"%s %s" <%s>', $User->get( 'firstname','lastname','email' ) ),
 					SUBJECT => 'New Login Application',
-					ATTACHMENTS	=> [ '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ],
 					);
 		} # end foreach
 
@@ -457,7 +453,7 @@ $log->debug("Sending password change");
 							FROM    => $config{'AdministratorEmail'},
 							TO      => $User,
 							SUBJECT => 'Password Changed',
-							ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+							ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 							);
 					$variable{'information'} = 'The user has been notified by email of the password change.';
 				} else {
@@ -504,7 +500,7 @@ sub login {
 					FROM 	=> $config{'AdministratorEmail'},
 					TO		=> $User,
 					SUBJECT	=> 'Forgotten Password',
-					ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
 					);
 			if ( $results ) {
 				$variable{'information'} = 'Your password has been mailed to you.';
@@ -581,7 +577,7 @@ sub reseller_application {
 					FROM	=> $config{'ResellerApplicationEmail'},
 					TO	=> $config{'ResellerApplicationEmail'},
 					SUBJECT	=> 'New Reseller Application',
-					ATTACHMENTS	=> [ '', encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable' ],
 					);
 
 		} # end if ! error
@@ -663,7 +659,7 @@ sub credit_application {
 				FROM	=> $config{'CreditApplicationEmail'},
 				TO	=> $config{'CreditApplicationEmail'},
 				SUBJECT => 'New Credit Application',
-				ATTACHMENTS	=> [ '', encode_qp($template), 'text/html', 'quoted-printable' ],
+				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
 				);
 	} # end if Apply
 
