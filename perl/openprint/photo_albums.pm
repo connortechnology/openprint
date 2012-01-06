@@ -88,6 +88,9 @@ sub edit {
 		$variable{'error'} .= $Privacy->save( {
 				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
 			} );
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/photo_albums/view.html?album_id='.$$Album{'id'};
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Upload' ) {
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );
