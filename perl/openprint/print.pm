@@ -1,6 +1,5 @@
-package openprint::print;
-
 use strict;
+package openprint::print;
 
 require sql;
 require openprint::main_project;

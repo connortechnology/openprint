@@ -1,5 +1,5 @@
-package openprint::usergroup;
 use strict;
+package openprint::usergroup;
 require sql;
 
 use vars qw( %cache %groups_cache );

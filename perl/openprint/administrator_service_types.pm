@@ -1,6 +1,6 @@
+use strict;
 package openprint::administrator_service_types;
 
-use strict;
 use openprint ();
 
 require sql;

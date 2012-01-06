@@ -1,9 +1,8 @@
+use strict;
 package openprint::support;
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
-use Email::Valid;
-use strict;
+use MIME::QuotedPrint ();
+use Email::Valid ();
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
 *r = \$openprint::r;
@@ -78,7 +77,7 @@ sub confirmation_returns {
 			FROM	=> $config{'RMAEmail'},
 			TO		=> $config{'RMAEmail'},
 			SUBJECT => 'Online RMA Submission.',
-			ATTACHMENTS	=>	[ '', encode_qp($template), 'text/html', 'quoted-printable' ],
+			ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
 			);
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
@@ -91,7 +90,7 @@ sub confirmation_returns {
 		TO		=> $info{'Email'},
 		FROM	=> $config{'RMAEmail'},
 		SUBJECT => 'Online RMA Submission.',
-		ATTACHMENTS	=>	[ '', encode_qp($email_template), 'text/html', 'quoted-printable' ],
+		ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 
 } # end sub rma
@@ -168,7 +167,7 @@ sub confirmation_help_desk {
 			FROM	=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
 			TO		=> $config{'HelpdeskEmail'},
 			SUBJECT => 'Online Helpdesk Submission.',
-			ATTACHMENTS =>	[ '', encode_qp($template), 'text/html', 'quoted-printable' ],
+			ATTACHMENTS =>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
 			);
 
 	if ( 0 ) {
@@ -184,7 +183,7 @@ sub confirmation_help_desk {
 			TO		=> sprintf('"%s %s" <%s>', @param{'txtFirstName','txtLastName','txtEmail'} ),
 			FROM	=> $config{'HelpdeskEmail'},
 			SUBJECT => 'Online Helpdesk Submission.',
-			ATTACHMENTS =>	[ '', encode_qp($email_template), 'text/html', 'quoted-printable' ],
+			ATTACHMENTS =>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 	} # end if
 

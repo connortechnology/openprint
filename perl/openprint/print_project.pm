@@ -10,7 +10,6 @@ use vars qw( $r $log $dbh %session %param %variable );
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-
 require sql;
 require openprint::account;
 require openprint::service;

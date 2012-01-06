@@ -1,7 +1,6 @@
 use strict;
 package openprint::content_prin;
 
-use strict;
 require openprint::main_project;
 require openprint::Project;
 require openprint::ProjectType;

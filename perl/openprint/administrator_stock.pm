@@ -1,6 +1,6 @@
-package openprint::administrator_stock;
-use Text::CSV_XS;
 use strict;
+package openprint::administrator_stock;
+use Text::CSV_XS ();
 require sql;
 require misc;
 require openprint::Paper;

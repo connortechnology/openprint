@@ -1,12 +1,9 @@
+use strict;
 package openprint::order;
 
-use MIME::QuotedPrint;
-use MIME::Base64;
-use Mail::Sendmail;
-use Email::Valid;
-use Date::Calc qw(Add_Delta_Days check_date);
+use Email::Valid ();
+use Date::Calc ();
 
-use strict;
 use openprint ();
 use vars qw( %param %variable %config %session $log $dbh );
 *param = \%openprint::param;

@@ -1,6 +1,6 @@
+use strict;
 package openprint::employee_schedule;
 
-use Date::Calc qw(Add_Delta_Days);
 use openprint ();
 use vars qw( $log $dbh %variable %config );
 *log = \$openprint::log;
@@ -14,7 +14,6 @@ require openprint::service;
 require openprint::Shift;
 require openprint::ScheduledJob;
 
-use strict;
 
 sub add_missing_jobs_to_schedule {
 	if ( $config{'Smart Schedule'} ne 'Y') {

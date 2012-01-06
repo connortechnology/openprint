@@ -1,6 +1,6 @@
-package openprint::maps;
 use strict;
-use openprint;
+package openprint::maps;
+use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -11,7 +11,6 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Location;
-
 
 sub index {
    if ( $param{'selected_name'} ) {

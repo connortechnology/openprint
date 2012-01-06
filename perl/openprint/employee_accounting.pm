@@ -1,7 +1,7 @@
+use strict;
 package openprint::employee_accounting;
 
-use Text::CSV_XS;
-use strict;
+use Text::CSV_XS ();
 
 require openprint::Payment;
 require openprint::order;

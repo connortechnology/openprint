@@ -1,7 +1,7 @@
-package openprint::administrator_managerial;
-use MIME::QuotedPrint;
-
 use strict;
+package openprint::administrator_managerial;
+use MIME::QuotedPrint ();
+
 use openprint ();
 
 require sql;
@@ -590,7 +590,7 @@ sub credit_applications {
 						TO		=> sprintf('"%s" <%s>', $User->name(), $User->email() ),
 						SUBJECT => 'Credit Status Changed.'
 						);
-				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
+				misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ) );
 			} # end if
 		} # end if
 

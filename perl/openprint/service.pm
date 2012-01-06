@@ -1,11 +1,10 @@
+use strict;
 package openprint::service;
 
-use strict;
 use Carp qw( cluck );
 
 require openprint::Equipment;
 require openprint::pricing;
-
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Counting;
 require openprint::Estimating::Folding;

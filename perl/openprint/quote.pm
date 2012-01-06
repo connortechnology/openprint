@@ -1,18 +1,12 @@
+use strict;
 package openprint::quote;
 
-use Date::Calc qw(Add_Delta_Days);
-
-use MIME::QuotedPrint;
-use MIME::Base64;
-use Mail::Sendmail;
-use Email::Valid;
-use openprint;
+use openprint ();
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-use strict;
 
 require sql;
 require ssi;

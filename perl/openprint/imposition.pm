@@ -1,7 +1,7 @@
+use strict;
 package openprint::imposition;
 use POSIX qw{ ceil };
 
-use strict;
 
 require openprint::Imposition;
 

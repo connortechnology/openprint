@@ -1,9 +1,8 @@
+use strict;
 package openprint::employee_support;
 
-use Mail::Sendmail;
-use MIME::QuotedPrint;
+use MIME::QuotedPrint ();
 use openprint ();
-use strict;
 
 require sql;
 require misc;
@@ -44,7 +43,7 @@ sub helpdesk {
 			FROM	=> $config{'HelpdeskEmail'},
 			TO		=> $email,
 			SUBJECT	=> 'Your help desk submission has been reviewed.',
-			ATTACHMENTS	=>	[ '', encode_qp($email_template), 'text/html', 'quoted-printable' ],
+			ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 	} # end if
 
@@ -170,7 +169,7 @@ sub returns {
 				FROM	=> $config{'RMAEmail'},
 				TO		=> $To,
 				SUBJECT	=> 'Your RMA has been reviewed.',
-				ATTACHMENTS => [ '', encode_qp($email_template), 'text/html', 'quoted-printable' ],
+				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 
 	} # end if

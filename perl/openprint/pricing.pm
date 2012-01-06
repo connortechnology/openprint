@@ -1,6 +1,5 @@
-package openprint::pricing;
-
 use strict;
+package openprint::pricing;
 
 require openprint::pricelist;
 require openprint::priceset;

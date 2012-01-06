@@ -1,5 +1,5 @@
-package openprint::bindery_schedule;
 use strict;
+package openprint::bindery_schedule;
 
 require openprint::Project;
 require openprint::Project_Service;

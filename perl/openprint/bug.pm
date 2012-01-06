@@ -1,7 +1,7 @@
+use strict;
 package openprint::bug;
 
-use strict;
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
