@@ -116,7 +116,7 @@ $log->error("COuldn'tget album!");
 				<fieldset><legend>Events</legend>
 					<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 					<span class="buttons">
-						<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'Add' } ); ) ?>
+						<? echo ( ssi::button( 'NewEvent', {'href'=>'/events/edit.html', 'text'=>'New' } ); ) ?>
 					</span>
 					<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 					<div class="content">

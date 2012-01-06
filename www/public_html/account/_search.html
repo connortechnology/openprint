@@ -28,7 +28,7 @@
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
 			'order'	=>	'lower(firstname),lower(lastname)',
 			'limit'		=>	$session{'/account/search.html?paging_per_page'},
-			'offset'	=>	$session{'/account/search.html?paging_per_page'} * $session{'/account/search.html?paging_page'},
+			'offset'	=>	$session{'/account/search.html?paging_per_page'} * $param{'paging_page'},
 			'id !='		=>	$session{'user_id'},
 			) ) {
 			my $filtered = 0;
@@ -110,7 +110,7 @@
 		$html .= '</div>';
 	} # end foreach User
 	if ( @Users == $session{'/account/search.html?paging_per_page'} ) {
-		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($session{'/account/search.html?paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
+		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
 ) ?>

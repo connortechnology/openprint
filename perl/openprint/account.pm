@@ -715,7 +715,6 @@ sub _search {
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
 				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
-				'paging_page',
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked
 	foreach my $F ( openprint::User_Profile_Field->find( ) ) {
