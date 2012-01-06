@@ -12,7 +12,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>"number", id=>"txtQuantity$qty_index", name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, onkeyup=>"this.value=this.value.replace(/\D/,'');calc(this.form.name);");
+			$html .= ssi::input( type=>"number", id=>"txtQuantity$qty_index", name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, onkeyup=>"cardinalize(this);calc(this.form.name);");
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
@@ -73,7 +73,7 @@
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= sprintf(q`
 			<span class="%1$sColumns">
-				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d>.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
+				<select name="ddmStockSheetSize%2$d" size="1" onchange="this.form.OverrideStockWidth%2$d.value='';this.form.OverrideStockHeight%2$d.value='';ddmStockSheetSize_onchange();"><option value="">Please select one</option>%3$s</select>
 				`, $$variable{'Columns'}, $qty_index, ssi::make_drop_down( [ 
 					map { $_, join(' x ', map { $_.'"' } split('x', $_) ) } @sizes ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} ),
 			);
@@ -83,7 +83,7 @@
 					"\$('OverrideStockSize$qty_index').show();", 
 					"f1.OverrideStockWidth$qty_index.value='';f1.OverrideStockHeight$qty_index.value='';\$('OverrideStockSize$qty_index').hide();calc('f1');" );
 			$html .= sprintf(q`<br/><span id="OverrideStockSize%1$d"%2$s>`, $qty_index, ( $$variable{'chkOverrideSheetSize'.$qty_index} ne 'Y' ? '' : ' style="display:none;"' ) );
-			$html .= ssi::input( type=>"number", name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
+			$html .= ssi::input( type=>'number', name=>"OverrideStockWidth$qty_index", value=>$$variable{'OverrideStockWidth'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
 			$html .= ' x ';
 			$html .= ssi::input( type=>"number", name=>"OverrideStockHeight$qty_index", value=>$$variable{'OverrideStockHeight'.$qty_index}, onkeyup=>"this.form.ddmStockSheetSize$qty_index.selectedIndex=0;calc(this.form.name);" );
 			$html .= '</span>';
@@ -125,7 +125,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>"number", id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, onkeyup=>"this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" );
+			$html .= ssi::input( type=>"number", id=>"CutOff$qty_index", name=>"CutOff$qty_index", value=>$$variable{'CutOff'.$qty_index}, onkeyup=>"floatize(this);calc(this.form.name);" );
 			$html .= ssi::write_override( 'OverrideCutOff'.$qty_index, $$variable{'OverrideCutOff'.$qty_index},'', "calc('f1');" );
 			$html .= '</span>';
 		} # end foreah qty_index
@@ -265,7 +265,8 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
-<div id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
+</ul>
+<ul id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 <? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
 	<li>
 		<label><? echo ( ssi::writeTip( 'Plate' ); ) ?> type</label>
@@ -299,7 +300,7 @@
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= ssi::input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);", "readonly"=>1 );
+				$html .= ssi::input( name=>"txtPlateQuantity$qty_index", value=>$$variable{'txtPlateQuantity'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);", "readonly"=>1 );
 				$html .= ssi::input( name=>"BlankPlateQuantity$qty_index", value=>$$variable{'BlankPlateQuantity'.$qty_index}, type=>"hidden" );
 				$html .= '</span>';
 			} # end foreach qty_index
@@ -312,13 +313,14 @@
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= ssi::input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);" );
+				$html .= ssi::input( name=>"txtPlateChangeQuantity$qty_index", value=>$$variable{'txtPlateChangeQuantity'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);" );
 				$html .= '</span>';
 			} # end foreach qty_index
 			return $html;
 		) ?>
 	</li>
-</div>
+</ul>
+<ul>
 <? if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <li>
 	<label>Base</label>
@@ -326,21 +328,20 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverBase$qty_index", name=>"OverBase$qty_index", value=>$$variable{'OverBase'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);" );
+			$html .= ssi::input( id=>"OverBase$qty_index", name=>"OverBase$qty_index", value=>$$variable{'OverBase'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);" );
 			$html .= ssi::write_override( 'OverrideBase'.$qty_index, $$variable{'OverrideBase'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;
 	) ?>
 </li>
-
 <li>
 	<label>Setup</label>
 	<? echo ( 
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);" );
+			$html .= ssi::input( id=>"OverSetup$qty_index", name=>"OverSetup$qty_index", value=>$$variable{'OverSetup'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);" );
 			$html .= ssi::write_override( 'OverrideSetup'.$qty_index, $$variable{'OverrideSetup'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
@@ -353,7 +354,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);" );
+			$html .= ssi::input( id=>"OverRun$qty_index", name=>"OverRun$qty_index", value=>$$variable{'OverRun'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);" );
 			$html .= ssi::write_override( 'OverrideRun'.$qty_index, $$variable{'OverrideRun'.$qty_index},'',"calc('f1');" );
 			$html .= '</span>';
 		} # end foreach qty_index
@@ -366,7 +367,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>"number", onkeyup=>"this.value=this.value.replace(/[^\-\d]/g,'');calc(this.form.name);" );
+			$html .= ssi::input( id=>"OverTotal$qty_index", name=>"OverTotal$qty_index", value=>$$variable{'OverTotal'.$qty_index}, type=>"number", onkeyup=>"integerize(this);calc(this.form.name);" );
 			$html .= '</span>';
 		} # end foreach qty_index
 		return $html;

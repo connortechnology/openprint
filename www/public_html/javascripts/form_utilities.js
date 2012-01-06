@@ -1388,6 +1388,10 @@ function changed( e, div ) {
 		e.removeClassName('changed');
 	} // end if
 } // end function changed
+function cardinalize(e) {
+	e.value = e.value.replace(/\D/g,'');
+	e.focus();
+}
 function integerize(e) {
 	e.value = e.value.replace(/[^\d\-]/g,'');
 	e.focus();

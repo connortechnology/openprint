@@ -765,12 +765,13 @@ sub input {
 	my %options = @_;
 	my $html = '<input';
 	$html .= ' type="'.$options{type}.'"' if $options{type};
-	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+	$html .= ' value="'.$options{value}.'"' if $options{value};
 	$html .= ' name="'.$options{name}.'"' if $options{name};
 	$html .= ' id="'.$options{id}.'"' if $options{id};
 	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
 	$html .= ' onkeydown="'.$options{onkeydown}.'"' if $options{onkeydown};
 	$html .= ' onchange="'.$options{onchange}.'"' if $options{onchange};
+	$html .= ' class="'.$options{class}.'"' if $options{class};
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
