@@ -99,9 +99,9 @@ $openprint::dbh->disconnect();
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
 
-my $scoreboard = get_scoreboard( $config{'scoreboard'} );
+my $scoreboard = get_scoreboard( $CFG::Config{'scoreboard'} );
 my $fifoh;
-if (open($fifoh, "< $config{fifo}")) {
+if (open($fifoh, "< $CFG::Config{fifo}")) {
 	while (1) {
 		my $line;
 		eval {

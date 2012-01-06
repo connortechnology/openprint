@@ -288,12 +288,6 @@ sub Users {
 	$params{'company_id'} = $$self{'id'};
 	return openprint::User->find( \%params );
 } # end sub Users
-sub taxexempt1 {
-	return $_[0]{gst_exempt};
-}
-sub taxexempt2 {
-	return $_[0]{pst_exempt};
-}
 
 sub Pricelist {
 	my $self = shift;
