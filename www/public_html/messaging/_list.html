@@ -7,21 +7,6 @@
 	my @Messages = openprint::Message->find('id'=>\@message_ids);
 	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] );
 	@{$$variable{'Conversations'}} = @Conversations;
-
-#if ( 0 ) {
-	#foreach my $Message ( openprint::Conversation->find( 
-			#ssi::date_filter( '/messaging/sent.html?created_on_start', 'sent_on >=' ),
-			#ssi::date_filter( '/messaging/sent.html?created_on_end', 'sent_on <=' ),
-			#( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
-			#( $session{'/messaging/list.html?folder'} eq 'Inbox' ? (
-				#'to_id'			=>	$session{'user_id'},
-				#'sent_on is null'	=>	0,
-			#) : () ),
-			#'order'				=> 'created_on',
-		##) ) {
-		#push @{$$variable{'Conversations'}}, $Message;
-	#} # end foreach Conversations
-#}
 ) ?>
 
 <? if ( @{$$variable{'Conversations'}} == 0 ) ?>
@@ -47,7 +32,7 @@
 					`, $Conversation->id(), 
 					ssi::html_escape($Conversation->subject()),
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
-					join( ', ', map { $$_{user_id} == $session{user_id} ? () : sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$_{user_id}, $_->User()->name() ) } $Message->To() ),
+					join( ', ', map { $$_{user_id} == $session{user_id} ? () : $_->User()->name() } $Message->To() ),
 					join('', 
 						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),
 						),
