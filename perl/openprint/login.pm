@@ -1,8 +1,5 @@
-package openprint::login;
-
-use Mail::Sendmail;
-use MIME::QuotedPrint;
 use strict;
+package openprint::login;
 
 require sql;
 require ssi;
@@ -131,7 +128,7 @@ sub verify_login {
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			new openprint::Email()->send(
 					FROM	=> $config{'LoginEmail'},
 					TO	=> $config{'LoginEmail'},
@@ -205,7 +202,7 @@ sub email_password {
 		foreach my $User ( @Users ) {
 			my %info;
 			$info{'ReplacementText'} = ssi::variable_substitution( \$content, \%info );
-			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			new openprint::Email()->send(
 					FROM 	=> $config{'AdministratorEmail'},
 					TO	=> @Users,

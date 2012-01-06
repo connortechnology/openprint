@@ -1,7 +1,7 @@
+use strict;
 package openprint::timetrack;
 
-use strict;
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -11,7 +11,10 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+require Date::Format;
 require openprint::Timetrack;
+require openprint::Currency;
+require ssi;
 
 sub history {
 	if ( $param{'func'} eq 'Save' ) {

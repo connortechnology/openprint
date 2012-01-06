@@ -1,9 +1,9 @@
+use strict;
 package openprint::article;
 
-use strict;
-use LWP::UserAgent;
-use HTML::LinkExtractor;
-use openprint;
+use LWP::UserAgent ();
+use HTML::LinkExtractor ();
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;

@@ -1,8 +1,8 @@
+use strict;
 package openprint::invoice;
 
-use strict;
-use openprint;
-use Math::Round;
+use openprint ();
+use Math::Round ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
