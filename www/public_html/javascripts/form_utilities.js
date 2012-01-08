@@ -1431,7 +1431,7 @@ function get_form_element_array( form, name ) {
 			values = new Array()
 			values.push( form.elements[name].value );
 		} else {
-			values = form.elements[name].map( function( e ) { return e.value; } );
+			values = $A(form.elements[name]).map( function( e ) { return e.value; } );
 		}
 	} else {
 		values = new Array()

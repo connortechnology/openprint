@@ -7,7 +7,7 @@
 		theme : "simple"
 	});
 	function add_to_id( input, query ) {
-		var to_id = get_form_element_array( input.form, 'to_id' );
+		var to_id = get_form_element_array( $('f1'), 'to_id' );
 		query += '&to_id=' + to_id.join('&to_id=');
 		return query;
 	}
