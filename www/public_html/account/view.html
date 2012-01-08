@@ -37,7 +37,7 @@
 				my $html;
 				my $Asset = $$variable{'User'}->Asset();
 				if ( $Asset->id() ) {
-					my $Album = openprint::Photo_Album->find_one('asset_id'=>$$Asset{'id'},'user_id'=>$$variable{'User'}->id());
+					my $Album = openprint::Photo_Album->find_one('asset_id any'=>$$Asset{'id'},'user_id'=>$$variable{'User'}->id());
 					if ( ! $Album ) {
 						$log->error("COuldn'tget album!");
 						$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );

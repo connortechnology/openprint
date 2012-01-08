@@ -6,7 +6,7 @@ require openprint::Photo_in_Album;
 package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
@@ -19,6 +19,9 @@ $table = 'photo_albums';
 	'created_on'		=>	'created_on',
 	'privacy_mode_id'	=>	'privacy_mode_id',
 	'deleted'			=>	'deleted',
+);
+%find_fields = (
+	'asset_id'	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
 );
 
 %defaults = (
