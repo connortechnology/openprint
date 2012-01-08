@@ -60,7 +60,7 @@ $debug = 1;
 	'deleted'			=>	'deleted',
 ); # end %fields
 %find_fields = (
-	'name'	=>	q`firstname || '' || lastname`,
+	'name'	=>	q`firstname || ' ' || lastname`,
 	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
 	'last_online'	=>	'(SELECT MAX(date_time) FROM logs WHERE user_id=users.id)',
