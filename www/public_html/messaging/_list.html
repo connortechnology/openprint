@@ -1,11 +1,16 @@
 <? eval (
 	@{$$variable{'Conversations'}} = ();
 
-	# Gets every message to me, which will be a lot. Need to trim this to active conversations
-	my @Message_Tos = openprint::Message_To->find('user_id'=>$session{'user_id'});
-	my @message_ids = sets::union( map { $$_{'message_id'} } @Message_Tos );
-	my @Messages = openprint::Message->find('id'=>\@message_ids);
-	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] );
+	my @Who = $param{'who'} ? map { ( $_ ? openprint::User->find('name ilike'=>'%'.$_.'%') : () ) } misc::trim( split(',', $param{'who'} ) ) : ();
+	my @who_id = map { $$_{'id'} } @Who;
+
+	my @Messages = openprint::Message->find(
+		'me_id any'=>$session{'user_id'},
+		(
+			$param{'who'} ? ( 'to_id any'	=>	\@who_id ) : () ),
+				 #map { ( 'to_id any' => $$_{'id'} ) } @Who ) : 
+		);
+	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
 	@{$$variable{'Conversations'}} = @Conversations;
 ) ?>
 
