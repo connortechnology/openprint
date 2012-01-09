@@ -2,10 +2,16 @@
 	@{$$variable{'Conversations'}} = ();
 
 	# Gets every message to me, which will be a lot. Need to trim this to active conversations
-	my @Message_Tos = openprint::Message_To->find('user_id'=>$session{'user_id'});
-	my @message_ids = sets::union( map { $$_{'message_id'} } @Message_Tos );
-	my @Messages = openprint::Message->find('id'=>\@message_ids);
-	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] );
+	#my @Message_Tos = openprint::Message_To->find('user_id'=>$session{'user_id'});
+	#my @message_ids = sets::union( map { $$_{'message_id'} } @Message_Tos );
+	#if ( $param{'who'} ) {
+		#@message_ids = sets::exclude
+		
+		
+	my @Messages = openprint::Message->find('to_id any'=>$session{'user_id'},
+		($param{'who'} ? ('to_id any', [ map { map { $$_{'id'} } openprint::User->find('name ilike'=>'%'.$_.'%') } misc::trim( split(',', $param{'who'} ) ) ] ) : () ),
+		);
+	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
 	@{$$variable{'Conversations'}} = @Conversations;
 ) ?>
 

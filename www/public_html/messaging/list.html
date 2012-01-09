@@ -30,6 +30,10 @@
 		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
 						</span>
 					</li>
+					<li>
+						<label>Who</label>
+						<input type="text" name="who" id="who" onkeyup="if(this.value.length>2){load_messages(this.form);}" placeholder="minimum 3 characters"/>
+					</li>
 				</ul>
 				<br class="spacer"/>
 				<p class="buttons">
