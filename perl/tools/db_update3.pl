@@ -744,7 +744,7 @@ if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
 	} else {
 		$dbh->do('DROP TABLE tbl_projecttype_defaults');
 	} # end if
-	$dbh->do('DROP SEQUENCE tbl_projecttype_defaults_id_seq');
+	$dbh->do('DROP SEQUENCE tbl_projecttype_defaults_id_seq') if sets::isin('tbl_projecttype_defaults_id_seq', \@sequences );
 } # end if
 if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Defaults.sql}) );
