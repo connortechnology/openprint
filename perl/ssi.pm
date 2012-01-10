@@ -1,6 +1,6 @@
+use strict;
 package ssi;
 
-use strict;
 use countries;
 use states;
 use provinces;
@@ -11,7 +11,7 @@ use HTML::Entities qw(encode_entities);
 require sets;
 require sql;
 
-use openprint;
+use openprint ();
 use vars qw( $r $log $dbh %config %session %param %variable );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -657,7 +657,8 @@ sub write_override {
 
 sub count_lines {
 	if ( $_[0] ) {
-		return scalar split( "\n", $_[0] );
+		my @lines = split( "\n", $_[0] );
+		return scalar @lines;
 	} else {
 		return 2;
 	} # end if

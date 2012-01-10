@@ -37,7 +37,21 @@ sub search {
         } # end if
     } # end if
 
-} # end sub order_report
+	_search();
+	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', 0 );
+	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', 0 );
+	if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
+		$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
+	} # end if
+} # end sub search
+
+sub _search {
+	ssi::save_params( '/employee/accounting/search.html',
+			'ddmCustomer','ddmStatus','ddmEmployee','dblTotal1','dblTotal2',
+			( map { 'ordered_on_start_'.$_ } ( 'year', 'month','day' ) ),
+			( map { 'ordered_on_end_'.$_ } ( 'year', 'month','day' ) ),
+			);
+} # end sub _search
 
 sub details {
 

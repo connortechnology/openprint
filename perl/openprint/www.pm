@@ -130,7 +130,9 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
+$log->debug("starting variable subst of pagecontent " . ( time - $starttime ) );
 			$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
+$log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
@@ -155,11 +157,15 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if _
 		if ( $template ) {
 			#$log->debug("parsing template!");
+$log->debug("starting variable subst of template " . ( time - $starttime ) );
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
+$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
 		#$log->warn($variable{'PageContent'});
+$log->debug("starting print " . ( time - $starttime ) );
 			$r->print( $variable{'PageContent'} );
+$log->debug("ending print " . ( time - $starttime ) );
 		} # end if
 	} # end if
 

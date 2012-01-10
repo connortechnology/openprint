@@ -1,34 +1,14 @@
-<? eval (
-		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$session{'/employee/accounting/search.html?'.$key} = $param{$key} if defined $param{$key};
-		} # end foreach
-		if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
-			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
-		} # end if
-	if ( ! $session{'/employee/accounting/search.html?ddmStartYear'} ) {
-		@session{
-		'/employee/accounting/search.html?ddmStartYear',
-		'/employee/accounting/search.html?ddmStartMonth',
-		'/employee/accounting/search.html?ddmStartDay',
-		} = Date::Calc::Today();
-		@session{
-		'/employee/accounting/search.html?ddmEndYear',
-		'/employee/accounting/search.html?ddmEndMonth',
-		'/employee/accounting/search.html?ddmEndDay',
-		} = Date::Calc::Today();
-	} # end if
-) ?>
-<script language="javascript" src="/javascripts/barcode.js"></script>
-Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
-<br>
-<form name="f1" method="post" action="/employee/accounting/search.html">
-	<div style="float: left; width: 35%;">
-	<fieldset class="filters">
+<script type="/text/javascript" src="/javascripts/barcode.js"></script>
+<div class="Accounting"><div class="Search">
+Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
+<form id="f1" name="f1" method="post" action="/employee/accounting/search.html">
+	<fieldset class="filters leftColumn">
 		<p>
 			<label>Docket #:</label>
 			<input type="text" id="StartDocket" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" size="6" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
 			- <input type="text" id="EndDocket" name="EndDocket" value="<? echo ( $param{'EndDocket'} ) ?>" size="6" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'DocketGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'DocketGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Order ID:</label>
@@ -46,9 +26,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 			<? echo ( ssi::writeButton( $log, $dbh, 'ProjectGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
-	</div>
-	<div style="float: right; width: 65%;">
-	<fieldset class="filters">
+	<fieldset class="filters rightColumn">
 		<p>
 			<label>Company:</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
@@ -77,36 +55,31 @@ Choose criteria and click show results. You may the download the results in CSV 
 					) ?>
 			</select>
 		</p>
-		<? eval (
-			ssi::get_start_end_dates( $log, $dbh, $variable,
-				@session{
-				'/employee/accounting/search.html?ddmStartYear',
-				'/employee/accounting/search.html?ddmStartMonth',
-				'/employee/accounting/search.html?ddmStartDay',
-				'/employee/accounting/search.html?ddmEndYear',
-				'/employee/accounting/search.html?ddmEndMonth',
-				'/employee/accounting/search.html?ddmEndDay'} );
-
-			) ?>
 		<p> 
 			<label>Order Date:</label>
-			<select name="ddmStartMonth" onchange="setDaysDropDown(this.form.ddmStartYear.value,this.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startmonths?></select>
-			<select name="ddmStartDay"><?startdays?></select>
-			<select name="ddmStartYear" onchange="setDaysDropDown(this.value,this.form.ddmStartMonth.value,this.form.ddmStartDay,this.form.ddmStartDay.value);"><?startyears?></select>
-			&nbsp;-&nbsp;
-			<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endmonths?></select>
-			<select name="ddmEndDay"><?enddays?></select>
-			<select name="ddmEndYear" onchange="setDaysDropDown(this.value,this.form.ddmEndMonth.value,this.form.ddmEndDay,this.form.ddmEndDay.value);"><?endyears?></select>
+				<span class="DateSelectorCT">
+				<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
+							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+							'with_today'=>1, 'with_clear'=>1,
+							} ); ) ?>
+				</span>to<span class="DateSelectorCT">
+				<? echo ( ssi::date_select_session( '/employee/accounting/searchhtml', 'ordered_on_end', { 'onchange' =>
+							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+							'with_today'=>1, 'with_clear'=>1,
+							} ); ) ?>
+				</span>
 		</p>
 		<p> 
 			<label>Total Range:</label>
-			<input type="text" name="dblTotal1" size="12" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal1'} ) ?>"	/>
+			<input type="number" name="dblTotal1" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal1'} ) ?>" />
 			to 
-			<input type="text" name="dblTotal2" size="12" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal2'} ) ?>"	/>
+			<input type="number" name="dblTotal2" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal2'} ) ?>"	/>
 		</p>
 		<p class="buttons">
 		<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
+					ssi::button( 'ShowResults', { 'onclick'=>
+						q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+						'text'=>'Show Results' } ),
 					ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='accounting_search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
 					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
 					); ) ?>
@@ -116,5 +89,6 @@ Choose criteria and click show results. You may the download the results in CSV 
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results"><!--#include virtual="/employee/accounting/_search_results.html"--></div>
+<div id="Results"><!--#include virtual="/employee/accounting/_search.html"--></div>
+</div></div>
 <script type="text/javascript">document.forms['f1'].StartDocket.focus();</script>
