@@ -55,27 +55,39 @@
 		<th class="Price">Total</th>
 		<th class="Price">Balance</th>
 	</tr>
-	<? eval (
+	<? echo (
 		$$variable{'ReportTotal'} = $$variable{'ReportBalance'} = 0;
+		my $html;
+		my $rowclass;
+		foreach my $Order ( @{$$variable{'Orders'}} ) {
+			$html .= sprintf(q`
+<tr%1$s> 
+	<td><a href="details.html?order_id=%2$d">%2$d</a></td>
+	<td><a href="details.html?order_id=%2$d">%3$d</a></td>
+	<td class="Date">%4$s</td>
+	<td align="left">%5$s</td>
+	<td align="left">%6$s</td>
+	<td align="right">%7$s</td>
+	<td align="right">%8$s</td>
+	<td class="Price">%9$s</td>
+	<td class="Price">%10$s</td>
+</tr>`,
+	$rowclass, $$Order{'id'}, $$Order{'docket'}, 
+	Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Order->created_on() ) ),
+	ssi::html_escape( $Order->Company->name() ),
+	$Order->status(),
+	ssi::html_escape( $Order->invoice_id() ),
+	ssi::html_escape( $Order->po() ),
+	openprint::Currency::format( $Order->total() ),
+	openprint::Currency::format( $Order->owing() ),
+);
+
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{'ReportTotal'} += $Order->total();
+			$$variable{'ReportBalance'} += $Order->owing();
+		} # end foreach Order
+		return $html;
 	) ?>
-	<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
-	<tr<?rowclass?>> 
-		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
-		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-		<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
-		<td align="left"><? echo ( ssi::htmlize( $$variable{'Order'}->Company->name() ); ) ?></td>
-		<td align="left"><? echo ( $$variable{'Order'}->status(); ) ?></td>
-		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->invoice_id() ); ) ?></td>
-		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->ponum() ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->total() ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->owing() ); ) ?></td>
-	</tr>
-	<? eval ( 
-		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-		$$variable{'ReportTotal'} += $$variable{'Order'}->total();
-		$$variable{'ReportBalance'} += $$variable{'Order'}->owing();
- ) ?>
-	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 	<tr class="totals"> 
 		<td colspan="7" align="right"><b>Report Total:</b></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
