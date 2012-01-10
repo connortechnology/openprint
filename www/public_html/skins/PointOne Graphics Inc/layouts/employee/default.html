@@ -25,22 +25,24 @@
 		}
 		pop @parts;
 	} # end while
+	@html = reverse @html;
 	if ( $$variable{'uri'} =~ /claim/ ) {
-		push @parts, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /credit_application/ ) {
-		push @parts, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /print_overview/ ) {
-		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /bindery_schedule2/ ) {
-		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /operator_schedule/ ) {
-		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
 	} # end if
-	return join("\n", reverse @html );
+
+	return join("\n", @html );
 ) ?>
 		<? if ( $$variable{'uri'} =~ /prepress_overview/ ) ?>
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
