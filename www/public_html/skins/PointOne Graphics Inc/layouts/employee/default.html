@@ -25,23 +25,23 @@
 		}
 		pop @parts;
 	} # end while
+	if ( $$variable{'uri'} =~ /claim/ ) {
+		push @parts, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /credit_application/ ) {
+		push @parts, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /print_overview/ ) {
+		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /bindery_schedule2/ ) {
+		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /operator_schedule/ ) {
+		push @parts, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
 	return join("\n", reverse @html );
 ) ?>
-		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
-		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /claim/ ) ?>
-		<? if ( $$variable{'uri'} =~ /credit_application/ ) ?>
-		<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /credit_application/ ) ?>
-		<? if ( $$variable{'uri'} =~ /print_overview/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /print_overview/ ) ?>
-		<? if ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
-		<? if ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
 		<? if ( $$variable{'uri'} =~ /prepress_overview/ ) ?>
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
 		<meta http-equiv="refresh" content="300">
