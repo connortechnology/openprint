@@ -1,11 +1,4 @@
 <? eval (
-		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$session{'/employee/accounting/search.html?'.$key} = $param{$key} if defined $param{$key};
-		} # end foreach
-		if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
-			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
-		} # end if
-
 	if ( $param{'order_id'} ) {
 		@{$$variable{'Orders'}} = openprint::Order::find(
 			'id'		=>	$param{'order_id'},
@@ -20,16 +13,8 @@
 			);
 	} else {
 	@{$$variable{'Orders'}} = openprint::Order::find(
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-			'/employee/accounting/search.html?ddmStartYear',
-			'/employee/accounting/search.html?ddmStartMonth',
-			'/employee/accounting/search.html?ddmStartDay',
-			} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-			'/employee/accounting/search.html?ddmEndYear',
-			'/employee/accounting/search.html?ddmEndMonth',
-			'/employee/accounting/search.html?ddmEndDay',
-			} ),
+			ssi::date_filter( '/employee/accounting/search.html?ordered_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/accounting/search.html?ordered_on_end', 'created_on_end' ),
 		'status'		=> $session{'/employee/accounting/search.html?ddmStatus'}, 
 		'company_id'	=> $session{'/employee/accounting/search.html?ddmCustomer'},
 		'salesrep_id'	=> $session{'/employee/accounting/search.html?ddmEmployee'},
