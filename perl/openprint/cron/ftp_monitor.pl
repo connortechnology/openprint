@@ -23,19 +23,19 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 use File::Basename qw(basename);
-use Getopt::Long;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
+use Getopt::Long ();
+use Mail::Sendmail ();
+use MIME::QuotedPrint ();
 use MIME::Base64 qw(encode_base64);
 use Time::HiRes qw(usleep);
-use Encode;
+use Encode ();
 
 my $program = basename($0);
 
 my @args = @ARGV;
 
 my $opts = {};
-GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
+Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
 	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
@@ -295,7 +295,7 @@ $log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if
 	if ( ! $User ) {
-		if ( $User = openprint::User->find_one('email'=>lc $upload->{user},'limit'=>1) ) {
+		if ( $User = openprint::User->find_one('email'=>lc $upload->{user}) ) {
 			$Company = $User->Company();
 			foreach my $upload ( @uploads ) {
 				$$upload{'company_name'} = $Company->name();
@@ -586,6 +586,7 @@ sub get_scoreboard {
 		close(SCORE);
 	} else {
 		$log->warn("Unable to open scoreboard at $score_file");
+		sleep 1;
 	} # end if
 	return \@scoreboard;
 } # end sub get_scoreboard
