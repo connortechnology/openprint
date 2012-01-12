@@ -1,8 +1,8 @@
+use strict;
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use Carp qw( cluck );
 
-use strict;
 use openprint ();
 require sets;
 require openprint::Like;
@@ -767,9 +767,6 @@ sub find_one {
 sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
-#if ( $self eq 'supplier' ) {
-#$log->debug("Autoload $type $name");
-#}
 	$name =~ s/.*://;
 	if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
@@ -796,8 +793,7 @@ sub to_string {
 }
 
 sub dropdown {
-	my $type = shift;
-	return [ map { $_->id(), $_->name() } $type->find(@_) ];
+	return [ map { $$_{'id'}, $_->name() } $_[0]->find(@_) ];
 } # end sub dropdown
 
 sub sort_value {
@@ -843,16 +839,12 @@ sub likes {
 		} # end if
 	} else {
 		my %Opinions;
-		my @Do;
 		foreach my $Like ( @Likes ) {
-			if ( $Like->user_id() == $session{'user_id'} ) {
-				$html .= 'You ' . $Like->Opinion_Type()->name() . ' this.';
-			}  # end if
-			if ( $$Like{'value'} ) {
-				push @Do, $Like;
-			} # end if
-		}
-		$html = int(@Do*100/@Likes) . '% of ' . @Likes . ' people love this.';
+			push @{$$_{'value'}}, $Like;
+		} # end foreach
+		foreach my $opinion_id ( keys %Opinions ) {
+			$html .= int(@{$Opinions{$opinion_id}}/@Likes) . '% of '  . @Likes . ' people ' . new openprint::Opinion_Type( $opinion_id )->name() . ' this.<br/>';
+		} # end foreach opinion
 	} # end if
 	$html .= $_[0]->like_button( 'Likes', '/includes/_likes.html' );
 	return $html;

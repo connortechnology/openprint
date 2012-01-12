@@ -28,7 +28,6 @@
 					if ( $DoDont ) {
 						my $DoDontPhoto = openprint::Photo_in_Album->find_one( 'asset_id'=>$$variable{'Photo'}->asset_id(), 'album_id'=>$DoDont->id() );
 						if ( $DoDontPhoto ) {
-							$html .= '<div id="DoDont">'.$$variable{'Photo'}->Asset()->likes('Likes').'</div>';
 							$html .= ssi::button( 'DoDont', { 'onclick' => q`f1.elements['action'].value='UnDo/Dont';f1.submit();`,
 								'text'=>"Remove from Do/Don't" } );
 						} else {
