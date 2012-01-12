@@ -793,7 +793,8 @@ sub to_string {
 }
 
 sub dropdown {
-	return [ map { $$_{'id'}, $_->name() } $_[0]->find(@_) ];
+	my $self = shift;
+	return [ map { $$_{'id'}, $_->name() } $self->find(@_) ];
 } # end sub dropdown
 
 sub sort_value {
