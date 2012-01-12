@@ -2,11 +2,10 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
+use MIME::QuotedPrint ();
 use Carp qw( cluck );
-use Math::Round;
+use Math::Round ();
 use Math::Calc::Units ();
-
 
 use openprint ();
 use vars qw( $log %variable %config );

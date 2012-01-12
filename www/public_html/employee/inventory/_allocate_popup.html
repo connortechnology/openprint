@@ -7,11 +7,48 @@
 			<p>
 			<? echo ( 
 				my $html = '';
+				my $captcha = 0;
+
+				if ( $$variable{'Paper'}->Quality()->message() ) {
+					$html .= '<div class="warning">'.$$variable{'Paper'}->Quality()->message().'</div>';
+					$captcha = 1;
+				} # end if
+				my @SkidContents = openprint::SkidContent->find('paper_id'=>$$variable{'Paper'}{'id'}, 'quantity >'=>1 );
+				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{'id'} } @SkidContents ] );
+				if ( @ClaimContents ) {
+					$html .= join('', 
+						map { 
+						sprintf('skid %d is included in <a href="/employee/claims/view.html?claim_id=%d">claim %d</a>', @$_{'skid_id','claim_id','claim_id'} );
+						} @ClaimContents
+						);
+				} # end if
+
+				my %Conditions;
+				foreach my $SkidContent ( @SkidContents ) {
+					push @{$Conditions{$$SkidContent{'condition_id'}}}, $SkidContent if $SkidContent->Condition()->message();
+				} # end foreach SkidContent
+
+				if ( %Conditions ) {
+					$html .= '<div class="warning">';
+					foreach my $condition_id ( keys %Conditions ) {
+						my $Condition = new openprint::InventoryCondition($condition_id);
+						
+						$html .= @{$Conditions{$condition_id}}.
+							($$variable{'Paper'}->type() eq 'Roll' ? ' Roll' : ' Skid').
+							(@{$Conditions{$condition_id}}==1?' is':'s are').' in ' . $Condition->name() . ' condition.<br/>' . $Condition->message().'<br/>';
+					} # end foreach
+					$html .= '</div>';
+					$captcha = 1;
+				} # end if
+				if ( $captcha ) {
+					$html .= 'Do you still wish to allocate this stock?';
+					$html .= '<div id="Captcha">'.ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ).'</div>';
+				} # end if
 				$$variable{'available'} = 0;
 				if ( $param{'skid_id'} ) {
 					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 						my $Skid = new openprint::Skid( $skid_id );
-						if ( my $C = $Skid->Content( $$variable{'Paper'}) ) {
+						if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
 							$$variable{'available'} += $C->allocateable();
 							$html .= sprintf('skid %d contains: %s available: %s<br/>', $skid_id, 
 								Number::Format::format_number($C->quantity()).$$variable{'Paper'}->units(), 
@@ -25,28 +62,29 @@
 				return $html;
 			) ?>
 			</p>
-			<p>
-				<label>Docket</label>
-				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+			<ul>
+			<li>
+				<label>Docket:</label>
+				<input type="number" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
-			</p>
-			<p>
-				<label>Project</label>
-				<input type="text" name="Project" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+			</li>
+			<li>
+				<label>Project:</label>
+				<input type="number" name="Project" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
-			</p>
-			<p>
-				<label>Quantity ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
+			</li>
+			<li>
+				<label>Quantity: (<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>)</label>
 				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
 				<input type="hidden" name="available_quantity" value="<?available?>"/>
-				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D\-/g,'');"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
-				
-			</p>
-			<p>
-				<label><a title="Click to allocate specific skids on the floor.">Specific Skids</label>
+				<input type="number" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
+				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Quantity.value='';", '', 'Clear' ); ) ?>
+			</li>
+			<li>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
 				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
-			</p>
+			</li>
+</ul>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 

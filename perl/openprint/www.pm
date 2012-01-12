@@ -45,6 +45,8 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	my $page = $r->uri();
+	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
@@ -116,7 +118,6 @@ sub handler {
 #$log->debug("No page settings for $chunk");
 					} # end if
 				} # end while chunks
-
 			} # end if
 			if ( ! $page_settings{$page} ) {
 				$page_settings{$page} = new openprint::Page_Setting();

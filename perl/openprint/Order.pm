@@ -1,7 +1,7 @@
-package openprint::Order;
-@ISA=qw(openprint::Object);
-
 use strict;
+package openprint::Order;
+our @ISA=qw(openprint::Object);
+
 use openprint ();
 use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
 *session = \%openprint::session;

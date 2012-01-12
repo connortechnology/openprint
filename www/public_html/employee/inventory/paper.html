@@ -16,7 +16,7 @@ Please select a Paper to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket</label>
-			<input type="number" id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="Docket" name="Docket" value="<? echo ( $session{'/employee/inventory/paper.html?Docket'} ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){LoadContent('Results','/employee/inventory/_paper_results.html', $('f1').serialize() );}" onkeyup="integerize(this);" />
 		</p>
 	</fieldset>
 	<fieldset class="filters"><legend>Or</legend>

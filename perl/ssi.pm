@@ -1,6 +1,6 @@
+use strict;
 package ssi;
 
-use strict;
 use countries;
 use states;
 use provinces;
@@ -11,7 +11,7 @@ use HTML::Entities qw(encode_entities);
 require sets;
 require sql;
 
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;

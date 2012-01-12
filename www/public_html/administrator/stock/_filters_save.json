@@ -1,21 +1,27 @@
 <? echo (
-	$r->content_type('text/javascript');
-	my $Object = eval( "new openprint::$param{type}($param{id});" );
+	my $Object = ('openprint::'.$param{type})->new($param{id});
 	my $error;
-	if ( $param{'action'} eq 'Save' and $param{'shortname'} ) {
-		$error .= $Object->save({
-			'shortname'	=>	$param{'shortname'},
-			'longname'	=>	$param{'longname'},
-			});
+	my $html;
+	if ( $param{'action'} eq 'Save' and $param{'name'} ) {
+		if ( sets::isin( $param{type}, [ 'InventoryCondition','StockQuality' ] ) ) {
+			$variable{'error'} .= $Object->save({
+				'name'	=>	$param{'name'},
+				'message'	=>	$param{'message'},
+				});
+			$html .= sprintf(q`$('%s_name').value = '';`, $param{type}, $Object->name() );
+			$html .= sprintf(q`$('%s_message').value = '';`, $param{type}, $Object->message() );
+		} else {
+			$error .= $Object->save({
+				'name'	=>	$param{'name'},
+				});
+		} # end if
+		$html .= sprintf(q`$('%s_name').value = '';`, $param{type}, $Object->name() );
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		$error .= $Object->delete();
 	} # end if
-	my $html;
 	$html .= "alert('$error');" if $error;
-	$html .= sprintf(q`$('%s_shortname').value = '';`, $param{type}, $Object->shortname() );
-	$html .= sprintf(q`$('%s_longname').value = '';`, $param{type}, $Object->longname() );
 
-	my @array = ( '', 'select', map { $_->id(), $_->shortname() } eval("openprint::$param{type}->find('order'=>'shortname');") );
+	my @array = ( '', 'select', map { $_->id(), $_->name() } ('openprint::'.$param{type})->dropdown('order'=>'name') );
 	$html .= q`
 var ddm = $('`.$param{type}.q`');
 var options = ` . JSON::encode_json( \@array ) . q`;
@@ -24,4 +30,3 @@ fill_ddm_from_array( ddm, options );
 ddm_select_by_value( ddm, '`.$$Object{id}.q`' );`;
 	return $html;
 ) ?>
-	

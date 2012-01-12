@@ -152,7 +152,7 @@
 			$html .= '<tr class="totals"><td>Totals</td><td>';
 			$html .= Number::Format::format_number($available_weight).'lbs<br/>' if $available_weight;
 			$html .= Number::Format::format_number($available_sheets).'sheets<br/>' if $available_sheets;
-			$html .= '</td><td colspan="2">&nbsp;</td><td>';
+			$html .= '</td><td colspan="3">&nbsp;</td><td>';
 			$html .= Number::Format::format_number($total_rolls).'rolls ' . Number::Format::format_number($total_weight).'lbs<br/>' if $total_weight;
 			$html .= Number::Format::format_number($total_skids).'skids ' . Number::Format::format_number($total_sheets).'sheets<br/>' if $total_sheets;
 			$html .= '</td><td>&nbsp;</td></tr>';

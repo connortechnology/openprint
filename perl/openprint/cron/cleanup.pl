@@ -83,7 +83,6 @@ if ( 1 ) {
 			'limit'		=>	1000,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'uncalculated' ) {
@@ -101,7 +100,6 @@ if ( 1 ) {
 			$Project->delete();
 			last if $dbh->errstr();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 
 	@Projects = openprint::Project->find(
@@ -115,7 +113,6 @@ if ( 1 ) {
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Unordered' ) {
 				$log->error('WTF! Was supposed to be Unordered' . $Project->id());
@@ -132,7 +129,6 @@ if ( 1 ) {
 			$Project->delete();
 			last if $dbh->errstr();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project->find(
 			'predefined'	=>	0,
@@ -143,7 +139,6 @@ if ( 1 ) {
 			'quote_id exists'	=>	0,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Deleted' ) {
@@ -154,7 +149,6 @@ if ( 1 ) {
 			$Project->destroy();
 			last if $dbh->errstr();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
 } # end if 1
 if ( 1 ) {
@@ -347,6 +341,7 @@ if ( $config{'AssetPath'} ) {
 		} # end if
 	} # end foreach Asset
 } 
+
 $dbh->disconnect();
 1;
 __END__
