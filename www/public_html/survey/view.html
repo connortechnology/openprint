@@ -13,11 +13,11 @@
 		<input type="hidden" name="action" />
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
+				ssi::button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
 ( $$variable{'Survey'}->can_edit() ? (
-	ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id() } ),
-	ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id() } ),
-	ssi::button( 'ResponsesTop', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+	ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+	ssi::button( 'ResponsesTop', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
 ) : () ),
 			); ) ?>
 		</p>
@@ -91,11 +91,11 @@ foreach my $A ( $Response->Answers() ) {
 		<br/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SubmitBottom', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();" } ),
+				ssi::button( 'SubmitBottom', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
 ( $$variable{'Survey'}->can_edit() ? (
-	ssi::button( 'DeleteBottom', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id() } ),
-	ssi::button( 'EditBottom', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id() } ),
-	ssi::button( 'ResponsesBottom', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id() } ),
+	ssi::button( 'DeleteBottom', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+	ssi::button( 'EditBottom', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+	ssi::button( 'ResponsesBottom', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
 ) : () ),
 			); ) ?>
 		</p>
