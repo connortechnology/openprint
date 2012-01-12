@@ -835,12 +835,22 @@ sub likes {
 		$html = 'No one loves this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
 		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
-			$html .= 'You love this.';
+			$html .= 'You ' . $Likes[0]->Opinion_Type()->name() . ' this.';
 		} else {
 			$html = '1 person loves this.';
 		} # end if
 	} else {
-		$html = @Likes . ' people love this.';
+		my %Opinions;
+		my @Do;
+		foreach my $Like ( @Likes ) {
+			if ( $Like->user_id() == $session{'user_id'} ) {
+				$html .= 'You ' . $Like->Opinion_Type()->name() . ' this.';
+			}  # end if
+			if ( $$Like{'value'} ) {
+				push @Do, $Like;
+			} # end if
+		}
+		$html = int(@Do*100/@Likes) . '% of ' . @Likes . ' people love this.';
 	} # end if
 	$html .= $_[0]->like_button( 'Likes', '/includes/_likes.html' );
 	return $html;

@@ -549,6 +549,11 @@ if ( ! sets::isin( 'page_settings', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
+
+if ( ! sets::isin( 'opinion_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Opinion_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'likes', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Likes.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -570,6 +575,7 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'value'} ) {
 		$dbh->do('ALTER TABLE likes ADD value INTEGER');
+		$dbh->do('ALTER TABLE likes ADD FORIEGN KEY (value) REFERENCES opinion_types (id)');
 	} # end if
 }
 if ( ! sets::isin( 'keywords', \@tables ) ) {
