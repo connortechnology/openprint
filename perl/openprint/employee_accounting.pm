@@ -45,7 +45,7 @@ sub search {
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_start', '' );
 	ssi::setup_date_select( '/employee/accounting/search.html', 'ordered_on_end', '' );
 	if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
-		$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
+		$session{'/employee/accounting/search.html?ddmStatus'} = join(',', 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' );
 	} # end if
 } # end sub search
 

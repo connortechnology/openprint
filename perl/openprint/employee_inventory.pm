@@ -489,7 +489,7 @@ sub save_Paper {
 		} # end if
 	} # end if
 
-	my @papers = openprint::Paper->find(
+	my @Papers = openprint::Paper->find(
 			'owner_id'	=>	$param{'Owner'.$id},
 			'manufacturer_id'	=>	$param{'Manufacturer'.$id},
 			'manufacturer'		=>	$param{'txtManufacturer'.$id},

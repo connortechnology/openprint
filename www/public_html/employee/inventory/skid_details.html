@@ -7,7 +7,7 @@
 
 <form id="jump" name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
-		<p>
+		<p class="Skid">
 			<label for="skid_id">Skid ID #</label>
 			<input type="number" id="skid_id" name="skid_id" value="<? echo ( $$variable{'Skid'}->id() ) ?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" />
 			<? echo ( join('',
@@ -16,7 +16,7 @@
 				ssi::button( 'Next', { 'onclick'=>q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'text'=>'&gt;&gt;' } ),
 			); ) ?>
 		</p>
-		<p>
+		<p class="RFID">
 			<label for="rfidtag_id">RFID Tag ID #</label>
 			<input type="number" id="rfidtag_id" name="rfidtag_id" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:

@@ -37,10 +37,10 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p> 
 			<label>Status</label>
-			<select name="ddmStatus" size="1">
+			<select name="ddmStatus" multiple size="4">
 				<option value="">All</option>
 				<? echo (
-				       ssi::make_drop_down( [ map { $$_{name}, $$_{name} } openprint::Order_Status->find('order'=>'lower(name)' ) ], $session{'/employee/accounting/search.html?ddmStatus'} );
+				       ssi::make_drop_down( [ map { $$_{name}, $$_{name} } openprint::Order_Status->find('order'=>'lower(name)' ) ], [ split(',',$session{'/employee/accounting/search.html?ddmStatus'})] );
 					   ) ?>
 			</select>
 		</p>
@@ -56,21 +56,21 @@ Choose criteria and click show results. You may the download the results in CSV 
 			</select>
 		</p>
 		<p> 
-			<label>Order Date:</label>
-				<span class="DateSelectorCT">
-				<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
-							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
-							'with_today'=>1, 'with_clear'=>1,
-							} ); ) ?>
-				</span>to<span class="DateSelectorCT">
-				<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { 'onchange' =>
-							q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
-							'with_today'=>1, 'with_clear'=>1,
-							} ); ) ?>
-				</span>
+			<label>Order Date</label>
+			<span class="DateSelectorCT">
+			<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_start', { 'onchange' =>
+						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+						'with_today'=>1, 'with_clear'=>1,
+						} ); ) ?>
+			</span>to<span class="DateSelectorCT">
+			<? echo ( ssi::date_select_session( '/employee/accounting/search.html', 'ordered_on_end', { 'onchange' =>
+						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+						'with_today'=>1, 'with_clear'=>1,
+						} ); ) ?>
+			</span>
 		</p>
 		<p> 
-			<label>Total Range:</label>
+			<label>Total Range</label>
 			<input type="number" name="dblTotal1" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal1'} ) ?>" />
 			to 
 			<input type="number" name="dblTotal2" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal2'} ) ?>"	/>
@@ -78,7 +78,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 		<p class="buttons">
 		<? echo ( join('',
 					ssi::button( 'ShowResults', { 'onclick'=>
-						q`AjaxLoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
+						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 						'text'=>'Show Results' } ),
 					ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='accounting_search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
 					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
