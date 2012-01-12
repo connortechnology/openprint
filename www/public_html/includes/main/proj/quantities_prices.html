@@ -1,27 +1,27 @@
-<p>
+<li>
 	<label>Quantity</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="<?Columns?>Columns">
-	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc('f1');" /> 
+	<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="number" onkeyup="cardinalize(this);calc('f1');" /> 
 	</span>
 	<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>
 <!--#include virtual="/includes/main/proj/_unit_price.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-<p><label>&nbsp;</label>
+<li>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="<?Columns?>Columns">
-<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
+<? echo ( ssi::button( 'Breakdown'.$$variable{'QTYIndex'}, { onclick=>"show_breakdown('$$variable{'QTYIndex'}');", text=> 'Breakdown' } ); ) ?>
     </span>
 	<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>

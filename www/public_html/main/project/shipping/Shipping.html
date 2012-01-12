@@ -45,21 +45,25 @@
 			</div>
 			<br class="spacer"/>
 			<fieldset>
-			<p>
-				<label># of items to ship</label>
-				<? echo (
-					my $html = '';
-					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$html .= sprintf(q`	
-							<span class="%3$sColumns">
-							<input type="number" name="txtQuantity%1$d" value="%2$d" onkeyup="calc(this.form.name);" />
-							</span>`, $qty_index, $$variable{"txtQuantity$qty_index"}, $$variable{'Columns'} );
-					} # end foreach qty_index
-					return $html;
-				) ?>
-			</p>
-			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
-			<!--#include virtual="/includes/main/proj/_service_price.html"-->
+			<ul>
+				<li><label># of items to ship</label>
+					<? echo (
+						my $html = '';
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+							$html .= ssi::input(
+								name	=>	'txtQuantity'.$qty_index,
+								value	=>	$$variable{"txtQuantity$qty_index"},
+								type	=>	'number',
+								onkeyup	=>	'cardinalize(this);calc(this.form.name);' );
+								$html .= '</span>';
+						} # end foreach qty_index
+						return $html;
+					) ?>
+				</li>
+				<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
+				<!--#include virtual="/includes/main/proj/_service_price.html"-->
+			</ul>
 			</fieldset>
 			<p><label>More Shipping?</label>
 				<input type="radio" id="AdditionalY" name="Additional" value="Y" /><label class="radio" for="AdditionalY">Yes</label>

@@ -100,7 +100,7 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 		} # end foreach Type
 		$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Manifest
-	$html .= '<tr class="totals"><td colspan="9">Total</td><td id="total" class="Price">'.openprint::Current::format($total).'</td></tr>';
+	$html .= '<tr class="totals"><td colspan="9">Total</td><td id="total" class="Price">'.openprint::Currency::format($total).'</td></tr>';
 	return $html;
 ) ?>
 </table>

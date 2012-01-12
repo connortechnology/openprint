@@ -314,6 +314,7 @@ sub save {
 	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
 	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction() if ! $$specs{'chkOverrideGrainDirection'.$qty_index};
+	$$specs{'ddmBleedSize'.$qty_index} = $$self{'bleed_size'};
 	my $Paper = $self->Paper();
 	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
 		$$specs{'CutOff'.$qty_index} = $Paper->height();

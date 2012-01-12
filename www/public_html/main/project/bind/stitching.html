@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-<script type="text/javascript" src="/javascripts/proj/stitching.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/stitching.js"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -13,7 +13,8 @@
 		<!--#include virtual="/includes/main/proj/stitching.html"-->
 		</fieldset>
 		<fieldset><legend>Results</legend>
-			<p>
+			<ul>
+			<li>
 				<label>Signatures</label>
 			<!-- The rest is done for each qty -->
 			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -22,13 +23,17 @@
 			<span class="<?Columns?>Columns">
 <? echo ( 
 	my $html = '';
-	foreach my $page ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 44, 48, 64 ) {
-		$html .= sprintf('<input name="txtSignatureQty%1$dPage-%2$d" value="%3$d" type="number" onkeyup="calc(this.form.name);" %4$s /> %1$d Page Signature(s)<br/>', $page, $$variable{'QTYIndex'}, $$variable{'txtSignatureQty'.$page.'Page-'.$$variable{'QTYIndex'}}, sets::isin( $session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"' );
+	foreach my $page ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
+		$html .= ssi::input( 
+			name		=>	"txtSignatureQty${page}Page-$$variable{QTYIndex}",
+			value		=>	$$variable{"txtSignatureQty${page}Page-$$variable{QTYIndex}"},
+			type		=>	'number',
+			onkeyup		=>	'cardinalize(this);calc(this.form.name);',
+			readonly	=>	!sets::isin( $session{'user_type'}, ['A','E'] ),
+			) . ' ' . $page . ' Page Signature(s)<br/>';
 	} # end foreach
 	return $html;
 ) ?>
-				<input name="txtSignatureQtyGateFolded-<?QTYIndex?>" value="<? echo ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?>" type="number" onkeyup="calc('f1');" <? echo ( sets::isin( $session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"' ) ?> />
-				Gate Folded Signature(s)<br/>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				<input type="checkbox" id="OverridePockets<?QTYIndex?>" name="OverridePockets<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverridePockets'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="OverridePockets<?QTYIndex?>">Override</label>
@@ -41,8 +46,8 @@
 			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 			<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
-		<p>
+		</li>
+		<li>
 			<label>Imposition</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -57,9 +62,10 @@
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-		</p>
+		</li>
 
         <!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+			</ul>
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

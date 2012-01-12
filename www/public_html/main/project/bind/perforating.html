@@ -24,7 +24,7 @@
 						'name'=>"txtVerticalQty-$signature_index",
 						'value'=>$$variable{"txtVerticalQty-$signature_index"},
 						'type'=>'numeric',
-						'onkeyup'=>'calc(this.form.name);',
+						'onkeyup'=>'cardinalize(this);calc(this.form.name);',
 						);
 	
 					$html .= qq`<select name="VerticalTeeth-$signature_index">
@@ -37,7 +37,7 @@
 						'name'=>"txtHorizontalQty-$signature_index",
 						'value'=>$$variable{"txtHorizontalQty-$signature_index"},
 						'type'=>'numeric',
-						'onkeyup'=>'calc(this.form.name);',
+						'onkeyup'=>'cardinalize(this);calc(this.form.name);',
 						);
 		
 					$html .= qq`<select name="HorizontalTeeth-$signature_index">
@@ -49,8 +49,10 @@
 			) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<ul>
 			<!--#include virtual="/includes/main/proj/scoring_results.html"-->
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="btnFunction" value="Save Service"/>
