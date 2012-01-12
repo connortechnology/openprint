@@ -29,7 +29,7 @@ table .mweight, table .gsm {
 	text-align: right;
 	width: 50px;
 }
-table .on_order, table .allocated, table .in_stock, table .Quantity {
+table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs {
 	text-align: right;
 	width: 90px;
 	padding-right: 5px;
@@ -82,3 +82,6 @@ padding-left: 100px;
 	vertical-align: middle;
 }
 
+.qty_lbs input, .qty_kgs input, .Docket input, .Skid input {
+	width: 100%;
+}

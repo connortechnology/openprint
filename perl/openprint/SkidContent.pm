@@ -35,6 +35,8 @@ $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::SkidContent';
+	shift @_ if ref $_[0] eq 'openprint::SkidContent';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);

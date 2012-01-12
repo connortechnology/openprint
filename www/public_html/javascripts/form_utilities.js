@@ -1047,6 +1047,10 @@ function toggletinymce(textarea_id, toggle ) {
 	} // end if
 } // end function toggletinymce
 
+function cardinalize(e) {
+	e.value = e.value.replace(/\D/g,'');
+	e.focus();
+}
 function integerize(e) {
 	e.value = e.value.replace(/[^\d\-]/g,'');
 	e.focus();

@@ -366,6 +366,11 @@ fieldset ul li input[type="text"] {
 	-webkit-box-sizing: border-box;
 	resize: vertical;
 }
+table input[type="text"], table input[type="number"] {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
 
 fieldset.filters {
 	margin-left: 0px;

@@ -318,7 +318,7 @@ foreach my $Skid ( openprint::Skid->find(
     $delete = 0 if openprint::Claim_Content->find('skid_id'=>$$Skid{id});
     $delete = 0 if openprint::ManifestContent->find('skid_id'=>$$Skid{id});
     if ( $delete ) {
-        #$Skid->destroy();
+        $Skid->destroy();
         $deleted_skids += 1;
     } # end if
 } # end foreach Skid
