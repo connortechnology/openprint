@@ -1,10 +1,16 @@
 #!/usr/bin/perl 
 
 BEGIN {
+# Debugging Stuff
+	#use	APR::Pool ();
+	#use	Apache::DB ();
+	#Apache::DB->init();
+	#use Apache::DProf;
+	#use Apache::SmallProf;
 	use 5.10.0;
 	use utf8;
-	use threads;
-	use threads::shared;
+	#use threads;
+	#use threads::shared;
 	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
@@ -23,11 +29,8 @@ BEGIN {
 	use HTML::Entities ();
 	use Data::Dumper ();
 
-# Debugging Stuff
-	#use	APR::Pool ();
-	#use	Apache::DB ();
-	#Apache::DB->init();
-#
+
+
 	use MIME::QuotedPrint ();
 	use MIME::Base64 ();
 	use Mail::Sendmail ();

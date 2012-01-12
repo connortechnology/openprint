@@ -145,23 +145,26 @@ function Fold_onchange( element, signature, qty_index, index ) {
 			return $html;
 			) ?>
 			<hr/>
-
-			<p>
+			<ul>
+			<li>
 				<label>Quantity</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-					<input name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" type="number" onkeyup="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+<? echo ( my $html;
+foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				$html .= ssi::input( name=>"txtQuantity$qty_index",
+					value=>$$variable{'txtQuantity'.$qty_index},
+					type=>'number',
+					onkeyup=>q`calc(this.form.name);`,
+				);
+				$html .= '</span>';
+			} # end foreach qty_index
+return $html;
+) ?>
+			</li>
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
 <!--#include virtual="/includes/main/proj/_additional_service.html"-->
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<p>
+			<li>
 <? echo ( 
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -171,8 +174,9 @@ function Fold_onchange( element, signature, qty_index, index ) {
 	} # end foreach qty_index
 	return $html;
 ) ?>
-			</p>
+			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			</ul>
 		</fieldset>
 		<br class="spacer"/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

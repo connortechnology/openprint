@@ -9,6 +9,9 @@ require openprint::Location;
 require openprint::Equipment_Stock_Setting;
 require sql;
 
+use Memoize;
+memoize('fits');
+
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;

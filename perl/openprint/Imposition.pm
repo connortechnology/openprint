@@ -40,45 +40,40 @@ sub new {
 } # end sub new
 
 sub AUTOLOAD {
-    my $self = shift;
-    my $type = ref($self);
     my $name = $AUTOLOAD;
     $name =~ s/.*://;
 
-    if ( @_ ) {
-		$$self{$name} = shift;
+    if ( @_ > 1 ) {
+		$_[0]{$name} = $_[1];
 		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
-			$$self{'dutch_rows'} = 1*$$self{'dutch_rows'};
-			$$self{'dutch_columns'} = 1*$$self{'dutch_columns'};
-			$$self{'imposition'} = $$self{'rows'} * $$self{'columns'} + $$self{'dutch_rows'} * $$self{'dutch_columns'};
-			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
-			$$self{'pages'} = $$self{'spreads'} * $$self{'spread_size'};
-			if ( $$self{'image_orientation'} eq 'Vertical' ) {
-				$$self{'layout_width'} = $$self{'columns'} * $$self{'image_width'};
-				$$self{'layout_height'} = $$self{'rows'} * $$self{'image_height'};
-				if ( $$self{'dutch_orientation'} eq 'width' ) {
-					$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_height'};
-					my $dutch_height = $$self{'dutch_rows'} * $$self{'image_width'};
-					$$self{'layout_height'} = $dutch_height if $dutch_height > $$self{'layout_height'};
+			$_[0]{'imposition'} = $_[0]{'rows'} * $_[0]{'columns'} + $_[0]{'dutch_rows'} * $_[0]{'dutch_columns'};
+			$_[0]{'spreads'} = $_[0]{'spread_rows'} * $_[0]{'spread_columns'};
+			$_[0]{'pages'} = $_[0]{'spreads'} * $_[0]{'spread_size'};
+			if ( $_[0]{'image_orientation'} eq 'Vertical' ) {
+				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_width'};
+				$_[0]{'layout_height'} = $_[0]{'rows'} * $_[0]{'image_height'};
+				if ( $_[0]{'dutch_orientation'} eq 'width' ) {
+					$_[0]{'layout_width'} += $_[0]{'dutch_columns'} * $_[0]{'image_height'};
+					my $dutch_height = $_[0]{'dutch_rows'} * $_[0]{'image_width'};
+					$_[0]{'layout_height'} = $dutch_height if $dutch_height > $_[0]{'layout_height'};
 				} else {
-					$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_width'};
-					my $dutch_width = $$self{'dutch_columns'} * $$self{'image_height'};
-					$$self{'layout_width'} = $dutch_width if $dutch_width > $$self{'layout_width'};
+					$_[0]{'layout_height'} += $_[0]{'dutch_rows'} * $_[0]{'image_width'};
+					my $dutch_width = $_[0]{'dutch_columns'} * $_[0]{'image_height'};
+					$_[0]{'layout_width'} = $dutch_width if $dutch_width > $_[0]{'layout_width'};
 				} # end if
-			} elsif ( $$self{'image_orientation'} eq 'Horizontal' ) {
-				$$self{'layout_width'} = $$self{'columns'} * $$self{'image_height'};
-				$$self{'layout_height'} = $$self{'rows'} * $$self{'image_width'};
+			} elsif ( $_[0]{'image_orientation'} eq 'Horizontal' ) {
+				$_[0]{'layout_width'} = $_[0]{'columns'} * $_[0]{'image_height'};
+				$_[0]{'layout_height'} = $_[0]{'rows'} * $_[0]{'image_width'};
 
-				if ( $$self{'dutch_orientation'} eq 'width' ) {
-					$$self{'layout_width'} += $$self{'dutch_columns'} * $$self{'image_width'};
-					my $dutch_height = $$self{'dutch_rows'} * $$self{'image_height'};
-					$$self{'layout_height'} = $dutch_height if $dutch_height > $$self{'layout_height'};
+				if ( $_[0]{'dutch_orientation'} eq 'width' ) {
+					$_[0]{'layout_width'} += $_[0]{'dutch_columns'} * $_[0]{'image_width'};
+					my $dutch_height = $_[0]{'dutch_rows'} * $_[0]{'image_height'};
+					$_[0]{'layout_height'} = $dutch_height if $dutch_height > $_[0]{'layout_height'};
 				} else {
-					$$self{'layout_height'} += $$self{'dutch_rows'} * $$self{'image_height'};
-					my $dutch_width = $$self{'dutch_columns'} * $$self{'image_width'};
-					$$self{'layout_width'} = $dutch_width if $dutch_width > $$self{'layout_width'};
+					$_[0]{'layout_height'} += $_[0]{'dutch_rows'} * $_[0]{'image_height'};
+					my $dutch_width = $_[0]{'dutch_columns'} * $_[0]{'image_width'};
+					$_[0]{'layout_width'} = $dutch_width if $dutch_width > $_[0]{'layout_width'};
 				} # end if
-
 			} # end if
 			#if ( $$self{'spreads'} ) {
 				#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
@@ -86,7 +81,7 @@ sub AUTOLOAD {
 			#} # end if
 		} # end if
 	} # end if
-	return $$self{$name};
+	return $_[0]{$name};
 } # end sub AUTOLOAD
 
 sub display {

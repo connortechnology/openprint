@@ -340,7 +340,7 @@ function selectProjectTemplate( formName ) {
 		var selected_size = get_value( form.ddmProjectSize );
 		clear_ddm(ddm);
 		add_option( form.ddmProjectSize, 'Custom','Custom' );
-		if ( TemplateType ) {
+		if ( TemplateType != '' ) {
 			if ( options[TemplateType] ) {
 				for ( var x = 0; x < options[TemplateType].length; x += 1 ) {
 					var value = options[TemplateType][x].value;
@@ -405,6 +405,7 @@ function Stock_onchange( element, id ) {
 	h.set('project_id', form.elements['ProjectIndex'].value );
 	h.set('selected', element.name );
 	h.set('form', form.id );
+	h.set('signature_id', id );
 	if ( form.elements['txtWidth'] ) 
 		h.set( 'width', form.elements['txtWidth'].value );
 	if ( form.elements['txtHeight'] ) 
@@ -438,6 +439,7 @@ function cbStockFillResults( results ) {
 		return;
 	} // end if
 	results.unset('form');
+	var signature_id = results.get('signature_id');
 	var suffixes = new Array ( '', '1', '2', '3' );
 
     var keys = results.keys();
@@ -473,7 +475,7 @@ function cbStockFillResults( results ) {
 				} // end if
 			} // end for suffix
 		} else {
-			var ddm = form.elements['ddmStock'+key];
+			var ddm = form.elements['ddmStock'+key+signature_id];
 			if ( ! ddm ) {
 //alert('No ddmStock'+key+suffix);
 				continue;
@@ -497,7 +499,7 @@ function cbStockFillResults( results ) {
 	for ( var index = 0, len = filters.length; index < len; ++index ) {
 		for ( var suffix_index = 0; suffix_index < suffixes.length; suffix_index += 1 ) {
 			var suffix = suffixes[suffix_index];
-			var filter = form.elements['ddmStock'+filters[index]+suffix];
+			var filter = form.elements['ddmStock'+filters[index]+signature_id+suffix];
 			if ( filter ) {
 				filter.disabled = false;
 			} // end if filter exists

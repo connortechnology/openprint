@@ -97,18 +97,19 @@ $log->debug("New by hash @keys : " . $id->to_string() );
 sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-	my $fields = eval '\%'.$type.'::fields';
-	my $debug = eval '$'.$type.'::debug';
+	no strict 'refs';
+	my $fields = \%{$type.'::fields'};
+	my $debug = ${$type.'::debug'};
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-		my $table = eval '$'.$type.'::table';
+		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );
 			return;
 		} # end if
-		my @identified_by = eval '@'.$type.'::identified_by';
-		my $d = eval '$'.$type.'::dbh';
+		my @identified_by = @{$type.'::identified_by'};
+		my $d = ${$type.'::dbh'};
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
@@ -320,10 +321,10 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 } # end sub set
 
 sub copy {
-
+	no strict 'refs';
 	my $type = ref $_[0];
 	my $new = new $type;
-	my $fields = eval ('\%'.$type.'::fields');
+	my $fields = \%{$type.'::fields'};
 	@$new{keys %$fields} = @{$_[0]}{keys %$fields};
 	delete $$new{id};
 
@@ -524,10 +525,11 @@ sub find_operators {
 } # end sub
 
 sub find {
+	no strict 'refs';
 	my $type = shift;
-	my $table = eval '$'.$type.'::table';
+	my $table = ${$type.'::table'};
 
-	my $debug = eval '$'.$type.'::debug';
+	my $debug = ${$type.'::debug'};
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
@@ -554,7 +556,7 @@ sub find {
 	} # end if
 	$sql .= ' FROM '.$table;
 	my @values;
-	my $local_dbh = eval '$'.$type.'::dbh';
+	my $local_dbh = ${$type.'::dbh'};
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	if ( $$params{'dbh'} ) {
 		$local_dbh = $$params{'dbh'};
@@ -563,7 +565,7 @@ sub find {
 	return () if ! $local_dbh;
 	delete $$params{'dbh'};
 
-	my $cache_field = eval '$'.$type.'::cache_field;';
+	my $cache_field = ${$type.'::cache_field'};
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
 
 #$log->debug("have cache field $cache_field flr $$params{$cache_field}");
@@ -590,7 +592,7 @@ sub find {
 	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
 
 	foreach ( 'find_fields', 'fields' ) {
-		my $f = eval '\%'.$type.'::'.$_;
+		my $f = \%{$type.'::'.$_};
 		next if ! $f;
 
 		foreach my $k ( @param_keys ) {
@@ -661,7 +663,7 @@ sub find {
 
 #$log->debug("Where: (@where)");
 
-	my $fields = eval '\%'.$type.'::fields';
+	my $fields = \%{$type.'::fields'};
 	# Check for Object references
 	if ( %$params ) {
 		foreach my $k ( keys %$params ) {
@@ -670,7 +672,7 @@ sub find {
 			if ( exists $$fields{$f} ) {
 Carp::cluck("Use of deprecated Object ref in find");
 				if ( $$params{$k}->id() ) {
-					push @where, "$$fields{$f} = ?";
+					push @where, $$fields{$f}.' = ?';
 					push @values, $$params{$k}->id();
 				} else {
 					push @where, "$$fields{$f} IS NULL";

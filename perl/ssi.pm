@@ -777,6 +777,16 @@ sub input {
 	$html .= '/>';
 	return $html;
 } # end sub input
+sub select( $$$ ) {
+	my ( $data, $selected, $options ) = @_;
+	my $html = '<select';
+	$html .= ' name="'.$$options{name}.'"' if $$options{name};
+	$html .= ' id="'.$$options{id}.'"' if $$options{id};
+	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
+	$html .= '>';
+	$html .= make_drop_down( $data, $selected );
+	$html .= '</select>';
+}
 
 1;
 __END__

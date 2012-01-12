@@ -7,7 +7,7 @@
 	} # end if
 ) ?>
 <div class="Service <?ServiceTypeID?>">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 <? echo (
 	my $html = '';
@@ -55,25 +55,28 @@
 		$html .= "</fieldset>\n";
 	} # end foreach signature
 
-	$html .= "<fieldset><legend>Totals</legend>\n";
+	$html .= "<fieldset><legend>Totals</legend><ul>\n";
 	foreach my $stock ( @stocks ) {
 		my $stock_id = $indexes{$stock};
-		$html .= '<p><label>'.$stock."</label>\n";
+		$html .= '<li><label>'.$stock."</label>\n";
 		my $Paper = $papers{$stock};
 
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			my $blah = $stock_id.'-'.$qty_index;
 			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= sprintf(q`<input size="6" type="text" id="qty-%1$d-%2$d" name="qty-%1$d-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />lbs`, $stock_id, $qty_index, $totals{$stock}[$qty_index] );
+			$html .= ssi::input( type=>'number', id=>'qty-'.$blah, name=>'qty-'.$blah, value=>$totals{$stock}[$qty_index], onkeyup=>q`cardinalize(this);calc(this.form.name);` );
+			$html .= 'lbs';
 			if ( $Paper->type() ne 'Roll' ) {
-				$html .= sprintf(q`<br/><input size="6" type="text" id="sheets-%1$d-%2$d" name="sheets-%1$d-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />sheets`, $stock_id, $qty_index, $sheets{$stock}[$qty_index] );
+				$html .= '<br/>'. ssi::input( type=>'number', id=>'sheets-'.$blah, name=>'sheets-'.$blah, value=>$sheets{$stock}[$qty_index], onkeyup=>q`cardinalize(this);calc(this.form.name);` );
+				$html .= 'sheets';
 			} # end if
 			$html .= "</span>\n";
 		} # end foreach qty_index
-		$html .= "</p>\n";
+		$html .= "</li>\n";
 		$stock_id += 1;
 	} # end foreach stock
 	$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_service_price.html' );
-	$html .= '</fieldset>';
+	$html .= '</ul></fieldset>';
 	return $html;
 ) ?>
 			
