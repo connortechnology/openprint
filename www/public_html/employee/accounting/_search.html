@@ -1,0 +1,83 @@
+<? eval (
+	if ( $param{'order_id'} ) {
+		@{$$variable{'Orders'}} = openprint::Order->find(
+			'id'		=>	$param{'order_id'},
+			'order'		=> 'created_on',
+			);
+	} elsif ( $param{'invoice_id'} ) {
+		s/^\s+//, s/\s+$// for $param{'invoice_id'};
+		
+		@{$$variable{'Orders'}} = openprint::Order->find(
+			'invoice_id'	=>	$param{'invoice_id'},
+			'order'		=> 'created_on',
+			);
+	} else {
+	@{$$variable{'Orders'}} = openprint::Order->find(
+		ssi::date_filter( '/employee/accounting/search.html?ordered_on_start', 'created_on_start' ),
+		ssi::date_filter( '/employee/accounting/search.html?ordered_on_end', 'created_on_end' ),
+		( $session{'/employee/accounting/search.html?ddmStatus'} ? ( 'status'		=> $session{'/employee/accounting/search.html?ddmStatus'} ) : () ),
+		( $session{'/employee/accounting/search.html?ddmCustomer'} ? ( 'company_id'	=> $session{'/employee/accounting/search.html?ddmCustomer'} ) : () ),
+		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( 'salesrep_id' => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
+
+		( $session{'/employee/accounting/search.html?dblTotal1'} ? ( 'value_start'	=> $session{'/employee/accounting/search.html?dblTotal1'} ) : () ),
+		( $session{'/employee/accounting/search.html?dblTotal2'} ? ( 'value_end'	=> $session{'/employee/accounting/search.html?dblTotal2'} ) : () ),
+		'owing >'	=>	0,
+		'order'		=> $openprint::Order::fields{'created_on'},
+		);
+	} # end if
+) ?>
+	<? if ( @{$$variable{'Orders'}} ) ?>
+<table class="List">
+	<tr> 
+		<th class="order_id">Order ID</th>
+		<th class="Docket">Docket</th>
+		<th class="Date">Date</th>
+		<th class="Company">Company</th>
+		<th class="status">Status</th>
+		<th class="invoice_id">Invoice #</th>
+		<th class="po_id">P.O. #</th>
+		<th class="Price">Total</th>
+		<th class="Price">Balance</th>
+	</tr>
+	<? echo (
+		$$variable{'ReportTotal'} = $$variable{'ReportBalance'} = 0;
+		my $html;
+		my $rowclass;
+		foreach my $Order ( @{$$variable{'Orders'}} ) {
+			$html .= sprintf(q`
+<tr%1$s> 
+	<td class="order_id"><a href="details.html?order_id=%2$d">%2$d</a></td>
+	<td class="Docket"><a href="details.html?order_id=%2$d">%3$d</a></td>
+	<td class="Date">%4$s</td>
+	<td class="Company">%5$s</td>
+	<td class="status">%6$s</td>
+	<td class="invoice_id">%7$s</td>
+	<td class="po_id">%8$s</td>
+	<td class="Price">%9$s</td>
+	<td class="Price">%10$s</td>
+</tr>`,
+	$rowclass, $$Order{'id'}, $$Order{'docket'}, 
+	Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Order->created_on() ) ),
+	ssi::html_escape( $Order->Company->name() ),
+	$Order->status(),
+	ssi::html_escape( $Order->invoice_id() ),
+	ssi::html_escape( $Order->po() ),
+	openprint::Currency::format( $Order->total() ),
+	openprint::Currency::format( $Order->owing() ),
+);
+
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$$variable{'ReportTotal'} += $Order->total();
+			$$variable{'ReportBalance'} += $Order->owing();
+		} # end foreach Order
+		return $html;
+	) ?>
+	<tr class="totals"> 
+		<td colspan="7" align="right"><b>Report Total:</b></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
+	</tr>
+</table>
+<? else ( @{$$variable{'Orders'}} ) ?>
+There were no results matching your criteria.<br>
+<? endif ( @{$$variable{'Orders'}} ) ?>

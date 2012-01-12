@@ -214,7 +214,9 @@ function howdidyouhearaboutus_onchange(e) {
 					<span id="password_alert"></span>
 				</li>
 			</ul>
+<? if ( (!$session{'user_id'}) and ($config{'UseCaptchaOnRegistration'} eq 'Y') ) ?>
 			<div id="Captcha"><!--#include virtual="/includes/_captcha.html"--></div>
+<? endif ( (!$session{'user_id'}) and ($config{'UseCaptchaOnRegistration'} eq 'Y') ) ?>
 			</div>
 <? if ( $config{'RegistrationDisclaimer'} ) ?>
 				<p><? echo ( $config{'RegistrationDisclaimer'} ) ?></p>
