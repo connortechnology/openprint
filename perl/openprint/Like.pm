@@ -1,5 +1,6 @@
 use strict;
 require openprint::Object_Type;
+require openprint::Opinion_Type;
 package openprint::Like;
 our @ISA = qw( openprint::Object );
 
@@ -43,6 +44,10 @@ sub Object {
 	} # end if
 	return $_[0]{'Object'};
 } # end sub Object
+
+sub Opinion_Type {
+	return new openprint::Opinion_Type( $_[0]{'value'} );
+} # end sub Opinion_Type
 
 1;
 __END__

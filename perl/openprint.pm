@@ -61,7 +61,7 @@ sub session_init {
 		} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
 			my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
 			if ( ! $Pricelist->id() ) {
-				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh ) );
+				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( ) );
 			} # end if
 			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 		} # end if

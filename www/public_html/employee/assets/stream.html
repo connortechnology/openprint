@@ -19,7 +19,7 @@ Vote on these pictures to say whether you think each one is a &quot;do&quot; or 
 
 		my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
 
-		my $Asset = openprint::Asset->find_one( 'created_by !=' => $session{'user_id'}, 'order'	=>	'id desc',
+		my $Asset = openprint::Asset->find_one( 'order'	=>	'id desc',
 				'id not in'=>[ map { $_->object_id() } @Likes ],
 				'id in' => [ map { $_->asset_id() } $DoDont->Photos() ],
 			);

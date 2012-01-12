@@ -65,7 +65,7 @@ if ( 0 ) {
 		</form>
 		<div class="Caption"><? echo ( $$variable{'Photo'}->Asset()->description() ) ?></div>
 <? if ( $session{'user_id'} ) ?>
-<div id="Likes"><? echo ( $$variable{'Photo'}->likes('Likes') ) ?></div>
+<div id="Likes"><? echo ( $$variable{'Photo'}->Asset()->likes('Likes') ) ?></div>
 		<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_photo_comments.html"--></fieldset></div>
 <? endif ( $session{'user_id'} ) ?>
 	</div><!--View-->
