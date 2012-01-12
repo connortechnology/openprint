@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::OrderedProject;
 require openprint::Order_Tax;
+require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
