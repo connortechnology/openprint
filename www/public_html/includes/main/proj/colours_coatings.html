@@ -1,6 +1,7 @@
 <div id="Inks<?Signature?>">
 <div class="InksFront">
 	<fieldset><legend>Front</legend>
+		<div class="SpotColours">
 		<? echo ( 
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
@@ -24,7 +25,8 @@
 			} # end foreach colour
 			return $html;
 		) ?>
-		<br class="spacer"/>
+		</div>
+		<div class="ProcessColours">
 		<input type="checkbox" id="chkProcessColourSideOne<?Signature?>" name="chkProcessColourSideOne<?Signature?>" <? echo ( ssi::checked( $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
 		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
@@ -43,6 +45,7 @@
 	return $html;
 ) ?>
 		</span>
+		</div>
 		<div id="SpecialColoursSideOne<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<? echo ( 
 				my $html;
@@ -72,6 +75,7 @@ same as front?
 <? endif ( ! $$variable{'txtSignatureType'} ) ?>
 </legend>
 		<div id="InksOnBackQuestions<?Signature?>" <? echo ( $$variable{'sides_the_same'.$$variable{'Signature'}} eq 'Y' ? ' style="display:none;"':'') ?>>
+		<div class="SpotColours">
 		<? echo (
 			my $html;
 			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
@@ -94,6 +98,8 @@ same as front?
 			} # end foreach colour
 			return $html;
 		) ?>
+		</div>
+		<div class="ProcessColours">
 		<input type="checkbox" id="chkProcessColourSideTwo<?Signature?>" name="chkProcessColourSideTwo<?Signature?>" <? echo ( ssi::checked( $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideTwo<?Signature?>').show() } else { $('ProcessCoveragesSideTwo<?Signature?>').hide() } calc(this.form.name);" />
 	  <label class="radio" for="chkProcessColourSideTwo<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideTwo<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
@@ -112,6 +118,7 @@ same as front?
 	return $html;
 ) ?>
 		</span>
+		</div>
 		<div id="SpecialColoursSideTwo<?Signature?>" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 			<? echo ( 
 				my $html;

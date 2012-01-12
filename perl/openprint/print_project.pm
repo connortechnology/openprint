@@ -169,6 +169,7 @@ sub choose_service {
 
 	# get the printing service
 	my $status = openprint::service::status( $Project->id(), $$services{''}[0] ) if $$services{''};
+$log->debug("Status of projec type: $status");
 	
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)

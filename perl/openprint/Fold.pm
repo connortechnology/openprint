@@ -7,14 +7,14 @@ use openprint::Fold;
 use openprint::FoldSpecification;
 require sql;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 use vars qw( $table $serial $log $dbh %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 $table = 'folds';
 $serial= 'fold_id_seq';
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 %fields = (
 	'id'					=>	'id',
@@ -90,8 +90,11 @@ $serial= 'fold_id_seq';
 );
 
 sub to_string {
-	my ( $self ) = @_;
-	return sprintf('%s %dx%d=%d pages min:%d max:%d impo', @$self{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
+	if ( ! $_[0]{'to_string'} ) {
+		$_[0]{'to_string'} = sprintf('%s %dx%d=%d pages min:%d max:%d impo', 
+				@{$_[0]}{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
+	} # end if
+	return $_[0]{'to_string'};
 } # end sub to_string
 
 sub delete {
@@ -105,32 +108,29 @@ sub delete {
 } # end sub delete
 
 sub copy {
-	my ( $self ) = @_;
 	my $new = new openprint::Fold();
-	@$new{keys %fields} = @$self{keys %fields};
-	@{$$new{'Specifications'}} = map { $_->copy() } $self->Specifications();
+	@$new{keys %fields} = @{$_[0]}{keys %fields};
+	@{$$new{'Specifications'}} = map { $_->copy() } $_[0]->Specifications();
 	delete $$new{id};
 	return $new;
 } # end sub copy
 
 sub Equipment {
-	my $self = shift;
-	return new openprint::Equipment( $$self{equipment_id} );
+	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
 
 sub Specifications {
-	my $self = shift;
-	if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+	if ( ! $_[0]{'Specifications'} ) {
+		@{$_[0]{'Specifications'}} = openprint::FoldSpecification->find( 'fold_id'=>$_[0]{'id'},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
 	} # end if
-	return @{$$self{'Specifications'}};
+	return @{$_[0]{'Specifications'}};
 } # end sub Equipment
 
 sub Specification {
 	my ( $self, $range ) = @_;
 
     if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
+		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'fold_id'=>$$self{'id'},'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
     } # end if
 
     if ( ! @{$$self{'Specifications'}} ) {
@@ -138,7 +138,7 @@ sub Specification {
 	} # end if
 
 	if ( $$self{'Specifications'}[0]{weight_units} eq 'lbs' )  {
-$log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if $debug;
+$log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $range ) ) if DEBUG;
 		$range = openprint::Paper::gsm_to_weight( $range );
 	} # end if
 
@@ -148,7 +148,7 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}[$i];
-$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
+$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if DEBUG;
 		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
 		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} >= $range ) );
@@ -167,10 +167,10 @@ $log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold
         $i -= 1;
         # back up
 		$x = $$self{'Specifications'}[$i];
-$log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if $debug;
+$log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight() . ' : ' . $x->runspeed() ) if DEBUG;
 		return if ( (1*$$x{max_weight}) and ( $$x{max_weight} < $range ) and ! $$x{interpolate} );
    } else {
-	   $log->debug("Couldn't find monimum for $range ") if $debug;
+	   $log->debug("Couldn't find monimum for $range ") if DEBUG;
 	   return;
    } # end if
 
@@ -179,7 +179,7 @@ $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight()
 		# Don't need to check for equality, as we do that above
 	   return $Spec if ( !(1*$$Spec{max_weight}) and ! $$Spec{interpolate} );
 
-$log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
+$log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if DEBUG;
 # first step, find one less than the min
 		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( $$Spec{max_weight} eq '' ) ) {
 			#$log->debug("Foudn Max at $i " . @{$$self{'Specifications'}} );
@@ -189,9 +189,9 @@ $log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec
    if ( $i and $i < @{$$self{'Specifications'}} ) {
 # back up
 	   $y = $$self{'Specifications'}[$i];
-$log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if $debug;
+$log->debug("Found spec max " . $y->min_weight() . ' ' . $y->max_weight() . ' : ' . $y->runspeed() ) if DEBUG;
    } else {
-$log->debug("Couldn't find maximum") if $debug;
+$log->debug("Couldn't find maximum") if DEBUG;
 	   return;
    } # end if
 

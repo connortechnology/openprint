@@ -244,7 +244,7 @@ $html .= '</span>';
 	<!--#include virtual="/includes/main/proj/_unit_price.html"-->
 	<!--#include virtual="/includes/main/proj/_service_price.html"-->
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<li><label>&nbsp;</label>
+	<li>
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

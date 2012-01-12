@@ -2,6 +2,7 @@ use strict;
 package openprint::service;
 
 use Carp qw( cluck );
+use Memoize;
 
 require openprint::Equipment;
 require openprint::pricing;
@@ -44,6 +45,8 @@ sub get_price {
 	my %price = get_price_object( $service, $range, $Equipment );
 	return $price{'Price'};
 } # end sub get_price
+#memoize('get_price_object');
+#memoize('get_price');
 
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;

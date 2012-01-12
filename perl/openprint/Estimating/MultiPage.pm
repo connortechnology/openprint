@@ -155,6 +155,18 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 				$$specs{'txtServiceDescription'.$group_id} = 'Perforated Reply Card';
 			} # end if
 		} else {
+if ( ! $group_id ) {
+$log->warn("NO GROUP ID $group_id");
+}
+			my @g_signatures = $Project->signatures({'Group'=>$group_id});
+			if ( ! @g_signatures ) {
+				$Project->add_signature( undef, undef, {
+'Group'=>$group_id,
+( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages' ) : () ),
+( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages' ) : () ),
+( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages' ) : () ),
+} );
+			} # end if
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 				$override_pages{$group_id} = $$sig_specs{'GroupPageQuantity'} if $$sig_specs{'OverrideGroupPageQuantity'} eq 'Y';
@@ -278,6 +290,7 @@ $openprint::log->debug("********************************************************
 	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
 	@signatures = $Project->signatures() if ! @signatures;
 $openprint::log->debug( "Signature: @signatures");
+	return 'uncalculated' if ! @signatures;
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {

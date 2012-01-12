@@ -27,7 +27,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -1067,12 +1067,12 @@ sub add_signature {
 	
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-	my ($print_service_index) = $self->add_service( 'Signature' );
+	my $print_service_index = $self->add_service( 'Signature', $data );
 	if ( ! $print_service_index ) {
 		$log->error("Error adding Signature!");
 		return;
 	} # end if
-	openprint::service::status( $self->id(), $print_service_index, $status );
+	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
@@ -1165,7 +1165,7 @@ sub Ordered_Project {
 } # end sub Ordered_Project
 
 sub add_service {
-	my ( $self, $type ) = @_;
+	my ( $self, $type, $data ) = @_;
     my $service_index = 0;
 
     my $ServiceType;
@@ -1190,12 +1190,23 @@ sub add_service {
     my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
     $_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
     push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
-    while ( @defaults ) {
-        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, shift @defaults, shift @defaults, 1 );
+    while ( my ( $n, $v ) = splice @defaults, 0, 2 ) {
+		if ( $data and exists $$data{$n} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
+			delete $$data{$n};
+		} else {
+			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $v, 1 );
+		} # end if
     } # end while
     foreach my $qty_index ( $self->quantity_indexes() ) {
-        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", $self->quantity($qty_index), 1 );
+        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", 
+		( ( $data and exists $$data{"txtQuantity$qty_index"} ) ? $$data{"txtQuantity$qty_index"} : $self->quantity($qty_index) ), 1 );
     } # end foreach
+if ( $data ) {
+	foreach my $n ( keys %$data ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, $n, $$data{$n}, 1 );
+	} # end foreach 
+}
 
     sql::end_transaction( $dbh, $ac );
     delete $$self{'Services'};
@@ -1406,6 +1417,7 @@ sub add_Service {
 	my $service_id = $_[0]->add_service( $_[1] );
 	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
 } # end sub add_Service
+
 sub recalculate {
 	my $self = shift;
 $openprint::log->debug("Project::recalculate");
@@ -1428,6 +1440,7 @@ $openprint::log->debug("Calculate_Sigs: status: $status");
 	$self->summary(undef);
 	return $self->save();
 } # end sub recalculate
+
 sub Project {
 	return $_[0];
 } # end sub Proejct;

@@ -65,6 +65,7 @@ sub view_services {
 		# Will insert starting signatures
 		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
 		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
+		# Not strictly needed, because MultiPage::calc will rough in any signatures needed
 		$Project->recalculate();	
 		# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
@@ -319,20 +320,15 @@ sub multipage_signatures {
 $log->debug("special group $group_id");
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
-$log->debug("adding special group $group_id");
-				my $ac = sql::start_transaction( $dbh );
-				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-				my $print_service_index = $Project->add_service( 'Signature' );
+				$log->debug("adding special group $group_id");
+				my $print_service_index = $Project->add_signature( 'Signature', undef, undef, {
+						#'txtSignatureType'=>'Interior Pages',
+						#'txtServiceDescription'=>'Interior Pages',
+						'Group'	=>	$group_id,
+						'PrintingType'=>$$param{'PrintingType'},
+						'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+						} );
 				push @{$$services{'Signature'}}, $print_service_index;
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $group_id );
-				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', ++$signature_count );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-				sql::end_transaction( $dbh, $ac );
 			} # end if
 
 			$specified_pages{$$param{$k}} += $$param{'GroupPageQuantity'.$group_id};
@@ -352,21 +348,13 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 # now add a cover spread if we need one.
 # First, see if we have one.
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my $cover_index = $Project->add_service( 'Signature' );
-			push @{$$services{'Signature'}}, $cover_index;
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSignatureType', 'Cover Pages');
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtServiceDescription', 'Cover');
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'Group', 1 );
-# Used to give each signature a # for reference in proofs, etc.
-			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'SignatureIndex', ++$signature_count );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'PrintingType', $$param{'PrintingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSpreadSize', 4 );
-			# Width and Height will be added on auto-calc
-			sql::end_transaction( $dbh, $ac );
+			push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+						'txtSignatureType'=>'Cover Pages',
+						'txtServiceDescription'=>'Cover',
+						'Group'	=>	1,
+						'PrintingType'=>$$param{'PrintingType'},
+						'txtSpreadSize'	=>	4,
+						} );
 			$specified_pages{'Cover Pages'} = 4;
 		} # end if
 
@@ -390,37 +378,25 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	my @gate_spread_services = $Project->signatures({'type'=>'Gate Folded Pages'});
 	my $need_gate_spreads = int($$param{'txtGateFoldedSpreadQuantity'}) - scalar @gate_spread_services;
 	while ( $need_gate_spreads > 0 ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my $gate_index = $Project->add_service( 'Signature' );
-		push @{$$services{'Signature'}}, $gate_index;
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtSignatureType', 'Gate Folded Pages');
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtServiceDescription', 'Gate Folded Pages');
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'Group', 3 );
-		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'SignatureIndex', ++$signature_count );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'PrintingType', $$param{'PrintingType'} );
-		sql::end_transaction( $dbh, $ac );
+		push @{$$services{'Signature'}}, $Project->add_signature( 'Signature', undef, undef, {
+				'txtSignatureType'=>'Gate Folded Pages',
+				'txtServiceDescription'=>'Gate Folded Pages',
+				'Group'	=>	3,
+				'PrintingType'=>$$param{'PrintingType'},
+				} );
 		$need_gate_spreads -= 1;
 	} # end while need_gate_spreads
 
 	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
-$log->debug('add interiorpages');
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my $print_service_index = $Project->add_service( 'Signature' );
-		push @{$$services{'Signature'}}, $print_service_index;
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', 2 );
-		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'SignatureIndex', ++$signature_count );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'PrintingType', $$param{'PrintingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
-		sql::end_transaction( $dbh, $ac );
+		$log->debug('add interiorpages');
+		my $print_service_index = $Project->add_signature( 'Signature', undef,  undef, {
+				'txtSignatureType'=>'Interior Pages',
+				'txtServiceDescription'=>'Interior Pages',
+				'Group'	=>	2,
+				'PrintingType'=>$$param{'PrintingType'},
+				'txtSpreadSize'	=>	$$param{'txtSpreadSize'},
+				} );
 		$specified_pages{'Interior Pages'} = $needed_pages{'Interior Pages'};
 	} # end if
 	if ( ( ! $$param{'GroupPageQuantity2'} ) and ( $$param{'OverrideGroupPageQuantity2'} ne 'Y' ) ) {

@@ -1,5 +1,6 @@
 use strict;
 package openprint::pricing;
+use Memoize;
 
 require openprint::pricelist;
 require openprint::priceset;
@@ -45,6 +46,7 @@ sub get_pricelist_id {
 	return $list_id;
 } # end sub get_pricelist_id
 
+memoize('find_price');
 # returns an index into the passed array of the price entry that fits the specified quantity.
 # if $qty = '' then it will return the last entry
 # if the price array is empty, it will return -4, which isn't good.
@@ -74,14 +76,14 @@ sub get_increment {
 # So the result could be one price, or two prices.
 # $price1 and $price2 are expected to be in sorted order.
 sub merge_prices {
-	my ( $price1, $price2 ) = @_;
+	my ( $price1, $price2 );
 
-	if ( $price1->{Price} > $price2->{Price} ) {
-		my $temp_price = $price1;
-		$price1 = $price2;
-		$price2 = $temp_price;	
+	if ( $_[0]{Price} > $_[1]{Price} ) {
+		( $price2, $price1 ) = @_;
 	} elsif ( $price1->{equipment_index} != $price2->{equipment_index} ) {
-		return ( $price1, $price2 );
+		return @_;
+	} else {
+		( $price1, $price2 ) = @_;
 	} # end if
 	my @prices = ( $price1 );
 
@@ -108,13 +110,12 @@ sub merge_prices {
 # builds an array of prices with a linear quantity range.
 # the prices for each quantity range are the lowest possible.
 sub build_lowest_price_list {
-	my @prices = @_;
-	my @returned = shift @prices;
+	my @returned = shift @_;
 
 	# basically, we process each entry in the huge list of prices, and fit them into a returned list
-	while ( @prices ) {
+	while ( @_ ) {
 		# pull and entry off
-		my $price = shift @prices;
+		my $price = shift @_;
 		# Get the appropriate price entry in the returned list.
 		my $price_index = find_price( $price->{max}, @returned );
 		# so all prices higher than price_index are for quantities higher than the current
@@ -141,16 +142,17 @@ sub split_by_equipment {
 	return %lists;
 } # end sub split_by_equipment
 
+memoize('get_best_prices');
 sub get_best_prices {
 	my ( $log, $dbh, $cust_id, $prod_index, $list_id, $pricesetclass, $equipment, $qty ) = @_;
 
-	my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
+	#my $hash_index = "$list_id-$pricesetclass-$cust_id-$prod_index-$equipment-$qty";
 
-	if ( ! defined $price_cache{$hash_index} ) {
+	#if ( ! defined $price_cache{$hash_index} ) {
 
 		if ( ! $list_id ) {
 # figure out which price list we select from, because the caller didn't specify.
-			$list_id = get_pricelist_id( $log, $dbh );
+			$list_id = get_pricelist_id();
 		} # end if
 
 		my @pricing = ();
@@ -198,10 +200,11 @@ sub get_best_prices {
 				push @prices, build_lowest_price_list( @{$lists{$key}} );
 			} # end foreach
 		} # end if
-		$price_cache{$hash_index} = [ @prices ];
-	} # end if
+		#$price_cache{$hash_index} = [ @prices ];
+	#} # end if
 
-	return $price_cache{$hash_index};
+	return \@prices;
+	#return $price_cache{$hash_index};
 } # end sub get_best_prices
 
 sub get_best_price {
