@@ -2,7 +2,7 @@ use strict;
 package openprint::Opinion_Availability;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table %fields %transforms %defaults @identified_by);
+use vars qw( $debug $table %fields %find_fields %transforms %defaults @identified_by);
 
 $debug = 1;
 $table = 'opinion_availability';
@@ -12,6 +12,9 @@ $table = 'opinion_availability';
 	'object_type_id'	=>	'object_type_id',
 	'object_type'		=>	undef,
 	'object_id'			=>	'object_id',	
+);
+%find_fields = (
+	'object_type'	=>	'(SELECT name FROM object_types WHERE id=object_type_id)',
 );
 %transforms = (
 );
