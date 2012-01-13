@@ -835,7 +835,7 @@ sub likes {
 		$html = 'No one loves this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
 		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
-			$html .= 'You ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @likes ) . ' this.';
+			$html .= 'You ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} else {
 			$html = '1 person ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} # end if
