@@ -1,7 +1,7 @@
-package openprint::employee_inventory;
-use MIME::QuotedPrint;
-use Text::CSV_XS;
 use strict;
+package openprint::employee_inventory;
+use MIME::QuotedPrint ();
+use Authen::Captcha ();
 require sql;
 require misc;
 
@@ -29,6 +29,7 @@ require openprint::PurchaseOrder_Item;
 require openprint::Label;
 require openprint::Skid;
 require openprint::SkidContent;
+require openprint::Claim_Content;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -115,12 +116,20 @@ sub skids {
 			} # end foreach
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		if ( $param{'skid_id'} ) {
 			$param{'skid_id'} =~ s/[^\d\,]//g;
 			$param{Project} =~ s/\D//g;
 			$param{Docket} =~ s/\D//g;
 			my $Project = openprint::Project->find_one( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
-
 			if ( ! $Project ) {
 				$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 				return;
@@ -425,6 +434,15 @@ sub paper_details {
 			$variable{'information'} .= 'Paper successfully deleted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
@@ -471,7 +489,7 @@ sub save_Paper {
 		} # end if
 	} # end if
 
-	my @papers = openprint::Paper->find(
+	my @Papers = openprint::Paper->find(
 			'owner_id'	=>	$param{'Owner'.$id},
 			'manufacturer_id'	=>	$param{'Manufacturer'.$id},
 			'manufacturer'		=>	$param{'txtManufacturer'.$id},
@@ -814,6 +832,15 @@ $log->debug("Entering skid $skid_count");
 			$Skid->print_label();
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		foreach my $skid_id ( @skid_ids ) {
 			allocate( $skid_id, @param{'paper_id', 'Quantity','Project','Docket'} );
 		} # end foreach
@@ -1080,8 +1107,8 @@ sub send_paper_arrival_notification {
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
-			new openprint::Email()->send(
+			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			(new openprint::Email())->send(
 					FROM	=> new openprint::User( $session{'user_id'} ),
 					TO	=> @To,
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
@@ -1407,8 +1434,7 @@ sub _manifest_content {
 			$variable{'error'} .= 'No manifest id.  Please enter the manifest id before adding items to it.<br/>';
 			return;
 		} # end if
-		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-		$variable{'Manifest'} = $Manifest;
+		my $Manifest = $variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
 		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
 			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
@@ -1424,13 +1450,15 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';
+				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
 			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
+				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
+			} elsif ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
+				$variable{'error'} .= 'Skid ' . $Skid->id(). ' is already on manifest '.$otherMC->Manifest()->name().'.';
 			} else {
 				my $MC = new openprint::ManifestContent();
 				my @SC = $Skid->Contents();
-				if ( ! $param{"qty_lbs"} ) {
+				if ( ! $param{'qty_lbs'} ) {
 					if ( @SC == 1 ) {
 						$param{'qty_lbs'} = $SC[0]->quantity();
 					} # end if
@@ -1570,6 +1598,15 @@ sub available_paper {
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'owner_id'};
 	$session{'/employee/inventory/available_paper.html?type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
+		if ( exists $param{'Captcha'} ) {
+	# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$variable{'error'} .= 'Captcha Validation Code incorrect.  Please try again.';
+				return;
+			} # end if
+		} # end if
 		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
 } # end sub available_paper

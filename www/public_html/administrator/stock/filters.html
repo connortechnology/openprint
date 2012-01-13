@@ -4,13 +4,20 @@
 		new Ajax.Request( '_filters_load.json', { method: 'post', parameters: { type: e.name, id: e.value }, evalScripts: true } );
 	} // end function load(e)
 	function save( type ) {
-		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
-				type: type, 
-				id: $(type).value, 
-				action: 'Save',
-				shortname: $(type+'_shortname').value,
-				longname: $(type+'_longname').value,
-			}, evalScripts: true } );
+		if ( type == 'StockQuality' || type == 'InventoryCondition' ) {
+			new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+					type: type, 
+					id: $(type).value, 
+					name: $(type+'_name').value,
+					message: $(type+'_message').value,
+				}, evalScripts: true } );
+		} else {
+			new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+					type: type, 
+					id: $(type).value, 
+					name: $(type+'_name').value,
+				}, evalScripts: true } );
+		} 
 	} // end function save(e)
 	function destroy( type ) {
 		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
@@ -35,9 +42,26 @@
 				%3$s
 				%4$s
 			</p>`, $type,
-			ssi::make_drop_down( [ map { $_->id(), $_->shortname() } eval('openprint::'.$type."->find('order'=>'lower(shortname)')") ] ),
-			ssi::writeButton( $log, $dbh, $type.'Save', 'save.gif', "save('$type');", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, $type.'Delete', 'delete.gif', "destroy('$type');", '', 'Delete' ),
+			ssi::make_drop_down( ('openprint::'.$type)->dropdodwn('order'=>'lower(name)') ] ),
+			ssi::button( $type.'Save', { onclick=>"save('$type');", text=>'Save' } ),
+			ssi::button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
+			);
+	} # end foreach type
+	foreach my $type ( 'StockQuality', 'InventoryCondition' ) {
+		$html .= sprintf(q`
+			<p>
+				<label>%1$s</label>
+				<select name="%1$s" id="%1$s" onchange="load(this);">
+					<option value=""> select </option>
+					%2$s
+				</select><br/>
+				<label>Name</label><input type="text" name="%1$s_name" id="%1$s_name"/><br/>
+				<label>Message</label><textarea name="%1$s_message" id="%1$s_message" /></textarea><br/>
+				%3$s
+			</p>`, $type,
+			ssi::make_drop_down( ('openprint::'.$type)->dropdown('order'=>'lower(name)') ),
+			ssi::button( $type.'Save', {'onclick'=>"save('$type');", 'text'=>'Save' } ),
+			ssi::button( $type.'Delete', { onclick=>"destroy('$type');", text=>'Delete' } ),
 			);
 	} # end foreach type
 	return $html;

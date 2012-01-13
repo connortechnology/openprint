@@ -2,11 +2,10 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
+use MIME::QuotedPrint ();
 use Carp qw( cluck );
-use Math::Round;
+use Math::Round ();
 use Math::Calc::Units ();
-
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -36,7 +35,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -125,11 +124,10 @@ sub copy {
 } # end sub copy
 
 sub Prices {
-	my $self = shift;
-	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$self{'id'} );
+	if ( ! $_[0]{'Prices'} ) {
+		@{$_[0]{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $_[0]{'id'} );
 	} # end if
-	return @{$$self{'Prices'}};
+	return @{$_[0]{'Prices'}};
 } # end sub Prices
 
 sub save {

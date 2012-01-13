@@ -237,7 +237,6 @@ sub calc_setup_object {
 	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
-	$setup1->bleed_size( $$specs{'BleedSize'} );
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
@@ -255,7 +254,6 @@ sub calc_setup_object {
 	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
-	$setup2->bleed_size( $$specs{'BleedSize'} );
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );
@@ -308,13 +306,17 @@ sub calc_setup_object {
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
-		$setup1->bleed_size( $bindery_bleed );
-		$setup2->bleed_size( $bindery_bleed );
+		if ( $bindery_bleed ) {
+			$setup1->bleed_size( $bindery_bleed );
+			$setup2->bleed_size( $bindery_bleed );
+		} # end if
 	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
-		$setup1->bleed_size( $bindery_bleed ) if $bindery_bleed;
-		$setup2->bleed_size( $bindery_bleed ) if $bindery_bleed;
+		if ( $bindery_bleed ) {
+			$setup1->bleed_size( $bindery_bleed );
+			$setup2->bleed_size( $bindery_bleed );
+		} # end if
 		$bindery_head = $$specs{'PerfectBindCoverGutter'};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");

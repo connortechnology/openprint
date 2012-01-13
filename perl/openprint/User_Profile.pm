@@ -136,7 +136,7 @@ sub save {
 #$openprint::log->debug("Got parent: $parent_id");
 
 
-				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name_lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, $parent_id?('parent_id'=>$parent_id):() );
+				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, $parent_id?('parent_id'=>$parent_id):() );
 				if ( ! $Location ) {
 #$openprint::log->debug("DIdn't find location, so adding it");
 					$Location = new openprint::Location();

@@ -162,9 +162,9 @@ $log->warn("NO GROUP ID $group_id");
 			if ( ! @g_signatures ) {
 				$Project->add_signature( undef, undef, {
 'Group'=>$group_id,
-( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages' ) : () ),
-( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages' ) : () ),
-( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages' ) : () ),
+( $group_id == 1 ? ( 'txtSignatureType'=>'Cover Pages', 'txtServiceDescription'=>'Cover' ) : () ),
+( $group_id == 2 ? ( 'txtSignatureType'=>'Interior Pages', 'txtServiceDescription'=>'Interior Pages' ) : () ),
+( $group_id == 3 ? ( 'txtSignatureType'=>'Gate Folded Pages', 'txtServiceDescription'=>'Gate Folded Pages' ) : () ),
 } );
 			} # end if
 			foreach my $sig_id ( $Project->signatures({'Group'=>$group_id}) ) {

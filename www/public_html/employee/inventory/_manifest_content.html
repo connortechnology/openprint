@@ -1,6 +1,8 @@
-<!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
 	my $html = '';
+	if ( $variable{'error'} ) {
+		return qq`<script type="text/javascript">alert('$$variable{error}');</script>`;
+	} 
 	if ( $$variable{'C'} ) {
 		my $C = $$variable{'C'};
 		my $tag_id = $C->Skid()->rfidtag_id();
@@ -11,19 +13,37 @@
 		} elsif ( @SkidContents and ( $SkidContents[0]->paper_id() != $$variable{'Type'}->paper_id() ) ) {
 			$error = 'Skid contents do not match manifest.';
 		} # end if
+
+		my $id = $$variable{'type_id'}.'-'.$$C{id};
 			
-		$html .= sprintf('<tr id="tr-%1$d"><td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
-		$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
-		$html .= sprintf( q{<td><input type="text" id="docket-%3$d-%1$d" size="8" name="docket-%3$d-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/\D/,'');" /></td>}, $C->id(), $C->docket(), $$variable{'type_id'} );
-		$html .= sprintf( q{<td><input type="text" id="qty_lbs-%4$d-%1$s" name="qty_lbs-%4$d-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%4$d-%1$s') );" /></td><td><input type="text" id="qty_kgs-%4$d-%1$s" name="qty_kgs-%4$d-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%4$d-%1$s') );" /></td>}, $C->id(), $C->quantity(), $C->quantity()/2.2046, $$variable{'type_id'} );
+		$html .= sprintf('<tr id="tr-%1$d"><td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a></td>', $C->id(), $tag_id );
+		$html .= sprintf('<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
+		$html .= '<td class="Docket">'.ssi::input( type=>'number', 
+			id		=>	'docket-'.$id,
+			name	=>	'docket-'.$id,
+			value	=>	$C->docket(),
+			onkeyup	=>	'integerize(this);',
+			).'</td>';
+		$html .= '<td class="qty_lbs">'.ssi::input( type=>'number', 
+			id		=>	'qty_lbs-'.$id,
+			name	=>	'qty_lbs-'.$id,
+			value	=>	$C->quantity(),
+			onkeyup	=>	q`cardinalize(this);convert_lbs_to_kg( this, $('qty_kgs-`.$id.q`') );`,
+			) . '</td>';
+		$html .= '<td class="qty_kgs">'.ssi::input( type=>'number', 
+			id		=>	'qty_kgs-'.$id,
+			name	=>	'qty_kgs-'.$id,
+			value	=>	Math::Round::nearest( .1, $C->quantity()/2.2046 ),
+			onkeyup	=>	q`floatize(this);convert_kg_to_lbs( this, $('qty_lbs-`.$id.q`') );`,
+			) . '</td>';
 		if ( @SkidContents ) {
-			$html .= sprintf( '<td class="InStock">%d lbs</td>', $SkidContents[0]->quantity() );
-			$html .= sprintf( '<td class="LastSeen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
+			$html .= sprintf( '<td class="in_stock">%d lbs</td>', $SkidContents[0]->quantity() );
+			$html .= sprintf( '<td class="last_seen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
 		} else {
 			$html .= '<td colspan="2">&nbsp;</a>';
 		} # end if
 		$html .= '<td>'.$error.'</td>';
-		$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$$C{'id'}, 'x.gif', qq`delete_content('$$C{id}');`, '', 'X' ) . '</td>';
+		$html .= '<td class="buttons">' . ssi::button( 'X'.$$C{'id'}, { onclick=>qq`delete_content('$$C{id}');`, text=>'X', title=>'Remove' } ) . '</td>';
 		$html .= '</tr>';
 	} # end if
 	return $html;

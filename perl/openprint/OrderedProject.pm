@@ -6,7 +6,7 @@ require openprint::Project;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'order_contents';
 @identified_by = ( 'project_id', 'order_id' );
 
@@ -28,21 +28,18 @@ $table = 'order_contents';
 );
 
 sub Project {
-	my $self = shift;
-	return new openprint::Project( $$self{'project_id'} );
+	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
 
 sub price {
-	my $self = $_[0];
-
 	if ( @_ > 1 ) {
-		$$self{'price'} = $_[1];
+		$_[0]{'price'} = $_[1];
 	} # end if
 
-	if ( ! $$self{price} ) {
-		$$self{price} = $self->Project()->price( $self->qty_index() );
+	if ( ! $_[0]{price} ) {
+		$_[0]{price} = $_[0]->Project()->price( $_[0]->qty_index() );
 	} # end if
-	return $$self{price};
+	return $_[0]{price};
 } # end sub price
 
 sub quantity {

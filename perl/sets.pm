@@ -1,30 +1,26 @@
-package sets;
-
 use strict;
+package sets;
 
 sub isin {
 
     # Takes in a variable, and an array, and checks the array element by
     # element to see if the variable exists inside the array.
-    my $var = shift;
-	if ( @_ == 1 ) {
-		my $thing = shift;
+	if ( @_ == 2 ) {
 #$openprint::log->debug( 'REF' . ref $thing );
-		if ( ref $thing eq 'ARRAY' ) {
-			foreach (@{$thing}) {
-#$openprint::log->debug( 'var' . $var . ' value: ' . $_ );
-				return 1 if $_ eq $var;
+		if ( ref $_[1] eq 'ARRAY' ) {
+			foreach (@{$_[1]}) {
+				return 1 if $_ eq $_[0];
 			} # end foeach
 		} else {
-			return 1 if $thing eq $var;
+			return 1 if $_[1] eq $_[0];
 		} # end if
-	} elsif ( @_ > 1 ) {
+	} elsif ( @_ > 2 ) {
+		my $var = shift @_;
 		foreach (@_) {
 			return 1 if $_ eq $var;
 		} # end foreach
 	} # end if
     return 0;
-
 } # end sub isin
 
 sub isin_regx {

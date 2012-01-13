@@ -1155,7 +1155,6 @@ sub Ordered_Project {
 	} # end if
 
 	if ( ! $_[0]{'Ordered_Project'} ) {
-		$openprint::log->error(" No OrderedProject");
 		$_[0]{'Ordered_Project'} = new openprint::OrderedProject();
 		$_[0]{'Ordered_Project'}->project_id( $_[0]{'id'} );
 		$_[0]{'Ordered_Project'} = $_[0]{'Ordered_Project'};

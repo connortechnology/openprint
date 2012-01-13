@@ -1,12 +1,14 @@
-<p>
-	<label>Full Package Weight</label>
+<li><label>Full Package Weight</label>
 <? echo (
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= sprintf(q`
-			<span class="%3$sColumns">
-			<input name="txtPackageWeight%1$d" value="%2$s" type="text" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" /> lbs`,
-			$qty_index, $$variable{"txtPackageWeight$qty_index"}, $$variable{'Columns'} );
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= ssi::input(
+			name	=>	'txtPackageWeight'.$qty_index,
+			value	=>	$$variable{"txtPackageWeight$qty_index"},
+			type	=>	'number',
+			onkeyup	=>	'floatize(this);calc(this.form.name);' );
+		$html .= ' lbs';
 
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 			$html .= sprintf(q`<input type="checkbox" id="chkOverridePackageWeight%1$d" name="chkOverridePackageWeight%1$d" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" %2$s />
@@ -16,9 +18,8 @@
 	} # end foreach qty_index
 	return $html;
 ) ?>
-</p>
-<p>
-	<label>Package Quantity</label>
+</li>
+<li><label>Package Quantity</label>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 	<input type="checkbox" id="chkOverridePackageQuantity" name="chkOverridePackageQuantity" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( ssi::checked( $$variable{'chkOverridePackageQuantity'} eq 'Y' ); ) ?> /> 
 	<label class="radio" for="chkOverridePackageQuantity">Override</label>
@@ -27,24 +28,31 @@
 <? echo (
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= sprintf(q`
-			<span class="%3$sColumns">
-			<input name="txtPackageQuantity%1$d" value="%2$d" type="text" size="9" onkeyup="this.value=this.value.replace(/[\D]/g,'');calc(this.form.name);" />
-			</span>`, $qty_index, $$variable{"txtPackageQuantity$qty_index"}, $$variable{'Columns'} );
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= ssi::input(
+			name	=>	'txtPackageQuantity'.$qty_index,
+			value	=>	$$variable{"txtPackageQuantity$qty_index"},
+			type	=>	'number',
+			onkeyup	=>	'cardinalize(this);calc(this.form.name);' );
+		$html .= '</span>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
-</p>
-<p>
-	<label>Total Weight</label>
+</li>
+<li><label>Total Weight</label>
 <? echo (
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-		$html .= sprintf(q`
-			<span class="%3$sColumns">
-			<input name="txtTotalWeight%1$d" value="%2$d" type="text" size="9" readonly="readonly" /> lbs
-			</span>`, $qty_index, $$variable{"txtTotalWeight$qty_index"}, $$variable{'Columns'} );
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= ssi::input(
+			name	=>	'txtTotalWeight'.$qty_index,
+			value	=>	$$variable{"txtTotalWeight$qty_index"},
+			type	=>	'number',
+			onkeyup	=>	'floatize(this);calc(this.form.name);',
+			readonly	=>	1,
+ );
+		$html .= ' lbs</span>';
 	} # end foreach qty_index
 	return $html;
 ) ?>
-</p>
+</li>

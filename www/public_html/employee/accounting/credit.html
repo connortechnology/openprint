@@ -7,8 +7,8 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
 		</p>
 		<p>
-			<label>Customer:&nbsp;</label>
-            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
+			<label>Customer</label>
+            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
@@ -20,15 +20,15 @@
 <fieldset><legend>Credit Information</legend>
     <p>
         <label>Deny Purchases after</label>
-		<input type="text" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
+		<input type="number" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
     </p>
     <p>
         <label>Warn about credit after</label>
-		<input type="text" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
+		<input type="number" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
     </p>
     <p>
         <label>Credit Account Limit</label>
-        <input type="text" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+        <input type="number" name="txtCreditLimit" value="<?txtCreditLimit?>" />
     </p>
     <p>
         <label>Current Credit Balance</label>
@@ -47,7 +47,7 @@
     </p>
     <p>
         <label>Required Downpayment Amount</label>
-		<input type="text" name="txtDownpayment" value="<?txtDownpayment?>"/>
+		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>"/>
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
@@ -61,22 +61,22 @@
 	@{$$variable{'UnpaidOrders'}} = openprint::Order->find(
 		'company_id'	=> $param{'ddmCustomer'},
 		'owing >'	=>	0,
-		'order'		=> 'created_on',
+		'order'		=> $openprint::Order::fields{'created_on'},
 		);
 
 ) ?>
 <? if ( @{$$variable{'UnpaidOrders'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th align="left" width="65">Order ID</th>
-			<th align="left" width="60">Docket</th>
+			<th class="order_id">Order ID</th>
+			<th class="Docket">Docket</th>
 			<th class="Date">Date</th>
 			<th class="Status">Status</th>
-			<th align="left" width="90">Invoice #</th>
-			<th align="right">P.O. #</th>
+			<th class="invoice_id">Invoice #</th>
+			<th class="po_id">P.O. #</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
-			<th align="center" width="55"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
+			<th class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
 		</tr>
 		<? echo (
 			my $rowclass;
@@ -87,15 +87,15 @@
 				next if sets::isin( $Order->status(), ['Cancelled','Incomplete','Deleted'] );
 				$html .= sprintf( '
 				<tr%1$s> 
-					<td><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
-					<td><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
 					<td class="Date">%4$s</td>
 					<td class="Status">%9$s</td>
-					<td align="left">&nbsp;%5$s</td>
-					<td align="right">&nbsp;%6$s</td>
+					<td class="invoice_id">%5$s</td>
+					<td class="po_id">%6$s</td>
 					<td class="Price">%7$s</td>
 					<td class="Price">%8$s</td>
-					<td align="center"><input type="checkbox" name="PAID" value="%2$d"/></td>
+					<td class="buttons"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
