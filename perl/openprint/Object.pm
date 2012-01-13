@@ -10,6 +10,7 @@ require openprint::Comment;
 require openprint::View;
 require openprint::Privacy;
 require openprint::Object_Type;
+require openprint::Opinion_Availability;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -832,7 +833,7 @@ sub likes {
 	my $html;
 	my @Likes = openprint::Like->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	if ( ! @Likes ) {
-		$html = 'No one loves this yet.  Be the first!';
+		$html = 'No one has an opinion on this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
 		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
 			$html .= 'You ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
@@ -853,6 +854,8 @@ sub likes {
 } # end sub likes
 
 sub like_button {
+	my $type = ref $_[0];
+
 	my $Like = $_[0]->Like();
 	my $html;
 	my $div = $_[1];
@@ -861,11 +864,10 @@ sub like_button {
 		$div = 'like_button';
 		$html = '<span id="like_button">';
 	} # end if
-	if ( $Like ) {
-		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
-	} else {
-		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
-	} # end if
+	my @Types = openprint::Opinion_Availability->find('object_type'=>$type, 'object_id'=>$_[0]->id() );
+	foreach my $Type ( @Types ) {
+		$html .= ssi::button( $Type->Opinion_Type()->name(), { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ) } );
+	} # end foreach
 	if ( ! $_[1] ) {
 		$html .= '</span>';
 	} # end if
