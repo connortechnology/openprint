@@ -499,5 +499,9 @@ sub ReadCfg {
     return ($err);
 }
 
+sub pluralize {
+	return $_[0].'s';
+}
+
 1;
 __END__
