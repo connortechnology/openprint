@@ -1,12 +1,12 @@
-
-		<div id="Statistics">
-			<fieldset><legend>Statistics</legend>
-				<div class="content">
-					<ul>
-						<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
-						<li class="updated_on"><label>Updated on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
-						<li class="last_online"><label>Last Online</label><? echo ( $$variable{'User'}->last_logged_in() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->last_logged_in() ) ) : 'never'; ) ?></li>
-					</ul>
-				</div>
-			</fieldset>
+<div id="Statistics">
+	<fieldset><legend>Statistics</legend>
+		<div class="content">
+			<ul>
+				<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
+				<li class="updated_on"><label>Updated on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
+				<li class="last_online"><label>Last Online</label><? echo ( $$variable{'User'}->last_logged_in() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->last_logged_in() ) ) : 'never'; ) ?></li>
+				<li class="viewed"><label>Viewed</label><? echo ( scalar $$variable{'User'}->Views() ) ?> people</li>
+			</ul>
 		</div>
+	</fieldset>
+</div>

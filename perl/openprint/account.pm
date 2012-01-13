@@ -668,6 +668,11 @@ sub credit_application {
 sub view {
 	$variable{'Me'} = new openprint::User( $session{'user_id'} );
 	$variable{'User'} = new openprint::User( $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
+	my $View = openprint::View->find_one('object_type'=>'openprint::User', 'object_id'=>$variable{'User'}->id(), 'user_id'=>$session{'user_id'} );
+	if ( ! $View ) {
+		$View = new openprint::View();
+		$View->save({'object_type'=>'openprint::User', 'object_id'=>$variable{'User'}->id(), 'user_id'=>$session{'user_id'}});
+	} # end if
 	if ( exists $param{'relationship_type_id'} ) {
 		if ( $variable{'User'}->id() == $variable{'Me'}->id() ) {
 			$variable{'error'} .= "We already know you love yourself.  Frequently.";

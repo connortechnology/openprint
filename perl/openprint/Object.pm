@@ -7,6 +7,7 @@ use openprint ();
 require sets;
 require openprint::Like;
 require openprint::Comment;
+require openprint::View;
 require openprint::Privacy;
 require openprint::Object_Type;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
@@ -939,6 +940,20 @@ sub date_format {
 sub datetime_format {
 	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub datetime_format 
+
+sub Views {
+	if ( $_[1] ) {
+		$_[1]{'object_id'} = $_[0]{'id'};
+		$_[1]{'object_type'} = ref $_[0],
+		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+		return openprint::View->find($_[1]);
+	} # end if
+
+	if ( ! defined $_[0]{'Views'} ) {
+		@{$_[0]{'Views'}} = openprint::View->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	} # end if
+	return @{$_[0]{'Views'}};
+} # end sub Views
 
 sub Comments {
 	if ( $_[1] ) {
