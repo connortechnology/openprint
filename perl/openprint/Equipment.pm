@@ -43,6 +43,7 @@ $serial= 'Equipment_Index_seq';
 %defaults = (
 	'location_id'		=>	undef,
 	'servicetype_id'	=>	undef,
+	'sorting'			=>	undef,
 );
 
 sub init_cache {

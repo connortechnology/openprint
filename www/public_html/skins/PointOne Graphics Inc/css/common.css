@@ -39,6 +39,9 @@ body {
 	min-width: 880px;
 	max-width: 1280px;
 }
+input[type="radio"],input[type="checkbox"] {
+	vertical-align: middle;
+}
 input, select, textarea {
 	color: black;
 	font-size: small;
@@ -250,7 +253,8 @@ p.buttons {
     visibility: hidden;
 }
 
-fieldset p {
+fieldset p,
+fieldset ul li {
 	margin: 0;
 	margin-top: .4em;
 	padding: 0 0 0 185px;
@@ -322,11 +326,6 @@ fieldset ul:after {
     clear: both; 
     visibility: hidden;
 }
-fieldset ul li {
-	list-style: none;
-	margin: 0px;
-	padding: 0px 0px 0px 185px;
-}
 fieldset ul li:after {
     content: "."; 
     display: block; 
@@ -358,6 +357,14 @@ fieldset ul li input[type="text"] {
 .dialog li label {
 	margin-left: -80px;
 	width: 75px;
+}
+.dialog input,
+.dialog textarea {
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	resize: vertical;
 }
 
 fieldset.filters {
@@ -510,9 +517,10 @@ tr.highlightOn {
 img {
 	border: none;
 }
-td.Date, th.Date {
-	width: 120px;
+table .Date {
+	width: 118px;
 	text-align: right;
+	padding-right: 2px;
 }
 table .DateTime {
 	width: 150px;
@@ -533,7 +541,7 @@ td.StockQuantity, th.StockQuantity, tr .StockQuality {
 	width: 100px;
 	text-align: right;
 }
-td.Quantity, th.Quantity {
+table .Quantity {
 	width: 40px;
 	text-align: right;
 }

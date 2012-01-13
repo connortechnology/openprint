@@ -108,3 +108,6 @@ table .Skid {
 	display: none;
 	}
 }
+input#StartDocket, input#EndDocket, input#Docket {
+	width: 50px;
+}

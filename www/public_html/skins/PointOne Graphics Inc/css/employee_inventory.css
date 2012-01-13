@@ -1,0 +1,84 @@
+table .paper_name {
+	text-align: left;
+}
+table .available {
+	text-align: right;
+	width: 72px;
+	padding-right: 3px;
+}
+table .age {
+	text-align: left;
+	width: 125px;
+}
+table .last_seen {
+	text-align: left;
+	width: 125px;
+}
+table .inventory {
+	text-align: left;
+	width: 200px;
+}
+table .condition {
+	text-align: left;
+	width: 100px;
+}
+table.List .buttons {
+	width: 60px;
+}
+table .mweight, table .gsm {
+	text-align: right;
+	width: 50px;
+}
+table .on_order, table .allocated, table .in_stock, table .Quantity {
+	text-align: right;
+	width: 90px;
+	padding-right: 5px;
+}
+table .Location {
+	text-align: left;
+}
+table .Condition {
+	text-align: left;
+}
+
+#SkidResults table .RFID,
+#Allocations table .RFID,
+#CurrentInventory table .RFID {
+	width: 95px;
+}
+
+input#quantity {
+	width: 100%;
+}
+table .Employee, table .Comment {
+	text-align: left;
+}
+table .RFIDScanner {
+	width: 140px;
+	text-align: left;
+}
+#Allocate fieldset p {
+	padding: 0;
+}
+#Allocate fieldset li {
+padding-left: 100px;
+}
+#Allocate fieldset li label {
+	margin-left: -100px;
+	width: 100px;
+}
+#Allocate fieldset li label.radio {
+	margin-left: 0;
+	width: auto;
+}
+#Allocate input {
+	width: 60px;
+}
+.captcha input {
+	width: 40px;
+}
+.captcha img {
+	height: 24px;
+	vertical-align: middle;
+}
+

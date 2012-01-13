@@ -6,7 +6,9 @@
 	 	<input type="hidden" name="allocation_id" value="<? echo ( $param{'allocation_id'} ) ?>" />
 		<input type="hidden" name="action" id="action" value="Delete Allocation" />
 		<fieldset><legend>Delete Allocation</legend>
-			<p><label>Reason:</label><textarea id="reason" name="reason" onkeyup="textarea_resize(this);" cols="" rows="1"></textarea></p>
+			<ul>
+			<li><label>Reason:</label><textarea id="reason" name="reason" onkeyup="textarea_resize(this);" rows="1"></textarea></li>
+			</ul>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 

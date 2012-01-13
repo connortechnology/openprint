@@ -63,6 +63,7 @@ CREATE TABLE PurchaseOrder_COntents (
 	type_id	INTEGER, FOREIGN KEY (type_id) REFERENCES PurchaseOrder_ContentTypes (id),
 	qty		float,
 	price	float,
+	units	TEXT,
 	total	float,
 	item	text,
 	item_id	INTEGER, FOREIGN KEY (item_id) REFERENCES PurchaseOrder_Items (id),

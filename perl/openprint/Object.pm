@@ -44,8 +44,12 @@ sub new {
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
-		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-			return $openprint::Object::cache{$parent}{$id};
+		if ( $id and (!$data) ) {
+			if ( $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+				return $openprint::Object::cache{$parent}{$id};
+			} else {
+				$log->debug("Not loading from cache $id $parent ");
+			} # end if
 		} # end if
 
 		$$self{'log'} = $openprint::log;
@@ -513,7 +517,7 @@ sub find_one {
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'->find(%params);');
+	my @Results = $type->find(%params);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -546,8 +550,8 @@ sub to_string {
 
 sub dropdown {
     my $type = shift;
-$log->debug("dropdown");
-    return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+$log->debug("dropdown $type");
+    return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub transform {

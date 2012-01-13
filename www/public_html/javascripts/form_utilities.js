@@ -1046,3 +1046,16 @@ function toggletinymce(textarea_id, toggle ) {
 		tinyMCE.execCommand('mceRemoveControl', false, textarea_id);
 	} // end if
 } // end function toggletinymce
+
+function integerize(e) {
+	e.value = e.value.replace(/[^\d\-]/g,'');
+	e.focus();
+}
+function floatize(e) {
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
+	e.focus();
+}
+function hexize(e) {
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+	e.focus();
+}

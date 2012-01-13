@@ -31,15 +31,15 @@
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 			<li><label>PO #:</label>
-				<input type="number" id="po_id" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+				<input type="number" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Docket:</label>
-				<input type="number" id="docket" name="docket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+				<input type="number" id="docket" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Manifest:</label>
-				<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+				<input type="text" id="manifest_id" name="manifest_id" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 		</ul>
@@ -48,7 +48,7 @@
 <? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{'user_id'} ) ) ?>
 			<li><label>Created By:</label>
 				<select id="created_by" name="created_by" onchange="page_load('Results',$('f1'));">
-	<!--#include virtual="_po_created_by_options.html"-->
+				<!--#include virtual="_po_created_by_options.html"-->
 				</select>
 				<input type="checkbox" name="created_by_deleted" id="created_by_deleted" value="1" onclick="new Ajax.Updater($('created_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="created_by_deleted">Show Deleted Users</label>
 			</li>

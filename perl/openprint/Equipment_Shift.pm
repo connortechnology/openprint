@@ -126,7 +126,7 @@ sub emanantise {
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				'equipment_id'	=>	$$self{'equipment_id'},
-				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : $openprint::session{'user_id'} ),
+				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : undef ),
 				'shift_id'		=>	$$self{'id'},
 				'starttime'		=>	$parser->format_datetime( $st ),
 				'endtime'		=>	$parser->format_datetime( $et ),

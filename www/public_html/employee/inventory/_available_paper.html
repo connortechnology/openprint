@@ -16,20 +16,23 @@
 			$sql{'finish_id'} = $session{'/employee/inventory/available_paper.html?Finish'} if $session{'/employee/inventory/available_paper.html?Finish'};
 			$sql{'colour_id'} = $session{'/employee/inventory/available_paper.html?Colour'} if $session{'/employee/inventory/available_paper.html?Colour'};
 			$sql{'weight_id'} = $session{'/employee/inventory/available_paper.html?Weight'} if $session{'/employee/inventory/available_paper.html?Weight'};
+			$sql{'quality_id'} = $session{'/employee/inventory/available_paper.html?Quality'} if $session{'/employee/inventory/available_paper.html?Quality'};
 		} # end if
 		@{$$variable{'Papers'}} = openprint::Paper::find( %sql );
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">
 		<tr>
-			<th align="left">Paper ID</th>
-			<th align="left" width="75">Available</th>
-			<th align="left" width="125">Age</th>
-			<th align="left" width="125">Last Seen</th>
-			<th align="left" width="200">Inventory</th>
-			<th width="40" class="unprintable">&nbsp;</th>
+			<th class="paper_name">Paper</th>
+			<th class="available">Available</th>
+			<th class="age">Age</th>
+			<th class="last_seen">Last Seen</th>
+			<th class="condition">Condition</th>
+			<th class="inventory">Inventory</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
+			openprint::Location->find();
 			my $html;
 			my $rowclass;
 			my $selected;
@@ -68,7 +71,6 @@
 				   ) {
 					$selected = 'style="background-color:yellow;"';
 				} elsif ( $session{'/employee/inventory/available_paper.html?unmatched'} ne 'Y' ) {
-$log->debug("Next for " . $Paper->to_string() );
 					next;
 				} else {
 					$selected = '';
@@ -77,6 +79,7 @@ $log->debug("Next for " . $Paper->to_string() );
 				my %last_seen;
 				my %skid_location;
 				my %inventory;
+				my %conditions;
 				my $skids = 0;
 				my @Skids = $Paper->skids();
 
@@ -84,9 +87,19 @@ $log->debug("Next for " . $Paper->to_string() );
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
 						next if $Skid->last_seen_days() > $session{'/employee/inventory/available_paper.html?last_seen'};
 					} # end if
+					if ( $session{'/employee/inventory/available_paper.html?condition_id'} ) {
+						my $keep = 0;
+						foreach my $C ( $Skid->Contents() ) {
+							if ( $$C{'condition_id'} == $session{'/employee/inventory/available_paper.html?condition_id'} ) {
+								$keep = 1;
+								last;
+							} # end if
+						} #  end foreach
+						next if ! $keep;
+					} # end if
 
+					my $root_id = $Skid->Location()->Root()->id();
 					if ( @location_ids ) {
-						my $root_id = $Skid->Location()->Root()->id();
 						if ( $root_id ) {
 							if ( ! sets::isin( $root_id, \@location_ids ) ) {
 	$log->debug("Next because $root_id is not in location_ids (@location_ids)");
@@ -97,11 +110,14 @@ $log->debug("Next for " . $Paper->to_string() );
 						} # end if 
 					} # end if 
 					$skid_age{$Skid->age_days()} += 1;
-					$last_seen{$Skid->last_seen_days()} += 1;
+					$last_seen{$$Skid{'last_seen_days'}} += 1;
+					foreach my $C ( $Skid->Contents() ) {
+						$conditions{$$C{'condition_id'}} += 1;
+					} # end foreach Content
 					$skids += 1;
 
-					$skid_location{$Skid->Location()->Root()->id()} += 1;
-					$inventory{$Skid->Location()->Root()->id()} += $Skid->contents($Paper);
+					$skid_location{$root_id} += 1;
+					$inventory{$root_id} += $Skid->contents($Paper);
 
 				} # end foreach Skid
 				if ( ! $skids ) {
@@ -120,7 +136,7 @@ $log->debug("Next for " . $Paper->to_string() );
 				} # end if
 				
 
-				$html .= sprintf( '<tr%s id="Paper%d" %s><td><a href="paper_details.html?paper_id=%d">%s</a></td><td align="left">%s</td><td align="left">%s</td><td align="left">%s</td><td>%s</td>',
+				$html .= sprintf( '<tr%s id="Paper%d" %s><td class="paper_name"><a href="paper_details.html?paper_id=%d">%s</a></td><td class="available">%s</td><td class="age">%s</td><td class="last_seen">%s</td><td class="condition">%s</td><td class="inventory">%s</td><td class="buttons">%s</td></tr>',
 					$rowclass,
 					$$Paper{'id'},
 					$selected,
@@ -129,18 +145,16 @@ $log->debug("Next for " . $Paper->to_string() );
 					Number::Format::format_number($Paper->available()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
 					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
+					join('<br/>', map { new openprint::InventoryCondition($_)->name().' - ' . $conditions{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($conditions{$_}>1?'s':'&nbsp;') } keys %conditions),
 					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . Number::Format::format_number($inventory{$_}).'lbs' } keys %skid_location),
+					ssi::button( 'Allocate'.$$Paper{id}, { 'onclick'=>'allocate_window('.$$Paper{id}.');', 'text'=>'A' } ),
 					);
-				$html .= '<td align="center" class="unprintable">';
-				$html .= ssi::writeButton( $log, $dbh, 'Allocate'.$Paper->id(), 'allocate.gif', 'allocate_window('.$Paper->id().');', '', 'A' );
-				$html .= '</td>';
-				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Paper
 			$html .= '<tr class="totals"><td>Totals:</td><td>';
 			$html .= Number::Format::format_number($available_weight).'lbs<br/>' if $available_weight;
 			$html .= Number::Format::format_number($available_sheets).'sheets<br/>' if $available_sheets;
-			$html .= '</td><td colspan="2">&nbsp;</td><td>';
+			$html .= '</td><td colspan="3">&nbsp;</td><td>';
 			$html .= Number::Format::format_number($total_rolls).'rolls ' . Number::Format::format_number($total_weight).'lbs<br/>' if $total_weight;
 			$html .= Number::Format::format_number($total_skids).'skids ' . Number::Format::format_number($total_sheets).'sheets<br/>' if $total_sheets;
 			$html .= '</td><td>&nbsp;</td></tr>';

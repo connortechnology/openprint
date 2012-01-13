@@ -25,23 +25,25 @@
 		}
 		pop @parts;
 	} # end while
-	return join("\n", reverse @html );
+	@html = reverse @html;
+	if ( $$variable{'uri'} =~ /claim/ ) {
+		push @html, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /credit_application/ ) {
+		push @html, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /print_overview/ ) {
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /bindery_schedule2/ ) {
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+	if ( $$variable{'uri'} =~ /operator_schedule/ ) {
+		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+	} # end if
+
+	return join("\n", @html );
 ) ?>
-		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
-		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /claim/ ) ?>
-		<? if ( $$variable{'uri'} =~ /credit_application/ ) ?>
-		<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /credit_application/ ) ?>
-		<? if ( $$variable{'uri'} =~ /print_overview/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /print_overview/ ) ?>
-		<? if ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
-		<? if ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
-		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
 		<? if ( $$variable{'uri'} =~ /prepress_overview/ ) ?>
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
 		<meta http-equiv="refresh" content="300">
@@ -51,12 +53,12 @@
 		<meta http-equiv="refresh" content="300">
 		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
 		<? if ( $$variable{'uri'} =~ /purchase_order/ ) ?>
-		<link href="/css/purchase_order.css?version=new" rel="stylesheet" type="text/css"/>
+		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /purchase_order/ ) ?>
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js?version=3.4.3.2"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
@@ -73,7 +75,6 @@
 		<script src="/javascripts/ipre/src/inplacericheditor.js" type="text/javascript"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
-
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header"<? if ( $session{'menuoff'} ) ?> style="display:none;"<? endif ( $session{'menuoff'} ) ?>>
@@ -190,6 +191,9 @@
 								<li><a href="/employee/inventory/manifests.html;NOSSL">&raquo; Manifests</a></li>
 								<li><a href="/employee/inventory/inventory_log.html;NOSSL">&raquo; Inventory Log</a></li>
 								<li><a href="/employee/inventory/packingslips.html;NOSSL">&raquo; Packing Slips</a></li>
+						<? if ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock Value</a></li>
+						<? endif ( openprint::usergroup::is_user_in( ['InventoryManager'], $session{'user_id'} ) ) ?>
 							</ul>
 						</li>
 						<li id="ISOMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/iso/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ISOMenu'), 'off', 'on');return false;">ISO</a>
@@ -207,7 +211,7 @@
 								<li><a href="/employee/it/cameras.html;NOSSL">&raquo; Camera Admin</a></li>
 								<li><a href="/employee/it/camera_viewer.html;NOSSL">&raquo; Camera Viewer</a></li>
 								<li><a href="/employee/it/logs.html;NOSSL">&raquo; Login Log</a></li>
-								<li><a href="/employee/it/locations.html;NOSSL">&raquo; Locations</a></li>
+								<li><a href="/location/list.html;NOSSL">&raquo; Locations</a></li>
 								<li><a href="/employee/it/sessions.html;NOSSL">&raquo; Sessions</a></li>
 							</ul>
 						</li>

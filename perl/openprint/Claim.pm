@@ -250,12 +250,12 @@ sub Contents {
 	my ( $self, %params ) = @_;
 	if ( %params ) {
 		if ( $$self{'id'} ) {
-			return openprint::Claim_Content::find('claim_id'=>$$self{id}, %params );
+			return openprint::Claim_Content->find('claim_id'=>$$self{id}, %params );
 		} # end if
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::Claim_Content::find('claim_id'=>$$self{id} );
+			@{$$self{'Contents'}} = openprint::Claim_Content->find('claim_id'=>$$self{id} );
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};

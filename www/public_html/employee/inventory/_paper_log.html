@@ -68,30 +68,34 @@
 	<hr/>
 	<table class="List">
 		<tr>
-			<th align="left" width="120">Date</th>
-			<th align="left">Employee</th>
-			<th align="left" width="70">Skid</th>
-			<th align="left" width="170">RFID</th>
-			<th align="left">Comment</th>
-			<th align="right" width="90">Amount</th>
-			<th align="right" width="90">In Stock</th>
+			<th class="DateTime">Date</th>
+			<th class="Employee">Employee</th>
+			<th class="Skid">Skid</th>
+			<th class="RFID">RFID</th>
+			<th class="Comment">Comment</th>
+			<th class="Quantity">Amount</th>
+			<th class="Quantity">In Stock</th>
 		</tr>
 		<? echo (
 			my $html;
 			my $total = 0;		
 			my $rowclass;
 			foreach my $PI ( @{$$variable{'PI'}} ) {
-				$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td>
-	<td><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%4$d</a></td>
-	<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
-	<td>%9$s</td>
-	<td align="right">%6$s%8$s</td><td align="right">%7$s%8$s</td>
-	</tr>',
+				$html .= sprintf( '
+<tr%1$s>
+	<td class="DateTime">%2$s</td>
+	<td class="Employee">%3$s</td>
+	<td class="Skid"><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%4$d</a></td>
+	<td class="RFID"><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
+	<td class="Comment">%9$s</td>
+	<td class="Quantity">%6$s%8$s</td>
+	<td class="Quantity">%7$s%8$s</td>
+</tr>',
 					$rowclass,
 					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on()) ),
 					$PI->User()->name(),
 					$PI->skid_id(),
-					$PI->Skid()->rfidtag_id() ? sprintf('%d (%2$x)', $PI->Skid()->rfidtag_id(),substr($PI->Skid()->rfidtag_id(),1,15)) : '',
+					$PI->Skid()->rfidtag_id() ? sprintf('%d (%2$x)', $PI->Skid()->RFIDTag()->id_short(),substr($PI->Skid()->rfidtag_id(),1,15)) : '',
 					Number::Format::format_number( $PI->delta() ),
 					Number::Format::format_number( $PI->instock() ),
 					$PI->units(),
@@ -100,7 +104,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $PI->delta();
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5" align="right">Totals:</td><td align="right">' . Number::Format::format_number( $total ) . $$variable{'Paper'}->units() .'</td><td>&nbsp;</td></tr>';
+			$html .= '<tr class="totals"><td colspan="5">Totals:</td><td class="Quantity">' . Number::Format::format_number( $total ) . $$variable{'Paper'}->units() .'</td><td>&nbsp;</td></tr>';
 			return $html;
 		) ?>
 	</table>

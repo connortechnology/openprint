@@ -1,14 +1,15 @@
 use strict;
-package openprint::StockQuality;
+package openprint::InventoryCondition;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$table = 'stockqualities';
-$serial= 'stockqualities_id_seq';
+$debug = 1;
+$table = 'inventoryconditions';
+$serial= 'inventoryconditions_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'name'		=>	'name',
+    'id'    =>  'id',
+    'name' =>  'name',
 	'message'	=>	'message',
 );
 %transforms = (

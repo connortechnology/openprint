@@ -1,9 +1,13 @@
-package openprint::SkidContent;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::SkidContent;
+our @ISA = qw(openprint::Object);
+
+use Carp qw( cluck );
 
 require sql;
+require openprint::StockPurpose;
+require openprint::InventoryCondition;
+require openprint::ManifestContent;
 use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -17,11 +21,13 @@ $debug = 0;
 	'quantity'		=>	'quantity',
 	'purpose_id'	=>	'purpose_id',
 	'units'			=>	'units',
-	'quality_id'	=>	'quality_id',
+	'condition_id'	=>	'condition_id',
+	'manifestcontent_id'	=>	'manifestcontent_id',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
-	'quality_id'	=>	undef,
+	'condition_id'	=>	undef,
+	'manifestcontent_id'	=>	undef,
 );
 %transforms = (
 );
@@ -36,6 +42,9 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::SkidContent';
+	shift @_ if ref $_[0] eq 'openprint::SkidContent';
+	
 	my %params = @_;
 
 	my $sql = 'SELECT * FROM Skid_Contents WHERE 1>0';
@@ -55,6 +64,19 @@ sub find {
 	if ( exists $params{'quantity_>'} ) {
 		$sql .= ' AND quantity > ?';
 		push @values, $params{'quantity_>'};
+	} elsif ( exists $params{'quantity >'} ) {
+		$sql .= ' AND quantity > ?';
+		push @values, $params{'quantity >'};
+	} # end if
+	if ( exists $params{'allocated'} ) {
+		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) = ?';
+		push @values, $params{'allocated'};
+	} # end if
+	if ( exists $params{'allocated is null'} ) {
+		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NULL';
+	} # end if
+	if ( exists $params{'allocated is not null'} ) {
+		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -106,42 +128,101 @@ sub allocated {
 	return 0;
 } # end sub allocated
 
-sub quality {
-    my ( $self, $quality ) = @_;
+sub condition {
+    my ( $self, $condition ) = @_;
 
-    if ( defined $quality ) {
-		$quality =~ s/^\s+//;
-		$quality =~ s/\s+$//;
-		$quality =~ s/\s\s+$/ /;
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
-        if ( ! $$self{'quality_id'} ) {
-			$$self{'quality'} = $quality;
-        } # end if
-    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
+    if ( defined $condition ) {
+		$condition = openprint::InventoryCondition->transform('name', $condition );
+		my $Condition = openprint::InventoryCondition->find_one('name lc'=>$condition);
+		if ( ! $Condition ) {
+			$Condition = new openprint::InventoryCondition();
+			$Condition->save({'name'=>$condition});
+		} # end if
+        @$self{'condition_id','condition'} = @$Condition{'id','name'};
+    } elsif ( $$self{'condition_id'} and ! $$self{'condition'} ) {
+        $$self{'condition'} = new openprint::InventoryCondition( $$self{'condition_id'} )->name();
     } # end if
-    return $$self{'quality'};
-} # end sub quality
+    return $$self{'condition'};
+} # end sub condition
+
+sub Condition {
+	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
+} # end sub Condition
 
 # Looks to find a PO matching this stock and pulls the value from it.
 sub cost {
 	my $self = $_[0];
-	my $MC = openprint::ManifestContent->find_one('skid_id'=>$$self{'skid_id'},'paper_id'=>$$self{'paper_id'});
-	if ( ! $MC ) {
-		#$log->debug("No Manifest Content found for skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
-		return;
-	} # end if
-	if ( ! $MC->Type()->po_id() ) {
-		#$log->debug("No Po_id skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
-		return;
-	} # end if
- if ( $MC->cost() ) {
-#$log->debug("Returning cost from Manifest");
-	return $MC->cost();
-	} # end if
-#$log->debug("Returning cost from PO");
-	return $MC->Type()->cost_from_po();
+	if ( ! exists $$self{'cost'} ) {
+		if ( ! $$self{'manifestcontent_id'} ) {
+			my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
+			if ( @MCS == 1 ) {
+				$self->save({'manifestcontent_id'=>$MCS[0]->id()});
+			} elsif ( @MCS > 1 ) {
+				$log->error("TOo many MCs ffor SKID " .$$self{'skid_id'});
+			} # end if
+		}
+		my $MC = new openprint::ManifestContent( $$self{'manifestcontent_id'} );
+		if ( ! $MC->id() ) {
+			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
+			return;
+		} # end if
+		if ( $MC->Type()->cost() ) {
+			$$self{'cost'} = $MC->Type()->cost();
+		} else {
+			my $POC = $MC->Type()->PurchaseOrder_Content();
+			return if ! $POC;
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$$self{'cost'} = $POC->price();
+			} # end if
+		} # end if
+	} # end if ! exists cost
+    return $$self{'cost'};
 } # end sub cost
+# Looks to find a PO matching this stock and pulls the value from it.
+sub value {
+	my $self = $_[0];
+	if ( ! exists $$self{'value'} ) {
+		if ( ! $$self{'manifestcontent_id'} ) {
+			my @MCS = openprint::ManifestContent->find('skid_id'=>$$self{'skid_id'});
+			if ( @MCS == 1 ) {
+				$self->save({'manifestcontent_id'=>$MCS[0]->id()});
+			} elsif ( @MCS > 1 ) {
+				$log->error("TOo many MCs ffor SKID " .$$self{'skid_id'});
+			} # end if
+		} # end if
+		my $MC = new openprint::ManifestContent( $$self{'manifestcontent_id'} );
+		if ( ! $MC->id() ) {
+			#$log->error("No Manifest Content found for skid_id $_[0]{'skid_id'}, paper_id $_[0]{'paper_id'}");
+			return;
+		} # end if
+		my ( $cost, $units );
+		if ( $MC->Type()->cost() ) {
+			$cost = $MC->Type()->cost();
+			$units = $MC->Type()->cost_units();
+		} else {
+			my $POC = $MC->Type()->PurchaseOrder_Content();
+			return if ! $POC;
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$cost = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$cost = $POC->price();
+			} # end if
+			$units = $POC->price_units();
+		} # end if
+		if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {
+			$$self{'value'} = $$self{'quantity'} * $cost / 100;
+		} else {
+			$$self{'value'} = $$self{'quantity'} * $cost;
+		} # end if
+	} # end if ! exists value
+    return $$self{'value'};
+} # end sub value
 
 1;
 __END__

@@ -1,9 +1,9 @@
-package openprint::Order;
-@ISA=qw(openprint::Object);
-
 use strict;
+package openprint::Order;
+our @ISA=qw(openprint::Object);
+
 use openprint ();
-use vars qw( %session %config %variable $log $dbh %fields);
+use vars qw( $debug %session %config %variable $log $dbh %fields);
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
 
+$debug = 1;
 %fields = (
 	'id'						=> 'index',
 	'company_id'				=> 'companyindex',
@@ -53,6 +54,14 @@ require openprint::Payment;
 	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
 	);
+
+sub find_one {
+	shift @_ if $_[0] eq 'openprint::Order';
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	if ( $_[0] eq 'openprint::Order' ) {
 		shift;
@@ -152,7 +161,7 @@ sub find {
 		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Orders: $sql @values");
 		return;
 	} else {
-		#$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
+		$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data) if $debug;
 		return map { new openprint::Order( $_->{index}, $_ ) } @$data;
 	} # end if
 } # end sub find

@@ -18,7 +18,6 @@ package openprint::Estimating::SpinePaste;
 use strict;
 
 require openprint::service;
-require sql;
 
 my @variables = (
 'chkOverrideCalliper',
@@ -144,11 +143,11 @@ sub calc {
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
 			if ( $qty and ! $$specs{'txtPrice'.$qty_index} ) {
-				return $$specs{'Status'} = 'uncalculated';
+				return $$specs{'Status'} = 'calculated';
 			} # end if
 		} # end foreach
 		
-		return $$specs{'Status'}='calculated';
+		return $$specs{'Status'}='uncalculated';
 	} # end if
 
 	my $services = $Project->services();
