@@ -87,6 +87,7 @@ BEGIN {
 	use openprint::Survey ();
 	use openprint::Event ();
 	use MapImage;
+	use Lingua::EN::Inflect ();
 
 }
 
