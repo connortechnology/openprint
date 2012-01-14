@@ -44,14 +44,14 @@
 	<? echo ( 
 		my $html;
 		foreach my $mode ( @{$$variable{'Modes'}} ) {
-			 my $detailedSpecifications;
-			 if($mode eq 'Detailed') {
-					$detailedSpecifications = qq{onclick="showHideDiv('step2Questions',true);"};
-			 } else {
-					$detailedSpecifications = qq{onclick="showHideDiv('step2Questions',false);"};
-			 } # end if
-			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . ($$variable{'rdbMode'} eq $mode ? ' checked' : '' ) ." $detailedSpecifications />";
-			$html .= qq{<label for="rdbMode$mode">} . ssi::writeTip($mode.' Specifications') . '</label></li>';
+			my $detailedSpecifications;
+			if($mode eq 'Detailed') {
+				$detailedSpecifications = qq{onclick="$('step2Questions').show();"};
+			} else {
+				$detailedSpecifications = qq{onclick="$('step2Questions').hide();"};
+			} # end if
+			$html .= qq{<li><input type="radio" id="rdbMode$mode" name="rdbMode" value="$mode"} . ssi::checked($$variable{'rdbMode'} eq $mode) .' '. $detailedSpecifications . ' />';
+			$html .= qq{<label class="radio" for="rdbMode$mode">} . ssi::writeTip($mode.' Specifications') . '</label></li>';
 		} # end foreach
 		return $html;
 	) ?>
