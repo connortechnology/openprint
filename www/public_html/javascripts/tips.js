@@ -473,8 +473,8 @@ function tipOn(tipName,blah,e){
 }
 
 function tipOff(blah) {	
-	hide_div('tip');
-	return 1;
+	$('tip').hide();
+	return true;
 }	
 
 
