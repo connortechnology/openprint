@@ -91,7 +91,7 @@
 			<th class="Price">Price 3</th>
 			<th class="status">Status</th>
 			<th class="Date">Created</th>
-			<th width="30" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
+			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'project_id',this.checked);" /></th>
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 

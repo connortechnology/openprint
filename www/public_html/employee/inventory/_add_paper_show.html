@@ -82,7 +82,7 @@
 	<input type="number" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); if ( $weight =~ /PT/i ) { $weight = '' } $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
 </p>
 <p>
-	<label for="txtQuality" onclick="toggleInput('Quality');">Quality</label>
+	<label for="txtQuality" onclick="$('txtQuality').toggle();$('Quality').toggle();">Quality</label>
 	<select id="Quality" name="Quality" size="1">
 		<option value="">select</option>
 	<? echo (
@@ -103,7 +103,7 @@
 	<input style="display: none;" type="text" id="txtQuality" name="txtQuality" />
 	</p>
 	<p>
-		<label for="txtCondition" onclick="toggleInput('Condition');">Condition</label>
+		<label for="txtCondition" onclick="$('txtCondition').toggle();$('Condition').toggle();">Condition</label>
 		<select id="Condition" name="Condition" size="1">
 			<option value="">select</option>
 		<? echo (

@@ -44,7 +44,7 @@
 			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( ssi::make_drop_down( $$variable{'Owners'}, $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
 		<p id="Manufacturer-<?type_id?>_div">
-			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer</label>
+			<label for="txtManufacturer-<?type_id?>" onclick="$('Manufacturer-<?type_id?>').toggle();$('txtManufacturer-<?type_id?>').toggle();">Manufacturer</label>
 			<select id="Manufacturer-<?type_id?>" name="Manufacturer-<?type_id?>" size="1" onchange="Manufacturer_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
@@ -60,7 +60,7 @@
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
 		<p id="Brand-<?type_id?>_div">
-			<label for="txtBrand-<?type_id?>" onclick="toggleInput('Brand-<?type_id?>');">Brand</label>
+			<label for="txtBrand-<?type_id?>" onclick="$('Brand-<?type_id?>');$('txtBrand-<?type_id?>').toggle();">Brand</label>
 			<select id="Brand-<?type_id?>" name="Brand-<?type_id?>" size="1" onchange="Brand_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -69,16 +69,16 @@
 			</select>
 			<input style="display: none;" type="text" id="txtBrand-<?type_id?>" name="txtBrand-<?type_id?>" />
 		</p><p id="Finish-<?type_id?>_div">
-			<label for="txtFinish-<?type_id?>" onclick="toggleInput('Finish-<?type_id?>');">Finish</label>
+			<label for="txtFinish-<?type_id?>" onclick="$('Finish-<?type_id?>').toggle();$('txtFinish-<?type_id?>').toggle();">Finish</label>
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockFinish->find('order'=>'lower(name)') ], $param{'Finish-'.$$variable{'type_id'}} );
+					return ssi::make_drop_down( openprint::StockFinish->dropdown('order'=>'lower(name)') ], $param{'Finish-'.$$variable{'type_id'}} );
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
 		</p><p id="Colour-<?type_id?>_div">
-			<label for="txtColour-<?type_id?>" onclick="toggleInput('Colour-<?type_id?>');">Colour</label>
+			<label for="txtColour-<?type_id?>" onclick="$('Colour-<?type_id?>').toggle();$('txtColour-<?type_id?>').toggle();">Colour</label>
 			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
 			<? echo (
@@ -103,7 +103,7 @@
 			<input type="text" id="weight-<?type_id?>" name="weight-<?type_id?>" value="<? echo ( my $weight = $param{'weight-'.$$variable{'type_id'}}; $weight =~ s/lb//; return $weight; ) ?>" onkeyup="floatize(this);"/>lb
 		</p>
 		<p>
-			<label for="txtQuality-<?type_id?>" onclick="toggleInput('Quality-<?type_id?>');">Quality</label>
+			<label for="txtQuality-<?type_id?>" onclick="$('Quality-<?type_id?>').toggle();$('txtQuality-<?type_id?>').toggle();">Quality</label>
 			<select id="Quality-<?type_id?>" name="Quality-<?type_id?>" size="1">
 				<option value="">select</option>
 			<? echo (
@@ -131,17 +131,17 @@
 		</p>
 		<p>
 			<label for="width-<?type_id?>">Size</label>
-			<input type="text" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<input type="number" id="width-<?type_id?>" name="width-<?type_id?>" value="<? echo ( $param{'width-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
 			<span id="PaperHeight-<?type_id?>"<? echo ( ' style="display: none;"' if $param{'type-'.$$variable{'type_id'}} eq 'Roll' ) ?>>
 			&nbsp;x&nbsp;
-			<input type="text" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" size="6" style="width: auto;" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
+			<input type="number" id="height-<?type_id?>" name="height-<?type_id?>" value="<? echo ( $param{'height-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);gsm_to_mweight(this.form, '<?type_id?>' );"/>
 			</span>
 		</p>
 	</div>
 	<div class="rightColumn">
 		<p>
 			<label>Calliper</label>
-			<input type="text" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" size="6" onkeyup="floatize(this);" style="width: auto;" />PT
+			<input type="number" id="calliper-<?type_id?>" name="calliper-<?type_id?>" value="<? echo ( $param{'calliper-'.$$variable{'type_id'}} ) ?>" onkeyup="floatize(this);" />PT
 		</p>
 		<p>
 			<label>GSM</label>
@@ -161,7 +161,7 @@
 		</p>
 		<p>
 			<label>Docket</label>
-			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" onkeyup="integerize(this);"/>
+			<input type="number" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" onkeyup="cardinalize(this);"/>
 <? echo ( ssi::button( 'LoadPos'.$$variable{'Type'}->id(), { 
 			'onclick'=>"new Ajax.Updater('PurchaseOrders$$variable{Type}{id}','_manifest_purchase_orders.html', { parameters: { supplier_id: \$('supplier_id').value, Docket: \$('docket-$$variable{Type}{id}').value} } );", 'text'=>'Load POs' } ); ) ?>
 		</p>

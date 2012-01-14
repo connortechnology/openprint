@@ -7,8 +7,10 @@ use openprint ();
 require sets;
 require openprint::Like;
 require openprint::Comment;
+require openprint::View;
 require openprint::Privacy;
 require openprint::Object_Type;
+require openprint::Opinion_Availability;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -831,12 +833,12 @@ sub likes {
 	my $html;
 	my @Likes = openprint::Like->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
 	if ( ! @Likes ) {
-		$html = 'No one loves this yet.  Be the first!';
+		$html = 'No one has an opinion on this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
 		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
-			$html .= 'You ' . $Likes[0]->Opinion_Type()->name() . ' this.';
+			$html .= 'You ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} else {
-			$html = '1 person loves this.';
+			$html = '1 person ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} # end if
 	} else {
 		my %Opinions;
@@ -852,6 +854,8 @@ sub likes {
 } # end sub likes
 
 sub like_button {
+	my $type = ref $_[0];
+
 	my $Like = $_[0]->Like();
 	my $html;
 	my $div = $_[1];
@@ -860,11 +864,10 @@ sub like_button {
 		$div = 'like_button';
 		$html = '<span id="like_button">';
 	} # end if
-	if ( $Like ) {
-		$html .= ssi::button( 'UnLove', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
-	} else {
-		$html .= ssi::button( 'Love', { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d } } );`, $div, $url, ref $_[0], $_[0]{'id'} ) } );
-	} # end if
+	my @Types = openprint::Opinion_Availability->find('object_type'=>$type, 'object_id'=>$_[0]->id() );
+	foreach my $Type ( @Types ) {
+		$html .= ssi::button( $Type->Opinion_Type()->name(), { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ) } );
+	} # end foreach
 	if ( ! $_[1] ) {
 		$html .= '</span>';
 	} # end if
@@ -940,6 +943,20 @@ sub date_format {
 sub datetime_format {
 	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub datetime_format 
+
+sub Views {
+	if ( $_[1] ) {
+		$_[1]{'object_id'} = $_[0]{'id'};
+		$_[1]{'object_type'} = ref $_[0],
+		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
+		return openprint::View->find($_[1]);
+	} # end if
+
+	if ( ! defined $_[0]{'Views'} ) {
+		@{$_[0]{'Views'}} = openprint::View->find({'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
+	} # end if
+	return @{$_[0]{'Views'}};
+} # end sub Views
 
 sub Comments {
 	if ( $_[1] ) {
