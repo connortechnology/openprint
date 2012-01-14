@@ -68,6 +68,7 @@ $log->warn("Updating rpoject $$Project{id}");
 		next if ! $sig_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+			# Don't need to delete, becaeuse insert does a delete by default
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ServiceType', 'Signature' );
 		} # end if
 			
@@ -357,15 +358,23 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Lette
 	$Default->destroy();
 } # end foreach
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
-	my $SD = new openprint::ServiceType_Default();
-	$SD->save({	
-			'name'			=>	$Default->name(),
-			'value'			=>	$Default->value(),
-			'projecttype_id'=>	$Default->projecttype_id(),
-			'servicetype_id'	=>	$ServiceType->id(),
-			} );
+	if ( ! openprint::ServiceType_Default->find_one('name'=>$Default->name(), 'value'=>$Default->value(), 'projecttype_id'=>$Default->projecttype_id(), 'servicetype_id'=>$ServiceType->id()) ) {
+		my $SD = new openprint::ServiceType_Default();
+		$SD->save({	
+				'name'			=>	$Default->name(),
+				'value'			=>	$Default->value(),
+				'projecttype_id'=>	$Default->projecttype_id(),
+				'servicetype_id'	=>	$ServiceType->id(),
+				} );
+	} # end if
 	$Default->destroy();
 } # end foreach
+foreach my $D ( openprint::ServiceType_Default->find('name'=>'rdbColourBar','value'=>'') ) {
+	$D->destroy();
+}
+foreach my $D ( openprint::ProjectType_Default->find('projecttype'=>'ScratchPads', 'name'=>'rdbPageQuantity') ) {
+	$D->save({'name'=>'PageQuantity'});
+}
 
 $dbh->disconnect();
 	

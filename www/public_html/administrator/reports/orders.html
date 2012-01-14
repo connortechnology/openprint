@@ -6,17 +6,17 @@
 	<fieldset class="filters"><legend>Select Report Criteria</legend>
 		<p>
 			<label for="OrderID">Order ID</label>
-			<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="cardinalize(this);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Docket</label>
-			<input type="text" size="10" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<input type="number" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="cardinalize(this);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Company</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
+			<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
 				<? echo (
@@ -29,7 +29,7 @@
 			<select name="ddmStatus" size="1">
 				<option value="">All</option>
 				<? echo (
-						ssi::fill_drop_down( $log, $dbh, q{SELECT name,name FROM Order_statuses ORDER BY name}, $param{'ddmStatus'} );
+				       ssi::make_drop_down( [ map { $$_{name}, $$_{name} } openprint::Order_Status->find('order'=>'lower(name)' ) ], $param{'ddmStatus'} );
 						) ?>
 			</select>
 		</p>
@@ -38,7 +38,7 @@
 			<select name="ddmCurrency" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $param{'ddmCurrency'} );
+return ssi::make_drop_down( openprint::Currency->dropdown('order'=>'lower(name)'), $param{'ddmCurrency'} );
 ) ?>
 			</select>
 		</p>
@@ -47,7 +47,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->
 			<select name="ddmMarketingCategory" size="1">
 			<option value="">All Categories</option>
 <? echo (
-ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], $param{'ddmMarketingCategory'} );
+ssi::make_drop_down( openprint::MarketingCategory->dropdown('order'=>'lower(name)'), $param{'ddmMarketingCategory'} );
 ) ?>
 			</select>
 		</p>
@@ -56,7 +56,7 @@ ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','usergroup any'=>['Sales'] ) ] , $param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>
@@ -87,9 +87,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 		</p>
 		<p> 
 			<label>Total Range</label>
-			<input type="text" name="TotalStart" size="12" style="width: auto;" value="<? echo ( $param{'TotalStart'} ) ?>" />
+			<input type="number" name="TotalStart" value="<? echo ( $param{'TotalStart'} ) ?>" onkeyup="floatize(this);"/>
 			to 
-			<input type="text" name="TotalEnd" size="12" style="width: auto;" value="<? echo ( $param{'TotalEnd'} ) ?>" />
+			<input type="number" name="TotalEnd" value="<? echo ( $param{'TotalEnd'} ) ?>" onkeyup="floatize(this);"/>
 		</p>
 		<p class="buttons">
 		<? echo ( $log, $dbh, join('',
@@ -106,14 +106,14 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 		@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'} );
 	} else {
 		@{$$variable{'Orders'}} = openprint::Order->find( 
-			'company_id'		=> $param{'ddmCustomer'},
+			( $param{'ddmCustomer'} ? ( 'company_id'		=> $param{'ddmCustomer'} ) : () ),
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
-			'value_start'		=> $param{'TotalStart'},
-			'value_end'			=> $param{'TotalEnd'},
-			'salesrep_id'		=> $param{'ddmEmployee'},
-			'status'			=> $param{'ddmStatus'},
-			'currency_id'		=> $param{'ddmCurrency'},
+			( $param{'TotalStart'} ? ( 'total >='		=> $param{'TotalStart'} ) : () ),
+			( $param{'TotalEnd'} ? ( 'total <='			=> $param{'TotalEnd'} ) : () ),
+			( $param{'ddmEmployee'} ? ( 'salesrep_id'		=> $param{'ddmEmployee'} ) : () ),
+			( $param{'ddmStatus'} ? ( 'status'			=> $param{'ddmStatus'} ) : () ),
+			( $param{'ddmCurrency'} ? ( 'currency_id'		=> $param{'ddmCurrency'} ) : () ),
 			'order'				=>	'id',
 		);
 	} # end if
@@ -121,26 +121,26 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 	<? if ( @{$$variable{'Orders'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th align="left" width="75">ID</th>
-			<th align="left" width="60">Docket</th>
-			<th align="left" width="120">Date</th>
-			<th align="left">Company</th>
-			<th align="left">CSR</th>
-			<th align="left" width="100">Status</th>
+			<th class="order_id">ID</th>
+			<th class="Docket">Docket</th>
+			<th class="DateTime">Date</th>
+			<th class="Company">Company</th>
+			<th class="CSR">CSR</th>
+			<th class="status">Status</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
 <? if ( ! $param{'ddmCurrency'} ) ?>
-			<th align="right" width="30">&nbsp;</th>
+			<th class="Currency">&nbsp;</th>
 <? endif ( ! $param{'ddmCurrency'} ) ?>
 		</tr>
 		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 		<tr<?rowclass?>> 
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->CSR()->name(); ) ?></a></td>
-			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
+			<td class="order_id"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+			<td class="Docket"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+			<td class="DateTime"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
+			<td class="Company"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
+			<td class="CSR"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->CSR()->name(); ) ?></a></td>
+			<td class="status"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
 			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>
 			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->balance() ); ) ?></a></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>
@@ -157,8 +157,8 @@ if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
 		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 		<tr class="totals"> 
 			<td colspan="6" align="right"><b>Report Total</b></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>
 			<td>&nbsp;</td>
 <? endif ( ! $param{'ddmCurrency'} ) ?>

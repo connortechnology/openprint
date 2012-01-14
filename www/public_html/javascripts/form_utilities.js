@@ -22,7 +22,7 @@ function get_value( obj ) {
 		} else {
 			return;
 		} 
-	} else if ( obj.type == 'hidden' || obj.type == 'text' ) {
+	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' ) {
 		return obj.value;
 	} else if ( obj.length ) {
 		var value = new Array();
@@ -170,7 +170,7 @@ function isin_ddm ( array, value ) {
 
 function get_option_index ( array, value ) {
 	if ( array ) {
-		for ( var i = 0; i < array.length; i += 1 ) {
+		for ( var i = 0, len = array.length; i < len; i += 1 ) {
 			if ( array[i] && array[i].value == value )
 				return i;
 		} // end for
@@ -403,33 +403,34 @@ function setDaysDropDown(year, month, dayDropDown, selectedDay) {
 
 function Serialize( form ) {
 	var parameters = new Array();
-	for ( var index = 0; index < form.elements.length ; index += 1 ) {
-		if ( form.elements[index].type == 'radio' ) {
-			if ( form.elements[index].checked == true ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].value;
+	for ( var index = 0, len = form.elements.length; index <len ; index += 1 ) {
+		var e = form.elements[index];
+		if ( e.type == 'radio' ) {
+			if ( e.checked == true ) {
+				parameters[parameters.length] = e.name;
+				parameters[parameters.length] = e.value;
 			} // end if
-		} else if ( form.elements[index].type == 'checkbox' ) {
-			if ( form.elements[index].checked == true ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].value;
+		} else if ( e.type == 'checkbox' ) {
+			if ( e.checked == true ) {
+				parameters[parameters.length] = e.name;
+				parameters[parameters.length] = e.value;
 			} // end if
-		} else if ( form.elements[index].type == 'select-one' ) {
-			if ( form.elements[index].selectedIndex != -1 ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].options[form.elements[index].selectedIndex].value;
+		} else if ( e.type == 'select-one' ) {
+			if ( e.selectedIndex != -1 ) {
+				parameters[parameters.length] = e.name;
+				parameters[parameters.length] = e.options[e.selectedIndex].value;
 			} // end if
-		} else if ( form.elements[index].type == 'select-multiple' ) {
-			for ( var option_index = 0; option_index < form.elements[index].options.length; option_index += 1 ) {
-				if ( form.elements[index].options[option_index].selected ) {
-					parameters[parameters.length] = form.elements[index].name;
-					parameters[parameters.length] = form.elements[index].options[option_index].value;
+		} else if ( e.type == 'select-multiple' ) {
+			for ( var option_index = 0; option_index < e.options.length; option_index += 1 ) {
+				if ( e.options[option_index].selected ) {
+					parameters[parameters.length] = e.name;
+					parameters[parameters.length] = e.options[option_index].value;
 				} // end if
 			} // end if
-		} else if ( form.elements[index].type == 'text' || form.elements[index].type == 'hidden' ||  form.elements[index].type=='textarea') {
-			if ( form.elements[index].name ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].value;
+		} else if ( e.type == 'text' || e.type == 'hidden' || e.type=='textarea') {
+			if ( e.name ) {
+				parameters[parameters.length] = e.name;
+				parameters[parameters.length] = e.value;
 			} // end if
 		} else {
 		} // end if
@@ -437,53 +438,40 @@ function Serialize( form ) {
 	return parameters;
 } // end function serialize
 
-function select_all( form, element_name, checked ) {
-	for ( var i=0; i< form.elements.length; i += 1 ) {
-		if ( form.elements[i].name == element_name ) {
-			if ( form.elements[i].length ) {
-				for ( var j = 0; j < form.elements[i].length; j += 1 ) {
-					form.elements[i][j].checked = checked;
-				} // end for
-			} else {
-				form.elements[i].checked = checked;
-			} // end if
-		} // end if
-	} // end for
+function select_all( form, name, checked ) {
+	if ( ! form.elements[name] ) {
+		return;
+	}  // end if
+	if ( form.elements[name].length ) {
+		for ( var i = 0, len = form.elements[name].length; i < len; i += 1 ) {
+			form.elements[name][i].checked = checked;
+		} // end for
+	} else {
+		form.elements[name].checked = checked;
+	} // end if
 }
 
-/* Added by Antonio */
-
-function selectAllCheckboxes( masterCheckBox, targetForm ) {
-	var i;
-	for(i = 0; i < targetForm.length; i++) {
-		if(targetForm[i].type == 'checkbox' && targetForm[i].name != masterCheckBox.name) {
-		 targetForm[i].checked = masterCheckBox.checked;
-		}
-	}
-}
-/* ------------ form scripts ------------ */
-
-function clearSelect( what ) {
-		for ( var k = 0; k < what.options.length; k++ ) {
-				what.options[k].selected = 0;
-				what.options[0].selected = 1;
-		} 
+function clearSelect( ddm ) {
+	for ( var i = 0, len = ddm.options.length; i < len; i++ ) {
+		ddm.options[i].selected = 0;
+	} 
+	ddm.options[0].selected = 1;
 }
 
 function clearForm(form) {
-	for ( var i=0; i < form.elements.length; i += 1 ) {
+	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )
 			continue;
 		if ( e.type == 'checkbox' || e.type == 'radio' ) {
 			e.checked = '';
-		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' ) {
+		} else if (e.type == 'hidden' || e.type == 'password' || e.type == 'text' || e.type == 'textarea' || e.type == 'number' || e.type == 'email' || e.type == 'url' ) {
 			e.value = '';
 		} else if ( e.type == 'select-one' ) {
-			e.selectedIndex = 0;
 			while ( e.selectedIndex > 0 ) {
 				e.options[e.selectedIndex].selected = false;
 			} // end while
+			e.selectedIndex = 0;
 		} else if ( e.type == 'select-multiple' ) {
 			while ( e.selectedIndex >= 0 ) {
 				e.options[e.selectedIndex].selected = false;
@@ -501,37 +489,36 @@ function element_changed( element ) {
 	}
 
 	if ( element.type == 'select-one' ) {
-		for ( var optionIndex = 0; optionIndex < element.options.length; optionIndex += 1 ) {
-			if ( element.options[optionIndex].selected != element.options[optionIndex].defaultSelected ) {
+		for ( var i = 0, len = element.options.length; i < len; optionIndex += 1 ) {
+			if ( element.options[i].selected != element.options[i].defaultSelected ) {
 				return true;
 			} // end if
 		} // end for
-		return false;
-	} else if ( element.type == 'text' || element.type == 'password' || element.type == 'hidden' || element.type == 'textarea' ) {
+	} else if ( element.type == 'text' || element.type == 'password' || element.type == 'hidden' || element.type == 'textarea' || element.type == 'number' || element.type == 'email' || element.type == 'url' ) {
 		return ! ( element.value == element.defaultValue );	
 	} else if ( element.type == 'radio' || element.type == 'checkbox' ) {
 		return ! ( element.checked == element.defaultChecked );
 	} else if ( element.length ) {
-		for ( var i = 0; i < element.length; i += 1 ) {
+		for ( var i = 0, len = element.length; i < len; i += 1 ) {
 			if ( element_changed( element[i] ) ) {
 				return true;
 			} // end if
 		} // end for
-		return false;
 	} // end if
+	return false;
 } // end function element_changed
 
 var fmChange = 0;
 function changed( form ) {
-	for ( var index = 0; index < form.elements.length; index += 1 ) {
-		if ( form.elements[index].length ) {
-			for ( var subindex = 0; subindex < form.elements[index].length; subindex += 1 ) {
-				if ( element_changed( form.elements[index][subindex] ) ) {
+	for ( var i = 0, len = form.elements.length; i < len; index += 1 ) {
+		if ( form.elements[i].length ) {
+			for ( var subindex = 0; subindex < form.elements[i].length; subindex += 1 ) {
+				if ( element_changed( form.elements[i][subindex] ) ) {
 					return true;
 				} // end if
 			} // end for
 		} else {
-			if ( element_changed( form.elements[index] ) ) {
+			if ( element_changed( form.elements[i] ) ) {
 				return true;
 			} // end if
 		} // end if
@@ -614,38 +601,21 @@ function checkLoginData( usernameInput, passwordInput ) {
 	return false;
 }
 
-function checkForgotPasswordData ( emailInput )
-{
-	 var pass = 1;
+function checkForgotPasswordData ( emailInput ) {
+	 var pass = true;
 	 
-	 if( !checkInputData( emailInput ) )
-	 {
-			// Display email error.
-			document.getElementById('forgotPassword_missingEmailMessage').style.display = 'block';
-			pass *= 0;
-	 }
-	 else
-	 {
-			document.getElementById('forgotPassword_missingEmailMessage').style.display = 'none';
+	 if ( !checkInputData( emailInput ) ) {
+		 // Display email error.
+		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'block';
+		 pass = false;
+	 } else {
+		 document.getElementById('forgotPassword_missingEmailMessage').style.display = 'none';
 	 }
 
-	 if( pass )
-	 {
-			// Passed. Submit the form and it's data.
-			document.f2.submit();
-			return false;
-	 }	 
-}
-
-function showHideDiv(divId, formTrigger)
-{
-	 if(formTrigger == true)
-	 {
-			document.getElementById(divId).style.display='block';
-	 }
-	 else
-	 {
-			document.getElementById(divId).style.display='none';
+	 if ( pass ) {
+		 // Passed. Submit the form and it's data.
+		 emailInput.form.submit();
+		 return false;
 	 }
 }
 
@@ -812,61 +782,6 @@ function pad_with_zeros(rounded_value, decimal_places) {
 	return value_string;
 }
 
-function fill_form_from_xml( form, xmlResponse ) {
-	var results = xmlResponse.getElementsByTagName('row')[0];
-	for(var i=0;i<results.childNodes.length;i++) {
-		var el = $(results.childNodes[i].nodeName);
-		switch(el.type) {
-			case 'text':
-				el.value = results.childNodes[i].firstChild.data;
-				break;
-			case 'select-one':
-				for(var j=0; j<el.length;j++) {
-					if (el.options[j].value == results.childNodes[i].firstChild.data) {
-						el.selectedIndex = j;
-					}
-				}
-				break;
-			case 'select-multiple':
-				var values = results.childNodes[i].firstChild.data.split(',');
-				for(var j=0; j<el.length;j++) {
-					el.options[j].selected = false;
-					for(var k=0;k<values.length;k++){
-						if (el.options[j].value == values[k]) {
-							el.options[j].selected = true;
-						}
-					}
-				}
-				break;
-			case 'checkbox':
-				var values = results.childNodes[i].firstChild.data.split(',');
-				var checkbox = Form.getInputs(FORMNAME, 'checkbox', results.childNodes[i].nodeName);
-				for(var j=0;j<checkbox.length;j++) {
-					checkbox[j].checked = false;
-					for(var k=0;k<values.length;k++){
-						if ( checkbox[j].value == values[k]) {
-							checkbox[j].checked = true;
-						}
-					}
-				}
-				break;
-			case 'radio':
-				var radio = Form.getInputs(FORMNAME, 'radio', results.childNodes[i].nodeName);
-				for(var j=0;j<radio.length;j++) {
-					if(radio[j].value == results.childNodes[i].firstChild.data) {
-						radio[j].checked = true;
-					}
-				}
-				break;
-			case 'textarea':
-				el.value = results.childNodes[i].firstChild.data;
-				break;
-			case 'hidden':
-				el.value = results.childNodes[i].firstChild.data;
-				break;
-		}
-	}
-}
 function getFormObj( formName ) {
 	var form = document.forms[formName];
 	return form;
@@ -908,6 +823,7 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	if ( e_min )
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
+
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
 	ddm_select_by_value( e_y, '' );
 	ddm_select_by_value( e_m, '' );
@@ -1126,36 +1042,6 @@ function convert_kg_to_lbs( from, to ) {
 	to.value = qtys.join(',');
 } // end function convert_kg_to_lbs
 
-function radio_all(element) {
-	// assume the element is part of an array
-	var radio_array = element.form.elements[element.name];	
-	if ( ! radio_array ) {
-		alert('no aray');
-	} else if ( ! radio_array.length ) {
-		alert('not an array');
-	} // end if
-
-	if ( element.value == '' ) {
-		for ( var i = 0; i < radio_array.length; i += 1 ) {
-			if ( radio_array[i].value != '' ) {
-				radio_array[i].checked = ! element.checked;
-			} // end if
-		} // end for
-	} else {
-		var all_element;
-		var on = false;
-		for ( var i = 0; i < radio_array.length; i += 1 ) {
-			if ( radio_array[i].value == '' ) {
-				all_element = radio_array[i];
-			} else if ( radio_array[i].checked ) {
-				on = true;
-			} // end if
-		} // end for
-		if ( all_element ) 
-			all_element.checked = ! on;	
-	} // end if
-} // end function radio_all
-
 // prevents the entering of a second decimal place
 function check_decimal( element, e ) {
 	var keynum;
@@ -1195,26 +1081,23 @@ function disable_rightclick() {
 	
 	document.onmousedown=click;
 } // end function disable_rightclick
-function remove_div( divname ) {
-    var div = document.getElementById(divname);
-    if ( div ) {
-        div.style.display = 'none';
-    } // end if
-}
-function add_div( divname ) {
-    var div = document.getElementById(divname);
-    if ( div ) {
-        div.style.display = '';
-		return div;
-    } // end if
-}
 
-function hide_div( divname ) {
+function remove_div( divname ) {
     var div = $(divname);
     if ( div ) {
-        div.style.visibility = 'hidden';
+        div.hide();
     } // end if
+	return div;
 }
+function add_div( divname ) {
+    var div = $(divname);
+    if ( div ) {
+        div.show();
+    } // end if
+	return div;
+}
+
+// also positions it
 function show_div( divname, e ) {
     var div = $(divname);
     if ( div ) {
@@ -1266,17 +1149,15 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 	}
 	} // end if
 
-
 	if ( div.style.display == 'none' ) {
 		div.show();
-		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+		new Ajax.Updater( divID, show_url, { parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
 		if ( hide_url )
-			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+			new Ajax.Updater( divID, hide_url, { parameters: params.join('&'), evalScripts: true } );
 	} // end if
-} // end function AjaxToggleContent
-
+} // end function toggleContent
 
 function LoadContent( divID, page, parameters, message ) {
 	var div = $( divID );
@@ -1340,12 +1221,6 @@ onDestroy: function(eventName, win) {
 } // end function popup_window
 
 
-function toggleInput( name ) {
-$('txt'+name).value='';
-$(name).selectedIndex=0;
-$(name).toggle();
-$('txt'+name).toggle();
-}
 function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();

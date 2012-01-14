@@ -152,10 +152,10 @@ function cbFillResults( results ) {
 					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
-			} else if ( element.type == 'text' ) {
+			} else if ( element.type == 'text' || element.type == 'number' || element.type == 'email' ) {
 				if ( element.value != value ) {
-				if ( ! element.gotFocus )
-					element.value = value;
+					if ( ! element.gotFocus )
+						element.value = value;
 					if ( element.onchange ) element.onchange();
 				} // end if
 			} else if ( element.type == 'hidden' ) {
