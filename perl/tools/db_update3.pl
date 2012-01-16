@@ -798,6 +798,10 @@ if ( ! sets::isin( 'views', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Views.sql}) );
 	die if $dbh->errstr();
 } # en dif
+if ( ! sets::isin( 'opinion_availability', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Opinion_Availability.sql}) );
+	die if $dbh->errstr();
+} # en dif
 $dbh->disconnect();
 1;
 __END__

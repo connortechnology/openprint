@@ -33,7 +33,6 @@
 					<th class="Price">Total1</th>
 					<th class="Price">Total2</th>
 					<th class="Price">Total3</th>
-					<th width="20" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f2);" /></th>
 				</tr>
 				<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 				<tr<?rowclass?>> 
@@ -44,11 +43,10 @@
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
-					<td class="unprintable" align="center"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
 				</tr>
 				<tr<?rowclass?>>
 					<td>&nbsp;</td>
-					<td colspan="7"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
+					<td colspan="6"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
 				</tr>
 				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 				<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
@@ -59,7 +57,7 @@
 		There are no quotes which match your search criteria. 
 	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 <? else ( @{$$variable{'Quotes'}} == 0 ) ?>
-<form method="post" action="history.html" name="f2">
+<form method="post" action="history.html" name="f2" id="f2">
 	<div class="unprintable">
 		Please click on a <b>Quote ID # </b>to view its details.<br/>
 		To delete quotes from history check the appropriate quote(s) and click delete.<br/>
@@ -73,7 +71,7 @@
 			<th class="Price">Total1</th>
 			<th class="Price">Total2</th>
 			<th class="Price">Total3</th>
-			<th width="20" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f2);" /></th>
+			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'chkDelete',this.checked);" /></th>
 		</tr>
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 		<tr<?rowclass?>> 
@@ -83,7 +81,7 @@
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
-			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
+			<td class="checkbox"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
 		</tr>
 		<tr<?rowclass?>>
 			<td>&nbsp;</td>

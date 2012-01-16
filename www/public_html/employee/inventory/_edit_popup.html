@@ -6,13 +6,13 @@
 		<input type="hidden" name="btnFunction" value="Edit" />
 		<div class="row">
 			<span class="label">Quantity</span>
-			<span class="input"><input style="float: left;" type="text" name="Quantity" onKeyPress="return input_handler( this, event);"/>
+			<span class="input"><input type="text" name="Quantity" onkeypress="return input_handler( this, event);"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'clearEditQuantity', 'clear.gif', "EditForm.Quantity.value='';", '', 'Clear' ); ) ?>
 			</span>
 		</div>
 		<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'SaveEdit', 'save.gif', 'checkinform.submit();', '', 'Save' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'CancelEdit', 'cancel.gif', "hide_div('Edit');", '', 'Cancel' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CancelEdit', 'cancel.gif', q`$('Edit').hide();`, '', 'Cancel' ); ) ?>
 		</span>
 	</form>
 </div>

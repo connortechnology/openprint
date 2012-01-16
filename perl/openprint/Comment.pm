@@ -29,9 +29,7 @@ $serial = 'comments_id_seq';
 	'approved'		=>	0,
 );
 sub Object {
-	$_ =  $_[0]->object_type()->new( $_[0]{'object_id'} );
-$openprint::log->debug( "Returning object of type " . ref $_ );
-	return $_;
+	return $_[0]->object_type()->new( $_[0]{'object_id'} );
 } # end sub Object
 
 sub can_delete {

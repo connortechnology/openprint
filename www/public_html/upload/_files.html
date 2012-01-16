@@ -81,7 +81,7 @@ if ( 0 ) {
 				<th class="Filename">Filename</th>
 				<th class="size">Size</th>
 				<th class="mtime">When</th>
-				<th class="delete"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
+				<th class="delete"><input type="checkbox" name="checkall" onclick="select_all($('f1'),'chkFiles',this.checked);" /></th>
 			</tr>
 		</thead>
 		<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
