@@ -59,9 +59,9 @@ sub html {
 		} # end foreach value
 	} elsif ( $Field->type() eq 'date' ) {
 		my ( $start, $end ) = @{$Field->values()} if $Field->values();
-$openprint::log->debug("Adding date start $start end $end value $value ");
+#$openprint::log->debug("Adding date start $start end $end value $value ");
 		$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), $value, { 'start'=>$start, 'end'=>$end } ) . '</span>';
-$openprint::log->debug("Done");
+#$openprint::log->debug("Done");
 	} elsif ( $Field->type() eq 'country' ) {
 		my $StateField = openprint::User_Profile_Field->find_one('type'=>'state');
 		if ( $StateField ) {

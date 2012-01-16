@@ -54,8 +54,6 @@
 							last;
 						} # end if
 					} # end if
-} else {
-#$log->debug("Not in session");
 				} # end if
 			} # end foreach Field
 			push @Users, $User if ! $filtered;
@@ -70,7 +68,7 @@
 
 	my $html;
 	foreach my $User ( @Users ) {
-		next if $User->id() == $session{'user_id'};
+		next if $$User{'id'} == $session{'user_id'};
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
@@ -78,9 +76,9 @@
 								<div class="Address">%3$s</div>
 							</div>`, $User->id(), $User->name(), 
 							join(', ',
-								( $Profile->city() ? new openprint::Location( $Profile->city() )->name() : () ),
-								( $Profile->state() ? new openprint::Location( $Profile->state() )->name() : () ),
-								( $Profile->country() ? new openprint::Location( $Profile->country() )->name() : () ),
+								#( $Profile->city() ? (new openprint::Location( $Profile->city() ))->name() : () ),
+								#( $Profile->state() ? (new openprint::Location( $Profile->state() ))->name() : () ),
+								#( $Profile->country() ? (new openprint::Location( $Profile->country() ))->name() : () ),
 							),
 				);
 		my $age = 0;
@@ -88,8 +86,9 @@
 
 		if ( $birthday and $birthday ne '--' ) {
 			my @Birthday = split('-', $birthday );
+$log->debug("Birhtday: @Birthday");
 			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-			$log->debug("Birthday $age years @Birthday");
+			#$log->debug("Birthday $age years @Birthday");
 		} 
 		$html .= sprintf(q`
 				<div class="User">

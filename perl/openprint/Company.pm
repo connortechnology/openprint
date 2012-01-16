@@ -1,7 +1,7 @@
 use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
-use Text::Unaccent;
+use Text::Unaccent ();
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
 use openprint ();
@@ -91,8 +91,7 @@ $serial = 'companies_id_seq';
 );
 
 sub Currency {
-	my $self = shift;
-	return new openprint::Currency( $$self{'currency_id'} );
+	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub CUrrency
 
 sub destroy {
@@ -290,9 +289,8 @@ sub Users {
 } # end sub Users
 
 sub Pricelist {
-	my $self = shift;
-	if ( $$self{'pricelist_id'} ) {
-		return new openprint::Pricelist( $$self{'pricelist_id'} );
+	if ( $_[0]{'pricelist_id'} ) {
+		return new openprint::Pricelist( $_[0]{'pricelist_id'} );
 	} else {
 		return new openprint::Pricelist( openprint::pricing::get_pricelist_id());
 	} # end if

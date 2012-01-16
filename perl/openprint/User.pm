@@ -3,6 +3,7 @@ package openprint::User;
 our @ISA = qw( openprint::Object );
 use Text::Unaccent ();
 use MIME::QuotedPrint ();
+use Carp qw( cluck );
 
 require openprint::Company;
 require openprint::logs;
@@ -21,7 +22,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'Users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -200,7 +201,7 @@ sub next {
 	my $self = shift;
 	my %params = @_;
 
-	my $sql = 'SELECT MIN(FirstName) FROM Users WHERE FirstName > ?';
+	my $sql = 'SELECT MIN(firstname) FROM users WHERE firstname > ?';
 	my @values = ( $$self{firstname} );
 	if ( $params{'company_id'} ) {
 		$sql .= ' AND company_id=?';
@@ -211,7 +212,7 @@ sub next {
 		push @values, $params{'type'};
 	} # end if
 
-	$sql = qq{SELECT id FROM Users WHERE FirstName = ($sql)};
+	$sql = qq{SELECT id FROM users WHERE firstname = ($sql)};
 	( $_ ) = sql::execute( $log, $dbh, $sql, @values );
 	return $_;
 }
@@ -248,13 +249,26 @@ sub Company {
 } # end sub Company
 
 sub name {
-	my $self = shift;
-	if ( $$self{'firstname'} and $$self{'lastname'} ) {
-		return join(' ', @$self{'firstname','lastname'} ) 
-	} elsif ( $$self{'firstname'} ) {
-		return $$self{'firstname'};
-	} elsif ( $$self{'lastname'} ) {
-		return $$self{'lastname'};
+	my $self = $_[0];
+if ( (!$self) or ( ref $self ne 'openprint::User' ) ) {
+$log->error("FUcked up $self");
+Carp::cluck( 'No object is name' );
+return;
+}
+	my $Company = $_[0]->Company();
+	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
+		#return $_[0]{'firstname'};
+	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
+	if ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
+		return $Company->name() . ' (' . $_[0]{'firstname'} . ')';
+	} else {
+		if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
+			return join(' ', @$self{'firstname','lastname'} );
+		} elsif ( $_[0]{'firstname'} ) {
+			return $_[0]{'firstname'};
+		} elsif ( $_[0]{'lastname'} ) {
+			return $_[0]{'lastname'};
+		} # end if
 	} # end if
 } # end sub name
 

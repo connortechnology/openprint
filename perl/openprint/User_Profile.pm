@@ -26,20 +26,20 @@ sub new {
 } # end sub new
 
 sub AUTOLOAD {
-	my $self = shift;
-	my $type = ref($self);
+	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	
 	$name =~ s/.*://;
-	if ( @_ ) {
-		if ( exists $$self{'fields'}{$name} ) {
-			return $$self{'fields'}{$name}->value( $_[0] );
+	if ( @_ > 1 ) {
+		if ( exists $_[0]{'fields'}{$name} ) {
+			return $_[0]{'fields'}{$name}->value( $_[1] );
 		} else {
 			# create a new entry
 		} # end if
-	} elsif ( $$self{'fields'} and exists $$self{'fields'}{$name} ) {
-		return $$self{'fields'}{$name}->value( );
+	} elsif ( $_[0]{'fields'} and exists $_[0]{'fields'}{$name} ) {
+		return $_[0]{'fields'}{$name}->value( );
 	} # end if
+	#return new openprint::User_Profile_Entry();
 	return undef;
 } # end sub AUTOLOAD
 

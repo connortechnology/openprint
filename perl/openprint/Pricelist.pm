@@ -11,9 +11,7 @@ require openprint::Currency;
 require openprint::logs;
 require openprint;
 
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 0;
 $table = 'pricelists';
