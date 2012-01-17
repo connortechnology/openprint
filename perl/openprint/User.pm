@@ -248,13 +248,7 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
-sub name {
-	my $self = $_[0];
-if ( (!$self) or ( ref $self ne 'openprint::User' ) ) {
-$log->error("FUcked up $self");
-Carp::cluck( 'No object is name' );
-return;
-}
+sub alias {
 	my $Company = $_[0]->Company();
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
@@ -262,15 +256,19 @@ return;
 	if ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
 		return $Company->name() . ' (' . $_[0]{'firstname'} . ')';
 	} else {
-		if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
-			return join(' ', @$self{'firstname','lastname'} );
-		} elsif ( $_[0]{'firstname'} ) {
-			return $_[0]{'firstname'};
-		} elsif ( $_[0]{'lastname'} ) {
-			return $_[0]{'lastname'};
-		} # end if
+		return $_[0]->name();
 	} # end if
 } # end sub name
+sub name {
+	if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
+		my $self = $_[0];
+		return join(' ', @$self{'firstname','lastname'} );
+	} elsif ( $_[0]{'firstname'} ) {
+		return $_[0]{'firstname'};
+	} elsif ( $_[0]{'lastname'} ) {
+		return $_[0]{'lastname'};
+	} # end if
+}
 
 sub assistant_ids {
 	my $self = shift;
