@@ -72,7 +72,9 @@ sub handler {
 			} # end if
 		} # end if
 
-		#$session{'lastupdated'} = time;
+		# If the session was created, then we want to tell it when, otherwise
+		# don't update it so that we don't incur another db update
+		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 		untie %session;
 		$dbh->disconnect();
 	} # end if
