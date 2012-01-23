@@ -4,12 +4,15 @@ require openprint::Location_Type;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 
-use JSON;
-use LWP::UserAgent;
-use HTTP::Request;
+use constant PI => atan2(1,1)*4;
+# 3.14159265358979;
+use JSON ();
+use LWP::UserAgent ();
+use HTTP::Request ();
+use Data::Dumper;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
@@ -50,15 +53,13 @@ $serial = 'locations_id_seq';
 );
 
 sub children {
-	my $self = shift;
-	return openprint::Location->find( 'parent_id' => $$self{'id'} );
+	return openprint::Location->find( 'parent_id' => $_[0]{'id'} );
 } # end sub children
 
 sub get_all_children {
-	my $self = shift;
 	my @results;
 	
-	foreach my $child ( $self->children() ) {
+	foreach my $child ( $_[0]->children() ) {
 		# Prevent infinite loop
 		next if sets::isin( $child->id(), [ map { $_->id() } @results ] );
 		push @results, $child, $child->get_all_children();
@@ -67,16 +68,14 @@ sub get_all_children {
 } # end sub get_all_children
 
 sub parent {
-	my $self = shift;
-	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};
+$openprint::log->error("use of deprecated method");
+	return new openprint::Location( $_[0]{'parent_id'}) if $_[0]{'parent_id'};
 } # end sub parent
 sub Parent {
-	my $self = shift;
-	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};
+	return new openprint::Location( $_[0]{'parent_id'}) if $_[0]{'parent_id'};
 } # end sub parent
 sub Root {
-	my $self = shift;
-	my $P = $self;
+	my $P = shift;
 	while ( $P->parent_id() ) {
 		$P = $P->Parent();
 	} # end while 
@@ -179,16 +178,55 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),map{$_->name()}$_[0]->Pa
 	my $res = $ua->request($req);
 	my $json = JSON::decode_json( $res->content );
 $openprint::log->debug( $json );
-	if ( $$json{'PlaceMark'} ) {
-$openprint::log->debug( 'PlaceMark'.$$json{'PlaceMark'} );
+	if ( $$json{'Placemark'} ) {
+$openprint::log->debug( 'Placemark'.$$json{'Placemark'} );
+		my $PlaceMark = $$json{'Placemark'}[0];
+		my $Point = $$PlaceMark{'Point'};
+		my $coordinates = $$Point{'coordinates'};
+		$_[0]{'latitude'} = @{$coordinates}[0];	
+		$_[0]{'longitude'} = @{$coordinates}[1];	
 	} else {
-		$openprint::log->warn("No placemrk");
-	foreach my $k ( keys %{$json} ) {
-$openprint::log->debug("$k => $$json{$k}");
-	} # end foreach
+		$openprint::log->warn("No placemrk" . Dumper( $json ) );
 	} # end if
 
 } # end sub get_latitude_longitude
+
+
+sub distance {
+	my ($lat1, $lon1, $lat2, $lon2, $unit) = @_;
+	my $theta = $lon1 - $lon2;
+	my $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+	$dist  = acos($dist);
+	$dist = rad2deg($dist);
+	$dist = $dist * 60 * 1.1515;
+	if ($unit eq "K") {
+		$dist = $dist * 1.609344;
+	} elsif ($unit eq "N") {
+		$dist = $dist * 0.8684;
+	}
+	return ($dist);
+}
+
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function get the arccos function using arctan function   :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub acos {
+	return atan2(sqrt(1 - $_[0]**2), $_[0]);
+}
+
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function converts decimal degrees to radians             :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub deg2rad {
+	return ($_[0] * PI / 180);
+}
+
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#:::  This function converts radians to decimal degrees             :::
+#::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+sub rad2deg {
+	return ($_[0] * 180 / PI);
+}
 
 1;
 __END__

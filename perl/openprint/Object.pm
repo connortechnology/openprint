@@ -2,6 +2,7 @@ use strict;
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use Carp qw( cluck );
+use Lingua::EN::Inflect ();
 
 use openprint ();
 require sets;

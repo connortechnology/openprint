@@ -65,7 +65,7 @@
 						</li>
 						<li>
 							<label for="info">More info</label>
-							<textarea cols="" id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Event'}->info() ) ?></textarea>
+							<textarea id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{'Event'}->info()); ) ?></textarea>
 						</li>
 					</ul>
 				</div>

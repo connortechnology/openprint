@@ -8,11 +8,11 @@
 	my $html = '';
 	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to is null'=>1 ) ) {
 		my $Author = $Wall->Author();
-		$html .= sprintf(q`<li id="wall-%1$d">
+		$html .= sprintf(q`<li id="wall-%1$d" class="wall_post">
 <span class="buttons">%7$s</span>
 <a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
 <a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>
- <span class="message">%5$s</span><span class="when">%6$s</span>`,
+<span class="message">%5$s</span><span class="when">%6$s</span>`,
 			$Wall->id(),
 			$Author->id(), $Author->name(), 
 			$Author->Asset()->thumbnail_url(),
@@ -29,7 +29,7 @@
 		if ( $Wall->has_replies() ) {
 			foreach my $Reply ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to'=>$Wall->id() ) ) {
 				my $Author = $Reply->Author();
-				$html .= sprintf(q`<div id="wall-%1$d">
+				$html .= sprintf(q`<div id="wall-%1$d" class="wall_post">
 						<span class="buttons">%7$s</span>
 						<a class="thumbnail" href="/account/view.html?user_id=%2$d"><img src="%4$s" alt="%3$s" title="%3$s"/></a>
 						<a class="who" href="/account/view.html?user_id=%2$d">%3$s</a>

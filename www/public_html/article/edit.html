@@ -68,11 +68,11 @@
 					</li>
 					<li>
 						<label for="summary">Summary</label>
-						<textarea cols="" id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{'Article'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->summary() ); ) ?></textarea>
+						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{'Article'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->summary() ); ) ?></textarea>
 					</li>
 					<li>
 						<label for="body">Body</label>
-						<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Article'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->body() ) ) ?></textarea>
+						<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Article'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->body() ) ) ?></textarea>
 					</li>
 				</ul>
 			<p class="buttons">
