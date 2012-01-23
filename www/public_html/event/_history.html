@@ -1,8 +1,8 @@
 <? eval (
 	@{$$variable{'Events'}} = ();
 	foreach my $Event ( openprint::Event->find( 
-			(Date::Calc::check_date( @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ? ( 'starting_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ? ( 'starting_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ) : () ),
+		ssi::date_filter( '/event/history.html?starting_on_start', 'starting_on_start'),
+		ssi::date_filter( '/event/history.html?starting_on_end', 'starting_on_end'),
 		( $session{'/event/history.html?category_id'} ? ( 'category_id' => $session{'/event/history.html?category_id'} ) : () ),
 		'order'				=> 'starting_on',
 		) ) {

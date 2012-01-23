@@ -16,6 +16,33 @@
 		<? echo ( 
 			my $html;
 			foreach my $Event ( @{$$variable{'Events'}} ) {
+
+				my $time_string;
+				my $starting_on_seconds = Date::Parse::str2time($Event->starting_on());
+				my $ending_on_seconds = Date::Parse::str2time($Event->ending_on());
+				my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+				my ($ssec,$smin,$shour,$smday,$smon,$syear,$swday,$syday,$sisdst) = localtime($starting_on_seconds);
+				my ($esec,$emin,$ehour,$emday,$emon,$eyear,$ewday,$eyday,$eisdst) = localtime($ending_on_seconds);
+				if ( $syear == $year and $smon == $mon && $smday == $mday ) {
+					# starts today
+					$time_string .= 'today';
+					if ( $Event->time_associated() ) {
+						$time_string .= ' at '.Date::Format::time2str( '%l:%M%P', $starting_on_seconds );
+					} # end if
+				} elsif ( $Event->time_associated() ) {
+					$time_string .= Date::Format::time2str( '%a, %h %d %Y at %l:%M%P', $starting_on_seconds );
+				} else {
+					$time_string .=	Date::Format::time2str( '%a, %h %d %Y', $starting_on_seconds );
+				} # end if
+				$time_string .= ' until ';
+				if ( $eyear == $syear and (($eyday == $syday ) or ( $eyday == $syday+1 and $ehour < 7) ) ) {
+					$time_string .= Date::Format::time2str( '%l:%M%P', $ending_on_seconds );
+				} elsif ( $Event->time_associated() ) {
+					$time_string .= Date::Format::time2str( '%a, %h %d %Y at %l:%M%P', $ending_on_seconds );
+				} else {
+					$time_string .=	Date::Format::time2str( '%a, %h %d %Y', $ending_on_seconds );
+				} # end if
+
 				$html .= sprintf(q` 
 					<div title="%2$s" class="Event"> 
 						<a class="thumbnail" href="/event/view.html?event_id=%1$s"><img src="%6$s"/></a>
@@ -27,7 +54,7 @@
 					</div>
 					`, $Event->id(), ssi::html_escape($Event->name()),
 					$Event->Category()->name(),
-					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+					$time_string,
 					$Event->where(),
 					$Event->Asset()->thumbnail_url()
 				);
