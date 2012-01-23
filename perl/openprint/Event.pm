@@ -43,13 +43,18 @@ $serial = 'events_id_seq';
 
 sub category {
 	if ( @_ > 1 ) {
-		my $Category = openprint::Event_Category->find_one('name_lc'=>lc$_[1]);
-		if ( ! $Category ) {
-			$Category = new openprint::Event_Category();
-			$Category->save({'name'=>$_[1]})
+		my $new = openprint::Event_Category->transform('name',$_[1]);
+		if ( $new ) {
+			my $Category = openprint::Event_Category->find_one('name lc'=>lc $new );
+			if ( ! $Category ) {
+				$Category = new openprint::Event_Category();
+				$Category->save({'name'=>$_[1]})
+			} # end if	
+			$_[0]{'category_id'} = $Category->id();
+			return $Category->name();
+		} else {
+			$_[0]{'category_id'} = undef;
 		} # end if	
-		$_[0]{'category_id'} = $Category->id();
-		return $Category->name();
 	} # end if
 	return new openprint::Event_Category( $_[0]{'category_id'} )->name();
 } # end sub category

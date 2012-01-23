@@ -7,6 +7,16 @@
 		<? if ( $$variable{'Event'}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
 		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Event'}->can_edit() ) {
+					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
+				} # end if
+				return $html;
+			) ?>
+		</p>
 		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
 		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
@@ -47,16 +57,6 @@
 		</fieldset>
 <div id="Likes"><? echo ( $$variable{'Event'}->likes('Likes') ) ?></div>
 <div id="Attendance"><!--#include virtual="_attendance.html"--></div>
-		<p class="buttons">
-			<? echo (
-				my $html = '';
-				if ( $$variable{'Event'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
-					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
-				} # end if
-				return $html;
-			) ?>
-		</p>
 	</fieldset>
 	</form>
 </div></div>

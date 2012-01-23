@@ -17,6 +17,24 @@
 			<? endif ( $$variable{'Event'}->deleted() ) ?>
 			
 			<input type="hidden" name="event_id" value="<? echo ( $param{'event_id'} ) ?>" />
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+					
+					if ( $$variable{'Event'}->id() ) {
+						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
+						if ( $$variable{'Event'}->deleted() ) {
+							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+						} else {
+							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+						} # end if
+						#$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
+					} # end if
+					$html .= ssi::button( 'Save', { 'onclick'=>"f1.function.value='Save';f1.submit();" } );
+					return $html;
+				) ?>
+			</p>
 
 			<fieldset><legend>Tell us about the event</legend>
 				<div class="content">
@@ -51,6 +69,7 @@
 							</span>
 							<script type="text/javascript">update_duration(document.forms['f1'],'starting_on','ending_on');</script>
 						</li>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
 							<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 							<select name="category_id" id="category_id" onchange="$('category').value='';">
@@ -60,6 +79,16 @@
 								) ?>
 							</select>
 						</li>
+<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+						<li><label>Category</label>
+							<select name="category_id" id="category_id">
+								<option value="">select</option>
+								<? echo (
+									return ssi::make_drop_down( openprint::Event_Category->dropdown('order'=>'lower(name)'), $$variable{'Event'}->category_id() );
+								) ?>
+							</select>
+						</li>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 						<li><label>Name</label>
 							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Event'}->name() ) ?>" />
 						</li>
@@ -74,24 +103,6 @@
 <? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();) ?>
 <!--#include virtual="/location/_location_fields.html"-->
 			</fieldset>
-			<p class="buttons">
-				<? echo (
-					my $html = '';
-					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-					
-					if ( $$variable{'Event'}->id() ) {
-						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
-						if ( $$variable{'Event'}->deleted() ) {
-							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
-						} else {
-							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
-						} # end if
-						#$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
-					} # end if
-					$html .= ssi::button( 'Save', { 'onclick'=>"f1.function.value='Save';f1.submit();" } );
-					return $html;
-				) ?>
-			</p>
 		</fieldset>
 		<input type="hidden" name="function" />
 	</form>
