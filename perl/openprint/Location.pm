@@ -12,7 +12,7 @@ use HTTP::Request ();
 use Data::Dumper;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
@@ -168,6 +168,25 @@ sub child_type {
 	} # end if
 } # end sub child_type
 
+sub latitude {
+	if ( @_ > 1 ) {
+		$_[0]{'latitude'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'latitude'} ) {
+		$_[0]->get_latitude_and_longitude();
+	} # end if
+	return $_[0]{'latitude'};
+}
+sub longitude {
+	if ( @_ > 1 ) {
+		$_[0]{'longitude'} = $_[1];
+	} # end if
+	if ( ! $_[0]{'longitude'} ) {
+		$_[0]->get_latitude_and_longitude();
+	} # end if
+	return $_[0]{'longitude'};
+}
+
 sub get_latitude_and_longitude {
 	my $ua = LWP::UserAgent->new;
 	$ua->agent("IntelligentQuote/0.1 ");
@@ -179,7 +198,7 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),map{$_->name()}$_[0]->Pa
 	my $json = JSON::decode_json( $res->content );
 $openprint::log->debug( $json );
 	if ( $$json{'Placemark'} ) {
-$openprint::log->debug( 'Placemark'.$$json{'Placemark'} );
+		$openprint::log->warn("Placemrk" . Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
 		my $Point = $$PlaceMark{'Point'};
 		my $coordinates = $$Point{'coordinates'};

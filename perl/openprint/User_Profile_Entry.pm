@@ -3,7 +3,7 @@ package openprint::User_Profile_Entry;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $table = 'user_profiles';
 @identified_by = ( 'user_id', 'field_id' );
 %fields = (

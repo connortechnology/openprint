@@ -72,7 +72,7 @@ sub value {
 		if ( $$Entry{'value'} ne $v ) {
 			$_ = $Entry->save( { 'value' => $v } );
 		} else {
-			$openprint::log->debug("Not saving: $$Entry{'field'} value: $$Entry{'value'} == $v");
+			$openprint::log->debug("Not saving: $$Entry{'name'} $$Entry{'field'} value: $$Entry{'value'} == $v");
 		} # end if
 	} # end if 
 		

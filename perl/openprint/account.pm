@@ -374,7 +374,6 @@ sub user_profile {
 		$User = new openprint::User();
 	} # end if
 
-
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
 			$User = $User->Prev( 'company_id'=>$session{'company_id'} );
@@ -437,6 +436,7 @@ sub user_profile {
 
 			$User->Profile()->save( \%param );
 $log->debug("Back from profile sae");
+			$variable{'ExternalRedirect'} = '/account/user_profile.html?ddmUser='.$User->id();
 
 			if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
 $log->debug("Sending password change");
