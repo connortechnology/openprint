@@ -176,6 +176,12 @@
 			<label>Account #:</label>
 			<input type="text" name="txtAccountNum" value="<?txtAccountNum?>" >
 		</p>
+		<p><label>Category:</label>
+			<select name="category_id" id="category_id">
+				<option value="">select</option>
+			<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $$variable{'Company'}->category_id() ); ) ?>
+			</select>
+		</p>
 		<p> 
 			<label>Internal Name:</label>
 			<input type="text" name="txtCompanyName" value="<?txtCompanyName?>" >

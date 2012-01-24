@@ -57,6 +57,7 @@ require openprint::customer_credit;
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
+		'category_id'				=>	'category_id',
 		);
 %transforms = (
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
@@ -71,6 +72,7 @@ require openprint::customer_credit;
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
 	'deleted'		=>	0,
+	'category_id'	=>	undef,
 );
 
 my $debug = 1;
@@ -133,6 +135,10 @@ sub find {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
+	} # end if
+	if ( $params{'category_id'} ) {
+		$sql .= q{ AND category_id=?};
+		push @values, $params{'category_id'};
 	} # end if
 	if ( $params{'marketing_category_id'} ) {
 		$sql .= q{ AND Index IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};

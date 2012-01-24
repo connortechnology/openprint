@@ -1,13 +1,10 @@
-package openprint::employee_purchase_order;
-use MIME::QuotedPrint;
-use Text::CSV_XS;
 use strict;
+package openprint::employee_purchase_order;
 require sql;
-require misc;
 require openprint::paper;
-
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
+require openprint::Company_Category;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -488,7 +485,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled' ) );
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {
@@ -624,6 +621,10 @@ sub item {
 
 sub _po_created_by_options {
 } # end sub _po_created_by_options
+
+sub _vendor_dropdown {
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'vendor_category_id', 'supplier_id' ) );
+} # end sub _vendor_dropdown
 
 1;
 __END__
