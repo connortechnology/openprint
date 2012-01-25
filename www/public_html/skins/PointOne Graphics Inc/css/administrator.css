@@ -23,7 +23,11 @@ div#UserProfile form fieldset p {
 }
 div#UserProfile form fieldset p label {
 	margin-left: -200px;
-	width: 295px;
+	width: 195px;
+}
+div#UserProfile form fieldset p label.radio {
+	width: auto;
+	margin: 0;
 }
 div#UserProfile fieldset p.buttons {
 }
