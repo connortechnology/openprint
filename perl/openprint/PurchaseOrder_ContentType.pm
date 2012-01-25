@@ -12,6 +12,7 @@ $serial = 'PurchaseOrder_ContentTypes_id';
 %fields = (
 	'id'		=>	'id',
 	'name'		=>	'name',
+	'type'		=>	'type',
 );
 
 %transforms = (
