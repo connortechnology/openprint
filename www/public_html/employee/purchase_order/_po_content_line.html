@@ -11,7 +11,7 @@
 		next;
 	} # end if
 
-	if ( $C->type() eq 'Roll Stock' ) {
+	if ( $C->Type()->type() eq 'Roll Stock' ) {
 		my ( $type, $name );
 		if ( $C->item() =~ /^(FSC|PEFC\/SFI)? ?(.+)$/ ) {
 			( $type, $name ) = ( $1, $2 );
@@ -40,7 +40,7 @@
 		$C->total(),
 			ssi::make_drop_down( openprint::PurchaseOrder_Item->dropdown( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'vendor_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'type_id'=>$C->type_id(), 'order'=>'lower(name)' ), $C->item_id() ),
 		);
-	} elsif ( $C->type() eq 'Sheet Stock' ) {
+	} elsif ( $C->Type()->type() eq 'Sheet Stock' ) {
 		my ( $mweight, $type, $name ) = $C->item() =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
 		if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
 			$name = $type . ' ' . $name;
@@ -91,7 +91,6 @@
 			ssi::make_drop_down( openprint::PurchaseOrder_Item->dropdown( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'vendor_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'type_id'=>$C->type_id(), 'order'=>'lower(name)' ), $C->item_id() ),
 		);
 	} # end if
-$log->debug("item_id: " . $C->item_id() );
 	$html .= '</tr>';
 	return $html;
 ) ?>

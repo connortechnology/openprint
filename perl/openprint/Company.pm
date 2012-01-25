@@ -66,6 +66,7 @@ $serial = 'companies_id_seq';
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
+		'category_id'				=>	'category_id',
 		);
 %find_fields = (
 	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -88,6 +89,7 @@ $serial = 'companies_id_seq';
 	'employees'		=>	undef,
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
+	'category_id'	=>	undef,
 );
 
 sub Currency {
