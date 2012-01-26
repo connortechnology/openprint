@@ -68,9 +68,14 @@ sub Category {
 sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0]->Location();
-		$_[0]{'where'} = join(', ', map { $_->name() } $L, $L->Parents() );
+		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
+		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
-		$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+		} # end if
+		$_[0]{'where'} .= '</a>';
+		if ( $L->url() ) {
+			$_[0]{'where'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
 		} # end if
 	} # end if
 	return $_[0]{'where'};

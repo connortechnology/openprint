@@ -16,8 +16,143 @@ sub _project_history_results {
 }
 
 sub order_history {
+
+	if ( ! $param{'DateStartYear'} ) {
+		my ( $y, $m, $d ) = Date::Calc::Today();
+		@variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $y, $m, 1 ); 
+		@param{'DateStartYear','DateStartMonth','DateStartDay'} = ($y, $m, 1);
+	} else {
+		@variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
+				@param{'DateStartYear','DateStartMonth','DateStartDay'} );
+	} # end if
+
+	if ( ! $param{'DateEndYear'} ) {
+		@variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+		@param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
+	} else {
+		@variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
+				@param{'DateEndYear','DateEndMonth','DateEndDay'} );
+	} # end if
+
+	_order_history_results();
+	if ( $param{'action'} eq 'download' ) {
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value' );
+		my @Data = ();
+		foreach my $Order ( @{$variable{'Orders'}} ) {
+			foreach my $Project ( $Order->Projects() ) {
+
+				my %totals;
+				my %prices;
+				my $qty_index = $Project->ordered_quantity_index();
+				my $stock_price = 0;
+
+				foreach my $ss_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+					next if ! $$sig_specs{'txtPrice'.$qty_index};
+					my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+					if ( ! $Paper ) {
+						next;
+					} elsif ( $Paper->supplied() ) {
+						next;
+					} # end if	
+					my $string = $Paper->to_string();
+
+					my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+						$impressions /= 2
+					} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
+						my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+						my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+						if ( @side_one_colours and @side_two_colours ) {
+							$impressions /= 2
+						} # end if
+					} # end if
+
+					if ( $Paper->type() eq 'Roll' ) {
+						$totals{$string} += POSIX::ceil($impressions * $Paper->area() * $Paper->wpsi());
+					} elsif ( $Paper->type() eq 'Sheet' ) {
+						my $sheets = $impressions;
+						if ( $Paper->start_area() and $Paper->area() and ( $Paper->start_area() != $Paper->area() ) ) {
+							$sheets /= $Paper->factor();
+							$sheets = POSIX::ceil( $sheets );
+							$Paper = $Paper->Supplied();
+						} else {
+							$log->debug("No area in project view: " . $string );
+						} # end if
+						$totals{$string} += Math::Round::nearest( 1, $sheets * $Paper->start_area() * $Paper->wpsi() );
+					} # end if
+					my %price = $Paper->get_price( $totals{$string} );
+					$price{'Total'} = $price{'100lb Price'} * $totals{$string} / 100;
+					$stock_price += $price{Total};
+				} # end foreach signature
+
+				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price;
+			} # end foreach Project
+		} # end foreach Order
+
+		misc::export_csv( $r, $log, \%variable, 'order_history_report.csv', \@Header,\@Data );	
+	} # end if
 }
 sub _order_history_results {
+    my %parameters; 
+    if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+        $parameters{'SalesPerson'} = $session{'user_id'};
+        $parameters{'or'} = "companies.id=(SELECT company_id FROM users WHERE users.id=$session{'user_id'})";
+    } elsif ( $param{'CSR'} ) {
+        $parameters{'SalesPerson'} = $param{'CSR'};
+    } # end if
+    my @Companies = openprint::Company->find( %parameters );
+    my %companies = map { int($_->id()), $_->name() } @Companies;
+    @{$variable{'Orders'}} = ();
+    if ( %companies ) {
+        foreach my $Order ( openprint::Order->find(
+            'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
+            'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
+            'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
+            ( $param{'status'} ? (
+                'status' =>
+                ( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
+                ) : () ),
+            ( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+            ( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+            'order' => ($param{'order'} ? $param{'order'} : 'id'),
+            'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
+        ) ) {
+            if ( $param{'reprint'} ) {
+                my $reprint = 0;
+                foreach my $Project ( $Order->Projects() ) {
+                    if ( $Project->reprint() eq 'Y' ) {
+                        $reprint=1;
+                        last;
+                    } # end if
+                } # end foreach Project
+                next if ( $param{'reprint'} eq 'Y' ) and ! $reprint;
+                next if ( $param{'reprint'} eq 'N' ) and $reprint;
+            } # end if reprint
+            if ( $param{'press_id'} ) {
+                my $Press = new openprint::Equipment( $param{'press_id'} );
+                my $on_press = 0;
+                foreach my $Project ( $Order->Projects() ) {
+                    foreach my $sig_id ( $Project->signatures() ) {
+                        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+                        if ( ! $$sig_specs{'UsePress'} ) {
+                            $$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
+                        } # end if
+                        if ( $$sig_specs{'UsePress'} eq $Press->strid() ) {
+                            $on_press = 1;
+                        } # end if
+                        last if $on_press;
+                    } # end foreach sig
+                    last if $on_press;
+                } # end foreach Project
+                next if ! $on_press;
+            } # end if
+            push @{$variable{'Orders'}}, $Order;
+        } # end foreach Order
+    } else {
+        $variable{'error'} .= 'There were no companies to filter on.<br/>';
+    } # end if
+    %{$variable{'Companies'}} = %companies;
 }
 
 sub stock {

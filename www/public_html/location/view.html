@@ -1,0 +1,62 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Location"><div class="View">
+	<form id="f1" name="f1" action="/location/view.html?location_id=<? echo ( $$variable{'Location'}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="action"/>
+	<fieldset><legend>Viewing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
+		<h1><? echo ( $$variable{'Location'}->name() ) ?></h1>
+		<? if ( $$variable{'Location'}->deleted() ) ?>
+		<span class="warning">This location has been deleted</span>
+		<? endif ( $$variable{'Location'}->deleted() ) ?>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Location'}->can_edit() ) {
+					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?location_id='.$$variable{'Location'}->id() } );
+				} # end if
+				return $html;
+			) ?>
+		</p>
+		<? if ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>
+		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
+		<? endif ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>
+<? echo (
+	my $Location = $$variable{'Location'}->Location();
+	if ( $Location ) {
+		$Location->get_latitude_and_longitude();
+		if ( $Location->latitude() and $Location->longitude() ) {
+			return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+		} 
+	} 
+	return;
+) ?>
+		<fieldset><legend>All about it</legend>
+			<div class="content">
+				<ul>
+					<li class="info">
+						<label for="description">Description</label>
+						<? echo ( $$variable{'Location'}->description() ) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Where</legend>
+			<div class="content">
+				<ul>
+					<li><label>Location</label>
+						<? echo ( $$variable{'Location'}->where(); ) ?>
+					</li>
+				</ul>
+			</div>
+		</fieldset>
+		<fieldset><legend>Photos</legend>
+<? if ( $$variable{'Location'}->id() ) ?>
+	<div id="Photos">
+		<!--#include virtual="_photos.html"-->
+	</div>
+<? endif ( $$variable{'Location'}->id() ) ?>
+		</fieldset>
+<div id="Likes"><? echo ( $$variable{'Location'}->likes('Likes') ) ?></div>
+	</fieldset>
+	</form>
+</div></div>

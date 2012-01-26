@@ -20,6 +20,16 @@
 		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
 		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
+<? echo (
+	my $Location = $$variable{'Event'}->Location();
+	if ( $Location ) {
+		$Location->get_latitude_and_longitude();
+		if ( $Location->latitude() and $Location->longitude() ) {
+			return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+		} 
+	} 
+	return;
+) ?>
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>

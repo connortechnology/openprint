@@ -4,9 +4,7 @@ our @ISA = qw( openprint::Object );
 
 require openprint::ProductCategory;
 require openprint::Log;
-
 require sql;
-
 
 use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
 $debug = 0;
@@ -33,8 +31,8 @@ $serial = 'products_id_seq';
 );
 %defaults = (
 	'weight'		=>	undef,
-	'taxexempt1'	=>	'N',
-	'taxexempt2'	=>	'N',
+	'taxexempt1'	=>	q`'N'`,
+	'taxexempt2'	=>	q`'N'`,
 	'sort'			=>	undef,
 	'category_id'	=>	undef,
 	'project_id'	=>	undef,
