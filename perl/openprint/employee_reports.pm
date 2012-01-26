@@ -80,10 +80,12 @@ sub order_history {
 							$log->debug("No area in project view: " . $string );
 						} # end if
 						$totals{$string} += Math::Round::nearest( 1, $sheets * $Paper->start_area() * $Paper->wpsi() );
+					} else {
+						$log->error("Unknown type $$Paper{type}");
 					} # end if
-					my %price = $Paper->get_price( $totals{$string} );
-					$price{'Total'} = $price{'100lb Price'} * $totals{$string} / 100;
-					$stock_price += $price{Total};
+					my %price = $Paper->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
+$log->error("$totals{$string} . $price{'100lb Total'} ");
+					$stock_price += $price{'100lb Total'};
 				} # end foreach signature
 
 				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price;
@@ -115,8 +117,8 @@ sub _order_history_results {
                 ) : () ),
             ( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
             ( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
-            'order' => ($param{'order'} ? $param{'order'} : 'id'),
-            'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
+            'order' => ($param{'order'} ? $openprint::Order::fields{$param{'order'}} : 'id'),
+            ( $param{'Estimator'} ? ( 'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
         ) ) {
             if ( $param{'reprint'} ) {
                 my $reprint = 0;

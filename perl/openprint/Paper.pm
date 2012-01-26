@@ -856,6 +856,9 @@ sub recommendations {
 sub get_price {
 	my ( $self, %params ) = @_;
 	
+foreach my $k ( keys %params ) {
+$log->warn("$k => $params{$k}");
+}
 	my $price;
 	my $qty = $params{'weight'};
 
@@ -901,7 +904,7 @@ sub get_price {
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( $price );
 	} else {
-		Carp::cluck("No custom price, and no paper::id");
+		Carp::cluck("No custom price, and no paper::id for service: $params{service}" . $self->to_string());
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
