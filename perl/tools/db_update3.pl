@@ -802,6 +802,12 @@ if ( ! sets::isin( 'opinion_availability', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Opinion_Availability.sql}) );
 	die if $dbh->errstr();
 } # en dif
+if ( ! sets::isin( 'company_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Company_Categories.sql}) );
+	die if $dbh->errstr();
+	$dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
+	$dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
+} # endif
 $dbh->disconnect();
 1;
 __END__

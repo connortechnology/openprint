@@ -223,6 +223,12 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 				<label>Account #</label>
 				<input type="text" name="accountnumber" value="<? echo ( $$variable{'Company'}->accountnumber() ) ?>" />
 			</li>
+			<li><label>Company Category:</label>
+				<select name="category_id" id="category_id">
+					<option value="">select</option>
+				<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $$variable{'Company'}->category_id() ); ) ?>
+				</select>
+			</li>
 			<li> 
 				<label>Internal Name</label>
 				<input type="text" name="name" value="<? echo ( $$variable{'Company'}->name() ) ?>" />
@@ -349,7 +355,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 		<ul>
 			<? if ( $$variable{'selectCustomerCategories'} ) ?>
 			<li> 
-				<label>Customer Category</label>
+				<label>Marketing Category</label>
 				<select name="selectCustomerCategories" size="4" multiple="multiple"><?selectCustomerCategories?></select>
 			</li>
 			<? endif ( $$variable{'selectCustomerCategories'} ) ?>
