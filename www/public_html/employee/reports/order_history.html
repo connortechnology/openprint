@@ -8,7 +8,8 @@
 <h1>REPORTS</h1>
 <h2>Order History</h2>
 </div>
-<form id="f1" name="f1">
+<form id="f1" name="f1" action="/employee/reports/order_history.html">
+	<input type="hidden" name="action" />
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Company</label>
@@ -27,24 +28,6 @@
 					) ?>
 			</select>
 		</p>
-		 <? eval (
-				 if ( ! $param{'DateStartYear'} ) {
-					 my ( $y, $m, $d ) = Date::Calc::Today();
-					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $y, $m, 1 ); 
-					 @param{'DateStartYear','DateStartMonth','DateStartDay'} = ($y, $m, 1);
-				 } else {
-					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
-						 @param{'DateStartYear','DateStartMonth','DateStartDay'} );
-				 } # end if
-
-				 if ( ! $r->param('DateEndYear') ) {
-					 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
-					 @param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
-				 } else {
-				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
-					 @param{'DateEndYear','DateEndMonth','DateEndDay'} );
-				 } # end if
-				 ) ?>
 		 <p>
 			 <label>Date</label>
 			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
@@ -102,7 +85,10 @@
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		 <p class="buttons">
-			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", '', 'Show Results' ); ) ?>
+			 <? echo ( join('',
+					 ssi::button( 'Go', { onclick=>"LoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", text=>'Show Results' } ),
+					 ssi::button( 'Download', { 'onclick'=>"f1.elements['action'].value='download';f1.submit();" } ),
+); ) ?>
 		 </p>
 	</fieldset>
 </form>
