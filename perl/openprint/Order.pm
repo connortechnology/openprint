@@ -405,8 +405,7 @@ sub projects {
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 } # end sub projects
 sub Projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $_[0]{'id'} );
 }
 
 sub Products {

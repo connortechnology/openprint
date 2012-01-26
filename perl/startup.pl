@@ -60,7 +60,8 @@ BEGIN {
 	use openprint::JDF;
 	use Number::Format;
 	use openprint::Project_Service;
-	use Math::Round;
+	use Math::Round ();
+	use POSIX ();
 
 #use MapImage;
 
