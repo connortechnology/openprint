@@ -20,6 +20,7 @@ $serial = 'locations_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
+	'description'	=>	'description',
 	'short'			=>	'short',
 	'parent_id'		=>	'parent_id',
 	'coordinates'	=>	'coordinates',

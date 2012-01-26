@@ -269,6 +269,9 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	if ( ! exists $$data{'short'} ) {
 	$dbh->do('ALTER TABLE Locations add short text');
 	} # end if
+	if ( ! exists $$data{'description'} ) {
+	$dbh->do('ALTER TABLE Locations add description text');
+	} # end if
 	if ( ! exists $$data{'parent_id'} ) {
 	$dbh->do('ALTER TABLE Locations add parent_id integer');
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(parent_id) REFERENCES Locations (id)');

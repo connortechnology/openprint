@@ -24,9 +24,62 @@ sub list {
 sub _action {
 } # end sub _action
 
+sub edit {
+	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
+} # end sub edit
+
 sub view {
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
-	if ( $param{'filename'} ) {
+	if ( $param{'function'} eq 'Save' ) {
+		my $parent_id;
+		if ( $param{'country'} ) {
+			my $Country = openprint::Location->find_one('name lc'=> lc $param{'country'}, 'type'=>'country' );
+			if ( ! $Country ) {
+				$Country = new openprint::Location();
+				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
+			} # end if
+			$parent_id = $param{'country_id'} = $Country->id();
+		} elsif ( $param{'country_id'} ) {
+			$parent_id = $param{'country_id'};
+		} # end if
+		if ( $param{'state'} ) {
+			my $State = openprint::Location->find_one('name lc'=> lc $param{'state'}, 'type'=>['state','province']);
+			if ( ! $State ) {
+				$State = new openprint::Location();
+				$variable{'error'} .= $State->save({'name'=>$param{'state'}, 'type'=>'state', 'parent_id'=>$param{'country_id'}});
+			} # end if
+			$parent_id = $param{'state_id'} = $State->id();
+		} elsif ( $param{'state_id'} ) {
+			$parent_id = $param{'state_id'};
+		} # end if
+		if ( $param{'city'} ) {
+			my $City = openprint::Location->find_one('name lc'=> lc $param{'city'}, 'type'=>'city');
+			if ( ! $City ) {
+				$City = new openprint::Location();
+				$variable{'error'} .= $City->save({'name'=>$param{'city'}, 'type'=>'city', 'parent_id'=>$param{'state_id'}});
+			} # end if
+			$parent_id = $param{'city_id'} = $City->id();
+		} elsif ( $param{'city_id'} ) {
+			$parent_id = $param{'city_id'};
+		} # end if
+			
+		if ( ( $_ = openprint::Location->find_one(
+			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
+			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), ) ) ) {
+			$variable{'error'} .= 'A location with that name at that place already exists.';
+		} else {
+			$variable{'error'} .= $Location->save({
+					'name'			=>	$param{'name'}, 
+					'description'	=>	$param{'description'},
+					'parent_id'		=>	$parent_id, 
+					'type'			=>	'place', 
+					'address'		=>	$param{'address'},
+					'postalcode'	=>	$param{'postalcode'},
+					'url'			=>	$param{'url'},
+					});
+			new openprint::Log()->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
+		} # end if
+	} elsif ( $param{'filename'} ) {
 		my $Album = $Location->Album();
 		if ( ! $Album->id() ) {
 			$variable{'error'} .= $Album->save({'name'=>'Photos for ' . $Location->name()});

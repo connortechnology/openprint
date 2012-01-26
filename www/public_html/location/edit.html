@@ -1,0 +1,57 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "advanced"
+	});
+-->
+</script>
+<div class="Location"><div class="Edit">
+	<form name="f1" id="f1" action="/location/view.html" method="post" enctype="multipart/form-data">
+		<fieldset><legend>Editing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{'Location'}->deleted() ) ?>
+			<span class="warning">This location has been deleted</span>
+			<? endif ( $$variable{'Location'}->deleted() ) ?>
+			
+			<input type="hidden" name="location_id" value="<? echo ( $param{'location_id'} ) ?>" />
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					
+					if ( $$variable{'Location'}->id() ) {
+						if ( $$variable{'Location'}->deleted() ) {
+							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+						} else {
+							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+						} # end if
+					} # end if
+					$html .= ssi::button( 'Save', { 'onclick'=>"f1.function.value='Save';f1.submit();" } );
+					return $html;
+				) ?>
+			</p>
+
+			<fieldset><legend>Tell us about the location</legend>
+				<div class="content">
+					<ul>
+						<li><label>Name</label>
+							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Location'}->name() ) ?>" />
+						</li>
+						<li>
+							<label for="description">Description</label>
+							<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Location'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{'Location'}->description()); ) ?></textarea>
+						</li>
+						<li><label for="url">URL</label>
+							<input type="text" name="url" id="url" value="<? echo ( $$variable{'Location'}->url() ) ?>" />
+						</li>
+					</ul>
+				</div>
+			</fieldset>
+			<fieldset><legend>Where</legend>
+<? eval ( $$variable{'Location'} = $$variable{'Location'}->Location();) ?>
+<!--#include virtual="/location/_location_fields.html"-->
+			</fieldset>
+		</fieldset>
+		<input type="hidden" name="function" />
+	</form>
+</div></div>
