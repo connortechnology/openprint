@@ -39,5 +39,12 @@ sub view {
 	} # end if
 } # end sub view
 
+sub _photos {
+	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Location{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$variable{'error'} .= $Photo->delete() if $Photo->id();
+	} # end if
+} # end sub _photos
 1;
 __END__
