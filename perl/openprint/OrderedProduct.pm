@@ -75,8 +75,7 @@ sub Order {
 } # end sub Order
 
 sub Product {
-	my $self = shift;
-	return new openprint::Product( $$self{'product_id'} );
+	return new openprint::Product( $_[0]{'product_id'} );
 } # end sub Product
 
 sub price {

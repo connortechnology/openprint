@@ -14,9 +14,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-package openprint::Estimating::Skids;
 use strict;
+package openprint::Estimating::Skids;
 use POSIX qw(ceil);
+require Math::Units;
 
 require openprint::service;
 
