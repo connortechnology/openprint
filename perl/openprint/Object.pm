@@ -2,7 +2,7 @@ use strict;
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use Carp qw( cluck );
-use Lingua::EN::Inflect ();
+require Lingua::EN::Inflect;
 
 use openprint ();
 require sets;
@@ -837,9 +837,9 @@ sub likes {
 		$html = 'No one has an opinion on this yet.  Be the first!';
 	} elsif ( @Likes == 1 ) {
 		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
-			$html .= 'You ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
+			$html .= 'You ' . Lingua::EN::Inflect::PL( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} else {
-			$html = '1 person ' . Lingua::EN::Inflect( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
+			$html = '1 person ' . Lingua::EN::Inflect::PL( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
 		} # end if
 	} else {
 		my %Opinions;

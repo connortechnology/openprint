@@ -1,6 +1,8 @@
 use strict;
 use openprint ();
 require openprint::Location_Type;
+require openprint::Asset;
+require openprint::Photo_Album;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 
@@ -9,7 +11,7 @@ use constant PI => atan2(1,1)*4;
 use JSON ();
 use LWP::UserAgent ();
 use HTTP::Request ();
-use Data::Dumper;
+use Data::Dumper ();
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
@@ -31,6 +33,9 @@ $serial = 'locations_id_seq';
 	'address'		=>	'address',
 	'latitude'		=>	'latitude',
 	'longitude'		=>	'longitude',
+	'url'			=>	'url',	
+	'asset_id'		=>	'asset_id',
+	'album_id'		=>	'album_id',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
@@ -50,6 +55,8 @@ $serial = 'locations_id_seq';
 	'type_id'		=>	undef,
 	'latitude'		=>	undef,
 	'longitude'		=>	undef,
+	'asset_id'		=>	undef,
+	'album_id'		=>	undef,
 );
 
 sub children {
@@ -191,7 +198,7 @@ sub get_latitude_and_longitude {
 	my $ua = LWP::UserAgent->new;
 	$ua->agent("IntelligentQuote/0.1 ");
 # Create a request
-$openprint::log->debug('Get: ' . join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()));
+$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()));
 	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()) );
 # Pass request to the user agent and get a response back
 	my $res = $ua->request($req);
@@ -246,6 +253,31 @@ sub deg2rad {
 sub rad2deg {
 	return ($_[0] * 180 / PI);
 }
+
+sub Asset {
+    if ( ! $_[0]{'Asset'} ) {
+        my $Album = $_[0]->Album();
+        if ( $$Album{'asset_id'} ) {
+            $_[0]{'Asset'} = new openprint::Asset( $$Album{'asset_id'} );
+        } elsif ( my @Photos = $Album->Photos() ) {
+            $_[0]{'Asset'} = $Photos[0];
+        } else {
+            $_[0]{'Asset'} = new openprint::Asset();
+        } # end if
+    } # end if
+    return $_[0]{'Asset'};
+} # end sub Asset
+
+sub Photos {
+	if ( ! $_[0]{'album_id'} ) {
+		return ();
+	} # end if
+	return $_[0]->Album()->Photos( );
+} # end sub Photos
+
+sub Album {
+	return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
 
 1;
 __END__

@@ -22,6 +22,8 @@ CREATE TABLE Locations (
 	address		text,
 	latitude	float,
 	longitude	float,
+	url			text,
+	asset_id				INTEGER, FOREIGN KEY (asset_id) REFERENCES Assets (id),
 	PRIMARY KEY (id)
 );
 

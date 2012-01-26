@@ -286,11 +286,22 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	if ( ! exists $$data{'address'} ) {
 	$dbh->do('ALTER TABLE Locations add address text');
 	} # end if
+	if ( ! exists $$data{'url'} ) {
+	$dbh->do('ALTER TABLE Locations add url text');
+	} # end if
 	if ( ! exists $$data{'latitude'} ) {
 	$dbh->do('ALTER TABLE Locations add latitude float');
 	} # end if
 	if ( ! exists $$data{'longitude'} ) {
 	$dbh->do('ALTER TABLE Locations add longitude float');
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do('ALTER TABLE Locations add asset_id INTEGER');
+		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
+	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE Locations add album_id INTEGER');
+		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');

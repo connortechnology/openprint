@@ -22,8 +22,11 @@
 		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 <? echo (
 	my $Location = $$variable{'Event'}->Location();
-	if ( $Location->latitude() and $Location->longitude() ) {
-		return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+	if ( $Location ) {
+		$Location->get_latitude_and_longitude();
+		if ( $Location->latitude() and $Location->longitude() ) {
+			return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+		} 
 	} 
 	return;
 ) ?>

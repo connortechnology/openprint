@@ -1,5 +1,5 @@
 use strict;
-use openprint ();
+require openprint;
 require Digest::MD5;
 require openprint::Keyword;
 
@@ -19,7 +19,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -169,16 +169,25 @@ sub upload {
 	my $data;
 	$upload->slurp( $data );
 	my $md5 = Digest::MD5::md5_base64( $data );
-	my $Asset = openprint::Asset->find_one('md5'=>$md5) if $md5;
+	if ( ! $md5 ) {
+		return "Unable to MD5?";
+	} # end if
+	my $Asset = openprint::Asset->find_one('md5'=>$md5);
 	if ( ! $Asset ) {
 		$Asset = new openprint::Asset();
 		$! .= $Asset->save({'filename'=>$upload->filename(),'md5'=>$md5});
 		if ( ! $upload->link( $Asset->on_disk_path() ) ) {
 			return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
 		} # end if
-		if ( $_[1] ) {
+		if ( ( @_ > 1 ) and $_[1] ) {
 			# Should be a hash of more attribute
 			$Asset->save($_[1]);
+		} # end if
+	} else {
+		if ( ! -e $Asset->on_disk_path() ) {
+			if ( ! $upload->link( $Asset->on_disk_path() ) ) {
+				return 'There was an error saving file ' . $upload->filename().' to ' . $Asset->on_disk_path() . ": $!<br/>";
+			} # end if
 		} # end if
 	} # end if
 	return $Asset;
