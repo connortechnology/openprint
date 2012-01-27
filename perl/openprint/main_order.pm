@@ -487,6 +487,7 @@ sub history {
 
 sub history_details {
 	my $order_id = $param{'OrderID'};
+	$order_id = $param{'order_id'} if $param{'order_id'} and ! $order_id;
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $param{'btnFunction'} eq 'Cancel' ) {
