@@ -856,9 +856,6 @@ sub recommendations {
 sub get_price {
 	my ( $self, %params ) = @_;
 	
-foreach my $k ( keys %params ) {
-$log->warn("$k => $params{$k}");
-}
 	my $price;
 	my $qty = $params{'weight'};
 
@@ -932,7 +929,7 @@ $log->warn("$k => $params{$k}");
 		} # end if
 		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-#$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'})") if $debug;
+$openprint::log->debug("Costs: ($$price{Cost}) ($$price{'100lb Price'})/100lb ($$price{'100lb Cost'}) ($$price{'Price'}) T($$price{'100lb Total'})") if $debug;
 	return $price;
 } # end sub get_price
 
@@ -1192,8 +1189,8 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
 				@Papers = openprint::Paper->find( %params );
-			} elsif ( $qty_index and ( @Papers > 1 ) ) {
-				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
+			#} elsif ( $qty_index and ( @Papers > 1 ) ) {
+				#Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
@@ -1226,7 +1223,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 
 			foreach my $P ( @Papers ) {
 				if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
-					$openprint::log->debug("Paper no good due to minimum order");
+					$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() );
 					next;
 				} # end if
 				$Paper = $P;

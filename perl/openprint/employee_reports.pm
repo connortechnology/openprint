@@ -36,26 +36,33 @@ sub order_history {
 
 	_order_history_results();
 	if ( $param{'action'} eq 'download' ) {
-		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value' );
+		my @Header = ( 'OrderID', 'Docket', 'Invoice', 'Company', 'Project Reference', 'Date Ordered', 'Status', 'Total', 'Quoted Stock Value', 'Stock Amount' );
 		my @Data = ();
 		foreach my $Order ( @{$variable{'Orders'}} ) {
 			foreach my $Project ( $Order->Projects() ) {
 
 				my %totals;
-				my %prices;
+				my %Papers;
 				my $qty_index = $Project->ordered_quantity_index();
 				my $stock_price = 0;
 
-				foreach my $ss_id ( $Project->signatures() ) {
+				my $services = $Project->services();
+				foreach my $ss_id ( $Project->Type()->name() eq 'MultiPage' ? $Project->signatures() : $$services{''}[0] ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-					next if ! $$sig_specs{'txtPrice'.$qty_index};
+					if ( ! $$sig_specs{'txtPrice'.$qty_index} ) {
+						$log->warn("No price found.");
+						next;
+					} # end nif
 					my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 					if ( ! $Paper ) {
+$log->warn("No Paper found");
 						next;
 					} elsif ( $Paper->supplied() ) {
+$log->warn("Paper was supplied");
 						next;
 					} # end if	
 					my $string = $Paper->to_string();
+					$Papers{$string} = $Paper;
 
 					my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
 					if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
@@ -76,19 +83,21 @@ sub order_history {
 							$sheets /= $Paper->factor();
 							$sheets = POSIX::ceil( $sheets );
 							$Paper = $Paper->Supplied();
-						} else {
-							$log->debug("No area in project view: " . $string );
 						} # end if
 						$totals{$string} += Math::Round::nearest( 1, $sheets * $Paper->start_area() * $Paper->wpsi() );
 					} else {
 						$log->error("Unknown type $$Paper{type}");
 					} # end if
-					my %price = $Paper->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
-$log->error("$totals{$string} . $price{'100lb Total'} ");
-					$stock_price += $price{'100lb Total'};
 				} # end foreach signature
 
-				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price;
+				my $stock_total;
+				foreach my $string ( keys %totals ) {
+					my $price = $Papers{$string}->get_price( 'weight'=>$totals{$string}, 'service'=>'Material' );
+					$stock_price += $$price{'100lb Total'};
+					$stock_total += $totals{$string};
+				} # end foreach string
+
+				push @Data, $Order->id(), $Order->docket(), $Order->invoice_id(), $Order->Company()->name(), $Project->reference(), $Order->created_on(), $Order->status(), $Order->total(), $stock_price, $stock_total;
 			} # end foreach Project
 		} # end foreach Order
 
