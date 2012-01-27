@@ -182,6 +182,10 @@ sub view {
 			$variable{'error'} .= $Event->save(\%param);
 			new openprint::Log()->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
 		} # end if
+		my $Privacy = $Event->Privacy();
+		$variable{'error'} .= $Event->save( {
+				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+			} );
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {
