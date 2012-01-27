@@ -59,7 +59,7 @@ sub new {
 			# If the object is cached
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
+#$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
 		bless $self, $parent;
 
@@ -106,7 +106,7 @@ sub load {
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 	if ( ! $data ) {
-$log->debug("Object::load Loading from db $type");
+#$log->debug("Object::load Loading from db $type");
 		my $table = ${$type.'::table'};
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );
@@ -129,7 +129,7 @@ $log->debug("Object::load Loading from db $type");
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
 		} elsif ( $debug ) {
-			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};

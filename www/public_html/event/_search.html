@@ -6,6 +6,7 @@
 			( $session{'/event/search.html?category_id'} ? ( 'category_id' => $session{'/event/search.html?category_id'} ) : () ),
 			'order'				=> 'starting_on',
 		) ) {
+		next if ! $Event->can_view();
 		push @{$$variable{'Events'}}, $Event;
 	} # end foreach Events
 ) ?>

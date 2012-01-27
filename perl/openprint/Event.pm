@@ -126,6 +126,15 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	my $Privacy = $_[0]->Privacy();
+	return 1 if ! $$Privacy{'id'};
+	return $Privacy->can_view();
+} # end sub can_view
+
 sub Comments {
 	return openprint::Comment->find({'object_type'=>'openprint::Event','object_id'=>$_[0]{'id'}});
 } # end sub Comments

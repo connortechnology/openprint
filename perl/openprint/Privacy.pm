@@ -28,8 +28,7 @@ $serial = 'privacy_id_seq';
 %defaults = (
 );
 sub Object {
-	$_ =  $_[0]->object_type()->new( $_[0]{'object_id'} );
-	return $_;
+	return $_[0]->object_type()->new( $_[0]{'object_id'} );
 } # end sub Object
 
 sub privacy_mode {

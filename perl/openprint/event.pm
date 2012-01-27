@@ -1,8 +1,8 @@
+use strict;
 package openprint::event;
 
-use strict;
-use LWP::UserAgent;
-use openprint;
+use LWP::UserAgent ();
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -180,12 +180,15 @@ sub view {
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
 			$variable{'error'} .= $Event->save(\%param);
-			new openprint::Log()->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
+			(new openprint::Log())->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
 		} # end if
 		my $Privacy = $Event->Privacy();
-		$variable{'error'} .= $Event->save( {
+		$variable{'error'} .= $Privacy->save( {
 				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
 			} );
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
+		} # end if
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Event->Album();
 		if ( ! $Album->id() ) {
@@ -195,6 +198,7 @@ sub view {
 		$variable{'error'} = $Album->upload( 'filename' );
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
 	} # end if
 } # end sub view

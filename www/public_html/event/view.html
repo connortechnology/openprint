@@ -1,15 +1,12 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{'Event'}->can_view() ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="action"/>
 	<fieldset>
-<? if ( $session{'user_type'} eq 'A' ) ?>
-<legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
-		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
-		<? if ( $$variable{'Event'}->deleted() ) ?>
-		<span class="warning">This event has been deleted</span>
-		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<? if ( $session{'user_type'} eq 'A' ) ?>
+		<legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<? endif ( $session{'user_type'} eq 'A' ) ?>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
@@ -20,6 +17,11 @@
 				return $html;
 			) ?>
 		</p>
+		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
+		<? if ( $$variable{'Event'}->deleted() ) ?>
+		<span class="warning">This event has been deleted</span>
+		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<div class="rightColumn">
 		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
 		<? endif ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
@@ -28,11 +30,13 @@
 	if ( $Location ) {
 		$Location->get_latitude_and_longitude();
 		if ( $Location->latitude() and $Location->longitude() ) {
-			return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+			return '<img class="map" src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
 		} 
 	} 
 	return;
 ) ?>
+</div>
+<div class="leftColumn">
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>
@@ -55,6 +59,7 @@
 				</ul>
 			</div>
 		</fieldset>
+</div>
 		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Event'}->id() ) ?>
 	<div id="Photos">
@@ -67,3 +72,6 @@
 	</fieldset>
 	</form>
 </div></div>
+<? else ( $$variable{'Event'}->can_view() ) ?>
+You can't view this event.
+<? endif ( $$variable{'Event'}->can_view() ) ?>
