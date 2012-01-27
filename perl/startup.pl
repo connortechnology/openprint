@@ -57,6 +57,7 @@ BEGIN {
 	use Math::Round ();
 	use Number::Format ();
 	use DateTime::Format::Pg ();
+	use POSIX ();
 
 	use openprint::Object ();
 	use openprint::Company ();

@@ -1,7 +1,6 @@
-package openprint::service_priceset;
-@ISA = qw(openprint::priceset);
-
 use strict;
+package openprint::service_priceset;
+our @ISA = qw(openprint::priceset);
 
 require openprint::service_price;
 
