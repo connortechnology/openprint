@@ -21,6 +21,7 @@
 		<? if ( $$variable{'Event'}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
 		<? endif ( $$variable{'Event'}->deleted() ) ?>
+<br class="spacer"/>
 		<div class="rightColumn">
 		<? if ( $$variable{'Asset'} = $$variable{'Event'}->Asset() ) ?>
 		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
@@ -60,6 +61,7 @@
 			</div>
 		</fieldset>
 </div>
+<br class="spacer"/>
 		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Event'}->id() ) ?>
 	<div id="Photos">
