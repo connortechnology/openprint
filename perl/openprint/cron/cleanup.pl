@@ -309,6 +309,7 @@ foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 my $deleted_skids = 0;
 foreach my $Skid ( openprint::Skid->find(
             'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 2*-365 ) ),
+            'created_on >='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 4*-365 ) ),
             ) ) {
     my $delete = 1;
     my @Contents = $Skid->Contents();
