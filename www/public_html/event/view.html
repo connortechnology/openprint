@@ -70,7 +70,9 @@
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
 <div id="Likes"><? echo ( $$variable{'Event'}->likes('Likes') ) ?></div>
+<? if ( $session{'user_id'} ) ?>
 <div id="Attendance"><!--#include virtual="_attendance.html"--></div>
+<? endif ( $session{'user_id'} ) ?>
 	</fieldset>
 	</form>
 </div></div>

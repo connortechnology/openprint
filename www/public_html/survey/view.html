@@ -17,7 +17,7 @@
 ( $$variable{'Survey'}->can_edit() ? (
 	ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
 	ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
-	ssi::button( 'ResponsesTop', { 'href'=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Responses' } ),
+	ssi::button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
 ) : () ),
 			); ) ?>
 		</p>
