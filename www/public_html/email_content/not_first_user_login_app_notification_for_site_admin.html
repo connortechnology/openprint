@@ -1,4 +1,4 @@
-<? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login to an existing company on <? echo ( $openprint::config{'SiteTitle'} ) ?>.<br>
+<? echo ( join(' ', $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login to an existing company on <? echo ( $config{'SiteTitle'} ) ?>.<br>
 <br>
 Company: <? echo ( $$variable{'Company'}->name() ) ?><br/>
 Address: <? echo ( $$variable{'Company'}->address1() ) ?><br/>
