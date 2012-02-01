@@ -3,11 +3,11 @@
 
 	if ( $param{'company_name'} ) {
 		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
-			$param{'company_name'} .= '%';
+			$param{'company_name'} = '%'.$param{'company_name'}.'%';
 		} # end if
 		my @Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
 		if ( @Companies ) {
-		@Users = openprint::User->find('company_id in'=> [ map { $_{'id'} } @Companies ],
+		@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
 			'order'	=>	'lower(firstname),lower(lastname)',
 			'id !='		=>	$session{'user_id'},
 			);
