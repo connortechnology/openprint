@@ -787,8 +787,9 @@ sub _relationships {
 	} elsif ( $param{'action'} eq 'add' ) {
 		if ( $param{'company_id'} ) {
 		} else {
-		my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
-		$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+			my $R = new openprint::User_Relationship( { map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+			$variable{'error'} .= $R->save({map { $_, $param{$_} } ( 'user_id1','user_id2','type_id' ) } );
+			$variable{'information'} .= 'Your request has been sent.' if ! $variable{'error'};
 		} # end if
 	} # end if
 	$variable{'User'} = new openprint::User( $param{'user_id'} );
