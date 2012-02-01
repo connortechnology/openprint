@@ -88,7 +88,7 @@ sub thumbnail_url {
 #$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
-	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif' ] ) ) {
+	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");

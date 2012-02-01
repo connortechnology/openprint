@@ -22,7 +22,9 @@
 				( $Wall->can_edit() ? (
 				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`delwall($$Wall{id});`, 'text'=>'X', 'title'=>'Delete' } ),
 				) : () ),
+				( $session{'user_id'} == $$variable{'User'}->id() ? (
 				ssi::button('replywall'.$Wall->id(), { 'onclick'=>qq`replywall($$Wall{id});`, 'text'=>'R', 'title'=>'Reply' } ),
+				) : () ),
 			),
 			
 			);
