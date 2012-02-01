@@ -51,7 +51,7 @@ sub thumbnail_url {
 sub thumbnail_html {
 	my $Photo = $_[0]->Thumbnail();
 	if ( $Photo->asset_id() ) {
-		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" /></a>', $_{id}, $Photo->thumbnail_url(), $Photo->name() );
+		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" /></a>', $_[0]{id}, $Photo->thumbnail_url(), $Photo->name() );
 	} # end if
 	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d">Empty</a>', $_{id} );
 } # end sub thumbnail_html
