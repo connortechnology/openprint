@@ -78,7 +78,7 @@ sub edit {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
-		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		(new openprint::Log())->save({'action'=>'Create Photo Album','url'=>'/photo_albums/view.html?album_id='.$Album->id(), 'Object'=>$Album}) if ! $param{'id'};
 
         if ( $param{'filename'} ) {
 			$variable{'error'} .= $Album->upload( 'filename' );

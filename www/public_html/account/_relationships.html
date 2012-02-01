@@ -74,8 +74,8 @@ if ( ! $$variable{'Company'} ) {
 						$html .= sprintf('<li><span class="buttons">%4$s</span><a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%3$s" alt="%2$s" title="%2$s" /></a></li>',
 								$R->user_id1(), $R->User1()->name(), $R->User1()->Asset()->thumbnail_url(),
 								join('',
-									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, 'text'=>'OK'} ),
-									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 'text'=>'X','title'=>'Remove Relationship'} ),
+									ssi::button( 'Approve'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'approve' } } );`, text=>'OK', title=>'Approve'} ),
+									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id1: $$R{user_id1}, user_id: $$variable{User}{id}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, text=>'X',title=>'Deny'} ),
 									)
 								);
 					} # end foreach Relationship
@@ -93,8 +93,9 @@ if ( ! $$variable{'Company'} ) {
 								$R->user_id2(), $R->User2()->name(), $R->User2()->Asset()->thumbnail_url(),
 								join('',
 									ssi::button( 'Delete'.$R->user_id1().'-'.$R->user_id2().'-'.$R->type_id(), { 
-										'onclick'=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete','title'=>'Delete Relationship' } } );`, 
-										'text'=>'X'} ),
+										onclick=>qq`new Ajax.Updater( 'Relationships', '_relationships.html', { parameters: { user_id: $$variable{User}{id}, user_id1: $$R{user_id1}, user_id2: $$R{user_id2}, type_id: $$R{type_id}, action: 'delete' } } );`, 
+										title=>'Delete Relationship',
+										text=>'X'} ),
 									)
 								);
 					} # end foreach Relationship

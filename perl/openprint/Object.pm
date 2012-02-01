@@ -934,6 +934,20 @@ sub object_type {
 	} # end if
 	return $_[0]{'object_type'};
 } # end sub object_type
+sub Object {
+	if ( @_ > 1 ) {
+		$_[0]->object_type( ref $_[1] );
+		$_[0]{'object_id'} = $_[1]{'id'};
+	} # end if
+	my $type =  $_[0]->object_type();
+	if ( ! $type ) {
+		$log->error("No type in Object::Object". $_[0]->to_string());
+		return undef;
+	} # end if
+	$_ = $type->new( $_[0]{'object_id'} );
+	$openprint::log->debug( "Returning object of type " . ref $_ );
+	return $_;
+} # end sub Object
 
 sub date_format {
 	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
