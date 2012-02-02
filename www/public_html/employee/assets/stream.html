@@ -15,12 +15,12 @@ Vote on these pictures to say whether you think each one is a &quot;do&quot; or 
 <form id="f1" name="f1" action="stream.html" method="post">
 	<input type="hidden" name="action"/>
 <? echo (
-		my @Likes = openprint::Like->find('user_id'=>$session{'user_id'}, 'object_type'=>'openprint::Asset');
+		my @Opinions = openprint::Opinion->find('user_id'=>$session{'user_id'}, 'object_type'=>'openprint::Asset');
 
 		my $DoDont = openprint::Photo_Album->find_one('name'=>'Do/Dont', 'user_id is null' => 1);
 
 		my $Asset = openprint::Asset->find_one( 'order'	=>	'id desc',
-				'id not in'=>[ map { $_->object_id() } @Likes ],
+				'id not in'=>[ map { $_->object_id() } @Opinions ],
 				'id in' => [ map { $_->asset_id() } $DoDont->Photos() ],
 			);
 		if ( $Asset ) {
