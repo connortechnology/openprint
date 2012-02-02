@@ -9,9 +9,8 @@
 		my %search = (
  #'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
 			( $session{'/employee/assets/history.html?company_id'} ? ( 'company_id' => $session{'/employee/assets/history.html?company_id'} ) : () ),
-( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ? (
-			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ) : () ),
+			ssi::date_filter( '/employee/assets/history.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/assets/history.html?created_on_end', 'created_on_end' ),
 			( $session{'/employee/assets/history.html?deleted'} ne '' ? ( 'deleted' => $session{'/employee/assets/history.html?deleted'} ) : () ),
 			'order',			'id desc',
 		);
@@ -47,7 +46,7 @@
 		while ( my $Asset = shift @{$$variable{'Assets'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d">`, $Asset->id() );
 			$html .= sprintf( q`
-				<td class="checkbox"><input type="checkbox" id="asset_id" name="asset_id" value="%1$d"/></td>
+				<td class="checkbox"><input type="checkbox" id="asset_id%1$d" name="asset_id" value="%1$d"/></td>
 				<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
 				<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
 				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
