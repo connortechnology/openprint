@@ -7,7 +7,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 0;
+$debug = 1;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -35,13 +35,21 @@ sub created_by {
 } # end sub
 
 sub Thumbnail {
-	if ( ! $_[0]{'thumbnail_id'} ) {
-$openprint::log->debug("No thumbnail assigned, showing first.");
-		my @Photos = $_[0]->Photos();
-		return $Photos[0] if @Photos;
+	if ( ! $_[0]{'Thumbnail'} ) {
+		if ( ! $_[0]{'thumbnail_id'} ) {
+	$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
+			my @Photos = $_[0]->Photos();
+	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned, showing first. $Photos[0]{asset_id}");
+			$_[0]{'Thumbnail'} = $Photos[0] if @Photos;
+		} # end if
+		if ( ! $_[0]{'Thumbnail'} ) {
+		$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
+		} # end if
+		if ( ! $_[0]{'Thumbnail'} ) {
+			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album( { 'album_id'=>$_[0]{'id'} } );
+		} # end if
 	} # end if
-$openprint::log->debug("thumbnail assigned.");
-	return new openprint::Photo_in_Album( { 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} } );
+	return $_[0]{'Thumbnail'};
 } # end sub Thumbnail
 
 sub thumbnail_url {
@@ -51,9 +59,11 @@ sub thumbnail_url {
 sub thumbnail_html {
 	my $Photo = $_[0]->Thumbnail();
 	if ( $Photo->asset_id() ) {
-		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" /></a>', $_[0]{id}, $Photo->thumbnail_url(), $Photo->name() );
+$openprint::log->debug("Photo has asset" . $Photo->to_string() );
+		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%1$d" title="%3$s"><img src="%2$s" alt="%3$s" /></a>', $_[0]{id}, $Photo->thumbnail_url(), $_[0]->name() );
 	} # end if
-	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d">Empty</a>', $_{id} );
+$openprint::log->debug("Photo no asset"  );
+	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
 } # end sub thumbnail_html
 
 sub Photos {

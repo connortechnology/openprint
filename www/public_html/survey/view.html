@@ -6,7 +6,7 @@
 	<? echo ( $$variable{'Survey'}->description() ) ?>
 
 <? if ( $session{'user_id'} ) ?>
-<div id="Likes"><? echo ( $$variable{'Survey'}->likes('Likes') ) ?></div>
+<div id="Opinions"><? echo ( $$variable{'Survey'}->opinions('Opinions') ) ?></div>
 <? endif ( $session{'user_id'} ) ?>
 	
 	<form id="f1" name="f1" method="post" action="view.html<? echo ( $$variable{'Survey'}->id() ? '?survey_id='.$$variable{'Survey'}->id() : '' ) ?>">
@@ -55,11 +55,7 @@
 					} # end foreach
 					$html .= '</ul>';
 					if ( $Response ) {
-$log->debug($Response->to_string());
-foreach my $A ( $Response->Answers() ) {
-	$log->debug("Answer: " . $A->to_string() );
-}
-						$html .= 'Your reponse: ' . join(',',map{$_->text()} $Response->Answers() ).'<br/>' . ( $Response->answer() ? $Response->answer().'<br/>' : '' );
+						$html .= '<div class="response">Your reponse: ' . join(',',map{$_->text()} $Response->Answers() ).'<br/>' . ( $Response->answer() ? $Response->answer().'</div>' : '' );
 					} # end if
 				} # end if
 				if ( ! $Response ) {
