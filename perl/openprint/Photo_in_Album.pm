@@ -44,7 +44,7 @@ sub Comments {
 } # end sub Comments
 
 sub can_edit {
-	return 1 if $openprint::session{'user_id'} == $_[0]{'created_by'};
+	return 1 if $openprint::session{'user_id'} == $_[0]->Asset()->created_by();
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	return 0;
 } # end sub can_edit

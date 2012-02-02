@@ -84,6 +84,8 @@ BEGIN {
 	use openprint::Host ();
 	use openprint::Log ();
 	use openprint::Opinion ();
+	use openprint::Opinion_Availability ();
+	use openprint::Opinion_Type ();
 	use openprint::Page_Setting ();
 	use openprint::Survey ();
 	use openprint::Event ();
