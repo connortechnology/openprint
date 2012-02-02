@@ -591,7 +591,26 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('ALTER TABLE likes ADD value INTEGER');
 		$dbh->do('ALTER TABLE likes ADD FORIEGN KEY (value) REFERENCES opinion_types (id)');
 	} # end if
+	if ( ! exists $$data{'opinion_type_id'} ) {
+		$dbh->do('ALTER TABLE likes ADD opinion_type_id INTEGER');
+		$dbh->do('ALTER TABLE likes ADD FOREIGN KEY (opinion_type_id) REFERENCES Opinion_Types (id)');
+		$dbh->do('UPDATE likes SET opinion_type_id=value');
+		$dbh->do('DELETE FROM Likes where opinion_type IS NULL');
+		$dbh->do( 'ALTER TABLE likes DROP CONSTRAINT likes_pkey');
+		$dbh->do( 'ALTER TABLE likes ADD PRIMARY KEY (object_id, object_type_id, user_id, opinion_type_id)' );
+	} # end if
 }
+if ( ! sets::isin( 'opinions', \@tables ) ) {
+	if ( sets::isin( 'likes', \@tables ) ) {
+		$dbh->do('ALTER TABLE likes RENAME to opinions');
+		$dbh->do( 'ALTER TABLE opinions DROP CONSTRAINT likes_pkey');
+		$dbh->do( 'ALTER TABLE opinions ADD PRIMARY KEY (object_id, object_type_id, user_id, opinion_type_id)' );
+	} else {
+		$dbh->do( misc::load_file( $log, '../openprint/sql/Opinions.sql' ) );
+		die $dbh->errstr() if $dbh->errstr();
+	} # end if
+} # end if
+
 if ( ! sets::isin( 'keywords', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Keywords.sql' ) );
     die $dbh->errstr() if $dbh->errstr();

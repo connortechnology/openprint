@@ -6,7 +6,8 @@ require Lingua::EN::Inflect;
 
 use openprint ();
 require sets;
-require openprint::Like;
+require openprint::Opinion;
+require openprint::Opinion_Type;
 require openprint::Comment;
 require openprint::View;
 require openprint::Privacy;
@@ -407,11 +408,11 @@ sub find_operators {
 	if ( exists $$params{$k.' ='} ) {
 		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
 	} # end if
-	if ( exists $$params{$k.'_like'} ) {
-		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
+	if ( exists $$params{$k.'_opinion'} ) {
+		push @{$results{'_opinion'}}, $f.'::text LIKE ?', $$params{$k.'_opinion'};
 	} 
-	if ( exists $$params{$k.' ilike'} ) {
-		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $$params{$k.' ilike'};
+	if ( exists $$params{$k.' iopinion'} ) {
+		push @{$results{' iopinion'}}, $f.'::text ILIKE ?', $$params{$k.' iopinion'};
 	} 
 	if ( exists $$params{$k.'_start'} ) {
 		push @{$results{'_start'}}, $f.' >= ?', $$params{$k.'_start'};
@@ -602,7 +603,7 @@ sub find {
 		foreach my $k ( @param_keys ) {
 			next if ! $$f{$k};
 
-			# This allows mainly for find_fields to reference multiple values, like in Project, value
+			# This allows mainly for find_fields to reference multiple values, opinion in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
 				if ( ref $$params{$k} eq 'ARRAY' ) {
 					if ( @{$$params{$k}} ) {
@@ -830,84 +831,92 @@ $openprint::log->debug("After $transform: $_[2]") if $debug;
 
 } # end sub transform
 
-sub likes {
+sub opinions {
 	my $type = ref $_[0];
 	my $html;
-	my @Likes = openprint::Like->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
-	if ( ! @Likes ) {
+	my @Opinions = openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]->id() );
+	my %Opinions;
+	foreach my $Opinion ( @Opinions ) {
+		push @{$Opinions{$$Opinion{'opinion_type_id'}}}, $Opinion;
+	} # end foreach
+
+	if ( ! @Opinions ) {
 		$html = 'No one has an opinion on this yet.  Be the first!';
-	} elsif ( @Likes == 1 ) {
-		if ( $Likes[0]->user_id() == $session{'user_id'} ) {
-			$html .= 'You ' . Lingua::EN::Inflect::PL( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
-		} else {
-			$html = '1 person ' . Lingua::EN::Inflect::PL( $Likes[0]->Opinion_Type()->name(), @Likes ) . ' this.';
-		} # end if
 	} else {
-		my %Opinions;
-		foreach my $Like ( @Likes ) {
-			push @{$$_{'value'}}, $Like;
-		} # end foreach
-		foreach my $opinion_id ( keys %Opinions ) {
-			$html .= int(@{$Opinions{$opinion_id}}/@Likes) . '% of '  . @Likes . ' people ' . new openprint::Opinion_Type( $opinion_id )->name() . ' this.<br/>';
+		foreach my $opinion_type_id ( keys %Opinions ) {
+			my $Opinion_Type = new openprint::Opinion_Type( $opinion_type_id );
+			if ( @{$Opinions{$opinion_type_id}} == 1 ) {
+				if ( $Opinions{$opinion_type_id}[0]->user_id() == $session{'user_id'} ) {
+					$html .= 'You ' . $Opinion_Type->name() . ' this.';
+				} else {
+					$html = '1 person ' . Lingua::EN::Inflect::PL( $Opinion_Type->name(), @{$Opinions{$opinion_type_id}} ) . ' this.';
+				} # end if
+			} else {
+				$html .= int(@{$Opinions{$opinion_type_id}}/@Opinions) . '% of '  . @Opinions . ' people ' . new openprint::Opinion_Type( $opinion_type_id )->name() . ' this.<br/>';
+			} # end if
 		} # end foreach opinion
 	} # end if
-	$html .= $_[0]->like_button( 'Likes', '/includes/_likes.html' );
+	$html .= $_[0]->opinion_button( 'Opinions', '/includes/_opinions.html' );
 	return $html;
-} # end sub likes
+} # end sub opinions
 
-sub like_button {
+sub opinion_button {
 	my $type = ref $_[0];
 
-	my $Like = $_[0]->Like();
+	my %Opinions;
+	foreach my $Opinion ( openprint::Opinion->find('object_type'=> $type, 'object_id'=>$_[0]{'id'}, 'user_id'=>$session{'user_id'} ) ) {
+		push @{$Opinions{$$Opinion{opinion_type_id}}}, $Opinion;
+	} # end foreach
 	my $html;
 	my $div = $_[1];
-	my $url = @_ > 2 ? $_[2] : '/includes/_like_button.html';
+	my $url = @_ > 2 ? $_[2] : '/includes/_opinion_button.html';
 	if ( ! $div ) {
-		$div = 'like_button';
-		$html = '<span id="like_button">';
+		$div = 'opinion_button';
+		$html = '<span id="opinion_button">';
 	} # end if
 	my @Types = openprint::Opinion_Availability->find('object_type'=>$type, 'object_id'=>$_[0]->id() );
+	@Types = openprint::Opinion_Availability->find('object_type'=>$type ) if ! @Types;
 	foreach my $Type ( @Types ) {
-		$html .= ssi::button( $Type->Opinion_Type()->name(), { 'onclick'=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ) } );
+		# Only need 1 button becuse it's a toggle
+		if ( $Opinions{$$Type{opinion_type_id}} ) {
+			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ), text=>'Remove Opinion' } );
+		} else {
+			$html .= ssi::button( $Type->Opinion_Type()->name(), { onclick=>sprintf( q`new Ajax.Updater( '%s', '%s', { parameters: { object_type: '%s', object_id: %d, opinion_type_id: %d } } );`, $div, $url, $type, $_[0]{'id'}, $Type->opinion_type_id() ) } );
+		} # end if
 	} # end foreach
 	if ( ! $_[1] ) {
 		$html .= '</span>';
 	} # end if
 	return $html;
-} # end sub like_button
+} # end sub opinion_button
 
-sub like {
-	my $Like = $_[0]->Like();
-	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>1});
-		$_[0]{'Like'} = $Like;
+sub toggle_Opinion {
+	my $ac = sql::start_transaction();
+	$dbh->do('LOCK TABLE opinions IN ROW EXCLUSIVE MODE');
+	my $Opinion = $_[0]->Opinion( $_[1] );
+	if ( $Opinion ) {
+		$Opinion->delete();
+		delete $_[0]{'Opinions'}{$_[1]};
+	} else {
+		$Opinion = new openprint::Opinion();
+		$Opinion->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'opinion_type_id'=>$_[1]});
 	} # end if
-} # end sub like
+	sql::end_transaction( $ac );
+} # end sub toggle_Opinion
 
-sub dislike {
-	my $Like = $_[0]->Like();
-	if ( ! $Like ) {
-		$Like = new openprint::Like()->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'value'=>0});
-		$_[0]{'Like'} = $Like;
+#Param is opinion_type_id
+# second param could be for setting it, so should be an Opinion Object
+sub Opinion {
+	if ( @_ > 2 ) {
+		$_[0]{'Opinions'}{$_[1]} = $_[2];
 	} # end if
-} # end sub dislike
-
-sub unlike {
-	my $Like = $_[0]->Like();
-	$Like->delete() if $Like;
-	delete $_[0]{'Like'};
-}
-
-sub Like { 
-	if ( @_ > 1 ) {
-		$_[0]{'Like'} = $_[1];
-	} 
+	$_[0]{'Opinions'} = {} if ! $_[0]{'Opinions'};
 	my $type = ref $_[0];
-	if ( ! defined $_[0]{'Like'} ) {
-		$_[0]{'Like'} = openprint::Like->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'object_id'=>$_[0]{'id'});
+	if ( ! defined $_[0]{'Opinions'}{$_[1]} ) {
+		$_[0]{'Opinions'}{$_[1]} = openprint::Opinion->find_one( 'user_id'=>$session{'user_id'}, 'object_type'=>$type, 'opinion_type_id'=>$_[1], 'object_id'=>$_[0]{'id'});
 	} # end if
-	return $_[0]{'Like'};
-} # end sub Like
+	return $_[0]{'Opinions'}{$_[1]};
+} # end sub Opinion
 
 sub Object_Type {
 	if ( $_[0]{'object_type_id'} ) {

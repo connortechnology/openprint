@@ -83,7 +83,7 @@ BEGIN {
 	use openprint::Article_Category ();
 	use openprint::Host ();
 	use openprint::Log ();
-	use openprint::Like ();
+	use openprint::Opinion ();
 	use openprint::Page_Setting ();
 	use openprint::Survey ();
 	use openprint::Event ();

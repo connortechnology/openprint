@@ -17,25 +17,27 @@ sub _states {
 sub _provinces {
 } # end sub _provinces
 
-sub _like_button {
-	my $Object = $variable{'Object'} = $param{'object_type'}->new( $param{'object_id'} );
-	my $Like = $Object->Like();
-	if ( $Like ) {
-		$Object->unlike();
-	} else {
-		$Object->like();
+sub _opinion_button {
+	my $Object_Type = openprint::Object_Type->find_one('name'=>$param{'object_type'});
+	if ( ! $Object_Type ) {
+		$log->error('Object type not found : ' . $param{'object_type'} );
+		$variable{'error'} .= 'Unable to opinion. Please try again later';
+		return;
 	} # end if
-} # end sub like_button
+	my $Object = $variable{'Object'} = $Object_Type->Object( $param{'object_id'} );
+	$Object->toggle_Opinion( $param{'opinion_type_id'} );
+} # end sub opinion_button
 
-sub _likes {
-	my $Object = $variable{'Object'} = $param{'object_type'}->new( $param{'object_id'} );
-	my $Like = $Object->Like();
-	if ( $Like ) {
-		$Object->unlike();
-	} else {
-		$Object->like();
+sub _opinions {
+	my $Object_Type = openprint::Object_Type->find_one('name'=>$param{'object_type'});
+	if ( ! $Object_Type ) {
+		$log->error('Object type not found : ' . $param{'object_type'} );
+		$variable{'error'} .= 'Unable to load opinions. Please try again later';
+		return;
 	} # end if
-} # end sub _likes
+	my $Object = $variable{'Object'} = $Object_Type->Object( $param{'object_id'} );
+	$Object->toggle_Opinion( $param{'opinion_type_id'} );
+} # end sub _opinions
 
 sub _captcha {
 } # end sub _captcha

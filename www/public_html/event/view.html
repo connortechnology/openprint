@@ -14,6 +14,7 @@
 					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 				} # end if
+				$html .= '<span class="GooglePlusOne"><g:plusone annotation="inline"></g:plusone></span>';
 				return $html;
 			) ?>
 		</p>
@@ -69,13 +70,21 @@
 	</div>
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
-<div id="Likes"><? echo ( $$variable{'Event'}->likes('Likes') ) ?></div>
+<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
 <? if ( $session{'user_id'} ) ?>
 <div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 <? endif ( $session{'user_id'} ) ?>
 	</fieldset>
 	</form>
 </div></div>
+<script type="text/javascript">
+	window.___gcfg = {lang: 'en-GB'};
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>
 <? else ( $$variable{'Event'}->can_view() ) ?>
 You can't view this event.
 <? endif ( $$variable{'Event'}->can_view() ) ?>

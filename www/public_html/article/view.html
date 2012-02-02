@@ -1,14 +1,17 @@
 <div class="Article">
 	<div class="View">
-<? if ( $$variable{'Article'}->can_edit() ) ?>
 	<p class="buttons">
-		<? echo ( join('',
+		<? echo ( 
+join('',
+	( $$variable{'Article'}->can_edit() ?
+		(
 			ssi::button( 'Edit', { 'href'=>'edit.html?article_id='.$$variable{'Article'}->id() } ),
 			ssi::button( 'Destroy', { 'href'=>'history.html?func=Destroy&amp;article_id='.$$variable{'Article'}->id() } ),
-		); ) ?>
-		<span class="GooglePlusOne"><g:plusone annotation="inline"></g:plusone></span>
+		) : () ),
+		'<span class="GooglePlusOne"><g:plusone annotation="inline"></g:plusone></span>',
+	);
+) ?>
 	</p>
-<? endif ( $$variable{'Article'}->can_edit() ) ?>
 <? if ( $$variable{'Article'}->can_view() ) ?>
 	<h1><? hecho ( $$variable{'Article'}->title() ) ?></h1>
 Posted on <? echo ( $$variable{'Article'}->datetime_format( 'published_on' ) ) ?> by <a href="/account/view.html?user_id=<? echo ( $$variable{'Article'}->created_by() ) ?>"><? hecho ( new openprint::User( $$variable{'Article'}->created_by() )->name() ) ?></a><br/>

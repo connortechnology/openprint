@@ -15,5 +15,8 @@ $serial = 'object_types_id_seq';
 %defaults = (
 );
 
+sub Object {
+	return $_[0]{'name'}->new( $_[1] );
+} # end sub Object
 1;
 __END__
