@@ -14,10 +14,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+use strict;
 package openprint::Estimating::Cutting;
 use POSIX qw{ ceil };
+require Math::Calc::Units;
 
-use strict;
 use openprint ();
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -1012,15 +1013,15 @@ sub jdf {
 	$Media->setAttribute( 'Brand', $$sig_specs{'ddmStockBrand'} );
 	$Media->setAttribute( 'DescriptiveName', join(' ', @$sig_specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','StockWidth'.$Project->ordered_quantity_index(),$Project->ordered_quantity_index()} ) );
 	$Media->setAttribute( 'Dimension', join(' ',
-                Math::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()},'in','mm'),
-                Math::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()},'in','mm'),
+                Math::Calc::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()}.'in','mm'),
+                Math::Calc::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()}.'in','mm'),
 			) );
 	$Media->setAttribute( 'GrainDirection', 'LongEdge' );
 	$Media->setAttribute( 'MediaType', 'Paper' );
 	$Media->setAttribute( 'MediaUnit', 'Sheet' );
 	$Media->setAttribute( 'Grade', '1' );
-	$Media->setAttribute( 'Thickness', Math::Units::convert($$sig_specs{'SpecificStockCalliper'},'in','mm') );
-	$Media->setAttribute( 'Weight', Math::Units::convert($$sig_specs{'txtMWeight'..$Project->ordered_quantity_index()}/1000,'lb','g') );
+	$Media->setAttribute( 'Thickness', Math::Calc::Units::convert($$sig_specs{'SpecificStockCalliper'}.'in','mm') );
+	$Media->setAttribute( 'Weight', Math::Calc::Units::convert(($$sig_specs{'txtMWeight'.$Project->ordered_quantity_index()}/1000).'lb','g') );
 
 
 	my $InputComponent = $ResourcePool->appendElement( $doc->createElement('Component') );
@@ -1029,9 +1030,9 @@ sub jdf {
 	$InputComponent->setAttribute( 'Status','Available' );
 	$InputComponent->setAttribute( 'ComponentType','Sheet' );
 	$InputComponent->setAttribute( 'Dimensions',join(' ', 
-				Math::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()},'in','mm'),
-				Math::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()},'in','mm'),
-				Math::Units::convert($$sig_specs{'SpecificStockCalliper'},'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'StockWidth'.$Project->ordered_quantity_index()}.'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'StockHeight'.$Project->ordered_quantity_index()}.'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'SpecificStockCalliper'},'in','mm'),
 				) );
 	my $CuttingParams = $ResourcePool->appendElement( $doc->createElement('CuttingParams') );
 	$CuttingParams->setAttribute('ID','CPM'.$sig_id);
@@ -1044,9 +1045,9 @@ sub jdf {
 	$OutputComponent->setAttribute( 'Status','Available' );
 	$OutputComponent->setAttribute( 'ComponentType','Block' );
 	$OutputComponent->setAttribute( 'Dimensions',join(' ', 
-				Math::Units::convert($$sig_specs{'txtWidth'},'in','mm'),
-				Math::Units::convert($$sig_specs{'txtHeight'},'in','mm'),
-				Math::Units::convert($$sig_specs{'SpecificStockCalliper'},'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'txtWidth'}.'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'txtHeight'}.'in','mm'),
+				Math::Calc::Units::convert($$sig_specs{'SpecificStockCalliper'}.'in','mm'),
 				) );
 
 	# Need Media, Input Component, CuttingParams, Output Component

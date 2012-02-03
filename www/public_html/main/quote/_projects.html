@@ -44,7 +44,7 @@
 				} else {
 					$weight = openprint::print::get_finished_weight($Project->id()) * $Project->quantity($qty_index);
 				} # end if
-				my $g = Math::Units::convert( $weight, 'lbs', 'g' );
+				my $g = Math::Calc::Units::convert( $weight.'lbs', 'g' );
 				if ( $g > 1000 ) {
 					$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
 				} else {
@@ -109,7 +109,7 @@
 				} else {
 					$weight = openprint::print::get_finished_weight($Project->id()) * $Project->quantity($qty_index);
 				} # end if
-				my $g = Math::Units::convert( $weight, 'lbs','g');
+				my $g = Math::Calc::Units::convert( $weight.'lbs','g');
 				if ( $g > 1000 ) {
 					return sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
 				} else {

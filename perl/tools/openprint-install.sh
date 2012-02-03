@@ -22,7 +22,6 @@ echo "APREQ2_ReadLimit 1024M" >> /etc/apache2/conf.d/perl
 perl -MCPAN -e shell << EOF
 force install Date::Handler
 force install Date::Parse
-force install Math::Units
 force install Business::PayPal
 EOF
 
