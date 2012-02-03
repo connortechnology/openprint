@@ -22,7 +22,7 @@ Posted on <? echo ( $$variable{'Article'}->datetime_format( 'published_on' ) ) ?
 
 	<div class="body"><? echo ( $$variable{'Article'}->body() ) ?></div>
 	<? if ( $session{'user_id'} ) ?>
-		<div id="Likes"><? echo ( $$variable{'Article'}->likes() ) ?></div>
+		<div id="Opinions"><? echo ( $$variable{'Article'}->opinions() ) ?></div>
 		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><!--#include virtual="_comments.html"--></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? else ( $$variable{'Article'}->can_view() ) ?>

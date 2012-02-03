@@ -452,6 +452,8 @@ sub button {
 			$html .= "alt=\"$$options{text}\"";
 		} # end if
 		$html .= "/>";
+	} elsif ( $openprint::config{'SimpleButtons'} ) {
+		$html .= $$options{'text'};
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
 	}
