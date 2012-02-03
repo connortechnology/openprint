@@ -59,7 +59,7 @@ Vote on these pictures to say whether you think each one is a &quot;do&quot; or 
 			foreach my $O ( @All_Opinions ) {
 				push @{$All_Opinions{$$O{'opinion_type_id'}}}, $O;
 			} # end foreach
-			$html .= '<div class="Results">'. join(', ', map { int(@{$All_Opinions{$_}}/@All_Opinions) .'% ' . (new openprint::Opinion_Type($_))->name() } keys %All_Opinions) . '</div>';
+			$html .= '<div class="Results">'. join(', ', map { int(100*@{$All_Opinions{$_}}/@All_Opinions) .'% ' . (new openprint::Opinion_Type($_))->name() } keys %All_Opinions) . '</div>';
 		} else {
 			$html .= sprintf('<p class="buttons">%s</p>',
 				join('',
