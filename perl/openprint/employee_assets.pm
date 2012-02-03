@@ -103,10 +103,12 @@ sub edit {
 sub stream {
 	if ( $param{'action'} eq 'Do' ) {
 		my $Asset = new openprint::Asset($param{'asset_id'});
-		$Asset->like();
+		my $Opinion_Type = openprint::Opinion_Type->find_one('name'=>'Do');
+		$Asset->toggle_Opinion( $$Opinion_Type{'id'} ) if $Opinion_Type;
 	} elsif ( $param{'action'} eq 'Dont' ) {
 		my $Asset = new openprint::Asset($param{'asset_id'});
-		$Asset->dislike();
+		my $Opinion_Type = openprint::Opinion_Type->find_one('name'=>'Dont');
+		$Asset->toggle_Opinion( $$Opinion_Type{'id'} ) if $Opinion_Type;
 	} # end if
 } # end sub stream
 
