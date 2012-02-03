@@ -173,14 +173,14 @@ function calc_print( formName, force, options ) {
 
 	if ( gettingNewPrice && ! force ) {
 		// This prevents concurrent price getting
-		if ( timeout ) clearTimeout( timeout );
 		if ( options ) {
-			timeout = setTimeout("calc('f1', " + Object.toJSON( options ) + ");", 1000 );	
+			timeout = setTimeout("calc('f1', 0, " + Object.toJSON( options ) + ");", 1000 );	
 		} else {
 			timeout = setTimeout("calc('f1' );", 1000 );	
 		} // end if
 		return;
 	} // end if
+	if ( timeout ) clearTimeout( timeout );
 	//timeout = null;
 
 	clear_price_data(form);

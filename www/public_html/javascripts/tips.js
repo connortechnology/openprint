@@ -458,12 +458,14 @@ tips['colour correction'] = new Array(
 );
 
 
-
-document.write( '<div id="tip" class="tipDiv">&nbsp;</div>');
-
-
 function tipOn(tipName,blah,e){
 	var div = $('tip');
+	if ( ! div ) {
+		div = document.createElement('div');
+		Element.extend(div);
+		div.addClassName('tipDiv');
+		div.id='tip';
+	}
 	var tip = tips[tipName.toLowerCase()];
 	if ( div && tip ) {
 //alert( 'Tip: ' + tip + ' Head: ' + tip[0] + ' Text: ' + tip[1] );
