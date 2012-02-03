@@ -810,8 +810,8 @@ sub sort {
 	my $type = shift;
 	return sort { $$a{'name'} cmp $$b{'name'} } @_;
 } # end sub sort
+
 sub transform {
-	
 	my $type = ref $_[0];
 	$type = $_[0] if ! $type;
 	my $fields = eval '\%'.$type.'::fields';
@@ -891,7 +891,7 @@ sub opinion_button {
 } # end sub opinion_button
 
 sub toggle_Opinion {
-	my $ac = sql::start_transaction();
+	my $ac = sql::start_transaction(  $dbh );
 	$dbh->do('LOCK TABLE opinions IN ROW EXCLUSIVE MODE');
 	my $Opinion = $_[0]->Opinion( $_[1] );
 	if ( $Opinion ) {
@@ -901,7 +901,7 @@ sub toggle_Opinion {
 		$Opinion = new openprint::Opinion();
 		$Opinion->save({'user_id'=>$session{'user_id'}, 'object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'},'opinion_type_id'=>$_[1]});
 	} # end if
-	sql::end_transaction( $ac );
+	sql::end_transaction( $dbh, $ac );
 } # end sub toggle_Opinion
 
 #Param is opinion_type_id
