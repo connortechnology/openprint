@@ -18,8 +18,8 @@
 			<th class="Title">Description</th>
 			<th class="CreatedBy">Created By</th>
 			<th class="DateTime">Created On</th>
-			<th class="questions"># of Questions</th>
-			<th class="responses"># of Responses</th>
+			<th class="questions">Questions</th>
+			<th class="responses">Responses</th>
 			<th class="complete">% Complete</th>
 		</tr>
 		<? echo ( 
@@ -33,7 +33,7 @@
 				<tr%9$s> 
 					<td class="Title"><a href="/survey/view.html?survey_id=%1$d">%5$s</a></td>
 					<td class="Description"><a href="/survey/view.html?survey_id=%1$d">%6$s</a></td>
-					<td class="Author"><a href="/survey/view.html?survey_id=%1$d" class="thumbnail"><img src="%2$s" alt=""/></a><a href="/survey/view.html?survey_id=%1$d">%3$s</a></td>
+					<td class="Author"><a href="/survey/view.html?survey_id=%1$d" class="thumbnail"><img src="%2$s" alt=""/></a><br/><a href="/survey/view.html?survey_id=%1$d">%3$s</a></td>
 					<td class="DateTime"><a href="/survey/view.html?survey_id=%1$d">%4$s</a></td>
 					<td class="questions"><a href="/survey/view.html?survey_id=%1$d">%7$s</a></td>
 					<td class="responses"><a href="/survey/view.html?survey_id=%1$d">%8$s</a></td>

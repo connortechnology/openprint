@@ -39,23 +39,42 @@
 				my @Photos = $Album->Photos();
 				my $index = 0;
 				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $Photo->id(); $index += 1 ) {};
-				$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } ) if $index;
-				$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } ) if ( $index + 1 ) < @Photos;
-				$html .= ssi::button( 'Back', { 'href' => "/photo_albums/view.html?album_id=$Photos[$index+1]{'album_id'}", 'text'=>'Back to Album' } );
+				if ( $index ) {
+					$html .= ssi::button( 'Previous', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } );
+					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index-1]->url().'";</script>';
+				} # end if
+				if ( ( $index + 1 ) < @Photos ) {
+					$html .= ssi::button( 'Next', { 'href' => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } );
+					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index+1]->url().'";</script>';
+				} # end if
+				$html .= ssi::button( 'Back', { 'href' => "/photo_albums/view.html?album_id=$$Album{'id'}", 'text'=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g)$/ ) {
+				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/ ) {
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
-						$html .= ssi::button( 'CCW', { 'text'=>'Rotate CCW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$Photo{asset_id} } } );` } );
-						$html .= ssi::button( 'CW', { 'text'=>'Rotate CW', 'onclick'=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$Photo{asset_id} } } );` } );
+						$html .= ssi::button( 'CCW', { 
+								text=>'Rotate CCW',
+								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 270, asset_id: $$Photo{asset_id} } } );`,
+								} );
+						$html .= ssi::button( 'CW', {
+								text=>'Rotate CW', 
+								onclick=>qq`new Ajax.Request( '_photo_actions.json', { parameters: { function: 'rotate', degrees: 90, asset_id: $$Photo{asset_id} } } );`,
+								} );
 if ( 0 ) {
 						$html .= sprintf('<input type="text" name="keywords" value="%s"/>', $Photo->keywords() );
 						$html .= ssi::button( 'SaveKeywords', { 'onclick'=>q`var form=$('f1');form.elements['action'].value='Save';form.submit();`, 'text'=>'Save Keywords' } );
 }
+
+						$html .= '<fieldset><legend>Available Opinions</legend><div id="OpinionAvailability">';
+						$$variable{'Object'} = $Photo->Asset();
+						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/includes/_opinion_availability.html' );
+						$html .= '</div></fieldset>';
+
+
 						$html .= '</fieldset>';	
-					} else {
-						$html .= '<label>Keywords</label>' . $Photo->keywords() . '<br/>';
+					#} else {
+						#$html .= '<label>Keywords</label>' . $Photo->keywords() . '<br/>';
 					} # end if
 				} else {
 					$log->error("Not a photo at view_photo : " . $Photo->url() );
@@ -64,9 +83,9 @@ if ( 0 ) {
 			) ?>
 		</form>
 		<div class="Caption"><? echo ( $$variable{'Photo'}->Asset()->description() ) ?></div>
-<? if ( $session{'user_id'} ) ?>
-<div id="Likes"><? echo ( $$variable{'Photo'}->Asset()->likes('Likes') ) ?></div>
+	<? if ( $session{'user_id'} ) ?>
+		<div id="Opinions"><? echo ( $$variable{'Photo'}->Asset()->opinions('Opinions') ) ?></div>
 		<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_photo_comments.html"--></fieldset></div>
-<? endif ( $session{'user_id'} ) ?>
+	<? endif ( $session{'user_id'} ) ?>
 	</div><!--View-->
 </div><!--Photo-->

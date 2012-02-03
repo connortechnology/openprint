@@ -11,7 +11,6 @@ use constant PI => atan2(1,1)*4;
 use JSON ();
 use LWP::UserAgent ();
 use HTTP::Request ();
-use Data::Dumper ();
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
@@ -206,14 +205,14 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]-
 	my $json = JSON::decode_json( $res->content );
 $openprint::log->debug( $json );
 	if ( $$json{'Placemark'} ) {
-		$openprint::log->warn("Placemrk" . Dumper( $json ) );
+		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
 		my $Point = $$PlaceMark{'Point'};
 		my $coordinates = $$Point{'coordinates'};
 		$_[0]{'latitude'} = @{$coordinates}[0];	
 		$_[0]{'longitude'} = @{$coordinates}[1];	
 	} else {
-		$openprint::log->warn("No placemrk" . Dumper( $json ) );
+		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
 	} # end if
 
 } # end sub get_latitude_longitude

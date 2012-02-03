@@ -25,6 +25,7 @@ $serial = 'logs_id_seq';
 	'object_type_id'		=>	'object_type_id',
 	'object_type'	=>	undef,
 	'object_id'		=>	'object_id',
+	'Object'		=>	undef,
 );
 %find_fields = (
 	'action'	=>	'(SELECT name FROM log_actions WHERE log_actions.id = logs.action_id)',

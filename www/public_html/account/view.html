@@ -19,8 +19,7 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html;
-				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) or ( $$variable{'User'}->id() == $session{'user_id'} ) 
-				) {
+				if ( $$variable{'User'}->can_edit() ) {
 					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", 'text'=>'Delete Profile' } );
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html?ddmUser='.$$variable{'User'}->id() } );
 				} # end if
@@ -62,12 +61,7 @@
 					return 'no albums' if ! @Albums;
 					foreach my $Album ( @Albums ) {
 						next if ! $Album->can_view();
-						
-						my $Photo = $Album->Thumbnail();
-						if ( $Photo->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Photo->thumbnail_url(), $Photo->name() );
-					
-						} # end if Thumbnail
+						$html .= $Album->thumbnail_html();
 					} # end foreach Album
 					return $html;
 				) ?>

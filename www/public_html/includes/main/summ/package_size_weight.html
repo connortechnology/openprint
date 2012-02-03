@@ -4,7 +4,7 @@
 		my $html;
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= '<span class="value">';
-			my $g = Math::Units::convert( $$variable{'txtPackageWeight'.$qty_index}, 'lbs','g' );
+			my $g = Math::Calc::Units::convert( $$variable{'txtPackageWeight'.$qty_index}.'lbs','g' );
 			if ( $g > 1000 ) {
 				$html .= sprintf( '%.0flbs (%.0fkg)', $$variable{'txtPackageWeight'.$qty_index}, $g/1000 );
 			} else {

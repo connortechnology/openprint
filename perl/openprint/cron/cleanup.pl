@@ -342,6 +342,12 @@ if ( $config{'AssetPath'} ) {
 	} # end foreach Asset
 } 
 
+foreach my $Photo_Album ( openprint::Photo_Album->find( 'thumbnail_id is null'=>0) ) {
+	if ( ! sets::isin( $$Photo_Album{'thumbnail_id'}, ( map { $_->asset_id() } $Photo_Album->Photos() ) ) ) {
+		$Photo_Album->save({'thumnail_id'=>undef});
+	} # end if
+} # end foreach
+
 $dbh->disconnect();
 1;
 __END__

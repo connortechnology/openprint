@@ -68,11 +68,11 @@ sub Category {
 sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0]->Location();
-		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
-		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
+		$_[0]{'where'} .= '<a href="/location/view.html?location_id='.$L->id().'">';
 		if ( $L->address() or $L->postalcode() ) {
-			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+			$_[0]{'where'} .= $L->address() . ', '.$L->postalcode().'<br/>';
 		} # end if
+		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
 		$_[0]{'where'} .= '</a>';
 		if ( $L->url() ) {
 			$_[0]{'where'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
@@ -125,6 +125,15 @@ sub can_edit {
 	} # end if
 	return 0;
 } # end sub can_edit
+
+sub can_view {
+	return 1 if ! $_[0]{'id'};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	my $Privacy = $_[0]->Privacy();
+	return 1 if ! $$Privacy{'id'};
+	return $Privacy->can_view();
+} # end sub can_view
 
 sub Comments {
 	return openprint::Comment->find({'object_type'=>'openprint::Event','object_id'=>$_[0]{'id'}});

@@ -2,11 +2,10 @@
 <div class="Location"><div class="View">
 	<form id="f1" name="f1" action="/location/view.html?location_id=<? echo ( $$variable{'Location'}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="action"/>
-	<fieldset><legend>Viewing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
-		<h1><? echo ( $$variable{'Location'}->name() ) ?></h1>
-		<? if ( $$variable{'Location'}->deleted() ) ?>
-		<span class="warning">This location has been deleted</span>
-		<? endif ( $$variable{'Location'}->deleted() ) ?>
+	<fieldset>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+<legend>Viewing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
@@ -17,6 +16,10 @@
 				return $html;
 			) ?>
 		</p>
+		<h1><? echo ( $$variable{'Location'}->name() ) ?></h1>
+		<? if ( $$variable{'Location'}->deleted() ) ?>
+		<span class="warning">This location has been deleted</span>
+		<? endif ( $$variable{'Location'}->deleted() ) ?>
 		<? if ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>
 		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
 		<? endif ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>

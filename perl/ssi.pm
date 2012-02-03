@@ -77,7 +77,7 @@ sub do_new_substitution {
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
-		my $result = eval $1;
+		my $result = eval($1);
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
@@ -452,6 +452,8 @@ sub button {
 			$html .= "alt=\"$$options{text}\"";
 		} # end if
 		$html .= "/>";
+	} elsif ( $openprint::config{'SimpleButtons'} ) {
+		$html .= $$options{'text'};
 	} else {
 		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
 	}

@@ -402,6 +402,10 @@ sub icon {
 	return $_[0]{'icon'};
 } # end sub icon
 
+sub thumbnail_html {
+	return $_[0]->icon();
+}
+
 sub html {
 	if ( ! $_[0]{'id'} ) {
 		$log->error("called html on user without id".$_[0]->to_string() );

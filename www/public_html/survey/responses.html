@@ -1,20 +1,33 @@
 <form id="f1" name="f1" method="post" action="responses.html">
 	<fieldset class="filters unprintable"><legend>Select Response to View</legend>
-		<p>
-			<label>Responder</label>
-			<select name="user_id" onchange="this.form.submit();">
-				<option value=""> select </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
-								'id in' => [ 
-								sets::union( 
-									map { $_->user_id() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}) 
-									) ], 
-								'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} );
+		<ul>
+			<li><label>Survey</label>
+				<select name="survey_id" id="survey_id" onchange="this.form.submit();">
+				<? echo (
+					my @Surveys = ();
+					foreach my $S ( openprint::Survey->find('order'=>'lower(name)') ) {
+						next if ! $S->can_edit();
+						push @Surveys, $S;
+					} # end foreach S
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Surveys ], $param{'survey_id'} );
 				) ?>
-			</select>
-		</p>
+				</select>
+			</li>
+			<li>
+				<label>Responder</label>
+				<select name="user_id" onchange="this.form.submit();">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+									'id in' => [ 
+									sets::union( 
+										map { $_->user_id() } openprint::Survey_Response->find('survey_id'=>$param{'survey_id'}) 
+										) ], 
+									'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} );
+					) ?>
+				</select>
+			</li>
+		</ul>
 	</fieldset>
-	<input type="hidden" name="survey_id" value="<? echo ( $param{'survey_id'}; ) ?>"/>
 	<input type="hidden" name="btnFunction" />
 <? if ( $param{'user_id'} ) ?>
 <fieldset><legend>Viewing Survey</legend>
