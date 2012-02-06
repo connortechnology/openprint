@@ -10,6 +10,7 @@
 )?>
 </ul>
 <? if ( $session{'user_id'} ) ?>
+<? echo ( $session{'user_id'} ) ?>
 <p class="buttons">
 	Select file: <input type="file" name="filename" id="filename" />
 	<? echo ( ssi::button( 'Upload', { 'onclick'=>q`var form = $('f1'); form.elements['action'].value='Upload';form.submit();` } ); ) ?>
