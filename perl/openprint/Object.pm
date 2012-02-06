@@ -337,9 +337,9 @@ sub copy {
 } # end sub copy
 
 sub clone {
-	my $self = shift;
-	my $new = new ref $self;
-	@$new{keys %$self} = @$self{keys %$self};
+	my $new = new ref $_[0];
+	my @keys = keys %{$_[0]};
+	@$new{@keys} = @{$_[0]}{@keys};
 	return $new;
 } # end sub clone
 

@@ -17,7 +17,6 @@
 use strict;
 package openprint::Estimating::Skids;
 use POSIX qw(ceil);
-require Math::Calc::Units;
 
 require openprint::service;
 
@@ -279,7 +278,7 @@ sub summary {
 		if ( $$services{'BulkSkids'} ) {
 			if ( $$services{'BulkSkids'}[0] == $service_id ) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' skid' : ' skids' );
-				my $g = Math::Calc::Units::convert( $$specs{'totalWeight'.$qty_index}.'lbs','g');
+				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {
 					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
 				} else {
@@ -295,7 +294,7 @@ sub summary {
 		} else {
 			if ( $$specs{'ServiceType'} eq 'Gaylords' ) {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' gaylord' : ' gaylords' );
-				my $g = Math::Calc::Units::convert( $$specs{'totalWeight'.$qty_index}.'lbs','g');
+				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {
 					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
 				} else {
@@ -303,7 +302,7 @@ sub summary {
 				} # end if
 			} else {
 				$summary .= $$specs{"txtPackageQuantity$qty_index"} . ( $$specs{"txtPackageQuantity$qty_index"} == 1 ? ' carton' : ' cartons' );
-				my $g = Math::Calc::Units::convert( $$specs{'totalWeight'.$qty_index}.'lbs','g');
+				my $g = $$specs{'totalWeight'.$qty_index} * 453.5923696;
 				if ( $g > 1000 ) {
 					$summary .= sprintf( ', Total Weight: %.0flbs (%.0fkg)', $$specs{'totalWeight'.$qty_index}, $g/1000 );
 				} else {
