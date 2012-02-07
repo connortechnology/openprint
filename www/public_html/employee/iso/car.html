@@ -16,6 +16,15 @@
 			alert('Please select the reason');
 			return 0;
 		} // end if
+		var charge = get_value( form.reprint_charge );
+		if ( ! charge ) {
+			alert('Please select wether there will be a reprint charge');
+			return 0;
+		} // end if
+		if ( charge != 'No' && ! get_value( form.reprint_value ) ) {
+			alert('Please enter the reprint value');
+			return 0;
+		} // end if
 		return 1;
 	} // end function check_part1
 	function area_id_onchange( e ) {

@@ -195,25 +195,6 @@ if ( 0 ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-my $deleted_skids = 0;
-foreach my $Skid ( openprint::Skid->find(
-			'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*-365 ) ),
-			) ) {
-	my $delete = 1;
-	my @Contents = $Skid->Contents();
-	foreach my $C ( @Contents ) {
-		$delete = 0 if $C->quantity();
-	}
-	$delete = 0 if openprint::Claim_Content->find('skid_id'=>$$Skid{id});
-	$delete = 0 if openprint::ManifestContent->find('skid_id'=>$$Skid{id});
-	if ( $delete ) {
-		$Skid->destroy();
-		$deleted_skids += 1;
-	} # end if
-} # end foreach Skid
-$log->warn("Deleted $deleted_skids skids");
-
-
 if ( 0 ) {
 foreach my $Skid ( openprint::Skid->find() ) {
 
@@ -347,6 +328,24 @@ foreach my $Photo_Album ( openprint::Photo_Album->find( 'thumbnail_id is null'=>
 		$Photo_Album->save({'thumnail_id'=>undef});
 	} # end if
 } # end foreach
+my $deleted_skids = 0;
+foreach my $Skid ( openprint::Skid->find(
+            'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 2*-365 ) ),
+            'created_on >='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 4*-365 ) ),
+            ) ) {
+    my $delete = 1;
+    my @Contents = $Skid->Contents();
+    foreach my $C ( @Contents ) {
+        $delete = 0 if $C->quantity();
+    }
+    $delete = 0 if openprint::Claim_Content->find('skid_id'=>$$Skid{id});
+    $delete = 0 if openprint::ManifestContent->find('skid_id'=>$$Skid{id});
+    if ( $delete ) {
+        $Skid->destroy();
+        $deleted_skids += 1;
+    } # end if
+} # end foreach Skid
+$log->warn("Deleted $deleted_skids skids");
 
 $dbh->disconnect();
 1;
