@@ -7,6 +7,24 @@
 			'order'				=> 'starting_on',
 		) ) {
 		next if ! $Event->can_view();
+		if ( $session{'/event/search.html?country_id'} ) {
+			my $Country = $Event->Location()->ancestor('type','country');
+			if ( $Country and $Country->id() != $session{'/event/search.html?country_id'} ) {
+				next;
+			} # end if
+		} # end if
+		if ( $session{'/event/search.html?state_id'} ) {
+			my $State = $Event->Location()->ancestor('type','state');
+			if ( $State and $State->id() != $session{'/event/search.html?state_id'} ) {
+				next;
+			} # end if
+		} # end if
+		if ( $session{'/event/search.html?city_id'} ) {
+			my $City = $Event->Location()->ancestor('type','city');
+			if ( $City and $City->id() != $session{'/event/search.html?city_id'} ) {
+				next;
+			} # end if
+		} # end if
 		push @{$$variable{'Events'}}, $Event;
 	} # end foreach Events
 ) ?>
@@ -20,7 +38,7 @@
 
 				$html .= sprintf(q` 
 					<div title="%2$s" class="Event"> 
-						<a class="thumbnail" href="/event/view.html?event_id=%1$s"><img src="%6$s"/></a>
+						<a class="thumbnail" href="/event/view.html?event_id=%1$s"><img src="%6$s" alt="%7$s"/></a>
 						<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
 						<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 						<div class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></div>
@@ -31,7 +49,7 @@
 					$Event->Category()->name(),
 					$Event->time_string(),
 					$Event->where(),
-					$Event->Asset()->thumbnail_url()
+					$Event->Asset()->thumbnail_url(), $Event->Asset()->caption(),
 				);
 			} # end foreach Events
 			return $html;

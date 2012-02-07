@@ -58,6 +58,7 @@ $serial = 'articles_id_seq';
 	'deleted'		=> 0,
 	'category_id'	=>	undef,
 	'user_type'		=>	undef,
+	'created_by'	=>	undef,
 );
 
 sub name {
@@ -168,6 +169,7 @@ sub can_edit {
 sub html {
 	my $Article = $_[0];
 	my @Comments = $Article->Comments();
+	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
@@ -182,7 +184,7 @@ sub html {
 			$Article->created_by(),
 			ssi::htmlize( $Article->Author()->name() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
-			join('',map { $_->thumbnail_html() } $Article->Assets() ),
+			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
                 );
 	if ( $Article->source() ) {

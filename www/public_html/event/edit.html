@@ -102,8 +102,10 @@
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
-<? eval ( $$variable{'Location'} = $$variable{'Event'}->Location();) ?>
-<!--#include virtual="/location/_location_fields.html"-->
+<? echo ( 
+	$$variable{'Location'} = $$variable{'Event'}->Location();
+	return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/location/_location_fields.html' );
+) ?>
 			</fieldset>
 		</fieldset>
 		<input type="hidden" name="function" />

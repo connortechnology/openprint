@@ -170,7 +170,10 @@ sub html {
 } # end  sub html
 
 sub Location {
-	return new openprint::Location( $_[0]{'location_id'} );
+	if ( ! $_[0]{'Location'} ) {
+	$_[0]{'Location'} = new openprint::Location( $_[0]{'location_id'} );
+	} # end if
+	return $_[0]{'Location'};
 } # end sub Location
 
 sub time_string {
