@@ -23,6 +23,11 @@
 			my $City = $Event->Location()->ancestor('type','city');
 			if ( $City and $City->id() != $session{'/event/search.html?city_id'} ) {
 				next;
+			} elsif ( my $State = $Event->Location()->ancestor('type','state') ) {
+				my $Event_State = new openprint::Location( $session{'/event/search.html?city_id'} )->ancestor('type','state');
+				if ( $Event_State and $State->id() != $Event_State->id() ) {
+					next;
+				} # end if
 			} # end if
 		} # end if
 		push @{$$variable{'Events'}}, $Event;

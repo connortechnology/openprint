@@ -15,7 +15,7 @@
 		} # end foreach Article
 		foreach my $k ( keys %counts ) {
 			next if $k == 0;
-			push @Articles, sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}};
+			push @Articles, reverse( sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}} );
 		} # end foreach
 	} else {
 		foreach my $Article ( openprint::Article->find( 
