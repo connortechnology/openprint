@@ -569,7 +569,7 @@ if ( ! sets::isin( 'opinion_types', \@tables ) ) {
     die $dbh->errstr() if $dbh->errstr();
 }
 if ( ! sets::isin( 'likes', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Likes.sql' ) );
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Opinions.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='likes'", 'column_name');

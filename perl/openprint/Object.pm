@@ -841,7 +841,8 @@ sub opinions {
 	} # end foreach
 
 	if ( ! @Opinions ) {
-		$html = 'No one has an opinion on this yet.  Be the first!';
+		$html = 'No one has an opinion on this yet.';
+		$html .= '  Be the first!' if $session{'user_id'};
 	} else {
 		foreach my $opinion_type_id ( keys %Opinions ) {
 			my $Opinion_Type = new openprint::Opinion_Type( $opinion_type_id );

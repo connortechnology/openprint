@@ -10,14 +10,12 @@
 			) ) {
 			my @name_keywords = split(/\s/, lc $Article->name() );
 			my @body_keywords = split(/\s/, lc $Article->body() );
-			#$log->debug("name: @name_keywords , body: @body_keywords");
 			my $count = sets::intersection( @keywords, sets::union( @name_keywords, @body_keywords ) );
 			push @{$counts{$count}}, $Article;
 		} # end foreach Article
 		foreach my $k ( keys %counts ) {
 			next if $k == 0;
-#$log->debug("$k => " . @{$counts{$k}} );
-			push @Articles, sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}};
+			push @Articles, reverse( sort { $a->published_on() cmp $b->published_on() } @{$counts{$k}} );
 		} # end foreach
 	} else {
 		foreach my $Article ( openprint::Article->find( 

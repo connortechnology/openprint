@@ -1,5 +1,6 @@
 use strict;
 require openprint::Comment;
+require openprint::Article_Asset;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
 
@@ -57,6 +58,7 @@ $serial = 'articles_id_seq';
 	'deleted'		=> 0,
 	'category_id'	=>	undef,
 	'user_type'		=>	undef,
+	'created_by'	=>	undef,
 );
 
 sub name {
@@ -80,7 +82,7 @@ sub send_notifications {
 				FROM    => new openprint::User( $session{'user_id'} ),
 				TO      => \@Users,
 				SUBJECT => 'A new Article has been generated.',
-				ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable'],
+				ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable'],
 				);
 	} # end if to
 
@@ -167,19 +169,22 @@ sub can_edit {
 sub html {
 	my $Article = $_[0];
 	my @Comments = $Article->Comments();
+	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			Posted on %7$s by <a href="/account/view.html?user_id=%5$d">%6$s</a><br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
+			<div class="Assets">%8$s</div>
 			`, $Article->id(),
 			ssi::htmlize($Article->title()),
 			$Article->source_content(),
-			$Article->summary() ? $Article->summary() : $Article->body(),
+			($Article->summary() ? $Article->summary() : $Article->body() ),
 			$Article->created_by(),
 			ssi::htmlize( $Article->Author()->name() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
                 );
 	if ( $Article->source() ) {
@@ -199,6 +204,10 @@ sub summary_html {
 sub view_url {
 	return '/article/view.html?article_id='.$_[0]{'id'};	
 } # end sub view_url
+
+sub Assets {
+	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
+} # end sub Assets
 
 1;
 __END__
