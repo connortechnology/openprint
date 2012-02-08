@@ -69,7 +69,7 @@ if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
 foreach my $Equipment ( @Equipment ) {
-	#$log->warn("Processing " . $Equipment->name() ) if $debug;
+	$log->debug("Processing " . $Equipment->name() );
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
 		$log->error("Unable to open semaphore\n");
