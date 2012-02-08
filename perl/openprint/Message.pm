@@ -22,6 +22,7 @@ $serial = 'messages_id_seq';
 %find_fields = (
 	'me_id'			=>	'(SELECT user_id FROM Message_to WHERE message_id=messages.id AND deleted!=true)',
 	'to_id'			=>	'(SELECT user_id FROM Message_to WHERE message_id=messages.id AND deleted!=true)',
+	'viewed'		=>	'(SELECT viewed FROM Message_to WHERE message_id=messages.id and deleted!=true)',
 );
 %transforms = (
 );
