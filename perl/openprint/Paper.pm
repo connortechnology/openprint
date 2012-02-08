@@ -101,7 +101,6 @@ $serial	= 'paper_id_seq';
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
-
 %defaults = (
 	'allocated'	=>	q`'0'`,
 	'in_stock'	=>	q`'0'`,

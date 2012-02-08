@@ -186,6 +186,7 @@ sub stock {
 		$Paper->minimum_order( $param{'minimum_order'} );
 		$Paper->full_packages( $param{'full_packages'} );
 		$Paper->message( $param{'message'} );
+		$Paper->user_type( $param{'user_type'} );
 
 		@{$$Paper{'recommendations'}} = ();
 		foreach my $Type ( openprint::ProjectType->find() ) {
