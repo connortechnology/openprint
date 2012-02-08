@@ -61,7 +61,7 @@
 	</tr>
 	<tr>
 		<td colspan="1">Docket No:</td>
-		<td colspan="1"><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
+		<td colspan="1"><input type="number" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" onkeyup="integerize(this);new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
 		<td colspan="1">Customer:</td>
 		<td colspan="7">
 <select id="company_id" name="company_id" style="width: 100%;">
