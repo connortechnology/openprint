@@ -1125,10 +1125,7 @@ function show_div( divname, e ) {
 			posy += 10; // to move it south of the mouse cursor
 			div.style.top = posy + 'px';
 		} // end if
-		div.style.visibility = 'visible';
-		if ( div.style.display == '' ) {
-			div.style.display='block';
-		}
+		div.show();
 	} else {
 		alert("Div not found: " + divname );
 	} // end if

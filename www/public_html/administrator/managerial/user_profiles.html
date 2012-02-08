@@ -58,9 +58,9 @@ Please select a company or user to obtain login information.<br/>
 				<label>
 					<? echo (
 						if ( $$variable{'User'}->company_id() ) {
-							return ssi::writeButton( $log, $dbh, 'CompanyInfo1', 'company.gif', '', 'company_profiles.html?ddmCustomer='.$$variable{'User'}->company_id(), 'Company Information' );
+							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{'User'}->company_id(), text=>'Company Information' } );
 						} elsif ( $param{'ddmCustomer'} ) {
-							return ssi::writeButton( $log, $dbh, 'CompanyInfo1', 'company.gif', '', 'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, 'Company Information' );
+							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
 						}
 						return;
 					) ?>
@@ -233,14 +233,14 @@ Please select a company or user to obtain login information.<br/>
 						} # end foreach PO_Type
 						return $html;
 					) ?>
-					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup in'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? if ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<li class="csr_ids">
 						<label>Assistant to</label>
 						<select name="csr_ids" size="4" multiple="multiple">
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'csr_ids'}} ], [$$variable{'User'}->csr_ids()] ); ) ?>
 						</select>
 					</li>
-					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup in'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
+					<? endif ( @{$$variable{'csr_ids'}} = openprint::User->find('type'=>['E','A'], 'usergroup any'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) ?>
 					<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 				</ul>
 			</div>
@@ -250,7 +250,7 @@ Please select a company or user to obtain login information.<br/>
 					<li class="user_categories">
 						<label>User Category</label>
 						<select name="selectUserCategories" size="4" multiple="multiple">
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id in'=>$$variable{'User'}->id()) ] ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'user_categories'}} ], [ openprint::MarketingCategory->find('user_id any'=>$$variable{'User'}->id()) ] ); ) ?>
 						</select>
 					</li>
 					<? endif ( @{$$variable{'user_categories'}} = openprint::MarketingCategory->find('order'=>'lower(name)') ) ?>
@@ -371,9 +371,17 @@ Please select a company or user to obtain login information.<br/>
 		<? endif ( openprint::ServiceType->find_one() ) ?>
 		<br class="spacer"/>
 		<fieldset>
-		<p id="ButtonsBottom">
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
-			
+		<p id="ButtonsBottom" class="buttons">
+			<label>
+				<? echo (
+						if ( $$variable{'User'}->company_id() ) {
+							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{'User'}->company_id(), text=>'Company Information' } );
+						} elsif ( $param{'ddmCustomer'} ) {
+							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
+						}
+						return;
+				) ?>
+			</label>
 	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 	<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>

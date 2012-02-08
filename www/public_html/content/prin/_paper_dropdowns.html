@@ -5,10 +5,17 @@
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+
 	my %find = (
 			'project_type_id any'	=>	$$variable{'ProjectType'}->id(),
 			'supplied is null or ='			=>	$$variable{'rdbSuppliedStock'.$$variable{'Signature'}} eq 'Y' ? 1 : 0,
 			'type'				=>	\@types,
+			'user_type'			=>	\@user_types,
 	);
 
 	my @StockOptions = misc::trim(split( ',', $config{$$variable{'ProjectType'}->name().'StockOptions'} ));
