@@ -322,6 +322,12 @@
 					<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->bladecleaning() ); ) ?> />
 					<label class="radio" for="bladecleaningN">No</label>
 				</p>
+				<p class="user_type">
+					<label>Required User Type</label>
+					<select name="user_type" id="user_type">
+					<? echo	( ssi::make_drop_down( [ '', 'All', 'C', 'Customer', 'E', 'Employee', 'A', 'Administrator' ], $$variable{'Stock'}->user_type() ); ) ?>
+					</select>
+				</p>
 				<hr class="spacer"/>
 				<p> <b>Tax Information</b> </p>
 				<p class="taxexempt1">

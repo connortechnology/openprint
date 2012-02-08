@@ -42,7 +42,7 @@ my @fields = (
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
 		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts',
-		'material_id',
+		'material_id','user_type',
 		);
 
 my %find_cache;
@@ -75,6 +75,15 @@ sub find {
 		} else {
 			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
+		} # end if
+	} # end if
+	if ( exists $params{'user_type'} ) {
+		if ( ref $params{'user_type'} eq 'ARRAY' ) {
+			$sql .= ' AND (papers.user_type IS NULL OR papers.user_type IN ('. join(',', map {'?'} @{$params{'user_type'}} ) . ') )';
+			push @values, @{$params{'user_type'}};
+		} else {
+			$sql .= ' AND (papers.user_type IS NULL OR papers.user_type=? )';
+			push @values, $params{'user_type'};
 		} # end if
 	} # end if
 	if ( $params{'grain_direction'} ) {

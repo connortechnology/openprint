@@ -15,6 +15,11 @@ sub get_paper {
 	my @types = ('Sheet');
 	push @types, 'Roll';
 
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+
 	my @papers = openprint::Paper::find( 
 			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
 			( $specs{'Selected'} eq 'Group' ? ( 'group_id'=>$specs{'Group'} ) : ()  ),
@@ -25,6 +30,7 @@ sub get_paper {
 			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
 			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
+			'user_type'	=>	\@user_types,
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
@@ -32,6 +38,7 @@ sub get_paper {
 			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
 			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
+			'user_type'	=>	\@user_types,
 				);
 	} # end if
 	my %names;
@@ -73,6 +80,11 @@ sub select_paper {
 		push @types, 'Roll';
 	} # end if
 
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+
 	$log->debug("******** START OF select_paper_names, Press: $type $press $flat_width $flat_height*****************");
 	my @papers = openprint::Paper::find( 
 			( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
@@ -82,6 +94,7 @@ sub select_paper {
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
 			'supplied'	=>	[undef,$supplied eq 'Y' ? 1 : 0],
 			'type'		=>	\@types,
+			'user_type'	=>	\@user_types,
 			( $flat_width ? ( (sets::isin($type,[ 'Envelopes','NCR' ]) ? 'width' : 'width_>=')=>$flat_width ) : () ),
 			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height_>=')=>$flat_height ) : () ),
 			);
@@ -91,6 +104,7 @@ sub select_paper {
                 ( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
                 'supplied'  =>  [undef,$supplied eq 'Y' ? 1 : 0],
                 'type'      =>  \@types,
+			'user_type'	=>	\@user_types,
                 );
     } # end if
 
@@ -127,11 +141,16 @@ sub get_names {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 
 	my @papers = openprint::Paper::find( 
-		'project_type_name'=>$type,
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
-		'type'=>\@types,
+			'project_type_name'	=>	$type,
+			'supplied'			=>	[undef,$supplied eq 'Y' ? 1 : 0],
+			'type'				=>	\@types,
+			'user_type'			=>	\@user_types,
 		 );
 	my %finishes;
 	foreach my $Paper ( @papers ) {
@@ -152,11 +171,16 @@ sub get_finishes {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 	my @papers = openprint::Paper::find( 
 		'project_type_name'=>$type,
 		'name'=>$name,
 		'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 		'type'=>\@types,
+			'user_type'			=>	\@user_types,
 		);
 	my %finishes;
 	foreach my $Paper ( @papers ) {
@@ -179,19 +203,26 @@ sub get_colours {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 	my @papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish, 'weight'=>$weight,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
+			'user_type'         =>  \@user_types,
 			);
 	if ( ! @papers ) {
 	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
+			'user_type'         =>  \@user_types,
 			);
 	} # end if
 	if ( ! @papers ) {
 	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'type'=>\@types,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
+			'user_type'         =>  \@user_types,
 			);
 	} # end if
 	my %colours;
@@ -213,11 +244,16 @@ sub get_weights {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 	my @papers = openprint::Paper::find( 
 			'project_type_name'=>$type,
 			'name'=>$name, 'finish'=>$finish, 'colour'=>$colour,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
+			'user_type'         =>  \@user_types,
 			);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
@@ -225,6 +261,7 @@ sub get_weights {
 				'name'=>$name, 'finish'=>$finish,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 				'type'=>\@types,
+			'user_type'         =>  \@user_types,
 				);
 	} # end if
 	if ( ! @papers ) {
@@ -233,6 +270,7 @@ sub get_weights {
 				'name'=>$name,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 				'type'=>\@types,
+			'user_type'         =>  \@user_types,
 				);
 	} # end if
 
@@ -321,10 +359,15 @@ sub get_sheetsizes {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
 				'project_type_name'	=>	$type,
 				'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
+				'user_type'         =>  \@user_types,
 				);
 	} # end if
 	return if ! @papers;
