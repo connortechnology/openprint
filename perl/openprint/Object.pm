@@ -785,9 +785,15 @@ sub AUTOLOAD {
 			# This looks to handle returning Objects
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
-				if ( eval '\%openprint::'.$name.'::fields' ) {
-					return new("openprint::$name", $_[0]{$field});
+				my $O = eval {
+					require "openprint/$name.pm";
+					return ('openprint::'.$name)->new( $_[0]{$field} );
+				}; # end eval
+				if ( $@ ){
+					$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
+					return undef;
 				} # end if
+				return $O;
 			} # end if
 		} # end if
 		return $_[0]{$name};

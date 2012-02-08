@@ -3,6 +3,8 @@ package openprint::Message;
 our @ISA = qw( openprint::Object );
 require openprint::User;
 require openprint::Message_To;
+require openprint::Conversation;
+
 use Date::Format qw( time2str );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
@@ -74,5 +76,6 @@ sub sent_on_string {
 	} # end if
 	return $_[0]{'sent_on_string'};
 } # end sub sent_on_string
+
  1;
 __END__
