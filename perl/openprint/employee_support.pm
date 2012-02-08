@@ -19,7 +19,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub helpdesk {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $index = $r->param('helpdesk_id');
+	my $index = $param{'helpdesk_id'};
 
 	if ( $r->param('btnFunction') eq 'Submit' ) {
 		sql::update( $log, $dbh, 'HelpDesk', "Id =$index", 
@@ -69,7 +69,7 @@ sub helpdesk {
 sub rma {
 	my ( $r, $log, $dbh, $variable ) = @_;
 	
-	my $rma = $r->param('rma_id');
+	my $rma = $param{'rma_id'};
 
 
 	$_ = q{SELECT company_id,
