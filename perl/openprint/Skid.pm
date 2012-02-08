@@ -261,6 +261,9 @@ sub destroy {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{UPDATE manifestcontents SET skid_id=NULL WHERE skid_id=?}, $$self{'id'} );
+	foreach my $V ( openprint::Skid_Verification->find('skid_id'=>$$self{'id'}) ) {
+	$V->delete();
+	} # end foreach V	
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );

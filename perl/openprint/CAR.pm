@@ -57,6 +57,9 @@ $serial = 'car_id_seq';
 );
 
 %transforms = (
+	'reprint_quantity'	=>	[ 's/[^\d\.]//g' ],
+	'reprint_value'		=>	[ 's/[^\d\.]//g' ],
+	'docket'			=>	[ 's/[\D]//g' ],
 );
 %defaults = (
 	'issued_to_id'	=> undef,

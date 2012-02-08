@@ -6,6 +6,8 @@ use Math::Calc::Units ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 require openprint::Claim_ContentType;
+require openprint::Claim;
+require openprint::Skid;
 
 $debug = 0;
 

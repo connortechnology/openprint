@@ -84,7 +84,7 @@ sub delete {
 	} # end if
 	my @SkidContents = openprint::SkidContent->find('manifestcontent_id'=>$_[0]{'id'});
 	if ( @SkidContents > 1 ) {
-		$log->warn("Too many skidContents found for manifestcontent $_[0]{'id'}");
+		$log->error("Too many skidContents found for manifestcontent $_[0]{'id'}");
 	} # end if
 	foreach my $S (@SkidContents) {
 		if ( $S->manifestcontent_id() != $_[0]->id() ) {

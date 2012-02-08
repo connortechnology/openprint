@@ -1,13 +1,13 @@
-package openprint::Skid_Verification;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
-use openprint ();
+package openprint::Skid_Verification;
+
 require openprint::User;
-use vars qw($debug $table $serial %fields %transforms %defaults );
+our @ISA = qw(openprint::Object);
+
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
+
 $table = 'skid_verifications';
 $serial = 'skid_verifications_id_seq';
 
