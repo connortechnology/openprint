@@ -82,6 +82,7 @@ $serial	= 'paper_id_seq';
 		'allocated'				=>	'allocated',
 		'parts'					=>	'parts',
 		'material_id'			=>	'material_id',
+		'user_type'				=>	'user_type',
 		);
 %find_fields = (
 		'manufacturer'	=>	'(SELECT name FROM manufacturers WHERE manufacturers.id=papers.manufacturer_id)',
@@ -100,9 +101,11 @@ $serial	= 'paper_id_seq';
 		'stock_settings_equipment_id'	=>	'(SELECT equipment_id FROM equipment_stock_settings WHERE stock_id=papers.id)',
 		);
 
+
 %defaults = (
 	'allocated'	=>	q`'0'`,
 	'in_stock'	=>	q`'0'`,
+	'user_type'	=>	q`undef`,
 );
 
 sub load {

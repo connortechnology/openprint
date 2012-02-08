@@ -493,6 +493,7 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	$dbh->do('alter table papers add basis_height float') if ! exists $$data{basis_height};
 	$dbh->do('alter table papers add basis_mweight float') if ! exists $$data{basis_mweight};
 	$dbh->do('alter table papers add grade integer') if ! exists $$data{'grade'};
+	$dbh->do('ALTER TABLE papers add user_type char(1)') if ! exists $$data{'user_type'};
 } # end if
 if ( ! sets::isin( 'materials', \@tables ) ) {
 	$dbh->do(misc::load_file( $log, '../openprint/sql/Materials.sql') );
