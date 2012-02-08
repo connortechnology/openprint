@@ -2,17 +2,15 @@ use strict;
 package openprint::Claim_Content;
 our @ISA = qw(openprint::Object);
 
-use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
+require openprint;
 require sql;
 require ssi;
 require misc;
 require openprint::Claim_ContentType;
+require openprint::Claim;
+require openprint::Skid;
 
 $debug = 0;
 
