@@ -1630,6 +1630,11 @@ sub get_project_price {
 			next;
 		} # end if
 
+		if ( ( $Press->specification('Printing Type') eq 'Digital' ) and $openprint::usergroup::groups_cache{'Digital Estimating'} and ! openprint::usergroup::is_user_in( ['Digital Estimating'], $openprint::session{'user_id'} ) ) {
+			$openprint::log->debug('No Digital 4 U');
+			next;
+		} # end if
+
 		my $SpreadLayout;
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' ) {
