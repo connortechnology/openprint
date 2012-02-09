@@ -50,7 +50,7 @@
 				return $html;
 			) ?>
 		</div><!--ProfilePicture-->
-		<div id="Albums">
+		<div id="PhotoAlbums">
 			<fieldset><legend>Photo Albums</legend>
 				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
@@ -66,6 +66,8 @@
 					return $html;
 				) ?>
 			</fieldset>
+		</div>
+		<div id="VideoAlbums">
 			<fieldset><legend>Video Albums</legend>
 				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
 				<span class="buttons"><? echo ( ssi::button( 'AddVideoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>

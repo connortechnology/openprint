@@ -10,7 +10,13 @@
 	@options = ( 'Brand','Finish','Colour','Weight' ) if ! @options;
 	my @lc_options = map { lc $_ } @options;
 
+	my @user_types = ('');
+	push @user_types, 'C' if $openprint::session{'user_id'};
+	push @user_types, 'E' if $openprint::session{'user_type'} eq 'E';
+	push @user_types, ('A','E') if $openprint::session{'user_type'} eq 'A';
+
 	my %find = (
+		'user_type'	=>	\@user_types,
 		( $$ProjectType{'id'}?(
 							   'project_type_id any'	=>	$ProjectType->id(),
 							  ):(
@@ -22,7 +28,7 @@
 
 # initially, load all stocks available as per projectype, supplied, and size.
 if ( 0 ) {
-# I think this is remarked out so that if we get no stocks, we can back up a bit.  Might be better to just reload
+	# I think this is remarked out so that if we get no stocks, we can back up a bit.  Might be better to just reload
 	foreach my $option ( @options ) {
 		next if ( $option eq $options[0] and $param{'selected'} eq 'rdbSuppliedStock' );
 		if ( $param{$option} ) {

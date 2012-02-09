@@ -104,7 +104,7 @@ $serial	= 'paper_id_seq';
 %defaults = (
 	'allocated'	=>	q`'0'`,
 	'in_stock'	=>	q`'0'`,
-	'user_type'	=>	q`undef`,
+	'user_type'	=>	q`''`,
 );
 
 sub load {

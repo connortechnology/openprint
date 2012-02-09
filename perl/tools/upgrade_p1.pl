@@ -139,7 +139,7 @@ new openprint::ProjectType_Template()->save({
 	'flat_height'		=>	11,
 });
 }
-	sql::insert( undef, undef, 'configuration', 'name', 'SimpleButtons','value','yes', 'category'=>'Miscellaneous Settings', 'type'=>'yes/no', 'description'=>'SimpleButtons: When true, will use a simple anchor tag instead of one with left right and centre sections. This reduces page size and speeds up rendering.');
+	sql::insert( undef, undef, 'configuration', 'name', 'SimpleButtons','value','Y', 'category'=>'Miscellaneous Settings', 'type'=>'yes/no', 'description'=>'SimpleButtons: When true, will use a simple anchor tag instead of one with left right and centre sections. This reduces page size and speeds up rendering.');
 	sql::insert( undef, undef, 'configuration', 'name', 'ProjectViewDisclaimer','value','All CTP quotes must include a digital proof.
 All prices are subject to the viewing of artwork, film or electronic file.
 Please check specifications for accuracy.

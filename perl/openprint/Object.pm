@@ -408,11 +408,14 @@ sub find_operators {
 	if ( exists $$params{$k.' ='} ) {
 		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
 	} # end if
-	if ( exists $$params{$k.'_opinion'} ) {
-		push @{$results{'_opinion'}}, $f.'::text LIKE ?', $$params{$k.'_opinion'};
+	if ( exists $$params{$k.'_like'} ) {
+		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
 	} 
-	if ( exists $$params{$k.' iopinion'} ) {
-		push @{$results{' iopinion'}}, $f.'::text ILIKE ?', $$params{$k.' iopinion'};
+	if ( exists $$params{$k.' like'} ) {
+		push @{$results{' like'}}, $f.'::text LIKE ?', $$params{$k.' like'};
+	} 
+	if ( exists $$params{$k.' ilike'} ) {
+		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $$params{$k.' ilike'};
 	} 
 	if ( exists $$params{$k.'_start'} ) {
 		push @{$results{'_start'}}, $f.' >= ?', $$params{$k.'_start'};
@@ -782,9 +785,15 @@ sub AUTOLOAD {
 			# This looks to handle returning Objects
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
-				if ( eval '\%openprint::'.$name.'::fields' ) {
-					return new("openprint::$name", $_[0]{$field});
+				my $O = eval {
+					require "openprint/$name.pm";
+					return ('openprint::'.$name)->new( $_[0]{$field} );
+				}; # end eval
+				if ( $@ ){
+					$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
+					return undef;
 				} # end if
+				return $O;
 			} # end if
 		} # end if
 		return $_[0]{$name};
