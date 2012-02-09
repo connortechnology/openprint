@@ -18,14 +18,17 @@ require openprint::Event_Attendance;
 require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
+require openprint::Location;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
+		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Event = new openprint::Event( $param{'event_id'} );
-		$variable{'error'} .= $Event->destroy();
+		$variable{'error'} .= $Event->delete();
+		%param = ();
 	} # end if
 
 	_history();
@@ -113,79 +116,30 @@ sub view {
 		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
 		if ( $param{'category_id'} ) {
 			delete $param{'category'};
+		} elsif ( $param{'category'} ) {
+			delete $param{'category_id'};
 		} else {
+			delete $param{'category'};
 			delete $param{'category_id'};
 		} # end if
-		my $parent_id;
-		if ( $param{'country'} ) {
-			my $Country = openprint::Location->find_one('name_lc'=> lc $param{'country'}, 'type'=>'country' );
-			if ( ! $Country ) {
-				$Country = new openprint::Location();
-				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
-			} # end if
-			$parent_id = $param{'country_id'} = $Country->id();
-		} elsif ( $param{'country_id'} ) {
-			$parent_id = $param{'country_id'};
-		} # end if
-		if ( $param{'state'} ) {
-			my $State = openprint::Location->find_one('name_lc'=> lc $param{'state'}, 'type'=>['state','province']);
-			if ( ! $State ) {
-				$State = new openprint::Location();
-				$variable{'error'} .= $State->save({'name'=>$param{'state'}, 'type'=>'state', 'parent_id'=>$param{'country_id'}});
-			} # end if
-			$parent_id = $param{'state_id'} = $State->id();
-		} elsif ( $param{'state_id'} ) {
-			$parent_id = $param{'state_id'};
-		} # end if
-		if ( $param{'city'} ) {
-			my $City = openprint::Location->find_one('name_lc'=> lc $param{'city'}, 'type'=>'city');
-			if ( ! $City ) {
-				$City = new openprint::Location();
-				$variable{'error'} .= $City->save({'name'=>$param{'city'}, 'type'=>'city', 'parent_id'=>$param{'state_id'}});
-			} # end if
-			$parent_id = $param{'city_id'} = $City->id();
-		} elsif ( $param{'city_id'} ) {
-			$parent_id = $param{'city_id'};
-		} # end if
-		if ( $param{'location'} ) {
-			my $Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$param{'location'}),
-				( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
-				);
-			if ( ( ! $Location ) or 
-					( $Location->address() and $param{'address'} and ( $Location->address() ne $param{'address'} ) ) or
-					( $Location->postalcode() and $param{'postalcode'} and ( $Location->postalcode() ne $param{'postalcode'} ) ) or
-					( $Location->parent_id() != $parent_id )
-			   ) {
-				$Location = new openprint::Location();
-				$variable{'error'} .= $Location->save({
-						'name'			=>	$param{'location'}, 
-						'parent_id'		=>	$parent_id, 
-						'type'			=>	'place', 
-						'address'		=>	$param{'address'},
-						'postalcode'	=>	$param{'postalcode'},
-						});
-			
-			} else {
-				my %change;
-				$change{'address'} = $param{'address'} if $param{'address'} and ! $Location->address();
-				$change{'postalcode'} = $param{'postalcode'} if $param{'postalcode'} and ! $Location->postalcode();
-				if ( %change ) {
-					$variable{'error'} .= $Location->save( \%change );
-				} # end if
-			} # end if
-			$param{'location_id'} = $Location->id();
-		} # end if
-		if ( ( ! $param{'event_id'} ) and ( $_ = openprint::Event->find_one('location_id'=>$param{'location_id'}, 'starting_on'=>$param{'starting_on'}, 'name'=>$param{'name'} ) ) ) {
+		my $Location = openprint::Location::save_location( \%param );
+		$variable{'error'} .= $Location if ref $Location ne 'openprint::Location';
+
+		if ( ( ! $param{'event_id'} ) and ( $_ = openprint::Event->find_one(
+			( $Location ? ( 'location_id'=>$Location->id() ) : () ),
+			, 'starting_on'=>$param{'starting_on'}, 'name lc'=> lc openprint::Event->transform('name', $param{'name'} ) ) ) ) {
 			$variable{'Event'} = $Event = $_;
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
 			$variable{'error'} .= $Event->save(\%param);
 			(new openprint::Log())->save({'action'=>'Create Event', 'object'=>'Event','object_id'=>$Event->id()});
 		} # end if
-		my $Privacy = $Event->Privacy();
-		$variable{'error'} .= $Privacy->save( {
-				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
-			} );
+		if ( ! $variable{'error'} ) {
+			my $Privacy = $Event->Privacy();
+			$variable{'error'} .= $Privacy->save( {
+					map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+				} );
+		} # en dif ! error
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
