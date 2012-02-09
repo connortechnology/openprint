@@ -135,8 +135,13 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 		@equipment = @possible_equipment;
 	} # end if
 
+	my @sigs = $Project->signatures();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+	my $Press = $I->Press();
+
 	my $bestPrice;
 	my $bestEquipment;
+	
 #$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
 		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
@@ -149,15 +154,13 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 		} # end if
 
 		if ( $Equipment->specification('Type') eq 'Press' ) {
-			next if $$specs{'txtPockets'.$qty_index} > 1;
-			my @sigs = $Project->signatures();
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
-			if ( $I->Press()->id() != $Equipment->id() ) {
-				$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+			#next if $$specs{'txtPockets'.$qty_index} > 1;
+			if ( $$Press{'id'} != $$Equipment{'id'} ) {
+				$openprint::log->debug("Press not the same: " . $$Press{'id'} . ' != ' . $$Equipment{'id'} );
 				next;
 			} # end if
-			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
-				$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+			if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $$Equipment{'id'} ) {
+				$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $$Equipment{'id'} );
 				next;
 			} # end if
 		} # end if
@@ -188,7 +191,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
 
 	foreach my $Equipment ( @all_equipment ) {
@@ -227,11 +230,12 @@ sub calc {
 	my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my @signatures = $Project->signatures();
 
 	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'txtCalliper'} = 0;
-			foreach my $signature_service_index ( $Project->signatures() ) {
+			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				# All but the cover
 				next if $$sig_specs{'Group'} == 1;
@@ -251,13 +255,12 @@ sub calc {
 	my @Materials = openprint::Material->find('category'=>'PerfectBound Glue');
 	if ( $$specs{'override_glue_id'} eq 'Y' ) {
 	} else {
-		foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $ss_id ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 
 			my $Paper;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				next if ! $Project->quantity( $qty_index );
 				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				last;
 			} # end foreach
@@ -286,7 +289,7 @@ sub calc {
 
 			$$specs{"txtPockets$qty_index"} = 0;
 
-			foreach my $signature_service_index ( $Project->signatures() ) {
+			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 				next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 				if ( 
@@ -564,7 +567,7 @@ sub get_price {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 
 } # end sub display
 
