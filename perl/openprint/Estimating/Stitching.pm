@@ -178,6 +178,7 @@ sub signature_calc {
 
 	my $bestPrice;
 	my $bestEquipment;
+	my $I = $Impositions[0];
 #$results{'alert'} .= $imposition.'out on ';
 #$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
@@ -189,6 +190,22 @@ sub signature_calc {
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
 		} # end if
+       if ( $Equipment->specification('Type') eq 'Press' ) {
+            #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+                #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+                #next;
+            #} # end if
+            if ( $I->Press()->id() != $Equipment->id() ) {
+                #$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+                next;
+            } # end if
+
+            #if ( $$I{'Folder'}->id() != $Equipment->id() ) {
+                #$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+                #next;
+            #} # end if
+        } # end if
+
 		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
 			$bestEquipment = $Equipment;
@@ -310,12 +327,14 @@ $openprint::log->debug("Overriding imposiion");
 		$$specs{'alert'} .= 'Unable to determine spine length.  Calculations may be wrong.';
 	} # end if
 
+	my @signatures = $Project->signatures();
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{'Width'} Spine Length: $$specs{'Height'}<br/>";
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-			foreach my $signature_service_index ( $Project->signatures() ) {
+			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -370,6 +389,10 @@ $openprint::log->debug("Overriding imposiion");
 		return 'uncalculated';
 	} # end if
 
+    # Get one of the sigs, so we can look at which press it was printed on.  Technically we should look at all
+    my $ss_id = $signatures[0];
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		if ( $$specs{'txtInsertQuantity'} > 0 ) {
@@ -417,6 +440,23 @@ $openprint::log->debug("Overriding imposiion");
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
 			} # end if
+			if ( $Equipment->specification('Type') eq 'Press' ) {
+
+				# No long valid... should prbably be greater than some settnig
+                #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+                    #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+                    #next;
+                #} # end if
+                if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+                    $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Printing equipment not the same: %s<br/>',$$sig_specs{"ddmPress$qty_index"} );
+                    next;
+                } # end if
+                #if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+                    #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Folding equipment not the same: %s<br/>',$$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+                    #next;
+                #} # end if
+            } # end if
+
 
 			my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 			if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
@@ -459,7 +499,7 @@ $openprint::log->debug("Overriding imposiion");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 	foreach my $qty_index ( 1 .. 3 ) {	
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index
@@ -474,7 +514,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
