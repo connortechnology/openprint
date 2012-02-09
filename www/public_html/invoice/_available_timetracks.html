@@ -8,7 +8,7 @@
 			<th class="Interval">Interval</th>
 			<th class="Rate">Rate</th>	
 			<th class="Price">Price</th>
-			<th width="10" class="unprintable">&nbsp;</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html = '';
@@ -34,7 +34,7 @@
 				my $Price = $T->Price();
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
-				$html .= sprintf('<td class="unprintable">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$T->id(), '', 'add_timetrack('.$T->id().');', '', '+' ) );
+				$html .= sprintf('<td class="buttons">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$T->id(), '', 'add_timetrack('.$T->id().');', '', '+' ) );
 				$html .= "</tr>\n";
 			} # end foreach $T
 			return $html;
