@@ -9,7 +9,8 @@
 		<form name="f1" id="f1" action="/account/search.html" method="post">
 			<fieldset class="filters"><legend>Search for account</legend>
 				To search profiles, complete one or more of the fields below.
-				<div class="content leftColumn">
+				<div class="content">
+					<div class="leftColumn">
 					<ul>
 						<li><label>Alias</label>
 							<input type="text" name="company_name" id="company_name" onkeyup="if(this.value.length > 2){load_results();};" />
@@ -93,6 +94,7 @@ $log->debug( "Value: $v, text: $t");
 ) ?>
 					</ul>
 				</div>
+			</div>
 			<p class="buttons">
 				<? echo ( join('',
 					ssi::button( 'ShowResults', { onclick=>q`LoadContent('Results','_search.html', f1 );`, text=>'Show Results' } ),
