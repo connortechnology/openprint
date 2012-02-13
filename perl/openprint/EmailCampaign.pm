@@ -1,18 +1,15 @@
-package openprint::EmailCampaign;
-@ISA=qw(openprint::Object);
-
-use openprint::Object;
-use Email::Valid;
-use MIME::QuotedPrint;
-use openprint ();
-use vars qw( %config );
-*config = \%openprint::config;
-
 use strict;
+package openprint::EmailCampaign;
+our @ISA=qw(openprint::Object);
+
+require openprint::Object;
+require Email::Valid;
+require MIME::QuotedPrint;
+require openprint;
 
 require sql;
-require configuration;
-require openprint::logs;
+require openprint::Email;
+require openprint::Log;
 require openprint::EmailTemplate;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
@@ -78,37 +75,20 @@ Users Rep: <?REPNAME?>
 
 __ADMIN_EMAIL__
 
-	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
+	$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
 
 	# Setup the mail message
-	my %mail = (
-			SMTP => $openprint::config{'Mail Server'},
+	my $Email = new openprint::Email();
+	$Email->send(
 			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			#TO => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
 			TO => 'iconnor@point-one.com',
 			SUBJECT => 'Automatically Generated Account Deletion Email',
+			ATTACHMENTS	=>	\@body,
 		);
-
-	# Send the email
-	misc::send_email_with_attachment($log, \%mail, @body, ());
-	%mail = (
-			SMTP => $openprint::config{'Mail Server'},
-			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
-			#TO => sprintf("\"%s\" <%s>", 'Keith Luder', 'keith@point-one.com' ),
-			TO => 'iconnor@point-one.com',
-			SUBJECT => 'Automatically Generated Account Deletion Email',
-		);
-	misc::send_email_with_attachment($log, \%mail, @body, ());
-	%mail = (
-			SMTP => $openprint::config{'Mail Server'},
-			FROM => sprintf("\"%s\" <%s>", @$replacements{'REPNAME','REPEMAIL'} ),
-			TO => 'iconnor@point-one.com',
-			SUBJECT => 'Automatically Generated Account Deletion Email',
-		);
-	misc::send_email_with_attachment($log, \%mail, @body, ());
 } # end sub send_admin_email
 
 sub send_email {
@@ -120,7 +100,7 @@ sub send_email {
 		my $EmailTemplate = $self->Template();
 		$email_template = $EmailTemplate->body();
 	} else {
-		$email_template = misc::load_file( $self->{log}, $config{'SkinPath'} . '/email_template.html' );
+		$email_template = misc::load_file( $self->{log}, $openprint::config{'SkinPath'} . '/email_template.html' );
 	} # end if
 
 	# Do the appropriate variable substitutions
@@ -128,7 +108,7 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
+	$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
@@ -136,18 +116,17 @@ sub send_email {
 	$openprint::log->warn( "Eval error Reason: " . $@ ) if $@;
 
 	# Setup the mail message
-	my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
+	my $Email = new openprint::Email();
+	my $rc = $Email->send(
 			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO		=> sprintf('"%s %s" <%s>', @$replacements{'User'}->get('firstname','lastname','email') ),
-			SUBJECT => $$self{'email_subject'}
+			TO		=> $$replacements{'User'},
+			SUBJECT => $$self{'email_subject'},
+			ATTACHMENTS =>	[ @body, @attachments ],
 		);
 
-	# Send the email
-	misc::send_email_with_attachment($self->{log}, \%mail, @body, @attachments );
 	sql::insert( undef, undef, 'EmailCampaign_Log', 
 			'campaign_id',	$self->{'id'},
-			'Log',				"Sending Email To $mail{TO}",
+			'Log',			$rc,
 			'time',				'NOW()',
 			);
 } # end sub send_email

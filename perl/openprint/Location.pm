@@ -300,5 +300,79 @@ sub where {
 	} # end if
 	return $_[0]{'where'};
 } # end sub where
+
+# Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.
+# If no location name is given, returns the parent. So if in an event I specified Toronto, then the location would be Toronto
+sub save_location {
+	my $param = $_[0];
+	my $parent_id;
+	my $error;
+
+	if ( $$param{'country'} ) {
+		my $Country = openprint::Location->find_one('name_lc'=> lc $$param{'country'}, 'type'=>'country' );
+		if ( ! $Country ) {
+			$Country = new openprint::Location();
+			$error .= $Country->save({'name'=>$$param{'country'}, 'type'=>'country'});
+		} # end if
+		$parent_id = $$param{'country_id'} = $Country->id();
+	} elsif ( $$param{'country_id'} ) {
+		$parent_id = $$param{'country_id'};
+	} # end if
+	if ( $$param{'state'} ) {
+		my $State = openprint::Location->find_one('name_lc'=> lc $$param{'state'}, 'type'=>['state','province']);
+		if ( ! $State ) {
+			$State = new openprint::Location();
+			$error .= $State->save({'name'=>$$param{'state'}, 'type'=>'state', 'parent_id'=>$$param{'country_id'}});
+		} # end if
+		$parent_id = $$param{'state_id'} = $State->id();
+	} elsif ( $$param{'state_id'} ) {
+		$parent_id = $$param{'state_id'};
+	} # end if
+	if ( $$param{'city'} ) {
+		my $City = openprint::Location->find_one('name_lc'=> lc $$param{'city'}, 'type'=>'city');
+		if ( ! $City ) {
+			$City = new openprint::Location();
+			$error .= $City->save({'name'=>$$param{'city'}, 'type'=>'city', 'parent_id'=>$$param{'state_id'}});
+		} # end if
+		$parent_id = $$param{'city_id'} = $City->id();
+	} elsif ( $$param{'city_id'} ) {
+		$parent_id = $$param{'city_id'};
+	} # end if
+	my $Location;
+
+	if ( $$param{'location'} ) {
+		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
+			);
+		if ( ( ! $Location ) or 
+				( $Location->address() and $$param{'address'} and ( $Location->address() ne openprint::Location->transform('address',$$param{'address'}) ) ) or
+				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('address',$$param{'postalcode'}) ) ) or
+				( $Location->parent_id() != $parent_id )
+		   ) {
+			$Location = new openprint::Location();
+			$error .= $Location->save({
+					'name'			=>	$$param{'location'}, 
+					'parent_id'		=>	$parent_id, 
+					'type'			=>	'place', 
+					'address'		=>	$$param{'address'},
+					'postalcode'	=>	$$param{'postalcode'},
+					});
+		
+		} else {
+			my %change;
+			$change{'address'} = $$param{'address'} if $$param{'address'} and ! $Location->address();
+			$change{'postalcode'} = $$param{'postalcode'} if $$param{'postalcode'} and ! $Location->postalcode();
+			if ( %change ) {
+				$error .= $Location->save( \%change );
+			} # end if
+		} # end if
+	} elsif ( $$param{'location_id'} ) {
+		$Location = new openprint::Location( $$param{'location_id'} );
+	} elsif ( $parent_id ) {
+		$Location = new openprint::Location( $parent_id );
+	} # end if
+	return $error if $error;
+	return $Location;
+} # end sub save_location
 1;
 __END__

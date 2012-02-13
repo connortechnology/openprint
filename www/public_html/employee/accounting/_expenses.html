@@ -1,9 +1,9 @@
 <? eval (
 	my @invoiced_on_start = ssi::date( '/employee/accounting/expenses.html?invoiced_on_start' );
 	my @invoiced_on_end = ssi::date( '/employee/accounting/expenses.html?invoiced_on_end' );
-		@{$$variable{'Taxes'}} = openprint::Tax->find(
-			( Date::Calc::check_date( @invoiced_on_start ) ?  ( 'period_end_null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @invoiced_on_start ) ) : () ),
-			( Date::Calc::check_date( @invoiced_on_end ) ? ( 'period_start_null_or_<='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @invoiced_on_end ) ) : () ),
+	@{$$variable{'Taxes'}} = openprint::Tax->find(
+		( Date::Calc::check_date( @invoiced_on_start ) ?  ( 'period_end_null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @invoiced_on_start ) ) : () ),
+		( Date::Calc::check_date( @invoiced_on_end ) ? ( 'period_start_null_or_<='	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @invoiced_on_end ) ) : () ),
 		'order'		=>	'period_start,name',
 	);
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = $$variable{'bus_total'} = $$variable{'business_subtotal'} = 0;
@@ -85,7 +85,7 @@
 					</tr>
 					`, $rowclass, $Expense->id(), $Expense->Recipient()->name(), 
 					$Expense->account(),
-$Expense->category(), 
+					$Expense->category(), 
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->invoiced_on() ) ),
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->due_on() ) ),
 					( $Expense->paid_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),

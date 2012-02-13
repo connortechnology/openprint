@@ -17,10 +17,10 @@
 );
 	} else {
 		foreach my $Invoice ( openprint::Invoice->find( 
-			( Date::Calc::check_date(  @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ) ? ( 'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ) ? ( 'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ) ? ( 'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ) ? ( 'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ) ) : () ),
+			ssi::date_filter( '/invoice/history.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/invoice/history.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/invoice/history.html?due_on_start', 'due_on >=' ),
+			ssi::date_filter( '/invoice/history.html?due_on_end', 'due_on <=' ),
 
 			( sets::isin( $session{'user_type'}, ['E','A'] ) ? (
 				( $session{'/invoice/history.html?company_id'} ? ( 'invoicee_id' => $session{'/invoice/history.html?company_id'} ) : () ),
@@ -71,9 +71,9 @@
 	</div>
 	<table class="List sortable">
 		<tr> 
-			<th width="50">ID</th>
+			<th class="invoice_id"">ID</th>
 			<th class="Date">Due</th>
-			<th>Company</th>
+			<th class="Company">Company</th>
 			<th class="Price">SubTotal</th>
 			<? echo ( 
 				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
@@ -86,9 +86,9 @@
 			my $html;
 			foreach my $Invoice ( @{$$variable{'Invoices'}} ) {
 				$html .= sprintf(q`<tr title="%2$s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-					<td><a href="/invoice/%3$s.html?invoice_id=%1$d">%1$d</a></td>
+					<td class="invoice_id"><a href="/invoice/%3$s.html?invoice_id=%1$d">%1$d</a></td>
 					<td class="Date"><a href="/invoice/%3$s.html?invoice_id=%1$d">%4$s</a></td>
-					<td><a href="/invoice/%3$s.html?invoice_id=%1$d">%5$s</a></td>
+					<td class="Company"><a href="/invoice/%3$s.html?invoice_id=%1$d">%5$s</a></td>
 					<td class="Price">%6$s</td>
 					%7$s
 					<td class="Price">%8$s</td>
@@ -120,6 +120,6 @@
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
 <p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+<? echo ( ssi::button( 'Delete',{ onclick=>'delete_confirm(document.f1);' } ); ) ?>
 </p>
 <? endif ( @{$$variable{'Invoices'}} == 0 ) ?>

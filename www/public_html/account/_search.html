@@ -9,7 +9,7 @@
 		if ( @Companies ) {
 		@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
 			'order'	=>	'lower(firstname),lower(lastname)',
-			'id !='		=>	$session{'user_id'},
+			'id !='	=>	$session{'user_id'},
 			);
 		} # end if
 	} elsif ( $param{'name'} ) {

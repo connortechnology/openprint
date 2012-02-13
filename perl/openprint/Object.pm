@@ -55,10 +55,10 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+		if ( $id and (!$data) and $openprint::Object::cache{$config{'db_name'}}{$parent} and $openprint::Object::cache{$config{'db_name'}}{$parent}{$id} ) {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
-			return $openprint::Object::cache{$parent}{$id};
+			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -71,7 +71,7 @@ sub new {
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {
-				$openprint::Object::cache{$parent}{$id} = $self;
+				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
 			} # end if
 		} # end if
 		return $self;
@@ -266,7 +266,7 @@ $log->debug("No serial") if $debug;
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 #$log->debug("Got here");
-	delete $openprint::Object::cache{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
@@ -367,7 +367,7 @@ sub delete {
 	} else {
 		sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 		return $local_dbh->errstr if $local_dbh->errstr;
-		delete $openprint::Object::cache{$type}{join('-',@$self{@identified_by})};
+		delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
@@ -382,7 +382,7 @@ sub undelete {
 	$$self{'deleted'} = 0;
 	my %find_cache = eval '%'.$type.'::find_cache';
 	%find_cache = () if %find_cache;
-	delete $openprint::Object::cache{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 	return;
 } # end sub undelete
 
@@ -392,7 +392,7 @@ sub destroy {
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
 	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
-	delete $openprint::Object::cache{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
 
@@ -785,9 +785,15 @@ sub AUTOLOAD {
 			# This looks to handle returning Objects
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
-				if ( eval '\%openprint::'.$name.'::fields' ) {
-					return new("openprint::$name", $_[0]{$field});
+				my $O = eval {
+					require "openprint/$name.pm";
+					return ('openprint::'.$name)->new( $_[0]{$field} );
+				}; # end eval
+				if ( $@ ){
+					$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
+					return undef;
 				} # end if
+				return $O;
 			} # end if
 		} # end if
 		return $_[0]{$name};
