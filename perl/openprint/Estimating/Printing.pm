@@ -2327,7 +2327,23 @@ sub calc_price {
 	#$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-	$run_speed = $Press->specification('Runspeed', $Paper->gsm() ) if ! $run_speed;
+	if ( ! $run_speed ) {
+		my $RunSpeed = $Press->Specification('Runspeed', $Paper->gsm() );
+		if ( $RunSpeed and ( $$RunSpeed{'units'} =~ /^Per (.+) Per Hour$/ ) ) {
+$openprint::log->debug("Have runspeed");
+			my $unit = $1;
+			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
+$openprint::log->debug("Have unit $1 $2");
+				my $area = $1*$2;
+				$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
+$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
+			} else {
+$openprint::log->warn("Unknown Per setting $unit");
+			} # end if
+		} else {
+			$openprint::log->debug("No RunSpeed setting");
+		} # end if
+	} # end if
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
 	$run_speed = $speed_mod if $speed_mod;
