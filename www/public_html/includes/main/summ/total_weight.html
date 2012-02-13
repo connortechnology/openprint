@@ -4,7 +4,7 @@
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><? echo ( 
-my $g = Math::Calc::Units::convert( $$variable{'totalWeight'.$$variable{'QTYIndex'}}.'lbs','g' );
+my $g = $$variable{'totalWeight'.$$variable{'QTYIndex'}}*453.59237
 if ( $g > 1000 ) {
 return sprintf( '%.0flbs (%.0fkg)', $$variable{'totalWeight'.$$variable{'QTYIndex'}}, $g/1000 );
 } # end nif

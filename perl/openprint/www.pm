@@ -524,10 +524,10 @@ $log->debug("after third");
 		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my ( $proc ) = $filename =~ /(.*).html/;
 			if ( $proc ) {
-				my $module = 'openprint::' . join('_', ($first, $second));
+				my $module = join('_', ($first, $second));
 				eval{ 
-					require "$module";
-					$module->$proc( $r, $log, $dbh, \%variable );
+					require "openprint/$module.pm"; 
+					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
 				};
 				$log->error( "Eval error of ($module $proc), Reason: " . $@ )  if $@;
 			} # end if

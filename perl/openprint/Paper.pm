@@ -5,7 +5,6 @@ require openprint::Object;
 use MIME::QuotedPrint ();
 use Carp qw( cluck );
 use Math::Round ();
-use Math::Calc::Units ();
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -1041,7 +1040,7 @@ sub JDF_Media {
 	$Paper->setAttribute( 'Dimension',join(' ', $$self{'height'} *72, $$self{'width'}*72) );
 	$Paper->setAttribute('GrainDirection', 'LongEdge' );
 	} # end if
-	$Paper->setAttribute('Thickness', int(Math::Calc::Units::convert($$self{'calliper'}.'in','microns') ));
+	$Paper->setAttribute('Thickness', int($self{'calliper'}*25400));
 	$Paper->setAttribute('Weight', .99*int $self->gsm() );
 
 	return $Paper;	
@@ -1075,11 +1074,11 @@ sub JDF_MediaIntent {
 
 	my $Weight = $Paper->appendChild( $doc->createElement( 'Weight' ) );
 	$Weight->setAttribute('DataType','NumberSpan');
-	$Weight->setAttribute('Preferred', Math::Calc::Units::convert(($$self{'mweight'}/1000).'lb','g' ) );
+	$Weight->setAttribute('Preferred', $$self{'mweight'}*.45359237 ); #Kg
 
 	my $Thickness = $Paper->appendChild( $doc->createElement( 'Thickness' ) );
 	$Thickness->setAttribute('DataType','NumberSpan');
-	$Thickness->setAttribute('Preferred', Math::Calc::Units::convert($$self{'calliper'}.'in','mm') );
+	$Thickness->setAttribute('Preferred', $$self{'calliper'}*25.4 ); #mm
 
 	my $GrainDirection = $Paper->appendChild( $doc->createElement( 'GrainDirection' ) );
 	$GrainDirection->setAttribute('DataType','EnumerationSpan');

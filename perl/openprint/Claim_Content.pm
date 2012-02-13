@@ -1,7 +1,6 @@
 use strict;
 package openprint::Claim_Content;
 our @ISA = qw(openprint::Object);
-use Math::Calc::Units ();
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -85,7 +84,7 @@ sub total {
 	} elsif ( $$self{'cost_units'} eq '/100lb' ) {
 		return sprintf('%.2f', $$self{'cost'} * $$self{'weight'}/100 );
 	} elsif ( $$self{'cost_units'} eq '/Kg' ) {
-		return sprintf('%.2f', $$self{'quantity'} * $$self{'cost'} * Math::Calc::Units::convert($$self{'weight'}.'lb','kg' ) );
+		return sprintf('%.2f', $$self{'quantity'} * $$self{'cost'} * $$self{'weight'}*453.59237 );
 	} elsif ( $$self{'cost_units'} eq '/1000' ) {
 		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/1000 );
 	} # end if

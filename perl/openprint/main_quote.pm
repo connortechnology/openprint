@@ -1,11 +1,7 @@
+use strict;
 package openprint::main_quote;
 
 use Date::Calc qw(Add_Delta_Days);
-
-use MIME::QuotedPrint;
-use MIME::Base64;
-use Mail::Sendmail;
-use strict;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -24,6 +20,7 @@ require configuration;
 require openprint::Currency;
 require openprint::Project;
 require openprint::Quote;
+require openprint::quote;
 
 sub try_to_delete {
 	my $quote_id = shift;

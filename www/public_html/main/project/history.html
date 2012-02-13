@@ -41,10 +41,11 @@
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="Project"><div class="History">
 		<fieldset class="filters"><legend>Select Search Criteria</legend>
+			<div class="content">
 			<div class="leftColumn">
 			<p>
 				<label>Project #</label>
-				<input type="text" id="ProjectID" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}" onkeyup="this.value=this.value.replace(/\D/g, '');" />
+				<input type="number" id="ProjectID" name="ProjectID" onkeydown="if(event.keyCode == 13){load_projects( this.form );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
 			</p>
 			<p>
@@ -111,6 +112,7 @@
 			</p>
 <? endif ( openprint::Product->find_one() ) ?>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
+			</div>
 			</div>
 			<p class="buttons">
 					<? echo ( join( '',
