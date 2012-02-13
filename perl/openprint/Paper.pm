@@ -1040,7 +1040,7 @@ sub JDF_Media {
 	$Paper->setAttribute( 'Dimension',join(' ', $$self{'height'} *72, $$self{'width'}*72) );
 	$Paper->setAttribute('GrainDirection', 'LongEdge' );
 	} # end if
-	$Paper->setAttribute('Thickness', int($self{'calliper'}*25400));
+	$Paper->setAttribute('Thickness', int($$self{'calliper'}*25400));
 	$Paper->setAttribute('Weight', .99*int $self->gsm() );
 
 	return $Paper;	

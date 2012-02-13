@@ -1,25 +1,25 @@
-		<!--#include virtual="/includes/project_header.html" -->
-		<table class="List Services">
-			<thead>
-				<tr> 
-					<th class="description">Services</th>
-					<? echo (
-						my $html = '';
-						if ( $$variable{'Project'}->Ordered_Product() ) {
-							$html .= '<th class="price">'.$$variable{'Project'}->Ordered_Product()->quantity() .'</th>';
-						} else {
-							foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-								$html .= '<th class="price">'.$$variable{'Project'}->quantity( $qty_index ) .'</th>';
-							} # end foreach qty_index
-						} # end if Ordered Product
-						return $html;
-					) ?>
-					<th class="status">Status</th>
-					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-					<th class="unprintable actions">Actions</th>
-					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-				</tr>
-			</thead>
+<!--#include virtual="/includes/project_header.html" -->
+<table class="List Services">
+	<thead>
+		<tr> 
+			<th class="description">Services</th>
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Project'}->Ordered_Product() ) {
+					$html .= '<th class="price">'.$$variable{'Project'}->Ordered_Product()->quantity() .'</th>';
+				} else {
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= '<th class="price">'.$$variable{'Project'}->quantity( $qty_index ) .'</th>';
+					} # end foreach qty_index
+				} # end if Ordered Product
+				return $html;
+			) ?>
+			<th class="status">Status</th>
+			<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
+			<th class="unprintable actions">Actions</th>
+			<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
+		</tr>
+	</thead>
 <? echo ( 
 	my $html = '';
 	my $rowclass = '';

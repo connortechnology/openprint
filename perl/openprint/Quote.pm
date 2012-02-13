@@ -281,20 +281,20 @@ sub send {
 # Add a project summary for each project in the quote
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
-		my %variable;
+		my %var;
 		if ( $Project->template_id() ) {
-			$variable{'Quote'} = $self;
-			$variable{'Project'} = $Project->Project();
-			$variable{'QuotedProject'} = $Project;
-			$variable{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
+			$var{'Quote'} = $self;
+			$var{'Project'} = $Project->Project();
+			$var{'QuotedProject'} = $Project;
+			$var{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
 			misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html' );
 		} elsif ( -f $config{'SkinPath'} . '/email_content/project_view.html' ) {
 			$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/project_view.html' );
 		} else {
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_view.html' );
 		} # end if
-		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
-		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
+		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%var );
+		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%var ))), 'text/html', 'quoted-printable';
 	} # for each Project
 	
 	my $Me = new openprint::User( $session{'user_id'} );
@@ -312,7 +312,7 @@ sub send {
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 			push @attachments, "Quote$$self{id}.html", MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
-			new openprint::Email()->send(
+			(new openprint::Email())->send(
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
