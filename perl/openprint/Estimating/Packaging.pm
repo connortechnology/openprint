@@ -106,7 +106,7 @@ sub calc {
 			} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-			} elsif ( lc $ServicePrice{'units'} eq 'per bundle' ) {
+			} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per bundle', 'per package' ] ) ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $package_qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
