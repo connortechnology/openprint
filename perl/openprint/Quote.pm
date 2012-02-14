@@ -282,10 +282,10 @@ sub send {
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
 		my %var;
-		if ( $Project->template_id() ) {
 			$var{'Quote'} = $self;
 			$var{'Project'} = $Project->Project();
 			$var{'QuotedProject'} = $Project;
+		if ( $Project->template_id() ) {
 			$var{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
 			misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html' );
 		} elsif ( -f $config{'SkinPath'} . '/email_content/project_view.html' ) {

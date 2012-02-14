@@ -61,7 +61,6 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
-	my $services = $Project->services();
 
 	$$specs{'Status'} = 'calculated';
 	$$specs{'SetsOfNumbers'} =~ s/\D//g;
@@ -75,7 +74,6 @@ sub calc {
 	} # end if
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
-			$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 			$$specs{"txtPrice$qty_index"} =~ s/[^\d\.\-]//g;
 		} else {
 			$$specs{"txtPrice$qty_index"} = 0;
@@ -189,12 +187,9 @@ $openprint::log->debug("Got press $Press for " . $$printing_specs{"ddmPress$qty_
 	} # end if
 
 	foreach my $Equipment ( @Equipment ) {
-$openprint::log->debug("Equipment: $$Equipment{strid}");
 		if ( $Equipment->specification('Numbering Capable') eq 'When Printing' ) {
-$openprint::log->debug("Equipment: When printing");
 			next if $$Press{'id'} != $Equipment->id();
 		} # end if
-$openprint::log->debug("Equipment: good" );
 		my $heads = $Equipment->specification('Numbering Heads');
 		my @colours = split(',', $Equipment->specification('Numbering Colours') );
 		$Results{'Breakdown'} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
@@ -213,7 +208,7 @@ $openprint::log->debug("Equipment: good" );
 			my $last_run;
 			$Results{'Breakdown'} .= sprintf('<b>Imposition: %dx%d=%dout</b><br/>', $I->get('columns','rows','imposition') ); 
 
-			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} and $I->imposition() == $Imposition->imposition() ) {
+			if ( $Equipment->id() eq $Press->id() and $I->imposition() == $Imposition->imposition() ) {
 				$Results{'Breakdown'} .= 'Numbering while printing.<br/>';
 	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
 				if ( ! ( 
