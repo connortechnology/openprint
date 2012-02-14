@@ -20,19 +20,22 @@
 		<? if ( $$variable{'Location'}->deleted() ) ?>
 		<span class="warning">This location has been deleted</span>
 		<? endif ( $$variable{'Location'}->deleted() ) ?>
-		<? if ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>
-		<img class="Asset" src="<? echo ( $$variable{'Asset'}->url() ) ?>" alt="" />
-		<? endif ( $$variable{'Asset'} = $$variable{'Location'}->Asset() ) ?>
-<? echo (
-	my $Location = $$variable{'Location'}->Location();
-	if ( $Location ) {
-		$Location->get_latitude_and_longitude();
-		if ( $Location->latitude() and $Location->longitude() ) {
-			return '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
-		} 
-	} 
-	return;
-) ?>
+		<? echo (
+			my $html;
+			
+			my $Asset = $$variable{'Location'}->Asset();
+			if ( $Asset and $Asset->id() ) {
+				$html .= '<img class="Asset" src="'. $Asset->url().'" alt="" />';
+			} # end if
+			my $Location = $$variable{'Location'}->Location();
+			if ( $Location ) {
+				$Location->get_latitude_and_longitude();
+				if ( $Location->latitude() and $Location->longitude() ) {
+					$html .= '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
+				} 
+			} 
+			return $html;
+		) ?>
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>

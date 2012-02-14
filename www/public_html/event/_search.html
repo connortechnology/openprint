@@ -42,8 +42,7 @@
 			foreach my $Event ( @{$$variable{'Events'}} ) {
 
 				$html .= sprintf(q` 
-					<div title="%2$s" class="Event"> 
-						<a class="thumbnail" href="/event/view.html?event_id=%1$s"><img src="%6$s" alt="%7$s"/></a>
+					<div title="%2$s" class="Event"> %6$s
 						<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
 						<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 						<div class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></div>
@@ -54,7 +53,7 @@
 					$Event->Category()->name(),
 					$Event->time_string(),
 					$Event->where(),
-					$Event->Asset()->thumbnail_url(), $Event->Asset()->caption(),
+					$Event->thumbnail_html(),
 				);
 			} # end foreach Events
 			return $html;

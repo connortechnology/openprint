@@ -131,6 +131,7 @@ sub view {
 			$variable{'Event'} = $Event = $_;
 			$variable{'error'} .= 'An event with that name at that place at that time already exists.';
 		} else {
+			$param{'location_id'} = $Location->id() if $Location;
 			$variable{'error'} .= $Event->save(\%param);
 			(new openprint::Log())->save({'action'=>($param{'event_id'} ? 'Update Event' : 'Create Event'), 'object_type'=>'openprint::Event','object_id'=>$Event->id()});
 		} # end if

@@ -8,6 +8,7 @@
 			</tr>
 		<? echo ( 
 			my $html;
+			my @user_types = ( '', 'all', map { $_->id(), $_->name() } openprint::User_Type->find() );
 			foreach my $PS ( openprint::Page_Setting->find('order'=>'url') ) {
 				$html .= sprintf(q`
 					<tr>	
@@ -17,7 +18,7 @@
 					</tr>`,
 					$PS->id(), $PS->url(), 
 					ssi::make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
-					ssi::make_drop_down( [ '', 'all', map { $_->id(), $_->name() } openprint::User_Type->find() ], $PS->user_level() ),
+					ssi::make_drop_down( \@user_types, $PS->user_level() ),
 				);
 			} # end foreach
 			return $html;

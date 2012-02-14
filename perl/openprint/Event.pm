@@ -69,10 +69,11 @@ sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0]->Location();
 		$_[0]{'where'} .= '<a href="/location/view.html?location_id='.$L->id().'">';
+		$_[0]{'where'} .= $L->name().'<br/>';
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where'} .= $L->address() . ', '.$L->postalcode().'<br/>';
 		} # end if
-		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
+		$_[0]{'where'} .= join(', ', map { $_->name() } $L->Parents() );
 		$_[0]{'where'} .= '</a>';
 		if ( $L->url() ) {
 			$_[0]{'where'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
@@ -210,6 +211,17 @@ sub time_string {
 	} # end if
 	return $_[0]{'time_string'};
 } # end sub time_string
+
+sub thumbnail_html {
+	if ( ! $_[0]{'thumbnail_html'} ) {
+		my $Asset = $_[0]->Asset();
+		if ( $Asset and $$Asset{'id'} ) {
+			$_[0]{'thumbnail_html'} = sprintf('<a href="/event/view.html?event_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+					$_[0]{'id'}, $Asset->thumbnail_url(), $_[0]->name() );
+		} # end if
+	} # end if
+	return $_[0]{'thumbnail_html'};
+} # end sub thumbnail_html
 
 1;
 __END__
