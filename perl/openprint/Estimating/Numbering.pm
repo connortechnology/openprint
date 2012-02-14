@@ -207,6 +207,7 @@ $openprint::log->debug("Equipment: good" );
 		} # end if
 
 		foreach my $I ( @Impositions ) {
+			my $Paper = $I->Paper();
 
 			my $runs;
 			my $last_run;
@@ -222,12 +223,12 @@ $openprint::log->debug("Equipment: good" );
 					$last_run = $$specs{'SetsOfNumbers'} * $I->imposition();
 				} # end if
 			} else {
-				if ( $I->Paper()->calliper() > $Equipment->specification('Maximum Calliper') ) {
-					$Results{'Breakdown'} .= "Too thick<br/>";
+				if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$Paper{'calliper'} > $_ ) ) {
+					$Results{'Breakdown'} .= "Too thick Max: $_, Stock: " . $$Paper{'calliper'} . '<br/>';
 					$last_run = $$specs{'SetsOfNumbers'};
 					last;
 				} # end if
-				if ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height(), $I->Paper()->calliper() ) ) {
+				if ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height(), $Paper->calliper() ) ) {
 					$Results{'Breakdown'} .= "$_<br/>";
 					$last_run = $$specs{'SetsOfNumbers'};
 					next;

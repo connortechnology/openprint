@@ -275,16 +275,16 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 			next;
 		} # end if
 		if ( $Equipment->specification('Type') eq 'Press' ) {
-			if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
-				next;
-			} # end if
+			#if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+				#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+				#next;
+			#} # end if
 			if ( $I->Press()->id() != $Equipment->id() ) {
 				#$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
 				next;
 			} # end if
 			
-			if ( $$Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
+			if ( $$I{'Folder'}->id() != $Equipment->id() ) {
 				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
 				next;
 			} # end if
@@ -338,6 +338,8 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
+	my @signatures = $Project->signatures();
+
 	# Figure out whether we need a cover
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
@@ -367,7 +369,7 @@ sub calc {
 		$$specs{"txtPockets$qty_index"} = 0;
 		my $imposition = 2;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 #$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if $debug;
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
@@ -423,7 +425,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{'Width'} Spine Length: $$specs{'Height'}<br/>";
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-			foreach my $signature_service_index ( $Project->signatures() ) {
+			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -489,6 +491,10 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
+	# Get one of the sigs, so we can look at which press it was printed on.  Technically we should look at all
+	my $ss_id = $signatures[0];
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{"txtQuantity$qty_index"};
 
@@ -532,8 +538,6 @@ sub calc {
 
 		foreach my $Equipment ( @equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= "$$Equipment{name}.<br/>";
-			my ($ss_id) = $Project->signatures();
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			if ( $$services{'NoOfflineBindery'} ) {
 				if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
