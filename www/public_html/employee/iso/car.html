@@ -21,7 +21,7 @@
 			alert('Please select wether there will be a reprint charge');
 			return 0;
 		} // end if
-		if ( ! get_value( form.reprint_value ) ) {
+		if ( ! form.reprint_value.value ) {
 			alert('Please enter the reprint value');
 			return 0;
 		} // end if
