@@ -9,7 +9,7 @@ require sql;
 require openprint::Host;
 require logger;
 require openprint::Email;
-require openprint::logRecord;
+require openprint::Log;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -116,7 +116,7 @@ $openprint::log->debug("@ping");
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
 		} elsif ( $ping and ( $ping[1] > 1 ) ) {
-(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
+(new openprint::Log)->save({'action'=>'reboot', 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 
 		} # end if
 		if ( $Host->online() != $ping ) {
