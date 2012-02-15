@@ -312,7 +312,7 @@ sub signature_calc_folding_cutting {
 			);
 
 	my $services = $Project->services();
-	return %results if ! $$services{'Folding'};
+	return %results if (! $$services{'Folding'}) or ! @{$$services{'Folding'}};
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_folding_cutting");
 	$results{'Status'} = 'uncalculated';
