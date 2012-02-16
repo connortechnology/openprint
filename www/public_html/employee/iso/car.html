@@ -16,12 +16,14 @@
 			alert('Please select the reason');
 			return 0;
 		} // end if
-		var charge = get_value( form.reprint_charge );
-		if ( ! charge ) {
-			alert('Please select wether there will be a reprint charge');
-			return 0;
+		if ( form.reprint_charge ) {
+			var charge = get_value( form.reprint_charge );
+			if ( ! charge ) {
+				alert('Please select wether there will be a reprint charge');
+				return 0;
+			} // end if
 		} // end if
-		if ( charge != 'No' && ! get_value( form.reprint_value ) ) {
+		if ( form.reprint_value && ! form.reprint_value.value ) {
 			alert('Please enter the reprint value');
 			return 0;
 		} // end if

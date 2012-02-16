@@ -333,5 +333,17 @@ sub _notifications {
 	} # end if
 } # end sub _notifications
 
+sub _assets {
+	my $Host = $variable{'Host'} = new openprint::Host( $param{'host_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Object_Asset = openprint::Object_Asset->find_one('asset_id'=>$param{'asset_id'}, 'object_type'=>'openprint::Host','object_id'=>$Host->id());
+		if ( ! $Object_Asset ) {
+			$variable{'error'} .= 'Object Asset not found.';
+			return;
+		} # end if
+		$variable{'error'} .= $Object_Asset->delete();
+	} # end if
+} # end sub _assets
+
 1;
 __END__

@@ -3401,9 +3401,29 @@ sub calc_price {
 		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 0 );
 	} # end if
 
-    #my $speed_mod = $Press->specification('Press Additional Run Speed',$$Paper{'calliper'} );
-#$openprint::log->warn("Press ".$$Press{'strid'}." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if DEBUG or 1;
-    #$run_speed = $speed_mod if $speed_mod;
+if ( 0 ) {
+	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
+	if ( ! $run_speed ) {
+		my $RunSpeed = $Press->Specification('Runspeed', $Paper->gsm() );
+		if ( $RunSpeed and ( $$RunSpeed{'units'} =~ /^Per (.+) Per Hour$/ ) ) {
+$openprint::log->debug("Have runspeed");
+			my $unit = $1;
+			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
+$openprint::log->debug("Have unit $1 $2");
+				my $area = $1*$2;
+				$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
+$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
+			} else {
+$openprint::log->warn("Unknown Per setting $unit");
+			} # end if
+		} else {
+			$openprint::log->debug("No RunSpeed setting");
+		} # end if
+	} # end if
+	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
+#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
+	$run_speed = $speed_mod if $speed_mod;
+}
 
 	my %folding_results;
 
@@ -3805,6 +3825,9 @@ $openprint::log->debug("Using cached folding");
 		} elsif ( lc $ink_price{'units'} eq 'per m' ) {
 			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
 			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
+		} elsif ( lc $ink_price{'units'} eq 'per impression' ) {
+			$price{'Ink Price'} += $ink_price{'Price'} * $impressions;
+			$price{'Ink breakdown'} .= ' ' . $impressions . " * $ink_price{'Price'}$ink_price{'units'} = " . $ink_price{'Price'} * $impressions;
 		} else {
 			$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
 		} # end if
@@ -4177,8 +4200,9 @@ sub select_presses {
 			next;
 		} # end if
 
-		if ( $$Paper{'calliper'} > $Press->specification('Maximum Calliper', $$Paper{'grade'} ) ) {
-			$results{$press_id} = "Press $press_id Failed Calliper Check";
+		my $max_calliper = $Press->specification('Maximum Calliper', $$Paper{'grade'} );
+		if ( $max_calliper and ( $$Paper{'calliper'} > $max_calliper ) ) {
+			$results{$press_id} = "Press $press_id Failed Calliper Check.  Maximum calliper is $max_calliper";
 			next;
 		} # end if
 		if ( ( $$Paper{'type'} eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
