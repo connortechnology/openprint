@@ -36,7 +36,7 @@
 					</div>
 					`, $Conversation->id(), 
 					ssi::html_escape($Conversation->subject()),
-					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->created_on() ) ),
+					$Message->sent_on_string(),
 					join( ', ', map { $$_{user_id} == $session{user_id} ? () : $_->User()->name() } $Message->To() ),
 					join('', 
 						ssi::button( 'delete'.$Conversation->id(), {'onclick'=> 'delete_conversation( '.$Conversation->id().');', 'text'=>'X', 'title'=>'Delete' } ),

@@ -15,7 +15,7 @@ require openprint::Email;
 require openprint::User_Notification;
 require logger;
 require openprint::Upload;
-use openprint ();
+require openprint;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -93,13 +93,13 @@ $openprint::dbh = sql::open_sql( $log,
 	'password'	=> $CFG::Config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-configuration::init_cache( $log, $dbh, \%CFG::Config );
+configuration::init_cache( \%CFG::Config );
 $openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
 
-my $scoreboard = get_scoreboard( $CFG::Config{'scoreboard'} );
+#my $scoreboard = get_scoreboard( $CFG::Config{'scoreboard'} );
 my $fifoh;
 if (open($fifoh, "< $CFG::Config{fifo}")) {
 	while (1) {
@@ -197,7 +197,7 @@ if (open($fifoh, "< $CFG::Config{fifo}")) {
 		} # End if $line
 
 		if ( ! $dbh->ping() ) {
-			$log->info("Opening SQL connection");
+			$log->warn("REOpening SQL connection");
 			$openprint::dbh = sql::open_sql( $log, 
 					'host'		=> $CFG::Config{'db_host'},
 					'database'	=> $CFG::Config{'db_name'},
@@ -206,7 +206,7 @@ if (open($fifoh, "< $CFG::Config{fifo}")) {
 					'password'	=> $CFG::Config{'db_pass'},
 					);
 			die 'Error opening db' if ! $dbh;
-			configuration::init_cache( $log, $dbh, \%CFG::Config );
+			configuration::init_cache( \%CFG::Config );
 		} # end if
 	} # end while <input>
 
@@ -272,20 +272,21 @@ sub send_email {
 	my $Company;
 	my $User;
 
-	$openprint::dbh = sql::open_sql( $log, 
-		'host'		=> $CFG::Config{'db_host'},
-		'database'	=> $CFG::Config{'db_name'},
-		'driver'	=> 'Pg',
-		'login'		=> $CFG::Config{'db_user'},
-		'password'	=> $CFG::Config{'db_pass'},
-	);
-	if ( $openprint::dbh and $$upload{'company_name'} ) {
+	if ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
+		$openprint::dbh = sql::open_sql( $log, 
+			'host'		=> $CFG::Config{'db_host'},
+			'database'	=> $CFG::Config{'db_name'},
+			'driver'	=> 'Pg',
+			'login'		=> $CFG::Config{'db_user'},
+			'password'	=> $CFG::Config{'db_pass'},
+		);
+	} # end if
+	if ( $openprint::dbh and $openprint::dbh->ping() and $$upload{'company_name'} ) {
 # Try to figure out the company
-		if ( my @Companies = openprint::Company->find('name'=>$$upload{'company_name'},'limit'=>1) ) {
-$log->debug("Found company $$upload{'company_name'}");
-			$Company = $Companies[0];
-		} else {
+		if ( ! ( $Company = openprint::Company->find_one('name'=>$$upload{'company_name'} ) ) ) {
 $log->debug("Didn't Found company $$upload{'company_name'}");
+		} else {
+$log->debug("Found company $$upload{'company_name'}");
 		} # end if
 	} # end if
 	if ( $Company ) {
@@ -374,7 +375,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					TO      => \@to,
 #BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $subject,
-					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
+					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
 		} # end if
 		$openprint::dbh->disconnect();
@@ -585,7 +586,7 @@ sub get_scoreboard {
 		} # end while
 		close(SCORE);
 	} else {
-		$log->warn("Unable to open scoreboard at $score_file");
+		$log->warn("Unable to open scoreboard at $score_file: reason $!");
 		sleep 1;
 	} # end if
 	return \@scoreboard;
