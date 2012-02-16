@@ -104,7 +104,7 @@ sub neccessary {
 	} # end if
 
 	# Only need scoring if it's being folded.
-	if ( $$services{'Folding'} ) {
+	if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 		my $specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] ) if $$services{'Scoring'};
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
@@ -124,7 +124,6 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
@@ -175,6 +174,7 @@ sub calc {
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
+$openprint::log->debug("Breakdown: $Price{'Breakdown'}");
 
 			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
@@ -214,8 +214,8 @@ sub signature_calc {
 	$$sig_specs{'SignatureIndex'} *= 1;
 	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
 		get_scores( $Project, $specs, $sig_specs, $imposition->Paper() );
-	} else {
-		$openprint::log->debug('Override Scores');
+	#} else {
+		#$openprint::log->debug('Override Scores');
 	} # end if
 
 	my $score_qty = $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};
@@ -239,7 +239,6 @@ sub signature_calc {
 	$stitching_service_index = ( $$services{'LoopStitching'} ? $$services{'LoopStitching'}[0] : undef ) if ! $stitching_service_index;
 	# juts for efficeincy
 	my $cutting_service_index = $$services{'Cutting'} ? $$services{'Cutting'}[0] : undef;
-# If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
@@ -247,17 +246,17 @@ sub signature_calc {
 		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
-		my @capabilities = 'Y','When Printing';
+		my @capabilities = ('Y','When Printing');
 		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
-		push @capabilities, 'When Folding' if $$services{'Folding'};
+		push @capabilities, 'When Folding' if $$services{'Folding'} and @{$$services{'Folding'}};
 		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
 		
 		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 	} # endif
-	#foreach my $E ( @equipment ) {
-		#$openprint::log->debug( "Equipment: " . $E->strid() );
-	#}
+	foreach my $E ( @equipment ) {
+		$openprint::log->debug( "Equipment: " . $E->strid() );
+	}
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
@@ -314,21 +313,22 @@ $openprint::log->warn("No imposition in scoring");
 
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
-		if ( ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'} ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Not being folded.<br/>';
+		my $type = $Equipment->specification('Type');
+		if ( ( $type eq 'Folder' ) and ! $$services{'Folding'} ) {
+			$Results{'Breakdown'} .= 'Not being folded.<br/>';
 			next;
 		} # end if
-		if ( ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Not being stitched.<br/>';
+		if ( ( $type eq 'Stitcher' ) and ! $stitching_service_index ) {
+			$Results{'Breakdown'} .= 'Not being stitched.<br/>';
 			next;
 		} # end if
-		next if ( $Equipment->specification('Type') eq 'PerfectBinder' ) and ! $$services{'PerfectBound'};
+		next if ( $type eq 'PerfectBinder' ) and ! $$services{'PerfectBound'};
 		if ( $Equipment->specification('Scoring Capable') eq 'When Printing' and $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
 			$Results{'Breakdown'} .= "Not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
 		my @impositions = ();
-		if ( $Equipment->specification('Type') eq 'Press' ) {
+		if ( $type eq 'Press' ) {
 			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
 				$Results{'Breakdown'} .= 'Cant do an inline score when W&T.<br/>';
 				next;
@@ -348,7 +348,7 @@ $openprint::log->warn("No imposition in scoring");
 			next if ! $I->imposition();
 			next if ( $imposition->imposition() % $I->imposition() );
 			$Results{'Breakdown'} .= $I->to_string().'<br/>';
-			if ( $Equipment->specification('Type') ne 'Press' ) {
+			if ( $type ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
 			} # end if
 
@@ -360,11 +360,12 @@ $openprint::log->warn("No imposition in scoring");
 				next;
 			} # end if
 			if ( $max_feed_width ) {
-				if ( $Equipment->specification('Orientation') ) {
+				my $orientation = $Equipment->specification('Orientation');
+				if ( $orientation ) {
 $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 					if (
-							( $Equipment->specification('Orientation') eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
-							( $Equipment->specification('Orientation') eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
+							( $orientation eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
+							( $orientation eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
 					   ) {
 						if ( $I->layout_width() >= $max_feed_width ) {
 							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
@@ -406,11 +407,11 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 				} # end if
 			} # end if
 			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
+				$Results{'Breakdown'} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 				next;
 			} # end if
 
-			if ( $Equipment->specification('Type') eq 'Press' ) {
+			if ( $type eq 'Press' ) {
 				if ( $_ = $Equipment->fits( $I->Paper()->width(), $I->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 					$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 					next;
