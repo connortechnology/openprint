@@ -72,8 +72,8 @@
 	</div>
 <? endif ( $$variable{'Event'}->id() ) ?>
 		</fieldset>
-<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
 <? if ( $session{'user_id'} ) ?>
+<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
 <div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 <? endif ( $session{'user_id'} ) ?>
 	</fieldset>
