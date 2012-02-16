@@ -1,5 +1,6 @@
+use strict;
 package openprint::Timetrack;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 use openprint ();
 
@@ -8,7 +9,6 @@ require openprint::Company;
 require openprint::Service;
 
 
-use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 $debug = 1;
 
@@ -34,6 +34,7 @@ $serial = 'timetracks_id_seq';
 	'currency_id'		=>	'currency_id',
 	'travel_associated'	=>	'travel_associated',
 	'distance'			=>	'distance',
+	'billable'			=>	'billable',
 );
 
 %transforms = (
@@ -54,6 +55,7 @@ $serial = 'timetracks_id_seq';
 	'user_id'		=>	undef,
 	'travel_associated'	=>	0,
 	'distance'		=>	undef,
+	'billable'		=>	q`1`,
 );
 
 sub elapsed {
@@ -137,6 +139,4 @@ sub copy {
 } # end sub copy
 
 1;
-
 __END__
-~       

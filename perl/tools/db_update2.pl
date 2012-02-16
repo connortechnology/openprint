@@ -311,17 +311,19 @@ if ( ! sets::isin('purchaseorder_taxes', \@tables ) ) {
 	} # end foreach
 } # end if
 
-if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Other') ) {
-	my $PO_CT = new openprint::PurchaseOrder_ContentType();
-	$PO_CT->save({'name'=>'Other'});
-} # end if
-if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Roll Stock') ) {
-	my $PO_CT = new openprint::PurchaseOrder_ContentType();
-	$PO_CT->save({'name'=>'Roll Stock'});
-} # end if
-if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Sheet Stock') ) {
-	my $PO_CT = new openprint::PurchaseOrder_ContentType();
-	$PO_CT->save({'name'=>'Sheet Stock'});
+if ( 0 ) {
+	if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Other') ) {
+		my $PO_CT = new openprint::PurchaseOrder_ContentType();
+		$PO_CT->save({'name'=>'Other'});
+	} # end if
+	if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Roll Stock') ) {
+		my $PO_CT = new openprint::PurchaseOrder_ContentType();
+		$PO_CT->save({'name'=>'Roll Stock'});
+	} # end if
+	if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Sheet Stock') ) {
+		my $PO_CT = new openprint::PurchaseOrder_ContentType();
+		$PO_CT->save({'name'=>'Sheet Stock'});
+	} # end if
 } # end if
 if ( $config{'Default State Tax'} ) {
 	$dbh->do("DELETE FROM Configuration WHERE name='Default State Tax'");
@@ -375,6 +377,11 @@ if ( ! sets::isin( 'paycheques', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Timetracks.sql}) );
+} else {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='timetracks'", 'column_name');
+	if ( ! $$data{'billable'} ) {
+		$dbh->do('ALTER TABLE timetracks ADD billable BOOLEAN NOT NULL default true');
+	} # end if
 } # end if
 $dbh->disconnect();
 1;

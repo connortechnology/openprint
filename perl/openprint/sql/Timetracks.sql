@@ -18,6 +18,7 @@ CREATE TABLE timetracks (
     currency_id integer, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
     travel_associated boolean DEFAULT false NOT NULL,
     distance double precision,
+	billable	boolean not null default true,
 	PRIMARY KEY (id)
 );
 
