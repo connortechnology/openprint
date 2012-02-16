@@ -18,6 +18,9 @@ if ( $ARGV[1] ) {
 
 my ( $year, $month, $day ) = Date::Calc::Today();
 
+my $postfix_uid = getpwnam('postfix');
+my $postfix_gid = getgrnam('postfix');
+
 foreach my $user ( @users ) {
 	next if $user =~ /^\./;
 	foreach my $folder ( '.', '.Sent', '.Sent Messages' ) {
@@ -27,17 +30,19 @@ foreach my $user ( @users ) {
 			next;
 		} # end if
 
-		if ( ( $folder ne '.' ) and -e "$spool_path$user/$folder/.".($year-1) ) {
+		if ( $folder ne '.' ) {
+			if ( -e "$spool_path$user/$folder/.".($year-1) ) {
 			#print "Already has a directory for email from " . ($year-1)."\n";
-			rename "$spool_path$user/$folder/.".($year-1), "$spool_path$user/$folder.".($year-1);
-		} # end if
-		if ( ( $folder ne '.' ) and -e "$spool_path$user/$folder/.".($year-2) ) {
-			#print "Already has a directory for email from " . ($year-1)."\n";
-			rename "$spool_path$user/$folder/.".($year-2), "$spool_path$user/$folder.".($year-2);
-		} # end if
-		if ( ( $folder ne '.' ) and -e "$spool_path$user/$folder/.".($year-3) ) {
-			#print "Already has a directory for email from " . ($year-1)."\n";
-			rename "$spool_path$user/$folder/.".($year-3), "$spool_path$user/$folder.".($year-3);
+				rename "$spool_path$user/$folder/.".($year-1), "$spool_path$user/$folder.".($year-1);
+			} # end if
+			if ( -e "$spool_path$user/$folder/.".($year-2) ) {
+#print "Already has a directory for email from " . ($year-1)."\n";
+				rename "$spool_path$user/$folder/.".($year-2), "$spool_path$user/$folder.".($year-2);
+			} # end if
+			if ( -e "$spool_path$user/$folder/.".($year-3) ) {
+#print "Already has a directory for email from " . ($year-1)."\n";
+				rename "$spool_path$user/$folder/.".($year-3), "$spool_path$user/$folder.".($year-3);
+			} # end if
 		} # end if
 
 		my @inbox = readdir INBOXHANDLE;
@@ -80,7 +85,14 @@ foreach my $user ( @users ) {
 				mkdir "$spool_path$user/$folder/.".$y.'/tmp';
 				mkdir "$spool_path$user/$folder/.".$y.'/cur';
 				mkdir "$spool_path$user/$folder/.".$y.'/new';
-				chown	100,101, "$spool_path$user/$folder/.".$y, "$spool_path$user/$folder/.".$y.'/tmp', "$spool_path$user/$folder/.".$y.'/cur', "$spool_path$user/$folder/.".$y.'/new';
+				chown $postfix_uid, $postfix_gid, "$spool_path$user/$folder/.".$y, "$spool_path$user/$folder/.".$y.'/tmp', "$spool_path$user/$folder/.".$y.'/cur', "$spool_path$user/$folder/.".$y.'/new';
+				if ( -e "$spool_path$user/courierimapsubscribed" ) {
+					if ( $folder eq '.' ) {
+						`echo "INBOX.$y" >> $spool_path$user/courierimapsubscribed`;
+					} else {
+						`echo "INBOX$folder.$y" >> $spool_path$user/courierimapsubscribed`;
+					} # end if
+				} 
 			} # end if
 			if ( -e "$spool_path$user/$folder/.".$y and -e "$spool_path$user/$folder/.$y/cur" ) {
 				$process = 1;
