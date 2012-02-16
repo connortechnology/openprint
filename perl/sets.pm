@@ -103,7 +103,7 @@ sub exclude {
 	my @results;
 	my %exclude = map { $_ => 1 } @{$exclude};
 	foreach my $element ( @{$array} ) {
-		push @results, $element if $exclude{$element};
+		push @results, $element if ! $exclude{$element};
 	} # end foreach
 	return @results;
 } # end sub exclude
