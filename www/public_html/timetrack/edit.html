@@ -65,8 +65,9 @@
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{'Timetrack'}->service_id() ); ) ?>
 				</select>
 			</li>
+			<li><label>Billable</label><? echo ( ssi::radio( 'billable', [1,'Yes',0,'No'], $$variable{'Timetrack'}->billable() ); ) ?></li>
 			<li><label for="timetrack_rate">Override Rate</label>
-				<input type="number" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="number" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="floatize(this);" />
 			</li>
 			<li>
 				<label>Travel Associated</label>
@@ -76,7 +77,7 @@
 				<label class="radio" for="travel_associated0">No</label>
 			</li>
 			<li><label for="distance">Distance (km)</label>
-				<input type="text" name="distance" id="distance" value="<? echo ( $$variable{'Timetrack'}->distance() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="number" name="distance" id="distance" value="<? echo ( $$variable{'Timetrack'}->distance() ) ?>" onkeyup="floatize(this);" />
 			</li>
 			</ul>
 		</div>

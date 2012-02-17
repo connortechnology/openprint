@@ -914,7 +914,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Cutting Capable'=
 		} # end if
 	} # end foreach
 }
-foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y']}) ) {
+foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y','When Printing']}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
 			my $pages = $1;

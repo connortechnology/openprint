@@ -1,7 +1,7 @@
+use strict;
 package configuration;
 
-use strict;
-use openprint ();
+require openprint;
 use vars qw( %cache );
 
 require sql;
@@ -9,21 +9,21 @@ require sql;
 *cache = \%openprint::config;
 
 sub init_cache {
-	my $apr_table = $_[0];
 	
-	%cache = ();
 	if ( $openprint::dbh ) {
-		my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration', {Slice=>{}} );
+		#my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration' );
+		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
+		#%cache = @{$data};
 		foreach (@{$data}) {
 			$cache{$$_{name}} = $$_{value};
 		} # end foreach
+	} else {
+		%cache = ();
 	} # end if
 	
 	# Anything specified in dir_config override configuration
-	if ( $apr_table ) {
-		foreach my $key (keys %{$apr_table}) {
-			$cache{$key} = $$apr_table{$key};
-		} # end foreach
+	if ( @_ ) {
+		@cache{ keys %{$_[0]}} = values %{$_[0]};
 	} # end if
 	#return %cache;
 }

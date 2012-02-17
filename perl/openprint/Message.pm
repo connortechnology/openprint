@@ -4,8 +4,8 @@ our @ISA = qw( openprint::Object );
 require openprint::User;
 require openprint::Message_To;
 require openprint::Conversation;
+require misc;
 
-use Date::Format qw( time2str );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
@@ -54,25 +54,7 @@ sub Who {
 
 sub sent_on_string {
 	if ( ! $_[0]{'sent_on_string'} ) {
-		my $sent_on = Date::Parse::str2time( $_[0]{'sent_on'} );
-		my $difference = time - $sent_on;
-		if ( $difference > 7*24*60*60 ) {
-			# Use date
-			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A, %d %m %Y</span>', $sent_on );
-		} elsif ( $difference > 24*60*60 ) {
-			# Use date
-			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">%A</span>', $sent_on );
-		} elsif ( $difference > 3600 ) {
-			# Use hours
-			$difference = int($difference/3600);
-			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
-		} elsif ( $difference > 60 ) {
-			$difference = int($difference/60);
-			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
-		} else {
-			$difference = int($difference);
-			$_[0]{'sent_on_string'} = Date::Format::time2str( '<span title="%A, %d %m %Y at %H:%M">', $sent_on ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
-		}
+		$_[0]{'sent_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'sent_on'} ) );
 	} # end if
 	return $_[0]{'sent_on_string'};
 } # end sub sent_on_string

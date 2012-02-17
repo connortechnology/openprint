@@ -43,11 +43,7 @@ sub isin_regx {
 } # end sub inin_regx
 
 sub union {
-	my %hash;
-	foreach ( @_ ) {
-		$hash{$_} = 1;
-	} # end foreach
-	return keys %hash;
+	return keys %{{ map { $_ => 1 } @_ }};
 } # end sub union
 
 sub contains {
@@ -105,8 +101,9 @@ sub exclude {
 		return @{$array};
 	} # end if
 	my @results;
+	my %exclude = map { $_ => 1 } @{$exclude};
 	foreach my $element ( @{$array} ) {
-		push @results, $element if ( ! sets::isin( $element, $exclude ) );
+		push @results, $element if ! $exclude{$element};
 	} # end foreach
 	return @results;
 } # end sub exclude

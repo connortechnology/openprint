@@ -76,9 +76,9 @@
 								<div class="Address">%3$s</div>
 							</div>`, $User->id(), $User->alias(), 
 							join(', ',
-								#( $Profile->city() ? (new openprint::Location( $Profile->city() ))->name() : () ),
-								#( $Profile->state() ? (new openprint::Location( $Profile->state() ))->name() : () ),
-								#( $Profile->country() ? (new openprint::Location( $Profile->country() ))->name() : () ),
+								( $Profile->city() ? (new openprint::Location( $Profile->city() ))->name() : () ),
+								( $Profile->state() ? (new openprint::Location( $Profile->state() ))->name() : () ),
+								( $Profile->country() ? (new openprint::Location( $Profile->country() ))->name() : () ),
 							),
 				);
 		my $age = 0;
