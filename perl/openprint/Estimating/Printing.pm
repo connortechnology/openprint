@@ -2680,7 +2680,7 @@ sub get_project_price {
 			$openprint::log->debug("Wrong type " . $$Press{'strid'} . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if DEBUG;
 			next;
 		} # end if
-my $time = gettimeofday() if $debug;
+my $time = gettimeofday() if DEBUG;
 $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
 my @Is = calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
