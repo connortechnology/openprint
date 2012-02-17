@@ -19,7 +19,6 @@ use strict;
 
 require openprint::Project;
 require openprint::service;
-require sql;
 
 use vars qw( @folds %fold_types );
 
@@ -35,6 +34,7 @@ my @variables = (
 	'MPrice1', 'MPrice2', 'MPrice3',
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+	'alert',
 	);
 
 sub variables {
@@ -267,6 +267,7 @@ sub impositions {
 	my @imps = ( $Imposition );
 
 	my $services = $Project->services();
+	my $Paper = $Imposition->Paper();
 
 	my $Fold = $Imposition->Equipment()->Fold({
 			'pages'				=>	$Imposition->pages(),
@@ -278,9 +279,9 @@ sub impositions {
 			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-			'gsm'				=>	$Imposition->Paper()->gsm(),
+			'gsm'				=>	$Paper->gsm(),
 			'imposition'		=>	$$Imposition{'imposition'},
-			'calliper'			=>	$Imposition->Paper()->calliper(),
+			'calliper'			=>	$$Paper{'calliper'},
 			});
 	return @imps if $Fold;
 
@@ -294,16 +295,16 @@ sub impositions {
 			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
 			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-			'gsm'				=>	$Imposition->Paper()->gsm(),
+			'gsm'				=>	$Paper->gsm(),
 			'imposition'		=>	$$Imposition{'imposition'},
-			'calliper'			=>	$Imposition->Paper()->calliper(),
+			'calliper'			=>	$$Paper{'calliper'},
 			});
 	return @imps if ! $Fold;
 
-	if ( $Fold->min_width() and $Fold->min_width() > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
+	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{'image_orientation'} eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
 		my $I = $Imposition->copy();
 
-		if ( $I->image_orientation() eq 'Vertical' ) {
+		if ( $$I{'image_orientation'} eq 'Vertical' ) {
 			my $space = $Fold->min_width() - $I->image_width();
 			$I->cropmark_left(0) if $space >= $I->cropmark_left();
 			$I->cropmark_right(0) if $space >= $I->cropmark_right();
@@ -416,7 +417,7 @@ sub signature_calc {
 		my $add = 1;
 		my $capable = $Press->specification('Folding Capable');	
 		if ( $capable and ( $capable ne 'N' ) ) {
-			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $SignatureImposition->imposition() ) {
+			if ( $$sig_specs{'PreviousImposition'} and $$sig_specs{'PreviousImposition'} != $$SignatureImposition{'imposition'} ) {
 				$add = 0;
 			} # end if
 
@@ -472,14 +473,14 @@ sub signature_calc {
 	my @All_Impositions;
 
 	# IF it's a W&T, we have to cut in half first, so just do it.
-	if ( $SignatureImposition->runstyle() eq 'Work & Turn' ) {
+	if ( $$SignatureImposition{'runstyle'} eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
 		$i->start_columns( $i->columns() );
 		$i->columns( $i->columns()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
-	} elsif ( $SignatureImposition->runstyle() eq 'Work & Tumble' ) {
+	} elsif ( $$SignatureImposition{'runstyle'} eq 'Work & Tumble' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
 		$i->start_rows( $i->rows() );
@@ -542,29 +543,25 @@ sub signature_calc {
 					$Singleton->quantity( $I->quantity()*$I->imposition() );
 					push @Set_Of_Impositions, $Singleton;
 				} elsif ( $width_folds ) {
-					if ( $I->image_orientation() eq 'Vertical' ) {
-						my $Singleton = $I->copy();
+					my $Singleton = $I->copy();
+					if ( $$I{'image_orientation'} eq 'Vertical' ) {
 						$Singleton->quantity( $I->quantity()*$I->columns() );
 						$Singleton->columns( 1 );
-						push @Set_Of_Impositions, $Singleton;
 					} else {
-						my $Singleton = $I->copy();
 						$Singleton->quantity( $I->quantity()*$I->rows() );
 						$Singleton->rows( 1 );
-						push @Set_Of_Impositions, $Singleton;
 					} # end if
+					push @Set_Of_Impositions, $Singleton;
 				} elsif ( $height_folds ) {
-					if ( $I->image_orientation() eq 'Vertical' ) {
-						my $Singleton = $I->copy();
+					my $Singleton = $I->copy();
+					if ( $$I{'image_orientation'} eq 'Vertical' ) {
 						$Singleton->quantity( $I->quantity()*$I->rows() );
 						$Singleton->rows( 1 );
-						push @Set_Of_Impositions, $Singleton;
 					} else {
-						my $Singleton = $I->copy();
 						$Singleton->quantity( $I->quantity()*$I->columns() );
 						$Singleton->columns( 1 );
-						push @Set_Of_Impositions, $Singleton;
 					} # end if Orientation
+					push @Set_Of_Impositions, $Singleton;
 				} else {
 					push @Set_Of_Impositions, $I;
 				} # end if
@@ -596,20 +593,21 @@ sub signature_calc {
 
 	# Foreach equipment, figure out which folds are required.
 	foreach my $Equipment ( @my_equipment ) {
-		$Breakdown .= '<b>Equipment '.$Equipment->name().':</b><br/>';
+		$Breakdown .= '<b>Equipment '.$$Equipment{'name'}.':</b><br/>';
 		#$openprint::log->debug('2 Equipment '.$Equipment->name()) if DEBUG;
 		if ( $$services{'NoOfflineBindery'} and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
 			$Breakdown .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			$openprint::log->debug('No Offline Equipment '.$Equipment->name()) if DEBUG;
 			next;
 		} # end if
-		if ( $Equipment->specification( 'Folding Capable' ) eq 'When PerfectBound' ) {
+		my $capable = $Equipment->specification( 'Folding Capable' );
+		if ( $capable eq 'When PerfectBound' ) {
 # Means it's a PerfectBinder, so can only do covers
 			if ( $$sig_specs{'Group'} != 1 ) {
 				$Breakdown .= 'Perfect Binder can only fold 4pg cover:<br/>';
 				next;
 			} # end if
-		} elsif ( $Equipment->specification( 'Folding Capable' ) eq 'When Stitching' ) {
+		} elsif ( $capable eq 'When Stitching' ) {
 			$Breakdown .= 'When Stitching.';
 # Means it's a Stitcher, or a Duplo, so can only do covers
 			if ( $Equipment->specification('Fold Covers Only') and $$sig_specs{'Group'} != 1 ) {
@@ -620,14 +618,14 @@ sub signature_calc {
 				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-			if ( ( exists $$specs{'StitchingCost'} ) and ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) ) {
+			if ( ( exists $$specs{'StitchingCost'} ) and ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $capable eq 'When Stitching' ) ) {
 				$Breakdown .= "Not stitching on $$Equipment{name}:<br/>";
 				next;
 			} # end if
 		} # end if
+		my $ppt = $Press->specification('Printing Type');
 		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
-			my $ppt = $Press->specification('Printing Type');
-			if ( $ppt and ! sets::isin( $ppt, split(',',$pt ) ) ) {
+			if ( $ppt and ! sets::isin( $ppt, [ split(',',$pt ) ] ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
 				next;
 			} # end if
@@ -668,8 +666,8 @@ $Imposition->display("Folding on press");
 							'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 							'gsm'				=>	$Paper->gsm(),
 							'imposition'		=>	$$Imposition{'imposition'},
-							'calliper'			=>	$Paper->calliper(),
-							'printing_type'		=>	$Press->specification('Printing Type'),
+							'calliper'			=>	$$Paper{'calliper'},
+							'printing_type'		=>	$ppt,
 							} );
 					if ( $Fold ) {
 						$Fold = $Fold->clone();
@@ -687,7 +685,7 @@ $Imposition->display("Folding on press");
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 #$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
-						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Paper->calliper() );
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 						#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
@@ -698,9 +696,9 @@ $Imposition->display("Folding on press");
 							my $Fold = $Equipment->Fold({
 									'type'				=>	$$sig_specs{'rdbTemplateType'},
 									'gsm'				=>	$Paper->gsm(),
-									'calliper'			=>	$Paper->calliper(),
+									'calliper'			=>	$$Paper{'calliper'},
 									'imposition'		=>	$$Imposition{'imposition'},
-									'printing_type'		=>	$Press->specification('Printing Type'),
+									'printing_type'		=>	$ppt,
 									});
 							if ( $Fold ) {
 								# Need to check feed width
@@ -749,7 +747,7 @@ $Imposition->display("Folding on press");
 								$Breakdown .= "Can't fold that:<br/>
 									type			=>	$$sig_specs{'rdbTemplateType'}<br/>
 									gsm				=>	".$Paper->gsm()."<br/>
-									calliper		=>	".$Paper->calliper()."<br/>
+									calliper		=>	".$$Paper{'calliper'}."<br/>
 									imposition		=>	$$Imposition{'imposition'}<br/>";
 							} # end if
 						} # end if
@@ -759,7 +757,7 @@ $Imposition->display("Folding on press");
 						#$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if DEBUG;
 
 # See if it fits
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Paper->calliper() );
+						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 
 						if ( ! $_ )  {
 
@@ -772,9 +770,9 @@ $Imposition->display("Folding on press");
 									'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
 									'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
 									'gsm'				=>	$Paper->gsm(),
-									'calliper'			=>	$Paper->calliper(),
+									'calliper'			=>	$$Paper{'calliper'},
 									'imposition'		=>	$$Imposition{'imposition'},
-									'printing_type'		=>	$Press->specification('Printing Type'),
+									'printing_type'		=>	$ppt,
 									});
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
@@ -1390,6 +1388,21 @@ sub signature_summary {
 } # end sub signature_summary
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				return 'Overridden';
+			} # end if
+		} # end foreach
+	} else {
+		if ( $$specs{'alert'} ) {
+			return '<div class="warning">'.$$specs{'alert'}.'</span>';
+		} # end if
+	} # end if
+	
 	return '';
 } # end sub summary
 

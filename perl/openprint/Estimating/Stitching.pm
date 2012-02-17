@@ -252,6 +252,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $bestPrice;
 	my $bestEquipment;
+	my $I = $Impositions[0];
 #$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
@@ -419,6 +420,8 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to determine spine length.  Calculations may be wrong.';
 	} # end if
 
+	my @signatures = $Project->signatures();
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
@@ -557,10 +560,10 @@ sub calc {
 				next;
 			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
-				if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
-					next;
-				} # end if
+				#if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+					#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+					#next;
+				#} # end if
 				if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Printing equipment not the same: %s<br/>',$$sig_specs{"ddmPress$qty_index"} );
 					next;
@@ -648,8 +651,8 @@ sub display {
 
 	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
-	my $Project = new openprint::Project( $project_index );
-	my $ProjectType = $Project->Type();
+	#my $Project = new openprint::Project( $project_index );
+	#my $ProjectType = $Project->Type();
 
 	$$variable{'txtPockets'} = $$variable{'SignatureCount'} + $$variable{'txtInsertQuantity'};
 } # end sub display

@@ -9,17 +9,25 @@
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Drilling</legend>
-			<p>
+			<ul>
+			<li>
 				<label>Finished Caliiper</label>
 				<input name="txtFinishedCalliper" value="<?txtFinishedCalliper?>" type="number" onkeyup="floatize(this);calc(this.form.name);" />
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<input type="checkbox" id="chkOverrideFinishedCalliper" name="chkOverrideFinishedCalliper" value="Y" <? echo ( ssi::checked( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ); ) ?> />
 				<label class="radio" for="chkOverrideFinishedCalliper">Override</label>
-			</p>
-			<p>
+<? else ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+				<input type="hidden" name="chkOverrideFinishedCalliper" value="<? echo ( $$variable{'chkOverrideFinishedCalliper'} ) ?>" />
+<? if ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
+Overridden
+<? endif ( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			</li>
+			<li>
 				<label># of holes per item</label>
 				<input name="txtHoleQty" value="<?txtHoleQty?>" type="number" onkeyup="cardinalize(this);calc(this.form.name);" />
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Hole size</label>
 <? if ( $config{DrillingSizes} ) ?>
 <select name="txtHoleSize" onchange="calc(this.form.name);">
@@ -29,8 +37,8 @@
 					<input name="txtHoleSize" value="<?txtHoleSize?>" type="number" onkeyup="floatize(this);calc(this.form.name);" />
 					in inches (ex: 0.125, 0.25)
 <? endif ( $config{DrillingSizes} ) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Items per lift</label>
 				<input type="number" id="ItemsPerLift" name="ItemsPerLift" value="<?ItemsPerLift?>" onkeyup="cardinalize(this);calc(this.form.name);" />
 				<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
@@ -38,8 +46,12 @@
 				<label class="radio" for="OverrideItemsPerLift">Override</label>
 				<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 				<input type="hidden" name="OverrideItemsPerLift" value="<?OverrideItemsPerLift" />
+<? if ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
+Overridden
+<? endif ( $$variable{'OverrideItemsPerLift'} eq 'Y' ) ?>
 				<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<p>
+			<li>
+			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>

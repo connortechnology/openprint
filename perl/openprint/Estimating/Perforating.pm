@@ -206,7 +206,7 @@ sub signature_calc {
 	$stitching_service_index = $$services{'LoopStitching'}[0] if ( ! $stitching_service_index) and $$services{'LoopStitching'};
 
 	if ( ! @all_equipment ) {
-		@all_equipment = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'useinestimating'=>1);
+		@all_equipment = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing', 'When Folding']}, 'useinestimating'=>1);
 	} # end if
 
 	@stitchers = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'useinestimating'=>1) if ! @stitchers;
