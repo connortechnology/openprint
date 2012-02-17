@@ -5,12 +5,13 @@
 <? echo ( 
 	my $html = '';
 	if ( ($session{'user_id'} == $$variable{'Asset'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Asset'}->editor_id() ) ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Asset'}->id(), 'Edit' );
+		$html .= ssi::button( 'Edit', { href=> 'edit.html?asset_id='.$$variable{'Asset'}->id() } );
 		if ( $$variable{'Asset'}->deleted() ) {
-			$html .= ssi::writeButton( $log, $dbh, 'UnDelete', 'undelete.gif', "f1.btnFunction.value='Undelete';f1.submit();", '', 'Undelete' );
+			$html .= ssi::button( 'Undelete', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();" } );
 		} else {
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+			$html .= ssi::button( 'Delete', { onclick=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
+		$html .= ssi::button( 'New', { 'href'=>'edit.html' } );
 	} # end if
 	return $html;
 ) ?>
