@@ -255,9 +255,9 @@ sub specification {
 sub Specification {
 	my ( $self, $name, $range, $debug ) = @_;
 
-	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
+		return if ! $$self{'id'};
 		foreach ( openprint::EquipmentSpecification->find( 'equipment_id'=>$$self{'id'}, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$_->name()}}, $_;
 		} # end foreach
@@ -272,8 +272,6 @@ sub Specification {
 		return;
 	} # end if
 
-#$openprint::log->debug("Looking for $name : $range") if $debug or 1;
-
 	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification
 
@@ -281,9 +279,7 @@ sub copy {
 	my $self = shift;
 
 	my $new = new openprint::Equipment();
-	foreach my $k ( keys %fields ) {
-		$$new{$k} = $$self{$k};
-	} # end foreach
+	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
 	$$new{name} = 'Copy of ' . $$new{name};
 	$new->save();

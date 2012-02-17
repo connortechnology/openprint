@@ -22,8 +22,6 @@ use strict;
 require openprint::Equipment;
 require openprint::service;
 
-require sql;
-
 my @variables = (
 		'Markup1', 'Markup2', 'Markup3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -70,6 +68,7 @@ sub calc {
 	} elsif ( $$services{'LoopStitching'} ) {
 		$stitching_service_index = $$services{'LoopStitching'}[0];
 	} # end if
+	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
@@ -114,15 +113,37 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\tEquipment: %s Lift: %s<br/>", $Equipment->name(), $Equipment->specification('Maximum Lift Depth') );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("<br/>Equipment: %s Lift: %s<br/>", $Equipment->name(), $Equipment->specification('Maximum Lift Depth') );
 			if ( $Equipment->specification('Type') eq 'Stitcher' ) {
 				if ( ! $stitching_service_index ) {
 					$$specs{'hdnBreakdown'.$qty_index} .="Not stitching <br/>";
 					next;
 				} # end if
-				my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
 				if ( $$stitching_specs{'Imposition'.$qty_index} > 1 ) {
 					$$specs{'hdnBreakdown'.$qty_index} .="Not when stitching more than 1 out<br/>";
+					next;
+				} # end if
+
+# Need to figure out which dimension the spine bisects
+				my $spine_length;
+				if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
+					$spine_length = $$printing_specs{'txtWidth'};
+				} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
+					$spine_length = $$printing_specs{'txtHeight'};
+				} else {
+					$spine_length = $$printing_specs{'txtHeight'};
+					$$specs{'alert'} .= 'Unable to determine spine direction. Calculations may be invalid.';
+				} # end if
+
+				my $max_spine_length = $Equipment->specification('Drilling Maximum Spine Length', $$specs{'txtHoleQty'} );
+				my $min_spine_length = $Equipment->specification('Drilling Minimum Spine Length', $$specs{'txtHoleQty'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= " Spine Length: $spine_length, min: $min_spine_length, max: $max_spine_length<br/>";
+				if ( $max_spine_length and ( $max_spine_length < $spine_length ) ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too long.\n";
+					next;
+				} # end if
+				if ( $min_spine_length and ( $min_spine_length > $spine_length ) ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= " Spine too short.\n";
 					next;
 				} # end if
 			} # end if
