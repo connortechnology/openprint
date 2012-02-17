@@ -7,5 +7,5 @@
 </li>
 <li id="PerfingDiv" <? echo ( 'style="display:none;"' if $$variable{'Perfing'} ne 'Y' ) ?> >
 	<label for="txtPerfQty"># of Perforations:</label>
-	<input type="text" id="txtPerfQty" name="txtPerfQty" value="<?txtPerfQty?>" size="2" onkeyup="this.value=this.value.replace(/\D/g,'');remove_p('OrderButton');" />
+	<input type="text" id="txtPerfQty" name="txtPerfQty" value="<?txtPerfQty?>" size="2" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" />
 </li>

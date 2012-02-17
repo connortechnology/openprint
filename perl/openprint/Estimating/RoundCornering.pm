@@ -67,9 +67,14 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} = 'No maximum lift depth specified.<br/></fieldset>';
 				next;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Lift Depth: %.2f<br/>',$lift);
+			my $corners = $Equipment->specification('Corners Per Lift');
+			$corners = 1 if ! $corners;
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Corners Per Lift: %d<br/>', $corners );
+
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Lift Depth: %.2f&quot;<br/>',$lift);
 
 			my $runs = ceil( $$specs{'txtQuantity'.$qty_index} * $calliper / $lift );
+			$runs *= ceil( $$specs{'RoundedCorners'} / $corners );
 			my $total = 0;
 
 			my %MakeReady = openprint::service::get_price_object('RoundCorneringMakeReady', undef, $Equipment );
