@@ -79,8 +79,8 @@ sub AUTOLOAD {
 				#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 				#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 			#} # end if
-	} else {
-$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
+	#} else {
+#$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
 		} # end if
 	} # end if
 	return $_[0]{$name};
