@@ -3,14 +3,19 @@ package sets;
 
 sub isin {
 
+	my %h;
     # Takes in a variable, and an array, and checks the array element by
     # element to see if the variable exists inside the array.
 	if ( @_ == 2 ) {
 #$openprint::log->debug( 'REF' . ref $thing );
 		if ( ref $_[1] eq 'ARRAY' ) {
+
+			#%h = %{ { map { $_ => 1 } @{$_[1]} } };
+			
 			foreach (@{$_[1]}) {
 				return 1 if $_ eq $_[0];
 			} # end foeach
+			return 1 if $h{$_[0]};
 		} else {
 			return 1 if $_[1] eq $_[0];
 		} # end if

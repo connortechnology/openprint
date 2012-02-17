@@ -1,10 +1,9 @@
-package openprint::Fold;
-@ISA = qw( openprint::Object );
 use strict;
-use openprint ();
-use openprint::Equipment;
-use openprint::Fold;
-use openprint::FoldSpecification;
+package openprint::Fold;
+our @ISA = qw( openprint::Object );
+require openprint;
+require openprint::Equipment;
+require openprint::FoldSpecification;
 require sql;
 
 use constant DEBUG => 0;
@@ -109,7 +108,7 @@ sub delete {
 
 sub copy {
 	my $new = new openprint::Fold();
-	@$new{keys %fields} = @{$_[0]}{keys %fields};
+	@$new{keys %fields} = values %fields;
 	@{$$new{'Specifications'}} = map { $_->copy() } $_[0]->Specifications();
 	delete $$new{id};
 	return $new;

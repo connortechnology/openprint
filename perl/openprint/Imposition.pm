@@ -79,6 +79,8 @@ sub AUTOLOAD {
 				#$$self{'layout_width'} = $$self{'spread_columns'} * $$self{'layout_width'};
 				#$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 			#} # end if
+	} else {
+$openprint::log->debug("optimise $name" . ( @_ > 1 ? 'set to ' . $_[1] : '' ) );
 		} # end if
 	} # end if
 	return $_[0]{$name};
@@ -454,6 +456,23 @@ sub to_string {
 	}
 	return $_[0]{'to_string'};
 } # end sub to_string
+
+sub bleed_size {
+	$_[0]{'bleed_size'} = $_[1] if @_ > 1;
+	return $_[0]{'bleed_size'};
+} # end sub bleed_size
+sub runstyle {
+	$_[0]{'runstyle'} = $_[1] if @_ > 1;
+	return $_[0]{'runstyle'};
+} # end sub runstyle
+sub quantity {
+	$_[0]{'quantity'} = $_[1] if @_ > 1;
+	return $_[0]{'quantity'};
+} # end subquantity
+sub sides {
+	$_[0]{'sides'} = $_[1] if @_ > 1;
+	return $_[0]{'sides'};
+} # end sub sides
 
 1;
 __END__

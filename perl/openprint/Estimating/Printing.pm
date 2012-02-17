@@ -27,7 +27,7 @@ my %Papers;
 my %impositions;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
-my $use_converted_imposition_cache = 0;
+my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 
@@ -2332,9 +2332,9 @@ $openprint::log->debug("SpreadLayout: $SpreadLayout override: " . $$sig_specs{'c
 				@impositions = @{$_};
 			} else {
 	#$openprint::log->debug("NOTin Cache string: $cache_string");
-my $time = gettimeofday();
+#my $time = gettimeofday();
 				$converted_imposition_cache{$cache_string} = [ sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, $$impositions{$Press->id()} ) ];
-$openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+#$openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 				@impositions = @{$converted_imposition_cache{$cache_string}};
 			} # end if
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if DEBUG;
@@ -3236,7 +3236,6 @@ sub calc_price {
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
-	$Imposition->sides( $$project{'print_sides'} );
 
 # It's ok to do this, because $$specs is either a copy, or will be reset before being returned
 	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
@@ -3459,7 +3458,8 @@ $openprint::log->debug("Using cached folding");
 				my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
 				my $fold_qty = 0;
 				foreach my $Fold ( @{$folding_results{'Folds'}{$k}} ) {
-					$fold_qty += $Fold->Imposition()->quantity();
+					my $Fold_Imposition = $Fold->Imposition();
+					$fold_qty += $$Fold_Imposition{'quantity'};
 				} # end foreach
 				$price{'Folding Breakdown'} .= sprintf('Folding %d %s (%d out) %d/hr Price: $%.2f on %s', $fold_qty, $folding_results{'Folds'}{$k}[0]->name(), $imposition, @folding_results{'RunSpeed','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 			} # end foreach
@@ -4292,120 +4292,6 @@ sub select_presses {
 	return %results;
 } # end sub select_press
 
-sub get_varnish_run_price {
-	my ( $log, $dbh, $variable, $Press, $print_sides, $impressions, $specs, $side_one_colours, $side_two_colours, $qty_index, $Imposition, $Project, $service_index, $inkCoverage ) = @_;
-
-	my %varnish_price;
-	my $varnish_sides;
-#$log->debug("***************** START OF GET VARNISH PRICE *********************");
-
-# How many varnishes we have per sheet...
-	foreach my $colour (@$side_one_colours, @$side_two_colours) {
-		if ( $colour =~ /Varnish/ ) {
-#$log->debug("***************** VARNISH CHECK: $colour DT: $dry_trap **********************");
-			$varnish_sides += 1;
-		} # end if
-	} # end for each
-	return if ! $varnish_sides;
-		
-	my %price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishMakeReady', 1, $Press);
-	if ( $price{'units'} eq 'Per Form' ) {
-		my $previous_forms = 0;
- #$$specs{'PreviousForms'};
-# Need to figure out how many similar forms we have
-		foreach my $ss_id ( $Project->signatures() ) {
-			next if $service_index and ($ss_id >= $service_index);
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-			next if $$sig_specs{'pages_supplied'} eq 'Y';
-			$previous_forms += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
-		} # end foreach
-		#$openprint::log->debug("Previous Forms $previous_forms");
-		#$$specs{'PreviousForms'} = $previous_forms;
-
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishMakeReady', $previous_forms + 1, $Press);
-	} # end if
-	$varnish_price{'Setup'} = $price{'Price'};
-
-
-	if ( $$specs{'chkVarnishDryTrapSideOne'} or $$specs{'chkVarnishDryTrapSideTwo'} ) {
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishDryTrap', $impressions, $Press);
-	} else {
-		%price = openprint::service::get_price_object( $log, $dbh, $variable, 'VarnishInLine', $impressions, $Press);
-	} # end if
-	if ( sets::isin( lc $price{'units'}, [ 'per m', 'per 1000' ] ) ) {
-		$price{'Run Price'} = $price{'Price'};
-		$price{'Total'} = $price{'Price'} * $impressions/1000;
-		$price{'Total'} /= 2 if ($varnish_sides == 1);
-	} # end if
-	$varnish_price{'run_price'} = $price{'Run Price'};
-	$varnish_price{'Run Total'} = $price{'Total'};
-	$varnish_price{'Run Units'} = $price{'units'};
-
-	foreach my $c ( @$side_one_colours, @$side_two_colours) {
-		my $colour = $c;
-		next if ! ( $colour =~ /Varnish/ );
-
-		my $area ;
-		if ( $colour =~ /Spot/ ) {
-			if ( $colour =~ /Gloss/ ) {
-				$colour = 'GlossVarnish';
-			} elsif ( $colour =~ /Matte/ ) {
-				$colour = 'MatteVarnish';
-			} # end if
-			$area = $Imposition->object_area() * $$inkCoverage{$colour}/100;
-			if ( sets::isin( $c, $side_one_colours ) and sets::isin( $c, $side_two_colours ) ) {
-				$area /= 2;
-			} # end if
-		} else { # Overall
-			if ( $colour =~ /Gloss/ ) {
-				$colour = 'GlossVarnish';
-			} elsif ( $colour =~ /Matte/ ) {
-				$colour = 'MatteVarnish';
-			} # end if
-			$area = $Imposition->layout_area();
-		} # end if
-		my $Material = openprint::Material->find_one('name'=>$colour);
-		if ( $Material ) {
-			%price = $Material->get_price( undef, $Press );
-		} # end if
-		if ( ! %price ) {
-			$colour = 'Varnish';
-			if ( $Material = openprint::Material->find_one('name'=>$colour) ) {
-				%price = $Material->get_price( undef, $Press );
-			} # end if
-		} # end if
-
-		$varnish_price{'Material Units'} = $price{'units'};
-
-		if ( lc $price{'units'} eq 'per square foot' ) {
-			my $p = $price{'Price'} * $area/144;
-			$varnish_price{'Material Price'} += $p;
-			$varnish_price{'Material Total'} += $p * $impressions;
-		} elsif ( lc $price{'units'} eq 'per square inch' ) {
-			my $p = $price{'Price'} * $area;
-			$varnish_price{'Material Price'} += $p;
-			$varnish_price{'Material Total'} += $p * $impressions;
-		} elsif ( lc $price{'units'} eq 'per kg' ) {
-			my $grade = $Imposition->Paper()->grade();
-			$grade = 4 if ! $grade;
-
-			if ( $Material ) {
-				my $coverage = $Material->specification('Coverage', $grade);
-				my $qty = ceil( $area*$impressions/$coverage ) if $coverage;
-				my %price = $Material->get_price( $qty, $Press );
-				$price{'Total'} = $price{'Price'} * $qty;
-				$varnish_price{'Material Price'} += $price{'Total'};
-				$varnish_price{'Material Total'} += $price{'Total'};
-				$varnish_price{'Breakdown'} .= sprintf('%s at %.2f%s * %dKg = $%.2f<br/>', $c, @price{'Price','units'}, $qty, $price{'Total'} );
-			} # end if
-		} # end if
-	} # end foreach
-
-#$log->debug(" **************** VARNISH RUN PRICE: $run_price * VS: $varnish_sides PS: $print_sides *********************");
-	$varnish_price{'Press Washes'} = $varnish_sides;
-	return %varnish_price;
-} # end if
-
 sub get_run_price {
 	my ( $impressions, $side_one_colours, $side_two_colours, $Imposition, $Press, $run_speed ) = @_;
 
@@ -4584,7 +4470,7 @@ sub press_setup_cost {
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}.$Imposition->sides().'Sided', undef, $Press );
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}.$$Imposition{'sides'}.'Sided', undef, $Press );
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$$Imposition{'runstyle'}, undef, $Press ) if ! %PlateSetupPrice;
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
 	if ( %PlateSetupPrice ) {
