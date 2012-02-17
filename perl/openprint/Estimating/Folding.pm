@@ -18,7 +18,6 @@ package openprint::Estimating::Folding;
 use strict;
 
 require openprint::service;
-require sql;
 
 use vars qw( %fold_types );
 
@@ -32,6 +31,7 @@ my @variables = (
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+		'alert',
 		);
 
 sub variables {
@@ -676,6 +676,21 @@ sub display {
 } # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				return 'Overridden';
+			} # end if
+		} # end foreach
+	} else {
+		if ( $$specs{'alert'} ) {
+			return '<div class="warning">'.$$specs{'alert'}.'</span>';
+		} # end if
+	} # end if
+	
 	return '';
 } # end sub summary
 

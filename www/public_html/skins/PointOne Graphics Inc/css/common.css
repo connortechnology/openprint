@@ -463,7 +463,7 @@ hr {
         background-color: #000088;
 }
 
-.error, .warning {
+.error, .warning, .warning a {
         color: red;
 }
 
