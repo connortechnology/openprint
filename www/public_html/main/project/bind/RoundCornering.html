@@ -7,10 +7,10 @@
     } # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<p><label>Rounded Corners:</label>
-				<input type="text" id="RoundedCorners" name="RoundedCorners" value="<?RoundedCorners?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+				<input type="number" id="RoundedCorners" name="RoundedCorners" value="<?RoundedCorners?>" onkeyup="integerize(this);calc(this.form.name);" />
 			</p>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>
