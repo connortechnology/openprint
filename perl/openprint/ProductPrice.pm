@@ -69,7 +69,7 @@ sub Pricelist {
 sub save {
 	my ( $self, $param ) = @_;
 
-	$$self{'owner_id'} = $openprint::config{'Owner'} if ! $$self{'owner_id'};
+	$$self{'owner_id'} = $openprint::config{'owner_id'} if ! $$self{'owner_id'};
 
 	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
 		return $error;

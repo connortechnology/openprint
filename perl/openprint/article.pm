@@ -350,7 +350,7 @@ sub _like {
 sub feed {
 	my ($y,$m,$d) = Date::Calc::Today();
 	my $rss = new XML::RSS( version=>'2.0' );
-	my $Owner = new openprint::Company( $config{'owner'} );
+	my $Owner = new openprint::Company( $config{'owner_id'} );
 	$rss->channel(
 		title	=>	substr($config{'SiteTitle'},0,100),
 		'link'	=>	$config{'ExternalSiteURL'},

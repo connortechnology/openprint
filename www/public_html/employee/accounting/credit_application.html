@@ -160,7 +160,7 @@
 			Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
 			</fieldset>
 		</div>
-		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{'Owner'})->fax(); ) ?></p>
+		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{'owner_id'})->fax(); ) ?></p>
 	</div>
 <? else ( $$variable{'credit_index'} ) ?>
 	No Credit Application specified.<br/>
