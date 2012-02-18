@@ -44,6 +44,10 @@ sub handler {
 	if ( $dbh ) {
 		# Need session, have to know who we are!
 		openprint::session_init();
+		# If the session was created, then we want to tell it when, otherwise
+		# don't update it so that we don't incur another db update
+		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
+		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 
 		# The asset filename form is id_title.extension
 		my ( $id ) = $r->uri() =~ /(\d+)_.+$/;
@@ -72,9 +76,6 @@ sub handler {
 			} # end if
 		} # end if
 
-		# If the session was created, then we want to tell it when, otherwise
-		# don't update it so that we don't incur another db update
-		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 		untie %session;
 		$dbh->disconnect();
 	} # end if

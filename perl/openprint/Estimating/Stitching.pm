@@ -252,8 +252,6 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $bestPrice;
 	my $bestEquipment;
-	my $I = $Impositions[0];
-#$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	my $I = $$Impositions[0];
 	foreach my $Equipment ( @equipment ) {

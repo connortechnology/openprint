@@ -165,7 +165,7 @@ sub display {
 				);
 
 		
-		my $Company = new openprint::Company( $openprint::config{'Owner'} );
+		my $Company = new openprint::Company( $openprint::config{'owner_id'} );
 		my $address = $Company->get_shipping_address();
 		foreach my $k ( keys %shipping_fields ) {
 			$$variable{$k} = $address->get( $shipping_fields{$k} ) if ! $$variable{$k};

@@ -2,7 +2,7 @@
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
 			'group_id'		=> $session{'/administrator/equipment/edit.html?Group'},
-			'owner_id'		=> $config{'Owner'},
+			'owner_id'		=> $config{'owner_id'},
 			'manufacturer_id'		=> $session{'/administrator/equipment/edit.html?Manufacturer'},
 			'name_id'	=> $session{'/administrator/equipment/edit.html?Name'},
 			'finish_id'	=> $session{'/administrator/equipment/edit.html?Finish'},

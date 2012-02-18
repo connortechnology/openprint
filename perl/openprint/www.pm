@@ -83,6 +83,11 @@ sub handler {
 		$r->content_type(q{text/html; charset=utf-8});
 	} elsif ( $page =~ /\.json/ ) {
 		$r->content_type(q{text/javascript; charset=utf-8});
+	} elsif ( $page =~ /\.xml/ ) {
+		$r->content_type(q{text/xml; charset=utf-8});
+	} elsif ( $page =~ /\.rss/ ) {
+		$r->content_type(q{application/rss+xml; charset=utf-8});
+		#$r->content_type(q{text/html; charset=utf-8});
 	} # end if
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
@@ -170,9 +175,13 @@ sub handler {
 		#$r->send_http_header;
 $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
+		if ( $variable{'File_Data'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
+		} else {
+			$r->print( $variable{'Download'} );
+		} # en dif
 	} else {
 		$variable{'SiteTitle'} = $config{'SiteTitle'};
 		$variable{'SecureSiteURL'} = $config{'SecureSiteURL'};
@@ -535,7 +544,7 @@ $log->debug("after third");
 
 	} else {
 		if ( $first and -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
-			my ( $proc ) = $filename =~ /^(.*)\.(html|json)$/;
+			my ( $proc ) = $filename =~ /^(.*)\.(html|json|xml|rss)$/;
 			if ( $proc ) {
 				my $module = lc $first;
 				$module .= '_'.$second if $second;

@@ -230,6 +230,7 @@ sub calc_setup_object {
 	my $paper_height;
 	my $cropmarkspace;
 
+	$$setup1{'sides'} = $$specs{'print_sides'};
 	$setup1->paper( $Paper->clone() );
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
@@ -247,6 +248,7 @@ sub calc_setup_object {
 	} # end if
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
+	$$setup2{'sides'} = $$specs{'print_sides'};
 	$setup2->paper( $Paper->clone() );
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
@@ -386,8 +388,8 @@ sub calc_setup_object {
 		# For Work & TUmble, the grip happens on the head and tail, but we can print on the backside of the grip so to speak.  So we can tuck the colour bar into the second grip space.
 		$$specs{'Grip Size'} -= $$specs{'colour_bar_size'};
 	} # end if
-	$setup1->grip( $$specs{'Grip Size'} );
-	$setup2->grip( $$specs{'Grip Size'} );
+	$$setup1{'grip'} = $$specs{'Grip Size'};
+	$$setup2{'grip'} = $$specs{'Grip Size'};
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
 # Setup 1. Width to Width

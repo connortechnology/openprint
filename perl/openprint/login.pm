@@ -116,7 +116,7 @@ sub verify_login {
 	} # end if
 
 	if ( $User->type() ne 'C' ) {
-		if ( $config{'Owner'} and ( $User->company_id() != $config{'Owner'} ) ) {
+		if ( $config{'owner_id'} and ( $User->company_id() != $config{'owner_id'} ) ) {
 # Send an email notification
 			my %info;
 			@info{'UserFirstName','UserLastName','UserEmail'} = $User->get('firstname','lastname','email');

@@ -83,7 +83,7 @@ sub save {
 
 	# Super Save will load at the end, wiping out the specs hash
 	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
-	$$self{'owner_id'} = $openprint::config{'Owner'};
+	$$self{'owner_id'} = $openprint::config{'owner_id'};
 
 	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
 		return $error;

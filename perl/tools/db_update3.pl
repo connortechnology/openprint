@@ -841,6 +841,9 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 	$dbh->do(q`ALTER TABLE Companies add category_id INTEGER`);
 	$dbh->do(q`ALTER TABLE Companies add FOREIGN KEY (category_id) REFERENCES company_categories (id)`);
 } # endif
+if ( $config{'Owner'} ) {
+	$dbh->do("UPDATE configuration SET name='owner_id' WHERE name='Owner'" );
+}
 $dbh->disconnect();
 1;
 __END__

@@ -1,7 +1,7 @@
-package openprint::Bug;
-@ISA = qw( openprint::Object );
-require openprint::Object;
 use strict;
+package openprint::Bug;
+our @ISA = qw( openprint::Object );
+require openprint::Object;
 
 require openprint::Bug_Comment;
 

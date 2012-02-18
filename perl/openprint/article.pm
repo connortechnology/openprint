@@ -16,6 +16,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Article;
 require openprint::Article_Category;
 require openprint::Article_Asset;
+require XML::RSS;
 
 sub save_article {
 	my $Article = new openprint::Article( $param{'article_id'} );
@@ -345,5 +346,38 @@ sub _like {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	
 } # end sub _like
+
+sub feed {
+	my ($y,$m,$d) = Date::Calc::Today();
+	my $rss = new XML::RSS( version=>'2.0' );
+	my $Owner = new openprint::Company( $config{'owner_id'} );
+	$rss->channel(
+		title	=>	substr($config{'SiteTitle'},0,100),
+		'link'	=>	$config{'ExternalSiteURL'},
+		description	=>	'Hedonistic Yet Discerning',
+		language	=>	'en',
+		copyright	=>	'Copyright ' . $y.' ' . $Owner->name(),
+		generator	=>	'IntelligentQuote',
+	);
+	foreach my $Article ( openprint::Article->find(
+			'published'			=>	1,
+			#'category_id'		=>	$session{'/article/list.html?category_id'},
+			'order'				=> 'published_on DESC',
+			'limit'				=>	100,
+		) ) {
+		$rss->add_item(
+			title	=>	$Article->name(),
+			description	=>	substr($Article->summary(),0,500),
+			'link'	=>	'http://www.pleasurablethings.ca/article/view.html?article_id='.$Article->id(),
+			'pubDate'	=>	$Article->published_on(),
+			'guid'	=>	$Article->id(),
+			'author'	=>	$Article->Author()->name(),
+			category	=>	$Article->category(),
+		);
+	} # end foreach
+	$variable{'Download'} = $rss->as_string();
+$log->debug("RSS: $variable{'Download'}");
+} # end sub feed 
+
 1;
 __END__
