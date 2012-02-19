@@ -675,6 +675,7 @@ if ( ! sets::isin( 'service_categories', \@tables ) ) {
 	}
 } # end if
 
+if ( 0 ) {
 sql::insert(undef,undef,'configuration', [
     'name','UseCaptchaOnRegistration',
     'value','N',
@@ -744,6 +745,7 @@ if ( $config{'public_URIs'} ) {
 	push @paths, '/main/project/_calc.json' if ! sets::isin( '/main/project/_calc.json', \@paths );
 	sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], 'value', join(',',sets::union(@paths)) );
 } # end inf
+} # end if 0
 if ( $config{cookie_issue_URIs} ) {
 sql::execute( undef, undef, 'delete from configuration where name=?', 'cookie_issue_URIs' );
 } # end if
@@ -773,15 +775,6 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
 	sql::end_transaction( $dbh, $ac );
 	$version = 1898;
-} # end if
-if ( $version < 1899 ) {
-	print "Updating to version 1899\n";
-	#$dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
-	#my $ac = sql::start_transaction( $dbh );
-	#$dbh->do(q{drop index if exists "skid_contents_skid_id_index"});
-	#sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
-	#sql::end_transaction( $dbh, $ac );
-	$version = 1899;
 } # end if
 
 if ( $version < 1900 ) {

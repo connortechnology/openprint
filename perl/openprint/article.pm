@@ -180,7 +180,7 @@ sub edit {
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
 			%param = ();
-			$variable{'Redirect'} = '/article/history.html';
+			$variable{'ExternalRedirect'} = '/article/history.html';
 		} # end if
 	} elsif ( $param{'func'} eq 'Destroy' ) {
 		my $Article = new openprint::Article( $param{'article_id'} );

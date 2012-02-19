@@ -34,16 +34,18 @@
 			my $html;
 			my $rowclass;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				my $Author = $Article->Author();
+
 				$html .= sprintf(q` 
-				<tr title="%2$s" %8$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+				<tr title="%2$s" %8$s> 
 					<td class="Author"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
 					<td class="Category"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
 					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>
 					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%6$s</a></td>
 					<td class="Title"><a href="/article/edit.html?article_id=%1$d">%7$s</a></td>
 				</tr>
-				`, $Article->id(), ssi::html_escape($Article->body()),
-				ssi::htmlize( $Article->Author()->name() ),
+				`, $Article->id(), ssi::html_escape($Article->summary()),
+				( $Author->name() ? ssi::htmlize( $Author->name() ) : ' ' ),
 				$Article->Category()->name(),
 				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->created_on() ) ),
 				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
