@@ -41,13 +41,11 @@ $serial = 'logs_id_seq';
 );
 
 sub User {
-	my $self = shift;
-	return new openprint::User( $$self{user_id} );	
+	return new openprint::User( $_[0]{user_id} );
 } # end sub User
 
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{company_id} );	
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub Company
 
 sub Action {
@@ -109,7 +107,6 @@ sub action {
 	} # end if
 	return $_[0]->Action()->name();
 } # end sub action
-
 
 1;
 __END__

@@ -95,7 +95,7 @@ sub session_init {
 sub switch_company {
 	my ( $Company ) = @_;
 	$session{'company_id'} = $Company->id();
-	openprint::logs::insertLogRecord('79',);
+	(new openprint::Log())->save({'action'=>'Switch Company'});
 
 	if ( $Company->currency_id() ) {
 		$session{'Currency_id'} = $Company->currency_id();

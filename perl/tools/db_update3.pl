@@ -380,7 +380,14 @@ if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
 my %config_actions = (
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
-	'Select Company'	=>	79,
+	'Switch Company'	=>	79,
+	'Login'		=>	2,
+	'Logout'	=>	3,
+	'Service Copy'	=>	27,
+	'Host online'	=>	100,
+	'Host offline'	=>	101,
+	'Host rebooted'	=>	102,
+	'Long response time'	=>	103,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
