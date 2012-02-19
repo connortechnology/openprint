@@ -1,8 +1,7 @@
 use strict;
 package openprint::administrator_equipment;
 
-use Text::CSV_XS ();
-
+require Text::CSV_XS;
 require sql;
 require misc;
 require openprint::Equipment;
@@ -10,8 +9,8 @@ require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::FoldSpecification;
 require openprint::logs;
+require openprint;
 
-use openprint ();
 use vars qw($r %variable $log $dbh %config %param );
 *r = \$openprint::r;
 *variable = \%openprint::variable;
