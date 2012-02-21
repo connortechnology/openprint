@@ -115,6 +115,12 @@
 				<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
 				<label class="radio" for="cancelled">Both</label>
 			</li>
+			<li><label>Department:</label>
+				<select name="department_id" onchange="page_load('Results',\$('f1'));">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
+				</select>
+			</li>
 			<li>
 				<label>Types:</label>
 				<? echo (

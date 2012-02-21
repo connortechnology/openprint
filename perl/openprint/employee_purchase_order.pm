@@ -4,6 +4,7 @@ require sql;
 require openprint::paper;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
+require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -485,7 +486,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id' ) );
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {
