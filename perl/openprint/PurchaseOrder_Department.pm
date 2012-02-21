@@ -6,8 +6,8 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
 
-$table = 'PurchaseOrder_Departments';
-$serial = 'PurchaseOrder_Departments_id';
+$table = 'purchaseorder_departments';
+$serial = 'purchaseorder_departments_id_seq';
 %fields = (
 	'id'		=>	'id',
 	'name'		=>	'name',
