@@ -184,13 +184,13 @@ function update_taxes( form ) {
 		}" } );
 ) ?>
 		</td>
-		<td class="quantity">
+		<td class="quantity" colspan="2">
 			<select name="type_id-new" id="type_id-new">
 				<option value=""> select one </option>
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
-		<td colspan="5">Click on Add to add a new line to this PO.</td>
+		<td colspan="4">Click on Add to add a new line to this PO.</td>
 	</tr>
 </table>
 <div class="Totals">
