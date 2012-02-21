@@ -851,6 +851,10 @@ if ( ! sets::isin( 'company_categories', \@tables ) ) {
 if ( $config{'Owner'} ) {
 	$dbh->do("UPDATE configuration SET name='owner_id' WHERE name='Owner'" );
 }
+if ( ! sets::isin( 'purchaseorder_departments', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Departments.sql}) );
+	die if $dbh->errstr();
+} # en dif
 $dbh->disconnect();
 1;
 __END__
