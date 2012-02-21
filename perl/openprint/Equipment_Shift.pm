@@ -195,7 +195,9 @@ sub Next {
 sub delete {
 	my $error;
 
-	my $now = DateTime::Format::Pg->format_datetime( time );
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$TZ );
+	my $now = DateTime::Format::Pg->format_datetime( $dt );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
