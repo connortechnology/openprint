@@ -67,6 +67,9 @@
 			} else {
 				next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
 			} # end if
+			if ( $session{'/employee/purchase_order/history.html?department_id'} ) {
+				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
+			} # end if
 
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
