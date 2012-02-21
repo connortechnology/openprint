@@ -37,7 +37,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<ul>
 		<li>
 			<label>Docket #</label>
-			<input type="number" pattern="[0-9]*" name="StartDocket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="integerize(this);" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
+			<input type="text" pattern="[0-9]*" name="StartDocket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="integerize(this);" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</li>
 		<li>

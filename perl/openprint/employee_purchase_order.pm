@@ -3,6 +3,7 @@ package openprint::employee_purchase_order;
 require sql;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
+require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -219,6 +220,19 @@ sub view {
 				$log->debug("No item for $content_id");
 			} # end if
 
+			my $Dept;
+			if ( ( $param{'dept_id-'.$content_id} eq 'new' ) or ! $param{'dept_id-'.$content_id} ) {
+				$Dept = openprint::PurchaseOrder_Department->find_one( 
+						'name lc' => lc openprint::PurchaseOrder_Department->transform('name',$param{'dept-'.$content_id}),
+						);
+				if ( ! $Dept ) {
+					$Dept = new openprint::PurchaseOrder_Department();
+					$Dept->save({'name'=>$param{'dept-'.$content_id}});
+				} # end if
+			} else {
+				$Dept = new openprint::PurchaseOrder_Department( $param{'dept_id-'.$content_id} );
+			} # end if
+
 			my $C = new openprint::PurchaseOrder_Content( $content_id );
 			
 			$variable{'error'} .= $C->save( {
@@ -231,6 +245,7 @@ sub view {
 					'price'         =>  $param{'price-'.$content_id},
 					'total'         =>  $param{'total-'.$content_id},
 					'type_id'		=>	$param{'type_id-'.$content_id},
+					( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
 					});
 
 			$types{$C->Type()->name()} = 1;
@@ -484,7 +499,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id' ) );
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {

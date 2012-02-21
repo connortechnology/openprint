@@ -123,6 +123,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<th class="product">PRODUCT #</th>
 		<th class="description">ITEM / DESCRIPTION</th>
 		<th class="docket">DOCKET</th>
+		<th class="dept">DEPT</th>
 		<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 		<th class="price">UNIT PRICE</th>
 		<th class="total">LINE TOTAL</th>
@@ -148,7 +149,8 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<td class="product">%1$s</td>
 			<td class="description">%2$s<br/>%3$s</td>
 			<td class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), 
+			<td class="dept">%5$s</td>
+			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
 			);
 
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
@@ -164,30 +166,30 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	} # end foreach C
 	if ( $unseen ) {
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
-		$html .= '<tr><td colspan="6">There are other items in this purchase order that you cannot see.</td></tr>';
+		$html .= '<tr><td colspan="7">There are other items in this purchase order that you cannot see.</td></tr>';
 		} else {
-		$html .= '<tr><td colspan="4">There are other items in this purchase order that you cannot see.</td></tr>';
+		$html .= '<tr><td colspan="5">There are other items in this purchase order that you cannot see.</td></tr>';
 		} # end if
 	} # end if $unseeen
 	return $html;
 ) ?>
 	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="5" class="totals">SUBTOTAL</td>
-		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		<td colspan="6" class="totals">SUBTOTAL</td>
+		<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-                <? echo ( 
-                    my $html;
-                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%)</td><td class="total">%s</td></tr>',
-                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
-                            );
-                    } # end foreach Tax
-                    return $html;
-                ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+				$html .= sprintf('<tr class="tax"><td colspan="6" class="totals">%s (%d%)</td><td class="total">%s</td></tr>',
+					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
 	<tr>
-		<td colspan="5" class="totals">TOTAL</td>
-		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+		<td colspan="6" class="totals">TOTAL</td>
+		<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 </table>

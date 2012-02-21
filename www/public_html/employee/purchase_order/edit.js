@@ -3,6 +3,20 @@ function load_content_type( index, type ) {
 	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
 
+function dept_onchange( element ) {
+	var re = /^dept_id-(\d+)$/
+	var matches = re.exec( element.name );
+	if ( matches ) {
+		var index = matches[1];
+		if ( element.getValue() == 'new' ) {
+			$('dept-'+index).show();
+		} else {
+			$('dept-'+index).hide();
+			$('dept-'+index).value = '';
+		} // end if
+	} // end if matches
+} // end function dept_onchange
+
 function set_item(index) {
 	var item = $('item-'+index);
 	item.value = '';
