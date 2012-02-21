@@ -193,15 +193,24 @@ sub Next {
 } # end sub Next
 
 sub delete {
+	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
 	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}) ) {
 #$log->debug("Delete shift " . $Shift->to_string() );
 		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
-			$Shift->delete() 
+			#$Shift->delete() 
+			$error .= $Shift->save({'shift_id'=>undef});
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
+		last if $error;
 	} # end foreach
-	my $error = $_[0]->SUPER::delete();
+	$error .= $_[0]->SUPER::delete() if ! $error;
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		return $error;
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
 sub starttime_string {
