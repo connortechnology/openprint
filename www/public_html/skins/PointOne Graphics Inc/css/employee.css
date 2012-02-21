@@ -118,3 +118,12 @@ table .invoice_id {
 table .Project {
 	text-align: left;
 }
+table .AuthorizedBy {
+	width: 150px;
+	text-align: left;
+	float: none;
+}
+table .po_id {
+	width: 60px;
+	text-align: left;
+}
