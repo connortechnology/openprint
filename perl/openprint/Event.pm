@@ -8,7 +8,7 @@ require openprint::Event_Attendance;
 package openprint::Event;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $debug = 1;
 $table = 'events';
 $serial = 'events_id_seq';
@@ -30,6 +30,10 @@ $serial = 'events_id_seq';
 	#'asset_id'		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
 	'album_id'		=>	'album_id', 
+);
+%find_fields = (
+	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
+	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
 );
 
 %defaults = (

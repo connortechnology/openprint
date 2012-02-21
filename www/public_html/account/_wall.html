@@ -17,7 +17,7 @@
 			$Author->id(), $Author->name(), 
 			$Author->Asset()->thumbnail_url(),
 			$Wall->message(),
-			$Wall->datetime_format( 'created_on' ),
+			misc::smart_time( Date::Parse::str2time( $Wall->created_on() ) ),
 			join('',
 				( $Wall->can_edit() ? (
 				ssi::button('delwall'.$Wall->id(), { 'onclick'=>qq`delwall($$Wall{id});`, 'text'=>'X', 'title'=>'Delete' } ),
@@ -39,7 +39,7 @@
 						$Reply->id(),
 						$Author->id(), $Author->name(),
 						$Author->Asset()->thumbnail_url(),
-						$Reply->message(),
+						misc::smart_time( Date::Parse::str2time( $Reply->created_on() ) ),
 						$Reply->datetime_format( 'created_on' ),
 						join('',
 							( $Reply->can_edit() ? (

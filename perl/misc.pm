@@ -504,20 +504,20 @@ sub smart_time {
 	my $difference = time - $_[0];
 	if ( $difference > 7*24*60*60 ) {
 # Use date
-		return Date::Format::time2str( '<span title="%A, %d %b %Y at %H:%M">%A, %d %b %Y</span>', $_[0] );
+		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">%A, %b %d %Y</span>', $_[0] );
 	} elsif ( $difference > 24*60*60 ) {
 # Use date
-		return Date::Format::time2str( '<span title="%A, %d %b %Y at %H:%M">%A</span>', $_[0] );
+		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">%A</span>', $_[0] );
 	} elsif ( $difference > 3600 ) {
 # Use hours
 		$difference = int($difference/3600);
-		return Date::Format::time2str( '<span title="%A, %d %b %Y at %H:%M">', $_[0] ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
+		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">', $_[0] ) . $difference. ' hour'.($difference==1?'':'s').' ago</span>';
 	} elsif ( $difference > 60 ) {
 		$difference = int($difference/60);
-		return Date::Format::time2str( '<span title="%A, %d %b %Y at %H:%M">', $_[0] ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
+		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">', $_[0] ) . $difference. ' minute'.($difference == 1?'':'s').' ago</span>';
 	} else {
 		$difference = int($difference);
-		return Date::Format::time2str( '<span title="%A, %d %b %Y at %H:%M">', $_[0] ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
+		return Date::Format::time2str( '<span title="%A, %b %d %Y at %H:%M">', $_[0] ) . $difference. ' second'.($difference == 1?'':'s').' ago</span>';
 	}
 } # end sub smart_time
 

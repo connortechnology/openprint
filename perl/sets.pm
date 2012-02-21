@@ -50,6 +50,9 @@ sub isin_regx {
 sub union {
 	return keys %{{ map { $_ => 1 } @_ }};
 } # end sub union
+sub object_union {
+	return values %{{ map { $_->id() => $_ } @_ }};
+} # end sub union
 
 sub contains {
 	my ( $setA, $setB ) = @_;

@@ -866,7 +866,7 @@ sub opinions {
 			} # end if
 		} # end foreach opinion
 	} # end if
-	$html .= $_[0]->opinion_button( 'Opinions', '/includes/_opinions.html' );
+	$html .= $_[0]->opinion_button( ( $_[1] ? $_[1] : 'Opinions' ), '/includes/_opinions.html' ) if $session{'user_id'};
 	return $html;
 } # end sub opinions
 
