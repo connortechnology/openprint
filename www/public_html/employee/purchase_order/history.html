@@ -36,11 +36,11 @@
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 			<li><label>PO #:</label>
-				<input type="number" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
+				<input type="number" pattern="[0-9]*" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Docket:</label>
-				<input type="number" id="docket" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
+				<input type="number" id="docket" pattern="[0-9]*" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Manifest:</label>
@@ -114,6 +114,12 @@
 				<label class="radio" for="cancelled0">No</label>
 				<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
 				<label class="radio" for="cancelled">Both</label>
+			</li>
+			<li><label>Department:</label>
+				<select name="department_id" onchange="page_load('Results',\$('f1'));">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
+				</select>
 			</li>
 			<li>
 				<label>Types:</label>

@@ -1050,16 +1050,28 @@ function toggletinymce(textarea_id, toggle ) {
 function cardinalize(e) {
 	e.value = e.value.replace(/\D/g,'');
 	e.focus();
+	var v = e.value;
+	e.value = '';
+	e.value = v;
 }
 function integerize(e) {
 	e.value = e.value.replace(/[^\d\-]/g,'');
 	e.focus();
+	var v = e.value;
+	e.value = '';
+	e.value = v;
 }
 function floatize(e) {
 	e.value = e.value.replace(/[^\d\-\.]/g,'');
 	e.focus();
+	var v = e.value;
+	e.value = '';
+	e.value = v;
 }
 function hexize(e) {
 	e.value = e.value.replace(/[^\da-fA-F]/g,'');
 	e.focus();
+	var v = e.value;
+	e.value = '';
+	e.value = v;
 }
