@@ -2095,7 +2095,8 @@ $imp->display();
 			$$price{'Comparison Cost'} += $$price{'Plate Comparison Cost'};
 			$$price{'Total Cost'} += $$price{'Plate Price'} + $$price{'Blank Plate Price'};
 
-			if ( $$services{'SaddleStitching'} and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
+			if ( $$services{'SaddleStitching'} ) {
+#and $$specs{'txtSignatureType'} ne 'Cover Spreads') {
 
 				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $service_index, $$project{'StitchingSpecs'}, $qty_index, @{$$price{'Impositions'}} );
 				#$openprint::log->error( "Stitching alert: $$results{alert}" );
