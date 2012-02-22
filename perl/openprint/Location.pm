@@ -211,6 +211,7 @@ $openprint::log->debug( $json );
 		my $coordinates = $$Point{'coordinates'};
 		$_[0]{'latitude'} = @{$coordinates}[0];	
 		$_[0]{'longitude'} = @{$coordinates}[1];	
+$openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
 	} else {
 		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
 	} # end if

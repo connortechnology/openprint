@@ -602,7 +602,9 @@ if ( ! sets::isin( 'likes', \@tables ) ) {
 		$dbh->do('ALTER TABLE likes ADD opinion_type_id INTEGER');
 		$dbh->do('ALTER TABLE likes ADD FOREIGN KEY (opinion_type_id) REFERENCES Opinion_Types (id)');
 		$dbh->do('UPDATE likes SET opinion_type_id=value');
+		if ( $$data{'opinion_type'} ) {
 		$dbh->do('DELETE FROM Likes where opinion_type IS NULL');
+		} # end if
 		$dbh->do( 'ALTER TABLE likes DROP CONSTRAINT likes_pkey');
 		$dbh->do( 'ALTER TABLE likes ADD PRIMARY KEY (object_id, object_type_id, user_id, opinion_type_id)' );
 	} # end if
