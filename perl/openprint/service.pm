@@ -425,10 +425,11 @@ sub external_calc {
 	$specs_cache{$specs{ServiceIndex}} = \%specs;
 	my %initial_specs = %specs;
 #blah
-	eval 'require openprint::Estimating::'.$service_type;
-	$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
-	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs, $specs{qty_index} );';
-	$log->error("Error running openprint::Estimating::$service_type ::calc in eval: $@") if $@;
+	require "openprint/Estimating/$service_type.pm";
+	my $module = 'openprint::Estimating::'.$service_type;
+	if ( my $function = $module->can( 'calc' ) ) {
+		$specs{'Status'} = $function->( $log, $dbh, $variable, @specs{'ProjectIndex', 'ServiceIndex'}, %specs, $specs{qty_index} );
+	} # end if
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
 	@vars = keys %specs if ! @vars;
