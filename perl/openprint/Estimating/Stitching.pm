@@ -136,27 +136,24 @@ sub signature_calc {
 	foreach my $I ( @Impositions ) {
 		$$specs{"txtPockets$qty_index"} += 1;
 
-		if ( $imposition > 1 ) {
+		last if $imposition <= 1;
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
-			if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
+		if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
+			$imposition = 1;
+			$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd';
+		} elsif ( ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 ) ) {
+			$imposition = 1;
+			$results{'alert'} .= 'Setting imposition to 1 cuz W&T and impo is not divisiable by 4';
+		} elsif ( $$I{'image_orientation'} eq 'Vertical' ) {
+			if ( $$I{'rows'} % 2 ) {
 				$imposition = 1;
-				$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd';
-			} # en dif
-			if ( ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 ) ) {
+				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd';
+			} # end if
+		} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
+			if ( $$I{'columns'} % 2 ) {
 				$imposition = 1;
-				$results{'alert'} .= 'Setting imposition to 1 cuz W&T and impo is not divisiable by 4';
-			} # end if
-			if ( $$I{'image_orientation'} eq 'Vertical' ) {
-				if ( $$I{'rows'} % 2 ) {
-					$imposition = 1;
-					$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd';
-				} # end if
-			} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
-				if ( $$I{'columns'} % 2 ) {
-					$imposition = 1;
-					$results{'alert'} .= 'Setting imposition to 1 cuz Horizontal and cols odd';
-				} # end i
-			} # end if
+				$results{'alert'} .= 'Setting imposition to 1 cuz Horizontal and cols odd';
+			} # end i
 		} # end if
 	} # end foreach
 
