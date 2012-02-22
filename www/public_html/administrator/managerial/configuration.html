@@ -49,8 +49,10 @@
         } else {
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if
+		$html .= '<span class="buttons">';
 		$html .= ssi::button( 'Delete'.$name, { 'onclick'=>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$name', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
 		$html .= ssi::button( 'Edit'.$name, { 'onclick'=>qq`popup_window('_configuration_popup.html','name=$name');`, 'text'=>'Edit' } );
+		$html .= '</span>';
         $html .= qq{</li>\n};
 		$cat = $category;
 		$cat = '' if ! defined $cat;
