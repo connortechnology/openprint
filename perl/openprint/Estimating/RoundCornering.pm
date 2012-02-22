@@ -52,10 +52,17 @@ sub calc {
 
 	my $status = 'calculated';
 
+	my $services = $Project->services();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
+		my $qty = $$specs{'txtQuantity'.$qty_index};
+		if ( $$sig_specs{'Versions'} ) {
+			$qty *= $$sig_specs{'Versions'};
+		} # end if
 
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -73,7 +80,7 @@ sub calc {
 
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Lift Depth: %.2f&quot;<br/>',$lift);
 
-			my $runs = ceil( $$specs{'txtQuantity'.$qty_index} * $calliper / $lift );
+			my $runs = ceil( $qty * $calliper / $lift );
 			$runs *= ceil( $$specs{'RoundedCorners'} / $corners );
 			my $total = 0;
 
@@ -114,9 +121,9 @@ sub calc {
 		} # end if
 
         $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 
-				( $BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
+				( $BestPrice{'ServicePrice'}{'Total'} / $qty ) * (1+$Project->markup()/100) );
         $$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, (1+$Project->markup()/100) *
-				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index}) * 1000) );
+				(1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{'ServicePrice'}{'Total'} / $qty) * 1000) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
