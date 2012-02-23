@@ -263,7 +263,7 @@ Please select a company or user to obtain login information.<br/>
 				my $html;
 				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
 				foreach my $Group ( openprint::UserGroup->find( 'order'=>'lower(name)' ) ) {
-					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 				} # end foreach
 				return $html;
 			) ?>
