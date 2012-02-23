@@ -3,7 +3,39 @@
 <h2>Reuse Project</h2>
 </div>
 <div class="Project"><div class="Reuse">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<? echo (
+		my $html;
+		my @required_services;
+		my @overrides;
+		my $services = $$variable{'Project'}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType->find() ) {
+			my $module = 'openprint::Estimating::'.$ServiceType->name();
+			if ( ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} ) ) {
+				if ( my $function = $module->can( 'neccessary' ) ) {
+					if ( $function->( $variable{'Project'} ) ) {
+						push @required_services, $ServiceType->name();	
+					} # end if
+				} # end if
+			} else {
+				if ( my $function = $module->can( 'has_overrides' ) ) {
+					foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
+						if ( $function->( $variable{'Project'}, $s_id ) ) {
+							push @overrides, $ServiceType->name();	
+						} # end if
+					} # end foreach my $s_id
+				} # end if
+			} # end if
+		} # end foreach ServiceType
+		if ( @required_services ) {
+			$html .= 'This project requires but does not have the following services:' . join(', ', @required_services).'<br/>';
+		} # end if
+		if ( @overrides ) {
+			$html .= 'The following services have overrides which may mean that this quote is not valid or not optimal:' . join(', ', @overrides).'<br/>';
+		} # end if
+		return '<span class="warning">'.$html.'</span>';
+	) ?>
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset>
 			<ul>
 				<li> 

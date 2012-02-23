@@ -62,6 +62,22 @@ my @no_outputs = (
 sub outputs {
 } # end sub outputs
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+    return @v;
+
+} # end sub has_overrides
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
@@ -94,8 +110,6 @@ sub signature_needs {
 # A function that is smart enough to return true if the project needs perfing/scoring, and false if it doesn't.
 sub neccessary {
 	my ( $Project ) = @_;
-
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
 	my $services = $Project->services( );
 	if ( $$services{'NoBindery'} ) {

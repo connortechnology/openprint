@@ -614,7 +614,7 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 		push @{$$services{'Paper'}}, $Project->add_service( $S ) if ! ( $$services{'Paper'} and @{$$services{'Paper'}} );
 	} # end if
 
-	if ( openprint::Estimating::Folding::neccessary( $$Project{'id'} ) ) {
+	if ( openprint::Estimating::Folding::neccessary( $Project ) ) {
 $openprint::log->debug('Adding Folding');
 		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
 		if ( (exists $$specs{'FoldType'}) and ((! $$specs{'FoldType'} ) or ( $$specs{'FoldType'} eq 'NoFold' )) ) {
