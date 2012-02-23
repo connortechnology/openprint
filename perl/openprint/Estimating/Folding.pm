@@ -239,9 +239,8 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	return 0 if $Project->Type()->name() eq 'Banners';
 	my $services = $Project->services( );
 
@@ -261,6 +260,25 @@ sub neccessary {
 } # end sub neccessary
 
 # Looks at the imposition, and if the width is too small for the fold, tries to pad the image until it can fold, wasting paper, but sometimes this is desireable.
+
+sub has_overrides {
+	my ( $Project, $service_id, $specs ) = @_;
+	my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+	return @v;
+	
+} # end sub has_overrides
+
+# Finds the different ways to run the job, and returns different impositions
 sub impositions {
 	my ( $Project, $Imposition, $specs, $sig_specs, $qty_index ) = @_;
 

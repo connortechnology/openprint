@@ -21,6 +21,7 @@ my $debug = 0;
 
 require openprint::Equipment;
 require openprint::service;
+
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 # This is an array of all the variables that need to be saved to the database for this service.
@@ -86,11 +87,25 @@ sub no_outputs {
 	return @v;
 }
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+		push @v, "OverrideImposition$qty_index" if $$specs{"OverrideImposition$qty_index"};
+		push @v, "OverridePockets$qty_index" if $$specs{"OverridePockets$qty_index"};
+		push @v, "OverridePrice$qty_index" if $$specs{"OverridePrice$qty_index"};
+	} # end foreach
+
+    return @v;
+
+} # end sub has_overrides
+
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
 	my ( $Project ) = @_;
-
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 
 	my $services = $Project->services();
 
@@ -332,7 +347,8 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( ! $Project->signatures() ) {
+	my @signatures = $Project->signatures();
+	if ( ! @signatures ) {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -340,7 +356,7 @@ sub calc {
 	my @signatures = $Project->signatures();
 
 	# Figure out whether we need a cover
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
 	if ( $$specs{'chkOverrideInsertQuantity'} ne 'Y' ) {
 		$variables{txtInsertQuantity} = [ sets::union( 'output', @{$variables{txtInsertQuantity}} ) ];
@@ -417,8 +433,6 @@ sub calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 		$$specs{'alert'} .= 'Unable to determine spine length.  Calculations may be wrong.';
 	} # end if
-
-	my @signatures = $Project->signatures();
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		next if ! $$specs{'txtQuantity'.$qty_index};

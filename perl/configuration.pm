@@ -10,6 +10,7 @@ require sql;
 
 sub init_cache {
 	
+	%cache = ();
 	if ( $openprint::dbh ) {
 		#my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration' );
 		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
@@ -17,8 +18,6 @@ sub init_cache {
 		foreach (@{$data}) {
 			$cache{$$_{name}} = $$_{value};
 		} # end foreach
-	} else {
-		%cache = ();
 	} # end if
 	
 	# Anything specified in dir_config override configuration

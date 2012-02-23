@@ -243,7 +243,7 @@ sub auto_calculate {
 	my $services = $Project->services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
-	if ( ! openprint::Estimating::Folding::neccessary( $$Project{'id'} ) ) {
+	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
 		while ( my $si = shift @{$$services{'Folding'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $si );
 		} # end while
