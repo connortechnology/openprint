@@ -125,13 +125,12 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services( );
 
 	if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
         return 0;
     } # end if
 	if ( $$services{'MetalCoil'} ) {
@@ -156,9 +155,26 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("FOLDING NOT NEEDED! $$services{Folding}");
+	$openprint::log->debug("FOLDING NOT NEEDED! $$services{Folding}");
 	return 0;	
 } # end sub neccessary
+
+sub has_overrides {
+	my ( $Project, $service_id, $specs ) = @_;
+	my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+	return @v;
+	
+} # end sub has_overrides
 
 # Finds the different ways to run the job, and returns different impositions
 sub impositions {

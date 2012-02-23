@@ -792,7 +792,7 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $specs );
 		} # end if
 
-		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $log, $dbh, $project_index, $specs );
+		$project{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
 	} else {
 		$project{'NeedScoring'} = 0;
 		$project{'NeedFolding'} = 0;

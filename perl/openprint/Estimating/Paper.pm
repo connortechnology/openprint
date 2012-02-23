@@ -35,19 +35,17 @@ sub variables {
 }
 
 sub signature_needs {
-	my ( $log, $dbh, $project_index, $specs ) = @_;
+	my ( $Project, $specs ) = @_;
 	return 1 if $$specs{'rdbSuppliedStock'} ne 'Y';
 	return 0;
 } # end sub
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
-
-	my $Project = new openprint::Project( $project_index );
+	my ( $Project ) = @_;
 
     foreach my $signature_service_index ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-        if ( signature_needs( $log, $dbh, $project_index, $sig_specs ) ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+        if ( signature_needs( $Project, $sig_specs ) ) {
             return 1;
         } # end if
     } # end foreach

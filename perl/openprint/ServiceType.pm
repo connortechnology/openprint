@@ -1,8 +1,6 @@
-package openprint::ServiceType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+package openprint::ServiceType;
+our @ISA = qw(openprint::Object);
 
 my %fields = (
 	'name'				=> 'name',
@@ -23,6 +21,7 @@ sub find_one {
 	return $Results[0] if @Results;
 } # end sub find_one
 sub find {
+	shift @_ if $_[0] eq 'openprint::ServiceType';
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
