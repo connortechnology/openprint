@@ -10,21 +10,26 @@ $debug = 1;
 $table = 'usergroups';
 $serial= 'usergroups_id_seq';
 %fields = (
-    'id'    =>  'id',
-    'name' =>  'name',
+	'id'		=>	'id',
+	'name'		=>	'name',
+	'duration'	=>	'duration',
+	'asset_id'	=>	'asset_id',
 );
 %find_fields = (
-    'user_id'       =>  '(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
+	'user_id'	=>	'(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
 );
 
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+	'duration'	=>	undef,
+	'asset_id'	=>	undef,
 );
 
 sub Users {
 	my ( $self, %param ) = @_;
+	return () if ! $$self{'id'};
 	if ( %param ) {
 		$param{'usergroup_id'} = $$self{'id'};
 		return openprint::User->find( %param );	

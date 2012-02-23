@@ -174,11 +174,11 @@ Please select a company or user to obtain login information.<br/>
 					</li>
 					<li> 
 						<label>Custom Greeting</label>
-						<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
+						<textarea id="greeting" name="greeting" rows="<? echo ( ssi::count_lines( $$variable{'User'}->greeting() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 					</li>
 					<li>
 						<label>Notes</label>
-						<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'User'}->notes() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
+						<textarea id="notes" name="notes" rows="<? echo ( ssi::count_lines( $$variable{'User'}->notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->notes() ) ?></textarea>
 					</li>
 					<li><label>Created</label>
 						<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?>
@@ -373,31 +373,31 @@ Please select a company or user to obtain login information.<br/>
 		<fieldset>
 		<p id="ButtonsBottom" class="buttons">
 			<label>
-				<? echo (
-						if ( $$variable{'User'}->company_id() ) {
-							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{'User'}->company_id(), text=>'Company Information' } );
-						} elsif ( $param{'ddmCustomer'} ) {
-							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
-						}
-						return;
-				) ?>
+			<? echo (
+					if ( $$variable{'User'}->company_id() ) {
+						return ssi::button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$$variable{'User'}->company_id(), text=>'Company Information' } );
+					} elsif ( $param{'ddmCustomer'} ) {
+						return ssi::button( 'CompanyInfo2', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
+					}
+					return;
+			) ?>
 			</label>
-	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
+			<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
-	<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
-				<? echo ( my $html = '';
-					$html .= ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
-					$html .= ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
-					$html .= ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
-					if ( $$variable{'User'}->deleted() ) {
+			<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
+			<? echo ( my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
+				$html .= ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
+				$html .= ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
+				if ( $$variable{'User'}->deleted() ) {
 					$html .= ssi::writeButton( $log, $dbh, 'Undelete2','undelete.gif',"f1.btnFunction.value='Undelete';f1.submit();",'','Undelete');
 					$html .= ssi::writeButton( $log, $dbh, 'Destroy2','destroy.gif',"f1.btnFunction.value='Destroy';f1.submit();",'','Destroy');
-					} else {
+				} else {
 					$html .= ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
-					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
-					$html .= ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset');
-	return $html; ) ?>
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+				$html .= ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset');
+				return $html; ) ?>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
@@ -405,16 +405,16 @@ Please select a company or user to obtain login information.<br/>
     <table class="List">
         <tr>
             <th class="DateTime">When</th>
-            <th align="left">From</th>
-            <th align="left">Company</th>
-            <th align="left" width="140">Result</th>
+            <th class="IP">From</th>
+            <th class="Company">Company</th>
+            <th class="Result">Result</th>
         </tr>
 <? echo (
     require openprint::Log;
     my $html = '';
 
     foreach my $Log ( openprint::Log->find('user_id'=>$$variable{'User'}->id(),'order'=>'date_time DESC', 'limit'=>10, 'action_id'=>[2,3,78,79] ) ) {
-        $html .= sprintf('<tr><td class="DateTime">%s</td><td style="overflow:hidden;" title="%s">%s</td><td>%s</td><td>%s</td></tr>',
+        $html .= sprintf('<tr><td class="DateTime">%s</td><td class="IP" title="%s">%s</td><td class="Company">%s</td><td class="Result">%s</td></tr>',
             Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
             $Log->ip_address(), 
 			( $Log->host_id() ? 
