@@ -811,5 +811,4 @@ $openprint::log->debug("reusing $project_index");
 } # end sub reuse_project
 
 1;
-
 __END__

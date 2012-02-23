@@ -32,6 +32,18 @@ sub variables {
     return @variables;
 } # end sub variables
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+	} # end foreach
+
+    return @v;
+
+} # end sub has_overrides
 
 sub neccessary {
 	my ( $Project ) = @_;

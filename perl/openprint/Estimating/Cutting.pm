@@ -80,6 +80,23 @@ sub outputs {
 sub no_outputs {
 } # end sub no_outputs
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+    return @v;
+
+} # end sub has_overrides
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
@@ -130,7 +147,7 @@ sub neccessary {
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
 		return 0;
 	} # end if
 
@@ -146,7 +163,7 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("CUTTING NOT NEEDED!");
+	$openprint::log->debug("CUTTING NOT NEEDED!");
 	return 0;
 } # end sub neccessary
 
