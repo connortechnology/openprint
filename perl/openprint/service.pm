@@ -428,7 +428,7 @@ sub external_calc {
 	require "openprint/Estimating/$service_type.pm";
 	my $module = 'openprint::Estimating::'.$service_type;
 	if ( my $function = $module->can( 'calc' ) ) {
-		$specs{'Status'} = $function->( $log, $dbh, $variable, @specs{'ProjectIndex', 'ServiceIndex'}, %specs, $specs{qty_index} );
+		$specs{'Status'} = $function->( $log, $dbh, $variable, @specs{'ProjectIndex', 'ServiceIndex'}, \%specs, $specs{qty_index} );
 	} # end if
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
