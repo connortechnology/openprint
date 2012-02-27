@@ -7,68 +7,58 @@
 		} # end if
 		my @Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
 		if ( @Companies ) {
-		@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
-			'order'	=>	'lower(firstname),lower(lastname)',
-			'id !='	=>	$session{'user_id'},
-			);
+			@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
+				'order'	=>	'lower(firstname),lower(lastname)',
+				'id !='	=>	$session{'user_id'},
+				);
 		} # end if
 	} elsif ( $param{'name'} ) {
 		if ( ! ( $param{'name'} =~ /%/ ) ) {
 			$param{'name'} .= '%';
 		} # end if
-		@Users = openprint::User->find('name ilike'=>$param{'name'},
-			'order'	=>	'lower(firstname),lower(lastname)',
+		@Users = openprint::User->find(
+			'name ilike'=>	$param{'name'},
+			'order'		=>	'lower(firstname),lower(lastname)',
 			'id !='		=>	$session{'user_id'},
 			);
 	} else {
-		foreach my $User ( openprint::User->find(
+
+		my %param = (
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
 			'order'	=>	'(select name from companies where companies.id=company_id),lower(firstname),lower(lastname)',
-			'offset'	=>	$session{'/account/search.html?paging_per_page'} * $param{'paging_page'},
 			'id !='		=>	$session{'user_id'},
-			) ) {
-			my $filtered = 0;
-			my $Profile = $User->Profile();
-			foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
-				my $value = $Profile->value( $Field->name() );
-				if ( $session{'/account/search.html?field-'.$Field->id()} ) {
-					if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
-						if ( ! sets::intersection( split(',',$session{'/account/search.html?field-'.$Field->id()} ), $value ) ) {
-#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
-							$filtered = 1; 
-						} # endif 
-					} elsif ( $Field->type() eq 'date' ) {
-					} elsif ( sets::isin( $Field->type(), [ 'country', 'state', ] ) ) {
-						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
-#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
-							$filtered = 1; 
-						} # endif 
-					} else {
-						if ( $value != $session{'/account/search.html?field-'.$Field->id()} ) {
-#$log->debug( "Filtered becase $value not in " . $session{'/account/search.html?field-'.$Field->id()} );
-							$filtered = 1;
-							last;
-						} # end if
-					} # end if
-				} # end if
-			} # end foreach Field
-			push @Users, $User if ! $filtered;
-			last if @Users == $session{'/account/search.html?paging_per_page'};
-		} # end foreach User
+		);
+		foreach my $Field ( openprint::User_Profile_Field->find() ) {
+			next if ! $session{'/account/search.html?field-'.$$Field{'id'}};
+
+			if ( ! $openprint::User::find_fields{'profile_field-'.$$Field{'id'}} ) {
+				$openprint::User::find_fields{'profile_field-'.$$Field{'id'}} = '(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id='.$$Field{'id'}.')';
+			} # end if
+			if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+				$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/search.html?field-'.$Field->id()} ) ];
+			} else {
+				$param{'profile_field-'.$$Field{'id'}} = $session{'/account/search.html?field-'.$Field->id()};
+			} # end if
+		} # end foreach Profile Field
+
+		@Users = openprint::User->find( %param );
 	} # end if
+
 	if ( ! @Users ) {
 		return 'No results found.';
 	} elsif ( @Users == 1 and $Users[0]{'id'} == $session{'user_id'} ) {
 		return 'No results found, other than your account.';
 	} # end if
 
-
 	my $html;
+	my $count = 0;
 	foreach my $User ( @Users ) {
-		next if $$User{'id'} == $session{'user_id'};
+		$count += 1;
+		next if $count <= $session{'/account/search.html?paging_per_page'} * $param{'paging_page'};
+		last if $count > $session{'/account/search.html?paging_per_page'};
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
@@ -88,10 +78,9 @@
 
 		if ( $birthday and $birthday ne '--' ) {
 			my @Birthday = split('-', $birthday );
-$log->debug("Birhtday: @Birthday");
 			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
-			#$log->debug("Birthday $age years @Birthday");
-		} 
+		} # end if 
+
 		$html .= sprintf(q`
 				<div class="User">
 					<a class="thumbnail" href="/account/view.html?user_id=%1$d"><img src="%2$s" alt="%3$s" /></a>
@@ -110,7 +99,7 @@ $log->debug("Birhtday: @Birthday");
 			);
 		$html .= '</div>';
 	} # end foreach User
-	if ( @Users == $session{'/account/search.html?paging_per_page'} ) {
+	if ( $count > $session{'/account/search.html?paging_per_page'} ) {
 		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
