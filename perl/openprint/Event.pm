@@ -226,12 +226,15 @@ sub thumbnail_html {
 	} # end if
 	return $_[0]{'thumbnail_html'};
 } # end sub thumbnail_html
+
 sub asset_html {
 	if ( ! $_[0]{'asset_html'} ) {
-		my $Asset = $_[0]->Asset();
-		if ( $Asset and $$Asset{'id'} ) {
-			$_[0]{'asset_html'} = sprintf('<a class="asset" href="/event/view.html?event_id=%1$d"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-					$_[0]{'id'}, $Asset->url(), $_[0]->name() );
+		my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+		my $Thumbnail = $Album->Thumbnail() if $Album and $$Album{'id'};
+
+		if ( $Thumbnail and $$Thumbnail{'asset_id'} ) {
+			$_[0]{'asset_html'} = sprintf('<a class="Asset" href="/event/view.html?event_id=%1$d"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+					$_[0]{'id'}, $Thumbnail->Asset()->url(), $_[0]->name() );
 		} # end if
 	} # end if
 	return $_[0]{'asset_html'};

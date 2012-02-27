@@ -26,10 +26,7 @@
 		<div class="rightColumn">
 		<? echo (
 			my $html;
-			my $Asset = $$variable{'Event'}->Asset();
-			if ( $Asset and $$Asset{'id'} ) {
-				$html .= '<img class="Asset" src="'. $Asset->url().'" alt="" />';
-			} # end if
+			$html .= $$variable{'Event'}->asset_html();
 			my $Location = $$variable{'Event'}->Location();
 			if ( $Location ) {
 				$Location->get_latitude_and_longitude();

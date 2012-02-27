@@ -65,6 +65,15 @@ $openprint::log->debug("Photo has asset" . $Photo->to_string() );
 $openprint::log->debug("Photo no asset"  );
 	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
 } # end sub thumbnail_html
+sub asset_html {
+	my $Photo = $_[0]->Thumbnail();
+	if ( $Photo->asset_id() ) {
+$openprint::log->debug("Photo has asset" . $Photo->to_string() );
+		return sprintf('<a class="asset" href="/photo_albums/view.html?album_id=%1$d" title="%3$s"><img src="%2$s" alt="%3$s" /></a>', $_[0]{id}, $Photo->url(), $_[0]->name() );
+	} # end if
+$openprint::log->debug("Photo no asset"  );
+	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
+} # end sub asset_html
 
 sub Photos {
 	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
