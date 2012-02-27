@@ -62,6 +62,8 @@ BEGIN {
 	use openprint::Object ();
 	use openprint::Company ();
 	use openprint::User ();
+	use openprint::UserGroup ();
+	use openprint::User_in_UserGroup ();
 	use openprint::User_Type ();
 	use openprint::User_Notification ();
 	use openprint::Service ();
