@@ -58,7 +58,7 @@
 	foreach my $User ( @Users ) {
 		$count += 1;
 		next if $count <= $session{'/account/search.html?paging_per_page'} * $param{'paging_page'};
-		last if $count > $session{'/account/search.html?paging_per_page'};
+		last if $count > $session{'/account/search.html?paging_per_page'} * ($param{'paging_page'}+1);
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
@@ -99,7 +99,7 @@
 			);
 		$html .= '</div>';
 	} # end foreach User
-	if ( $count > $session{'/account/search.html?paging_per_page'} ) {
+	if ( $count > ( $session{'/account/search.html?paging_per_page'} * ( $param{'paging_page'} + 1 ) ) ) {
 		$html .= ssi::button( 'More', { 'onclick'=>q`$('ButtonMore').remove();new Ajax.Updater( 'Results','_search.html', { parameters: { paging_page: `.($param{'paging_page'}+1).' }, insertion: Insertion.Bottom } );' } );
 	} # end if
 	return $html;
