@@ -132,6 +132,7 @@ sub domains {
 	$dbh = email::db_connect() if ! $dbh;
 	if ( ! $dbh ) {
 		$openprint::log->debug("No connection to mail database");
+		return ();
 	} # end if;
 	my $domains = $dbh->selectall_arrayref( 'SELECT * FROM domain', { Slice => {} } );
 	if ( $domains ) {

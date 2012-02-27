@@ -116,15 +116,15 @@ sub thumbnail_url {
 } # end sub thumbnail_url
 
 sub thumbnail_html {
-	return sprintf('<img src="%s" alt="%s"/>', $_[0]->thumbnail_url(), $_[0]->caption() );
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->thumbnail_url(), $_[0]->name() );
 } # end sub thumbnail_html
 
 sub thumbnail_path {
 	my $url = $_[0]->thumbnail_url();
-	if ( $url =~ /$\/thumbnails/ ) {
+	if ( $url =~ /^\/thumbnails/ ) {
 		return $openprint::config{'AssetPath'}.$url;
 	} else {
-		return $ENV{'SkinPath'}.$url;
+		return $openprint::config{'SkinPath'}.$url;
 	} # end if
 } # end sub thumbnail_path
 

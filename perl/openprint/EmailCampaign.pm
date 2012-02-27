@@ -202,6 +202,24 @@ sub recipients {
 	return sql::execute( undef, undef, $$self{'query'});
 } # end sub recipients
 
+sub test {
+	my ( $self ) = @_;
+	my %replacements;
+	my $body = $self->{'email_text'};
+# de we need to send this email?
+	$replacements{'User'} = new openprint::User( $openprint::session{'user_id'} );
+	$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
+	if ( ! $replacements{ReplacementText} ) {
+		return 'No body.  Not sending<br/>';
+	} # end if
+	if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
+		return sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+	} else {
+		$self->send_email( \%replacements );
+		return sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
+	} # end if email is valid
+}
+
 sub trial {
 	my ( $self ) = @_;
 

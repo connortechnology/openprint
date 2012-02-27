@@ -684,7 +684,7 @@ Carp::cluck("Use of deprecated Object ref in find");
 					push @values, $$params{$k}->id();
 				} else {
 					push @where, "$$fields{$f} IS NULL";
-				} # en dif
+				} # end if
 				delete $$params{$k};
 			} # end if
 		} # end foreach

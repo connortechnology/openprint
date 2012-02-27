@@ -141,8 +141,15 @@ sub handler {
 					( $page_settings{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
 			   ) {
 #$log->debug("No good, need login");
+				if ( $page =~ /^.*\/_/ ) {
+$log->debug("Sending js redirect");
+					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
+				} else {
 				$page = '/error/error_login.html';
+				} # end if
 				$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
+				#$r->headers_out->set(Location=>'/error/error_login.html');
+				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
 

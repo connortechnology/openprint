@@ -47,6 +47,8 @@ return $html;
 				ssi::writeButton( $log, $dbh, 'CopyBottom', 'copy.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
 				ssi::writeButton( $log, $dbh, 'ResetBottom', 'reset.gif', 'f1.reset();','','Reset'),
 				ssi::writeButton( $log, $dbh, 'Run', 'run.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();",'','Run'),
+				ssi::button( 'Test', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
+				ssi::button( 'ViewRecipients', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
 				ssi::writeButton( $log, $dbh, 'DownloadRecipients', 'run.gif', "f1.btnFunction.value='Download Recipients';f1.submit();",'','Download Recipients'),
 			); ) ?>
 		</p>

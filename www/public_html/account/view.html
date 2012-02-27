@@ -106,6 +106,13 @@
 		</div>
 				
 		<div class="rightColumn">
+			<div class="Badges">
+				<fieldset><legend>Badges</legend>
+				<? echo (
+					my @Badges = openprint::UserGroup->find( 'user_id any'=>$$variable{'User'}->id(), 'asset_id is null'=>0 );
+					return join("\n", map { $_->Asset()->thumbnail_html() } @Badges );
+				) ?>
+			</div>
 			<div class="Relationships">
 				<fieldset><legend>Relationships</legend>
 					<div id="Relationships"><!--#include virtual="/account/_relationships.html"--></div>

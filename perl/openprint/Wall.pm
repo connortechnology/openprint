@@ -35,5 +35,17 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub delete {
+	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach ( openprint::Wall->find('reply_to'=>$_[0]{'id'}) ) {
+		$error .= $_->delete();
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::delete() if ! $error;
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub delete
+
 1;
 __END__
