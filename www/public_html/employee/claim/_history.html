@@ -62,9 +62,9 @@
 <table class="List">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-		<th width="20"><input type="checkbox" onclick="select_all( $('f2'), 'claim_id', this.checked );"/></th>
+		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f2'), 'claim_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-		<th class="ID">ID</th>
+		<th class="claim_id">ID</th>
 		<th class="Date">Created/Updated</th>
 		<th class="Company">Vendor</th>
 		<th class="CreatedBy">Created By</th>
@@ -81,12 +81,12 @@
 		while ( my $Claim = shift @{$$variable{'Claims'}} ) {
 			$html .= sprintf(q`<tr%2$s id="tr-%1$d-1" onmouseover="$('tr-%1$d-1').addClassName('highlightOn');$('tr-%1$d-2').addClassName('highlightOn');" onmouseout="$('tr-%1$d-1').removeClassName('highlightOn');$('tr-%1$d-2').removeClassName('highlightOn');">`, $Claim->id(), $rowclass );
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td rowspan="2"><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
+				$html .= '<td class="checkbox" rowspan="2"><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
 			} # end if
 			my $total = $Claim->Currency()->convert_from( $Claim->total() );
 
 			$html .= sprintf( q`
-				<td class="ID" rowspan="2"><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td class="claim_id" rowspan="2"><a href="view.html?claim_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%2$s</a></td>
 				<td class="Company" rowspan="2"><a href="view.html?claim_id=%1$d">%3$s</a></td>
 				<td class="CreatedBy" rowspan="2"><a href="view.html?claim_id=%1$d">%4$s</a></td>
