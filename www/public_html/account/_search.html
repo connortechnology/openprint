@@ -26,8 +26,7 @@
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
-			'order'	=>	'lower(firstname),lower(lastname)',
-			'limit'		=>	$session{'/account/search.html?paging_per_page'},
+			'order'	=>	'(select name from companies where companies.id=company_id),lower(firstname),lower(lastname)',
 			'offset'	=>	$session{'/account/search.html?paging_per_page'} * $param{'paging_page'},
 			'id !='		=>	$session{'user_id'},
 			) ) {
@@ -57,6 +56,7 @@
 				} # end if
 			} # end foreach Field
 			push @Users, $User if ! $filtered;
+			last if @Users == $session{'/account/search.html?paging_per_page'};
 		} # end foreach User
 	} # end if
 	if ( ! @Users ) {
