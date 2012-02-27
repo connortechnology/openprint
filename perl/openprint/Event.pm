@@ -226,6 +226,16 @@ sub thumbnail_html {
 	} # end if
 	return $_[0]{'thumbnail_html'};
 } # end sub thumbnail_html
+sub asset_html {
+	if ( ! $_[0]{'asset_html'} ) {
+		my $Asset = $_[0]->Asset();
+		if ( $Asset and $$Asset{'id'} ) {
+			$_[0]{'asset_html'} = sprintf('<a class="asset" href="/event/view.html?event_id=%1$d"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+					$_[0]{'id'}, $Asset->url(), $_[0]->name() );
+		} # end if
+	} # end if
+	return $_[0]{'asset_html'};
+} # end sub asset_html
 
 1;
 __END__

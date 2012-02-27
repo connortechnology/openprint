@@ -18,6 +18,7 @@ $serial = 'bugs_id_seq';
 	'updated_on'	=>	'updated_on',
 	'user_id'		=>	'user_id',
 	'status_id'		=>	'status_id',
+	'company_id'	=>	'company_id',
 );
 %transforms = (
 );
@@ -26,6 +27,7 @@ $serial = 'bugs_id_seq';
 	'updated_on'	=>	q`'NOW()'`,
 	'user_id'		=>	q`$session{'user_id'}`,
 	'owner_id'		=>	q`$config{'owner_id'}`,
+	'company_id'	=>	q`$session{'company_id'}`,
 );
 
 sub destroy {
