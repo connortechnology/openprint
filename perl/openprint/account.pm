@@ -47,7 +47,7 @@ sub registration {
 	# perform input field validation
 	my $error = '';
 	my %required_fields = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
-	if ( ! $param{'company_name'} ) {
+	if ( ( ! $param{'company_name'} ) and ( ! $session{'company_id'} ) ) {
 		if ( $required_fields{'company_name'} ) {
 			$error .= 'Missing company name.<br/>';
 		} elsif ( $param{'firstname'} or $param{'lastname'} ) {
@@ -99,6 +99,7 @@ sub registration {
 	} # end if
 
 	if ( $error ne '' ) {
+$log->warn("registration errors $error");
 		$variable{'error'} = $error;
 		return;
 	} # end if
