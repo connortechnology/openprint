@@ -190,7 +190,7 @@ sub Contact {
 } # end sub Contact
 
 sub send {
-	my ( $self ) = @_;
+	my ( $self, @To ) = @_;
 
 	my $From = new openprint::User( $session{'user_id'} );
 	
@@ -221,7 +221,7 @@ sub send {
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
 	$results .= $Email->send( 
-			TO	=>	($self->Contact()->email() ? $self->Contact() : sprintf('<%s> "%s"', @$self{'vendor_contact','vendor_email'})),
+			TO	=>	( @To ? \@To : ( ($self->Contact()->email() ? $self->Contact() : sprintf('<%s> "%s"', @$self{'vendor_contact','vendor_email'})) ) ),
 			BCC	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			#TO	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
