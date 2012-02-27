@@ -42,8 +42,6 @@ sub email_campaigns {
         $variable{'error'} .= $Campaign->delete();
     } elsif ( $param{'btnFunction'} eq 'Run' ) {
         $variable{'information'} = $Campaign->send();
-    } elsif ( $param{'btnFunction'} eq 'Test' ) {
-        $variable{'information'} = $Campaign->test();
     } elsif ( $param{'btnFunction'} eq 'Trial' ) {
         $variable{'information'} = $Campaign->trial( new openprint::User( $openprint::session{'user_id'} )->email() );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
@@ -96,6 +94,8 @@ sub email_campaign {
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
 		$variable{'error'} .= $Campaign->save( );
+    } elsif ( $param{'btnFunction'} eq 'Test' ) {
+        $variable{'information'} = $Campaign->test();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
 		$Campaign->save( \%param );
@@ -153,7 +153,7 @@ sub email_templates {
 		my $Template = new openprint::EmailTemplate( $param{'template_id'}) ;
 		$variable{'error'} .= $Template->delete( );
 	} # end if
-} # end sub email_campaign
+} # end sub email_templates
 
 1;
 
