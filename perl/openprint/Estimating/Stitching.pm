@@ -89,14 +89,12 @@ sub no_outputs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $Project ) = @_;
-
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	my ( $Project ) = @_;
 
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-		$log->debug(" ** Project is marked as No bindery, Stitching not needed ! ** ");
+		$openprint::log->debug(" ** Project is marked as No bindery, Stitching not needed ! ** ");
 		return 0;
 	} # end if
 

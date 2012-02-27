@@ -57,6 +57,22 @@ sub variables {
 my @no_outputs = (
 );
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+    return @v;
+
+} # end sub has_overrides
 sub signature_needs {
 	my ( $Project, $specs ) = @_;
 # If it's not needing folding, then it doesn't need to be scored!!
@@ -79,8 +95,6 @@ sub signature_needs {
 sub neccessary {
 	my ( $Project ) = @_;
 
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
-
 	my $services = $Project->services( );
 	if ( $$services{'NoBindery'} ) {
         #$log->debug(" ** Project is marked as No bindery, Scoring not needed ! ** ");
@@ -90,7 +104,7 @@ sub neccessary {
 	# Only need scoring if it's being folded.
 	if ( $$services{'Folding'} ) {
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $specs = openprint::service::get_specs_ref( $Project->id(), $signature_service_index );
+			my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 			if ( signature_needs( $Project, $specs ) ) {
 				return 1;

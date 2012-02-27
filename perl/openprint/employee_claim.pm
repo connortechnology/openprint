@@ -114,6 +114,8 @@ sub view {
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		$variable{'information'} .= $Claim->send();
+	} elsif ( $param{'btnFunction'} eq 'SendToMe' ) {
+		$variable{'information'} .= $Claim->send( new openprint::User( $session{'user_id'} ) );
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
 		$variable{'error'} .= $Asset->save( \%param );
