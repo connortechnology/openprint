@@ -14,15 +14,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
+use strict;
 package openprint::employee_marketing;
 
-use openprint::EmailCampaign;
-use openprint::MarketingCategory;
-use openprint::Survey;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Email::Valid;
-use strict;
+require openprint::EmailCampaign;
+require openprint::MarketingCategory;
+require openprint::Survey;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -45,8 +42,10 @@ sub email_campaigns {
         $variable{'error'} .= $Campaign->delete();
     } elsif ( $param{'btnFunction'} eq 'Run' ) {
         $variable{'information'} = $Campaign->send();
-    } elsif ( $param{'btnFunction'} eq 'TrialRun' ) {
-        $variable{'information'} = $Campaign->trial( $param{'TrialEmailAddress'} );
+    } elsif ( $param{'btnFunction'} eq 'Test' ) {
+        $variable{'information'} = $Campaign->test();
+    } elsif ( $param{'btnFunction'} eq 'Trial' ) {
+        $variable{'information'} = $Campaign->trial( new openprint::User( $openprint::session{'user_id'} )->email() );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
         my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
@@ -58,6 +57,8 @@ sub email_campaigns {
 		} # end foreach
 
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
+    } elsif ( $param{'btnFunction'} eq 'View Recipients' ) {
+		$variable{'PageContent'} = join('<br/>', map { new openprint::User( $_ )->name() } $Campaign->recipients() );
 	} # end if
 
 	$variable{'campaign_id'} = $Campaign->id();
