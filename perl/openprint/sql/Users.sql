@@ -8,7 +8,7 @@ CREATE TABLE Users (
 	password		TEXT NOT NULL,
 	title		TEXT,
 	firstName	TEXT NOT NULL,
-	lastName		TEXT NOT NULL,
+	lastName		TEXT,
 	salutation	varchar(4),
 	phone		TEXT,
 	fax			TEXT,
