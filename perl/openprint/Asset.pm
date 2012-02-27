@@ -121,10 +121,10 @@ sub thumbnail_html {
 
 sub thumbnail_path {
 	my $url = $_[0]->thumbnail_url();
-	if ( $url =~ /$\/thumbnails/ ) {
+	if ( $url =~ /^\/thumbnails/ ) {
 		return $openprint::config{'AssetPath'}.$url;
 	} else {
-		return $ENV{'SkinPath'}.$url;
+		return $openprint::config{'SkinPath'}.$url;
 	} # end if
 } # end sub thumbnail_path
 

@@ -73,6 +73,7 @@
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
 								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
+								<div class="Badges">%4$s</div>
 								<div class="Address">%3$s</div>
 							</div>`, $User->id(), $User->alias(), 
 							join(', ',
@@ -80,6 +81,7 @@
 								( $Profile->state() ? (new openprint::Location( $Profile->state() ))->name() : () ),
 								( $Profile->country() ? (new openprint::Location( $Profile->country() ))->name() : () ),
 							),
+							join('', map { $_->Asset()->thumbnail_html() } openprint::UserGroup->find( 'user_id any'=>$User->id(), 'asset_id is null'=>0 )),
 				);
 		my $age = 0;
 		my $birthday = $Profile->date_of_birth();

@@ -49,8 +49,9 @@ sub handler {
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line
 		$session{'lastupdated'} = time if ! $session{'lastupdated'};
 
-		# The asset filename form is id_title.extension
-		my ( $id ) = $r->uri() =~ /(\d+)_.+$/;
+		# The asset filename form is id_title.extension, path is either assets or thumbnails
+		my ( $path, $id ) = $r->uri() =~ /^\/(.*)\/(\d+)_.+$/;
+$log->debug("{Path: $path, id: $id");
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
 			if ( $Asset->id() ) {
@@ -63,22 +64,42 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
-						$r->sendfile( $Asset->on_disk_path() );
+						if ( $path eq 'thumbnails' ) {
+$log->debug("Sending " .  $Asset->id() );
+$log->debug("Sending " .  $Asset->thumbnail_path() );
+							$r->sendfile( $Asset->thumbnail_path() );
+						} else {
+$log->debug("Sending " .  $Asset->on_disk_path() );
+							$r->sendfile( $Asset->on_disk_path() );
+						} # end if
 					} else {
+$log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
+						if ( $path eq 'thumbnails' ) {
+$log->debug("Sending " .  $Asset->id() );
+$log->debug("Sending " .  $Asset->thumbnail_path() );
+							$r->sendfile( $Asset->thumbnail_path() );
+						} else {
+$log->debug("Sending " .  $Asset->on_disk_path() );
 					# No album means has to be an article image, or a generic site image.
 					$r->sendfile( $Asset->on_disk_path() );
+}
 				} # end if
 			} else {
+$log->error("NOT FOUND");
 				$return_code = Apache2::Const::HTTP_NOT_FOUND;
-			} # end if
-		} # end if
+			} # end if Asset not found
+		} else {
+$log->error("No value for aset. " . $r->uri() );
+		} # end if parsed uri into asset
 
 		untie %session;
 		$dbh->disconnect();
-	} # end if
+	} else {
+	$log->warn("No dbh!");
+	} # end if dbh
 	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	return $return_code;
