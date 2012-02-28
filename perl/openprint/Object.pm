@@ -119,6 +119,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
 	delete $sql{'created_on'};
+	$sql{'created_by'} = $session{'user_id'} if exists $fields{'created_by'} and ! $sql{'created_by'};
 	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 	if ( $debug ) {
