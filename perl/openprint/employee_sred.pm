@@ -22,7 +22,7 @@ sub projects {
 	} elsif ( $param{'action'} eq 'Export' ) {
 		my $Project = new openprint::SRED_Project($param{'project_id'});
 		
-		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
+		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description','Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
 		my @data;
 		foreach my $C ( openprint::SRED_Content->find( 
 			ssi::date_filter('created_on_start', 'created_on >='),
@@ -36,6 +36,7 @@ sub projects {
 				$C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				$C->User()->name(),
 				join(',',map { $_->url() } $C->Assets() ),
+				$C->description(),
 				$C->cost(), $C->cost_units(),
 				$C->quantity(), $C->quantity_units(),
 				$C->weight(), $C->weight_units(),
@@ -124,12 +125,13 @@ sub project {
 		$variable{'error'} .= $Project->save();
 	} elsif ( $param{'action'} eq 'Export' ) {
 		
-		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence' );
+		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description' );
 		my @data;
 		foreach my $C ( openprint::SRED_Content->find('project_id'=>$param{'project_id'} ) ) {
 			push @data, ( $C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				join(',',map { $_->name() } $C->Personnel() ), 
 				join(',',map { $_->url() } $C->Assets() ),
+				$C->description(),
 				);
 		} # end foreach C
 		misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
