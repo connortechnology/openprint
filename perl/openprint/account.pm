@@ -202,7 +202,7 @@ $log->warn("registration errors $error");
 		# Promo Codes can only happen when we are creating a new company. Otherwise they breach the security of the existing company.
 		if ( $param{'promo_code'} ) {
 			require openprint::Promo_Code;
-			if ( my $Promo = openprint::Promo_Code->find_one('code'=>$param{'promo_code'}) ) {
+			if ( my $Promo = openprint::Promo_Code->find_one('code lc'=>lc openprint::Promo_Code->transform('code',$param{'promo_code'})) ) {
 				$log->debug("Found promo code $$Promo{effect}");
 				eval $$Promo{'effect'};
 				$log->error( "Eval error of promo code $param{'promo_code'}, Reason: " . $@ ) if $@;
