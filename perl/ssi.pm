@@ -136,13 +136,16 @@ sub variable_substitution {
 	return do_include( $r, $log, $dbh, $text, $variable );
 } # end sub variable_substitution
 
+my %html_replacements = (
+	'&'	=>	'&amp;',
+	'"'	=>	'&quot;',
+	'<' =>	'&lt;',
+	'>' =>	'&gt;',
+);
+my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-    $_ = shift;
-    $_ =~ s/&/&amp;/mg;
-    $_ =~ s/"/&quot;/mg;
-    $_ =~ s/</&lt;/mg;
-    $_ =~ s/>/&gt;/mg;
-    return $_;
+	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+    return $_[0];
 }
 
 sub escape_quotes {
@@ -435,7 +438,7 @@ sub button {
 		} # end if
 		$html .= "/>";
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
 	}
 	$html .= "</a>\n";
 	return $html;
@@ -537,10 +540,10 @@ $log->debug("$year-$month-$day");
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C',title=>'Clear' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today' } );
 	} # end if
 	$html .= '</span>';
 	return $html;
