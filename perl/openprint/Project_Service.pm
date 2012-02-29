@@ -2,15 +2,13 @@ use strict;
 package openprint::Project_Service;
 our @ISA = qw(openprint::Object);
 
-use openprint ();
-
+require openprint;
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $log $debug %fields %transforms %defaults $table $serial @identified_by );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 $debug = 1;
 %fields = (
@@ -107,6 +105,21 @@ sub ordered_price {
 	my $specs = $_[0]->specs();
 	return $$specs{'txtPrice'.$_[0]->Project()->ordered_quantity_index()};
 } # end sub ordered_price
+
+sub overrides {
+	my ( $self, $qty_index ) = @_;
+	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+	if ( my $function = $module->can( 'has_overrides' ) ) {
+		my $specs = $_[0]->specs();
+		$openprint::log->debug("$module :: has_overrides() $specs");
+		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
+		$log->debug("Overrides: @o");
+		return @o;
+	} # end if
+	return ();
+} # end sub overrides
 
 1;
 __END__
