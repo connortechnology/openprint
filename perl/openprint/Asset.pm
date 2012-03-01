@@ -92,7 +92,7 @@ sub thumbnail_url {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			`convert  -adaptive-resize 75x $src $dest`;
+			`convert  -adaptive-resize 75x "$src" "$dest"`;
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
