@@ -396,7 +396,7 @@ sub save_project_information {
 						);
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					foreach my $spec ( @shipping_fields ) {
-$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
+#$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $param{"$spec-$project_index-$service_id"} );
 						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $param{"$spec-$project_index-$service_id"} ) if exists $param{"$spec-$project_index-$service_id"};
 					} # end foreach field
 					my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
@@ -488,14 +488,12 @@ sub get_misc {
 sub display_order {
 	my ( $order_id ) = @_;
 
-	if ( $order_id ) {
-		my $Order = new openprint::Order( $order_id );
-		my $Currency = openprint::Currency::get_current();
-		@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-		$variable{'Currency'} = $Currency;
-		$variable{'OrderID'} = $order_id;
-		$variable{'Order'} = $Order;
-	} # end if
+	my $Order = new openprint::Order( $order_id );
+	my $Currency = openprint::Currency::get_current();
+	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	$variable{'Currency'} = $Currency;
+	$variable{'OrderID'} = $order_id;
+	$variable{'Order'} = $Order;
 } # end sub display_order
 
 # duplicates the given order.	returns the id of the newly created order

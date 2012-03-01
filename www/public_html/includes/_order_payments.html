@@ -1,9 +1,9 @@
 <div class="Payments">
 <fieldset><legend>Payments</legend>
-	<table class="List">
 <? eval ( @{$$variable{'PAYMENTS'}} = openprint::Payment->find('order_id'=>$$variable{'Order'}->id(),'completed'=>1,'order'=>'created_on'); ) ?>
 <? if ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
 <? if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
+	<table class="List">
 		<thead>
 			<tr>
 				<th class="payment_id">Ref #</th>
@@ -51,9 +51,9 @@
             </tr>
             <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
-<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 	</table>
+<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
+<? endif ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
 </fieldset>
 <input type="hidden" name="payment_id" />
-<? endif ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
 </div>
