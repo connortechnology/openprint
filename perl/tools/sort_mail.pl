@@ -93,6 +93,13 @@ foreach my $user ( @users ) {
 						`echo "INBOX$folder.$y" >> $spool_path$user/courierimapsubscribed`;
 					} # end if
 				} 
+				if ( -e "$spool_path$user/ubscriptions" ) {
+					if ( $folder eq '.' ) {
+						`echo "$y" >> $spool_path$user/subscriptions`;
+					} else {
+						`echo "$folder.$y" >> $spool_path$user/subscriptions`;
+					} # end if
+				} # end if
 			} # end if
 			if ( -e "$spool_path$user/$folder/.".$y and -e "$spool_path$user/$folder/.$y/cur" ) {
 				$process = 1;

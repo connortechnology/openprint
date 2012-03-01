@@ -1,5 +1,17 @@
 <div class="Article">
 	<div class="View">
+<? if ( $$variable{'Article'}->can_view() ) ?>
+	<div class="header">
+	<div class="ByLine">
+<? echo ( 
+	my $html;
+	my $User = new openprint::User( $$variable{'Article'}->created_by() );
+	$html .= '<div class="By">'.$User->thumbnail_html() . '<a href="/account/view.html?user_id="'.$User->id().'">'.$User->name().'</a></div>';
+	$html .= '<div class="When">'. $$variable{'Article'}->published_on_string().'</div>';
+	return $html;
+	) ?>
+	</div>
+	<h1><? hecho ( $$variable{'Article'}->title() ) ?></h1>
 	<p class="buttons">
 		<? echo ( 
 join('',
@@ -12,21 +24,11 @@ join('',
 	);
 ) ?>
 	</p>
-<? if ( $$variable{'Article'}->can_view() ) ?>
-	<h1><? hecho ( $$variable{'Article'}->title() ) ?></h1>
-	<div class="ByLine">
-<? echo ( 
-	my $html;
-	my $User = new openprint::User( $$variable{'Article'}->created_by() );
-	$html .= '<div class="By">'.$User->thumbnail_html() . '<a href="/account/view.html?user_id="'.$User->id().'">'.$User->name().'</a></div>';
-	$html .= '<div class="When">'. $$variable{'Article'}->published_on_string().'</div>';
-	$html .= '</div>';
-	return $html;
-	) ?>
 	<? if ( $$variable{'Article'}->source() ) ?>
 		<? echo ( $$variable{'Article'}->source_content() ) ?>
 		<a href="<? echo ( $$variable{'Article'}->source() ) ?>" target="_blank">View Original Article</a><br/>
 	<? endif ( $$variable{'Article'}->source() ) ?>
+	</div><!--header-->
 
 	<div class="body"><? echo ( $$variable{'Article'}->body() ) ?></div>
 	<? if ( $session{'user_id'} ) ?>

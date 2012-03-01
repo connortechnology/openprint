@@ -1361,16 +1361,20 @@ sub Operator {
 sub delivery_cost {
 	my ( $self ) = @_;
 
+	my $qty_index = $self->ordered_quantity_index();
+$openprint::log->error("Delivery Cost for $qty_index");
+
 	if ( ! exists $$self{'delivery_cost'} ) {
 		my $services = $self->services();
 		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 			next if ! $$services{$ServiceType->name()};
 			foreach ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $self, $_ );
-				$$self{'delivery_cost'} += $$specs{'txtPrice'.$self->ordered_quantity_index()};	
+				$$self{'delivery_cost'} += $$specs{'txtPrice'.$qty_index};	
 			} # end foreach
 		} # end foreach
 	} # end if
+$openprint::log->error("Delivery Cost for $qty_index $$self{delivery_cost}");
 	return $$self{'delivery_cost'};
 } # end sub delivery_cost
 

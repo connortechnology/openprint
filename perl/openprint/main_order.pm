@@ -542,5 +542,7 @@ sub _CustomerPickUp {
 } # end sub _CustoemrPickUp
 sub _view_log {
 } # end sub _view_log
+sub _UPS {
+} # end sub _UPS
 1;
 __END__

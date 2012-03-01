@@ -46,24 +46,8 @@
 			<div id="ShippingInformation">
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
-					my $html = '';
 					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();;
-					if ( 1 ) {
-						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
-					} else {
-
-					my @ShippingServices = openprint::Project_Service->find('project_id'=>$$variable{'Project'}->id(), 'category'=>'Shipping' );
-					if ( ! @ShippingServices ) {
-						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
-					} else {
-						foreach my $PS ( @ShippingServices ) {
-							$$variable{'ServiceIndex'} = $PS->service_id();
-							$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), $PS->ServiceType()->name() );
-							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_'.$PS->ServiceType()->name().'.html' );
-						} # end foreach PS
-					} # end if
-					} # end if
-					return $html;
+					return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
 				) ?>
 			</div><!--Shipping-->
 <? endif ( @{$$variable{'Contents'}} == 1 ) ?>

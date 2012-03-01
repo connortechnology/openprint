@@ -11,7 +11,11 @@
 			<? echo (
 				my $html = '';
 				if ( $$variable{'Event'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					if ( $$variable{'Event'}->deleted() ) {
+					$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
+					} else {
+					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+					} # end if
 					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 				} # end if
 				$html .= '<span class="GooglePlusOne"><g:plusone annotation="inline"></g:plusone></span>';
