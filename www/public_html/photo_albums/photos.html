@@ -1,0 +1,32 @@
+<div class="PhotoAlbums">
+	<div class="Assets">
+		<!--#include virtual="/includes/error_reporting.html"-->
+		<form name="f1" id="f1" method="post">
+			<fieldset class="filters"><legend>Photos</legend>
+				<div class="content">
+					<ul>
+					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					<li><label>Company</label>
+						<select name="company_id" id="company_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
+							<option value=""> all </option>
+							<? echo ( 
+								ssi::make_drop_down( openprint::Company->dropdown(), $session{'/photo_albums/list.html?company_id'} );
+							) ?>
+						</select>
+					</li>
+					<li><label>User</label>
+						<select name="user_id" id="user_id" onchange="new Ajax.Updater('Results','_list.html', { parameters: this.form.serialize() } );">
+							<option value=""> all </option>
+							<? echo ( 
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('order'=>'lower(firstname),lower(lastname)') ], $session{'/photo_albums/list.html?user_id'} );
+							) ?>
+						</select>
+					</li>
+					<? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
+					</ul>
+				</div>
+			</fieldset>
+			<div id="Results"><!--#include virtual="_photos.html"--></div>
+		</form>
+	</div>
+</div>
