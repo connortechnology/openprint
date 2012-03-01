@@ -113,14 +113,14 @@ sub requested_for {
 		$_[0]{'requested_for'} = $_[1];
 	} # end if
 	if ( ! $_[0]{'requested_for'} ) {
-$openprint::log->debug("Calcing requested_fro");
+#$openprint::log->debug("Calcing requested_fro");
 		my $days = 7; # Default to 7, I don't know why, just chose it.
 		my $Project = $_[0]->Project();
 		my $services = $Project->services('Turnaround');
 		if ( $$services{'Turnaround'} ) {
-$openprint::log->debug("Have turnaround_id ");
+#$openprint::log->debug("Have turnaround_id ");
 			my $Turnaround = $Project->Service( @{$$services{'Turnaround'}} );
-$openprint::log->debug("Turnaround: " . $Turnaround);
+#$openprint::log->debug("Turnaround: " . $Turnaround);
 			if ( $Turnaround ) {
 				my $specs = $Turnaround->specs();
 				$openprint::log->debug("Turnaround specs; $specs $$specs{'TurnaroundDays'}days");
