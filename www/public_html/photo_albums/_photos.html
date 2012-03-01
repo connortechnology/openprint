@@ -20,7 +20,7 @@
 
 	my $html;
 	if ( @Final_Assets ) {
-		$html .= '<div id="Image"><img id="Image" src="'.$Final_Assets[0]->url().'"/>';
+		$html .= '<div id="BigImage"><img id="Image" src="'.$Final_Assets[0]->url().'"/>';
 		$html .= $Final_Assets[0]->asset_html();
 		$html .= '<p class="buttons">';
 		#$html .= ssi::button('Prev', { onclick=>'$(
@@ -29,8 +29,9 @@
 	$html .= '<div class="thumbnails">';
 
 	foreach my $Asset ( @Final_Assets ) {
-		$html .= '<span onclick="load_image(
+		$html .= q`<span onclick="$('Image').src='`.$Asset->url().q`';">`;
 		$html .= $Asset->thumbnail_html();
+		$html .= '</span>';
 	} # end foreach Asset;
 	$html .= '</div>';
 	return $html;
