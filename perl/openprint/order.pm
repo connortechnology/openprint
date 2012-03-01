@@ -507,14 +507,12 @@ sub get_misc {
 sub display_order {
 	my ( $order_id ) = @_;
 
-	if ( $order_id ) {
-		my $Order = new openprint::Order( $order_id );
-		my $Currency = openprint::Currency::get_current();
-		@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-		$variable{'Currency'} = $Currency;
-		$variable{'OrderID'} = $order_id;
-		$variable{'Order'} = $Order;
-	} # end if
+	my $Order = new openprint::Order( $order_id );
+	my $Currency = openprint::Currency::get_current();
+	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	$variable{'Currency'} = $Currency;
+	$variable{'OrderID'} = $order_id;
+	$variable{'Order'} = $Order;
 } # end sub display_order
 
 # duplicates the given order.	returns the id of the newly created order
