@@ -30,7 +30,6 @@
 					$html .= ssi::writeButton( $log, $dbh, 'ReOpen','re_open.gif',"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", '', 'ReOpen' );
 					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'Order'}->status() ne 'Cancelled';
 				} # end if
-			} elsif ( $$variable{'Order'}->status() eq 'Cancelled' ) {
 			} # end if
 			if ( $$variable{'AmountOutstanding'} ) {
 				my @Payments = openprint::PaymentType::find();
