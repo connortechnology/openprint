@@ -232,8 +232,8 @@ Object.extend(TableKit, {
 		//delete the cache
 		TableKit.tables[table.id].dom = {head:null,rows:null,cells:{}}; // TODO: watch this for mem leaks
 	},
-	reloadTable : function(table){
-	  table = $(table);
+	reloadTable : function(t){
+	  var table = $(t);
 	  TableKit.unloadTable(table);
 	  var op = TableKit.option('sortable resizable editable', table.id);
 	  if(op.sortable) {TableKit.Sortable.init(table);}
@@ -327,9 +327,6 @@ TableKit.Sortable = {
 	},
 	reload : function(t) {
 		var table = $(t);
-		if ( ! table ) {
-			alert("No table" + t);
-		} // end if
 		var cells = TableKit.getHeaderCells(table);
 		var op = TableKit.option('noSortClass columnClass', table.id);
 		cells.each(function(c){
