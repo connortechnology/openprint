@@ -1,12 +1,12 @@
 <fieldset><legend>Available Timetracks</legend>
-	<table class="List sortable">
+	<table class="List sortable" id="availabletimetracks_table">
 		<tr>
 			<th>Employee</th>
 			<th>Service</th>
 			<th class="DateTime">Start</th>
 			<th class="DateTime">End</th>
 			<th class="Interval">Interval</th>
-			<th class="Rate">Rate</th>	
+			<th class="Rate">Rate</th>
 			<th class="Price">Price</th>
 			<th class="buttons">&nbsp;</th>
 		</tr>
@@ -26,7 +26,7 @@
 			foreach my $T ( @Timetracks ) {
 				my $desc = $T->description();
 				$desc =~ s/"/&quot;/mg;
-			$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, $desc );
+				$html .= sprintf( q`<tr title="%s">`, $desc );
 				$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Employee()->name()) );
 				$html .= sprintf('<td><a href="/timetrack/edit.html?timetrack_id=%1$d">%2$s</a></td>', $T->id(), ssi::htmlize($T->Service()->name()) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $T->starting() ) ) );
@@ -42,3 +42,4 @@
 		) ?>
 	</table>
 </fieldset>
+<script type="text/javascript">TableKit.reloadTable('availabletimetracks_table');</script>

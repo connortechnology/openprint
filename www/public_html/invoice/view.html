@@ -98,36 +98,36 @@
 	<fieldset><legend>Products</legend>
 		<table class="List">
 			<tr>
-				<th align="left">Product</th>
+				<th class="product">Product</th>
 				<th class="po">PO Num</th>
 				<th class="Price">Price</th>
-				<th style="text-align: right; width: 50px;">Qty</th>
+				<th class="Quantity">Qty</th>
 				<th class="Price">Total</th>
 			</tr>
 			<? echo ( 
 				my $html = '';
 				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
-					$html .= '<tr>';
-					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
-					$html .= sprintf('<td class="po">%s</td>', $Product->po() );
-
-					$html .= sprintf('<td class="Price">%2$s</td>', $Product->id(), openprint::Currency::format($Product->price()) );
-					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
-					$html .= sprintf('<td class="Price">%2$s</td>', $Product->id(), openprint::Currency::format($Product->total()) );
-					$html .= '</tr>';
+					$html .= '<tr>
+					<td class="product">%2$s</td>
+					<td class="po">%3$s</td>
+					<td class="Price">%4$s</td>
+					<td class="Quantity">%5$d</td>
+					<td class="Price">%6$s</td>
+					</tr>', $Product->id(), $Product->description(), $Product->po(), 
+					openprint::Currency::format($Product->price()), $Product->quantity(), openprint::Currency::format($Product->total()),
+;
 					$$variable{'product_total'} += $Product->total();
 				} # end foreach Product
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4" align="right"><b>Totals</b></td>
+				<td colspan="4"><b>Totals</b></td>
 				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
 			</tr>
 		</table>
 	</fieldset>
 <? endif ( $$variable{'Invoice'}->Products() > 0 ) ?>
-
 </form>
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
@@ -145,7 +145,7 @@
 <div class="Payments">
 	<fieldset><legend>Payments</legend>
 		<table>
-			<tr><th>ID</th><th class="transaction">Transaction/Cheque #</th><th align="left">When</th><th>Notes</th><th class="Price">Amount</th></tr>
+			<tr><th>ID</th><th class="transaction">Transaction/Cheque #</th><th class="DateTime">When</th><th>Notes</th><th class="Price">Amount</th></tr>
 			<? echo ( 
 				my $html = '';
 				$$variable{'payment_total'} = 0;
@@ -166,7 +166,7 @@
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td align="right" colspan="4">Total</td>
+				<td colspan="4">Total</td>
 				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
 		</table>

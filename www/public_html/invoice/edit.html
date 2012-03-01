@@ -5,38 +5,38 @@
 	} // end function update_product
     function add_timetrack( timetrack_id ) {
         new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
-                method:'get',
                 parameters: {
                     invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
-                        method:'get',
-                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> },
+						evalScripts: true
                         } );
                 },
                 onFailure: function(transport) {
                     alert('failure to include');
-                }
+                },
+				evalScripts: true
         } );
     } // end function add_timetrack( invoice_id)
     function del_timetrack( timetrack_id ) {
         new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
-                method:'get',
                 parameters: {
                     invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
                     timetrack_id: timetrack_id
                 },
                 onSuccess: function(transport) {
                     new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
-                        method:'get',
-                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
+                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> },
+						evalScripts: true
                         } );
                 },
                 onFailure: function(transport) {
                     alert('failure to remove timetrack');
-                }
+                },
+				evalScripts: true
             } );
     } // end function del_timetrack(invoice_id)
 </script>
