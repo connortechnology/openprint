@@ -325,8 +325,11 @@ TableKit.Sortable = {
 			TableKit.Rows.stripe(table);
 		}
 	},
-	reload : function(table) {
-		table = $(table);
+	reload : function(t) {
+		var table = $(t);
+		if ( ! table ) {
+			alert("No table" + t);
+		} // end if
 		var cells = TableKit.getHeaderCells(table);
 		var op = TableKit.option('noSortClass columnClass', table.id);
 		cells.each(function(c){
