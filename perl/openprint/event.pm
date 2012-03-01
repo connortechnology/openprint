@@ -110,8 +110,14 @@ sub category {
 
 sub view {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Event->delete();
+	} elsif ( $param{'action'} eq 'Undelete' ) {
+		$variable{'error'} .= $Event->undelete();
+		
+	} elsif ( $param{'function'} eq 'Save' ) {
 		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+		$param{'created_by'} = $session{'user_id'} if ! $param{'created_by'};
 		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
 		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
 		if ( $param{'category_id'} ) {

@@ -39,6 +39,31 @@
 			<fieldset><legend>Tell us about the event</legend>
 				<div class="content">
 					<ul>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+                    <li><label for="company_id">Company</label>
+                        <select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: this.value } } );">
+                            <option value=""> select </option>
+                            <? echo ( 
+my $company_id = $$variable{'Event'}->company_id();
+$company_id = $$variable{'Event'}->Created_By()->company_id() if (!$company_id) and $$variable{'Event'}->created_by();
+$company_id = $session{'company_id'} if (!$company_id);
+
+return openprint::Company::get_dropdown( $company_id ); ) ?>
+                        </select>
+                    </li>
+                   <li><label for="created_by">Owner</label>
+                        <select id="created_by" name="created_by">
+                            <option value=""> select </option>
+                            <? echo (
+my $company_id = $$variable{'Event'}->company_id();
+$company_id = $$variable{'Event'}->Created_By()->company_id() if (!$company_id) and $$variable{'Event'}->created_by();
+$company_id = $session{'company_id'} if (!$company_id);
+ ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+                                'company_id'=> $company_id,
+                                'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Event'}->created_by() ? $$variable{'Event'}->created_by() : $session{'user_id'} ); ) ?>
+                        </select>
+                    </li>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 						<li>
 							<label>All day</label>
 							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
