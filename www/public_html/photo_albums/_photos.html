@@ -3,7 +3,7 @@
 	my $html;
 	my %params = (
 		'order'=>'created_on DESC',
-		'created_by not in'=> [ map { $_->user_id() } openprint::User->find('company_id'=> new openprint::User($session{'user_id'})->company_id() ) ],
+		'created_by not in'=> [ map { $_->id() } openprint::User->find('company_id'=> new openprint::User($session{'user_id'})->company_id() ) ],
 		);
 	if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) {
 		$params{'user_id'} = $session{'/photo_albums/photos.html?user_id'} if exists $session{'/photo_albums/photos.html?user_id'};
