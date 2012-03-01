@@ -2717,6 +2717,9 @@ $openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colou
 			$openprint::log->error("Unknown units for Ink $colour: $ink_price{'units'}" . $Press->strid() );
 		} # end if
 	} # end foreach
+	if ( $Press->specification('Wash Unused Units') eq 'Y' ) {
+		$price{'Press Washes'} += ( $Press->specification('Number of Colours') - @colours );
+	} # end if
 	$price{'Press Wash Price'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'WashUp', undef, $Press );
 	$price{'Press Wash Total'} = $price{'Press Washes'} * $price{'Press Wash Price'};
 
