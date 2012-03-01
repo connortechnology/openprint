@@ -143,6 +143,15 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub can_view {
+	my @Albums = openprint::Photo_in_Album->find('asset_id'=>$_[0]{'id'});
+	return 1 if ! @Albums;
+	foreach my $Album ( @Albums ) {
+		return 1 if $Album->can_view();
+	} # end foreach
+	return 0;
+} # end sub can_view
+
 sub can_delete {
 	return 1 if $_[0]{'created_by'} == $openprint::session{'user_id'};
 	return 0;

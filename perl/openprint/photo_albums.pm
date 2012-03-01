@@ -269,5 +269,10 @@ sub _photo_actions {
 		} # end if
 	} # end if function
 } # end sub _photo_actions
+sub photos {
+} # end sub photos
+sub _photos {
+} # end sub _photos
+
 1;
 __END__
