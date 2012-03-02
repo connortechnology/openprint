@@ -181,7 +181,7 @@ sub order_history {
 }
 sub _order_history_results {
 	my %parameters; 
-	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) {
 		$parameters{'SalesPerson'} = $session{'user_id'};
 		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
 	} elsif ( $param{'CSR'} ) {
