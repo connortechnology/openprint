@@ -5,8 +5,8 @@
 	<div class="ByLine">
 <? echo ( 
 	my $html;
-	my $User = new openprint::User( $$variable{'Article'}->created_by() );
-	$html .= '<div class="By">'.$User->thumbnail_html() . '<a href="/account/view.html?user_id="'.$User->id().'">'.$User->name().'</a></div>';
+	my $User = $$variable{'Article'}->Author();
+	$html .= '<div class="By">'.$User->thumbnail_html() . '<a href="/account/view.html?user_id="'.$User->id().'">'.$User->alias().'</a></div>';
 	$html .= '<div class="When">'. $$variable{'Article'}->published_on_string().'</div>';
 	return $html;
 	) ?>

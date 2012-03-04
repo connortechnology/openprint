@@ -255,11 +255,12 @@ sub alias {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
 	if ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-		return $Company->name() . ' (' . $_[0]{'firstname'} . ')';
+		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
 	} else {
 		return $_[0]->name();
 	} # end if
 } # end sub name
+
 sub name {
 	if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
 		my $self = $_[0];
@@ -399,9 +400,8 @@ sub Profile {
 
 sub icon {
 	if ( ! $_[0]{'icon'} ) {
-		
 		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->name() );
+			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
 } # end sub icon

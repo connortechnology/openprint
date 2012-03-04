@@ -91,7 +91,14 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 sub Author {
-	return new openprint::User( $_[0]{'created_by'} );
+	if ( ! $_[0]{'Author'} ) {
+		$_[0]{'Author'} = new openprint::User( $_[0]{'created_by'} );
+	} # end if
+	if ( ! $_[0]{'Author'}->id() ) {
+		$_[0]{'Author'}->company_id( $_[0]{'company_id'} );
+	} # end if
+	return $_[0]{'Author'};
+		
 } # end sub Author
 
 sub category {
