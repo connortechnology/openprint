@@ -89,6 +89,9 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom' ) {
+		$$specs{$spec} = $$printing_specs{$spec};
+	} # end foreach
 	if ( ! ( $$specs{'EdgeLeft'} or $$specs{'EdgeRight'} or $$specs{'EdgeTop'} or $$specs{'EdgeBottom'} ) ) {
 		$$specs{'EdgeLeft'} = 'Left';
 		$$specs{'EdgeRight'} = 'Right';
@@ -177,6 +180,19 @@ sub summary {
 	} # end if
 } # end sub summary
 
-1;
+sub save {
+	my ( $project_id, $service_id, $specs ) = @_;
+$openprint::log->debug("In sewing sae");
+	my $Project = new openprint::Project( $project_id );
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
+	foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom' ) {
+		if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $$services{''}[0], $spec, $$specs{$spec} );
+		} # end if
+	} # end foreach spec
+} # end sub save
 
+1;
 __END__
