@@ -92,6 +92,9 @@ sub thumbnail_url {
 	} elsif ( sets::isin( lc $extension, [ 'mp3' ] ) ) {
 $openprint::log->debug("returning mp3 icon");
 		return '/images/icons/mp3.png';
+	} elsif ( sets::isin( lc $extension, [ 'pdf' ] ) ) {
+$openprint::log->debug("returning pdf icon");
+		return '/images/icons/pdf.png';
 	} # end if
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
