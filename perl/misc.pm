@@ -1,3 +1,4 @@
+use strict;
 package misc;
 use strict;
 require Exporter;
@@ -9,6 +10,7 @@ use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
 
 use Mail::Sendmail ();
+
 use openprint ();
 
 sub send_email_with_attached_files {

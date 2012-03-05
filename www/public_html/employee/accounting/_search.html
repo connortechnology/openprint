@@ -25,6 +25,9 @@
 		'order'		=> $openprint::Order::fields{'created_on'},
 		);
 	} # end if
+	if ( @{$$variable{'Orders'}} > 10 ) {
+		openprint::Company->find();
+	} # end if
 ) ?>
 	<? if ( @{$$variable{'Orders'}} ) ?>
 <table class="List">
@@ -59,8 +62,8 @@
 	$rowclass, $$Order{'id'}, $$Order{'docket'}, 
 	Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Order->created_on() ) ),
 	ssi::html_escape( $Order->Company->name() ),
-	$Order->status(),
-	ssi::html_escape( $Order->invoice_id() ),
+	$$Order{'status'},
+	ssi::html_escape( $$Order{'invoice_id'} ),
 	ssi::html_escape( $Order->po() ),
 	openprint::Currency::format( $Order->total() ),
 	openprint::Currency::format( $Order->owing() ),

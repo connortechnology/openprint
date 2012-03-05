@@ -92,7 +92,9 @@ sub thumbnail_url {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			`convert  -adaptive-resize 75x "$src" "$dest"`;
+			if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
+				$openprint::log->error("ERror creating thumbnail. Reason: $1");
+			} # end if convert
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
@@ -108,9 +110,10 @@ sub thumbnail_url {
 			} # end if
 		} # end if
 		return  '/thumbnails/'.$blah.'.jpg';
-	} elsif ( sets::isin( lc $extension, [ 'mp3' ] ) ) {
-#$openprint::log->debug("returning mp3 icon");
-		return '/images/icons/mp3.png';
+	} else {
+		if ( -e $config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
+			return '/images/icons/'.(lc $extension).'.png';
+		} # end if
 	} # end if
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
@@ -236,6 +239,14 @@ sub keywords {
 	} # end if
 	return $_[0]{'keywords'};
 } # end sub keywords
+sub caption {
+	if ( $_[0]{'name'} ) {
+		return $_[0]{'name'};
+	} # end if
+	if ( $_[0]{'filename'} ) {
+		return $_[0]{'filename'};
+	} # end if
+} # end sub caption
 
 1;
 __END__

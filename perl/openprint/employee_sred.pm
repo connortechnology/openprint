@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::SRED_Project;
+require HTML::FormatText;
 
 sub projects {
 	if ( $param{'action'} eq 'Save' ) {
@@ -21,8 +22,16 @@ sub projects {
 		%param = ();
 	} elsif ( $param{'action'} eq 'Export' ) {
 		my $Project = new openprint::SRED_Project($param{'project_id'});
+
+		my $tmp_path = '/tmp/sred-'.time;
+		if ( ! mkdir ( $tmp_path ) ) {
+			$variable{'error'} .= "Unable to make temporary directory. Reason: $!";
+			return;
+		} # end if
+		my @files;
 		
-		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
+		my $formatter = HTML::FormatText->new();
+		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description','Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
 		my @data;
 		foreach my $C ( openprint::SRED_Content->find( 
 			ssi::date_filter('created_on_start', 'created_on >='),
@@ -36,13 +45,37 @@ sub projects {
 				$C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				$C->User()->name(),
 				join(',',map { $_->url() } $C->Assets() ),
+				$formatter->format_string($C->description()),
 				$C->cost(), $C->cost_units(),
 				$C->quantity(), $C->quantity_units(),
 				$C->weight(), $C->weight_units(),
 				$C->total(),
 				);
+			foreach my $A ( $C->Assets() ) {
+				my $Asset = $A->Asset();
+				if ( ! symlink $Asset->on_disk_path(), $tmp_path.'/'.$Asset->on_disk_filename() ) {
+					$variable{'error'} .= 'Error linking Asset ' . $Asset->on_disk_path() . ' to ' . $tmp_path.'/'.$Asset->on_disk_filename().", reason: $!<br/>";
+				} else {
+					push @files, $tmp_path.'/'.$Asset->on_disk_filename();
+				} # end if
+			} # end foreach $Asset
 		} # end foreach C
-		misc::export_csv( $r, $log, \%variable, ($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', \@header, \@data );
+
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
+$log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
+		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
+			$variable{'error'} .= "Unable to create zip. Reason: $!<br/>";
+		} else {
+			push @files, $tmp_path.'.zip';
+			misc::export( $r, $log, \%variable, ($param{'project_id'} ? $Project->name() : 'SRED' ).'.zip', [ misc::load_file( $log, "$tmp_path.zip" ) ] );
+		} # end if
+
+		#Cleanup
+		foreach ( @files ) {
+		unlink $_;
+		} # end foreach
+		rmdir $tmp_path;
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		my $Project = new openprint::SRED_Project( $param{'project_id'} );
 		$variable{'error'} .= $Project->delete();
@@ -124,15 +157,48 @@ sub project {
 		$variable{'error'} .= $Project->save();
 	} elsif ( $param{'action'} eq 'Export' ) {
 		
-		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence' );
+		my $tmp_path = '/tmp/sred-'.time;
+		if ( ! mkdir ( $tmp_path ) ) {
+			$variable{'error'} .= "Unable to make temporary directory. Reason: $!";
+			return;
+		} # end if
+		my @files;
+		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description' );
 		my @data;
-		foreach my $C ( openprint::SRED_Content->find('project_id'=>$param{'project_id'} ) ) {
+		my $formatter = HTML::FormatText->new();
+		foreach my $C ( $Project->Contents() ) {
+$log->debug("Pre format " . $C->description() );
+$log->debug("APre format " . $formatter->format_string($C->description() ) );
 			push @data, ( $C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				join(',',map { $_->name() } $C->Personnel() ), 
 				join(',',map { $_->url() } $C->Assets() ),
+				$formatter->format_string($C->description()),
 				);
+			foreach my $A ( $C->Assets() ) {
+				my $Asset = $A->Asset();
+				if ( ! symlink $Asset->on_disk_path(), $tmp_path.'/'.$Asset->on_disk_filename() ) {
+					$variable{'error'} .= 'Error linking Asset ' . $Asset->on_disk_path() . ' to ' . $tmp_path.'/'.$Asset->on_disk_filename().", reason: $!<br/>";
+				} else {
+					push @files, $tmp_path.'/'.$Asset->on_disk_filename();
+				} # end if
+			} # end foreach $Asset
 		} # end foreach C
-		misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
+		#misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
+$log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
+		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
+			$variable{'error'} .= "Unable to create zip. Reason: $!<br/>";
+		} else {
+			push @files, $tmp_path.'.zip';
+			misc::export( $r, $log, \%variable, $Project->name().'SRED.zip', [ misc::load_file( $log, "$tmp_path.zip" ) ] );
+		} # end if
+
+		#Cleanup
+		foreach ( @files ) {
+		unlink $_;
+		} # end foreach
+		rmdir $tmp_path;
 	} elsif ( $param{'action'} eq 'Upload' ) {
 		foreach my $C ( $Project->Contents() ) {
 			next if ! $param{'filename-'.$$C{id}};

@@ -5029,5 +5029,31 @@ sub get_printing_types {
 	} # end if printing_specs{'PrintingType'}
 	return $results;
 } # end sub get_printing_types
+ 
+sub has_overrides {
+    my ( $Project, $service_id, $specs, $qty_index ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	if ( $qty_index ) {
+		return map { $$specs{$_.$qty_index} eq 'Y' ? $_ : () } (
+				'chkOverrideBleedSize',
+				'chkOverrideSignatureSpreadQuantity',
+				'chkOverridePageQuantity',
+				'chkOverrideImposition',
+				'chkOverrideRunStyle',
+				'OverrideCutOff',
+				'chkOverrideSheetSize',
+				'chkOverridePress',
+				'chkOverridePrintingType',
+				'chkOverrideGrainDirection',
+				);
+	} else {
+		return map { $$specs{$_} eq 'Y' ? $_ : () } (
+				'chkOverrideDimensions',
+				);
+	} # end if
+
+} # end sub has_overrides
+
 1;
 __END__
