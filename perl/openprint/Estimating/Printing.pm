@@ -235,6 +235,8 @@ my %variables = (
 		'supplied_format'=>['save'],
 # Banners
 		'grommets' => ['save'],
+		'hemmed'	=>	['save'],
+		'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
 		);
 
 sub variables {
