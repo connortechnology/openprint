@@ -21,6 +21,13 @@ sub projects {
 		%param = ();
 	} elsif ( $param{'action'} eq 'Export' ) {
 		my $Project = new openprint::SRED_Project($param{'project_id'});
+
+		my $tmp_path = '/tmp/sred-'.time;
+		if ( ! mkdir ( $tmp_path ) ) {
+			$variable{'error'} .= "Unable to make temporary directory. Reason: $!";
+			return;
+		} # end if
+		my @files;
 		
 		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description','Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
 		my @data;
@@ -42,8 +49,31 @@ sub projects {
 				$C->weight(), $C->weight_units(),
 				$C->total(),
 				);
+			foreach my $A ( $C->Assets() ) {
+				my $Asset = $A->Asset();
+				if ( ! symlink $Asset->on_disk_path(), $tmp_path.'/'.$Asset->on_disk_filename() ) {
+					$variable{'error'} .= 'Error linking Asset ' . $Asset->on_disk_path() . ' to ' . $tmp_path.'/'.$Asset->on_disk_filename().", reason: $!<br/>";
+				} else {
+					push @files, $tmp_path.'/'.$Asset->on_disk_filename();
+				} # end if
+			} # end foreach $Asset
 		} # end foreach C
-		misc::export_csv( $r, $log, \%variable, ($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', \@header, \@data );
+
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
+$log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
+		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
+			$variable{'error'} .= "Unable to create zip. Reason: $!<br/>";
+		} else {
+			push @files, $tmp_path.'.zip';
+			misc::export( $r, $log, \%variable, ($param{'project_id'} ? $Project->name() : 'SRED' ).'.zip', [ misc::load_file( $log, "$tmp_path.zip" ) ] );
+		} # end if
+
+		#Cleanup
+		foreach ( @files ) {
+		unlink $_;
+		} # end foreach
+		rmdir $tmp_path;
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		my $Project = new openprint::SRED_Project( $param{'project_id'} );
 		$variable{'error'} .= $Project->delete();
