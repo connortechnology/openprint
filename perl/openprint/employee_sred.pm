@@ -59,7 +59,7 @@ sub projects {
 			} # end foreach $Asset
 		} # end foreach C
 
-		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join("\n",misc::data_to_csv(\@header, \@data )));
 		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
 $log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
 		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
@@ -155,16 +155,45 @@ sub project {
 		$variable{'error'} .= $Project->save();
 	} elsif ( $param{'action'} eq 'Export' ) {
 		
+		my $tmp_path = '/tmp/sred-'.time;
+		if ( ! mkdir ( $tmp_path ) ) {
+			$variable{'error'} .= "Unable to make temporary directory. Reason: $!";
+			return;
+		} # end if
+		my @files;
 		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description' );
 		my @data;
-		foreach my $C ( openprint::SRED_Content->find('project_id'=>$param{'project_id'} ) ) {
+		foreach my $C ( $Project->Contents() ) {
 			push @data, ( $C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				join(',',map { $_->name() } $C->Personnel() ), 
 				join(',',map { $_->url() } $C->Assets() ),
 				$C->description(),
 				);
+			foreach my $A ( $C->Assets() ) {
+				my $Asset = $A->Asset();
+				if ( ! symlink $Asset->on_disk_path(), $tmp_path.'/'.$Asset->on_disk_filename() ) {
+					$variable{'error'} .= 'Error linking Asset ' . $Asset->on_disk_path() . ' to ' . $tmp_path.'/'.$Asset->on_disk_filename().", reason: $!<br/>";
+				} else {
+					push @files, $tmp_path.'/'.$Asset->on_disk_filename();
+				} # end if
+			} # end foreach $Asset
 		} # end foreach C
-		misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
+		#misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join("\n",misc::data_to_csv(\@header, \@data )));
+		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
+$log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
+		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
+			$variable{'error'} .= "Unable to create zip. Reason: $!<br/>";
+		} else {
+			push @files, $tmp_path.'.zip';
+			misc::export( $r, $log, \%variable, $Project->name().'SRED.zip', [ misc::load_file( $log, "$tmp_path.zip" ) ] );
+		} # end if
+
+		#Cleanup
+		foreach ( @files ) {
+		unlink $_;
+		} # end foreach
+		rmdir $tmp_path;
 	} elsif ( $param{'action'} eq 'Upload' ) {
 		foreach my $C ( $Project->Contents() ) {
 			next if ! $param{'filename-'.$$C{id}};
