@@ -59,7 +59,7 @@ sub projects {
 			} # end foreach $Asset
 		} # end foreach C
 
-		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join("\n",misc::data_to_csv(\@header, \@data )));
 		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
 $log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
 		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
@@ -179,7 +179,7 @@ sub project {
 			} # end foreach $Asset
 		} # end foreach C
 		#misc::export_csv( $r, $log, \%variable, $Project->name().'.csv', \@header, \@data );
-		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join('',misc::data_to_csv(\@header, \@data )));
+		misc::save_file( $log, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv', join("\n",misc::data_to_csv(\@header, \@data )));
 		push @files, $tmp_path.'/'.($param{'project_id'} ? $Project->name() : 'SRED' ).'.csv';
 $log->debug("Zipping zip -r $tmp_path.zip $tmp_path/");
 		if ( system( "zip -j -1 -r $tmp_path.zip $tmp_path/" ) ) {
