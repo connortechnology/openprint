@@ -1,6 +1,5 @@
 use strict;
 package openprint::video_albums;
-use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -10,6 +9,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+require openprint;
 require openprint::Video_Album;
 require openprint::Asset;
 
@@ -127,5 +127,8 @@ sub _video_comments {
 		} # end if
 	} # end if
 } # end sub _video_comments
+
+sub videos {
+} # end sub videos
 1;
 __END__

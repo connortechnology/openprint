@@ -183,6 +183,12 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	if ( ! $$data{'searchable'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add searchable BOOLEAN not null default false');
 	} # end if
+	if ( ! $$data{'search_default'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add search_default TEXT');
+	} # end if
+	if ( ! $$data{'match'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add match TEXT');
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );

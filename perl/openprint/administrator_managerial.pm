@@ -595,6 +595,8 @@ sub user_profile_fields {
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				'search_default'	=>	$param{'search_default-'.$Field->id()},
+				'match'	=>	$param{'match-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if
@@ -696,7 +698,7 @@ sub _company_fields_tbody {
 			$i += 1;
 		} # end foreach $feild_id
 	} # end if
-} # end sub _user_fields_tbody
+} # end sub _company_fields_tbody
 
 sub _search_by_email {
 } # end sub _search_by_email

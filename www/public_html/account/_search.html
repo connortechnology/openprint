@@ -31,20 +31,69 @@
 			'order'	=>	'(select name from companies where companies.id=company_id),lower(firstname),lower(lastname)',
 			'id !='		=>	$session{'user_id'},
 		);
+
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
 			next if ! $session{'/account/search.html?field-'.$$Field{'id'}};
 
 			if ( ! $openprint::User::find_fields{'profile_field-'.$$Field{'id'}} ) {
 				$openprint::User::find_fields{'profile_field-'.$$Field{'id'}} = '(SELECT value FROM User_Profiles WHERE user_id=users.id AND field_id='.$$Field{'id'}.')';
 			} # end if
-			if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
-				$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/search.html?field-'.$Field->id()} ) ];
-			} else {
-				$param{'profile_field-'.$$Field{'id'}} = $session{'/account/search.html?field-'.$Field->id()};
+			if ( $Field->match() eq 'exact' ) {
+				if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
+					$param{'profile_field-'.$$Field{'id'}} = [ split(',',$session{'/account/search.html?field-'.$Field->id()} ) ];
+				} else {
+					$param{'profile_field-'.$$Field{'id'}} = $session{'/account/search.html?field-'.$Field->id()};
+				} # end if
 			} # end if
 		} # end foreach Profile Field
 
-		@Users = openprint::User->find( %param );
+		my ( $my_lat, $my_long );
+
+		if ( $session{'/account/search.html?distance'} ) {
+
+			if ( $session{'/account/search.html?postalcode'} ) {
+				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?postalcode'});
+				if ( ! $Location ) {
+					$Location = new openprint::Location();
+					# Set country?
+				} # end if
+				if ( ! ( $Location->longitude() and $Location->latitude() ) ) {
+					if ( $Location->get_latitude_and_longitude() ) {
+						# Save it so as to cache the coords.
+						$Location->save();
+					} # end if
+				} # end if
+				( $my_lat, $my_long ) = $Location->get('latitude','longitude');
+			} else {
+			} # end if
+			if ( ! ( $my_lat and $my_long ) ) {
+				$variable{'error'} .= 'Unable to determine where you are/want to be.';
+			} # end if
+		} # end if
+		
+		if ( $my_lat and $my_long ) {
+$log->debug("Searching by distance");
+			foreach my $U ( openprint::User->find( %param ) ) {
+				my $Location = $U->Location();
+				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					if ( $Location->get_latitude_and_longitude() ) {
+						$Location->save();
+					} # end if
+				} # end if
+				next if ! ( $Location->latitude() and $Location->longitude() );
+my $distance = $Location->distance( $my_lat, $my_long, $Location->latitude(), $Location->longitude(), 'K' ) ;
+$log->debug("Distance between me and " . $U->name() . " is $distance" );
+				next if ( $distance > $session{'/account/search.html?distance'} );
+				push @Users, $U;
+			} # end foreach User
+		} else {
+			@Users = openprint::User->find( %param );
+		} # end if
+	} # end if
+
+	my $html;
+	if ( $variable{'error'} ) {
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/error_reporting.html');
 	} # end if
 
 	if ( ! @Users ) {
@@ -53,7 +102,6 @@
 		return 'No results found, other than your account.';
 	} # end if
 
-	my $html;
 	my $count = 0;
 	foreach my $User ( @Users ) {
 		$count += 1;

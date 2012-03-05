@@ -701,7 +701,7 @@ sub _couple_search {
 				'created_on_start_year', 'created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
-				'last_online_end_year','last_online_end_month','last_online_end_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
 				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
 				) );
 } # end sub _search
@@ -719,7 +719,7 @@ sub _search {
 				'created_on_start_year', 'created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
-				'last_online_end_year','last_online_end_month','last_online_end_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
 				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked

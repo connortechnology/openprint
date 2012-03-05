@@ -16,6 +16,8 @@ $serial = 'user_profile_fields_id_seq';
 	'values'		=>	'values',
 	'searchable'	=>	'searchable',
 	'deleted'		=>	'deleted',
+	'search_default'	=>	'search_default',
+	'match'			=>	'match',
 );
 %transforms = (
 	'sort'	=> [ 's/\D//g' ],

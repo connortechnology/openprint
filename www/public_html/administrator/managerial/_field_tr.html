@@ -10,13 +10,18 @@
 			<td><input type="text" id="default-%1$d" name="default-%1$d" value="%6$s" onkeyup="check_field(this);"/></td>
 			<td>%7$s</td>
 			<td>%8$s</td>
-			<td class="buttons">%9$s</td>
+			<td>%9$s</td>
+			<td>%10$s</td>
+			<td class="buttons">%11$s</td>
 		</tr>`, $Field->id(), $Field->name(), $Field->description(),
 			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
 			$Field->default(),
 			ssi::radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required() ),
 			ssi::radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable() ),
+			ssi::input( name=>'search_default-'.$Field->id(), value=>$Field->search_default(), type=>'text' ),
+			ssi::input( name=>'match-'.$Field->id(), value=>$Field->match(), type=>'text' ),
+			
 		join('', 
 			ssi::button( 'x'.$Field->id(), { 'onclick'=>qq`delField( $$Field{id} );`, 'text'=>'X' } ),
 			ssi::button( 'c'.$Field->id(), { 'onclick'=>qq`copyField( $$Field{id} );`, 'text'=>'C' } ),

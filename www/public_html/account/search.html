@@ -54,14 +54,20 @@
 					<ul>
 						<? echo ( 
 	my $html = '';
+	my $Profile = new openprint::User($session{'user_id'})->Profile();
 	
 	foreach my $Field ( openprint::User_Profile_Field->find('searchable'=>1,'order'=>'sort,name') ) {
 		$html .= '<li><label>'.$Field->name().'</label><span id="field-'.$Field->id().'_container">';
-		my $value = $session{'/account/search.html?field-'.$Field->id()};
+	
+		my $value;
+		if ( exists $session{'/account/search.html?field-'.$Field->id()} ) {
+			$value = $session{'/account/search.html?field-'.$Field->id()};
+		} elsif ( $Field->search_default() eq 'mine' ) {
+			$value = $Profile->value( $Field );
+		} # end if
 
 		if ( sets::isin( $Field->type(), [ 'checkbox', 'radio' ] ) ) {
 			while ( my ( $v, $t ) = splice ( @{$Field->values()}, 0, 2 ) ) {
-$log->debug( "Value: $v, text: $t");
 				$html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$s" %3$s />
 					<label class="radio" for="field-%1$d%2$s">%4$s</label>
 					`, $Field->id(), $v, ssi::checked( sets::isin( $v, [ split(',', $value ) ] ) ), $t
@@ -92,6 +98,11 @@ $log->debug( "Value: $v, text: $t");
 	} # end foreach Field
 	return $html;
 ) ?>
+						<li><label>Distance</label>
+							<select name="distance">
+								<? echo ( ssi::make_drop_down( [ '', 'Any', '10', '10km', '25', '25km', '50', '50km', '100', '100km' ], $session{'/account/search.html?distance'} ); ) ?>
+							</select>
+						</li>
 					</ul>
 				</div>
 			</div>
