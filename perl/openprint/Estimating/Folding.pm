@@ -1219,11 +1219,11 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
-	if ( ! neccessary( $project_index ) ) {
+	if ( ! neccessary( $Project ) ) {
 		$$specs{'alert'} .= 'Folding is not needed.';
 	} # end if
+	my $services = $Project->services();
+	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 

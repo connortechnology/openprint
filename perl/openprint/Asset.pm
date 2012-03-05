@@ -111,7 +111,7 @@ sub thumbnail_url {
 		} # end if
 		return  '/thumbnails/'.$blah.'.jpg';
 	} else {
-		if ( -e $config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
+		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
 			return '/images/icons/'.(lc $extension).'.png';
 		} # end if
 	} # end if
