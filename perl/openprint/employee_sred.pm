@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::SRED_Project;
+require HTML::FormatText;
 
 sub projects {
 	if ( $param{'action'} eq 'Save' ) {
@@ -29,6 +30,7 @@ sub projects {
 		} # end if
 		my @files;
 		
+		my $formatter = HTML::FormatText->new();
 		my @header = ( 'Type', ( $param{'project_id'} ? () : ( 'Project' ) ), 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description','Cost', 'Cost Units', 'Quantity', 'Quantity Units', 'Weight', 'Weight Units', 'Total' );
 		my @data;
 		foreach my $C ( openprint::SRED_Content->find( 
@@ -43,7 +45,7 @@ sub projects {
 				$C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				$C->User()->name(),
 				join(',',map { $_->url() } $C->Assets() ),
-				$C->description(),
+				$formatter->format_string($C->description()),
 				$C->cost(), $C->cost_units(),
 				$C->quantity(), $C->quantity_units(),
 				$C->weight(), $C->weight_units(),
@@ -163,11 +165,14 @@ sub project {
 		my @files;
 		my @header = ( 'Starting','Ending','Duration','All Day','Time Known', 'Personnel', 'Evidence', 'Description' );
 		my @data;
+		my $formatter = HTML::FormatText->new();
 		foreach my $C ( $Project->Contents() ) {
+$log->debug("Pre format " . $C->description() );
+$log->debug("APre format " . $formatter->format_string($C->description() ) );
 			push @data, ( $C->starting(), $C->ending(), $C->duration(), $C->all_day_event(), $C->unknown_time(), 
 				join(',',map { $_->name() } $C->Personnel() ), 
 				join(',',map { $_->url() } $C->Assets() ),
-				$C->description(),
+				$formatter->format_string($C->description()),
 				);
 			foreach my $A ( $C->Assets() ) {
 				my $Asset = $A->Asset();
