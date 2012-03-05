@@ -4681,6 +4681,18 @@ sub save {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $padding_id, 'PageQuantity', $$param{'PageQuantity'} );
 		} # end foreach
 	} # end if adding
+	if ( $$services{'Grommeting'} ) {
+		foreach my $s_id ( @{$$services{'Grommeting'}} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'Quantity', $$param{'grommets'} );
+		} # end foreach
+	} # end if
+	if ( $$services{'Sewing'} ) {
+		foreach my $s_id ( @{$$services{'Sewing'}} ) {
+			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom' ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, $spec, $$param{$spec} );
+		} # end foreach
+		} # end foreach
+	} # end if
 
 } # end sub save
 
