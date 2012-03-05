@@ -158,7 +158,7 @@ sub save {
 	my $Project = new openprint::Project( $project_id );
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $services{''}[0] ) if $$services{''} and @{$$services{''}};
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''} and @{$$services{''}};
 	if ( $$printing_specs{'grommets'} != $$specs{'Quantity'} ) {
 		openprint::service::insert_service_spec( $Project->id(), $$services{''}[0], 'grommets', $$specs{'Quantity'} );
 	} # end if
