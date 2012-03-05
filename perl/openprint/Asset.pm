@@ -162,5 +162,14 @@ sub upload {
 	return $Asset;
 } # end sub upload
 
+sub caption {
+	if ( $_[0]{'name'} ) {
+		return $_[0]{'name'};
+	} # end if
+	if ( $_[0]{'filename'} ) {
+		return $_[0]{'filename'};
+	} # end if
+} # end sub caption
+
 1;
 __END__
