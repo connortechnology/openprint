@@ -50,12 +50,14 @@
 		my ( $my_lat, $my_long );
 
 		if ( $session{'/account/search.html?distance'} ) {
+			my $Field = openprint::User_Profile_Field->find_one('name'=>'postalcode');
 
-			if ( $session{'/account/search.html?postalcode'} ) {
-				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?postalcode'});
+			if ( $session{'/account/search.html?field-'.$Field->id()} ) {
+				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?field-'.$Field->id()});
 				if ( ! $Location ) {
 					$Location = new openprint::Location();
 					# Set country?
+					$Location->postalcode( $session{'/account/search.html?field-'.$Field->id()} );
 				} # end if
 				if ( ! ( $Location->longitude() and $Location->latitude() ) ) {
 					if ( $Location->get_latitude_and_longitude() ) {
@@ -75,6 +77,7 @@
 $log->debug("Searching by distance");
 			foreach my $U ( openprint::User->find( %param ) ) {
 				my $Location = $U->Location();
+$log->warn("Users Location: " . $Location->to_string() );
 				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
 					if ( $Location->get_latitude_and_longitude() ) {
 						$Location->save();
