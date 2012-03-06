@@ -6,7 +6,7 @@
 	my $html;
 	my $Profile = $$variable{'User'}->Profile();
 	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name','viewable'=>1) ) {
 		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 		my $value = $Profile->value( $Field->name() );
 		if ( sets::isin( $Field->type(), ['country','state','city'] ) ) {

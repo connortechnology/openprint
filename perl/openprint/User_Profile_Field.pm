@@ -18,6 +18,8 @@ $serial = 'user_profile_fields_id_seq';
 	'deleted'		=>	'deleted',
 	'search_default'	=>	'search_default',
 	'match'			=>	'match',
+	'on_registration'	=>	'on_registration',
+	'viewable'			=>	'viewable',
 );
 %transforms = (
 	'sort'	=> [ 's/\D//g' ],
@@ -27,6 +29,8 @@ $serial = 'user_profile_fields_id_seq';
 	'searchable'	=>	0,
 	'sort'		=>	'undef',
 	'deleted'	=>	0,
+	'on_registration'	=>	0,
+	'viewable'	=>	1,
 );
 
 sub destroy {
