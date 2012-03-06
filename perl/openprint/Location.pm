@@ -221,12 +221,15 @@ $openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}"
 
 
 sub distance {
+	shift if $_[0] eq 'openprint::Location';
+	shift if ref $_[0] eq 'openprint::Location';
 	my ($lat1, $lon1, $lat2, $lon2, $unit) = @_;
 	my $theta = $lon1 - $lon2;
 	my $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
 	$dist  = acos($dist);
 	$dist = rad2deg($dist);
 	$dist = $dist * 60 * 1.1515;
+$openprint::log->debug("Calcing distance from $lat1,$lon1 to $lat2,$lon2 units: $unit, dist: $dist");
 	if ($unit eq "K") {
 		$dist = $dist * 1.609344;
 	} elsif ($unit eq "N") {
