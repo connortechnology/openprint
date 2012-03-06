@@ -189,6 +189,12 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	if ( ! $$data{'match'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add match TEXT');
 	} # end if
+	if ( ! $$data{'viewable'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add viewable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! $$data{'on_registration'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add on_registration BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );

@@ -597,6 +597,8 @@ sub user_profile_fields {
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
 				'search_default'	=>	$param{'search_default-'.$Field->id()},
 				'match'	=>	$param{'match-'.$Field->id()},
+				'viewable'	=>	$param{'viewable-'.$Field->id()},
+				'on_registration'	=>	$param{'on_registration-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if

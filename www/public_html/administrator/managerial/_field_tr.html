@@ -12,7 +12,9 @@
 			<td>%8$s</td>
 			<td>%9$s</td>
 			<td>%10$s</td>
-			<td class="buttons">%11$s</td>
+			<td>%11$s</td>
+			<td>%12$s</td>
+			<td class="buttons">%13$s</td>
 		</tr>`, $Field->id(), $Field->name(), $Field->description(),
 			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
@@ -21,6 +23,8 @@
 			ssi::radio( 'searchable-'.$Field->id(), [1,'Yes',0,'No'], $Field->searchable() ),
 			ssi::input( name=>'search_default-'.$Field->id(), value=>$Field->search_default(), type=>'text' ),
 			ssi::input( name=>'match-'.$Field->id(), value=>$Field->match(), type=>'text' ),
+			ssi::radio( 'viewable-'.$Field->id(), [1,'Yes',0,'No'], $Field->viewable() ),
+			ssi::radio( 'on_registration-'.$Field->id(), [1,'Yes',0,'No'], $Field->on_registration() ),
 			
 		join('', 
 			ssi::button( 'x'.$Field->id(), { 'onclick'=>qq`delField( $$Field{id} );`, 'text'=>'X' } ),

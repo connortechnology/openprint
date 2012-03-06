@@ -11,5 +11,7 @@ CREATE TABLE User_Profile_Fields (
 	searchable	BOOLEAN NOT NULL DEFAULT FALSE,
 	search_default	TEXT,	
 	match		TEXT,
+	on_registration	BOOLEAN,
+	viewable	BOOLEAN,
 	PRIMARY KEY (id)
 );
