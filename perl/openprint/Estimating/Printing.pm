@@ -2479,12 +2479,16 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			my $add = 1;
 			my $Paper = $imp->Paper();
 
+			# My thoughts here:  have to base it purely on this sig
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
 			if ( $$Paper{'type'} eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
+				#$stock_qty += $$PaperCounts{$Paper->to_string()};
+			} else {
+				#$stock_qty += $$PaperCounts{$Paper->to_string()};
+				$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
 			} # end if
-			$stock_qty += $$PaperCounts{$Paper->to_string()};
 
 			my $SmallerPrice;
 			if ( $$imp{'PaperPrice'} ) {
