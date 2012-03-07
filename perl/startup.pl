@@ -93,6 +93,7 @@ BEGIN {
 	use openprint::Event ();
 	use MapImage;
 	use Lingua::EN::Inflect ();
+	use	openprint::Location ();
 
 }
 
