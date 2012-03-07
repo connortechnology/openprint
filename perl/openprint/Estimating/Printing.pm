@@ -2287,11 +2287,13 @@ $imp->display("Grain override next");
 			my $Paper = $imp->Paper();
 
 			my $stock_qty = int( $qty/$imp->imposition() );
-			if ( $Paper->type() eq 'Roll' ) {
+			#if ( $Paper->type() eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-			} # end if
-			$stock_qty += $$PaperCounts{$Paper->to_string()};
+			#} else {
+				#$stock_qty
+			#} # end if
+			#$stock_qty += $$PaperCounts{$Paper->to_string()};
 
 			my $SmallerPrice;
 			if ( $$imp{'PaperPrice'} ) {
@@ -2321,6 +2323,8 @@ $imp->display("Grain override next");
 									'service'=>'Material'
 									);
 						} # end if
+#$I->display("Comparing ". $P->minimum_order_weight() . ' ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+#$imp->display("Comparing" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2477,6 +2481,8 @@ sub get_project_price {
 	my %best_price = $best_price ? %{$best_price} : ();
 #$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
 
+	my $services = $Project->services();
+
 	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
 		my $Press = $P;
 		next if ! $Press;
@@ -2486,7 +2492,6 @@ sub get_project_price {
 			$openprint::log->debug("Wrong type " . $Press->strid() . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if $debug;
 			next;
 		} # end if
-		my $services = $Project->services();
 #my $time = gettimeofday();
 my @Is = calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -2517,7 +2522,7 @@ my @Is = calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $Pap
 				next;
 			} # end if
 			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( $debug or 0 ) {
+				if ( $debug or 1 ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
 					if ( $$sig_specs{'Impositions'} ) {
 						foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
@@ -2699,9 +2704,9 @@ if ( 0 ) {
 				} # end if
 				next;
 			} # end if
-
+if ( 1 ) {
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( $debug or 0 ) {
+				if ( $debug or 1 ) {
 $openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
 					if ( $$price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
@@ -2718,6 +2723,7 @@ $openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Compari
 				} # end if
 				next; # next Impo
 			} # end if
+} # end if
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
