@@ -212,7 +212,11 @@ $log->warn("registration errors $error");
 		} # end if
 
 		# Send confirmation
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
+		if ( -e $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' ) {
+			$info{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' );
+		} else {
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
+		} # end if
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		new openprint::Email()->send(
 				FROM	=> $agent,
