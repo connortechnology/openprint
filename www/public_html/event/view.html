@@ -33,7 +33,9 @@
 			$html .= $$variable{'Event'}->asset_html();
 			my $Location = $$variable{'Event'}->Location();
 			if ( $Location ) {
-				$Location->get_latitude_and_longitude();
+				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+					$Location->get_latitude_and_longitude();
+				} # end if
 				if ( $Location->latitude() and $Location->longitude() ) {
 				$html .= '<iframe src="http://maps.google.com/maps?f=q&source=s_q&hl=en&ll='.$Location->longitude().','.$Location->latitude().'&sll='.$Location->longitude().','.$Location->latitude().'&q='.join('+',$Location->name(), $Location->address(), ( $Location->postalcode() ? $Location->postalcode() : () ), map{$_->name()} ( $Location->Parents() ) ).'&z=13&output=embed" style="width: 100%; height:400px;"></iframe>';	
 					#$html .= '<img class="map" src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->longitude().','.$Location->latitude().'&zoom=11&size=200x200&sensor=false&markers='.$Location->longitude().','.$Location->latitude().'">';
@@ -60,7 +62,16 @@
 			<div class="content">
 				<ul>
 					<li><label>Location</label>
-						<? echo ( $$variable{'Event'}->where(); ) ?>
+						<? echo ( 
+								my $html .= $$variable{'Event'}->where();
+								my $MyLocation = new openprint::User($session{'user_id'})->Location();
+								my $Location = $$variable{'Event'}->Location();
+								if ( $Location and $MyLocation ) {
+									my $distance = openprint::Location::distance( $MyLocation->latitude(), $MyLocation->longitude(), $Location->latitude(), $Location->longitude(), 'K' ) ;
+									$html .= '<br/>'.int($distance).'km from you.' if $distance;
+								} # end if
+								return $html;
+						) ?>
 					</li>
 				</ul>
 			</div>
