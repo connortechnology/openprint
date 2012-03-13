@@ -783,21 +783,32 @@ sub AUTOLOAD {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
 			# This looks to handle returning Objects
-			my $field = (lc $name) . '_id';
-			if ( exists $$fields{$field} ) {
-				my $O = eval {
-					require "openprint/$name.pm";
-					return ('openprint::'.$name)->new( $_[0]{$field} );
-				}; # end eval
-				if ( $@ ){
-					$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
-					return undef;
+			if ( exists $$fields{$name} ) {
+				if ( ! defined $_[0]{$name} ) {
+					my $defaults = eval '\%'.$type.'::defaults';
+					if ( exists $$defaults{$name} ) {
+						return $$defaults{$name};
+					}
 				} # end if
-				return $O;
+				return $_[0]{$name};
+			} else {
+				my $field = (lc $name) . '_id';
+				if ( exists $$fields{$field} ) {
+					my $O = eval {
+						require "openprint/$name.pm";
+						return ('openprint::'.$name)->new( $_[0]{$field} );
+					}; # end eval
+					if ( $@ ){
+						$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
+						return undef;
+					} # end if
+					return $O;
+				} # end if
 			} # end if
-		} # end if
-		return $_[0]{$name};
-	} # end if
+		} # end if has fields
+	} # end if setting
+$log->error("Bad autoload for $type $name");
+	return;
 } # end sub AUTOLOAD
 
 sub to_string {
