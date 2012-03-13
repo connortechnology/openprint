@@ -776,6 +776,7 @@ sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
 		return $_[0]{$name} = $_[1];
