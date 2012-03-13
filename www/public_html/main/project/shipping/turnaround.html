@@ -12,6 +12,7 @@
 			<p id="Turnaround">
 				<label>Turnaround:</label>
 				<select name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');calc('f1');">
+					<option value="">select</option>
 <? echo (
 	my $Service = openprint::Service->find_one('name'=>'Turnaround'.$$variable{'Project'}->Type()->name());
 	$Service = openprint::Service->find_one('name'=>'Turnaround') if ! $Service;

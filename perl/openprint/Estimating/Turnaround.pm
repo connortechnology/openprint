@@ -41,6 +41,11 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
 
+	if ( $$specs{'TurnaroundDays'} eq '' ) {
+		$$specs{'alert'} = 'Please select the turnaround time.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	my ( $min, $max ) = split('-', $$specs{'TurnaroundDays'} );
 $log->debug("Min: $min Max: $max");
 
