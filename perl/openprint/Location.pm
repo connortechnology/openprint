@@ -45,8 +45,8 @@ $serial = 'locations_id_seq';
 	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
-	'latitude'		=>	[ 's/[^\d\.]//g' ],
-	'longitude'		=>	[ 's/[^\d\.]//g' ],
+	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
+	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
@@ -194,8 +194,10 @@ sub get_latitude_and_longitude {
 	my $ua = LWP::UserAgent->new;
 	$ua->agent("IntelligentQuote/0.1 ");
 # Create a request
-$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()));
-	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()) );
+my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents());
+$string =~ s/ /+/g;
+$openprint::log->debug('Get: ' . $string );
+	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.$string);
 # Pass request to the user agent and get a response back
 	my $res = $ua->request($req);
 	my $json = JSON::decode_json( $res->content );
@@ -216,10 +218,37 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]-
 	if ( $$json{'Placemark'} ) {
 		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
-		if ( $$PlaceMark{'PostalCode'} and $_[0]{'postalcode'} ) {
-			if ( $$PlaceMark{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
-				$use = 1;
+		if ( $$PlaceMark{'AddressDetails'} ) {
+			my $Address = $$PlaceMark{'AddressDetails'};
+			if ( $$Address{'Country'} ) {
+				my $Country = $$Address{'Country'};
+				if ( $$Country{'AdministrativeArea'} ) {
+					my $AdministrativeArea = $$Country{'AdministrativeArea'};
+
+					if ( $$AdministrativeArea{'Locality'} ) {
+						my $Locality = $$AdministrativeArea{'Locality'};
+						if ( $_[0]{'postalcode'} ) {
+							if ( $$Locality{'PostalCode'} ) {
+								$openprint::log->debug("Have Postal code" . $$Locality{'PostalCode'}{'PostalCodeNumber'});
+
+								if ( $$Locality{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
+									$use = 1;
+								} # end if
+							} else {
+								$openprint::log->debug("No PostalCode");
+							} # en dif
+						} # en dif postalcode
+					} else {
+						$openprint::log->debug("No Locality");
+					} # end if
+				} else {
+					$openprint::log->debug("No Administrative Area");
+				} # end if
+			} else {
+				$openprint::log->debug("No Coutry");
 			} # end if
+		} else {
+			$openprint::log->debug("No Address");
 		} # end if
 
 		if ( $use ) {

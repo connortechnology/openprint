@@ -48,7 +48,7 @@
 							if ( $session{'user_id'} ) {
 								my $MyLocation = new openprint::User($session{'user_id'})->Location();
 								if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
-									$MyLocation->save() if $MyLocation->get_latitude_and_longitude();
+									$MyLocation->get_latitude_and_longitude();
 								} # en dif
 								if ( $MyLocation and $MyLocation->latitude() and $MyLocation->longitude() and $$variable{'Location'}->latitude() and $$variable{'Location'}->longitude() ) {
 									my $distance = openprint::Location::distance( $$variable{'Location'}->latitude(), $$variable{'Location'}->longitude(), $MyLocation->latitude(), $MyLocation->longitude(), 'K' );
