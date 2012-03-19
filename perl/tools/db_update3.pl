@@ -320,6 +320,9 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+	if ( ! exists $$data{'deleted'} ) {
+	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
+	} # end if
 		
 } # end if
 if ( ! sets::isin( 'events', \@tables ) ) {

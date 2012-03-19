@@ -36,6 +36,7 @@ $serial = 'locations_id_seq';
 	'url'			=>	'url',	
 	'asset_id'		=>	'asset_id',
 	'album_id'		=>	'album_id',
+	'deleted'		=>	'deleted',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
@@ -57,6 +58,7 @@ $serial = 'locations_id_seq';
 	'longitude'		=>	undef,
 	'asset_id'		=>	undef,
 	'album_id'		=>	undef,
+	'deleted'		=>	'0',
 );
 
 sub children {
@@ -260,7 +262,7 @@ sub Asset {
         my $Album = $_[0]->Album();
         if ( $$Album{'asset_id'} ) {
             $_[0]{'Asset'} = new openprint::Asset( $$Album{'asset_id'} );
-        } elsif ( my @Photos = $Album->Photos() ) {
+        } elsif ( $$Album{'album_id'} and my @Photos = $Album->Photos() ) {
             $_[0]{'Asset'} = $Photos[0];
         } else {
             $_[0]{'Asset'} = new openprint::Asset();
