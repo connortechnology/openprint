@@ -776,6 +776,7 @@ sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
 		return $_[0]{$name} = $_[1];
@@ -807,7 +808,7 @@ sub AUTOLOAD {
 			} # end if
 		} # end if has fields
 	} # end if setting
-$log->error("Bad autoload for $type $name");
+	Carp::cluck( "Bad autoload $type $name " );
 	return;
 } # end sub AUTOLOAD
 

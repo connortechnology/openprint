@@ -504,21 +504,24 @@ sub can_edit {
 } # end sub can_edit
 
 sub Location {
-	my $Profile = $_[0]->Profile();
-	my $Location;
-	if ( $Profile->postalcode() ) {
-		$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+	if ( ! $_[0]{'Location'} ) {
+		my $Profile = $_[0]->Profile();
+		my $Location;
+		if ( $Profile->postalcode() ) {
+			$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+		} # end if
+		if ( ! $Location and $Profile->city() ) {
+			my $City = new openprint::Location( $Profile->city() );
+			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+		} # end if
+		if ( ! $Location ) {
+			$log->error("Still no location");
+			return new openprint::Location();
+		} # endif
+		$_[0]{'Location'} = $Location;
 	} # end if
-	if ( ! $Location and $Profile->city() ) {
-		my $City = new openprint::Location( $Profile->city() );
-		$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
-	} # end if
-if ( ! $Location ) {
-	$log->error("Still no location");
-	return;
-}
 		
-	return $Location;
+	return $_[0]{'Location'};
 } # end sub Location
 
 1;

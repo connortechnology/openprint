@@ -63,32 +63,44 @@
 				<ul>
 					<li><label>Location</label>
 						<? echo ( 
+$log->error("FUCK ME");
 								my $html .= $$variable{'Event'}->where();
-								my $MyLocation = new openprint::User($session{'user_id'})->Location();
-								my $Location = $$variable{'Event'}->Location();
-								if ( $Location and $MyLocation ) {
-									my $distance = openprint::Location::distance( $MyLocation->latitude(), $MyLocation->longitude(), $Location->latitude(), $Location->longitude(), 'K' ) ;
-									$html .= '<br/>'.int($distance).'km from you.' if $distance;
-								} # end if
+								if ( $session{'user_id'} ) {
+$openprint::log->debug("Hello");
+									my $MyLocation = new openprint::User($session{'user_id'})->Location();
+									if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+										$MyLocation->get_latitude_and_longitude();
+									} # end if
+	$openprint::log->debug("MyLoc: " . $MyLocation->to_string() );
+
+									my $Location = $$variable{'Event'}->Location();
+									if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and 1*$MyLocation->latitude() and 1*$MyLocation->longitude() ) {
+	$openprint::log->debug("lat long for location: $$Location{latitude},$$Location{longitude} Mine: $$MyLocation{latitude},$$MyLocation{longitude}");
+										my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
+										$html .= '<br/>'.int($distance).'km from you.' if $distance;
+									} else {
+	$openprint::log->error("No Lot long for location: $$Location{latitude},$$Location{longitude} Mine: $$MyLocation{latitude},$$MyLocation{longitude}");
+									} # end if
+								} # end if user_id
 								return $html;
 						) ?>
 					</li>
 				</ul>
 			</div>
 		</fieldset>
-</div>
-<br class="spacer"/>
-		<fieldset><legend>Photos</legend>
+	</div>
+	<br class="spacer"/>
+	<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Event'}->id() ) ?>
 	<div id="Photos">
 		<!--#include virtual="_photos.html"-->
 	</div>
 <? endif ( $$variable{'Event'}->id() ) ?>
-		</fieldset>
-<? if ( $session{'user_id'} ) ?>
-<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
-<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
-<? endif ( $session{'user_id'} ) ?>
+	</fieldset>
+	<? if ( $session{'user_id'} ) ?>
+	<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
+	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
+	<? endif ( $session{'user_id'} ) ?>
 	</fieldset>
 	</form>
 </div></div>

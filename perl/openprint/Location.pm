@@ -179,17 +179,11 @@ sub latitude {
 	if ( @_ > 1 ) {
 		$_[0]{'latitude'} = $_[1];
 	} # end if
-	if ( ! $_[0]{'latitude'} ) {
-		$_[0]->get_latitude_and_longitude();
-	} # end if
 	return $_[0]{'latitude'};
 }
 sub longitude {
 	if ( @_ > 1 ) {
 		$_[0]{'longitude'} = $_[1];
-	} # end if
-	if ( ! $_[0]{'longitude'} ) {
-		$_[0]->get_latitude_and_longitude();
 	} # end if
 	return $_[0]{'longitude'};
 }
@@ -203,14 +197,14 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]-
 # Pass request to the user agent and get a response back
 	my $res = $ua->request($req);
 	my $json = JSON::decode_json( $res->content );
-$openprint::log->debug( $json );
+#$openprint::log->debug( $res->content );
 	if ( $$json{'Placemark'} ) {
 		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
 		my $Point = $$PlaceMark{'Point'};
 		my $coordinates = $$Point{'coordinates'};
-		$_[0]{'latitude'} = @{$coordinates}[0];	
-		$_[0]{'longitude'} = @{$coordinates}[1];	
+		$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
+		$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
 $openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
 		return 1;
 	} else {
@@ -221,8 +215,10 @@ $openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}"
 
 
 sub distance {
-	shift if $_[0] eq 'openprint::Location';
-	shift if ref $_[0] eq 'openprint::Location';
+$openprint::log->debug("distance: @_");
+	shift @_ if $_[0] eq 'openprint::Location';
+	shift @_ if ref $_[0] eq 'openprint::Location';
+
 	my ($lat1, $lon1, $lat2, $lon2, $unit) = @_;
 	my $theta = $lon1 - $lon2;
 	my $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
