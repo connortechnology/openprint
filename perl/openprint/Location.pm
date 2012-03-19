@@ -111,13 +111,13 @@ sub type {
 			$Type = new openprint::Location_Type();
 			$Type->save({'name'=>$_[1]});
 		} # end if
-$openprint::log->debug("Type: " . $Type->to_string() );
+#$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
-$openprint::log->debug("Location::type " . $_[0]->to_string() );
+#$openprint::log->debug("Location::type " . $_[0]->to_string() );
 	return $_[0]{'type'};
 } # end sub type
 
@@ -200,15 +200,37 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]-
 	my $res = $ua->request($req);
 	my $json = JSON::decode_json( $res->content );
 #$openprint::log->debug( $res->content );
+	if ( ! $$json{'Placemark'} ) {
+		# Try again without city
+		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
+		$req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()) );
+
+$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()));
+		$res = $ua->request($req);
+		$json = JSON::decode_json( $res->content );
+# Pass request to the user agent and get a response back
+	} # end if
+
+	my $use = 0;
+
 	if ( $$json{'Placemark'} ) {
 		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
-		my $Point = $$PlaceMark{'Point'};
-		my $coordinates = $$Point{'coordinates'};
-		$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
-		$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
-$openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
-		return 1;
+		if ( $$PlaceMark{'PostalCode'} and $_[0]{'postalcode'} ) {
+			if ( $$PlaceMark{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
+				$use = 1;
+			} # end if
+		} # end if
+
+		if ( $use ) {
+			my $Point = $$PlaceMark{'Point'};
+			my $coordinates = $$Point{'coordinates'};
+			$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
+			$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
+	$openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
+			$_[0]->save();
+			return 1;
+		} # end if
 	} else {
 		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
 	} # end if

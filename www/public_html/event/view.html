@@ -63,23 +63,17 @@
 				<ul>
 					<li><label>Location</label>
 						<? echo ( 
-$log->error("FUCK ME");
 								my $html .= $$variable{'Event'}->where();
 								if ( $session{'user_id'} ) {
-$openprint::log->debug("Hello");
 									my $MyLocation = new openprint::User($session{'user_id'})->Location();
 									if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
 										$MyLocation->get_latitude_and_longitude();
 									} # end if
-	$openprint::log->debug("MyLoc: " . $MyLocation->to_string() );
 
 									my $Location = $$variable{'Event'}->Location();
-									if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and 1*$MyLocation->latitude() and 1*$MyLocation->longitude() ) {
-	$openprint::log->debug("lat long for location: $$Location{latitude},$$Location{longitude} Mine: $$MyLocation{latitude},$$MyLocation{longitude}");
+									if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
 										my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
 										$html .= '<br/>'.int($distance).'km from you.' if $distance;
-									} else {
-	$openprint::log->error("No Lot long for location: $$Location{latitude},$$Location{longitude} Mine: $$MyLocation{latitude},$$MyLocation{longitude}");
 									} # end if
 								} # end if user_id
 								return $html;

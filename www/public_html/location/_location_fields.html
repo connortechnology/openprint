@@ -15,7 +15,10 @@
 	$html .= '</li>';
 	$html .= sprintf('
 	<li><label>Address</label><input type="text" name="address" id="address" value="%s" /></li>
-	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>', $$variable{'Location'}->get('address','postalcode') );
+	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
+	<li><label>Latitude</label><input type="number" name="latitude" id="latitude" value="%s" /></li>
+	<li><label>Longitude</label><input type="number" name="longitude" id="longitude" value="%s" /></li>
+', $$variable{'Location'}->get('address','postalcode','latitude','longitude') );
 	$html .= '</ul><ul class="ancestors">';
 	$html .= q`<li class="country"><label>Country</label>
 		<select id="country_id" name="country_id" onchange="Location_onchange( this, this.form.elements['state_id'], 'state' );$('country').value='';"><option value=""> </option>`;
