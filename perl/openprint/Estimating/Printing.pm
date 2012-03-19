@@ -264,6 +264,7 @@ my %variables = (
 		'ddmProjectSize' => ['save'],
 		'ScreenType' => ['save'],
 		'rdbGrainDirection1' => ['save','output'], 'rdbGrainDirection2' => ['save','output'], 'rdbGrainDirection3' => ['save','output'],
+		'MatchGrain1' => ['save'], 'MatchGrain2' => ['save'], 'MatchGrain3' => ['save'], 
 		'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 		'txtPressSheetComboItems'=>['save'],
 		'txtSpreadSize' => ['save'],
@@ -2412,8 +2413,8 @@ $imp->display("Grain override next");
 				} elsif ( $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index} ) {
 					next;
 				} # end if
-			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
-$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if DEBUG;
+			} elsif ( ( $$sig_specs{'MatchGrain'.$qty_index} eq 'Y' ) and $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
+				$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if DEBUG;
 				next;
 			} # end if
 
@@ -2480,11 +2481,13 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			my $Paper = $imp->Paper();
 
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
-			if ( $$Paper{'type'} eq 'Roll' ) {
+			#if ( $$Paper{'type'} eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-			} # end if
-			$stock_qty += $$PaperCounts{$Paper->to_string()};
+			#} else {
+				#$stock_qty
+			#} # end if
+			#$stock_qty += $$PaperCounts{$Paper->to_string()};
 
 			my $SmallerPrice;
 			if ( $$imp{'PaperPrice'} ) {
@@ -2514,6 +2517,8 @@ $imp->dispay('Ma imposition!') if DEBUG;
 									'service'=>'Material'
 									);
 						} # end if
+#$I->display("Comparing ". $P->minimum_order_weight() . ' ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+#$imp->display("Comparing" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2904,7 +2909,7 @@ if ( 0 ) {
 				} # end if
 				next;
 			} # end if
-
+if ( 1 ) {
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				if ( DEBUG or 0 ) {
 #$openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
@@ -2923,6 +2928,7 @@ if ( 0 ) {
 				} # end if
 				next; # next Impo
 			} # end if
+} # end if
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
