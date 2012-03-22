@@ -71,6 +71,9 @@
 			) ?>
 		</p>
 		<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<? if ( $$variable{'Project'}->reprint() ) ?>
+		<p><label>Reprint Reason:</label><? echo ( $$variable{'Project'}->reprint_reason() ) ?></p>
+		<? endif ( $$variable{'Project'}->reprint() ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
 		<p>
