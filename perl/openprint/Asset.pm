@@ -72,7 +72,9 @@ sub thumbnail_url {
 		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
 		if ( ! -e $dest ) {
 			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			`convert  -adaptive-resize 75x $src $dest`;
+			if ( system("convert  -adaptive-resize 75x $src $dest") ) {
+				$openprint::log->error("ERror creating thumbnail. Reason: $1");
+			} # end if convert
 		} # end if
 		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
@@ -90,6 +92,9 @@ sub thumbnail_url {
 	} elsif ( sets::isin( lc $extension, [ 'mp3' ] ) ) {
 $openprint::log->debug("returning mp3 icon");
 		return '/images/icons/mp3.png';
+	} elsif ( sets::isin( lc $extension, [ 'pdf' ] ) ) {
+$openprint::log->debug("returning pdf icon");
+		return '/images/icons/pdf.png';
 	} # end if
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
@@ -159,6 +164,15 @@ sub upload {
 	} # end if
 	return $Asset;
 } # end sub upload
+
+sub caption {
+	if ( $_[0]{'name'} ) {
+		return $_[0]{'name'};
+	} # end if
+	if ( $_[0]{'filename'} ) {
+		return $_[0]{'filename'};
+	} # end if
+} # end sub caption
 
 1;
 __END__

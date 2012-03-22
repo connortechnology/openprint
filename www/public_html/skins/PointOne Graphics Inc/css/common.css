@@ -366,6 +366,11 @@ fieldset ul li input[type="text"] {
 	-webkit-box-sizing: border-box;
 	resize: vertical;
 }
+table input[type="text"], table input[type="number"] {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
 
 fieldset.filters {
 	margin-left: 0px;
@@ -413,7 +418,7 @@ fieldset.filters p select {
 	width: auto;
 	max-width: 100%;
 }
-
+}
 .row {
 /*
 	height: 29px;
@@ -458,7 +463,7 @@ hr {
         background-color: #000088;
 }
 
-.error, .warning {
+.error, .warning, .warning a {
         color: red;
 }
 
@@ -771,3 +776,10 @@ td p label {
 #QuickLogin fieldset input {
 	width: 90%;
 }
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+

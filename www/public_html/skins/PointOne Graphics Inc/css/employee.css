@@ -111,3 +111,19 @@ table .Skid {
 input#StartDocket, input#EndDocket, input#Docket {
 	width: 50px;
 }
+table .invoice_id {
+	width: 90px;
+	text-align: left;
+}
+table .Project {
+	text-align: left;
+}
+table .AuthorizedBy {
+	width: 150px;
+	text-align: left;
+	float: none;
+}
+table .po_id {
+	width: 60px;
+	text-align: left;
+}

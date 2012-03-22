@@ -623,7 +623,7 @@ sub get_finished_weight {
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
+	#$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
@@ -638,7 +638,7 @@ sub get_finished_calliper {
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		my $calliper = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
+#$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
 			$finished_calliper += $calliper / 2;
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {

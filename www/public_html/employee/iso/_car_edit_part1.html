@@ -61,7 +61,7 @@
 	</tr>
 	<tr>
 		<td colspan="1">Docket No:</td>
-		<td colspan="1"><input type="text" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" size="6" onkeyup="this.value=this.value.replace(/\D/, '' );new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
+		<td colspan="1"><input type="number" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" onkeyup="integerize(this);new Ajax.Request('_select_customer_from_docket.json', {method:'get', parameters: {docket:this.value}} );" /></td>
 		<td colspan="1">Customer:</td>
 		<td colspan="7">
 <select id="company_id" name="company_id" style="width: 100%;">
@@ -192,9 +192,9 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 	</tr>
 	<tr>
 		<td colspan="2">Reprint Quantity:</td>
-		<td colspan="3"><input type="text" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
+		<td colspan="3"><input type="number" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
 		<td colspan="2">Reprint Value (CAD):</td>
-		<td colspan="3"><input type="text" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
+		<td colspan="3"><input type="number" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
 	</tr>
 	<tr>
 		<td colspan="2">Approved by:</td>

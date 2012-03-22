@@ -417,15 +417,19 @@ sub send_ppf {
 	my $error = misc::save_file( $log, sprintf('%s/%d_%sSg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','version','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
+	if ( $$self{'docket'} ) {
 		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error" );
 		} # end foreach $Project
+	} # end if
 		
 		return $error;
 	} 
+	if ( $$self{'docket'} ) {
 	foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "CIP Files released for form $$self{signature} side $$self{side}" );
 	} # end foreach $Project
+	} # end if docket
 	return;
 } # end sub send_ppf
 

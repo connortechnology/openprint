@@ -24,6 +24,7 @@ require openprint::customer_credit;
 require openprint::Email;
 require openprint::Email_Account;
 require openprint::UserGroup;
+require openprint::Company_Category;
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -336,6 +337,7 @@ sub company_profiles {
 			'txtCustomGreeting'     =>  'CustomGreeting',
 			'txtPricingLevel'		=>  'Discount',
 			'notes'					=>	'notes',
+			'category_id'			=>	'category_id',
 	);
 	my %shipping_fields = (
 			'txtShippingCompanyName'    =>  'CompanyName',
@@ -490,6 +492,8 @@ if ( 0 ) {
 		} # end if
 		$customer->set( \%params );
 		$index = $customer->{index};
+		delete $openprint::Object::cache{'openprint::Company'}{$index};
+		$Company = new openprint::Company( $index );
 
 		if ( $index > 0 ) {
 # Otherwise Error!

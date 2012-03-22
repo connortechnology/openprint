@@ -440,7 +440,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width().'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
 	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 	return $string;
 }
@@ -1210,7 +1210,7 @@ $openprint::log->debug("Looking for $qty");
 			foreach my $P ( @Papers ) {
 #$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
 				next if $qty < $P->minimum_order();
-$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+$openprint::log->debug("found for $qty < " . $P->minimum_order() . (ref $P).$P->to_string() );
 				$Paper = $P;
 				last;
 			} # end foreach
@@ -1359,6 +1359,13 @@ sub short {
 	my ( $self ) = @_;
 	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
 }
+
+sub factor {
+    my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+    return 1 if ! $factor;
+    return $factor;
+} # end sub factor
+
 
 1;
 __END__

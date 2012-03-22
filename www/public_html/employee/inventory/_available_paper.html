@@ -110,7 +110,7 @@
 						} # end if 
 					} # end if 
 					$skid_age{$Skid->age_days()} += 1;
-					$last_seen{$$Skid{'last_seen_days'}} += 1;
+					$last_seen{$Skid->last_seen_days()} += 1;
 					foreach my $C ( $Skid->Contents() ) {
 						$conditions{$$C{'condition_id'}} += 1;
 					} # end foreach Content

@@ -23,19 +23,24 @@
 			ajax_window('_po_decline_popup.html?po_id='+po_ids.join(','), 400 );
 		} // end if
 	} // end function open_decline_window()
+	function filter_vendors ( ddm ) {
+		new Ajax.Updater( ddm.form.supplier_id, '_vendor_dropdown.html', { 
+			parameters: { vendor_category_id: ddm.getValue(), supplier_id: ddm.form.supplier_id.getValue() }
+			} );
+	} // end function filter_vendors
 -->
 </script>
 <div class="PurchaseOrder">
 	<!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" action="history.html" method="post">
+<form id="f1" name="f1" action="/employee/purchase_order/history.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria:</legend>
 		<ul>
 			<li><label>PO #:</label>
-				<input type="number" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
+				<input type="number" pattern="[0-9]*" id="po_id" name="po_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Docket:</label>
-				<input type="number" id="docket" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
+				<input type="number" id="docket" pattern="[0-9]*" name="docket" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" onkeyup="integerize(this);" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "page_load('Results', \$('f1'));",'','Go' ); ) ?>
 			</li>
 			<li><label>Manifest:</label>
@@ -54,10 +59,18 @@
 			</li>
 <? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','Shipping','Inventory'], $session{'user_id'} ) ) ?>
 			<li><label>Vendor:</label>
+				<select name="vendor_category_id" id="vendor_category_id" onchange="filter_vendors(this);" >
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?vendor_category_id'} ); ) ?>
+				</select>
 				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 				<select name="supplier_id" id="supplier_id" onchange="if ( $('supplier_id').getValue() ) { new Ajax.Updater( 'item_id', '_item_filter.html', { parameters: { supplier_id: $('supplier_id').getValue() } } ); $('item_filter').show(); } else { $('item_filter').hide(); };page_load('Results',$('f1'));">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/purchase_order/history.html?supplier_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 
+								'order'=>'lower(strname)', 
+								( $session{'/employee/purchase_order/history.html?category_id'} ? ( 
+								'category_id'	=> $session{'/employee/purchase_order/history.html?category_id'} ) : () ),
+								'supplier'=>'Y') ], $session{'/employee/purchase_order/history.html?supplier_id'} ); ) ?>
 				</select>
 			</li>
 			<li id="item_filter" <? echo ( $session{'/employee/purchase_order/history.html?supplier_id'} ? '' : 'style="display:none;"' ) ?>><label>Item:</label>
@@ -101,6 +114,12 @@
 				<label class="radio" for="cancelled0">No</label>
 				<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/purchase_order/history.html?cancelled'} eq '' ) ) ?> onclick="page_load('Results',$('f1'));" />
 				<label class="radio" for="cancelled">Both</label>
+			</li>
+			<li><label>Department:</label>
+				<select name="department_id" onchange="page_load('Results',\$('f1'));">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
+				</select>
 			</li>
 			<li>
 				<label>Types:</label>

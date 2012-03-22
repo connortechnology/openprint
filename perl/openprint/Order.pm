@@ -141,8 +141,8 @@ sub find {
 		push @values, $params{'currency_id'};
 	} # end if
 	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND ( ((SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
-		push @values, @params{'owing_>','owing_>'};
+		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE order_id=Index),0) > ?) ';
+		push @values, $params{'owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
@@ -405,8 +405,7 @@ sub projects {
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 } # end sub projects
 sub Projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $_[0]{'id'} );
 }
 
 sub Products {

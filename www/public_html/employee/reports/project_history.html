@@ -1,21 +1,21 @@
 <script type="text/javascript">
 	function load_contents( form ) {
 		$('Results').innerHTML = 'Please wait...';
-		new Ajax.Updater('Results','/employee/reports/_project_history_results.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('Results','/employee/reports/_project_history_results.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>
 <div class="PageTitle">
 <h1>REPORTS</h1>
 <h2>Project History</h2>
 </div>
-<form id="f1" name="f1">
+<form id="f1" name="f1" method="post" action="/employee/reports/project_history.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Company:</label>
-			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $param{'company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_history.html?company_id'} ); ) ?>
 			</select>
 		</p>
 		<p>
@@ -24,51 +24,42 @@
 			<? echo (
 					my @options = ( '', 'All', 'Non Employee', 'Non Employee' );
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
-					return ssi::make_drop_down( \@options, $param{'Estimator'} );
+					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_history.html?Estimator'} );
 					) ?>
-			 </select>
+			</select>
 		</p>
 		<p>
-			<label>Project Status:</label>
-			<select name="status" multiple size="4" >
+			<label>Current Status:</label>
+			<select name="status" multiple="multiple" size="4" >
 			<? echo (
-				my @options = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
-				return ssi::make_select( \@options, $param{'status'} ? $param{'status'} : \@options);
-			 ) ?>
-			 </select>
-		 </p>
-		 <? eval (
-				 if ( ! $param{'DateStartYear'} ) {
-					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,Date::Calc::Today() ); 
-				 } else {
-					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
-						 @param{'DateStartYear','DateStartMonth','DateStartDay'} );
-				 } # end if
-
-				 if ( ! $param{'DateEndYear'} ) {
-				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
-				 } else {
-				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
-					 @param{'DateEndYear','DateEndMonth','DateEndDay'} );
-				 } # end if
-
-				 @param{'DateStartYear','DateStartMonth','DateStartDay'} = Date::Calc::Today();
-				 @param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
-				 ) ?>
-		 <p>
-			 <label>Date:</label>
-			 <select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
-			 <select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
-			 <select name="DateStartDay"><?DateStartDays?></select>
-			to 
-			 <select name="DateEndYear" onchange="setDaysDropDown(this.value,this.form.DateEndMonth.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndYears?></select>
-			 <select name="DateEndMonth" onchange="setDaysDropDown(this.form.DateEndYear.value,this.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndMonths?></select>
-			 <select name="DateEndDay"><?DateEndDays?></select>
+				@{$$variable{options}} = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
+				my @selected = split(',', $session{'/employee/reports/project_history.html?status'} );
+				@selected = @{$$variable{options}} if ! @selected;
+				return ssi::make_select( $$variable{options}, \@selected );
+			) ?>
+			</select>
+		</p>
+		<p>
+			<label>Previous Status:</label>
+			<select name="previous_status" multiple="multiple" size="4" >
+			<? echo (
+				my @selected = split(',', $session{'/employee/reports/project_history.html?previous_status'} );
+				@selected = @{$$variable{options}} if ! @selected;
+				return ssi::make_select( $$variable{options}, \@selected );
+			) ?>
+			</select>
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
+		</p>
+		<p>
+			<label>Created On:</label>
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
+			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
 		</p>
 		<p>
 			<label>Value:</label>
-			<input type="text" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" style="width: auto;"  /> to
-			<input type="text" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" style="width: auto;"  />
+			<input type="number" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" /> to
+			<input type="number" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" />
 		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p>
@@ -77,26 +68,20 @@
 			<? echo (
 					my @options = ( '', 'All' );
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
-					return ssi::make_drop_down( \@options, $param{'CSR'} );
+					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_history.html?CSR'} );
 					) ?>
 
 			 </select>
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p><label>Reprint:</label>
-			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked( $param{'reprint'} eq 'Y' ); ) ?> />
-			<label class="radio" for="reprintY">Yes</label>
-			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked( $param{'reprint'} eq 'N' ); ) ?> />
-			<label class="radio" for="reprintN">No</label>
-			<input type="radio" name="reprint" id="reprint" value="" <? echo ( ssi::checked( $param{'reprint'} eq '' ); ) ?> />
-			<label class="radio" for="reprint">Both</label>
+			<? echo (
+				return ssi::radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{'/employee/reports/project_history.html?reprint'} );
+			) ?>
 		</p>
-
 		 <p class="buttons">
 			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
 		 </p>
-
-
 	</fieldset>
 </form>
 <div id="Results">

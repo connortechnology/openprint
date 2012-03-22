@@ -35,6 +35,8 @@ $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::SkidContent';
+	shift @_ if ref $_[0] eq 'openprint::SkidContent';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -77,6 +79,10 @@ sub find {
 	} # end if
 	if ( exists $params{'allocated is not null'} ) {
 		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
+	} # end if
+	if ( $params{'manifestcontent_id'} ) {
+		$sql .= ' AND manifestcontent_id=?';
+		push @values, $params{'manifestcontent_id'};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};

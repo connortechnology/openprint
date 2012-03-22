@@ -339,7 +339,7 @@ sub user_profile {
 		if ( $param{'ddmUser'} ) {
 # Enforce that we can only edit users from our company
 			if ( $User->company_id() != $session{'company_id'} ) {
-				$User = new openprint::User( $session{'user_id'} );
+				#$User = new openprint::User( $session{'user_id'} );
 			} # end if
 		} # end if
 

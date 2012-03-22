@@ -1,11 +1,10 @@
-package openprint::PaperAllocation;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
+package openprint::PaperAllocation;
+our @ISA = qw(openprint::Object);
+use MIME::QuotedPrint ();
+
 use openprint ();
-use vars qw(%session %variable $dbh $log $table $serial %fields %transforms %defaults );
+use vars qw($debug %session %variable $dbh $log $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -24,7 +23,7 @@ require openprint::logs;
 require openprint::Manufacturer;
 require openprint::Email;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -114,8 +113,10 @@ sub delete {
 		} # end if
 		sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $_[0]{'id'} );
 		sql::end_transaction( undef, $ac );
-		$_[0]->Paper()->allocated(undef,undef);
-		$_[0]->Paper()->available(undef);
+		my $Paper = $_[0]->Paper();
+		$Paper->allocated(undef,undef);
+		$Paper->available(undef);
+		$Paper->save();
 		return;
 	} else {
 		return 'already deleted.';
@@ -197,7 +198,7 @@ sub send_notification {
 	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 

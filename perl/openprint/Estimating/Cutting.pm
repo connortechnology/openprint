@@ -62,19 +62,35 @@ sub variables {
     return @v;
 }
 
-sub signature_needs {
-	my ( $log, $dbh, $project_index, $specs ) = @_;
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-	my $Project = new openprint::Project( $project_index );
+    my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+    return @v;
+
+} # end sub has_overrides
+
+sub signature_needs {
+	my ( $Project, $specs ) = @_;
+
 	if ( $Project->Type()->strid() eq 'Envelopes' ) {
-        $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 
 
 	my $services = $Project->services();
 
     if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
     } # end if
 
@@ -103,17 +119,16 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs cutting, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
-	my $Project = new openprint::Project( $project_index );
+	my ( $Project ) = @_;
 	if ( $Project->Type()->strid() eq 'Envelopes' ) {
-        $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+        $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 
 
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
 		return 0;
 	} # end if
 
@@ -126,11 +141,11 @@ sub neccessary {
 	foreach my $signature_service_index ( $Project->signatures() ) {
 
 		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		if ( signature_needs( $log, $dbh, $project_index, $specs ) ) {
+		if ( signature_needs( $Project, $specs ) ) {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("CUTTING NOT NEEDED!");
+	$openprint::log->debug("CUTTING NOT NEEDED!");
 	return 0;
 } # end sub neccessary
 

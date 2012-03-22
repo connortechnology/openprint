@@ -126,32 +126,36 @@
 	</tr>
 	<? echo (
 		my $html = '';
+		my $qty_index = $$variable{'Project'}->ordered_quantity_index();
 		my @sigs = $$variable{'Project'}->signatures();
 		@sigs = sort { 
 			my $a_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $a );
 			my $b_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $b );
-			return $$a_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()} <=> $$b_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+			return $$a_specs{'PageQuantity'.$qty_index} <=> $$b_specs{'PageQuantity'.$qty_index};
 		} @sigs;
 		my $form = 1;
 
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
-			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
-			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+			my $Service = $$variable{'Project'}->Service( $service_index );
+
+			my $sig_specs = $Service->specs();
+
+			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+			$Imposition->load( $sig_specs, $qty_index );
 
 			my $signatures = 1;
 			for ( my $i=0; $i < @sigs; $i += 1 ) {
 				my $sig_specs2= openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[$i] );
-				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $$variable{'Project'}->ordered_quantity_index() ) ) {
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $qty_index ) ) {
 					$signatures += 1;
 					splice @sigs, $i, 1;
 					$i -= 1;
 				} # end if
 			} # end for
 
-			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$$variable{'Project'}->ordered_quantity_index()} if ( ! $$sig_specs{'UsePress'} );
+			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$qty_index} if ( ! $$sig_specs{'UsePress'} );
 			$part += 1;
 			$html .= '<tr valign="top"><td class="docketText" align="center">';
 			if ( $$sig_specs{'UsePress'} eq '4C-1' ) {
@@ -166,10 +170,10 @@
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
 			if ( $config{'Barcodes Enabled'} ne 'N' ) {
-			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&amp;NoText=1&amp;Height=20"/>';
+				$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&amp;NoText=1&amp;Height=20"/>';
 			} # end if
 			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
-			$html .= '</td><td class="docketText">';
+			$html .= '</td><td class="docketText"> ';
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$html .= '<b>Customer Supplied</b> ';
 			} # end if
@@ -207,34 +211,48 @@
 				} # end if
 				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
-			if ( $$sig_specs{'StockType'.$$variable{'Project'}->ordered_quantity_index()} eq 'Roll' ) {
-				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index()} );
-				if ( $$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()} ne 'Web' ) {
-					$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+			if ( $Paper->type() eq 'Roll' ) {
+				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
+				if ( $$sig_specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+					$html .= sprintf(' %s&quot; Cut Off', $$sig_specs{'StockHeight'.$qty_index} );
+				} # end if
+				if ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y'  ) {
+					$html .= 'Cut Off Overriden';
 				} # end if
 			} else {
-				$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
+				$html .= sprintf('&nbsp;%s&quot; x %s&quot; %.0fM', @$sig_specs{'StockWidth'.$qty_index, 'StockHeight'.$qty_index}, $Paper->mweight() );
 			} # end if
-			$html .= sprintf(' %.0fM', $Paper->mweight() ) if $Paper->type() eq 'Sheet';
+			if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y'  ) {
+				$html .= 'Stock Size Overriden';
+			} # end if
 			$html .='<hr/>';
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';
 			} # end if
-			$html .= '</td><td class="docketText">';
-			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$$variable{'Project'}->ordered_quantity_index()} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} ne '' );
-			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
-			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
-				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
-					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$variable{'Services'}{'Folding'}[0] );
-					my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()} );
-					if ( $Equipment->strid() eq $$sig_specs{'UsePress'} ) {
+			$html .= '</td><td class="docketText"> ';
+			$html .= ($$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$variable{'txtSpreadSize'} ) . 'pp ' if ( $$sig_specs{'txtSignatureType'} ne '' );
+			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$qty_index, 'txtImposition'.$qty_index} );
+			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+				$html .= '<br/>Grain Overriden';
+			} # end if
+
+			my $Press = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'});
+			if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
+				my $FoldingService = $$variable{'Project'}->Service( $$variable{'Services'}{'Folding'}[0] );
+				my $specs = $FoldingService->specs();
+				my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} );
+				if ( $Press->specification('Folding Capable') eq 'When Printing' ) {
+					if ( $Equipment->id() eq $Press->id() ) {
 						$html .= ' Fold inline';
 					} else {
 						$html .=' Sheeter';
 					} # end if
 				} # end if
+				if ( $FoldingService->overrides() ) {
+					$html .= '<br/>Folding has overrides.';
+				} # end if
 			} # end if
-			$html .= '</td><td class="docketText">';
+			$html .= '</td><td class="docketText"> ';
 
 			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
 
@@ -297,17 +315,17 @@ $inkCoverage{$colour} = 100;
 				openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
 				openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
 				sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] )){
-		$net_impressions *= 2 ;
-		$gross_sheets /= 2 ;
+			$net_impressions *= 2 ;
+			$gross_sheets /= 2 ;
 		} # end if
 
 		$html .= '</td><td class="docketText">';
 		foreach my $f ( $form .. ($form+$signatures-1) ) {
-			$html .= sprintf('%d sheets', $net_sheets );
+			$html .= sprintf('%d sheets<br/>', $net_sheets );
 		} # end foreach
 		$html .= '</td><td class="docketText">';
 		foreach my $f ( $form .. ($form+$signatures-1) ) {
-			$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $f );
+			$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $f );
 		} # end foreach
 		$html .= '</td>';
 		

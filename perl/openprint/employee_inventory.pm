@@ -1429,8 +1429,7 @@ sub _manifest_content {
 			$variable{'error'} .= 'No manifest id.  Please enter the manifest id before adding items to it.<br/>';
 			return;
 		} # end if
-		my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-		$variable{'Manifest'} = $Manifest;
+		my $Manifest = $variable{'Manifest'} = new openprint::Manifest( $param{'manifest_id'} );
 		if ( $param{'manifest_id'} and ! $Manifest->id() ) {
 			$variable{'error'} .= $Manifest->save({'id'=>$param{'manifest_id'}});
 		} # end if
@@ -1446,13 +1445,15 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 			return if $variable{'error'};
 
 			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';
+				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been entered.';
 			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
+				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been entered.';
+			} elsif ( my $otherMC = openprint::ManifestContent->find_one('skid_id'=>$$Skid{id}) ) {
+				$variable{'error'} .= 'Skid ' . $Skid->id(). ' is already on manifest '.$otherMC->Manifest()->name().'.';
 			} else {
 				my $MC = new openprint::ManifestContent();
 				my @SC = $Skid->Contents();
-				if ( ! $param{"qty_lbs"} ) {
+				if ( ! $param{'qty_lbs'} ) {
 					if ( @SC == 1 ) {
 						$param{'qty_lbs'} = $SC[0]->quantity();
 					} # end if

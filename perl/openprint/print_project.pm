@@ -1292,7 +1292,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 
 		} # end if
 
-		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
+		if ( openprint::Estimating::Folding::neccessary( $project ) ) {
 			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
