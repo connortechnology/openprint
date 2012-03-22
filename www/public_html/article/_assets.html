@@ -1,13 +1,14 @@
 <? echo ( 
 	my $html;
-	foreach my $Asset ( $$variable{'Article'}->Assets() ) {
+	foreach my $A ( $$variable{'Article'}->Assets() ) {
+		my $Asset = $A->Asset();
 		$html .= sprintf(q`<li><img src="%2$s" alt="%3$s"/>%3$s<span class="buttons">%4$s</span></li>`,
-			$Asset->id(), $Asset->url(), $Asset->Asset()->caption(),
+			$Asset->id(), $Asset->url(), ssi::html_escape($Asset->name()),
 			join('',
-				ssi::button( 'delete'.$Asset->asset_id(), { 
-					'onclick'=> qq`new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{asset_id}', func: 'delete' } } );`, 
-					'text'=>'Delete' } ),
-				ssi::button( 'edit'.$Asset->asset_id(), { 'href'=>'/employee/assets/edit.html?asset_id=' . $Asset->asset_id(), 'text'=>'Edit', 'target'=>'_blank' } ),
+				ssi::button( 'delete'.$Asset->id(), { 
+					onclick=> qq`new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{id}', func: 'delete' } } );`, 
+					text=>'Delete' } ),
+				ssi::button( 'edit'.$Asset->asset_id(), { href=>'/employee/assets/edit.html?asset_id=' . $Asset->id(), text=>'Edit', target=>'_blank' } ),
 					),
 				);
 	} # end foreach Asset
