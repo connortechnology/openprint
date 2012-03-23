@@ -593,6 +593,7 @@ sub user_profile_fields {
 				'description'	=>	$param{'description-'.$Field->id()},
 				'type'	=>	$param{'type-'.$Field->id()},
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'defaults'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
 				'search_default'	=>	$param{'search_default-'.$Field->id()},

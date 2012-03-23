@@ -68,6 +68,11 @@ sub view {
 			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), ) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
 		} else {
+			if ( $param{'url'} ) {
+				if ( ! ( $param{'url'} =~ /^https?:\/\//i ) ) {
+					$param{'url'} = 'http://'.$param{'url'};
+				} # end if
+			} # end if
 			$variable{'error'} .= $Location->save({
 					'name'			=>	$param{'name'}, 
 					'description'	=>	$param{'description'},

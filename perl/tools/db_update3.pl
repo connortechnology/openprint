@@ -186,6 +186,9 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	if ( ! $$data{'search_default'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add search_default TEXT');
 	} # end if
+	if ( ! $$data{'defaults'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields ADD defaults TEXT[]');
+	} # end if
 	if ( ! $$data{'match'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add match TEXT');
 	} # end if
