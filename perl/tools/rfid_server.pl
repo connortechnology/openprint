@@ -49,7 +49,7 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www5') );
+	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www4') );
 
 	# Have to reload scanner here
 
@@ -59,21 +59,23 @@ sub process_request {
 
 	$self->get_client_info();
 	%Scanners = map { $_->ipaddr(), $_ } openprint::RFIDScanner::find();
-	my $Scanner = $Scanners{$self->{server}->{peeraddr}};
+	my $ip_addr = $self->{server}->{peeraddr};
+	$ip_addr =~ s/^::ffff://;
+	my $Scanner = $Scanners{$ip_addr};
 	if ( ! $Scanner ) {
-		my @Scanners = openprint::RFIDScanner::find('ipaddr'=>$self->{server}->{peeraddr});
+		my @Scanners = openprint::RFIDScanner::find('ipaddr'=>$ip_addr);
 		if ( ! @Scanners ) {
 			# Have a new one, add it
 			$Scanner = new openprint::RFIDScanner();
-			$Scanner->save( {'ipaddr'=>$self->{server}->{peeraddr}} );
+			$Scanner->save( {'ipaddr'=>$ip_addr} );
 		} else {
 			$Scanner = $Scanners[0];
 		} # end if
-		$Scanners{$self->{server}->{peeraddr}} = $Scanner;
+		$Scanners{$ip_addr} = $Scanner;
 	} # end if
-	$self->log(1, sprintf('%s : %s : %s',$date, $self->{server}->{peeraddr}, 'connect ' . $Scanner->name() ));
+	$self->log(1, sprintf('%s : %s : %s',$date, $ip_addr, 'connect ' . $Scanner->name() ));
 	if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
-		$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $self->{server}->{peeraddr}, $error ));
+		$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 	} # end if
 
 	my @last_seen;
@@ -112,77 +114,77 @@ sub process_request {
 			# if not seen in 10 minutes, then update scanner last seen time
 			if ( (time - Date::Parse::str2time($Scanner->lastseen_on())) > 600 ) {
 				if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
-					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $self->{server}->{peeraddr}, $error ));
+					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $ip_addr, $error ));
 				} # end if
 			} # end if
 
-			#$self->log(1, sprintf('%s : %s : hex %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+			#$self->log(1, sprintf('%s : %s : hex %s', $date, $ip_addr, $tag_id ));
 			$tag_id = substr( $tag_id, length($tag_id)-16, 16 );
 			my $type_digit = substr( $tag_id, 0, 1 );
 			if ( $type_digit =~ /\D/ ) {
-				$self->log(1, sprintf('%s : %s : invlaid type digit', $date, $self->{server}->{peeraddr} ));
+				$self->log(1, sprintf('%s : %s : invlaid type digit', $date, $ip_addr ));
 				next;
 			} # end if
 		
 			# This is due to a fuck up, where the tags printed only used 15 digits, whereas the rfid is 16
 			$tag_id = hex( substr( $tag_id, 2, 15 ) );
 			if ( $tag_id =~ /\D/ ) {
-				$self->log(1, sprintf('%s : %s : invalid tag (%s)', $date, $self->{server}->{peeraddr}, $tag_id ));
+				$self->log(1, sprintf('%s : %s : invalid tag (%s)', $date, $ip_addr, $tag_id ));
 				next;
 			} elsif ( $debug ) {
-				$self->log(1, sprintf('%s : %s : valid tag (%s)', $date, $self->{server}->{peeraddr}, $tag_id ));
+				$self->log(1, sprintf('%s : %s : valid tag (%s)', $date, $ip_addr, $tag_id ));
 			} # end if
 
 			if ( ( $type_digit == 2 ) and ( $tag_id < 2100 ) ) {
 				# Ignore the test tags
-				$self->log(1, sprintf('%s : %s : old skid tag %s', $date, $self->{server}->{peeraddr}, $tag_id )) if $debug;
+				$self->log(1, sprintf('%s : %s : old skid tag %s', $date, $ip_addr, $tag_id )) if $debug;
 				next;
 			} # end if
 
 			$tag_id = sprintf('%d%.14d', $type_digit, $tag_id );
 			if ( ! $tag_id ) {
-				$self->log(1, sprintf('%s : %s : No tag', $date, $self->{server}->{peeraddr} ));
+				$self->log(1, sprintf('%s : %s : No tag', $date, $ip_addr ));
 				next;
 			} # end if
-			$self->log(1, sprintf('%s : %s : dec %s', $date, $self->{server}->{peeraddr}, $tag_id )) if $debug;
+			$self->log(1, sprintf('%s : %s : dec %s', $date, $ip_addr, $tag_id )) if $debug;
 
 			my $Tag = new openprint::RFIDTag( $tag_id );
 			if ( ! $Tag->id() ) {
-				$self->log(1, sprintf('%s : going to allocate ', $self->{server}->{peeraddr} )) if $debug;
+				$self->log(1, sprintf('%s : going to allocate ', $ip_addr )) if $debug;
 				if ( $_ = $Tag->save( {'id'=>$tag_id} ) ) {
-					$self->log(1, sprintf('%s : %s : Error saving tag %s', $date, $self->{server}->{peeraddr}, $_ ) );
+					$self->log(1, sprintf('%s : %s : Error saving tag %s', $date, $ip_addr, $_ ) );
 				} # end if
 			} # end if
 
 			if ( ! $Scanner->type() ) {
-				$self->log(1, sprintf('%s : %s : no scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
+				$self->log(1, sprintf('%s : %s : no scanner type %s', $date, $ip_addr, $Scanner->to_string() ));
 			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
 						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
-						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
+						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $ip_addr,$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							shift @last_seen if @last_seen > $location_cache_size;
 							push @last_seen, $Tag->location_id();
-							$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Scanner->Location()->name() ));
+							$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $ip_addr, $Scanner->name(), $Scanner->Location()->name() ));
 							if ( $_ = $Scanner->save() ) {
-								$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $_ ));
+								$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $ip_addr, $_ ));
 							} # end if
 						} # end if
 					} # end if
 				} elsif ( ( $Scanner->location_id() != $Tag->location_id() ) or ( time - Date::Parse::str2time( $Tag->updated_on()) > 60 ) ) {
-					$self->log(1, sprintf('%s(%s) : %s : updating location of tag %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Tag->id(), $Scanner->Location()->name() ));
+					$self->log(1, sprintf('%s(%s) : %s : updating location of tag %s to %s', $date, $ip_addr, $Scanner->name(), $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					if ( $_ = $Tag->save() ) {
-						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $self->{server}->{peeraddr}, $_ ));
+						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
 				} # end if
 			} elsif ( $Scanner->type() eq 'Fixed' ) {
 				if ( $Scanner->location_id() != $Tag->location_id() ) {
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					if ( $_ = $Tag->save() ) {
-						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $self->{server}->{peeraddr}, $_ ));
+						$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 					} # end if
 				} # End if
 			} elsif ( $Scanner->type() eq 'Checkout' ) {
@@ -190,7 +192,7 @@ sub process_request {
 					if ( ! sets::isin( $Tag->location_id(), [ map { $_->location_id() } @checkout_tags ] ) ) {
 						$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 						if ( $_ = $Tag->save() ) {
-							$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $self->{server}->{peeraddr}, $_ ));
+							$self->log(1, sprintf('%s : %s : error saving tag %s', $date, $ip_addr, $_ ));
 						} # end if
 					} # end if
 					Checkout_Skid( $Scanner, $Tag, $self, \@checkout_tags );
@@ -198,20 +200,20 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Truck Location' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-#$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
+#$self->log(1, sprintf('%s : %s : getting histyo', $date, $ip_addr ));
 						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
 						if ( ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
-#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
+#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $ip_addr, $Tag->id(), $Tag->Location()->name() ));
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							shift @last_seen if @last_seen > 7;
 							push @last_seen, $Tag->location_id();
 							my $e = $Scanner->save();
-							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $ip_addr, $e )) if $e;
 							if ( $Scanner->other() ) {
 								my $Scanner2 = new openprint::RFIDScanner( $Scanner->other() );
 								$Scanner2->location_id( $Tag->location_id(), $Tag->id() );
 								my $e = $Scanner2->save();
-								$self->log(1, sprintf('%s : %s : error saving scanner2 %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+								$self->log(1, sprintf('%s : %s : error saving scanner2 %s', $date, $ip_addr, $e )) if $e;
 							} # end if
 						} # end if
 					} # end if
@@ -226,34 +228,34 @@ sub process_request {
 					my $Skid = $Tag->Skid();
 					$Skid->rfidtag_id( $Tag->id() ) if ! $Skid->rfidtag_id();
 					my $error = $Skid->save() if ! $Skid->id();
-					$self->log(1, sprintf('%s : %s : error saving skid: %s', $date, $self->{server}->{peeraddr}, $error )) if $error;
-					$self->log(1, sprintf('%s : %s : updating location of tag %s to %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->Location()->name() ));
+					$self->log(1, sprintf('%s : %s : error saving skid: %s', $date, $ip_addr, $error )) if $error;
+					$self->log(1, sprintf('%s : %s : updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					my $error = $Tag->save({'id'=>$tag_id});
-					$self->log(1, sprintf('%s : %s : error %s', $date, $self->{server}->{peeraddr}, $error )) if $error;
-					$self->log(1, sprintf('%s : %s : done updating location of tag %s to %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->Location()->name() ));
+					$self->log(1, sprintf('%s : %s : error %s', $date, $ip_addr, $error )) if $error;
+					$self->log(1, sprintf('%s : %s : done updating location of tag %s to %s', $date, $ip_addr, $Tag->id(), $Scanner->Location()->name() ));
 				} elsif ( $Tag->type() eq 'Location' ) {
 				} else {
-					$self->log(1, sprintf('%s : %s : unknown tag %s by %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->name() ));
+					$self->log(1, sprintf('%s : %s : unknown tag %s by %s', $date, $ip_addr, $Tag->id(), $Scanner->name() ));
 
 				} # end if
 			} else {
-				$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
+				$self->log(1, sprintf('%s : %s : unknown scanner type %s', $date, $ip_addr, $Scanner->type() ));
 			} # end if
 			alarm($timeout);
 		} # end while
 		alarm($previous_alarm);
-		$self->log(1, sprintf('%s : %s : done while, tag: %s', $date, $self->{server}->{peeraddr}, $tag )) if $debug;
+		$self->log(1, sprintf('%s : %s : done while, tag: %s', $date, $ip_addr, $tag )) if $debug;
 	}; # end eval
-	$self->log(1, sprintf('%s : %s : %s',$date, $self->{server}->{peeraddr}, 'eval error ' . $@ )) if $@;
+	$self->log(1, sprintf('%s : %s : %s',$date, $ip_addr, 'eval error ' . $@ )) if $@;
 
 	$dbh->disconnect();
-	$self->log(1, sprintf('%s : %s : %s',$date, $self->{server}->{peeraddr}, 'disconnect ' )) if $debug;
+	$self->log(1, sprintf('%s : %s : %s',$date, $ip_addr, 'disconnect ' )) if $debug;
 
 	if ($@ =~ /timed out/i) {
-		$self->log(1, sprintf('%s : %s : timeout: %s', $date, $self->{server}->{peeraddr}, $@ )) if $debug;
+		$self->log(1, sprintf('%s : %s : timeout: %s', $date, $ip_addr, $@ )) if $debug;
 	} elsif ($@) {
-		$self->log(1, sprintf('%s : %s : other (%s)', $date, $self->{server}->{peeraddr}, $@ ));
+		$self->log(1, sprintf('%s : %s : other (%s)', $date, $ip_addr, $@ ));
 	} # end if
 } # end sub process_request
 
