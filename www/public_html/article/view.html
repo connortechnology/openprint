@@ -6,7 +6,7 @@
 <? echo ( 
 	my $html;
 	my $User = $$variable{'Article'}->Author();
-	$html .= '<div class="By">'.$User->thumbnail_html() . '<a href="/account/view.html?user_id="'.$User->id().'">'.$User->alias().'</a></div>';
+	$html .= '<div class="By">'.$User->thumbnail_html() . sprintf('<a href="/account/view.html?user_id=%d">%s</a></div>',$User->id(),$User->alias() );
 	$html .= '<div class="When">'. $$variable{'Article'}->published_on_string().'</div>';
 	return $html;
 	) ?>
