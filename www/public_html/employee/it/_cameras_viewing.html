@@ -18,7 +18,7 @@ Click on the image to stop streaming.
 		my @monitor_ids = split(',', $session{'cameras_viewing'} );
 		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
 			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
-			my @size_options = ( '320x240', '352x240', '640x480', '800x600', '1024x768' );
+			my @size_options = ( '320x240', '352x240', '384x288', '640x480', '800x600', '1024x768' );
 			$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} = join('x',$Monitor->get('width','height') ) if ! $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()};
 
 			if ( ! sets::isin( $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()}, \@size_options ) ) {
