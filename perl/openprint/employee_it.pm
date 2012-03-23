@@ -157,6 +157,9 @@ sub _cameras_available {
 		$session{'cameras_viewing'} = join(',', sets::exclude( [ $param{'camera_id'} ], [ split( ',', $session{'cameras_viewing'} ) ] ) );
 	} # end if
 } # end sub _cameras_available
+sub _camera { # .json 
+	$session{'/employee/it/camera_viewer.html?monitor_size-'.$param{'monitor_id'}} = join('x', @param{'width','height'} );
+}
 
 sub blacklist {
 	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
