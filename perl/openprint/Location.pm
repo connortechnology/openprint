@@ -343,7 +343,7 @@ sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0];
 		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
-		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
+		$_[0]{'where'} .= join(', ', map { $_->name() } $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
 		} # end if
