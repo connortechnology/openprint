@@ -106,5 +106,21 @@ sub _photos {
 		$variable{'error'} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
+
+sub search {
+	_search();
+	#if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
+		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
+	#} # end if
+} # end sub search
+sub _search {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/location/search.html', ( 
+				#'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				#'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+	} # end if
+} # end sub _search
 1;
 __END__

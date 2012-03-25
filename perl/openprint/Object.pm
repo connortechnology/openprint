@@ -1028,6 +1028,9 @@ sub Privacy {
 	return $_[0]{'Privacy'};
 } # end sub Privacy
 
+sub can_view {
+return 1;
+} # end sub can_view
 
 1;
 __END__
