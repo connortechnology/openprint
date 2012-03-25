@@ -49,7 +49,7 @@
 				} # end if
 				$html .= ssi::button( 'Back', { 'href' => "/photo_albums/view.html?album_id=$$Album{'id'}", 'text'=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/ ) {
+				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/i ) {
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
