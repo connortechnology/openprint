@@ -701,20 +701,19 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
-function Location_onchange( parent_element, child_element, type ) {
-	if ( parent_element.getValue() ) {
+function Location_onchange( parent_element, type ) {
+	//if ( parent_element.getValue() ) {
 		// only do anything if we have selected something	
-		new Ajax.Request( '/account/_location_ddm.json', { 
+		new Ajax.Request( '/location/_ddm.json', { 
 			parameters: { 
 					type: type,
 					parent_element: parent_element.id,
 					parent_id: parent_element.getValue(), 
-					child_element: child_element.id
 				}, evalScripts: true
 			}
 			);
-	} // end if
-	if ( type == 'state' ) {
+	//} // end if
+	if ( type == 'country' ) {
 		var state_label = $(parent_element.name + '_state');
 		var postal_label = $(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
@@ -726,7 +725,7 @@ function Location_onchange( parent_element, child_element, type ) {
 			if ( postal_label ) postal_label.innerHTML='Postal Code:';
 		} else {
 			if ( state_label ) state_label.innerHTML='State/Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code:';
 		}  // end if
 	} // end if
 }

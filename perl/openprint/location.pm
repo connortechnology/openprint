@@ -65,7 +65,9 @@ sub view {
 			
 		if ( ( $_ = openprint::Location->find_one(
 			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
-			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), ) ) ) {
+			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), 
+			( $param{'type_id'} ? ( type_id=>$param{type_id} ) : () ),
+			) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
 		} else {
 			if ( $param{'url'} ) {
@@ -122,5 +124,7 @@ sub _search {
 				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
 	} # end if
 } # end sub _search
+sub _ddm {
+} # end sub _ddm
 1;
 __END__
