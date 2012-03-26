@@ -4,27 +4,9 @@
 </div>
 <script type="text/javascript">
 <!--
-	function delete_confirm(form) {
-		var number_of_deleted_locations = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( ! form.elements[index].name )
-				continue;
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
-				number_of_deleted_locations += 1;
-			} // end if
-
-		} // end for
-		if ( number_of_deleted_locations == 0 ) {
-			alert("To Delete Locations, click the checkbox beside the location.");
-		} else {
-			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_locations + " locations from search?\n") ) {
-				form.submit();
-			} // end if
-		} // end if
-	}
 	function load_locations( form ) {
-		$('LocationsList').innerHTML = 'Please wait...';
-		new Ajax.Updater('LocationsList','_search.html', {method:'get',parameters:Form.serialize(form)});
+		$('Results').innerHTML = 'Please wait...';
+		new Ajax.Updater('Results','_search.html', {parameters:Form.serialize(form)});
 	} // end function
 -->
 </script>	 
@@ -72,7 +54,7 @@
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="LocationsList"><!--#include virtual="_search.html"--></div>
+		<div id="Results"><!--#include virtual="_search.html"--></div>
 	</form>
 	</div>
 </div>

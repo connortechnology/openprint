@@ -311,9 +311,9 @@ sub rad2deg {
 sub Asset {
     if ( ! $_[0]{'Asset'} ) {
         my $Album = $_[0]->Album();
-        if ( $$Album{'asset_id'} ) {
-            $_[0]{'Asset'} = new openprint::Asset( $$Album{'asset_id'} );
-        } elsif ( $$Album{'album_id'} and my @Photos = $Album->Photos() ) {
+        if ( $$Album{'thumbnail_id'} ) {
+            $_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+        } elsif ( $$Album{'id'} and my @Photos = $Album->Photos() ) {
             $_[0]{'Asset'} = $Photos[0];
         } else {
             $_[0]{'Asset'} = new openprint::Asset();
