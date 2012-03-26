@@ -1,6 +1,7 @@
+use strict;
+require openprint::Object_Asset;
 package openprint::Object;
 
-use strict;
 use openprint ();
 require sets;
 use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
@@ -575,6 +576,16 @@ sub transform {
 
 } # end sub transform
 
+sub Assets {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'object_id'} = $_[0]{'id'};
+	$param{'order'}	= 'asset_id' if ! $param{'order'};
+	$param{'object_type'} = ref $_[0];
+	my @Assets = openprint::Object_Asset->find(%param);	
+$openprint::log->debug("# of Assets: " . scalar @Assets );
+	return @Assets;
+} # end sub Assets
 
 1;
 __END__

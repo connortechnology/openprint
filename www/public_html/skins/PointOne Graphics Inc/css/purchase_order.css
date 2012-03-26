@@ -312,3 +312,9 @@ table .docket {
 table .supplier, table .item_name, table .product {
 	text-align: left;
 }
+#Assets .Thumbnail {
+	width: 75px;
+}
+#Assets .actions {
+	width: 75px;
+}
