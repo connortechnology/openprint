@@ -1,7 +1,6 @@
-package openprint::ProductPrice;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::ProductPrice;
+our @ISA = qw(openprint::Object);
 
 require sql;
 require openprint::logs;
@@ -114,6 +113,4 @@ sub price {
 } # end sub price
 
 1;
-
 __END__
-~       
