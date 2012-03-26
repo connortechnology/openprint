@@ -717,6 +717,8 @@ sub create_edit_process {
 	$Project->programs( $r->param('chkPrograms') );
 	$Project->other_programs( $r->param('txtOtherPrograms') );
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 # Handle ProjectType
 	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
