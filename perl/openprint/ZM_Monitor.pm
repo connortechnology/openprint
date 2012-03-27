@@ -17,6 +17,8 @@ $table = 'Monitors';
 	'max_fps'		=>	'MaxFPS',
 	'alarm_max_fps'	=>	'AlarmMaxFPS',
 	'path'			=>	'Path',
+	'jpg_path'		=>	'JPGPath',
+	'mjpeg_path'	=>	'MJPGPath',
 	'host'			=>	'Host',
 	'server_host'	=>	'ServerHost',
 );
@@ -28,7 +30,7 @@ sub source_stream_url {
 } # end sub source_stream_url
 
 sub source_snapshot_url {
-	return $_[0]{'type'} eq 'Remote' ? 'http://'.$_[0]{'host'}.$_[0]{'path'} :
+	return $_[0]{'type'} eq 'Remote' ? 'http://'.$_[0]{'host'}.($_[0]{'jpg_path'}?$_[0]{'jpg_path'}:$_[0]{'path'}) :
                           sprintf('http://%2$s.internal.point-one.com/cgi-bin/zms?mode=single&amp;monitor=%1$d&amp;maxfps=%3$d',
                               $_[0]{'id'}, $_[0]{'server_host'}, $_[0]{'max_fps'} );
 } # end sub source_snapshot_url

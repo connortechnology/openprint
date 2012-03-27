@@ -638,6 +638,8 @@ sub create_edit_process {
 	$Project->programs( $param{'chkPrograms'} );
 	$Project->other_programs( $param{'txtOtherPrograms'} );
 	$Project->currency_id( $session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 # Handle ProjectType
 	if ( $OldProjectType->id() ne $ProjectType->id() ) {

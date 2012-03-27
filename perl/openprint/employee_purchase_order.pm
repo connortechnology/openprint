@@ -5,6 +5,7 @@ require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
 require openprint::PurchaseOrder_Department;
 require openprint::Company_Category;
+require openprint::Object_Asset;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -294,6 +295,29 @@ sub view {
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
+		my $Asset = new openprint::Asset();
+		$variable{'error'} .= $Asset->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.<br/>';
+		} # end if
+		if ( $param{'filename'} ) {
+			my $upload = $r->upload('filename');
+			if ( ! $upload ) {
+				$Asset->save({'filename'=>''});
+				$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+			} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+				$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+				$Asset->save({'filename'=>''});
+			} else {
+				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			} # end if
+		} # end if
+		if ( $Asset->id() ) {
+			my $PO_Asset = new openprint::Object_Asset();
+			$variable{'error'} .= $PO_Asset->save({'object_id'=>$param{'po_id'},'object_type'=>'openprint::PurchaseOrder','asset_id'=>$Asset->id()});
+		} # end if
+		%param = ();
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;

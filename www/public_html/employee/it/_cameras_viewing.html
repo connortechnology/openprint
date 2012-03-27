@@ -18,18 +18,19 @@ Click on the image to stop streaming.
 		my @monitor_ids = split(',', $session{'cameras_viewing'} );
 		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
 			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
-			my @size_options = ( '320x240', '352x240', '640x480', '800x600', '1024x768' );
-			my $selected = join('x',$Monitor->get('width','height') );
-			if ( ! sets::isin( $selected, \@size_options ) ) {
-				@size_options = sort ( @size_options, $selected );
+			my @size_options = ( '320x240', '352x240', '384x288', '640x480', '800x600', '1024x768' );
+			$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} = join('x',$Monitor->get('width','height') ) if ! $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()};
+
+			if ( ! sets::isin( $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()}, \@size_options ) ) {
+				@size_options = sort ( @size_options, $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} );
 			} # end if
 			$html .= sprintf('<li id="camera_%1$d"><img src="%3$s" id="stream_%1$d" class="stream" alt="%2$s" style="width:%4$dpx; height: %5$dpx;" onclick="stop_stream( %1$d );" /><br/>
 				Size: <select onchange="resize_image( %1$d, this.getValue() );">%6$s</select>
 				</li>
 				',
 				$Monitor->id(), $Monitor->name(), $Monitor->source_stream_url(),
-				$Monitor->get('width','height'),
-				ssi::make_drop_down( [ map { $_, $_ } @size_options ], $selected ),
+				split('x',$session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()}),
+				ssi::make_drop_down( [ map { $_, $_ } @size_options ], $session{'/employee/it/camera_viewer.html?monitor_size-'.$Monitor->id()} ),
 				);
 		} # end foreach Monitor	
 		return $html;

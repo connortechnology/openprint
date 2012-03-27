@@ -261,7 +261,12 @@
 			} # end if
 			$html .= '</td><td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
+			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs ) . '<br/>';
+			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
+				if ( $$sig_specs{'chkBleed'.$edge} ne $edge ) {
+					$html .= 'No ' . $edge . ' bleed<br/>';
+				} # end if
+			} # end foreach edge
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';

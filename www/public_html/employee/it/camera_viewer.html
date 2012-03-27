@@ -28,6 +28,7 @@
 		camera_li.setStyle({width: size_array[0]+'px'});
 		var stream = $('stream_'+camera_id);
 		stream.setStyle({width: size_array[0]+'px', height: size_array[1]+'px'});
+		new Ajax.Request('_camera.json', { parameters: { monitor_id: camera_id, width: size_array[0], height: size_array[1] } } );
 	} // end function resize_image
 </script>
 <div class="ZM_Monitors">
