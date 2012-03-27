@@ -85,6 +85,7 @@ sub view {
 					'url'			=>	$param{'url'},
 					'latitude'		=>	$param{'latitude'},
 					'longitude'		=>	$param{'longitude'},
+					'type_id'		=>	$param{'type_id'},
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if
