@@ -2,7 +2,7 @@ use strict;
 package openprint::Product;
 our @ISA = qw( openprint::Object );
 
-require openprint::ProductCategory;
+require openprint::Product_Category;
 require openprint::Log;
 require sql;
 
@@ -22,6 +22,7 @@ $serial = 'products_id_seq';
 	'taxexempt2'	=>	'taxexempt2',
 	'sort'			=>	'sort',
 	'category_id'	=>	'category_id',
+	'category'		=>	undef,
 	'project_id'	=>	'project_id',
 	'deleted'		=>	'deleted',
 	'owner_id'		=>	'owner_id',
@@ -116,11 +117,22 @@ sub save {
 } # end sub save
 
 sub category {
-$log->error("deprecated Product->category()");
-	return new openprint::ProductCategory( $_[0]{'category_id'} );
+	if ( @_ > 1 ) {
+		my $Category = openprint::Product_Category->find_one('name lc'=>lc openprint::Product_Category->transform('name',$_[1]));
+		if ( ! $Category ) {
+			$Category = new openprint::Product_Category();
+			$Category->save({'name'=>$_[1]});
+		} # end if
+		$_[0]{'category_id'} = $Category->id();
+		$_[0]{'category'} = $Category->name();
+	} elsif ( ( ! defined $_[0]{'category'} ) and $_[0]{'category_id'} ) {
+		$_[0]{'category'} = $_[0]->Category()->name();
+	} # end if
+	return $_[0]{'category'};
 } # end sub category
+
 sub Category {
-	return new openprint::ProductCategory( $_[0]{'category_id'} );
+	return new openprint::Product_Category( $_[0]{'category_id'} );
 } # end sub Category
 
 sub get_price {
@@ -198,6 +210,7 @@ sub previous {
 	
 	return new openprint::Product( $id );
 } # end sub previous
+
 
 1;
 __END__

@@ -888,6 +888,10 @@ if ( ! sets::isin( 'usergroups', \@tables ) ) {
 		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 	} # end if
 } # end if
+if ( ! sets::isin( 'banners', \@tables )) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
+	die if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 1;
 __END__
