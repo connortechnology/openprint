@@ -385,6 +385,9 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
+		<? if ( $$variable{'txtSignatureType'} eq 'Interior Pages' ) ?>
+		<input type="checkbox" name="MatchGrain<?QTYIndex?>" id="MatchGrain<?QTYIndex?>" value="Y" <? echo ( ssi::checked( $$variable{'MatchGrain'.$$variable{'QTYIndex'}} eq 'Y' ); ) ?> onclick="calc(this.form.name);" /><label class="radio" for="MatchGrain<?QTYIndex?>">Match Other <?txtSignatureType?></label><br/>
+		<? endif ( $$variable{'txtSignatureType'} eq 'Interior Pages' ) ?>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Width" name="rdbGrainDirection<?QTYIndex?>" value="width" onclick="calc(this.form.name);"
 <? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'width' ); ) ?>
  />
