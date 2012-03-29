@@ -859,6 +859,7 @@ sub get_price {
 	
 	my $price;
 	my $qty = $params{'weight'};
+	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $params{'weight'};
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
@@ -877,8 +878,8 @@ sub get_price {
 			next if $$Price{'service'} ne $params{'service'};
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
-					( (!(1*$Price->min())) or $Price->min() <= $qty ) and
-					( (!(1*$Price->max())) or $Price->max() >= $qty )
+					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
+					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
 				) {
 				$price = $Price->clone();
 				last;
@@ -886,14 +887,14 @@ sub get_price {
 		} # end foreach Price
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
-				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty");
+				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
 			} # end if
 			return;
 		} # end if
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
-			$pricingpercent =~ s/[^\d\.\-]//g;
+			#$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
 			$$price{'price'} *= ( 1 + $pricingpercent );
 		} # end if

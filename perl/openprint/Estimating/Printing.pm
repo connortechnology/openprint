@@ -2479,15 +2479,18 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			my $add = 1;
 			my $Paper = $imp->Paper();
 
-			# My thoughts here:  have to base it purely on this sig
+			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
+			my $lookup_stock_qty = $stock_qty;
+
 			if ( $$Paper{'type'} eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-				#$stock_qty += $$PaperCounts{$Paper->to_string()};
+				$lookup_stock_qty += $$PaperCounts{$Paper->to_string()};
 			} else {
-				#$stock_qty += $$PaperCounts{$Paper->to_string()};
+				$lookup_stock_qty += $$PaperCounts{$Paper->to_string()};
 				$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
+				$lookup_stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
 			} # end if
 
 			my $SmallerPrice;
@@ -2518,6 +2521,8 @@ $imp->dispay('Ma imposition!') if DEBUG;
 									'service'=>'Material'
 									);
 						} # end if
+#$I->display("Comparing ". $P->minimum_order_weight() . ' ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+#$imp->display("Comparing" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2680,6 +2685,8 @@ sub get_project_price {
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
 #$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
+
+		my $has_sheeter = sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] );
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
 		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ($$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
@@ -2908,7 +2915,8 @@ if ( 0 ) {
 				} # end if
 				next;
 			} # end if
-
+if ( 1 ) {
+# I'm not sure we can do this.  Our prices at this point don''t include paper
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				if ( DEBUG or 0 ) {
 #$openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
@@ -2927,6 +2935,7 @@ if ( 0 ) {
 				} # end if
 				next; # next Impo
 			} # end if
+} # end if
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
@@ -2995,12 +3004,12 @@ $openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 				} # end if
 			} elsif ( ! openprint::ServiceType->find_one('name'=>'Paper') ) {
 				my $paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
-				$$paper_price{'Total'} = sprintf('%.2f', $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
+				$$paper_price{'Total'} = Math::Round::nearest(.01, $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
 				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @$paper_price{'100lb Cost', '100lb Price', 'Total'};
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
-			if ( $$Paper{'type'} eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+			if ( $$Paper{'type'} eq 'Roll' and $has_sheeter ) {
 # Add Roll2SheetSetup
 				if ( ! $$project{'roll2sheetcharged'} ) {
 					if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
