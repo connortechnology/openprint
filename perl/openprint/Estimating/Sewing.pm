@@ -25,6 +25,7 @@ my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'Quantity', 'OverrideQuantity',
 	'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom',
+	'HemWidth',
 );
 
 sub variables {

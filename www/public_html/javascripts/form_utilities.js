@@ -1093,3 +1093,16 @@ function radio_all(element) {
 			all_element.checked = ! on;	
 	} // end if
 } // end function radio_all
+
+function cardinalize(e) {
+	e.value = e.value.replace(/\D/g,'');
+}
+function integerize(e) {
+	e.value = e.value.replace(/[^\d\-]/g,'');
+}
+function floatize(e) {
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
+}
+function hexize(e) {
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+}

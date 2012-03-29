@@ -235,8 +235,10 @@ my %variables = (
 		'supplied_format'=>['save'],
 # Banners
 		'grommets' => ['save'],
+		'pockets'	=>	['save'],
 		'hemmed'	=>	['save'],
 		'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
+		'HemWidth'	=>	['save'],
 		);
 
 sub variables {
@@ -1283,20 +1285,38 @@ sub set_size {
 
 	if ( $Project->Type()->name() eq 'Banners' ) {
 		my $width = $$specs{'txtFinalWidth'};
-		$width += $$specs{'PocketSize'};
-		$width += $$specs{'PocketSize'};
+		my $height = $$specs{'txtFinalHeight'};
+
+		if ( $$specs{'pockets'} eq 'Y' ) {
+			$width += $$specs{'PocketSize'};
+			$width += $$specs{'PocketSize'};
+		} # end if
+
+		if ( $$specs{'hemmed'} eq 'Y' ) {
+			$width += $$specs{'HemWidth'} if $$specs{'EdgeLeft'};
+			$width += $$specs{'HemWidth'} if $$specs{'EdgeRight'};
+			$height += $$specs{'HemWidth'} if $$specs{'EdgeTop'};
+			$height += $$specs{'HemWidth'} if $$specs{'EdgeBottom'};
+		} # end if
+
 		if ( $width != $$specs{'txtWidth'} ) {
 			$$specs{'txtWidth'} = $width;
 			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 		} else {
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 		} # end if
-		if ( $$specs{'txtFinalHeight'} > $$specs{'txtHeight'} ) {
-			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
+
+		if ( $$specs{'txtFinalHeight'} > $height ) {
+			$height = $$specs{'txtFinalHeight'};
+		} # end if
+
+		if ( $height != $$specs{'txtHeight'} ) {
+			$$specs{'txtHeight'} = $height;
 			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 		} else {
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 		} # end if
+
 	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
@@ -4639,8 +4659,11 @@ if ( 0 ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$printing_specs{'txtFinalWidth','txtFinalHeight'});
 			} # end if
 		} elsif ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
-			if ( $$services{'Folding'} ) {
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
+						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} elsif ( $$services{'Sewing'} and @{$$services{'Sewing'}} ) {
+				$dimensions .= sprintf( '%s&quot;x%s&quot; hemmed to %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 			} else {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
@@ -4691,7 +4714,7 @@ sub save {
 	} # end if
 	if ( $$services{'Sewing'} ) {
 		foreach my $s_id ( @{$$services{'Sewing'}} ) {
-			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom' ) {
+			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom','HemWidth' ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, $spec, $$param{$spec} );
 		} # end foreach
 		} # end foreach
