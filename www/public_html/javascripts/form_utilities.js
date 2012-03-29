@@ -1261,34 +1261,6 @@ function changed( e, div ) {
 	} // end if
 } // end function changed
 
-function cardinalize(e) {
-	e.value = e.value.replace(/\D/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function integerize(e) {
-	e.value = e.value.replace(/[^\d\-]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function floatize(e) {
-	e.value = e.value.replace(/[^\d\-\.]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function hexize(e) {
-	e.value = e.value.replace(/[^\da-fA-F]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
 if (!Array.prototype.map)
 {
   Array.prototype.map = function(fun /*, thisp*/)
@@ -1323,3 +1295,16 @@ function get_form_element_array( form, name ) {
 	} // end if
 	return values;
 } // end function get_form_element_array
+
+function cardinalize(e) {
+	e.value = e.value.replace(/\D/g,'');
+}
+function integerize(e) {
+	e.value = e.value.replace(/[^\d\-]/g,'');
+}
+function floatize(e) {
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
+}
+function hexize(e) {
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+}
