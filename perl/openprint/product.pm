@@ -1,5 +1,5 @@
 use strict;
-package openprint::administrator_products;
+package openprint::product;
 
 use openprint ();
 use vars qw($r $log $dbh %variable %param);
@@ -10,7 +10,7 @@ use vars qw($r $log $dbh %variable %param);
 *dbh = \$openprint::dbh;
 
 require openprint::Product;
-require openprint::ProductCategory;
+require openprint::Product_Category;
 require openprint::logs;
 require sql;
 
@@ -21,6 +21,9 @@ sub edit {
 		if ( (! $param{'product_id'}) and openprint::Product->find( 'name' => $param{'name'} ) ) {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
+		} # end if
+		if ( $param{'category'} ) {
+			delete $param{'category_id'};
 		} # end if
 			
 		$variable{'error'} = $Product->save( \%param );
@@ -60,7 +63,7 @@ sub edit {
 
 			my $csv = Text::CSV_XS->new();
 			my $ac = sql::start_transaction( $dbh );
-			my %categories = map { $_->name(), $_ } openprint::ProductCategory->find();
+			my %categories = map { $_->name(), $_ } openprint::Product_Category->find();
 			my %products = map { $_->name(), $_ } openprint::Product->find();
 			
 			while ( <$io> ) {
@@ -68,7 +71,7 @@ sub edit {
 				my ( $name, $description, $category, $taxexempt1, $taxexempt2, $sort ) = misc::trim( $csv->fields() );
 				next if ! $name;
 				if ( $category and ! $categories{$category} ) {
-					$categories{$category} = new openprint::ProductCategory();
+					$categories{$category} = new openprint::Product_Category();
 					$categories{$category}->name( $category );
 					$categories{$category}->save();
 				} # end if
@@ -133,7 +136,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 } # end sub edit
 
 sub categories {
-	$variable{'ProductCategory'} = new openprint::ProductCategory( $param{'id'} );
+	$variable{'ProductCategory'} = new openprint::Product_Category( $param{'id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 	} # end if

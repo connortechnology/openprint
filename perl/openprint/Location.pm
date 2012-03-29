@@ -36,6 +36,7 @@ $serial = 'locations_id_seq';
 	'url'			=>	'url',	
 	'asset_id'		=>	'asset_id',
 	'album_id'		=>	'album_id',
+	'deleted'		=>	'deleted',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
@@ -44,8 +45,8 @@ $serial = 'locations_id_seq';
 	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
-	'latitude'		=>	[ 's/[^\d\.]//g' ],
-	'longitude'		=>	[ 's/[^\d\.]//g' ],
+	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
+	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
@@ -57,6 +58,7 @@ $serial = 'locations_id_seq';
 	'longitude'		=>	undef,
 	'asset_id'		=>	undef,
 	'album_id'		=>	undef,
+	'deleted'		=>	'0',
 );
 
 sub children {
@@ -109,13 +111,13 @@ sub type {
 			$Type = new openprint::Location_Type();
 			$Type->save({'name'=>$_[1]});
 		} # end if
-$openprint::log->debug("Type: " . $Type->to_string() );
+#$openprint::log->debug("Type: " . $Type->to_string() );
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	} elsif ( ( ! defined $_[0]{'type'} ) and $_[0]{'type_id'} ) {
 		$_[0]{'type'} = $_[0]->Type()->name();
 	} # end if
-$openprint::log->debug("Location::type " . $_[0]->to_string() );
+#$openprint::log->debug("Location::type " . $_[0]->to_string() );
 	return $_[0]{'type'};
 } # end sub type
 
@@ -179,17 +181,11 @@ sub latitude {
 	if ( @_ > 1 ) {
 		$_[0]{'latitude'} = $_[1];
 	} # end if
-	if ( ! $_[0]{'latitude'} ) {
-		$_[0]->get_latitude_and_longitude();
-	} # end if
 	return $_[0]{'latitude'};
 }
 sub longitude {
 	if ( @_ > 1 ) {
 		$_[0]{'longitude'} = $_[1];
-	} # end if
-	if ( ! $_[0]{'longitude'} ) {
-		$_[0]->get_latitude_and_longitude();
 	} # end if
 	return $_[0]{'longitude'};
 }
@@ -198,21 +194,72 @@ sub get_latitude_and_longitude {
 	my $ua = LWP::UserAgent->new;
 	$ua->agent("IntelligentQuote/0.1 ");
 # Create a request
-$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents()));
-	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->name()}$_[0]->Parents()) );
+my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents());
+$string =~ s/ /+/g;
+$openprint::log->debug('Get: ' . $string );
+	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.$string);
 # Pass request to the user agent and get a response back
 	my $res = $ua->request($req);
 	my $json = JSON::decode_json( $res->content );
-$openprint::log->debug( $json );
+#$openprint::log->debug( $res->content );
+	if ( ! $$json{'Placemark'} ) {
+		# Try again without city
+		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
+		$req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()) );
+
+$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()));
+		$res = $ua->request($req);
+		$json = JSON::decode_json( $res->content );
+# Pass request to the user agent and get a response back
+	} # end if
+
+	my $use = 0;
+
 	if ( $$json{'Placemark'} ) {
 		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
 		my $PlaceMark = $$json{'Placemark'}[0];
-		my $Point = $$PlaceMark{'Point'};
-		my $coordinates = $$Point{'coordinates'};
-		$_[0]{'latitude'} = @{$coordinates}[0];	
-		$_[0]{'longitude'} = @{$coordinates}[1];	
-$openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
-		return 1;
+		if ( $$PlaceMark{'AddressDetails'} ) {
+			my $Address = $$PlaceMark{'AddressDetails'};
+			if ( $$Address{'Country'} ) {
+				my $Country = $$Address{'Country'};
+				if ( $$Country{'AdministrativeArea'} ) {
+					my $AdministrativeArea = $$Country{'AdministrativeArea'};
+
+					if ( $$AdministrativeArea{'Locality'} ) {
+						my $Locality = $$AdministrativeArea{'Locality'};
+						if ( $_[0]{'postalcode'} ) {
+							if ( $$Locality{'PostalCode'} ) {
+								$openprint::log->debug("Have Postal code" . $$Locality{'PostalCode'}{'PostalCodeNumber'});
+
+								if ( $$Locality{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
+									$use = 1;
+								} # end if
+							} else {
+								$openprint::log->debug("No PostalCode");
+							} # en dif
+						} # en dif postalcode
+					} else {
+						$openprint::log->debug("No Locality");
+					} # end if
+				} else {
+					$openprint::log->debug("No Administrative Area");
+				} # end if
+			} else {
+				$openprint::log->debug("No Coutry");
+			} # end if
+		} else {
+			$openprint::log->debug("No Address");
+		} # end if
+
+		if ( $use ) {
+			my $Point = $$PlaceMark{'Point'};
+			my $coordinates = $$Point{'coordinates'};
+			$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
+			$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
+	$openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}");
+			$_[0]->save();
+			return 1;
+		} # end if
 	} else {
 		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
 	} # end if
@@ -221,8 +268,10 @@ $openprint::log->debug("Resulting coords: $_[0]{'latitude'}, $_[0]{'longitude'}"
 
 
 sub distance {
-	shift if $_[0] eq 'openprint::Location';
-	shift if ref $_[0] eq 'openprint::Location';
+$openprint::log->debug("distance: @_");
+	shift @_ if $_[0] eq 'openprint::Location';
+	shift @_ if ref $_[0] eq 'openprint::Location';
+
 	my ($lat1, $lon1, $lat2, $lon2, $unit) = @_;
 	my $theta = $lon1 - $lon2;
 	my $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
@@ -262,9 +311,9 @@ sub rad2deg {
 sub Asset {
     if ( ! $_[0]{'Asset'} ) {
         my $Album = $_[0]->Album();
-        if ( $$Album{'asset_id'} ) {
-            $_[0]{'Asset'} = new openprint::Asset( $$Album{'asset_id'} );
-        } elsif ( my @Photos = $Album->Photos() ) {
+        if ( $$Album{'thumbnail_id'} ) {
+            $_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+        } elsif ( $$Album{'id'} and my @Photos = $Album->Photos() ) {
             $_[0]{'Asset'} = $Photos[0];
         } else {
             $_[0]{'Asset'} = new openprint::Asset();
@@ -294,7 +343,7 @@ sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0];
 		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
-		$_[0]{'where'} .= join(', ', map { $_->name() } $L, $L->Parents() );
+		$_[0]{'where'} .= join(', ', map { $_->name() } $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
 		} # end if

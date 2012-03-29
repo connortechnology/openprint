@@ -765,8 +765,6 @@ sub _wall_reply {
 sub forgotten_password {
 } # end sub forgotten_password
 
-sub _location_ddm {
-} # end sub _location_ddm
 
 sub _relationships {
 	if ( $param{'action'} eq 'delete' ) {

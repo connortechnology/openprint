@@ -6,7 +6,7 @@ require openprint::Keyword;
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table $serial );
-$debug = 0;
+$debug = 1;
 $table = 'asset_types';
 $serial = 'asset_types_id_seq';
 %fields = (

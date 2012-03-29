@@ -119,18 +119,6 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
 		$dbh->do('ALTER TABLE Projects rename column userindex to user_id');
 	} # end if
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'style_id'} ) {
-		$dbh->do('ALTER TABLE Projects ADD style_id INTEGER');
-		$dbh->do('ALTER TABLE Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-	} # end if
-	sql::end_transaction( $dbh, $ac );
-	if ( ! exists $$data{'rush'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		print "Adding rush to projects";
-		$dbh->do(q`alter table Projects add rush boolean default false`);
-		sql::end_transaction( $dbh, $ac );
-	} # end if
 	if ( ! exists $$data{'summary'} ) {
 		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
 	} # end if

@@ -14,6 +14,7 @@ $serial = 'user_profile_fields_id_seq';
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
 	'values'		=>	'values',
+	'defaults'		=>	'defaults',
 	'searchable'	=>	'searchable',
 	'deleted'		=>	'deleted',
 	'search_default'	=>	'search_default',
@@ -54,7 +55,7 @@ sub html {
 	my $Field = $_[0];
 
 	$html .= '<li class="'.$Field->type().'"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
-	my $value = $_[1] ? $_[1] : $_[0]->default();
+	my $value = $_[1] ? $_[1] : ( $_[0]->defaults() ? join(',',@{$_[0]->defaults()}) : '' );
 
 	if ( $Field->type() eq 'checkbox' ) {
 		foreach my $v ( ref $Field->values() eq 'ARRAY' ? @{$Field->values()} : () ) {

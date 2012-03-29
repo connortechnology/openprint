@@ -13,6 +13,7 @@ require openprint::View;
 require openprint::Privacy;
 require openprint::Object_Type;
 require openprint::Opinion_Availability;
+require openprint::Object_Asset;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
@@ -776,6 +777,7 @@ sub AUTOLOAD {
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
 		return $_[0]{$name} = $_[1];
@@ -783,21 +785,32 @@ sub AUTOLOAD {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
 			# This looks to handle returning Objects
-			my $field = (lc $name) . '_id';
-			if ( exists $$fields{$field} ) {
-				my $O = eval {
-					require "openprint/$name.pm";
-					return ('openprint::'.$name)->new( $_[0]{$field} );
-				}; # end eval
-				if ( $@ ){
-					$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
-					return undef;
+			if ( exists $$fields{$name} ) {
+				if ( ! defined $_[0]{$name} ) {
+					my $defaults = eval '\%'.$type.'::defaults';
+					if ( exists $$defaults{$name} ) {
+						return $$defaults{$name};
+					}
 				} # end if
-				return $O;
+				return $_[0]{$name};
+			} else {
+				my $field = (lc $name) . '_id';
+				if ( exists $$fields{$field} ) {
+					my $O = eval {
+						require "openprint/$name.pm";
+						return ('openprint::'.$name)->new( $_[0]{$field} );
+					}; # end eval
+					if ( $@ ){
+						$log->error( "Eval error of Object::AUTOLOAD $type -> $name, Reason: " . $@ );
+						return undef;
+					} # end if
+					return $O;
+				} # end if
 			} # end if
-		} # end if
-		return $_[0]{$name};
-	} # end if
+		} # end if has fields
+	} # end if setting
+	Carp::cluck( "Bad autoload $type $name " );
+	return;
 } # end sub AUTOLOAD
 
 sub to_string {
@@ -1016,6 +1029,19 @@ sub Privacy {
 	return $_[0]{'Privacy'};
 } # end sub Privacy
 
+sub can_view {
+return 1;
+} # end sub can_view
+sub Assets {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'object_id'} = $_[0]{'id'};
+	$param{'order'}	= 'asset_id' if ! $param{'order'};
+	$param{'object_type'} = ref $_[0];
+	my @Assets = openprint::Object_Asset->find(%param);	
+$openprint::log->debug("# of Assets: " . scalar @Assets );
+	return @Assets;
+} # end sub Assets
 
 1;
 __END__

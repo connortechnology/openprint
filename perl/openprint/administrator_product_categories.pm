@@ -1,5 +1,6 @@
-package openprint::administrator_product_categories;
 use strict;
+require openprint::Product_Category;
+package openprint::administrator_product_categories;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
@@ -9,7 +10,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub list {
 	my ( $r, $log, $dbh, $variable ) = @_;
-	my $ProductCategory = new openprint::ProductCategory( $param{'category_id'} );
+	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$ProductCategory->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
@@ -23,7 +24,7 @@ sub list {
 
 sub edit {
 	my ( $r, $log, $dbh, $variable ) = @_;
-	my $ProductCategory = new openprint::ProductCategory( $param{'category_id'} );
+	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$ProductCategory = $ProductCategory->copy();
 		$ProductCategory->save();
@@ -39,7 +40,7 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my %categories = map { $_->name(), $_ } openprint::ProductCategory->find();
+			my %categories = map { $_->name(), $_ } openprint::Product_Category->find();
 
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
@@ -47,7 +48,7 @@ sub edit {
 				my ( $name, $description ) = misc::trim( $csv->fields() );
 				next if ! $name;
 				if ( ! $categories{$name} ) {
-					$categories{$name} = new openprint::ProductCategory();
+					$categories{$name} = new openprint::Product_Category();
 				} # end if
 				$categories{$name}->name( $name );
 				$categories{$name}->description( $description );

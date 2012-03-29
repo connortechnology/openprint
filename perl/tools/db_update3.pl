@@ -186,6 +186,9 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	if ( ! $$data{'search_default'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add search_default TEXT');
 	} # end if
+	if ( ! $$data{'defaults'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields ADD defaults TEXT[]');
+	} # end if
 	if ( ! $$data{'match'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add match TEXT');
 	} # end if
@@ -320,6 +323,9 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+	if ( ! exists $$data{'deleted'} ) {
+	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
+	} # end if
 		
 } # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
@@ -881,6 +887,10 @@ if ( ! sets::isin( 'usergroups', \@tables ) ) {
 		$dbh->do('ALTER TABLE usergroups ADD asset_id INTEGER');
 		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 	} # end if
+} # end if
+if ( ! sets::isin( 'banners', \@tables )) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
+	die if $dbh->errstr();
 } # end if
 $dbh->disconnect();
 1;

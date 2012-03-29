@@ -2,7 +2,7 @@ use strict;
 require openprint::Log;
 require openprint::Product;
 require openprint::ProjectType;
-package openprint::ProductCategory;
+package openprint::Product_Category;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
