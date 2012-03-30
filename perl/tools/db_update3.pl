@@ -161,6 +161,9 @@ if ( exists $$data{'monitor'} ) {
 } elsif ( ! exists $$data{'monitored'} ) {
 	$dbh->do('ALTER TABLE hosts add monitored BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
+if ( ! exists $$data{'offline_seconds'} ) {
+	$dbh->do('ALTER TABLE hosts add offline_seconds INTEGER');
+} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {

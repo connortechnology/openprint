@@ -774,24 +774,27 @@ sub find_one {
 } # end sub find_one
 
 sub AUTOLOAD {
+	my ( $self, $newvalue ) = @_;
 	my $type = ref($_[0]);
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
 	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
-#$openprint::log->debug("Autoload $type $name $_[0]");
+$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
 		return $_[0]{$name} = $_[1];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
 		if ( $fields ) {
 			# This looks to handle returning Objects
 			if ( exists $$fields{$name} ) {
-				if ( ! defined $_[0]{$name} ) {
-					my $defaults = eval '\%'.$type.'::defaults';
-					if ( exists $$defaults{$name} ) {
-						return $$defaults{$name};
-					}
-				} # end if
+
+# NOT SURE WE SHOULD DO THIS
+				#if ( ! defined $_[0]{$name} ) {
+					#my $defaults = eval '\%'.$type.'::defaults';
+					#if ( exists $$defaults{$name} ) {
+						#return $$defaults{$name};
+					#}
+				#} # end if
 				return $_[0]{$name};
 			} else {
 				my $field = (lc $name) . '_id';

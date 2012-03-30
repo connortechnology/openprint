@@ -646,7 +646,7 @@ $openprint::log->error("No date from $value");
 		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $F('%1$s_year'), $F('%1$s_month'), $F('%1$s_day') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
+		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;

@@ -207,9 +207,11 @@ sub edit {
 			} # end if
 		} # end if
 	} # end if
-	if ( time - $session{'/article/edit.html?lastupdated'} < ( 12*60*60 ) ) {
-		$variable{'Article'}->company_id( $session{'/article/edit.html?company_id'} ) if ! $variable{'Article'}->company_id();
-		$variable{'Article'}->published_on( $session{'/article/edit.html?ending'} ) if ! $variable{'Article'}->published_on();
+	if ( ! $variable{'Article'}->id() ) {
+		$variable{'Article'}->company_id( $session{'company_id'} ) if ! $variable{'Article'}->company_id();
+		$variable{'Article'}->published_on( Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ) ) if ! $variable{'Article'}->published_on();
+$log->debug(Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ));
+$log->debug($variable{'Article'}->published_on());
 	} # end if
 } # end sub edit
 
