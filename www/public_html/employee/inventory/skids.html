@@ -5,7 +5,7 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" onkeyup="this.value=this.value.replace(/\D/g, '');" />
+			<input type="number" id="skid_id" name="skid_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'f1.submit();','','Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -14,12 +14,12 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
+			<input type="number" name="Docket" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
 		</p>
 		<p>
 			<label>Verification:</label>
-			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
+			<input type="text" name="verification_code" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
 		</p>
 		<hr/>
@@ -122,11 +122,11 @@ Please select a Skid to view/edit.<br>
 				) ?>
 			</select>
 		</p>
-		<p><label>Quality:</label>
-			<select name="quality_id">
+		<p><label>Condition:</label>
+			<select name="condition_id">
 				<? echo ( 
-					my @options = ('','All', map { $_->id(), $_->name() } openprint::StockQuality::find('order'=>'lower(shortname)') );
-					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?quality_id'} );
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') );
+					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?condition_id'} );
 				) ?>
 			</select>
 		</p>

@@ -266,7 +266,7 @@ sub auto_calculate {
 	my %services = $Project->get_services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary
-	if ( ! openprint::Estimating::Folding::neccessary( $log, $dbh, $project_index ) ) {
+	if ( ! openprint::Estimating::Folding::neccessary( $Project ) ) {
 	} else {
 		if ( ! $services{'Folding'} ) {
 			if ( $Project->mode() ne 'Detailed' ) {
@@ -275,13 +275,13 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Paper::neccessary( $Project ) ) {
 		if ( ! $services{'Paper'} ) {
 			push @{$services{'Paper'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Paper' );
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::Cutting::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $services{'Cutting'} ) {
 			if ( $Project->mode() ne 'Detailed' ) { 
 				push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' );
@@ -289,7 +289,7 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::PerfectBound::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $services{'PerfectBound'} ) {
 			push @{$services{'PerfectBound'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PerfectBound' );
 		} # end if
@@ -299,12 +299,12 @@ sub auto_calculate {
 		} # end while
 	} # end if
 
-	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Stitching::neccessary( $Project ) ) {
 		if ( ! ( $services{'SaddleStitching'} or $services{'LoopStitching'} ) ) {
 			push @{$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
 		} # end if
 	} # end if
-	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Collating::neccessary( $Project ) ) {
 		if ( ! $services{'Collating'} ) {
 			push @{$services{'Collating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Collating' );
 		} # end if
@@ -425,10 +425,11 @@ sub external_calc {
 	$specs_cache{$specs{ServiceIndex}} = \%specs;
 	my %initial_specs = %specs;
 #blah
-	eval 'require openprint::Estimating::'.$service_type;
-	$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
-	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs, $specs{qty_index} );';
-	$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
+	require "openprint/Estimating/$service_type.pm";
+	my $module = 'openprint::Estimating::'.$service_type;
+	if ( my $function = $module->can( 'calc' ) ) {
+		$specs{'Status'} = $function->( $log, $dbh, $variable, @specs{'ProjectIndex', 'ServiceIndex'}, \%specs, $specs{qty_index} );
+	} # end if
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
 	@vars = keys %specs if ! @vars;

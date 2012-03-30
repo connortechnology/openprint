@@ -1,0 +1,23 @@
+table .RFID {
+	text-align: left;
+	width: 50px;
+}
+table .quantity {
+	text-align: right;
+	width: 60px;
+	padding-right: 3px;
+}
+table .Stock, table .Supplier {
+	text-align: left;
+}
+table .manifest_id {
+	text-align: left;
+	width: 120px;
+}
+table .SupplierINV {
+	width: 80px;
+}
+table .Cost input {
+	width: 60px;
+	text-align: right;
+}

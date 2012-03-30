@@ -1,9 +1,10 @@
+use strict;
 package openprint::Paper;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
+use Data::Dumper;
 
-use strict;
 use openprint ();
 use vars qw( $log %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
@@ -31,17 +32,18 @@ my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
-		'owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
+		'owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','quality_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages','in_stock','parts','message',
+		'minimum_order','full_packages','in_stock','parts','message','allocated',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::Paper';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -227,11 +229,10 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated'} = @$data{'allocated'} if exists $$data{'allocated'};
 } # end sub load
 
 
@@ -293,17 +294,24 @@ sub save {
 		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
-	#if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		#sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
-		#@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
-	#} # end if quality_id
+	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+        $$self{'quality'} = openprint::StockQuality->transform( 'name', $$self{'quality'} );
+        my $Quality = openprint::StockQuality->find_one('name lc'=>lc $$self{'quality'});
+		if ( ! $Quality ) {
+			$Quality = new openprint::StockQuality();
+			$Quality->save({'name'=>$$self{'quality'}});
+		} # end if
+		$$self{'quality_id'} = $Quality->id();
+	} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
 	} # end if manufacturer
 
-	delete $$self{'in_stock'};
-	$self->in_stock();
+	if ( $$self{'id'} ) {
+		$self->in_stock(undef);
+		$self->allocated(undef,undef);
+	} # end if
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -432,7 +440,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width().'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
 	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 	return $string;
 }
@@ -521,6 +529,30 @@ sub colour {
     } # end if
     return $$self{'colour'};
 } # end sub colour
+
+sub Quality {
+    return new openprint::StockQuality( $_[0]{'quality_id'} );
+} # end sub Quality
+
+sub quality {
+	my ( $self, $quality ) = @_;
+    if ( @_ > 1 ) {
+        $quality = openprint::StockQuality->transform( 'name', $quality );
+        if ( ! $$self{'custom'} ) {
+            my $Quality = openprint::StockQuality->find_one('name lc'=>lc $quality );
+            if ( $Quality ) {
+                @$self{'quality_id','quality'} = @$Quality{'id','name'};
+            } else {
+                @$self{'quality_id','quality'} = ( undef, $quality );
+            } # end if
+        } else {
+            $$self{'quality'} = $quality;
+        } # end if
+    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->name();
+    } # end if
+    return $$self{'quality'};
+} # end sub quality
 
 sub Weight {
 	return openprint::StockWeight( $_[0]{'weight_id'} );
@@ -672,8 +704,7 @@ sub add_inventory {
 		'units',	$units,
 		'docket',	$docket,
         );
-	delete $$self{allocated};
-	# Updates in_stock
+	# Updates in_stock and allocated
 	$self->save();
 } # end sub add_inventory
 
@@ -705,7 +736,7 @@ sub allocate {
 				);
 	} # end if project_id
 
-	delete $$self{allocated};
+	$self->save();
 	delete $$self{available};
 	return $PA;
 } # end sub allocate
@@ -721,43 +752,40 @@ sub allocated {
     my ( $self, $project_id, $new ) = @_;
 	return 0 if ! $$self{'id'};
 	if ( @_ == 3 ) {
-		if ( defined $new ) {
-			$$self{allocated} = $new;
-		} else {
-			delete $$self{allocated};
-		} # end if
+		$$self{allocated} = $new;
 	} # end if
 	if ( $project_id ) {
 		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
 		return $_;
 	} # end if
-	if ( ! exists $$self{allocated} ) {
-		@$self{allocated} = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
+	if ( ! defined $$self{allocated} ) {
+		($$self{allocated}) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
 	} # end if
     return $$self{allocated};
 } # end sub allocated
 
 sub in_stock {
-    my $self = shift;
-	return 0 if ! $$self{'id'};
+	return 0 if ! $_[0]{'id'};
 
-	if ( @_ ) {
-		if ( ref $_[0] eq 'openprint::StockQuality' ) {
+	if ( @_ > 1 ) {
+		if ( ref $_[1] eq 'openprint::StockQuality' ) {
 			my $in_stock = 0;
-			foreach my $C ( openprint::SkidContent::find('paper_id'=>$$self{'id'}, 'quality_id'=>$_[0]->id() ) ) {
+			foreach my $C ( openprint::SkidContent::find('paper_id'=>$_[0]{'id'}, 'quality_id'=>$_[1]->id() ) ) {
 				$in_stock += $C->quantity();
 			} # end foreach C
 			return $in_stock;
+		} else {
+			$_[0]{'in_stock'} = $_[1];
 		} # end if
 	} # end if
 
-	if ( ! exists $$self{in_stock} ) {
-		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+	if ( ! defined $_[0]{'in_stock'} ) {
+		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$_[0]{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			$$self{in_stock} += $SkidContent->quantity();
+			$_[0]{'in_stock'} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return 1*$$self{in_stock};
+    return $_[0]{'in_stock'};
 } # end sub in_stock
 
 sub available {
@@ -944,7 +972,7 @@ sub gsm {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'gsm'} = shift;
-	} elsif ( ! $$self{'gsm'} ) {
+	} elsif ( ! defined $$self{'gsm'} ) {
 		if ( ! $$self{'wpsi'} ) {
 			if ( $$self{'type'} eq 'Roll' ) {
 				if ( $self->basis_mweight() ) {
@@ -960,7 +988,8 @@ sub gsm {
 		if ( $$self{'wpsi'} ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
-			$openprint::log->warn("Can't calculate gsm");
+			$$self{'gsm'} = 0;
+			$openprint::log->warn("Can't calculate gsm " . $self->to_string());
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1181,7 +1210,7 @@ $openprint::log->debug("Looking for $qty");
 			foreach my $P ( @Papers ) {
 #$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
 				next if $qty < $P->minimum_order();
-$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+$openprint::log->debug("found for $qty < " . $P->minimum_order() . (ref $P).$P->to_string() );
 				$Paper = $P;
 				last;
 			} # end foreach
@@ -1299,8 +1328,7 @@ sub basis_height {
 } # end sub basis_height
 
 sub sheet_weight {
-    my ( $self ) = @_;
-    return $$self{'width'} * $$self{'height'} * $self->wpsi();
+    return $_[0]{'width'} * $_[0]{'height'} * $_[0]->wpsi();
 } # end sub sheet_weight
 
 sub start_sheet_weight {
@@ -1331,6 +1359,13 @@ sub short {
 	my ( $self ) = @_;
 	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
 }
+
+sub factor {
+    my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+    return 1 if ! $factor;
+    return $factor;
+} # end sub factor
+
 
 1;
 __END__

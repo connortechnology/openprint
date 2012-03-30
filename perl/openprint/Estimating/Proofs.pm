@@ -189,8 +189,10 @@ sub calc {
 
 				if ( lc $price{'units'} eq 'per square inch' ) {
 					$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"};
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Pricing: %d * %sx%s * %.2f%s = $%.2f<br/>', $quantity, @$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index","txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units'}, $price{'Total'} * $quantity );
 				} elsif ( lc $price{'units'} eq 'per square foot' ) {
 					$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Pricing: %d * %sx%s * %.2f%s = $%.2f<br/>', $quantity, @$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index","txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units'}, $price{'Total'} * $quantity );
 				} else {
 					$price{'Total'} = $price{'Price'};
                 } # end if

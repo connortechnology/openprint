@@ -88,5 +88,7 @@ CREATE TABLE Papers (
 	grade			integer,	
 	fsc_code		text,
 	parts			integer,
+	in_stock		INTEGER,
+	allocated		INTEGER,
 	PRIMARY KEY (id)
 );

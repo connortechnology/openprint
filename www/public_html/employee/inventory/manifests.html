@@ -1,53 +1,63 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
-Please select a Manifest to view/edit.<br>
-<form id="f1" name="f1" method="post" action="manifest.html">
-	<fieldset class="filters"><legend>Choose Manifest</legend>
-		<p>
-			<label for="manifest_id">Manifest ID #</label>
-			<input type="text" id="manifest_name" name="manifest_name" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Go' ); ) ?>
-			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Show' ); ) ?>
-		</p>
-		<p>
-			<label for="po_id">Purchase Order:</label>
-			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'','Go' ); ) ?>
-		</p>
-		<p>
-			<label for="docket">Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'','Go' ); ) ?>
-		</p>
-	</fieldset>
-</form>
-<form id="f2" name="f2" method="post" action="manifests.html">
-	<fieldset class="filters"><legend>Search Criteria</legend>
-		<p><label>Vendor:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
-			<select name="supplier_id" onchange="AjaxLoadContent('Results','_manifests.html', $('f2').serialize() );">
-				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
-			</select>
-		</p>
-		<p>
-			<label>Received On:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start' ); ) ?>
-			to 
-			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end' ); ) ?>
-			</span>
-		</p>
-		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'manifest.html', 'Add New Manifest' ),
-				); ) ?>
-		</p>
-	</fieldset>
-</form>
-<script type="text/javascript">document.f1.manifest_name.focus();</script>
-<div id="Results"><!--#include virtual="_manifests.html"--></div>
+<div class="Manifests">
+	Please select a Manifest to view/edit.<br>
+	<form id="f1" name="f1" method="post" action="manifest.html">
+		<fieldset class="filters"><legend>Choose Manifest</legend>
+			<ul>
+				<li>
+					<label for="manifest_name">Manifest ID</label>
+					<input type="text" id="manifest_name" name="manifest_name" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}" value="<? echo ( $param{'manifest_name'} ) ?>" />
+					<? echo ( ssi::button( 'Go1', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Go' } ); ) ?>
+					<input type="text" id="manifest_like" name="manifest_like" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
+					<? echo ( ssi::button( 'Show', { 'onclick'=>"AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'text'=>'Show' } ); ) ?>
+				</li>
+				<li>
+					<label for="po_id">Purchase Order</label>
+					<input type="number" id="po_id" name="po_id" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+					<? echo ( ssi::button( 'Go2', { 'onclick'=>q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'text'=>'Go' } ); ) ?>
+				</li>
+				<li>
+					<label for="docket">Docket</label>
+					<input type="number" id="docket" name="docket" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+					<? echo ( ssi::button( 'Go3', { 'onclick'=>q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'text'=>'Go' } ); ) ?>
+				</li>
+			</ul>
+		</fieldset>
+	</form>
+	<form id="f2" name="f2" method="post" action="manifests.html">
+		<fieldset class="filters"><legend>Search Criteria</legend>
+			<ul>
+			<li><label>Vendor</label>
+				<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+				<select name="supplier_id" onchange="AjaxLoadContent('Results','_manifests.html', $('f2').serialize() );">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Received On</label>
+				<span class="DateSelectorT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start', { 'with_today'=>1 } ); ) ?>
+				</span>
+				to 
+				<span class="DateSelectorT">
+	<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end', { 'with_today'=>1 } ); ) ?>
+				</span>
+			</li>
+			<li>
+				<label>Delivery</label>
+				<? echo ( ssi::radio( 'delivery', ['under','Under','over','Over','exact','Exact','','All'], $session{'/employee/inventory/manifests.html?delivery'} ); ) ?>
+			</li>
+			</ul>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::button( 'ShowResults', { 'onclick'=>"AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', \$('f2').serialize() );", 'text'=>'Show Results' } ),
+					ssi::button( 'Add', { 'href'=>'manifest.html', 'text'=>'Add New Manifest' } ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</form>
+	<script type="text/javascript">document.f1.manifest_name.focus();</script>
+	<div id="Results"><!--#include virtual="_manifests.html"--></div>
+</div>

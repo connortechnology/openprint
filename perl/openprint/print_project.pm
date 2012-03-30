@@ -154,7 +154,7 @@ sub get_incomplete_services_in_category {
 		my %services = $Project->get_services();
 
 		foreach my $index ( @{$services{'AdditionalSignature'}} ) {
-			if ( openprint::service::get_status( $log, $dbh, $index ) ne 'calculated' ) {
+			if ( openprint::service::get_status( $log, $dbh, $index, $project_index ) ne 'calculated' ) {
 				return $index;
 			} # end if
 		} # end foreach
@@ -196,7 +196,7 @@ sub choose_service {
 	$_ = "SELECT strValue, lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='ProjectType'";
 	my ( $project_type_id, $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
 
-	my $status = openprint::service::get_status( $log, $dbh, $service_index );
+	my $status = openprint::service::get_status( $log, $dbh, $service_index, $project_index );
 	
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)
@@ -717,6 +717,8 @@ sub create_edit_process {
 	$Project->programs( $r->param('chkPrograms') );
 	$Project->other_programs( $r->param('txtOtherPrograms') );
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 # Handle ProjectType
 	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
@@ -1292,7 +1294,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 
 		} # end if
 
-		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
+		if ( openprint::Estimating::Folding::neccessary( $project ) ) {
 			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {

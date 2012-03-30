@@ -24,7 +24,7 @@ require openprint::Equipment;
 require openprint::service;
 
 require sql;
-use openprint::Equipment;
+require openprint::Equipment;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 # This is an array of all the variables that need to be saved to the database for this service.
@@ -89,14 +89,12 @@ sub no_outputs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $Project ) = @_;
-
-	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
+	my ( $Project ) = @_;
 
 	my $services = $Project->services();
 
 	if ( $$services{'NoBindery'} ) {
-		$log->debug(" ** Project is marked as No bindery, Stitching not needed ! ** ");
+		$openprint::log->debug(" ** Project is marked as No bindery, Stitching not needed ! ** ");
 		return 0;
 	} # end if
 
@@ -136,17 +134,24 @@ sub signature_calc {
 	foreach my $I ( @Impositions ) {
 		$$specs{"txtPockets$qty_index"} += 1;
 
-		if ( $imposition > 1 ) {
+		last if $imposition <= 1;
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
-			$imposition = 1 if ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 );
-			$imposition = 1 if ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 );
-			if ( $$I{'image_orientation'} eq 'Vertical' ) {
-				$imposition = 1 if $$I{'rows'} % 2;
-				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
-			} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
-				$imposition = 1 if $$I{'columns'} % 2;
-				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd' if $imposition==1;
+		if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
+			$imposition = 1;
+			$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd';
+		} elsif ( ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 ) ) {
+			$imposition = 1;
+			$results{'alert'} .= 'Setting imposition to 1 cuz W&T and impo is not divisiable by 4';
+		} elsif ( $$I{'image_orientation'} eq 'Vertical' ) {
+			if ( $$I{'rows'} % 2 ) {
+				$imposition = 1;
+				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd';
 			} # end if
+		} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
+			if ( $$I{'columns'} % 2 ) {
+				$imposition = 1;
+				$results{'alert'} .= 'Setting imposition to 1 cuz Horizontal and cols odd';
+			} # end i
 		} # end if
 	} # end foreach
 
@@ -178,9 +183,11 @@ sub signature_calc {
 
 	my $bestPrice;
 	my $bestEquipment;
+	my $I = $Impositions[0];
 #$results{'alert'} .= $imposition.'out on ';
 #$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
+#$$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 		if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 			next;
@@ -189,6 +196,22 @@ sub signature_calc {
 			#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
 		} # end if
+       if ( $Equipment->specification('Type') eq 'Press' ) {
+            #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+                #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+                #next;
+            #} # end if
+            if ( $I->Press()->id() != $Equipment->id() ) {
+                #$openprint::log->debug("Press not the same: " . $I->Press()->id() . ' != ' . $Equipment->id() );
+                next;
+            } # end if
+
+            #if ( $$I{'Folder'}->id() != $Equipment->id() ) {
+                #$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
+                #next;
+            #} # end if
+        } # end if
+
 		my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 		if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
 			$bestEquipment = $Equipment;
@@ -222,13 +245,14 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( ! $Project->signatures() ) {
+	my @signatures = $Project->signatures();
+	if ( ! @signatures ) {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	# Figure out whether we need a cover
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	@$specs{'txtPageQuantity','txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtTotalPageQuantity','txtFinalWidth','txtFinalHeight'};
 	if ( $$specs{'chkOverrideInsertQuantity'} ne 'Y' ) {
 		$variables{txtInsertQuantity} = [ sets::union( 'output', @{$variables{txtInsertQuantity}} ) ];
@@ -254,7 +278,7 @@ sub calc {
 		$$specs{"txtPockets$qty_index"} = 0;
 		my $imposition = 2;
 
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Spreads';
 $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposition, @$sig_specs{'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if $debug;
@@ -268,15 +292,15 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
 				if ( $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
 					$imposition = 1;
-					$openprint::log->warn("Setting imposition to 1 : Rows " . $$sig_specs{'hdnImpositionRows'.$qty_index} );
+					$openprint::log->warn("Setting imposition to 1 Sig: $$sig_specs{SignatureIndex}: Rows " . $$sig_specs{'hdnImpositionRows'.$qty_index} );
 				} # end if
 			} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				if ( $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
 					$imposition = 1;
-					$openprint::log->warn("Setting imposition to 1 : Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
+					$openprint::log->warn("Setting imposition to 1 Sig: $$sig_specs{SignatureIndex}: Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
 				} # end if
 			} # end if
-		} # end foreach
+		} # end foreach signature
 
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 $openprint::log->debug("Overriding imposiion");
@@ -287,7 +311,7 @@ $openprint::log->debug("Overriding imposiion");
 		} else {
 			$$specs{'Imposition'.$qty_index} = $imposition;
 		} # end if
-	} # end foreach
+	} # end foreach qty_index
 
 	my $folding_specs = 0;
 	if ( $$services{'Folding'} ) {
@@ -315,7 +339,7 @@ $openprint::log->debug("Overriding imposiion");
 		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{'Width'} Spine Length: $$specs{'Height'}<br/>";
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
-			foreach my $signature_service_index ( $Project->signatures() ) {
+			foreach my $signature_service_index ( @signatures ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -370,6 +394,10 @@ $openprint::log->debug("Overriding imposiion");
 		return 'uncalculated';
 	} # end if
 
+    # Get one of the sigs, so we can look at which press it was printed on.  Technically we should look at all
+    my $ss_id = $signatures[0];
+    my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		if ( $$specs{'txtInsertQuantity'} > 0 ) {
@@ -409,6 +437,7 @@ $openprint::log->debug("Overriding imposiion");
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: ' . $Equipment->name() . '<br/>';
 			if ( $Equipment->specification('Maximum Spine Length') and ( $$specs{'Height'} > $Equipment->specification('Maximum Spine Length', $$specs{'Imposition'.$qty_index} ) ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too big. Spine: %s, Maximum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Maximum Spine Length') );
 				next;
@@ -417,6 +446,23 @@ $openprint::log->debug("Overriding imposiion");
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
 			} # end if
+			if ( $Equipment->specification('Type') eq 'Press' ) {
+
+				# No long valid... should prbably be greater than some settnig
+                #if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
+                    #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
+                    #next;
+                #} # end if
+                if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+                    $$specs{'hdnBreakdown'.$qty_index} .= sprintf('Printing equipment not the same: Printing on %s<br/>',$$sig_specs{"ddmPress$qty_index"} );
+                    next;
+                } # end if
+                #if ( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} != $Equipment->id() ) {
+                    #$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Folding equipment not the same: %s<br/>',$$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+                    #next;
+                #} # end if
+            } # end if
+
 
 			my $price = get_price( $Equipment, $specs, $plusCover, $qty_index );
 			if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
@@ -431,7 +477,7 @@ $openprint::log->debug("Overriding imposiion");
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', $$price{'txtPrice'}).'<br/><br/>';
-		} # end foreach
+		} # end foreach Equipment
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';
 			$$specs{"ddmEquipment$qty_index"} = '';
@@ -459,7 +505,7 @@ $openprint::log->debug("Overriding imposiion");
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 	foreach my $qty_index ( 1 .. 3 ) {	
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index
@@ -474,7 +520,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {

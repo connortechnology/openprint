@@ -25,9 +25,9 @@
 				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
 			} # end foreach Allocation
 			$html .= '</td>';
-			$html .= sprintf('<td class="Quality"><select id="quality_id-%1$d" name="quality_id-%1$d" size="1">%2$s</select></td>',
+			$html .= sprintf('<td class="Condition"><select id="condition_id-%1$d" name="condition_id-%1$d" size="1">%2$s</select></td>',
 				$C->id(), 
-				ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $C->quality_id() ),
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') ], $C->condition_id() ),
 );
 			$html .= '</tr>';
 			#$html .= '<tr>';

@@ -11,48 +11,51 @@
 
 	<table class="List">
 		<tr>
-			<th align="left" width="130">Date</th>
-			<th align="left"><? echo ( 
+			<th class="Skid"><? echo ( 
 				return 'Skid' if $param{'paper_id'};
 				return 'Paper' if $param{'skid_id'};
 			) ?></th>
 			<? if ( $config{'RFID'} eq 'Y' ) ?>
-			<th align="left" width="120">RFID</th>
+			<th class="RFID">RFID</th>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
-			<th align="left" width="120">Location</th>
-			<th align="left" width="60">Docket</th>
-			<th align="right" width="120">Amount</th>
-			<th align="right" width="120">Available</th>
-			<th width="75">&nbsp;</th>
+			<th class="Location">Location</th>
+			<th class="DateTime">When</th>
+			<th class="Docket">Docket</th>
+			<th class="Quantity">Amount</th>
+			<th class="Quantity">Available</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html;
 
 			my $rowclass;
 			foreach my $PA ( @{$$variable{'Allocations'}} ) {
-				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $PA->created_on() ) ) );
+				$html .= sprintf( '<tr%1$s>', $rowclass );
 			
 				my @Skids = $PA->Skids();
 
 				if ( $param{'skid_id'} ) {
-					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
+					$html .= sprintf('<td class="Skid"><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
 				} elsif ( @Skids ) {
-					$html .= '<td>'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ) } @Skids ).'</td>';
+					$html .= '<td class="Skid">'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ) } @Skids ).'</td>';
 				} else {
-					$html .= '<td>&nbsp;</td>';
+					$html .= '<td class="Skid">&nbsp;</td>';
 				} # end if
 				if ( $config{'RFID'} eq 'Y' ) {
-					$html .= '<td>'.join('<br/>',map{ sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a>', $_->rfidtag_id() ? $_->rfidtag_id() : '' ); } @Skids ).'</td>';
+					$html .= '<td class="RFID">'.join('<br/>',map{ 
+( $_->rfidtag_id() ? sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%2$d (%3$x)</a>', $_->rfidtag_id(), $_->RFIDTag()->id_short(),substr($_->RFIDTag()->id(),1,15)) : '' )
+} @Skids ).'</td>';
 				} # end if
-				$html .= '<td>'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
-				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%s%s</td><td align="right">%s%s</td><td>',
+				$html .= '<td class="Location">'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
+				$html .= sprintf( '<td class="DateTime">%s</td>', Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $PA->created_on() ) ) );
+				$html .= sprintf('<td class="Docket"><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td>
+<td class="Quantity">%s%s</td><td class="Quantity">%s%s</td><td class="buttons">',
 					$PA->project_id(),
 					$PA->Project()->docket() ? $PA->Project()->docket() : 'unknown',
 					Number::Format::format_number($PA->quantity()), $PA->units(),
 					Number::Format::format_number($PA->Paper()->available()),
 					$PA->units(),
 					);
-				#$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`new Ajax.Updater('Allocations','_paper_allocations.html', { method: 'get', parameters: { allocation_id: '$$PA{id}', action: 'Delete Allocation' } } );`, '', 'Delete' );
 				$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`ajax_window('_deallocate_popup.html?allocation_id=`.$$PA{id}.q`', 400 );`, '', 'Delete' );
 				$html .= '</td></tr>',
 
@@ -65,10 +68,10 @@
 			<? if ( $config{'RFID'} eq 'Y' ) ?>
 			<td>&nbsp;</td>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
-			<td colspan="4" align="right"><b>Totals:</b></td>
-			<td align="right"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Paper'}->units(); ) ?></td>
-			<td>&nbsp;</td>
-			<td>&nbsp;</td>
+			<td colspan="4"><b>Totals:</b></td>
+			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Paper'}->units(); ) ?></td>
+			<td class="Quantity">&nbsp;</td>
+			<td class="buttons">&nbsp;</td>
 		</tr>
 	</table>
 <? else ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>

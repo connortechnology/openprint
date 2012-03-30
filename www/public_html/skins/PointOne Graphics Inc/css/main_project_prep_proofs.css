@@ -1,0 +1,13 @@
+table .dimensions {
+	width: 170px;
+	text-align: center;
+}
+table .dimensions input {
+	width: 70px;
+}
+table .unitprice {
+	width: 110px;
+}
+table .unitprice input {
+	width: 90px;
+}

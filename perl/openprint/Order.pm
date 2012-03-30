@@ -1,9 +1,9 @@
-package openprint::Order;
-@ISA=qw(openprint::Object);
-
 use strict;
+package openprint::Order;
+our @ISA=qw(openprint::Object);
+
 use openprint ();
-use vars qw( %session %config %variable $log $dbh %fields);
+use vars qw( $debug %session %config %variable $log $dbh %fields);
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
 
+$debug = 1;
 %fields = (
 	'id'						=> 'index',
 	'company_id'				=> 'companyindex',
@@ -53,6 +54,14 @@ require openprint::Payment;
 	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
 	);
+
+sub find_one {
+	shift @_ if $_[0] eq 'openprint::Order';
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	if ( $_[0] eq 'openprint::Order' ) {
 		shift;
@@ -132,8 +141,8 @@ sub find {
 		push @values, $params{'currency_id'};
 	} # end if
 	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND ( ((SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
-		push @values, @params{'owing_>','owing_>'};
+		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE order_id=Index),0) > ?) ';
+		push @values, $params{'owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
@@ -152,7 +161,7 @@ sub find {
 		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Orders: $sql @values");
 		return;
 	} else {
-		#$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
+		$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data) if $debug;
 		return map { new openprint::Order( $_->{index}, $_ ) } @$data;
 	} # end if
 } # end sub find
@@ -396,8 +405,7 @@ sub projects {
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 } # end sub projects
 sub Projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $_[0]{'id'} );
 }
 
 sub Products {

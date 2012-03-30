@@ -1,0 +1,13 @@
+table .manifest_num {
+	width: 100px;
+	text-align: left;
+}
+table .contents {
+	text-align: left;
+}
+li label:after {
+	content: ":";	
+}
+li label.radio:after {
+	content: "";
+}

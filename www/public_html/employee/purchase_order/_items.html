@@ -20,7 +20,7 @@
 <table class="List sortable">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'item_id', this.checked );"/></th>
+		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f1'), 'item_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th class="id">ID</th>
 		<th class="product">Product #</th>
@@ -35,9 +35,7 @@
 		while ( my $Item = shift @{$$variable{'Items'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d">`, $Item->id() );
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td><input type="checkbox" name="item_id" value="'.$Item->id().'"/></td>';
-			} else {
-				$html .= '<td>'.$session{'user_type'}.'</td>';
+				$html .= '<td class="checkbox"><input type="checkbox" name="item_id" value="'.$Item->id().'"/></td>';
 			} # end if
 
 			if ( ! $session{'/employee/purchase_order/items.html?supplier_id'} ) {
@@ -47,7 +45,7 @@
 				<td class="item_name"><a href="item.html?item_id=%1$d">%3$s</a></td>
 				<td class="supplier"><a href="item.html?item_id=%1$d">%4$s</a></td>
 				<td class="price"><a href="item.html?item_id=%1$d">%5$s</a></td>
-			</tr>`, $Item->id(), $Item->product(), ssi::htmlize($Item->name()), $Item->Vendor()->name(), openprint::Currency::format( $Item->price() ),
+			</tr>`, $Item->id(), $Item->product(), ssi::htmlize($Item->name()), $Item->Vendor()->name(), openprint::Currency::format( 1*$Item->price() ),
 				);
 			} else {
 			$html .= sprintf( q`
@@ -55,7 +53,7 @@
 				<td class="product"><a href="item.html?item_id=%1$d">%2$s</a></td>
 				<td class="item_name"><a href="item.html?item_id=%1$d">%3$s</a></td>
 				<td class="price"><a href="item.html?item_id=%1$d">%4$s</a></td>
-			</tr>`, $Item->id(), $Item->product(), $Item->name(), openprint::Currency::format( $Item->price() ),
+			</tr>`, $Item->id(), $Item->product(), $Item->name(), openprint::Currency::format( 1*$Item->price() ),
 				);
 			} # end if
 		} # end while

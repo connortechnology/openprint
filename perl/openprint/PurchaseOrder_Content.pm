@@ -1,19 +1,13 @@
 use strict;
 package openprint::PurchaseOrder_Content;
 our @ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
 
-use openprint ();
-use vars qw(%variable $log $dbh $debug $table $serial %config %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+require openprint;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
 require openprint::PurchaseOrder_ContentType;
 require openprint::PurchaseOrder_Item;
+require openprint::PurchaseOrder_Department;
 
 $debug = 1;
 $table = 'PurchaseOrder_Contents';
@@ -25,6 +19,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'created_on'	=>	'created_on',
 	'qty'			=>	'qty',
 	'price'			=>	'price',
+	'price_units'	=>	'price_units',
 	'total'			=>	'total',
 	'product'		=>	'product',
 	'item'			=>	'item',
@@ -33,6 +28,8 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'description'	=>	'description',
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
+	'department_id'	=>	'department_id',
+	'department'	=>	undef,
 );
 
 %transforms = (
@@ -49,6 +46,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'qty'			=>	undef,
 	'type_id'		=>	undef,
 	'item_id'		=>	undef,
+	'department_id'	=>	undef,
 );
 
 sub PurchaseOrder {
@@ -65,10 +63,31 @@ sub type {
 		if ( $Type ) {
 			$_[0]{'type_id'} = $Type->id();
 			return $Type->name();
-		}
-	}
+		} # end if
+	} # end if
 	return new openprint::PurchaseOrder_ContentType( $_[0]{'type_id'} )->name();
-} # en dsub type
+} # end sub type
+
+sub Department {
+	return new openprint::PurchaseOrder_Department( $_[0]{department_id} );
+} # end sub Department
+
+sub department {
+	if ( @_ > 1 ) {
+		$_[1] = openprint::PurchaseOrder_Department->transform( 'name', $_[1] );
+		my $Department = openprint::PurchaseOrder_Department->find_one('name'=>$_[1]);
+		if ( $Department ) {
+			$_[0]{'department_id'} = $Department->id();
+			return $Department->name();
+		} else {
+			$Department = new openprint::PurchaseOrder_Department();
+			$Department->save({'name'=>$_[1]});
+			$_[0]{'department_id'} = $Department->id();
+			return $Department->name();
+		} # end if
+	} # end if
+	return new openprint::PurchaseOrder_Department( $_[0]{'department_id'} )->name();
+} # end sub department
 
 sub units {
 	my ( $self ) = @_;

@@ -1,19 +1,16 @@
+use strict;
 package openprint::www;
 
 #use Benchmark;
 #use diagnostics;
 
-use strict;
-use Apache2::Request;	# instead of CGI, it's MUCH faster, and does nice things.
+use Apache2::Request ();	# instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
-use APR::URI;
+use APR::URI ();
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
-use Apache2::Log;
+use Apache2::Log ();
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
-use Apache::Session::Postgres;
-use Apache2::Cookie;
-
 
 require openprint::quote;
 require openprint::main_quote;
@@ -32,10 +29,10 @@ require misc;
 require ssi;
 require configuration;
 
-use openprint::Object;
-use openprint::Currency;
+require openprint::Object;
+require openprint::Currency;
 
-use openprint;
+use openprint ();
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -58,9 +55,9 @@ sub handler {
 	$r->no_cache(1);
 
 	my $starttime = time;
-	$r->log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $r->uri() );
-
 	$log	= $r->log;
+	my $page = $r->uri();
+	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( sort sets::union( $r->param ) ) {
@@ -94,7 +91,6 @@ sub handler {
 	} # end if
 
 	my $lastpage = '';
-	my $page = $r->uri();
 $openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
@@ -130,7 +126,9 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
-			$variable{'PageContent'} = ssi::variable_substitution( $r, $r->log, $dbh, \$content, \%variable );
+$log->debug("starting variable subst of pagecontent " . ( time - $starttime ) );
+			$variable{'PageContent'} = ssi::variable_substitution( $r, $log, $dbh, \$content, \%variable );
+$log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
@@ -155,18 +153,18 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end if _
 		if ( $template ) {
 			#$log->debug("parsing template!");
-			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
+			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			my $h = ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable );
+			$log->debug("starting variable subst of template " . ( time - $starttime ) );
+			$r->print( $h );
+			$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
-		#$log->warn($variable{'PageContent'});
+		$log->warn($variable{'PageContent'});
+$log->debug("starting print " . ( time - $starttime ) );
 			$r->print( $variable{'PageContent'} );
+$log->debug("ending print " . ( time - $starttime ) );
 		} # end if
-	} # end if
-
-	if ( 0 ) {
-		foreach my $key ( keys %openprint::session ) {
-			$log->debug("Session $key => $openprint::session{$key}");
-		} # end foreach
 	} # end if
 
 	$session{'lastupdated'} = time;
@@ -177,6 +175,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	openprint::service::init_cache();
 	openprint::pricing::clear_cache();
 	openprint::Object::init_cache();
+$log->debug("returningprint " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -231,15 +230,11 @@ $openprint::log->debug("Getfile");
 			} # end if
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 		} elsif ( $first ) {
-#$log->debug("1 $first _ $second $filename");
-			my $eval = "openprint::$first";
-			$eval .= '_'.$second if $second;
-			eval	'require '.$eval;
-			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
-			$filename =~ /(.*).html/;
-			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
-			eval $eval;
-			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			eval( 'require openprint::'.join('_', @path ) );
+$log->error( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -341,7 +336,7 @@ $log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
-	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
+	} elsif ( sets::isin( $first , ['handheld' ] ) ) { # Handheld
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
 		if ( $variable{'Redirect'} ) {
 			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );

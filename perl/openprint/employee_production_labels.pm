@@ -1,5 +1,5 @@
-package openprint::employee_production_labels;
 use strict;
+package openprint::employee_production_labels;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
 
 use openprint ();
@@ -10,7 +10,6 @@ use vars qw{ $log $dbh %config %variable %param };
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 
-require sql;
 require openprint::Label;
 require openprint::LabelType;
 
@@ -22,7 +21,7 @@ sub _label {
 	if ( $param{'action'} eq 'update' ) {
 		$param{'value'} =~ s/<br\/>/\n/ig;
 		$Label->set_data($param{'field'}=>$param{'value'});
-		$Label->save();
+		$variable{'error'} .= $Label->save();
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
 	} elsif ( $param{'action'} eq 'get' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
@@ -45,15 +44,25 @@ sub label {
         push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/label.html' );
-		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+		push @attachments, $Label->Type()->name(). ' for docket ' . $Label->docket().'.html', 
+			 MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',
+						 ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 
+			 'text/html', 'quoted-printable';
+
+		my $Project = $Label->Project();
+		my $CSR;
+		if ( $Project and $Project->Company()->salesrep_id() ) {
+			$CSR = new openprint::User( $Project->Company()->salesrep_id() );
+		} # end if
 
 		my $Email = new openprint::Email();
         $variable{'information'} .= $Email->send(
                 #TO  =>  'iconnor@point-one.com',
                 TO  =>  [ split(',', $param{'to'}) ],
-                FROM    =>  $param{'from'},
-                SUBJECT =>  $param{'subject'},
-                ATTACHMENTS =>  \@attachments,
+				( $CSR ? ( 'CC' => sprintf('"%s" <%s>', $CSR->name(), $CSR->email() ) ) : () ),
+				FROM    =>  $param{'from'},
+				SUBJECT =>  $param{'subject'},
+				ATTACHMENTS =>  \@attachments,
                 );
 
 	} # end if

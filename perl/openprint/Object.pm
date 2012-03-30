@@ -1,6 +1,7 @@
+use strict;
+require openprint::Object_Asset;
 package openprint::Object;
 
-use strict;
 use openprint ();
 require sets;
 use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
@@ -44,8 +45,12 @@ sub new {
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
-		if ( $id and (!$data) and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-			return $openprint::Object::cache{$parent}{$id};
+		if ( $id and (!$data) ) {
+			if ( $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+				return $openprint::Object::cache{$parent}{$id};
+			} else {
+				$log->debug("Not loading from cache $id $parent ");
+			} # end if
 		} # end if
 
 		$$self{'log'} = $openprint::log;
@@ -115,6 +120,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
 	delete $sql{'created_on'};
+	$sql{'created_by'} = $session{'user_id'} if exists $fields{'created_by'} and ! $sql{'created_by'};
 	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 	if ( $debug ) {
@@ -513,7 +519,7 @@ sub find_one {
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'->find(%params);');
+	my @Results = $type->find(%params);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -546,8 +552,8 @@ sub to_string {
 
 sub dropdown {
     my $type = shift;
-$log->debug("dropdown");
-    return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+$log->debug("dropdown $type");
+    return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub transform {
@@ -570,6 +576,16 @@ sub transform {
 
 } # end sub transform
 
+sub Assets {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'object_id'} = $_[0]{'id'};
+	$param{'order'}	= 'asset_id' if ! $param{'order'};
+	$param{'object_type'} = ref $_[0];
+	my @Assets = openprint::Object_Asset->find(%param);	
+$openprint::log->debug("# of Assets: " . scalar @Assets );
+	return @Assets;
+} # end sub Assets
 
 1;
 __END__

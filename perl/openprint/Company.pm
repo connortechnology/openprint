@@ -57,6 +57,7 @@ require openprint::customer_credit;
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
+		'category_id'				=>	'category_id',
 		);
 %transforms = (
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
@@ -71,6 +72,7 @@ require openprint::customer_credit;
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
 	'deleted'		=>	0,
+	'category_id'	=>	undef,
 );
 
 my $debug = 1;
@@ -133,6 +135,10 @@ sub find {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
+	} # end if
+	if ( $params{'category_id'} ) {
+		$sql .= q{ AND category_id=?};
+		push @values, $params{'category_id'};
 	} # end if
 	if ( $params{'marketing_category_id'} ) {
 		$sql .= q{ AND Index IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
@@ -340,9 +346,9 @@ sub Credit {
 	
 	return new openprint::customer_credit( $$self{id}, $supplier );
 } # end sub Credit
-sub get_dropdown {
-	my $selected = shift;
-	my $params = shift;
+
+sub dropdown {
+	shift @_ if $_[0] eq 'openprint::Company';
 
 	my $sql = 'SELECT Index, strName FROM Company WHERE (deleted=false or deleted IS NULL)';
 	my @values;
@@ -351,19 +357,25 @@ sub get_dropdown {
 		$sql .= ' AND Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if
-	if ( $params ) {
-		if ( $$params{'id'} ) {
-			if ( ref $$params{'id'} eq 'ARRAY' ) {
-				$sql .= ' AND index IN ( '.join(',', @{$$params{'id'}} ).' )';
+
+	if ( @_ ) {
+		my %params = %{$_[0]};
+		if ( $params{'id'} ) {
+			if ( ref $params{'id'} eq 'ARRAY' ) {
+				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
 			} # en dif
 		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(strname)';
 
 	my @company = sql::execute( undef, undef, $sql, @values );
+	return \@company;
+} # end sub dropdown
 
-	return ssi::make_drop_down( \@company, $selected );
-} # sub get_customer_dropdown
+sub get_dropdown {
+	my $companies = dropdown( $_[1] ? $_[1] : () );
+	return ssi::make_drop_down( $companies, $_[0] );
+} # sub get_dropdown
 
 sub CSR {
 	my $self = shift;

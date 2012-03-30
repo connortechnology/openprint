@@ -18,7 +18,6 @@ package openprint::Estimating::SpinePaste;
 use strict;
 
 require openprint::service;
-require sql;
 
 my @variables = (
 'chkOverrideCalliper',
@@ -35,17 +34,16 @@ sub variables {
 }
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	if ( $services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Hand Assembly not needed ! ** ");
+	if ( $$services{'NoBindery'} ) {
+        $openprint::log->debug(" ** Project is marked as No bindery, Hand Assembly not needed ! ** ");
         return 0;
     } # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
     if ( $$printing_specs{'rdbTemplateType'} eq 'SpinePaste' ) {
         return 1;
@@ -144,11 +142,11 @@ sub calc {
 			$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 			my $qty = $$specs{'txtQuantity'.$qty_index};
 			if ( $qty and ! $$specs{'txtPrice'.$qty_index} ) {
-				return $$specs{'Status'} = 'uncalculated';
+				return $$specs{'Status'} = 'calculated';
 			} # end if
 		} # end foreach
 		
-		return $$specs{'Status'}='calculated';
+		return $$specs{'Status'}='uncalculated';
 	} # end if
 
 	my $services = $Project->services();

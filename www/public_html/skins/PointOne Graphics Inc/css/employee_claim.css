@@ -1,5 +1,5 @@
-.ID {
-	width: 75px;
+.claim_id {
+	width: 50px;
 	text-align: left;
 }
 
@@ -14,4 +14,9 @@ table .Date {
 table input[type="number"] {
 	width: 94%;
 	text-align: right;
+}
+@media print {
+	#Payments .new {
+		display: none;
+	}
 }

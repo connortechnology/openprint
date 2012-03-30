@@ -1,6 +1,6 @@
+use strict;
 package ssi;
 
-use strict;
 use countries;
 use states;
 use provinces;
@@ -11,7 +11,7 @@ use HTML::Entities qw(encode_entities);
 require sets;
 require sql;
 
-use openprint;
+use openprint ();
 use vars qw( $r $log $dbh %config %session %param %variable );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -136,13 +136,16 @@ sub variable_substitution {
 	return do_include( $r, $log, $dbh, $text, $variable );
 } # end sub variable_substitution
 
+my %html_replacements = (
+	'&'	=>	'&amp;',
+	'"'	=>	'&quot;',
+	'<' =>	'&lt;',
+	'>' =>	'&gt;',
+);
+my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-    $_ = shift;
-    $_ =~ s/&/&amp;/mg;
-    $_ =~ s/"/&quot;/mg;
-    $_ =~ s/</&lt;/mg;
-    $_ =~ s/>/&gt;/mg;
-    return $_;
+	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+    return $_[0];
 }
 
 sub escape_quotes {
@@ -435,7 +438,7 @@ sub button {
 		} # end if
 		$html .= "/>";
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
 	}
 	$html .= "</a>\n";
 	return $html;
@@ -537,10 +540,10 @@ $log->debug("$year-$month-$day");
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C',title=>'Clear' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today' } );
 	} # end if
 	$html .= '</span>';
 	return $html;
@@ -644,9 +647,21 @@ sub save_params {
 	} # end foreach
 } # end sub save_params
 
+sub write_override {
+	my ( $for, $value, $locked_js, $unlocked_js ) = @_;
+	if ( 0 ) {
+		return sprintf(q`<input type="hidden" id="%1$s" name="%1$s" value="%2$s"/><img class="Override" src="/images/%3$s.gif" onclick="var e=$('%1$s');if(e.value){e.value='';this.src='/images/unlocked.gif';%5$s} else {e.value='Y';this.src='/images/locked.gif';%4$s}" alt=""/>`,
+				$for, (sets::isin( $value, ['Y', '1' ] ) ? 'Y' : '' ), (sets::isin( $value, ['Y', '1' ] ) ? 'locked' : 'unlocked'), $locked_js, $unlocked_js );
+	} else {
+		return sprintf('<input type="checkbox" id="%1$s" name="%1$s" value="%2$s" onclick="if(!this.checked){%5$s}else{%4$s};" %3$s /> <label class="radio" for="%1$s">Override</label>', $for, $value, ssi::checked( $value eq 'Y' ), $locked_js, $unlocked_js );
+	} # end if
+} # end sub write_override
+
+
 sub count_lines {
 	if ( $_[0] ) {
-		return scalar split( "\n", $_[0] );
+		my @lines = split( "\n", $_[0] );
+		return scalar @lines;
 	} else {
 		return 2;
 	} # end if

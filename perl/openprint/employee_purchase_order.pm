@@ -1,13 +1,12 @@
-package openprint::employee_purchase_order;
-use MIME::QuotedPrint;
-use Text::CSV_XS;
 use strict;
+package openprint::employee_purchase_order;
 require sql;
-require misc;
 require openprint::paper;
-
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Item;
+require openprint::PurchaseOrder_Department;
+require openprint::Company_Category;
+require openprint::Object_Asset;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -223,6 +222,19 @@ sub view {
 				$log->debug("No item for $content_id");
 			} # end if
 
+			my $Dept;
+			if ( ( $param{'dept_id-'.$content_id} eq 'new' ) or ! $param{'dept_id-'.$content_id} ) {
+				$Dept = openprint::PurchaseOrder_Department->find_one( 
+						'name lc' => lc openprint::PurchaseOrder_Department->transform('name',$param{'dept-'.$content_id}),
+						);
+				if ( ! $Dept ) {
+					$Dept = new openprint::PurchaseOrder_Department();
+					$Dept->save({'name'=>$param{'dept-'.$content_id}});
+				} # end if
+			} else {
+				$Dept = new openprint::PurchaseOrder_Department( $param{'dept_id-'.$content_id} );
+			} # end if
+
 			my $C = new openprint::PurchaseOrder_Content( $content_id );
 			
 			$variable{'error'} .= $C->save( {
@@ -235,6 +247,7 @@ sub view {
 					'price'         =>  $param{'price-'.$content_id},
 					'total'         =>  $param{'total-'.$content_id},
 					'type_id'		=>	$param{'type_id-'.$content_id},
+					( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
 					});
 
 			$types{$C->Type()->name()} = 1;
@@ -283,6 +296,29 @@ sub view {
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
+		my $Asset = new openprint::Asset();
+		$variable{'error'} .= $Asset->save( \%param );
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.<br/>';
+		} # end if
+		if ( $param{'filename'} ) {
+			my $upload = $r->upload('filename');
+			if ( ! $upload ) {
+				$Asset->save({'filename'=>''});
+				$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+			} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+				$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+				$Asset->save({'filename'=>''});
+			} else {
+				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			} # end if
+		} # end if
+		if ( $Asset->id() ) {
+			my $PO_Asset = new openprint::Object_Asset();
+			$variable{'error'} .= $PO_Asset->save({'object_id'=>$param{'po_id'},'object_type'=>'openprint::PurchaseOrder','asset_id'=>$Asset->id()});
+		} # end if
+		%param = ();
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
@@ -475,8 +511,12 @@ sub history {
 		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 		$variable{'error'} .= $PO->send_to_vendor();
 		delete $param{'po_id'};
+	} elsif ( $param{'btnFunction'} eq 'Email Me' ) {
+		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+		$variable{'error'} = $PO->send_to_me();
+		delete $param{'po_id'};
 	} # end if
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled' ) );
+	_history();
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_start', -7 );
 	ssi::setup_date_select( '/employee/purchase_order/history.html', 'starting_end', '' );
 	$session{'/employee/purchase_order/history.html?cancelled'} = '0' if ! exists $session{'/employee/purchase_order/history.html?cancelled'};
@@ -484,7 +524,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled' ) );
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types', 'item_id', 'cancelled', 'vendor_category_id', 'department_id' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {
@@ -520,9 +560,12 @@ sub _po_content_line {
 		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
-		$PO = $PO_Content->PurchaseOrder();
-		$PO_Content->delete();
-		$variable{'error'} .= $PO->save();
+		if ( $PO_Content->id() ) {
+			# Might have already been deleted
+			$PO = $PO_Content->PurchaseOrder();
+			$PO_Content->delete();
+			$variable{'error'} .= $PO->save();
+		} # end if
 	} # end if
 } # end sub _purchase_order_content_line
 
@@ -614,6 +657,13 @@ sub item {
 		$variable{'ExternalRedirect'} = '/employee/purchase_order/items.html';
 	} # end if
 } # end sub item
+
+sub _po_created_by_options {
+} # end sub _po_created_by_options
+
+sub _vendor_dropdown {
+	ssi::save_params( '/employee/purchase_order/history.html', ( 'vendor_category_id', 'supplier_id' ) );
+} # end sub _vendor_dropdown
 
 1;
 __END__

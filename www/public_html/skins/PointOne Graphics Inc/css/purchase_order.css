@@ -37,7 +37,7 @@ table .price input {
 	width: 65px;
 }
 table .total {
-	width: 90px;
+	width: 100px;
 	text-align: right;
 }
 table .total input {
@@ -311,4 +311,10 @@ table .docket {
 
 table .supplier, table .item_name, table .product {
 	text-align: left;
+}
+#Assets .Thumbnail {
+	width: 75px;
+}
+#Assets .actions {
+	width: 75px;
 }

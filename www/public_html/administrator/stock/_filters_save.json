@@ -1,13 +1,25 @@
 <? echo (
 	$r->content_type('text/javascript');
-	my $Object = eval( "new openprint::$param{type}($param{id});" );
-	$Object->save({
-		'shortname'	=>	$param{'shortname'},
-		'longname'	=>	$param{'longname'},
-		});
 	my $html;
+	my $Object = ('openprint::'.$param{type})->new($param{id});
+	if ( sets::isin( $param{type}, [ 'InventoryCondition','StockQuality' ] ) ) {
+	$variable{'error'} .= $Object->save({
+		'name'	=>	$param{'name'},
+		'message'	=>	$param{'message'},
+		});
 	$html .= sprintf(q`$('%s_shortname').value = '';`, $param{type}, $Object->shortname() );
 	$html .= sprintf(q`$('%s_longname').value = '';`, $param{type}, $Object->longname() );
+	} else {
+		$variable{'error'} .= $Object->save({
+			'shortname'	=>	$param{'shortname'},
+			'longname'	=>	$param{'longname'},
+			});
+		$html .= sprintf(q`$('%s_shortname').value = '';`, $param{type}, $Object->shortname() );
+		$html .= sprintf(q`$('%s_longname').value = '';`, $param{type}, $Object->longname() );
+	}
+	if ( $variable{'error'} ) {
+		$html .= qq`alert('$variable{'error'}');`;
+	} # end if
 	return $html;
 ) ?>
 	

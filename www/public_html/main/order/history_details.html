@@ -101,7 +101,10 @@ Projects listed in red have changed price from the time this order was originall
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<? echo ( 
 			my $html;
-			if ( sets::isin( $$variable{'ORDER_STATUS'}, 'Re-Opened', 'Incomplete') ) {
+			if ( $$variable{'ORDER_STATUS'} eq 'Re-Opened' ) {
+				$html .= ssi::writeButton( $log, $dbh, 'ReOpen','re_open.gif',"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", '', 'Continue' );
+				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
+			} elsif ( $$variable{'ORDER_STATUS'} eq 'Incomplete') {
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
 				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {

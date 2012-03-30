@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw($table $serial %variable $log $dbh %config %fields %transforms %defaults );
+use vars qw( $debug $table $serial %variable $log $dbh %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -22,7 +22,7 @@ require openprint::Company;
 $table = 'manifests';
 $serial = 'manifests_id_seq';
 
-my $debug = 1;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -207,6 +207,9 @@ sub po_ids {
 sub dockets {
 	return sets::union( map { $_->docket() } $_[0]->Types() );
 } # end sub dockets
+sub link_to {
+	return '<a href="/employee/inventory/manifest.html?manifest_id='.$_[0]{'id'}.'">'.$_[0]{'name'}.'</a>';
+} # end sub link_to
 
 1;
 __END__

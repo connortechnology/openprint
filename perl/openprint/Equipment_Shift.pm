@@ -126,7 +126,7 @@ sub emanantise {
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				'equipment_id'	=>	$$self{'equipment_id'},
-				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : $openprint::session{'user_id'} ),
+				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : undef ),
 				'shift_id'		=>	$$self{'id'},
 				'starttime'		=>	$parser->format_datetime( $st ),
 				'endtime'		=>	$parser->format_datetime( $et ),
@@ -193,15 +193,36 @@ sub Next {
 } # end sub Next
 
 sub delete {
-	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}) ) {
-#$log->debug("Delete shift " . $Shift->to_string() );
+	my $error;
+
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$TZ );
+	my $now = DateTime::Format::Pg->format_datetime( $dt );
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+
+	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}, 'starttime <='=> $now ) ) {
 		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
-			$Shift->delete() 
+			$error .= $Shift->save({'shift_id'=>undef});
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
+		last if $error;
 	} # end foreach
-	my $error = $_[0]->SUPER::delete();
+	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}, 'starttime >'=> $now ) ) {
+		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
+			$error .= $Shift->delete() 
+		} else {
+			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
+		} # end if
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::delete() if ! $error;
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		return $error;
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
 sub starttime_string {
