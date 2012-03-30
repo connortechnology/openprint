@@ -16,7 +16,8 @@
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, Projects.id, Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Bindery Complete','Marked Waiting For Pickup','Added Label/Packing Slip','Added PackingSlip')) ".
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Picked Up' ,'Marked Shipped')) ".
 		"FROM Order_Contents, Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
 	$sql .= " AND Order_Contents.lngProjectIndex = Projects.id";
@@ -49,7 +50,16 @@ Results for <? echo (
 			<th align="left" width="140">Shipped/Ready Date/Time</th>
 			<th align="left">Performance Code</th>
 		</tr>
-		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
+		<? while ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+<? eval (
+				$$variable{'readytime'} = $$variable{'shippedtime'} if ! $$variable{'readytime'};
+				if ( ! $$variable{'readytime'} ) {
+					#@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
+				} # end if
+				if ( ! $$variable{'shippedtime'} ) {
+					#@$variable{'shippedtime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
+				} # end if
+) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
 			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
@@ -58,9 +68,6 @@ Results for <? echo (
 			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
 			<td><a href="/employee/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
-				if ( ! $$variable{'readytime'} ) {
-					@$variable{'readytime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );
-				} # end if
 				if ( $$variable{'readytime'} and $$variable{'duedate'} ) {
 					my ( $dmonth, $dday, $dyear, $dhour, $dminutes ) = $$variable{'duedate'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
 					my ( $rmonth, $rday, $ryear, $rhour, $rminutes ) = $$variable{'readytime'} =~ /(\d\d)\/(\d\d)\/(\d\d\d\d) (\d\d):(\d\d)/;
@@ -89,11 +96,11 @@ Results for <? echo (
 			$$variable{'DocketCount'} += 1;
 		) ?>
 		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
-<TR><th COLSPAN="6"></th></TR>
-		<tr><TD><B>Totals</B></TD><TD colspan="2">Selected Dockets: <?DocketCount?></TD><TD>Late:<?LateCount?></TD><TD colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></TD></tr>
+<tr><th colspan="6"></th></tr>
+		<tr><td><b>Totals</b></td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td></tr>
 	</table>
 	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", '', 'Save Reasons' ); ) ?>
+		<? echo ( ssi::button( 'Save', { onclick=>"LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", href=>'', text=>'Save Reasons' } ); ) ?>
 	</span>
 	<input type="hidden" name="btnFunction" value="Save" />
 	<input type="hidden" name="DateStartYear" value="<? echo ( $param{'DateStartYear'} ) ?>" />
