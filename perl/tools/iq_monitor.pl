@@ -108,41 +108,44 @@ while(1) {
 	my @Hosts = openprint::Host->find('monitored'=>1);
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
-		next if ! $Host->ip();
+		if ( ! $Host->ip() ) {
+			$log->debug( "Monitored host without ip: " . $Host->to_string() );
+			next;
+		} # end if
 		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
 		my @ping = $p->ping($Host->ip());
 		my $ping = $ping[0];
-$openprint::log->debug("Ping1: @ping");
+#$openprint::log->debug("Ping1: @ping");
 		if ( ! @ping ) {
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
 		} elsif ( $ping and ( $ping[1] > 1 ) ) {
 			(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 		} # end if
-		if ( ! $ping ) {
-			# offline
-			if ( $Host->online() ) {
-				if ( $Host->offline_seconds() ) {
-					my $LastOnline = openprint::logRecord->find_one('action_type'=> 100, 'ip_address'=>$Host->ip(),'order'=>'date_time DESC' );
-					my $seconds = time - ( DateTime::Format::Pg->parse_datetime($$LastOnline{'date_time'})) if $LastOnline;
-	
-
-			if ( $Host->offline_seconds() ) {
-				my $LastOffline = openprint::logRecord->find_one('action_type'=> 101, 'ip_address'=>$Host->ip(),'order'=>'date_time DESC' );
-				my $seconds = time - ( DateTime::Format::Pg->parse_datetime($$LastChange{'date_time'})) if $LastChange;
-
-				if ( $seconds > $Host->offline_seconds() ) {
-				} # end if
-			} # end if
-		} else { # online
 
 		if ( $Host->online() != $ping ) {
 			# Make sure
-			if ( $ping2[0] == $ping[0] ) {
+			if ( $Host->offline_seconds() ) {
+				if ( time - $$Host{'state_changed_on'} > $$Host{'offline_seconds'} ) {
+					$Host->save({'online'=>$ping,'state_changed_on'=>time});
+					(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+					$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+					my @To = map { $_->User() } $Host->Notifications();
+					if ( @To and ( @To < 10 ) ) {
+						my $results = (new openprint::Email())->send(
+								'TO'	=>	\@To,
+								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+								'FROM'		=>	$config{'TechSupportEmail'},
+								'BODY'		=>	"
+								IP: $$Host{ip}
+Description: $$Host{'description'}
 
-				$Host->save({'online'=>$ping});
-
-
+Please investigate.",
+);
+					} # end if @To > 10
+				} # end if
+			} else {
+				$Host->save({'online'=>$ping,'state_changed_on'=>time});
 				(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 				my @To = map { $_->User() } $Host->Notifications();
@@ -152,16 +155,15 @@ $openprint::log->debug("Ping1: @ping");
 							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
 							'FROM'		=>	$config{'TechSupportEmail'},
 							'BODY'		=>	"
-	IP: $$Host{ip}
-	Description: $$Host{'description'}
+							IP: $$Host{ip}
+Description: $$Host{'description'}
 
-	Please investigate.",
-							);
+Please investigate.",
+);
 				} # end if @To > 10
-			} else {
-				$log->debug("Ping 1 and Ping 2 do not agree");
-			} # end if 2nd ping is same as first
-		} # end if
+			} # end if offline_seconds
+		} # end if online != ping
+
 		if ( $Host->online() ) {
 			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
 				my $browser = LWP::UserAgent->new();

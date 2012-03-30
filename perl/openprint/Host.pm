@@ -129,7 +129,6 @@ sub Type {
 } # end sub Type
 
 sub type {
-$openprint::log->debug("type: @_");
 	if ( @_ > 1 ) {
 		my $Type = openprint::Host_Type->find_one('name lc'=> lc $_[1] );
 		if ( ! $Type ) {
