@@ -164,6 +164,9 @@ if ( exists $$data{'monitor'} ) {
 if ( ! exists $$data{'offline_seconds'} ) {
 	$dbh->do('ALTER TABLE hosts add offline_seconds INTEGER');
 } # end if
+if ( ! exists $$data{'state_changed_on'} ) {
+	$dbh->do('ALTER TABLE hosts add state_changed_on INTEGER');
+} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {
