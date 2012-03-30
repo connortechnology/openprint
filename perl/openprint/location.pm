@@ -79,13 +79,12 @@ sub view {
 					'name'			=>	$param{'name'}, 
 					'description'	=>	$param{'description'},
 					'parent_id'		=>	$parent_id, 
-					'type'			=>	'place', 
 					'address'		=>	$param{'address'},
 					'postalcode'	=>	$param{'postalcode'},
 					'url'			=>	$param{'url'},
 					'latitude'		=>	$param{'latitude'},
 					'longitude'		=>	$param{'longitude'},
-					'type_id'		=>	$param{'type_id'},
+					( $param{'type_id'} ? ( 'type_id' => $param{'type_id'} ) : ( 'type'	=>	'place' ) ),
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if
