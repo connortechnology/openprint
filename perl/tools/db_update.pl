@@ -1451,6 +1451,9 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	} elsif ( ! exists $$data{'taxexempt2'} ) {
 		$dbh->do(q{alter table products add ysntaxexempt2 CHAR(1) default 'N'});
 	} # end if
+	if ( ! exists $$data{'created_on'} ) {
+		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {

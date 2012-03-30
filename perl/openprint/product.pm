@@ -2,18 +2,22 @@ use strict;
 package openprint::product;
 
 use openprint ();
-use vars qw($r $log $dbh %variable %param);
+use vars qw($r $log $dbh %variable %param %session);
 *r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*session = \%openprint::session;
 
 require openprint::Product;
 require openprint::Product_Category;
 require openprint::logs;
 require sql;
 
+sub view {
+	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
+} # end sub view
 sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 
@@ -27,8 +31,11 @@ sub edit {
 		} # end if
 			
 		$variable{'error'} = $Product->save( \%param );
+		if ( $param{'product_id'} ) {
 		# Save the prices
-		_prices() if $param{'product_id'};
+			_prices() ;
+			_specifications()
+		} # end if
 		$param{'btnFunction'} = '';
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $NewProduct = $Product->copy();
@@ -185,24 +192,37 @@ sub _prices {
 
 sub _specifications {
 	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
-	if ( $param{'btnFunction'} eq 'SaveSpecifications' ) {
-		foreach my $spec ( keys %{$Product->specifications()} ) {
-			if ( $param{'Name'.$spec} ) {
-				if ( $param{'Name'.$spec} ne $spec ) {
-					$Product->del_specification( $spec );
-				} # end if
-				$Product->add_specification( @param{'Name'.$spec, 'Value'.$spec} );
-			} else {
-				$Product->del_specification( $spec );
-            } # end if
-        } # end foreach spec
-        if ( $param{'NameNew'} ) {
-            $Product->add_specification( @param{'NameNew', 'ValueNew'} );
-        } # end if
-        $variable{'error'} .= $Product->save();
-    } # end if
-
+	foreach my $Spec ( $Product->Specifications() ) {
+		if ( 
+				( exists $param{'spec_name-'.$$Spec{'id'}} )
+				and ( ( $param{'spec_name-'.$$Spec{'id'}} ne $$Spec{'name'} ) or ( $param{'spec_value-'.$$Spec{'id'}} ne $$Spec{'value'} ) )
+		   ) {
+			$variable{'error'} .= $Spec->save({'name'=>$param{'spec_name-'.$$Spec{'id'}}, 'value'=>$param{'spec_value-'.$$Spec{'id'}}});
+		} # end if
+	} # end foreach spec
+	if ( $param{'func'} eq 'Add' ) {
+		my $Spec = new openprint::Product_Specification();
+		$variable{'error'} .= $Spec->save({'product_id'=>$Product->id(),'name'=>$param{'spec_name-New'}, 'value'=>$param{'spec_value-New'}});
+	} elsif ( $param{'func'} eq 'Del' ) {
+		my $Spec = new openprint::Product_Specification($param{'spec_id'});
+		$variable{'error'} .= $Spec->delete();
+	} # end if
 } # end sub _specifications
 
+sub search {
+	_search();
+	if ( ( ! $session{'/product/search.html?lastupdated'} ) or ( time - $session{'/product/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/product/search.html', 'starting_on_start', 0 );
+		ssi::setup_date_select( '/product/search.html', 'starting_on_end', '' );
+	} # end if
+} # end sub search
+sub _search {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/product/search.html', ( 
+				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+	} # end if
+} # end sub _history
 1;
 __END__

@@ -2,6 +2,7 @@ use strict;
 package openprint::Product;
 our @ISA = qw( openprint::Object );
 
+require openprint::Product_Specification;
 require openprint::Product_Category;
 require openprint::Log;
 require sql;
@@ -26,6 +27,7 @@ $serial = 'products_id_seq';
 	'project_id'	=>	'project_id',
 	'deleted'		=>	'deleted',
 	'owner_id'		=>	'owner_id',
+	'created_on'	=>	'created_on',
 );
 
 %transforms = (
@@ -39,6 +41,7 @@ $serial = 'products_id_seq';
 	'project_id'	=>	undef,
 	'owner_id'		=>	q`$session{'company_id'}`,
 	'deleted'		=>	0,
+	'created_on'	=>	q`NOW()`,
 );
 
 sub destroy {
@@ -157,6 +160,10 @@ $log->debug("Looking at $$Price{min}");
 	openprint::Currency::convert( \%price );
 	return %price;
 } # end sub get_price
+
+sub Specifications {
+	return openprint::Product_Specification->find({'product_id'=>$_[0]{'id'}});
+} # end sub Specifications
 
 sub specifications {
 	my $self = shift;

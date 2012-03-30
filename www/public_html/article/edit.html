@@ -1,6 +1,47 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
 
 <script type="text/javascript">
+function dragOver(e) {
+	if ( e.preventDefault ) {
+		e.preventDefault();
+	} 
+	e.dataTransfer.dropEffect = 'move';
+}
+function dragEnter(e) {
+	this.classList.add('dragover');
+}
+function dragLeave(e) {
+	this.classList.remove('dragover');
+}
+function handleDrop(e,element) {
+  // this / e.target is current target element.
+
+	if (e.stopPropagation) {
+		e.stopPropagation(); // stops the browser from redirecting.
+	}
+	//if ( e.preventDefault )
+		//e.preventDefault();
+
+  // See the section on the DataTransfer object.
+	for(var i=0; i < e.dataTransfer.types.length; i += 1  ) {
+var item = e.dataTransfer.types.item(i);
+alert (item);
+var data = e.dataTransfer.getData(item);
+alert(data);
+		if ( item == 'application/x-moz-file-promise-dest-filename' ) {
+			new Ajax.Updater( 'assets', '_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>', filename: data, func: 'add' } } );
+		} // end if
+	}
+/*
+	alert( 'Items' + e.dataTransfer.items );
+	alert( 'Files: ' + e.dataTransfer.files.length );
+	for(var i=0; i < e.dataTransfer.files.length; i += 1  ) {
+		alert (e,dataTransfer.files[i]);
+	}
+*/
+
+  return false;
+}
 <!--
 	tinyMCE.init({
 		relative_urls : false,
@@ -121,3 +162,12 @@
 		<input type="hidden" name="func" />
 	</form>
 </div></div>
+<script type="text/javascript">
+	var ul = $('article_assets');
+	//ul.addEventListener('dragstart',dragStart, false);
+	ul.addEventListener('dragenter',dragEnter, false);
+	ul.addEventListener('dragover',dragOver, false);
+	ul.addEventListener('dragleave',dragLeave, false);
+	ul.addEventListener('drop', handleDrop, false );
+	
+</script>

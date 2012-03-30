@@ -30,7 +30,7 @@ sub edit {
 
 sub view {
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Save' ) {
 		my $parent_id;
 		if ( $param{'country'} ) {
 			my $Country = openprint::Location->find_one('name lc'=> lc $param{'country'}, 'type'=>'country' );
@@ -79,16 +79,25 @@ sub view {
 					'name'			=>	$param{'name'}, 
 					'description'	=>	$param{'description'},
 					'parent_id'		=>	$parent_id, 
-					'type'			=>	'place', 
 					'address'		=>	$param{'address'},
 					'postalcode'	=>	$param{'postalcode'},
 					'url'			=>	$param{'url'},
 					'latitude'		=>	$param{'latitude'},
 					'longitude'		=>	$param{'longitude'},
-					'type_id'		=>	$param{'type_id'},
+					( $param{'type_id'} ? ( 'type_id' => $param{'type_id'} ) : ( 'type'	=>	'place' ) ),
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Location->delete();
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		$variable{'error'} .= $Location->destroy();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/location/list.html';
+			$variable{'information'} = 'Location destroyed.';
+		} # end if
+	} elsif ( $param{'action'} eq 'Undelete' ) {
+		$variable{'error'} .= $Location->undelete();
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Location->Album();
 		if ( ! $Album->id() ) {
