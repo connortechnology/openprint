@@ -892,6 +892,16 @@ if ( ! sets::isin( 'banners', \@tables )) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
 	die if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'product_specifications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Specifications.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_specifications'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Product_Specifications add id SERIAL');
+		$dbh->do('ALTER TABLE Product_Specifications add PRIMARY KEY (id)');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

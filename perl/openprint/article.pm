@@ -25,7 +25,13 @@ sub save_article {
 		return;
 	} # end if
 	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
-	$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+
+	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
+		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+	} else {
+		delete $param{'published_on'};
+		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
+	} # end if
 	if ( $param{'category_id'} ) {
 		delete $param{'category'};
 	} elsif ($param{'category'}) {
@@ -294,6 +300,21 @@ sub _assets {
 	if ( $param{'func'} eq 'delete' ) {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
 		$variable{'error'} .= $Asset->delete();
+	} elsif ( $param{'func'} eq 'add' ) {
+		my $Asset = openprint::Asset->find_one('filename'=>$param{'filename'} );
+		if ( $Asset ) {
+			my $AA = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$$Asset{'id'}});
+			if ( ! $$AA{'asset_id'} ) {
+				$variable{'error'} .= $AA->save({
+					'asset_id'	=>	$$Asset{'id'},
+					'article_id'	=>	$param{'article_id'},
+				});
+			} else {
+				$variable{'error'} .= 'Asset already in article.';
+			} # end if
+		} else {
+			$variable{'error'} .= 'Asset not found.';
+		} # end if
 	} else {
 		$log->error("article/_assets: Uknown function");
 	} # end if
