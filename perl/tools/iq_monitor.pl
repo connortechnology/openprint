@@ -108,24 +108,40 @@ while(1) {
 	my @Hosts = openprint::Host->find('monitored'=>1);
 	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
 	foreach my $Host ( @Hosts ) {
+		next if ! $Host->ip();
 		$log->debug( $Host->hostname() . ' is ' . ( $Host->online() ? 'online' : 'offline' ) );
 		my @ping = $p->ping($Host->ip());
 		my $ping = $ping[0];
-$openprint::log->debug("@ping");
+$openprint::log->debug("Ping1: @ping");
 		if ( ! @ping ) {
 			$log->warn("Problem with ping for " . $Host->hostname() );
 			next;
 		} elsif ( $ping and ( $ping[1] > 1 ) ) {
-(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
-
+			(new openprint::logRecord())->save({'action_type'=>103, 'ip_address'=>$Host->ip(), 'note'=>sprintf('Response time %s seconds.<a href="/employee/it/host.html?host_id=%d">%s</a>', $ping[1], @$Host{'id','hostname'}) });
 		} # end if
+		if ( ! $ping ) {
+			# offline
+			if ( $Host->online() ) {
+				if ( $Host->offline_seconds() ) {
+					my $LastOnline = openprint::logRecord->find_one('action_type'=> 100, 'ip_address'=>$Host->ip(),'order'=>'date_time DESC' );
+					my $seconds = time - ( DateTime::Format::Pg->parse_datetime($$LastOnline{'date_time'})) if $LastOnline;
+	
+
+			if ( $Host->offline_seconds() ) {
+				my $LastOffline = openprint::logRecord->find_one('action_type'=> 101, 'ip_address'=>$Host->ip(),'order'=>'date_time DESC' );
+				my $seconds = time - ( DateTime::Format::Pg->parse_datetime($$LastChange{'date_time'})) if $LastChange;
+
+				if ( $seconds > $Host->offline_seconds() ) {
+				} # end if
+			} # end if
+		} else { # online
+
 		if ( $Host->online() != $ping ) {
 			# Make sure
-			my @ping2 = $p->ping($Host->ip());
-			my $ping2 = $ping[0];
-			if ( $ping2 == $ping ) {
+			if ( $ping2[0] == $ping[0] ) {
 
 				$Host->save({'online'=>$ping});
+
 
 				(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
@@ -142,6 +158,8 @@ $openprint::log->debug("@ping");
 	Please investigate.",
 							);
 				} # end if @To > 10
+			} else {
+				$log->debug("Ping 1 and Ping 2 do not agree");
 			} # end if 2nd ping is same as first
 		} # end if
 		if ( $Host->online() ) {
@@ -162,26 +180,30 @@ $openprint::log->debug("@ping");
 					} # end if
 				} # end if
 				if ( ! $response->is_success ) {
-					$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
-					my $headers = $response->headers();
-					foreach my $k ( keys %$headers ) {
-						$log->debug("Header $k => $$headers{$k}");
-					}  # end foreach
-					$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-					$log->debug($response->is_success);
-					(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
-					my @To = map { $_->User() } $Host->Notifications();
-					if ( @To and ( @To < 10 ) ) {
-						$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
-						my $results = (new openprint::Email())->send(
-								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
-								'FROM'		=>	$config{'TechSupportEmail'},
-								'BODY'		=>	"
-IP: $$Host{ip}
-Description: $$Host{'description'}
-",
-								);
+					if ( $response->status_line() eq '401 Unauthorized' ) {
+						$log->error("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi unauthorized'. $response->status_line );
+					} else {
+						$log->warn("Couldn't get content from " . $Host->hostname().'/cgi/jpg/image.cgi rebooting' . $response->status_line );
+						my $headers = $response->headers();
+						foreach my $k ( keys %$headers ) {
+							$log->debug("Header $k => $$headers{$k}");
+						}  # end foreach
+						$response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
+						$log->debug($response->is_success);
+						(new openprint::logRecord())->save({'action_type'=>102, 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a> has been rebooted.', @$Host{'id','hostname'})});
+						my @To = map { $_->User() } $Host->Notifications();
+						if ( @To and ( @To < 10 ) ) {
+							$log->debug("Emailing: " . join(',', map { $_->email() } @To ) );
+							my $results = (new openprint::Email())->send(
+									'TO'	=>	\@To,
+									'SUBJECT'	=>	'Camera rebooted ' . $Host->hostname(),
+									'FROM'		=>	$config{'TechSupportEmail'},
+									'BODY'		=>	"
+	IP: $$Host{ip}
+	Description: $$Host{'description'}
+	",
+									);
+						} # end if
 					} # end if
 				} else {
 					$log->debug("Got content from host. Size: " . $response->content_type );
