@@ -276,8 +276,10 @@ my %variables = (
 		'supplied_format'=>['save'],
 # Banners
 		'grommets' => ['save'],
+		'pockets'	=>	['save'],
 		'hemmed'	=>	['save'],
 		'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
+		'HemWidth'	=>	['save'],
 		);
 
 sub variables {
@@ -1443,20 +1445,38 @@ sub set_size {
 
 	if ( $Project->Type()->name() eq 'Banners' ) {
 		my $width = $$specs{'txtFinalWidth'};
-		$width += $$specs{'PocketSize'};
-		$width += $$specs{'PocketSize'};
+		my $height = $$specs{'txtFinalHeight'};
+
+		if ( $$specs{'pockets'} eq 'Y' ) {
+			$width += $$specs{'PocketSize'};
+			$width += $$specs{'PocketSize'};
+		} # end if
+
+		if ( $$specs{'hemmed'} eq 'Y' ) {
+			$width += $$specs{'HemWidth'} if $$specs{'EdgeLeft'};
+			$width += $$specs{'HemWidth'} if $$specs{'EdgeRight'};
+			$height += $$specs{'HemWidth'} if $$specs{'EdgeTop'};
+			$height += $$specs{'HemWidth'} if $$specs{'EdgeBottom'};
+		} # end if
+
 		if ( $width != $$specs{'txtWidth'} ) {
 			$$specs{'txtWidth'} = $width;
 			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 		} else {
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 		} # end if
-		if ( $$specs{'txtFinalHeight'} > $$specs{'txtHeight'} ) {
-			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
+
+		if ( $$specs{'txtFinalHeight'} > $height ) {
+			$height = $$specs{'txtFinalHeight'};
+		} # end if
+
+		if ( $height != $$specs{'txtHeight'} ) {
+			$$specs{'txtHeight'} = $height;
 			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 		} else {
 			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 		} # end if
+
 	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
@@ -2480,14 +2500,19 @@ $imp->dispay('Ma imposition!') if DEBUG;
 			my $add = 1;
 			my $Paper = $imp->Paper();
 
+			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
-			#if ( $$Paper{'type'} eq 'Roll' ) {
+			my $lookup_stock_qty = $stock_qty;
+
+			if ( $$Paper{'type'} eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
-			#} else {
-				#$stock_qty
-			#} # end if
-			#$stock_qty += $$PaperCounts{$Paper->to_string()};
+				$lookup_stock_qty += $$PaperCounts{$Paper->to_string()};
+			} else {
+				$lookup_stock_qty += $$PaperCounts{$Paper->to_string()};
+				$stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
+				$lookup_stock_qty = POSIX::ceil( $stock_qty * $Paper->area() * $Paper->wpsi() );
+			} # end if
 
 			my $SmallerPrice;
 			if ( $$imp{'PaperPrice'} ) {
@@ -2681,6 +2706,8 @@ sub get_project_price {
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
 #$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
+
+		my $has_sheeter = sets::isin('Sheet', [ split(',', $Press->specification('Feed') ) ] );
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
 		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ($$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
@@ -2910,6 +2937,7 @@ if ( 0 ) {
 				next;
 			} # end if
 if ( 1 ) {
+# I'm not sure we can do this.  Our prices at this point don''t include paper
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
 				if ( DEBUG or 0 ) {
 #$openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
@@ -2997,12 +3025,12 @@ $openprint::log->debug($$price{'Paper Breakdown'}) if DEBUG;
 				} # end if
 			} elsif ( ! openprint::ServiceType->find_one('name'=>'Paper') ) {
 				my $paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
-				$$paper_price{'Total'} = sprintf('%.2f', $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
+				$$paper_price{'Total'} = Math::Round::nearest(.01, $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
 				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @$paper_price{'100lb Cost', '100lb Price', 'Total'};
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
-			if ( $$Paper{'type'} eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+			if ( $$Paper{'type'} eq 'Roll' and $has_sheeter ) {
 # Add Roll2SheetSetup
 				if ( ! $$project{'roll2sheetcharged'} ) {
 					if ( $$price{'Roll2SheetMakeReady'} = openprint::service::get_price( 'Roll2SheetMakeReady', undef, $Press ) ) {
@@ -4782,8 +4810,11 @@ sub summary {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$printing_specs{'txtFinalWidth','txtFinalHeight'});
 			} # end if
 		} elsif ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
-			if ( $$services{'Folding'} ) {
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
+						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+			} elsif ( $$services{'Sewing'} and @{$$services{'Sewing'}} ) {
+				$dimensions .= sprintf( '%s&quot;x%s&quot; hemmed to %s&quot;x%s&quot; ',
 						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
 			} else {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
@@ -4834,7 +4865,7 @@ sub save {
 	} # end if
 	if ( $$services{'Sewing'} ) {
 		foreach my $s_id ( @{$$services{'Sewing'}} ) {
-			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom' ) {
+			foreach my $spec ( 'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom','HemWidth' ) {
 			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, $spec, $$param{$spec} );
 		} # end foreach
 		} # end foreach

@@ -9,21 +9,26 @@
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?> Services</legend>
-			<p><label>Hemmed Edges</label>
-				<? echo (
-					my $html;
-					foreach my $edge ( 'Left', 'Right','Top', 'Bottom' ) {
-						$html .= sprintf('<input type="checkbox" id="Edge%1$s" name="Edge%1$s" value="%1$s" onclick="calc(this.form.name);" %2$s />
-						<label class="radio" for="Edge%1$s">%1$s</label>', $edge, ssi::checked( $$variable{'Edge'.$edge} eq $edge ) );
-					} # end foreach $edge
-					return $html;
-				) ?>
-			</p>
-			<p>
-				<label>Inches</label>
-				<input type="number" name="Quantity" value="<?Quantity?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);"/>
- <? echo ( ssi::write_override( 'QuantityOverride', $$variable{'QuantityOverride'}, '', "calc('f1');" ); ) ?>
-			</p>
+			<ul>
+				<li><label>Hemmed Edges</label>
+					<? echo (
+						my $html;
+						foreach my $edge ( 'Left', 'Right','Top', 'Bottom' ) {
+							$html .= sprintf('<input type="checkbox" id="Edge%1$s" name="Edge%1$s" value="%1$s" onclick="calc(this.form.name);" %2$s />
+							<label class="radio" for="Edge%1$s">%1$s</label>', $edge, ssi::checked( $$variable{'Edge'.$edge} eq $edge ) );
+						} # end foreach $edge
+						return $html;
+					) ?>
+				</li>
+				<li id="HemWidth"><label>Hem Width</label>
+					<input type="number" name="HemWidth" value="<? echo ( $$variable{'HemWidth'} ) ?>" onkeyup="floatize(this);calc(this.form.name);"/>
+				</li>
+				<li>
+					<label>Inches</label>
+					<input type="number" name="Quantity" value="<?Quantity?>" onkeyup="floatize(this);calc(this.form.name);"/>
+					<? echo ( ssi::write_override( 'QuantityOverride', $$variable{'QuantityOverride'}, '', "calc('f1');" ); ) ?>
+				</li>
+			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
