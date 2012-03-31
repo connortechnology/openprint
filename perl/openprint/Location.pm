@@ -5,6 +5,7 @@ require openprint::Asset;
 require openprint::Photo_Album;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
+require Geo::Coder::Googlev3;
 
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
@@ -191,68 +192,68 @@ sub longitude {
 }
 
 sub get_latitude_and_longitude {
-	my $ua = LWP::UserAgent->new;
-	$ua->agent("IntelligentQuote/0.1 ");
-# Create a request
+	my $coder = Geo::Coder::Googlev3->new();
 my $string = join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->name()}$_[0]->Parents());
 $string =~ s/ /+/g;
 $openprint::log->debug('Get: ' . $string );
-	my $req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.$string);
-# Pass request to the user agent and get a response back
-	my $res = $ua->request($req);
-	my $json = JSON::decode_json( $res->content );
-#$openprint::log->debug( $res->content );
-	if ( ! $$json{'Placemark'} ) {
-		# Try again without city
-		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
-		$req = HTTP::Request->new(GET => 'http://maps.google.com/maps/geo?q='.join(',',$_[0]->name(),map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()) );
-
-$openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]->postalcode(), map{$_->type() eq 'city' ? () : $_->name()}$_[0]->Parents()));
-		$res = $ua->request($req);
-		$json = JSON::decode_json( $res->content );
-# Pass request to the user agent and get a response back
-	} # end if
+	my $location = $coder->geocode( location => $string );
+	if ( ! $location ) {
+		$openprint::log->error("No location for $string");
+		return;
+	} # enmdif 
+	$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $location ) );
 
 	my $use = 0;
+	if ( $$location{'Point'} ) {
+		my $Point = $$location{'Point'};
+		my $coordinates = $$Point{'coordinates'};
+		$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
+		$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
+		return 1;
+	} elsif ( $$location{'geometry'} ) {
+		if ( $$location{'geometry'}{'location'} ) {
+			$_[0]{'latitude'} = openprint::Location->transform('latitude',  $$location{'geometry'}{'location'}{'lat'} );
+			$_[0]{'longitude'} = openprint::Location->transform('longitude',  $$location{'geometry'}{'location'}{'lng'} );
+			return 1;
+		} # end if
+	
+	} else {
+		my $Address = $$location{'AddressDetails'};
+		if ( $$Address{'Country'} ) {
+			my $Country = $$Address{'Country'};
+			if ( $$Country{'AdministrativeArea'} ) {
+				my $AdministrativeArea = $$Country{'AdministrativeArea'};
+				if ( $$AdministrativeArea{'SubAdministrativeArea'} ) {
+					$openprint::log->debug('Have Sub AdministrativeArea');
+					$AdministrativeArea = $$AdministrativeArea{'SubAdministrativeArea'};
+					$openprint::log->debug(Data::Dumper::Dumper($AdministrativeArea));
+				} # end if
 
-	if ( $$json{'Placemark'} ) {
-		$openprint::log->warn("Placemrk" . Data::Dumper::Dumper( $json ) );
-		my $PlaceMark = $$json{'Placemark'}[0];
-		if ( $$PlaceMark{'AddressDetails'} ) {
-			my $Address = $$PlaceMark{'AddressDetails'};
-			if ( $$Address{'Country'} ) {
-				my $Country = $$Address{'Country'};
-				if ( $$Country{'AdministrativeArea'} ) {
-					my $AdministrativeArea = $$Country{'AdministrativeArea'};
+				if ( $$AdministrativeArea{'Locality'} ) {
+					my $Locality = $$AdministrativeArea{'Locality'};
+					if ( $_[0]{'postalcode'} ) {
+						if ( $$Locality{'PostalCode'} ) {
+							$openprint::log->debug("Have Postal code" . $$Locality{'PostalCode'}{'PostalCodeNumber'});
 
-					if ( $$AdministrativeArea{'Locality'} ) {
-						my $Locality = $$AdministrativeArea{'Locality'};
-						if ( $_[0]{'postalcode'} ) {
-							if ( $$Locality{'PostalCode'} ) {
-								$openprint::log->debug("Have Postal code" . $$Locality{'PostalCode'}{'PostalCodeNumber'});
-
-								if ( $$Locality{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
-									$use = 1;
-								} # end if
-							} else {
-								$openprint::log->debug("No PostalCode");
-							} # en dif
-						} # en dif postalcode
-					} else {
-						$openprint::log->debug("No Locality");
-					} # end if
+							if ( $$Locality{'PostalCode'}{'PostalCodeNumber'} eq $_[0]{'postalcode'} ) {
+								$use = 1;
+							} # end if
+						} else {
+							$openprint::log->debug("No PostalCode");
+						} # en dif
+					} # en dif postalcode
 				} else {
-					$openprint::log->debug("No Administrative Area");
+					$openprint::log->debug("No Locality");
 				} # end if
 			} else {
-				$openprint::log->debug("No Coutry");
+				$openprint::log->debug("No Administrative Area");
 			} # end if
 		} else {
-			$openprint::log->debug("No Address");
+			$openprint::log->debug("No Coutry");
 		} # end if
 
 		if ( $use ) {
-			my $Point = $$PlaceMark{'Point'};
+			my $Point = $$location{'Point'};
 			my $coordinates = $$Point{'coordinates'};
 			$_[0]{'latitude'} = openprint::Location->transform('latitude', @{$coordinates}[0] );
 			$_[0]{'longitude'} = openprint::Location->transform('longitude', @{$coordinates}[1] );
@@ -260,8 +261,6 @@ $openprint::log->debug('Get: ' . join(',',$_[0]->name(),$_[0]->address(), $_[0]-
 			$_[0]->save();
 			return 1;
 		} # end if
-	} else {
-		$openprint::log->warn("No placemrk" . Data::Dumper::Dumper( $json ) );
 	} # end if
 	return 0;
 } # end sub get_latitude_longitude
