@@ -70,6 +70,7 @@
 						) ?>
 					</li>
 				</ul>
+<div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
 				</div>
 					<div class="rightColumn">
 					<? echo ( my $html;
@@ -87,14 +88,18 @@
 				</div>
 			</div>
 		</fieldset>
-		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Location'}->id() ) ?>
-	<div id="Photos">
-		<!--#include virtual="_photos.html"-->
-	</div>
-<? endif ( $$variable{'Location'}->id() ) ?>
+		<fieldset><legend>Photos</legend>
+		<div id="Photos">
+			<!--#include virtual="_photos.html"-->
+		</div>
 		</fieldset>
-<div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
+		<fieldset><legend>Upcoming Events</legend>
+		<div id="Events">
+			<!--#include virtual="_events.html"-->
+		</div>
+		</fieldset>
+<? endif ( $$variable{'Location'}->id() ) ?>
 	</fieldset>
 	</form>
 </div></div>
