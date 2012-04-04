@@ -590,7 +590,7 @@ sub credit_application {
 
 		my $creditlimit = $param{'DesiredCreditLimit'};
 		$creditlimit =~ s/[^\d\.]//g;
-		sql::insert( $log, $dbh, 'CreditApplications',
+		$variable{'error'} .= sql::insert( $log, $dbh, 'CreditApplications',
 				'User_Id',	 $session{'user_id'},
 				'company_id', $session{'company_id'},
 				( defined $param{'Signature'} ? ( 'strSignature',	 $param{'Signature'} ) : () ),
@@ -604,29 +604,31 @@ sub credit_application {
 				'dtmCreationDate',	'NOW()',
 				);
 
+		if ( ! $variable{'error'} ) {
 # Now send email notifications
-		my %info;
-		$info{'Company'} = $Company;
-		$info{'User'} = new openprint::User( $session{user_id} );
+			my %info;
+			$info{'Company'} = $Company;
+			$info{'User'} = new openprint::User( $session{user_id} );
 
-		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+			$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
+			($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+			my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
-		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'CreditApplicationEmail'},
-				#TO		=> $openprint::config{'CreditApplicationEmail'},
-				TO		=>	'iconnor@point-one.com',
-				SUBJECT => "New Credit Application"
-				);
+			my %mail = (
+					SMTP	=> $openprint::config{'Mail Server'},
+					FROM	=> $openprint::config{'CreditApplicationEmail'},
+#TO		=> $openprint::config{'CreditApplicationEmail'},
+					TO		=>	'iconnor@point-one.com',
+					SUBJECT => "New Credit Application"
+					);
 
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
-	} # end if Apply
+			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
+		} # end if Apply
+	} # end if error
 
 } # sub credit_application
 

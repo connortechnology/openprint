@@ -1,7 +1,7 @@
-package openprint::Company;
-@ISA = qw( openprint::Object );
 use strict;
-use Text::Unaccent;
+package openprint::Company;
+our @ISA = qw( openprint::Object );
+require Text::Unaccent;
 
 use vars qw( %fields %defaults %transforms );
 use openprint ();
@@ -9,6 +9,7 @@ use openprint ();
 require sql;
 require openprint::Object;
 require openprint::customer_credit;
+require openprint::Company_Credit;
 
 %fields = (
 		'id'						=>	'index',
@@ -342,9 +343,7 @@ sub start_year {
 } # end sub start_year
 
 sub Credit {
-	my ( $self, $supplier ) = @_;
-	
-	return new openprint::customer_credit( $$self{id}, $supplier );
+	return new openprint::Company_credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$_[1] } );
 } # end sub Credit
 
 sub dropdown {

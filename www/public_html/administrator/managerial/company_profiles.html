@@ -418,14 +418,15 @@
 	</p>
 	<p> 
 		<label>Credit Hold:</label>
-		 
-			<input type="radio" name="rdbCreditHold" value="Y" <?rdbCreditHoldY?> /> Yes
-			<input type="radio" name="rdbCreditHold" value="N" <?rdbCreditHoldN?> /> No
+		<? echo ( ssi::radio('rdbCreditHold', ['Y','Yes','N','No'], $$variable{'rdbCreditHold'} ); ) ?>
 	</p>
 	<p> 
 		<label>Required Downpayment Amount:</label>
-		 
-			<input type="text" name="txtDownpayment" value="<?txtDownpayment?>" >
+		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>" onkeyup="floatize(this);"/> %
+	</p>
+	<p> 
+		<label>Required COD:</label>
+		<input type="number" name="COD" value="<?COD?>" onkeyup="floatize(this);"/> %
 	</p>
 	</fieldset>
 	<fieldset><legend>Bank Information</legend>

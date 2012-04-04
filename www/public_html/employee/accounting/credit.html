@@ -1,10 +1,10 @@
-<div class="error"><?error?></div>
-<form name="f1" method="post" action="credit.html">
-	<fieldset class="filters"><legend>Select Customer:</legend>
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" method="post" action="credit.html">
+	<fieldset class="filters"><legend>Select Company:</legend>
 		<p>
 			<label>Account #:</label>
 			<input type="text" name="txtSearchAccountNum" size="13"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Customer:&nbsp;</label>
@@ -13,22 +13,22 @@
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
-            <? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
+            <? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
 <fieldset><legend>Credit Information:</legend>
     <p>
         <label>Deny Purchases after:</label>
-		<input type="text" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
+		<input type="number" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
     </p>
     <p>
         <label>Warn about credit after:</label>
-		<input type="text" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
+		<input type="number" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
     </p>
     <p>
         <label>Credit Account Limit:</label>
-        <input type="text" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+        <input type="number" name="txtCreditLimit" value="<?txtCreditLimit?>" />
     </p>
     <p>
         <label>Current Credit Balance:</label>
@@ -46,13 +46,17 @@
 		<label class="radio" for="rdbCreditHoldN">No</label>
     </p>
     <p>
-        <label>Required Downpayment Amount:</label>
-		<input type="text" name="txtDownpayment" value="<?txtDownpayment?>"/>
+        <label>Required Downpayment:</label>
+		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>"/>%
+	</p>
+    <p>
+        <label>Required COD:</label>
+		<input type="number" name="COD" value="<?COD?>"/>%
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ),
+			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>
 </fieldset>
@@ -76,7 +80,7 @@
 			<th align="right">P.O. #</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
-			<th align="center" width="55"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
+			<th align="center" width="55"><? echo ( ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ); ) ?></th>
 		</tr>
 		<? echo (
 			my $rowclass;

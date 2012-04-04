@@ -71,23 +71,27 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+    no strict 'refs';
+    my $fields = \%{$type.'::fields'};
+    my $debug = ${$type.'::debug'};
+
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $d = eval '$'.$type.'::dbh';
 	$d = $dbh if ! $d;
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
-#$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} else {
-			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	@$self{keys %$fields} = @$data{values %$fields};
 } # end sub load
 
 sub save {
