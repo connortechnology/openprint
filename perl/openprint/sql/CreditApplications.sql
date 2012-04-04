@@ -16,5 +16,6 @@ CREATE TABLE CreditApplications (
 	lngGrantedTerms		INT4,
 	dblGrantedCreditLimit	NUMERIC(10,2),
 	dblGrantedDownpayment	NUMERIC(10,2),
+	GrantedCOD			NUMERIC(10,2),
 	PRIMARY KEY (id)
 );

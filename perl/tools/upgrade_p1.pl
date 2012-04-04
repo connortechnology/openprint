@@ -61,11 +61,11 @@ if ( ! $path ) {
 
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 2...";
-`$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one > /tmp/db_update2.log` or $log->error($!);
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one > /tmp/db_update3.log` or $log->error($!);
+`$lib_path/tools/db_update.pl $dst_db point-one point-one 2>&1 > /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update2.pl $dst_db point-one point-one 2>&1 > /tmp/db_update2.log` or $log->error($!);
+`$lib_path/tools/db_update3.pl $dst_db point-one point-one 2>&1 > /tmp/db_update3.log` or $log->error($!);
 print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one >> /tmp/update_signatures.log` or $log->error($!);
+`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one 2>&1 > /tmp/update_signatures.log` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
