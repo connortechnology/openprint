@@ -8,7 +8,6 @@ use openprint ();
 
 require sql;
 require openprint::Object;
-require openprint::customer_credit;
 require openprint::Company_Credit;
 
 %fields = (
