@@ -1,7 +1,7 @@
 use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
-use Text::Unaccent ();
+require Text::Unaccent;
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
 use openprint ();
@@ -11,9 +11,9 @@ use openprint ();
 require sql;
 require openprint::Object;
 require openprint::User;
-require openprint::customer_credit;
 require openprint::address;
 require openprint::Company_Profile;
+require openprint::Company_Credit;
 
 $debug = 0;
 $table = 'companies';
@@ -236,9 +236,7 @@ sub save_tradereferences {
 
 
 sub Credit {
-	my ( $self, $supplier ) = @_;
-	
-	return new openprint::customer_credit( $$self{id}, $supplier );
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$_[1] } );
 } # end sub Credit
 
 sub dropdown {

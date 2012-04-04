@@ -1,9 +1,9 @@
 use strict;
 package openprint::employee_accounting;
 
-use Text::CSV_XS ();
-
 require openprint::Payment;
+require MIME::QuotedPrint;
+require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
 require openprint::Ledger;
@@ -129,7 +129,6 @@ sub details {
 } # end sub details
 
 sub credit {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my %credit_fields = (
 			'txtDenyDays'		=>	'DenyDays',
@@ -137,9 +136,11 @@ sub credit {
 			'txtCreditLimit'	=>	'Limit',
 			'rdbCreditHold'		=>	'Hold',
 			'txtDownpayment'	=>	'Downpayment',
+			'COD'				=>	'COD',
 			);
 
 	my $company_index = $param{'ddmCustomer'};
+	my $Credit = new openprint::Company_Credit( { 'company_id' => $company_index, 'supplier_id' => (new openprint::User($session{'user_id'})->company_id()) } );
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		 if ( $param{'txtSearchAccountNum'} ne '' ) {
@@ -160,18 +161,17 @@ sub credit {
 			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		my $customer_credit = new openprint::customer_credit( $company_index );
-		$customer_credit->set( \%param );
+		$Credit->set({ 'company_id' => $company_index, 'supplier_id' => (new openprint::User($session{'user_id'})->company_id()) } ) if ! $Credit->company_id();
+		$variable{'error'} .= $Credit->save( { map { $credit_fields{$_} => $param{$_} } keys %credit_fields } );
 	} # end if
 
 	if ( $company_index ) {
-		my $customer_credit = new openprint::customer_credit( $company_index );
-		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
-		$variable{'CreditBalance'} = sprintf( '$ %.2f', $customer_credit->debt() );
-		if ( $variable{'txtCreditLimit'} < $customer_credit->debt() ) {
-			$variable{'CreditRemaining'} = '$ 0.00';
+		@variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
+		$variable{'CreditBalance'} = openprint::Currency::format( $Credit->debt() );
+		if ( $variable{'txtCreditLimit'} < $Credit->debt() ) {
+			$variable{'CreditRemaining'} = openprint::Currency::format(0);
 		} else {
-			$variable{'CreditRemaining'} = sprintf( '$ %.2f', ( $variable{'txtCreditLimit'} - $customer_credit->debt() ) );
+			$variable{'CreditRemaining'} = openprint::Currency::format( $variable{'txtCreditLimit'} - $Credit->debt() );
 		} # end if
 		$variable{'CompanyIndex'} = $company_index;
 	} # end if customer_index
@@ -368,6 +368,7 @@ sub credit_applications {
 				'txtTerms'			=>	'Terms',
 				'CreditLimit'		=>	'CreditLimit',
 				'txtDownpayment'	=>	'Downpayment',
+				'COD'				=>	'COD',
 				);
 		my $credit_app = $param{'credit_index'};
 
@@ -377,6 +378,7 @@ sub credit_applications {
 					'lngGrantedTerms',		$param{'txtTerms'},
 					'dblGrantedCreditLimit',	$param{'CreditLimit'},
 					'dblGrantedDownpayment',	$param{'txtDownpayment'},
+					'GrantedCOD',				$param{'COD'},
 					);
 			$_ = "SELECT company_id, user_id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,strAnnualPurchases, dblCreditLimit, strAccountsPayableContact, to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI') FROM CreditApplications WHERE id=?";
 
@@ -397,16 +399,12 @@ sub credit_applications {
 				return misc::error( $log, $dbh, \%variable, 'Deleted Customer', 'The company that created this credit app has been deleted from the system.' );
 			} # end if
 
-			my $customer_credit = new openprint::customer_credit( $variable{'hiddenCustomerID'}, $session{'company_id'} );
+			my $Credit = new openprint::Company_Credit( { 'company_id' => $variable{'hiddenCustomerID'}, 'supplier_id' => $session{'company_id'} } );
+			$variable{'error'} .= $Credit->save( { map { $credit_fields{$_} => $param{$_} } keys %credit_fields } );
 			my %params;
 
-			foreach my $field ( keys %credit_fields ) {
-				$params{$credit_fields{$field}} = $param{$field} if defined $param{$field};
-			} # end foreach
-			$params{'txtSignature'} = $variable{'Signature'};
-			$customer_credit->set( \%params );
-			$params{'siteURL'} = $config{'siteURL'};
-			$params{'SecureSiteURL'} = $config{'SecureSiteURL'};
+			$params{'Signature'} = $variable{'Signature'};
+			@params{keys %credit_fields} = $Credit->get( values %credit_fields );
 
 			my $User = new openprint::User( $variable{'UserIndex'} );
 
@@ -418,7 +416,7 @@ sub credit_applications {
 					FROM	=> $config{'AdministratorEmail'},
 					TO	=> $User,
 					SUBJECT => 'Credit Status Changed.',
-					ATTACHMENTS	=>	[ '', encode_qp($template), 'text/html', 'quoted-printable' ],
+					ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
 					);
 		} # end if
 	} # end if
@@ -435,9 +433,11 @@ sub credit_applications {
 sub credit_application {
 
 	my %credit_fields = (
-			'txtTerms'		=>	'Terms',
-			'CreditLimit'		=>	'CreditLimit',
+			'DenyDays'			=>	'DenyDays',
+			'WarnDays'			=>	'WarnDays',
+			'CreditLimit'		=>	'Limit',
 			'txtDownpayment'	=>	'Downpayment',
+			'COD'				=>	'COD',
 			);
 
 	my $credit_app = $param{'credit_index'};
@@ -446,7 +446,7 @@ sub credit_application {
 	if ( $credit_app ) {
 		$_ = "SELECT company_Id, User_Id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,\n".
 			"strAnnualPurchases, dblCreditLimit, lngTerms, strAccountsPayableContact,\n".
-			"to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI'), strStatus, lngGrantedTerms, dblGrantedCreditLimit, dblGrantedDownpayment\n".
+			"to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI'), strStatus, lngGrantedTerms, dblGrantedCreditLimit, dblGrantedDownpayment, GrantedCOD\n".
 			"FROM CreditApplications ".
 			"WHERE Id=?";
 
@@ -465,21 +465,22 @@ sub credit_application {
 				'GrantedTerms',
 				'GrantedCreditLimit',
 				'GrantedDownpayment',
+				'GrantedCOD',
 		} = sql::execute( $log, $dbh, $_, $credit_app );
 
 		$variable{'FinancialStatementAvailable'} = $variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No';
 		$variable{'verdict'.$variable{'verdict'}} = 'CHECKED';
 
-		my $customer_credit = new openprint::customer_credit( $variable{'hiddenCustomerID'}, $session{'company_id'} );
+		my $Credit = new openprint::Company_Credit( { 'company_id'=>$variable{'hiddenCustomerID'}, 'supplier_id'=>$session{'company_id'} } );
+		@variable{keys %credit_fields} = $Credit->get( values %credit_fields );
 
 		my $Company = $variable{'Company'} = new openprint::Company( $variable{'hiddenCustomerID'} );
 		my $User = $variable{'User'} = new openprint::User( $variable{'UserIndex'} );
 
-		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 		$variable{'rdbTerms'.$variable{'rdbTerms'}} = 'CHECKED';
 
 	} # end if
-} # end sub admin_credit_app
+} # end sub credit_application
 
 1;
 __END__

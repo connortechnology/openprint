@@ -1,10 +1,10 @@
-<div class="error"><?error?></div>
-<form name="f1" method="post" action="credit.html">
-	<fieldset class="filters"><legend>Select Customer</legend>
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" method="post" action="credit.html">
+	<fieldset class="filters"><legend>Select Company</legend>
 		<p>
 			<label>Account #</label>
 			<input type="text" name="txtSearchAccountNum" size="13"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Customer</label>
@@ -13,7 +13,7 @@
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
-            <? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
+            <? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
@@ -40,19 +40,20 @@
     </p>
 	<p>
         <label>Credit Hold</label>
-		<input type="radio" id="rdbCreditHoldY" name="rdbCreditHold" value="Y" <? echo ( 'checked' if $$variable{'rdbCreditHold'} eq 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldY">Yes</label>
-		<input type="radio" id="rdbCreditHoldN" name="rdbCreditHold" value="N" <? echo ( 'checked' if $$variable{'rdbCreditHold'} ne 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldN">No</label>
+		<? echo ( ssi::radio( 'rdbCreditHold', ['Y', 'Yes', 'N', 'No'], $$variable{'rdbCreditHold'} ); ) ?>
     </p>
     <p>
         <label>Required Downpayment Amount</label>
-		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>"/>
+		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>" onkeyup="floatize(this);"/>
+	</p>
+    <p>
+        <label>Required COD:</label>
+		<input type="number" name="COD" value="<?COD?>" onkeyup="floatize(this);"/>%
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-			ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ),
+			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>
 </fieldset>
@@ -76,7 +77,7 @@
 			<th class="po_id">P.O. #</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
-			<th class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
+			<th class="buttons"><? echo ( ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ); ) ?></th>
 		</tr>
 		<? echo (
 			my $rowclass;

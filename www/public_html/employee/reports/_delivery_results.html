@@ -16,7 +16,7 @@
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
 	my $sql = "SELECT OrderIndex, Projects.id, Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Bindery Complete','Marked Waiting For Pickup','Added Label/Packing Slip','Added PackingSlip')) ".
+		", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Waiting For Pickup','Added Label/Packing Slip','Added PackingSlip')) ".
 		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Picked Up' ,'Marked Shipped')) ".
 		"FROM Order_Contents, Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
@@ -96,12 +96,11 @@ Results for <? echo (
 			$$variable{'DocketCount'} += 1;
 		) ?>
 		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
-<tr><th colspan="6"></th></tr>
-		<tr><td><b>Totals</b></td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td></tr>
+		<tr class="totals"><td>Totals</td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td></tr>
 	</table>
-	<span style="float: right;">
+	<p class="buttons">
 		<? echo ( ssi::button( 'Save', { onclick=>"LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( document.forms['f2'] ) );", href=>'', text=>'Save Reasons' } ); ) ?>
-	</span>
+	</p>
 	<input type="hidden" name="btnFunction" value="Save" />
 	<input type="hidden" name="DateStartYear" value="<? echo ( $param{'DateStartYear'} ) ?>" />
 	<input type="hidden" name="DateStartMonth" value="<? echo ( $param{'DateStartMonth'} ) ?>" />

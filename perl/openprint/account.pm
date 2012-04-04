@@ -633,7 +633,7 @@ sub credit_application {
 
 		my $creditlimit = $param{'DesiredCreditLimit'};
 		$creditlimit =~ s/[^\d\.]//g;
-		sql::insert( $log, $dbh, 'CreditApplications',
+		$variable{'error'} .= sql::insert( $log, $dbh, 'CreditApplications',
 				'User_Id',	 $session{'user_id'},
 				'company_id', $session{'company_id'},
 				( defined $param{'Signature'} ? ( 'strSignature',	 $param{'Signature'} ) : () ),
@@ -647,25 +647,27 @@ sub credit_application {
 				'dtmCreationDate',	'NOW()',
 				);
 
+		if ( ! $variable{'error'} ) {
 # Now send email notifications
-		my %info;
-		$info{'Company'} = $Company;
-		$info{'User'} = new openprint::User( $session{user_id} );
+			my %info;
+			$info{'Company'} = $Company;
+			$info{'User'} = new openprint::User( $session{user_id} );
 
-		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+			$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
+			($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		my $template = ssi::variable_substitution( \$email_template, \%info );
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+			my $template = ssi::variable_substitution( \$email_template, \%info );
 
-		new openprint::Email()->send(
-				FROM	=> $config{'CreditApplicationEmail'},
-				TO	=> $config{'CreditApplicationEmail'},
-				SUBJECT => 'New Credit Application',
-				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
-				);
+			new openprint::Email()->send(
+					FROM	=> $config{'CreditApplicationEmail'},
+					TO	=> $config{'CreditApplicationEmail'},
+					SUBJECT => 'New Credit Application',
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
+					);
+		} # end if
 	} # end if Apply
 
 } # sub credit_application

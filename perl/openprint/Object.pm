@@ -134,7 +134,7 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
+	@$self{keys %$fields} = @$data{values %$fields};
 } # end sub load
 
 sub save {

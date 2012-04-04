@@ -1,14 +1,18 @@
 <script type="text/javascript">
 <!--
 	function approve( form ) {
-		form.txtTerms.value = form.AccountTermsDesired.value;
+		form.DenyDays.value = form.AccountTermsDesired.value;
+		form.WarnDays.value = parseInt(form.AccountTermsDesired.value/2);
 		form.CreditLimit.value = form.AccountLimitDesired.value;
 		form.txtDownpayment.value = '0';
+		form.COD.value = '0';
 	} // end function approve( form )
 	function decline( form ) {
-		form.txtTerms.value = '0';
-		form.CreditLimit.value = '0';
-		form.txtDownpayment.value = form.CurrentDownpayment.value;
+		form.DenyDays.value = '<?DenyDays?>';
+		form.WarnDays.value = '<?WarnDays?>';
+		form.CreditLimit.value = '<?CreditLimit?>';
+		form.txtDownpayment.value = '<?Downpayment?>';
+		form.COD.value='<?COD?>';
 	} // end function decline( form )
 	function submit_check( form ) {
 		if ( ! ( form.verdict[0].checked || form.verdict[1].checked ) ) {
@@ -59,16 +63,21 @@
 								<input type="radio" name="verdict" id="verdictDeclined" value="Declined" onclick="decline(f1);" <?verdictDeclined?> />
 								<label class="radio" for="verdictDeclined">Declined</label>
 							</li>
-							<li><label>Terms</label>
-							<input type="text" id="txtTerms" name="txtTerms" value="<?GrantedTerms?>"/> Days </li>
+							<li><label>Deny orders after</label>
+							<input type="number" id="DenyDays" name="DenyDays" value="<?DenyDays?>"/> Days </li>
+							<li><label>Warn after</label>
+							<input type="number" id="WarnDays" name="WarnDays" value="<?WarnDays?>"/> Days </li>
 							<li><label>Credit Limit</label>
-							<input type="text" id="CreditLimit" name="CreditLimit" value="<?GrantedCreditLimit?>" /></li>
+							<input type="number" id="CreditLimit" name="CreditLimit" value="<?CreditLimit?>" /></li>
 							<li><label>Required Downpayment Amount</label>
-								<input type="text" id="txtDownpayment" name="txtDownpayment" value="<?GrantedDownpayment?>"/> %
+								<input type="number" id="txtDownpayment" name="txtDownpayment" value="<?GrantedDownpayment?>"/> %
+							</li>
+							<li><label>COD Amount</label>
+								<input type="number" id="COD" name="COD" value="<?GrantedCOD?>"/> %
 							</li>
 						</ul>
 						<p class="buttons">
-						<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';submit_check(f1);", '', 'Save' ); ) ?> 
+						<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';submit_check(f1);" } ); ) ?> 
 						</p>
 					</fieldset>
 				</div><!--Granted-->
@@ -91,20 +100,24 @@
 				<div class="Current">
 					<fieldset><legend>Current Credit Information</legend>
 						<ul> 
-							<li><label>Terms</label><? echo ( $$variable{'txtTerms'} ne '' ? $$variable{'txtTerms'}.'Days' : 'none' ) ?></li>
+							<li><label>Deny orders after</label><? echo ( $$variable{'DenyDays'} ne '' ? $$variable{'DenyDays'}.'Days' : 'none' ) ?></li>
+							<li><label>Warn after</label><? echo ( $$variable{'WarnDays'} ne '' ? $$variable{'WarnDays'}.'Days' : 'none' ) ?></li>
 							<li><label>Credit Limit</label><? echo ( 1*$$variable{'CreditLimit'} ) ?></li>
-							<li><label>Required Downpayment Amount</label><input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>"/><? echo ( 1*$$variable{'txtDownpayment'} ) ?>%</li>
+							<li><label>Required Downpayment Amount</label><? echo ( 1*$$variable{'txtDownpayment'} ) ?>%</li>
+							<li><label>COD Amount</label><? echo ( 1*$$variable{'COD'} ) ?>%</li>
 						</ul>
 					</fieldset>
 				</div>
 			</div>
 		</form>
+		<br class="spacer"/>
 		<div class="CompanyInformation">
 			<!--#include virtual="/email_content/_company_information.html"-->
 		</div>
 		<div class="OwnershipInformation">
 			<!--#include virtual="/email_content/_business_information.html"-->
 		</div>
+		<br class="spacer"/>
 		<div class="TradeReferences">
 			<fieldset><legend>Trade References</legend>
 				<? eval ( @{$$variable{'indices'}} = ( 1 .. 3 ); ) ?>

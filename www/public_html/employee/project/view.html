@@ -311,7 +311,11 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="Price"><? echo ( 
 				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
 				$price = 5000 * ( int( $price/5000 ) );
+				if ( ! $price ) {
+					return 'under $5,000.00';
+				} else {
 				return openprint::Currency::format( $price );
+				} # end if
 				) ?>
 			</td>
 			<td class="status"></td>

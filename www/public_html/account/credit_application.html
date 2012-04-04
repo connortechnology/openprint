@@ -14,7 +14,7 @@ Thank you. Your information has been received. Someone will contact you in the i
 	<p class="required">
 	 denotes required information.<br/><br/>
 	</p>
-	<form name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
+	<form id="f1" name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
 		<div class="CreditApplication">
 			<!--#include virtual="/account/_business_information.html"-->
 			<!--#include virtual="/account/_bank_information.html"-->
@@ -48,8 +48,7 @@ Thank you. Your information has been received. Someone will contact you in the i
 				</li>
 				<li>
 					<label>Financial Statement Available?</label>
-					<input type="radio" name="FinancialStatementAvailable" id="FinancialStatementAvailableY" value="Y" /><label for="FinancialStatementAvailableY" class="radio">Yes</label>
-					<input type="radio" name="FinancialStatementAvailable" id="FinancialStatementAvailableN" value="N" /><label for="FinancialStatementAvailableN" class="radio">No</label>
+					<? echo ( ssi::radio( 'FinancialStatementAvailable', ['Y','Yes','N','No'], $param{'FinancialStatementAvailable'} ); ) ?>
 				</li>
 				</ul>
 				<?SiteTitle?> reserves the right to revoke/cancel credit status at their own discretion without prior notification. By submitting this 
@@ -59,12 +58,12 @@ Thank you. Your information has been received. Someone will contact you in the i
 				<ul>
 				<li class="required">
 					<label for="Signature">Name - First/Last</label>
-					<input type="text" id="Signature" name="Signature" />
+					<input type="text" id="Signature" name="Signature" value="<? echo ( $param{'Signature'} ) ?>" />
 				</li>
 				</ul>
 				<p class="buttons">
-					<? echo ( ssi::writeButton( $log, $dbh, 'Submit1','submit.gif','f1.submit();','','Submit'); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'); ) ?>
+					<? echo ( ssi::button( 'Submit1', { onclick=>'f1.submit();', text=>'Submit' } ); ) ?>
+					<? echo ( ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } ); ) ?>
 				</p>
 			</fieldset>
 			</div>

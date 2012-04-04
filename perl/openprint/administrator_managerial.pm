@@ -1,6 +1,5 @@
 use strict;
 package openprint::administrator_managerial;
-use MIME::QuotedPrint ();
 
 use openprint ();
 
@@ -14,7 +13,6 @@ require openprint::logs;
 require openprint::address;
 require openprint::Company;
 require openprint::Company_Profile;
-require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
@@ -25,6 +23,7 @@ require openprint::Timetrack;
 require openprint::User_Profile_Field;
 require openprint::Company_Profile_Field;
 require openprint::Company_Category;
+require openprint::Company_Credit;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -386,6 +385,7 @@ sub company_profiles {
 			'txtCreditLimit'	=>	'Limit',
 			'rdbCreditHold'	 =>	'Hold',
 			'txtDownpayment'	=>	'Downpayment',
+			'COD'			=>	'COD',
 			);
 
 	my $index = $param{'ddmCustomer'};
@@ -467,12 +467,8 @@ sub company_profiles {
 
 			$Company->save_tradereferences( \%params );
 
-			my $customer_credit = new openprint::customer_credit( $index );
-			my %params;
-			foreach my $field ( keys %credit_fields ) {
-				$params{$credit_fields{$field}} = $param{$field} if defined $param{$field};
-			} # end foreach
-			$customer_credit->set( \%params );
+			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
+			$variable{'error'} .= $Credit->save( { map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );
@@ -491,7 +487,6 @@ sub company_profiles {
 		$Company->undelete();
 	} # end if btnFunction
 
-	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @customers_categories;
 	my $total;
 	my $payments;
@@ -501,8 +496,9 @@ sub company_profiles {
 		} 
 		my $shipping_address = $Company->get_shipping_address();
 		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-		my $customer_credit = new openprint::customer_credit( $index );
-		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		# Credit fields are all numeric, we don't need to htmlize them
+		my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
+		@$variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
