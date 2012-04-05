@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
+use 5.10.0;
+use utf8;
 
 # INCLUDES
 use strict;
@@ -71,7 +73,7 @@ configuration::init_cache( $log, $dbh, \%CFG::Config );
 # create new instance of XML::RSS
 my $rss = new XML::RSS;
 
-foreach my $RSS_Feed ( split(',', $config{'RSS_Feeds'} ) ) {
+foreach my $RSS_Feed ( split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RSS_Feeds'} : $config{'RSS_Feeds'} ) ) ) {
 	my $content;
 	my $file;
 	my $arg = $RSS_Feed;
@@ -90,8 +92,20 @@ foreach my $RSS_Feed ( split(',', $config{'RSS_Feeds'} ) ) {
 		$rss->parsefile($file);
 	} # end if
 
-# print the HTML channel
-	&print_html($rss);
+    # print the channel items
+    foreach my $item (@{$rss->{'items'}}) {
+		next unless defined($item->{'title'}) && defined($item->{'link'});
+		print "<li><a href=\"$item->{'link'}\">$item->{'title'}</a><BR>\n";
+		my $Article = openprint::Article->find_one('title'=>$item->{'title'});
+		if ( ! $Article ) {
+			$Article = new openprint::Article();
+			$Article->save({
+				'title'	=>	$item->{'title'},
+				'body'	=>	$item->{'description'},
+				'source'	=>	$item->{'link'},
+			});
+		} # end if
+    } # en dforeach
 } # end foreach RSS_Feed
 
 
@@ -110,18 +124,13 @@ HTML
     if ($rss->{'image'}->{'link'}) {
 		print <<HTML;
 		<center>
-			<p><a href="$rss->{'image'}->{'link'}"><img src="$rss->{'image'}->{'url'}" alt="$rss->{'image'}->{'title'}" border="0"
+			<p><a href="$rss->{'image'}->{'link'}"><img src="$rss->{'image'}->{'url'}" alt="$rss->{'image'}->{'title'}"
 HTML
 		print " width=\"$rss->{'image'}->{'width'}\"" if $rss->{'image'}->{'width'};
 		print " height=\"$rss->{'image'}->{'height'}\"" if $rss->{'image'}->{'height'};
 		print "></a></center><p>\n";
     } # end if
 
-    # print the channel items
-    foreach my $item (@{$rss->{'items'}}) {
-		next unless defined($item->{'title'}) && defined($item->{'link'});
-		print "<li><a href=\"$item->{'link'}\">$item->{'title'}</a><BR>\n";
-    } # en dforeach
 
     # if there's a textinput element
     if ($rss->{'textinput'}->{'title'}) {

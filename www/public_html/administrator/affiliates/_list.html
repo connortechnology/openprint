@@ -1,0 +1,23 @@
+<? echo (
+	my $html;
+	my @Affiliates;
+	foreach ( openprint::Affiliate->find(
+		( $session{'/administrator/affiliates/list.html?supplier_id'} ? ( 'supplier_id' => $session{'/administrator/affiliates/list.html?supplier_id'} ) : () ),
+			'order'=>'lower(name)') ) {
+		push @Affiliates, $_; 
+	} # end foreach
+	if ( ! @Affiliates ) {
+		return 'No results.';
+	} # end if
+	foreach my $Affiliate ( @Affiliates ) {
+		$html .= sprintf('
+<div class="Affiliate">
+	<a class="supplier" href="/administrator/affiliates/edit.html?affiliate_id=%1$d">%3$s</a>
+	<a class="name" href="/administrator/affiliates/edit.html?affiliate_id=%1$d">%2$s</a>
+	<a class="link" href="/administrator/affiliates/edit.html?affiliate_id=%1$d">%4$s</a>
+	<a class="thumbnail" href="/administrator/affiliates/edit.html?affiliate_id=%1$d"><img src="%5$s"/></a>
+</div>', $Affiliate->id(), $Affiliate->name(), $Affiliate->Supplier()->name(), $Affiliate->url(), $Affiliate->image_url() );
+	} # end foreach Affiliate
+
+	return $html;
+) ?>

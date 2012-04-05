@@ -908,6 +908,32 @@ if ( ! sets::isin( 'product_specifications', \@tables ) ) {
 		$dbh->do('ALTER TABLE Product_Specifications add PRIMARY KEY (id)');
 	} # end if
 } # end if
+if ( ! sets::isin( 'feeds', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Feeds.sql}) );
+	die if $dbh->errstr();
+}
+if ( ! sets::isin( 'creditapplications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Credit_Applications.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='creditapplications'", 'column_name');
+	if ( ! exists $$data{'grantedcod'} ) {
+		$dbh->do('ALTER TABLE creditapplications add grantedcod float');
+	} # end if
+} # end if
+if ( ! sets::isin( 'company_credit', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Company_Credit.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_credit'", 'column_name');
+	if ( ! exists $$data{'cod'} ) {
+		$dbh->do('ALTER TABLE company_credit add cod float');
+	} # end if
+} # end if
+if ( ! sets::isin( 'affiliates', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
+	die if $dbh->errstr();
+}
 $dbh->disconnect();
 1;
 __END__
