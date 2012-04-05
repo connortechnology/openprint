@@ -1,4 +1,3 @@
-/* <![CDATA[ */  /* so (X)HTML validators ignore the javascript. */
 var theRequest = false;
 var force_KB_size = 0;
 var force_KB_rate = 0;
@@ -205,5 +204,29 @@ function format_timespan_with_unit(num,space) {
 	return num;
 }
 
-/* ]]> */  /* so (X)HTML validators ignore the javascript. */
+function FileUpload(img, file) {  
+	var reader = new FileReader();    
+	this.ctrl = createThrobber(img);  
+	var xhr = new XMLHttpRequest();  
+	this.xhr = xhr;  
 
+	var self = this;  
+	this.xhr.upload.addEventListener("progress", function(e) {  
+			if (e.lengthComputable) {  
+			var percentage = Math.round((e.loaded * 100) / e.total);  
+			self.ctrl.update(percentage);  
+			}  
+			}, false);  
+
+	xhr.upload.addEventListener("load", function(e){  
+			self.ctrl.update(100);  
+			var canvas = self.ctrl.ctx.canvas;  
+			canvas.parentNode.removeChild(canvas);  
+			}, false);  
+	xhr.open("POST", "http://demos.hacks.mozilla.org/paul/demos/resources/webservices/devnull.php");  
+	xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');  
+	reader.onload = function(evt) {  
+		xhr.sendAsBinary(evt.target.result);  
+	};  
+	reader.readAsBinaryString(file);  
+}  

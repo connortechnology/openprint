@@ -1,5 +1,5 @@
 use strict;
-package openprint::upload_handler;
+package handlers::upload;
 
 use Apache2::Request ();    # instead of CGI, it's MUCH faster, and does nice things.
 use Apache2::RequestRec ();
@@ -12,7 +12,6 @@ require sql;
 require ssi;
 require misc;
 require configuration;
-require openprint::login;
 require openprint::Upload;
 require openprint::File;
 require openprint::Company;
