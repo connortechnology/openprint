@@ -94,6 +94,7 @@ BEGIN {
 	use MapImage;
 	use Lingua::EN::Inflect ();
 	use	openprint::Location ();
+	use	openprint::Affiliate ();
 
 }
 

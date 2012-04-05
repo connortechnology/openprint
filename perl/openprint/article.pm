@@ -303,7 +303,9 @@ sub _assets {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
 		$variable{'error'} .= $Asset->delete();
 	} elsif ( $param{'func'} eq 'add' ) {
-		my $Asset = openprint::Asset->find_one('filename'=>$param{'filename'} );
+		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
+			
+		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
 		if ( $Asset ) {
 			my $AA = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$$Asset{'id'}});
 			if ( ! $$AA{'asset_id'} ) {

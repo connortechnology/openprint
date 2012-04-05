@@ -8,7 +8,7 @@
 				ssi::button( 'delete'.$Asset->id(), { 
 					onclick=> qq`new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '$$variable{Article}{id}', asset_id: '$$Asset{id}', func: 'delete' } } );`, 
 					text=>'Delete' } ),
-				ssi::button( 'edit'.$Asset->asset_id(), { href=>'/employee/assets/edit.html?asset_id=' . $Asset->id(), text=>'Edit', target=>'_blank' } ),
+				ssi::button( 'edit'.$Asset->id(), { href=>'/employee/assets/edit.html?asset_id=' . $Asset->id(), text=>'Edit', target=>'_blank' } ),
 					),
 				);
 	} # end foreach Asset

@@ -215,6 +215,7 @@ sub view_url {
 sub Assets {
 	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
 } # end sub Assets
+
 sub published_on_string {
 	if ( ! $_[0]{'published_on_string'} ) {
 		$_[0]{'published_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'published_on'} ) );
