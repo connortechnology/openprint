@@ -498,7 +498,7 @@ sub company_profiles {
 		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		# Credit fields are all numeric, we don't need to htmlize them
 		my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
-		@$variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
+		@variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
