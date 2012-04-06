@@ -77,9 +77,12 @@ function handleFiles(files) {
 	}  
 } // handleFiles
 function FileUpload(img, file) {
-    var reader = new FileReader();
     this.ctrl = createThrobber( img, img.li );
-    var xhr = new XMLHttpRequest();
+    var xhr;
+	if (XMLHttpRequest) xhr = new XMLHttpRequest();
+	else if ( window.ActiveXObject) xhr = new ActiveXObject("Microsoft.XMLHTTP");
+	else { throw new Error("XHR not available. Browser too old."); return false; }
+
     this.xhr = xhr;
 
     var self = this;
@@ -91,14 +94,23 @@ function FileUpload(img, file) {
             }, false);
 
     xhr.upload.addEventListener("load", function(e){
-            self.ctrl.update(100);
-            var canvas = self.ctrl.ctx.canvas;
-            canvas.parentNode.removeChild(canvas);
-            }, false);
-    xhr.open("POST", "http://pseudo.pleasurablethings.ca/upload.htm?UploadType=Article&id=<? echo ( $$variable{'Article'}->id() ) ?>");
-    xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');
+			self.ctrl.update(100);
+			var canvas = self.ctrl.ctx.canvas;
+			canvas.parentNode.removeChild(canvas);
+			new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>' } } );
+			img.li.remove();
+			}, false);
+	xhr.open("POST", "http://pseudo.pleasurablethings.ca/upload.htm?UploadType=Article&id=<? echo ( $$variable{'Article'}->id() ) ?>");
+	xhr.setRequestHeader("Content-Type", "multipart/form-data; boundary=xxxxxxxx"); // simulate a file MIME POST request.
+
+    var reader = new FileReader();
     reader.onload = function(evt) {
-        xhr.sendAsBinary(evt.target.result);
+		var body = "--xxxxxxxx\r\n";  
+            body += "Content-Disposition: form-data; name='myFile'; filename='" + img.file.name + "'\r\n";    
+            body += "Content-Type: application/octet-stream\r\n\r\n";    
+            body += evt.target.result + "\r\n";    
+            body += "--xxxxxxxx--";
+        xhr.sendAsBinary(body);
     };
     reader.readAsBinaryString(file);
 }

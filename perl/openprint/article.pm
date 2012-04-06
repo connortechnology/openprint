@@ -319,8 +319,8 @@ sub _assets {
 		} else {
 			$variable{'error'} .= 'Asset not found.';
 		} # end if
-	} else {
-		$log->error("article/_assets: Uknown function");
+	} elsif ( $param{'func'} {
+		$log->error("article/_assets: Uknown function $param{'func'}");
 	} # end if
 } # end sub _assets
 
