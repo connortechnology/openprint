@@ -223,5 +223,14 @@ sub published_on_string {
 	return $_[0]{'published_on_string'};
 } # end sub published_on_string
 
+sub handle_upload {
+	my $error;
+	my $Asset = openprint::Asset::upload( $_[1] );
+	if ( ref $Asset ne 'openprint::Asset' ) {
+		return $Asset;
+	} # end if
+	my $Article_Asset = new openprint::Article_Asset();
+	return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+} # end sub handle_upload
 1;
 __END__

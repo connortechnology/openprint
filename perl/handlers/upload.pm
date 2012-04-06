@@ -54,13 +54,13 @@ sub handler {
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
-		my $rsize=$request->headers_in->{'Content-Length'};
+		my $rsize = $request->headers_in->{'Content-Length'};
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {
 			($serial) = sql::execute( undef, undef, q`SELECT nextval('uploads_id_seq')` );
 		} # end if
-		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'type', 'Web' ] );
+		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company', $company, 'type', 'Web' ] );
 
 		my $upload_hook = sub {
 			my ( $upload, $data, $data_len, $hook_data ) = @_;
@@ -106,7 +106,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		openprint::session_init();
 		if ( $serial ) {
 			my $rsize=$request->headers_in->{'Content-Length'};
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $rsize ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
@@ -115,12 +115,15 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		} # end if
 		if ( $param{'UploadType'} ) {
 			my $error;
-			eval(sprintf('require openprint::%1$s;
-				$error = openprint::%1$s->handle_upload( $param{qqfile} );
-			', $param{'UploadType'} ));
-			$log->warn( "Eval error of Upload type  $param{'UploadType'} Reason: " . $@ ) if $@;
+			require "openprint/$param{'UploadType'}.pm";
+			if ( $param{'id'} ) {
+				my $Object = ('openprint::'.$param{'UploadType'})->new( $param{'id'} );
+				$error = $Object->handle_upload( $param{'file'} );
+			} else {
+				$error .= ('openprint::'.$param{'UploadType'})->handle_upload( $param{qqfile} );
+			} # end if
 			$r->content_type('application/json');
-			if ( $error ) {
+			if ( $error and ref $error ne 'openprint::'.$param{'UploadType'} ) {
 				$log->debug("Printing success:false $error");
 				$r->print( qq|{ "success": false, "error": "$error" }| );
 			} else {
