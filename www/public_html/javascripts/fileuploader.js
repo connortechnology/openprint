@@ -1200,8 +1200,15 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
         xhr.open("POST", queryString, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.setRequestHeader("X-File-Name", encodeURIComponent(name));
-        xhr.setRequestHeader("Content-Type", "application/octet-stream");
-        xhr.send(file);
+		xhr.setRequestHeader("Content-Type", "multipart/form-data; boundary=xxxxxxxx"); // simulate a file MIME POST request.
+        var body = "--xxxxxxxx\r\n";
+            body += "Content-Disposition: form-data; name=myFile; filename=" + encodeURIComponent(name) + "\r\n";
+            body += "Content-Type: application/octet-stream\r\n\r\n";
+            body += file + "\r\n";
+            body += "--xxxxxxxx--";
+        xhr.sendAsBinary(body);
+        //xhr.setRequestHeader("Content-Type", "application/octet-stream");
+        //xhr.send(file);
     },
     _onComplete: function(id, xhr){
         // the request was aborted/cancelled

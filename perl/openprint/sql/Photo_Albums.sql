@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS Photo_Albums;
 CREATE TABLE Photo_Albums (
 	id	SERIAL,
 	name	text,
+	description	text,
 	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
 	thumbnail_id	INTEGER, FOREIGN KEY (thumbnail_id) REFERENCES Assets (id),
 	privacy_mode_id	INTEGER,

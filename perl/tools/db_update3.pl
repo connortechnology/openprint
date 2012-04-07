@@ -269,6 +269,9 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 		$dbh->do( 'ALTER TABLE photos_in_albums DROP CONSTRAINT photos_in_albums_pkey');
 		$dbh->do( 'ALTER TABLE photos_in_albums ADD PRIMARY KEY (id)' );
 	} # end if
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
+	} # end if
 } # end if
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );

@@ -103,7 +103,7 @@ sub edit {
 	$variable{'Privacy'} = $Album->Privacy();
 } # end sub edit
 
-sub _photos {
+sub _album_photos {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});

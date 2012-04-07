@@ -1313,7 +1313,7 @@ function createThrobber( img, preview ) {
  
     var canvas = document.createElement("canvas");
     preview.appendChild(canvas);
-    canvas.width = img.width;
+    canvas.width = preview.width;
     canvas.height = img.height;
     var size = Math.min(canvas.height, canvas.width);
     canvas.style.top = y + "px";

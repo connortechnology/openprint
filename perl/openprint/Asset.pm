@@ -115,6 +115,7 @@ sub thumbnail_url {
 			return '/images/icons/'.(lc $extension).'.png';
 		} # end if
 	} # end if
+$openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)");
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
 

@@ -15,6 +15,7 @@ $table = 'photo_albums';
 	'id'				=>	'id',
 	'user_id'			=>	'user_id',
 	'name'				=>	'name',
+	'description'		=>	'description',
 	'thumbnail_id'		=>	'thumbnail_id',
 	'created_on'		=>	'created_on',
 	'privacy_mode_id'	=>	'privacy_mode_id',
@@ -128,5 +129,14 @@ sub can_view {
 	return $Privacy->can_view();
 } # end sub can_view
 
+sub handle_upload {
+	my $error;
+	my $Asset = openprint::Asset::upload( $_[1] );
+	if ( ref $Asset ne 'openprint::Asset' ) {
+		return $Asset;
+	} # end if
+	my $Photo = new openprint::Photo_in_Album();
+	return $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$_[0]->id()});
+} # end sub handle_upload
 1;
 __END__
