@@ -1313,8 +1313,9 @@ function createThrobber( img, preview ) {
  
     var canvas = document.createElement("canvas");
     preview.appendChild(canvas);
-    canvas.width = preview.width;
-    canvas.height = img.height;
+    canvas.width = preview.getStyle('width');
+    canvas.height = preview.getStyle('height');
+alert(img.getStyle('width'));
     var size = Math.min(canvas.height, canvas.width);
     canvas.style.top = y + "px";
     canvas.style.left = x + "px";

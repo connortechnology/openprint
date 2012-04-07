@@ -24,26 +24,8 @@
 				</div>
 			</fieldset>
 			<? if ( $$variable{'Album'}->id() ) ?>
-			<fieldset><legend>Photos</legend>
-				<div id="Photos"><!--#include virtual="_album_photos.html"--></div>
-			</fieldset>
-			<fieldset><legend>Upload Option 1</legend>
-			<div id="file_uploader">
-			<noscript><p>Please enable JavaScript to use file uploader.</p></noscript>
-			</div>
-			</fieldset>
+			<!--#include virtual="_album_upload.html"-->
 			<? endif ( $$variable{'Album'}->id() ) ?>
-			<fieldset><legend>Upload</legend>
-				<div class="content">
-					<ul>
-						<li><label>Select file</label><input type="file" name="filename"/>
-			<? if ( $$variable{'Album'}->id() ) ?>
-						<? echo ( ssi::button( 'Upload', { 'onclick'=>"f1.action='/photo_albums/edit.html?album_id=$$variable{Album}{id}';f1.btnFunction.value='Upload';f1.submit();" } ); ) ?>
-			<? endif ( $$variable{'Album'}->id() ) ?>
-</li>
-					</ul>
-				</div>
-				<div class="disclaimer"><? echo ( $config{'PhotoUploadDisclaimer'} ) ?></div>
 			</fieldset>
 		</form>
 <? else ( $$variable{'Album'}->can_edit() ) ?>
