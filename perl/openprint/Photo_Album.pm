@@ -129,17 +129,5 @@ sub can_view {
 	return $Privacy->can_view();
 } # end sub can_view
 
-sub handle_upload {
-	my $Asset = openprint::Asset::upload( $_[1] );
-	if ( ref $Asset ne 'openprint::Asset' ) {
-		return $Asset;
-	} # end if
-	my $Photo = openprint::Photo_in_Album->find_one( 'asset_id'=>$Asset->id(), 'album_id'=>$_[0]->id() );
-	if ( ! $Photo ) {
-		$Photo = new openprint::Photo_in_Album();
-		return $Photo->save({'asset_id'=>$Asset->id(), 'album_id'=>$_[0]->id()});
-	} # end if
-	return 'Photo already in album.';
-} # end sub handle_upload
 1;
 __END__

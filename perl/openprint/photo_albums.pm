@@ -49,7 +49,7 @@ sub list {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
-		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		(new openprint::Log())->save({action=>'Create Photo Album', Object=>$Album}) if ! $param{'album_id'};
 		$variable{'error'} .= $Album->Privacy()->save( {
 				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
 			} );

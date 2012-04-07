@@ -122,7 +122,7 @@ sub handler {
 			if ( $uploads and %$uploads ) {
 			my $Object = ('openprint::'.$param{'UploadType'})->new( $param{'id'} );
 			while ( my ( $field, $upload ) = each %$uploads ) {
-				$error .= $Object->handle_upload( $field );
+				$error .= $Object->upload( $field );
 			} # end while
 			} else {
 				$log->error('no uploads'.$r->body());
