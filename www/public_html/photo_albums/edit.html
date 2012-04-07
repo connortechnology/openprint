@@ -19,6 +19,21 @@
 					<ul>
 						<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
 						<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+						<li><label>Company</label>
+							<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
+								<option value="">no one</option>
+								<? echo ( ssi::make_drop_down( openprint::Company->dropdown($$variable{'Album'}->User()->company_id()) ); ) ?>
+							</select>
+							
+						</li>
+						<li><label>Owner</label>
+							<select name="user_id" id="user_id">
+<option value="">no one</option>
+<? echo ( ssi::make_drop_down( openprint::User->dropdown('company_id'=>$param{'company_id'} ? $param{'company_id'} : $$variable{'Album'}->User()->company_id(),'order'=>'lower(firstname),lower(lastname)'), $param{'company_id'} ? '' : $$variable{'Album'}->user_id() ); ) ?>
+							</select>
+						</li>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 						<!--#include virtual="/includes/_privacy_widget.html"-->
 					</ul>
 				</div>
