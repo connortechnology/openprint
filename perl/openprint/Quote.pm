@@ -2,7 +2,7 @@ use strict;
 package openprint::Quote;
 our @ISA=qw(openprint::Object);
 
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use openprint ();
 use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
@@ -18,7 +18,7 @@ require openprint::QuotedProject;
 require openprint::QuotedProduct;
 require openprint::Currency;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'quotes';
 $serial = 'quotes_id_seq';
@@ -131,11 +131,6 @@ sub destroy {
 	sql::end_transaction( $dbh, $ac );
 	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
 } # end sub delete
-
-sub to_string {
-	my $self = shift;
-	return '';
-} # end sub
 
 sub status {
 	my ( $self, $new_status ) = @_;
