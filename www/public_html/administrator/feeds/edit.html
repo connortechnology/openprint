@@ -1,7 +1,7 @@
 <div class="Feeds">
 	<div class="Edit">
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" method="post" action="edit.html<? echo ( $param{'affiliate_id'} ? '?affiliate_id='.$param{'affiliate_id'} : '' ) ?>">
+<form id="f1" name="f1" method="post" action="edit.html<? echo ( $param{'feed_id'} ? '?feed_id='.$param{'feed_id'} : '' ) ?>">
 		
 	<p class="buttons"> 
 		<? echo ( join('',
@@ -20,7 +20,7 @@
 			<li> 
 				<label>Type</label>
 				<select name="type" id="type">
-					<? echo ( ssi::make_drop_down( [ '', 'select', 'RSS', 'RSS' ], $$variable{'Feed'}->type() );
+					<? echo ( ssi::make_drop_down( [ '', 'select', 'RSS', 'RSS' ], $$variable{'Feed'}->type() ); ) ?>
 				</select>
 			</li>
 			<li><label>Company</label>
@@ -29,9 +29,19 @@
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)' ) ], $$variable{'Feed'}->company_id() ); ) ?>
 				</select>
 			</li>
+			<li><label>Category</label>
+				<select name="category_id" id="category_id">
+					<option value=""> none <option>
+					<? echo ( ssi::make_drop_down( openprint::Article_Category->dropdown( 'order'=>'lower(name)' ), $$variable{'Feed'}->category_id() ); ) ?>
+				</select>
+			</li>
 			<li> 
 				<label>Url</label>
 				<input type="url" name="url" value="<? echo ( $$variable{'Feed'}->url() ) ?>" />
+			</li>
+			<li>
+				<label>Filters</label>
+				<textarea name="filters"><? hecho ( $$variable{'Feed'}->filters() ) ?></textarea>
 			</li>
 		</ul>
 	</fieldset>

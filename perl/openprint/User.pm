@@ -97,6 +97,7 @@ $debug = 1;
 	'email_quotes_to_myself'	=>	0,
 	'asset_id'			=>	undef,
 	'password_changed_on'		=>	undef,
+	'password'			=>	'',
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.

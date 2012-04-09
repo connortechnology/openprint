@@ -7,7 +7,7 @@
 						<li><label>Company</label>
 							<select name="company_id" id="company_id" onchange="new Ajax.Updater( 'Results', '_list.html', { parameters: { company_id: $('company_id').getValue() } } );">
 								<option value="">all</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'company'=>'Y', 'order'=>'lower(name)' ) ], $session{'/administrator/feeds/list.html?company_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)' ) ], $session{'/administrator/feeds/list.html?company_id'} ); ) ?>
 							</select>
 						</li>
 					</ul>

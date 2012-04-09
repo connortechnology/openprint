@@ -152,7 +152,7 @@ sub currency {
 sub user_profiles {
 
 	my $user_id = $param{'ddmUser'};
-	my $User = new openprint::User( $user_id );
+	my $User = $variable{'User'} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
 
@@ -194,6 +194,7 @@ sub user_profiles {
 			foreach my $U ( @Users ) {
 				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
 			} # end foreach U
+		
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 

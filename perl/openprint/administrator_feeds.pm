@@ -2,6 +2,7 @@ use strict;
 package openprint::administrator_feeds;
 
 require openprint::Feed;
+require openprint::Article_Category;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session );

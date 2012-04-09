@@ -171,6 +171,25 @@ sub _history {
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
 				'published','employee_id','company_id', 'category_id' ) );
+	} 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->delete();
+		} # end foreach id
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->destroy();
+		} # end foreach id
 	} # end if
 } # end sub _history
 
@@ -190,6 +209,10 @@ sub edit {
 			return;
 		} # end if
 		$variable{'error'} .= $Article->destroy();
+		if ( ! $variable{'error'} ) {
+			%param = ();
+			$variable{'ExternalRedirect'} = '/article/history.html';
+		} # end if
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();

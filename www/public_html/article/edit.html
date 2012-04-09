@@ -137,6 +137,24 @@ function FileUpload(img, file) {
 			<? endif ( $$variable{'Article'}->deleted() ) ?>
 			
 			<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>" />
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					#$html = ssi::button( 'Back', { 'href'=>'history.html'} );
+					
+					if ( $$variable{'Article'}->id() ) {
+						$html = ssi::button( 'Reset1', { 'onclick'=>'f1.reset();check_time_published_on(f1);', text=>'Reset' } );
+						$html .= ssi::button( 'Destroy1', { 'onclick' => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}", text=>'Delete' } );
+						$html .= ssi::button( 'Copy1', { 'onclick'=> "f1.func.value='Copy';f1.submit();", text=>'Copy' } );
+						if ( $$variable{'Article'}->source() ) {
+							$html .= ssi::button( 'Reload1', { 'onclick'=> "f1.func.value='Reload';f1.submit();", text=>'Reload' } );
+						} # end if
+						$html .= ssi::button( 'View1', { 'href'=>'/article/view.html?article_id='.$$variable{'Article'}->id(), 'target'=>'_blank', text=>'View' } );
+					} # end if
+					$html .= ssi::button( 'Save1', { 'onclick'=>"f1.func.value='Save';f1.submit();", text=>'Save' } );
+					return $html;
+				) ?>
+			</p>
 			<div class="content leftColumn">
 				<ul>
 					<li><label for="company_id">Company</label>

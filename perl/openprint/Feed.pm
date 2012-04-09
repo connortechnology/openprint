@@ -14,6 +14,8 @@ $serial = 'feeds_id_seq';
 	'type'			=>	'type',
 	'url'			=>	'url',
 	'company_id'	=>	'company_id',
+	'category_id'	=>	'category_id',
+	'filters'		=>	'filters',
 );
 
 %defaults = (

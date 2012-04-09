@@ -930,6 +930,13 @@ if ( ! sets::isin( 'feeds', \@tables ) ) {
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do('ALTER TABLE feeds add type TEXT');
 	} # end if
+	if ( ! exists $$data{'category_id'} ) {
+		$dbh->do('ALTER TABLE feeds add category_id INTEGER');
+		$dbh->do('ALTER TABLE feeds add FOREIGN KEY (category_id) REFERENCES Article_Categories (id)');
+	} # end if
+	if ( ! exists $$data{'filters'} ) {
+		$dbh->do('ALTER TABLE feeds add filters TEXT');
+	} # en dif
 }
 if ( ! sets::isin( 'creditapplications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Credit_Applications.sql}) );

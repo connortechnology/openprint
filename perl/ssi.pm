@@ -84,7 +84,7 @@ sub do_new_substitution {
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result = htmlize($result);
+		$result = html_escape($result);
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
