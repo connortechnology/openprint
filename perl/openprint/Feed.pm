@@ -11,6 +11,7 @@ $serial = 'feeds_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
+	'type'			=>	'type',
 	'url'			=>	'url',
 	'company_id'	=>	'company_id',
 );

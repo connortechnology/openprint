@@ -925,6 +925,11 @@ if ( ! sets::isin( 'product_specifications', \@tables ) ) {
 if ( ! sets::isin( 'feeds', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Feeds.sql}) );
 	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='feeds'", 'column_name');
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do('ALTER TABLE feeds add type TEXT');
+	} # end if
 }
 if ( ! sets::isin( 'creditapplications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Credit_Applications.sql}) );

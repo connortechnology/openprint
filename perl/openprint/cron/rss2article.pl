@@ -18,7 +18,7 @@ require Email::Valid;
 require openprint::Email;
 require openprint::User_Notification;
 require logger;
-require openprint::Upload;
+require openprint::Article;
 use openprint ();
 
 use vars qw( $log $dbh %config );
