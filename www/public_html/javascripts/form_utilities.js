@@ -464,7 +464,7 @@ function Serialize( form ) {
 } // end function serialize
 
 function select_all( form, element_name, checked ) {
-	for ( var i=0; i< form.elements.length; i += 1 ) {
+	for ( var i=0, length=form.elements.length; i < length; i += 1 ) {
 		if ( form.elements[i].name == element_name ) {
 			if ( form.elements[i].length ) {
 				for ( var j = 0; j < form.elements[i].length; j += 1 ) {
