@@ -1,3 +1,6 @@
+<script type="text/javascript" src="/javascripts/fileuploader.js"></script>
+<link type="text/css" rel="/css/fileuploader.css"/>
+<script type="text/javascript" src="/javascripts/dragndrop.js"></script>
 <div class="PhotoAlbum">
 	<div class="View">
 <? if ( $$variable{'Album'}->can_view() ) ?>
@@ -32,9 +35,7 @@
 					</ul>
 				</div>
 			</fieldset>
-			<fieldset><legend>Photos</legend>
-				<div id="Photos"><!--#include virtual="_photos.html"--></div>
-			</fieldset>
+			<!--#include virtual="_album_upload.html"-->
 		</form>
 <? else ( $$variable{'Album'}->can_view() ) ?>
 	You don't have rights to view this album.

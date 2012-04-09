@@ -1307,3 +1307,53 @@ function floatize(e) {
 function hexize(e) {
 	e.value = e.value.replace(/[^\da-fA-F]/g,'');
 }
+function createThrobber( img, preview ) {
+    var x = img.x;
+    var y = img.y;
+ 
+    var canvas = document.createElement("canvas");
+    preview.appendChild(canvas);
+    canvas.width = preview.getStyle('width');
+    canvas.height = preview.getStyle('height');
+alert(img.getStyle('width'));
+    var size = Math.min(canvas.height, canvas.width);
+    canvas.style.top = y + "px";
+    canvas.style.left = x + "px";
+    canvas.classList.add("throbber");
+    var ctx = canvas.getContext("2d");
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.font = "15px monospace";
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = "white";
+ 
+    var ctrl = {};
+    ctrl.ctx = ctx;
+    ctrl.update = function(percentage) {
+        var ctx = this.ctx;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = "rgba(0, 0, 0, " + (0.8 - 0.8 * percentage / 100)+ ")";
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.beginPath();
+        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+                size / 6, 0, Math.PI * 2, false);
+        ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+        ctx.lineWidth = size / 10 + 4;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+                size / 6, -Math.PI / 2, (Math.PI * 2) * (percentage / 100) + -Math.PI / 2, false);
+        ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+        ctx.lineWidth = size / 10;
+        ctx.stroke();
+        ctx.fillStyle = "white";
+        ctx.baseLine = "middle";
+        ctx.textAlign = "center";
+        ctx.font = "10px monospace";
+        ctx.fillText(percentage + "%", ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+    ctrl.update(0);
+    return ctrl;
+}

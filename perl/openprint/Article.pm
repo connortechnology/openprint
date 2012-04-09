@@ -215,6 +215,7 @@ sub view_url {
 sub Assets {
 	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
 } # end sub Assets
+
 sub published_on_string {
 	if ( ! $_[0]{'published_on_string'} ) {
 		$_[0]{'published_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'published_on'} ) );
@@ -222,5 +223,18 @@ sub published_on_string {
 	return $_[0]{'published_on_string'};
 } # end sub published_on_string
 
+sub upload {
+	my $error;
+	my $Asset = openprint::Asset::upload( $_[1] );
+	if ( ref $Asset ne 'openprint::Asset' ) {
+		return $Asset;
+	} # end if
+	my $Article_Asset = new openprint::Article_Asset({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	if ( $Article_Asset->asset_id() ) {
+		return 'Asset already in article.';
+	} else {
+		return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	} # end if
+} # end sub upload
 1;
 __END__

@@ -15,6 +15,7 @@ $table = 'photo_albums';
 	'id'				=>	'id',
 	'user_id'			=>	'user_id',
 	'name'				=>	'name',
+	'description'		=>	'description',
 	'thumbnail_id'		=>	'thumbnail_id',
 	'created_on'		=>	'created_on',
 	'privacy_mode_id'	=>	'privacy_mode_id',

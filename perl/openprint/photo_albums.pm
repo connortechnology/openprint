@@ -49,7 +49,7 @@ sub list {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
-		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		(new openprint::Log())->save({action=>'Create Photo Album', Object=>$Album}) if ! $param{'album_id'};
 		$variable{'error'} .= $Album->Privacy()->save( {
 				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
 			} );
@@ -76,7 +76,7 @@ sub view {
 sub edit {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'user_id'} = $session{'user_id'};
+		$param{'user_id'} = $session{'user_id'} if ! ( ( $session{'user_type'} eq 'A' ) and $param{'user_id'} );
 		$variable{'error'} .= $Album->save(\%param);
 		(new openprint::Log())->save({'action'=>'Create Photo Album','url'=>'/photo_albums/view.html?album_id='.$Album->id(), 'Object'=>$Album}) if ! $param{'id'};
 
@@ -103,7 +103,7 @@ sub edit {
 	$variable{'Privacy'} = $Album->Privacy();
 } # end sub edit
 
-sub _photos {
+sub _album_photos {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
@@ -173,13 +173,17 @@ sub view_photo {
 				$variable{'error'} .= $DoDontPhoto->delete() if $DoDontPhoto;
 			} # end if
 			
-		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-			$variable{'error'} .= $Photo->delete();
-			if ( ! $variable{'error'} ) {
-				$variable{'ExternalRedirect'} = '/photo_album/view.html?album_id='.$param{'album_id'};
+		} elsif ( $param{'action'} eq 'Delete' ) {
+			if ( $Photo->can_edit() ) {
+				$variable{'error'} .= $Photo->delete();
+				if ( ! $variable{'error'} ) {
+					$variable{'ExternalRedirect'} = '/photo_albums/view.html?album_id='.$param{'album_id'};
+				} # end if
+			} else {
+				$variable{'error'} .= 'You cant delete that!';
 			} # end if
 
-		} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		} elsif ( $param{'action'} eq 'Undelete' ) {
 			$variable{'error'} .= $Photo->undelete();
 		} elsif ( $param{'btnFunction'} eq 'Save' ) {
 $log->debug("Saving");

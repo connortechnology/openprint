@@ -138,7 +138,7 @@ sub load {
 } # end sub load
 
 sub save {
-	my ( $self, $data ) = @_;
+	my ( $self, $data, $force_insert ) = @_;
 
 	my $type = ref $self;
 	my $local_dbh = eval '$'.$type.'::dbh';
@@ -174,7 +174,7 @@ if ( $debug ) {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
-		my $insert = 0;
+		my $insert = $force_insert;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
@@ -227,10 +227,12 @@ $log->debug("No serial") if $debug;
 			} # end if
 		} # end if
 	} else { # not identified_by
-		if ( ! $$self{'id'} ) {
-			my $serial = eval '$'.$type.'::serial';
-			if ( $serial ) {
-				($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+		if ( ( ! $$self{'id'} ) or $force_insert ) {
+			if ( ! $$self{'id'} ) {
+				my $serial = eval '$'.$type.'::serial';
+				if ( $serial ) {
+					($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+				} # end if
 			} # end if
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
