@@ -420,14 +420,24 @@ foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
 	if ( $Action ) {
 		if ( $Action->id() != $config_actions{$config_action} ) {
+			$log->debug("Must renumber the action: $config_action want $config_actions{$config_action} have $$Action{id}");
+
+			# Look for existing actions with this id
 			my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
 			if ( ! $RealAction ) {
+				# No existing action
+				$log->debug("No existing");
+
+				# Create an action type with the right name, and the right id, but we already have one with the right name, and the wrong id, so... we are renumbering?
+				my $ac = sql::start_transaction( $dbh );
 				my $New = $Action->copy();
-				$New->save({'id'=>$config_actions{$config_action}});
+				$New->save({'id'=>$config_actions{$config_action}}, 1 );
 				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
 					$Log->save({'action_id'=>$config_actions{$config_action}});
 				} # end foreach Log
+				sql::end_transaction( $dbh, $ac );
 			} elsif ( $RealAction->name() eq $config_action ) {
+				# Shouldnt happen, basically means that there must be duplicates
 				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
 					$Log->save({'action_id'=>$config_actions{$config_action}});
 				} # end foreach Log
@@ -438,6 +448,7 @@ foreach my $config_action ( keys %config_actions ) {
 		} # end if
 	} # end if
 } # end foreach config_action
+die $dbh->errstr() if $dbh->errstr();
 
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
