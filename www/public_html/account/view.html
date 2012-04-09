@@ -55,9 +55,9 @@
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
 			<fieldset><legend>Photo Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<? if ( $$variable{'User'}->can_edit() ) ?>
 				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<? endif ( $$variable{'User'}->can_edit() ) ?>
 				<? echo (
 					my $html = '';
 					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
