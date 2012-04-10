@@ -130,7 +130,7 @@ $log->debug("after filtering: $$item{'description'}");
 				'title'	=>	$item->{'title'},
 				'body'	=>	$item->{'description'},
 				'source'	=>	$item->{'link'},
-				'published'	=>	1,
+				'published'	=>	0,
 				'published_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 				'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 				'company_id'	=>	$Feed->company_id(),
