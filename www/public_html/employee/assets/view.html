@@ -43,7 +43,7 @@
 							<? echo ( 
 									my $html = $$variable{'Asset'}->filename() ;
 									if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/i ) {
-										$html .= '<br/><img src="/assets/'.$$variable{'Asset'}->on_disk_filename().'" />';
+										$html .= '<br/><img src="'.$$variable{'Asset'}->url().'" />';
 									} # end if
 									return $html;
 							) ?>

@@ -19,6 +19,9 @@
 
 		@{$$variable{'Assets'}} = ();
 		foreach my $Asset ( openprint::Asset->find( %search ) ) {
+			if ( $param{'search'} ) {
+				next if ( $Asset->name() !~ /$param{search}/i and $Asset->filename() !~ /$param{search}/i );
+			} # end if
 			push @{$$variable{'Assets'}}, $Asset;
 		} # end foreach Asset
 	} # end if
