@@ -103,7 +103,7 @@ foreach my $Feed ( openprint::Feed->find() ) {
 #print "RSS: " . Data::Dumper::Dumper($rss) . "\n";
     # print the channel items
     foreach my $item (@{$rss->{'items'}}) {
-#$log->debug("Item: " . Data::Dumper::Dumper($item));
+$log->debug("Item: " . Data::Dumper::Dumper($item));
 #print "Item: " . Data::Dumper::Dumper($item) ."\n";
 		next unless defined($item->{'title'}) && defined($item->{'link'});
 		my $Article = openprint::Article->find_one('title'=>$item->{'title'});
@@ -114,11 +114,16 @@ foreach my $Feed ( openprint::Feed->find() ) {
 			} # end if
 			$item->{'description'} =~ s/\n/ /g;
 
+			# Get rid of the feedburner stuff
+			if ( $$item{'http://rssnamespace.org/feedburner/ext/1.0'} and $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'} ) {
+				$$item{'link'} = $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'};
+			} # end if
+
 			if ( $Feed->filters() ) {
 				foreach my $filter ( split("\n", $Feed->filters() ) ) {
 $log->debug("Apply filter $filter");
 					eval q`$item->{'description'} =~ `.$filter;
-$log->error( "Eval error, Reason: " . $@ ) if $@;
+					$log->error( "Eval error, Reason: " . $@ ) if $@;
 				} # end foreach filter
 $log->debug("after filtering: $$item{'description'}");
 			} else {
@@ -130,7 +135,7 @@ $log->debug("after filtering: $$item{'description'}");
 				'title'	=>	$item->{'title'},
 				'body'	=>	$item->{'description'},
 				'source'	=>	$item->{'link'},
-				'published'	=>	1,
+				'published'	=>	$Feed->published(),
 				'published_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 				'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 				'company_id'	=>	$Feed->company_id(),

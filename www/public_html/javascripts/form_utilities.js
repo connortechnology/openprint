@@ -489,7 +489,7 @@ function element_changed( element ) {
 	}
 
 	if ( element.type == 'select-one' ) {
-		for ( var i = 0, len = element.options.length; i < len; optionIndex += 1 ) {
+		for ( var i = 0, len = element.options.length; i < len; i += 1 ) {
 			if ( element.options[i].selected != element.options[i].defaultSelected ) {
 				return true;
 			} // end if
