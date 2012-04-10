@@ -1,8 +1,17 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
-
+	my @Landscape;
+	my @Portrait;
 	foreach my $Photo ( $$variable{'Album'}->Photos() ) {
+		if ( $Photo->Asset()->layout() eq 'Portrait' ) {
+			push @Portrait, $Photo;
+		} else {
+			push @Landscape, $Photo;
+		} # end if
+	} # end foreach Photo
+
+	foreach my $Photo ( @Portrait, @Landscape ) {
 		$html .= '<div class="Photo">';
 		$html .= $Photo->thumbnail_html();
 		$html .= '<br/>';

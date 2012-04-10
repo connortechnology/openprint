@@ -20,6 +20,10 @@ CREATE TABLE Assets (
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	md5		char(32),
 	deleted	BOOLEAN NOT NULL default false,
+	optimised	BOOLEAN NOT NULL DEFAULT FALSE,
+	layout		TEXT,
+	width		float,
+	height		float,
 	PRIMARY KEY (id)
 );
 alter table Users add foreign key (asset_Id) REFERENCES assets (Id);
