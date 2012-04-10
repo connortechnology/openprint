@@ -1,0 +1,12 @@
+table {
+	border: none;
+}
+input[type="radio"] {
+	margin: 0;
+}
+textarea {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+}
+
