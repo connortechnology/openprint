@@ -89,6 +89,9 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	if ( ! exists $$data{'attribution'} ) {
 		$dbh->do('ALTER TABLE Assets ADD attribution TEXT');
 	} # end if
+	if ( ! exists $$data{'optimised'} ) {
+		$dbh->do('ALTER TABLE Assets ADD optimised BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {

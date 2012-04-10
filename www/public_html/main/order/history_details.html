@@ -25,13 +25,13 @@
 			} elsif ( $$variable{'Order'}->status() eq 'Incomplete' ) {
 				$html .= ssi::button( 'Continue', { href=>'information.html?OrderID='.$$variable{'OrderID'} } );
 				$html .= ssi::button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
-			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
+			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
 				$html .= ssi::button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
-				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
+				$html .= ssi::button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", href=>'', text=>'ReOrder' } ); 
 				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'Order'}->status() ne 'Cancelled'; 
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'ReOpen','re_open.gif',"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", '', 'ReOpen' );
-					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'Order'}->status() ne 'Cancelled';
+					$html .= ssi::button( 'ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", href=>'', text=>'ReOpen' } );
+					$html .= ssi::button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } ) if $$variable{'Order'}->status() ne 'Cancelled';
 				} # end if
 			} # end if
 			if ( $$variable{'Order'}->owing() ) {
@@ -39,13 +39,13 @@
 				if ( @Payments == 1 and $Payments[0]->name() eq 'PayPal' ) {
 					$html .= '<a href="/payment/make.html?order_id='.$$variable{'Order'}->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
 				} else {
-					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/payment/make.html';f1.submit();", '', 'Make Payment' ); 
+					$html .= ssi::button( 'MakePayment', { onclick=>"f1.action='/payment/make.html';f1.submit();", href=>'', text=>'Make Payment' } ); 
 				} # end if
 			} # end if
 			
-			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+			$html .= ssi::button( 'Print', { onclick=>'window.print();' } );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html?order_id=".$$variable{'Order'}->id()."', '', { width: 800 } );", '', 'View Log' );
+				$html .= ssi::button( 'Log', { onclick=> "popup_window('_view_log.html?order_id=".$$variable{'Order'}->id()."', '', { width: 800 } );", text=>'View Log' } );
 			} # end if
 			return $html;
 		) ?>
@@ -86,7 +86,7 @@ Projects listed in red have changed price from the time this order was originall
 					$html .= '<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
 					By checking the box and clicking Accept you agree to accept the listed terms and conditions.';
 
-					$html .= ssi::writeButton( $log, $dbh, 'Accept', 'accept.gif', "f1.btnFunction.value='AcceptTerms';f1.submit();", '', 'Accept' );
+					$html .= ssi::button( 'Accept', { onclick=>"f1.btnFunction.value='AcceptTerms';f1.submit();" } );
 				} else {
 					$html .= 'You cannot accept the terms on behalf of ' . $$variable{'Order'}->Company()->name().'<br/>';
 				} # end if
