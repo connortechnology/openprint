@@ -37,6 +37,7 @@ $debug = 0;
 	'attribution'	=>	'attribution',
 	'license'		=>	'license',
 	'keywords'		=>	undef,
+	'optimised'		=>	'optimised',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -47,6 +48,7 @@ $debug = 0;
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'md5'		=>	undef,
 	'deleted'	=>	0,
+	'optimised'	=>	0,
 );
 %transforms = (
 	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
