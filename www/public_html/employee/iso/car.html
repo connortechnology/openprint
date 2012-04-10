@@ -1,6 +1,8 @@
 <div class="PageTitle">
 <h1>CORRECTIVE ACTION REQUEST (CAR)</h1>
+<? if ( $$variable{'CAR'}->reprint() eq 'Yes' ) ?>
 <h2>(Re-print Job Request)</h2>
+<? endif ( $$variable{'CAR'}->reprint() eq 'Yes' ) ?>
 </div>
 <script type="text/javascript">
 	function check_part1( form ) {
@@ -16,16 +18,18 @@
 			alert('Please select the reason');
 			return 0;
 		} // end if
-		if ( form.reprint_charge ) {
-			var charge = get_value( form.reprint_charge );
-			if ( ! charge ) {
-				alert('Please select wether there will be a reprint charge');
+		if ( form.reprint_approval && ( get_rdb_value( form.reprint_approval ) == 'Yes' ) ) {
+			if ( form.reprint_charge ) {
+				var charge = get_value( form.reprint_charge );
+				if ( ! charge ) {
+					alert('Please select wether there will be a reprint charge');
+					return 0;
+				} // end if
+			} // end if
+			if ( form.reprint_value && ! form.reprint_value.value ) {
+				alert('Please enter the reprint value');
 				return 0;
 			} // end if
-		} // end if
-		if ( form.reprint_value && ! form.reprint_value.value ) {
-			alert('Please enter the reprint value');
-			return 0;
 		} // end if
 		return 1;
 	} // end function check_part1
@@ -71,7 +75,7 @@
 	Invalid CAR # specified.
 	<? else ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 
-		<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ) ) ?>
+		<? echo ( ssi::button( 'Print', { onclick=>'window.print();' } ) ) ?>
 		<? echo ( ssi::button( 'Send', { 'href'=>'/employee/iso/car.html?action=Send&amp;car_id='.$$variable{'CAR'}->id() } ); ) ?>
 		<h3>CAR ID: <span id="car_id"><? echo ( $$variable{'CAR'}->id() ) ?></span></h3>
 		<? echo (
