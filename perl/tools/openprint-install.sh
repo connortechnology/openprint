@@ -8,6 +8,7 @@ apt-get -y install libtext-unaccent-perl libauthen-captcha-perl libdbi-perl liba
 apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl
 apt-get -f -y --force-yes install perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl libmath-round-perl
 # Also need Barcode-Code128-2.00
+apt-get -y jpegoptim pngcrush
 
 ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
 ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
