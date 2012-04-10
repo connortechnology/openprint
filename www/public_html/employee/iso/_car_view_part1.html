@@ -1,4 +1,4 @@
-<div class="error"><?error?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <h3>Part 1 (To be completed by issuer)</h3>
 <table class="View">
 	<tr>
@@ -63,14 +63,14 @@
 	</tr>
 <? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 </table>
-<? if ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? if ( $$variable{'CAR'}->can_edit() ) ?>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart1', 'edit.gif', sprintf(q`new Ajax.Updater('Part1', '/employee/iso/_car_edit_part1.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
+		<? echo ( ssi::button( 'EditPart1', { onclick=>sprintf(q`new Ajax.Updater('Part1', '/employee/iso/_car_edit_part1.html', { parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), text=>'Edit' } ); ) ?>.
 	</p>
-<? endif ( $$variable{'CAR'}->issued_by_id() == $openprint::session{'user_id'} or openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( $$variable{'CAR'}->can_edit() ) ?>
 <? if ( ! $$variable{'CAR'}->part2_user_id() ) ?>
 <script type="text/javascript">
-	new Ajax.Updater( 'Part2', '/employee/iso/_car_edit_part2.html', { method: 'get', parameters: {car_id<? echo ( $$variable{'CAR'}->id() ) ?>} } );
+	new Ajax.Updater( 'Part2', '/employee/iso/_car_edit_part2.html', { parameters: {car_id:<? echo ( $$variable{'CAR'}->id() ) ?>} } );
 	$('car_id').innerHTML = <? echo ( $$variable{'CAR'}->id() ) ?>;
 </script>
 <? endif ( ! $$variable{'CAR'}->part2_user_id() ) ?>
