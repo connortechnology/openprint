@@ -16,10 +16,12 @@ $serial = 'feeds_id_seq';
 	'company_id'	=>	'company_id',
 	'category_id'	=>	'category_id',
 	'filters'		=>	'filters',
+	'published'		=>	'published',
 );
 
 %defaults = (
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
+	'published'		=>	0,
 );
 
 1;

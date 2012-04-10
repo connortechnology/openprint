@@ -43,6 +43,10 @@
 				<label>Filters</label>
 				<textarea name="filters"><? hecho ( $$variable{'Feed'}->filters() ) ?></textarea>
 			</li>
+			<li>
+				<label>Auto Publish</label>
+				<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No' ], $$variable{'Feed'}->published() ); ) ?>
+			</li>
 		</ul>
 	</fieldset>
 	<input type="hidden" name="action"/>
