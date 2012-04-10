@@ -103,7 +103,7 @@ foreach my $Feed ( openprint::Feed->find() ) {
 #print "RSS: " . Data::Dumper::Dumper($rss) . "\n";
     # print the channel items
     foreach my $item (@{$rss->{'items'}}) {
-#$log->debug("Item: " . Data::Dumper::Dumper($item));
+$log->debug("Item: " . Data::Dumper::Dumper($item));
 #print "Item: " . Data::Dumper::Dumper($item) ."\n";
 		next unless defined($item->{'title'}) && defined($item->{'link'});
 		my $Article = openprint::Article->find_one('title'=>$item->{'title'});
@@ -114,11 +114,16 @@ foreach my $Feed ( openprint::Feed->find() ) {
 			} # end if
 			$item->{'description'} =~ s/\n/ /g;
 
+			# Get rid of the feedburner stuff
+			if ( $$item{'http://rssnamespace.org/feedburner/ext/1.0'} and $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'} ) {
+				$$item{'link'} = $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'};
+			} # end if
+
 			if ( $Feed->filters() ) {
 				foreach my $filter ( split("\n", $Feed->filters() ) ) {
 $log->debug("Apply filter $filter");
 					eval q`$item->{'description'} =~ `.$filter;
-$log->error( "Eval error, Reason: " . $@ ) if $@;
+					$log->error( "Eval error, Reason: " . $@ ) if $@;
 				} # end foreach filter
 $log->debug("after filtering: $$item{'description'}");
 			} else {
