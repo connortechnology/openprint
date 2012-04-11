@@ -520,7 +520,7 @@ if ( 0 ) {
 			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
 
 			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'} } );
-			$variable{'error'} .= $Credit->save( { map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
+			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
 		} # end if $index
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$index = $Company->next();
