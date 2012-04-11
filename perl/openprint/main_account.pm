@@ -132,6 +132,7 @@ sub registration {
 		my $Credit = new openprint::Company_Credit();
 		$Credit->save({
 				'company_id'	=>	$Company->id(),
+				'supplier_id'	=>	$openprint::config{'Owner'},
 				'warndays'		=>	$openprint::config{'DefaultWarnDays'},
 				'denydays'		=>	$openprint::config{'DefaultDenyDays'},
 				'limit'			=>	$openprint::config{'DefaultCreditLimit'},
