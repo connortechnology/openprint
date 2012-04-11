@@ -150,7 +150,7 @@ sub load {
 	$$variable{'StateProvince'} = $$variable{'txtStateProvince'} = $$variable{'ddmStateProvince'};
 	$$variable{'txtBankAccountNumber'} = $$variable{'txtBankAccountNo'};
 
-	my $Credit = new openprint::Company_Credit({'company_id'=>$cust_id, 'supplier_id'=> $openprint::config{'Owner'} );
+	my $Credit = new openprint::Company_Credit({'company_id'=>$cust_id, 'supplier_id'=> $openprint::config{'Owner'}});
 	my %credit_fields = (
 			'txtWarnDays'		=>	'warndays',
 			'txtDenyDays'		=>	'denydays',
