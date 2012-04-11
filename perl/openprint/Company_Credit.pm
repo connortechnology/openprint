@@ -10,31 +10,31 @@ $table = 'company_credit';
 
 # COD and #DOWNpayment are percentages.  
 %fields = (
-		'Limit'			=>	'dbllimit',
-		'Hold'			=>	'hold',
-		'DenyDays'		=>	'denydays',
-		'WarnDays'		=>	'warndays',
-		'Downpayment'	=>	'downpayment',
-		'COD'			=>	'cod',
+		'limit'			=>	'dbllimit',
+		'hold'			=>	'hold',
+		'denydays'		=>	'denydays',
+		'warndays'		=>	'warndays',
+		'downpayment'	=>	'downpayment',
+		'cod'			=>	'cod',
 		'company_id'	=>	'company_id',
 		'supplier_id'	=>	'supplier_id',
 		);	
 
 %transforms = (
-		'Hold'      	=>  [ 's/[^YN]//g' ],
-		'Limit'			=>	[ 's/[^\d\.]//g' ],
-		'DenyDays'		=>	[ 's/\D//g' ],
-		'WarnDays'		=>	[ 's/\D//g' ],
-		'Downpayment'	=>	[ 's/[^\d\.]//g' ],
-		'COD'			=>	[ 's/[^\d\.]//g' ],
+		'hold'      	=>  [ 's/[^YN]//g' ],
+		'limit'			=>	[ 's/[^\d\.]//g' ],
+		'denydays'		=>	[ 's/\D//g' ],
+		'warndays'		=>	[ 's/\D//g' ],
+		'downpayment'	=>	[ 's/[^\d\.]//g' ],
+		'cod'			=>	[ 's/[^\d\.]//g' ],
 		);
 %defaults = (
 	'supplier_id'		=>	undef,
-	'Limit'				=>	undef,
-	'DenyDays'			=>	undef,
-	'WarnDays'			=>	undef,
-	'Downpayment'		=>	undef,
-	'COD'				=>	undef,
+	'limit'				=>	undef,
+	'denydays'			=>	undef,
+	'warndays'			=>	undef,
+	'downpayment'		=>	undef,
+	'cod'				=>	undef,
 );
 
 sub debt {
@@ -52,7 +52,7 @@ sub remaining {
 	my $self = shift;
 
 	my $debt = $self->debt();
-	my $limit = $$self{'Limit'};
+	my $limit = $$self{'limit'};
 
 	if ( $limit < $debt ) {
 		return openprint::Currency::format(0);
@@ -76,7 +76,7 @@ sub warn_orders {
     AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
     OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '?  days' < NOW() ORDER BY Index};
-    return sql::execute( undef, undef, $_, @$self{'company_id','WarnDays'} );
+    return sql::execute( undef, undef, $_, @$self{'company_id','warndays'} );
 } # end sub warn_orders
 
 sub denied_orders {
@@ -86,7 +86,7 @@ sub denied_orders {
     AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
     OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '? days' < NOW() ORDER BY Index};
-    return sql::execute( undef, undef, $_, @$self{'company_id','DenyDays'} );
+    return sql::execute( undef, undef, $_, @$self{'company_id','denydays'} );
 } # end sub denied_orders
 
 sub supplier_id {
@@ -94,7 +94,7 @@ sub supplier_id {
 		$_[0]{'supplier_id'} = $_[1];
 	}
 	if ( ! $_[0]{'supplier_id'} ) {
-		$_[0]{'supplier_id'} = ( new openprint::User( $openprint::session{'user_id'} )->company_id() );
+		$_[0]{'supplier_id'} = $openprint::config{'Owner'};
 	} # end if
 	return $_[0]{'supplier_id'};
 } # end if supplier_id
