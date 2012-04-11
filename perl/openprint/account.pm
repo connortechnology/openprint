@@ -698,7 +698,7 @@ sub couple_search {
 	_couple_search();
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
 } # end sub search
 
@@ -712,6 +712,14 @@ sub _couple_search {
 				) );
 } # end sub _search
 sub search {
+	if ( $param{'action'} eq 'Delete' ) {
+		my $User = new openprint::User( $param{'user_id'} );
+		if ( $User->can_edit() ) {
+			$variable{'error'} .= $User->delete();
+		} else {
+			$variable{'error'} .= 'You do not have rights to delete this profile.';
+		} # end if
+	} # end if
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );

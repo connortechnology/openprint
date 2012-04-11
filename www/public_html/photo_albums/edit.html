@@ -48,6 +48,7 @@
 <? endif ( $$variable{'Album'}->can_edit() ) ?>
 	</div>
 </div>
+<? if ( $$variable{'Album'}->id() ) ?>
 <script type="text/javascript">
 if ( 1 ) {
 var uploader = new qq.FileUploader({
@@ -69,3 +70,4 @@ var uploader = new qq.FileUploader({
 });
 }
 </script>
+<? endif ( $$variable{'Album'}->id() ) ?>

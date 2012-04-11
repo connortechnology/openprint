@@ -41,6 +41,8 @@ $debug = 0;
 	'keywords'		=>	undef,
 	'optimised'		=>	'optimised',
 	'layout'		=>	'layout',
+	'width'			=>	'width',
+	'height'		=>	'height',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -53,8 +55,12 @@ $debug = 0;
 	'deleted'	=>	0,
 	'optimised'	=>	0,
 	'layout'	=>	'',
+	'width'		=>	undef,
+	'height'	=>	undef,
 );
 %transforms = (
+	'width'			=>	[ 's/\D//g' ],
+	'height'			=>	[ 's/\D//g' ],
 	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],

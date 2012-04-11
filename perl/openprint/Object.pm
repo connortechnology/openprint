@@ -14,11 +14,12 @@ require openprint::Privacy;
 require openprint::Object_Type;
 require openprint::Opinion_Availability;
 require openprint::Object_Asset;
-use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session  );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache %session %config );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
+*config = \%openprint::config;
 
 my $debug = 0;
 my $debug_all = 0;
@@ -55,10 +56,10 @@ sub new {
 
 	my $ref = ref $id;
 	if ( ! $ref ) {
-		if ( $id and (!$data) and $openprint::Object::cache{$openprint::config{'db_name'}}{$parent} and $openprint::Object::cache{$openprint::config{'db_name'}}{$parent}{$id} ) {
+		if ( $id and (!$data) and $openprint::Object::cache{$config{'db_name'}}{$parent} and $openprint::Object::cache{$config{'db_name'}}{$parent}{$id} ) {
 #$log->debug("Loading from cache $parent $id");
 			# If the object is cached
-			return $openprint::Object::cache{$openprint::config{'db_name'}}{$parent}{$id};
+			return $openprint::Object::cache{$config{'db_name'}}{$parent}{$id};
 		} # end if
 #$log->debug("Not Loading from cache $parent $id") if $id and ! $data;
 		my $self = {};
@@ -71,7 +72,7 @@ sub new {
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {
-				$openprint::Object::cache{$openprint::config{'db_name'}}{$parent}{$id} = $self;
+				$openprint::Object::cache{$config{'db_name'}}{$parent}{$id} = $self;
 			} # end if
 		} # end if
 		return $self;
@@ -268,7 +269,7 @@ $log->debug("No serial") if $debug;
 	sql::end_transaction( $local_dbh, $ac );
 	$self->load();
 #$log->debug("Got here");
-	delete $openprint::Object::cache{$openprint::config{'db_name'}}{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 #$log->debug("after delete");
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 #$log->debug("after clear cache");
@@ -371,7 +372,7 @@ sub delete {
 	} else {
 		sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 		return $local_dbh->errstr if $local_dbh->errstr;
-		delete $openprint::Object::cache{$openprint::config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
+		delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
@@ -386,7 +387,7 @@ sub undelete {
 	$$self{'deleted'} = 0;
 	my %find_cache = eval '%'.$type.'::find_cache';
 	%find_cache = () if %find_cache;
-	delete $openprint::Object::cache{$openprint::config{'db_name'}}{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 	return;
 } # end sub undelete
 
@@ -396,7 +397,7 @@ sub destroy {
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
 	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
-	delete $openprint::Object::cache{$openprint::config{'db_name'}}{$type}{$$self{id}};
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
 
@@ -988,10 +989,10 @@ sub Object {
 } # end sub Object
 
 sub date_format {
-	return Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+	return Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub date_format 
 sub datetime_format {
-	return Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
+	return Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $_[0]{$_[1]} ) );
 } # end sub datetime_format 
 
 sub Views {

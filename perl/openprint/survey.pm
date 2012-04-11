@@ -111,7 +111,7 @@ sub responses {
 
 sub history {
 	_history();
-	ssi::setup_date_select( '/survey/history.html', 'created_on_start', -30 );
+	ssi::setup_date_select( '/survey/history.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/survey/history.html', 'created_on_end', '' );
 } # end sub history
 sub _history {
