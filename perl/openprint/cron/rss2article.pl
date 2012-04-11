@@ -71,7 +71,7 @@ $openprint::dbh = sql::open_sql( $log,
 	'password'	=> $CFG::Config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-configuration::init_cache( $log, $dbh, \%CFG::Config );
+configuration::init( $log, $dbh, \%CFG::Config );
 
 # create new instance of XML::RSS
 my $rss = new XML::RSS;
