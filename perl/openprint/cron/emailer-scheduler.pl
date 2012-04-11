@@ -40,9 +40,6 @@ if ($opts->{help}) {
 $log = new logger( {'level'=>'debug'});
 configuration::init( );
 configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
-foreach my $k ( keys %config ) {
-$log->debug("$k => $config{$k}");
-}
 
 # Declare variables
 foreach my $param ( 'db_name','db_user','db_pass' ) {

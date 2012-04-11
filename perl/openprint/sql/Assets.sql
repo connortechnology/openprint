@@ -22,8 +22,8 @@ CREATE TABLE Assets (
 	deleted	BOOLEAN NOT NULL default false,
 	optimised	BOOLEAN NOT NULL DEFAULT FALSE,
 	layout		TEXT,
-	width		float,
-	height		float,
+	width		INTEGER,
+	height		INTEGER,
 	PRIMARY KEY (id)
 );
 alter table Users add foreign key (asset_Id) REFERENCES assets (Id);

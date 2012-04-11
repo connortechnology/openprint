@@ -980,6 +980,11 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
 	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='affiliates'", 'column_name');
+	if ( ! exists $$data{'sort'} ) {
+		$dbh->do('ALTER TABLE affiliates add sort integer');
+	} # end if
 }
 $dbh->disconnect();
 1;

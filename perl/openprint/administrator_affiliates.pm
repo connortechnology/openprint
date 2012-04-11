@@ -35,12 +35,20 @@ sub list {
 } # end sub list
 
 sub _list {
-	if ( ! $param{'action'} ) {
+    if ( $param{'update'} ) {
+        $param{'update'} =~ s/affiliates\[\]=//g;
+        my $i = 0;
+        foreach my $affiliate_id ( split('&', $param{'update'} ) ) {
+            my $Affiliate = new openprint::Affiliate( $affiliate_id );
+            $Affiliate->save({'sort'=>$i});
+            $i += 1;
+        } # end foreach $affiliate_id
+	} elsif ( ! $param{'action'} ) {
 		ssi::save_params( '/administrator/affiliates/list.html', ( 
 					'created_on_start_year','created_on_start_month','created_on_start_day',
 					'created_on_end_year','created_on_end_month','created_on_end_day',
 					'supplier_id', ) );
-	} # end if
+    } # end if
 } # end sub _list
 1;
 __END__

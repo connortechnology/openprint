@@ -50,7 +50,7 @@ sub handler {
 			'password'  => $r->dir_config('db_password'),
 			);
 
-	%config = configuration::init_cache( $log, $dbh, $r->dir_config() );
+	%config = configuration::init( $log, $dbh, $r->dir_config() );
 
 	handle_JMF_Message( $doc );
 
