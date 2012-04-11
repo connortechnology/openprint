@@ -41,7 +41,7 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 $openprint::Object::no_cache = 1;
 
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 
 # Clear out old sessions
 my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );

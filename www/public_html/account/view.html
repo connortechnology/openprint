@@ -20,7 +20,7 @@
 			<? echo ( 
 				my $html;
 				if ( $$variable{'User'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", 'text'=>'Delete Profile' } );
+					$html .= ssi::button( 'Delete', { href=>"/account/search.html?action=Delete&amp;user_id=$$variable{'User'}{'id'}", text=>'Delete Profile' } );
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html?ddmUser='.$$variable{'User'}->id() } );
 				} # end if
 				if ( $$variable{'User'}->id() and ( $session{'user_id'} != $$variable{'User'}->id() ) ) {
@@ -96,6 +96,7 @@
 			<fieldset><legend>User Information</legend>
 				<div class="content">
 					<ul>
+						<li><label>Couple</label><? echo ( $$variable{'User'}->Company()->name() ) ?></li>
 						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
 					</ul>
 				</div>

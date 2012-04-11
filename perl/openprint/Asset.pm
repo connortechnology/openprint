@@ -3,6 +3,8 @@ require openprint;
 require Digest::MD5;
 require openprint::Keyword;
 
+require Image::Size;
+
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table $serial );
@@ -37,6 +39,10 @@ $debug = 0;
 	'attribution'	=>	'attribution',
 	'license'		=>	'license',
 	'keywords'		=>	undef,
+	'optimised'		=>	'optimised',
+	'layout'		=>	'layout',
+	'width'			=>	'width',
+	'height'		=>	'height',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -47,8 +53,14 @@ $debug = 0;
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'md5'		=>	undef,
 	'deleted'	=>	0,
+	'optimised'	=>	0,
+	'layout'	=>	'',
+	'width'		=>	undef,
+	'height'	=>	undef,
 );
 %transforms = (
+	'width'			=>	[ 's/\D//g' ],
+	'height'			=>	[ 's/\D//g' ],
 	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -248,6 +260,33 @@ sub caption {
 		return $_[0]{'filename'};
 	} # end if
 } # end sub caption
+
+sub width {
+	if ( ! $_[0]{'width'} ) {
+# get the image size, and print it out
+		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+	} # end if
+	return $_[0]{'width'};
+} # end sub width
+
+sub height {
+	if ( ! $_[0]{'height'} ) {
+# get the image size, and print it out
+		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+	} # end if
+	return $_[0]{'height'};
+} # end sub height
+
+sub layout {
+	if ( ! $_[0]{'layout'} ) {
+		if ( $_[0]->width() > $_[0]->height() ) {
+			$_[0]{'layout'} = 'Landscape';
+		} else {
+			$_[0]{'layout'} = 'Portrait';
+		} # end if
+	} # end if
+	return $_[0]{'layout'};
+} # end sub layout
 
 1;
 __END__
