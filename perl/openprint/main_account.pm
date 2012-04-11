@@ -129,15 +129,16 @@ sub registration {
 		} # end if
 
 		# Setup default Credit
-		my $customer_credit = new openprint::customer_credit( $Company->id() );
-		my %params = (
-				'WarnDays'	=>	1*$openprint::config{'DefaultWarnDays'},
-				'DenyDays'	=>	1*$openprint::config{'DefaultDenyDays'},
-				'Limit'	=>	1*$openprint::config{'DefaultCreditLimit'},
-				'Hold'	=>	$openprint::config{'DefaultCreditHold'},
-				'Downpayment'	=>	1*$openprint::config{'DefaultDownpayment'},
-				);
-		$customer_credit->set( \%params );
+		my $Credit = new openprint::Company_Credit();
+		$Credit->save({
+				'company_id'	=>	$Company->id(),
+				'warndays'		=>	$openprint::config{'DefaultWarnDays'},
+				'denydays'		=>	$openprint::config{'DefaultDenyDays'},
+				'limit'			=>	$openprint::config{'DefaultCreditLimit'},
+				'hold'			=>	$openprint::config{'DefaultCreditHold'},
+				'downpayment'	=>	$openprint::config{'DefaultDownpayment'},
+				'cod'			=>	$openprint::config{'DefaultCOD'},
+				});
 
 		my $User = new openprint::User();
 		$User->set( \%openprint::param );
@@ -621,8 +622,8 @@ sub credit_application {
 			my %mail = (
 					SMTP	=> $openprint::config{'Mail Server'},
 					FROM	=> $openprint::config{'CreditApplicationEmail'},
-#TO		=> $openprint::config{'CreditApplicationEmail'},
-					TO		=>	'iconnor@point-one.com',
+					TO		=> $openprint::config{'CreditApplicationEmail'},
+					BCC		=>	'iconnor@point-one.com',
 					SUBJECT => "New Credit Application"
 					);
 
