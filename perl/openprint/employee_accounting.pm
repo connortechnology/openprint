@@ -2,7 +2,9 @@ use strict;
 package openprint::employee_accounting;
 
 require openprint::Payment;
+require openprint::Credit_Application;
 require MIME::QuotedPrint;
+require Encode;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
@@ -131,12 +133,12 @@ sub details {
 sub credit {
 
 	my %credit_fields = (
-			'txtDenyDays'		=>	'DenyDays',
-			'txtWarnDays'		=>	'WarnDays',
-			'txtCreditLimit'	=>	'Limit',
-			'rdbCreditHold'		=>	'Hold',
-			'txtDownpayment'	=>	'Downpayment',
-			'COD'				=>	'COD',
+			'denydays'		=>	'denydays',
+			'warndays'		=>	'warndays',
+			'limit'			=>	'limit',
+			'credithold'	=>	'hold',
+			'downpayment'	=>	'downpayment',
+			'cod'			=>	'cod',
 			);
 
 	my $company_index = $param{'ddmCustomer'};
@@ -363,123 +365,58 @@ sub _stock {
 
 sub credit_applications {
 
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		my %credit_fields = (
-				'txtTerms'			=>	'Terms',
-				'CreditLimit'		=>	'CreditLimit',
-				'txtDownpayment'	=>	'Downpayment',
-				'COD'				=>	'COD',
-				);
-		my $credit_app = $param{'credit_index'};
-
-		if ( $credit_app ) {
-			sql::update( $log, $dbh, 'CreditApplications', ['Id = ?',$credit_app],
-					'strStatus',			$param{'verdict'},
-					'lngGrantedTerms',		$param{'txtTerms'},
-					'dblGrantedCreditLimit',	$param{'CreditLimit'},
-					'dblGrantedDownpayment',	$param{'txtDownpayment'},
-					'GrantedCOD',				$param{'COD'},
-					);
-			$_ = "SELECT company_id, user_id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,strAnnualPurchases, dblCreditLimit, strAccountsPayableContact, to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI') FROM CreditApplications WHERE id=?";
-
-			@variable{
-				'hiddenCustomerID',
-					'UserIndex',
-					'Signature',
-					'FinancialStatementAvailable',
-					'FirstOrderValue',
-					'AnnualPurchases',
-					'AccountLimitDesired',
-					'AccountsPayableContact',
-					'SubmissionDate',
-			} = sql::execute( $log, $dbh, $_, $credit_app );
-
-			my $Company = new openprint::Company( $variable{'hiddenCustomerID'} );
-			if ( ( ! $Company->id() ) or $Company->deleted() ) {
-				return misc::error( $log, $dbh, \%variable, 'Deleted Customer', 'The company that created this credit app has been deleted from the system.' );
-			} # end if
-
-			my $Credit = new openprint::Company_Credit( { 'company_id' => $variable{'hiddenCustomerID'}, 'supplier_id' => $session{'company_id'} } );
-			$variable{'error'} .= $Credit->save( { map { $credit_fields{$_} => $param{$_} } keys %credit_fields } );
-			my %params;
-
-			$params{'Signature'} = $variable{'Signature'};
-			@params{keys %credit_fields} = $Credit->get( values %credit_fields );
-
-			my $User = new openprint::User( $variable{'UserIndex'} );
-
-			$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-			$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
-			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-			my $template = ssi::variable_substitution( \$_, \%params );
-			new openprint::Email()->send(
-					FROM	=> $config{'AdministratorEmail'},
-					TO	=> $User,
-					SUBJECT => 'Credit Status Changed.',
-					ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
-					);
-		} # end if
-	} # end if
 	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_start', -180 );
 	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_end', 0 );
 	ssi::save_params( '/employee/accounting/credit_applications.html',
 			'ddmStatus',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day',
 			'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			);
+		);
 
 } # end sub credit_applications
 
 sub credit_application {
 
-	my %credit_fields = (
-			'DenyDays'			=>	'DenyDays',
-			'WarnDays'			=>	'WarnDays',
-			'CreditLimit'		=>	'Limit',
-			'txtDownpayment'	=>	'Downpayment',
-			'COD'				=>	'COD',
-			);
-
-	my $credit_app = $param{'credit_index'};
-	$variable{'credit_index'} = $credit_app;
-
-	if ( $credit_app ) {
-		$_ = "SELECT company_Id, User_Id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,\n".
-			"strAnnualPurchases, dblCreditLimit, lngTerms, strAccountsPayableContact,\n".
-			"to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI'), strStatus, lngGrantedTerms, dblGrantedCreditLimit, dblGrantedDownpayment, GrantedCOD\n".
-			"FROM CreditApplications ".
-			"WHERE Id=?";
-
-		@variable{
-			'hiddenCustomerID',
-				'UserIndex',
-				'Signature',
-				'FinancialStatementAvailable',
-				'FirstOrderValue',
-				'AnnualPurchases',
-				'AccountLimitDesired',
-				'AccountTermsDesired',
-				'AccountsPayableContact',
-				'SubmissionDate',
-				'verdict',
-				'GrantedTerms',
-				'GrantedCreditLimit',
-				'GrantedDownpayment',
-				'GrantedCOD',
-		} = sql::execute( $log, $dbh, $_, $credit_app );
-
-		$variable{'FinancialStatementAvailable'} = $variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No';
-		$variable{'verdict'.$variable{'verdict'}} = 'CHECKED';
-
-		my $Credit = new openprint::Company_Credit( { 'company_id'=>$variable{'hiddenCustomerID'}, 'supplier_id'=>$session{'company_id'} } );
-		@variable{keys %credit_fields} = $Credit->get( values %credit_fields );
-
-		my $Company = $variable{'Company'} = new openprint::Company( $variable{'hiddenCustomerID'} );
-		my $User = $variable{'User'} = new openprint::User( $variable{'UserIndex'} );
-
-		$variable{'rdbTerms'.$variable{'rdbTerms'}} = 'CHECKED';
-
+	my $Application = $variable{'Application'} = new openprint::Credit_Application( $param{'credit_index'} );
+	if ( ! $Application->id() ) {
+		$variable{'error'} .=  'Application does not exist.';
+		return;
 	} # end if
+
+	my $Company = $variable{'Company'} = $Application->Company();
+	if ( ! $Company->id() ) {
+		$variable{'error'} .= 'The company that created this credit app has been deleted from the system.  This credit app has been deleted.';
+	} # end if
+
+	my $User = $variable{'User'} = $Application->User();
+	my $Credit = $variable{'Credit'} = $Company->Credit();
+
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $Application->save({
+				'status'				=>	$param{'status'},
+				'granted_terms'			=>	$param{'denydays'},
+				'granted_limit'			=>	$param{'limit'},
+				'granted_downpayment'	=>	$param{'downpayment'},
+				'granted_cod'			=>	$param{'cod'},
+				});
+		
+		$variable{'error'} .= $Credit->save( \%param );
+		if ( ! $variable{'error'} ) {
+
+			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
+			$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
+			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+			my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%variable );
+			$variable{'error'} .= ( new openprint::Email())->send(
+					FROM	=> $config{'AdministratorEmail'},
+					TO		=> $Application->User()->email(),
+					SUBJECT => 'Credit Status Changed.',
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$template)), 'text/html', 'quoted-printable' ],
+				);
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/credit_applications.html' if ! $variable{'error'};
+	} # end if
+
 } # end sub credit_application
 
 1;

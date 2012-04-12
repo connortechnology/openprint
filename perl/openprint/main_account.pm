@@ -9,11 +9,13 @@ use strict;
 require sql;
 require ssi;
 require misc;
+require Encode;
 
 require openprint::user;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
+require openprint::Credit_Application;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -590,45 +592,41 @@ sub credit_application {
 		$variable{'error'} .= $Company->save( \%param );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
 
-		my $creditlimit = $param{'DesiredCreditLimit'};
-		$creditlimit =~ s/[^\d\.]//g;
-		$variable{'error'} .= sql::insert( $log, $dbh, 'CreditApplications',
-				'User_Id',	 $session{'user_id'},
-				'company_id', $session{'company_id'},
-				( defined $param{'Signature'} ? ( 'strSignature',	 $param{'Signature'} ) : () ),
-				( defined $param{'FinancialStatementAvailable'} ? ( 'ysnFinancialStatementAvailable', $param{'FinancialStatementAvailable'} ) : () ),
-				( defined $param{'FirstOrderValue'} ? ( 'strFirstOrderValue', $param{'FirstOrderValue'} ) : () ),
-				( defined $param{'AnnualPurchases'} ? ( 'strAnnualPurchases', $param{'AnnualPurchases'} ) : () ),
-				( $creditlimit ne '' ? ( 'dblCreditLimit',	$creditlimit ) : () ),
-				'lngTerms',						$param{'DesiredTerms'},
-				'strAccountsPayableContact',	$param{'AccountsPayableContact'},
-				'strStatus',		'Non-Reviewed',
-				'dtmCreationDate',	'NOW()',
-				);
+		my $App = new openprint::Credit_Application();
+		$variable{'error'} .= $App->save({
+				'desired_limit'			=>	$param{'DesiredCreditLimit'},
+				'user_id'				=>	$session{'user_id'},
+				'company_id'			=>	$session{'company_id'},
+				'signature'				=>	$param{'Signature'},
+				'financialstatementavailable'	=>	$param{'FinancialStatementAvailable'},
+				'firstordervalue'		=>	$param{'FirstOrderValue'},
+				'annualpurchases'		=>	$param{'AnnualPurchases'},
+				'desired_limit'			=>	$param{'DesiredCreditLimit'},
+				'desired_terms'			=>	$param{'DesiredTerms'},
+				'accountspayablecontact'	=>	$param{'AccountsPayableContact'},
+				'status'				=>	'Non-Reviewed',
+				});
 
 		if ( ! $variable{'error'} ) {
 # Now send email notifications
 			my %info;
 			$info{'Company'} = $Company;
 			$info{'User'} = new openprint::User( $session{user_id} );
-
-			$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-			($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+			$info{'CreditAppIndex'} = $App->id();
 
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 			my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
-			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM	=> $openprint::config{'CreditApplicationEmail'},
-					TO		=> $openprint::config{'CreditApplicationEmail'},
+			$_ = ( new openprint::Email() )->send(
+					FROM	=>	$openprint::config{'CreditApplicationEmail'},
+					TO		=>	$openprint::config{'CreditApplicationEmail'},
 					BCC		=>	'iconnor@point-one.com',
-					SUBJECT => "New Credit Application"
+					SUBJECT =>	'New Credit Application',
+					ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8', $template)), 'text/html', 'quoted-printable' ],
 					);
-
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
+			$log->error($_) if $_;
 		} # end if Apply
 	} # end if error
 

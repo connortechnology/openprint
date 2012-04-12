@@ -20,15 +20,15 @@
 <fieldset><legend>Credit Information</legend>
     <p>
         <label>Deny Purchases after</label>
-		<input type="number" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
+		<input type="number" name="denydays" value="<?denydays?>" /> Days
     </p>
     <p>
         <label>Warn about credit after</label>
-		<input type="number" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
+		<input type="number" name="warndays" value="<?warndays?>" /> Days
     </p>
     <p>
         <label>Credit Account Limit</label>
-        <input type="number" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+        <input type="number" name="limit" value="<?limit?>" />
     </p>
     <p>
         <label>Current Credit Balance</label>
@@ -40,15 +40,15 @@
     </p>
 	<p>
         <label>Credit Hold</label>
-		<? echo ( ssi::radio( 'rdbCreditHold', ['Y', 'Yes', 'N', 'No'], $$variable{'rdbCreditHold'} ); ) ?>
+		<? echo ( ssi::radio( 'credithold', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'credithold'} ); ) ?>
     </p>
     <p>
-        <label>Required Downpayment Amount</label>
-		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>" onkeyup="floatize(this);"/>
+        <label>Required Downpayment</label>
+		<input type="number" name="downpayment" value="<?downpayment?>" max="100" onkeyup="floatize(this);"/>%
 	</p>
     <p>
-        <label>Required COD:</label>
-		<input type="number" name="COD" value="<?COD?>" onkeyup="floatize(this);"/>%
+        <label>Required COD</label>
+		<input type="number" name="cod" value="<?cod?>" max="100" onkeyup="floatize(this);"/>%
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
