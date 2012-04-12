@@ -20,15 +20,15 @@
 <fieldset><legend>Credit Information:</legend>
     <p>
         <label>Deny Purchases after:</label>
-		<input type="number" name="txtDenyDays" value="<?txtDenyDays?>" /> Days
+		<input type="number" name="denydays" value="<?denydays?>" /> Days
     </p>
     <p>
         <label>Warn about credit after:</label>
-		<input type="number" name="txtWarnDays" value="<?txtWarnDays?>" /> Days
+		<input type="number" name="warndays" value="<?warndays?>" /> Days
     </p>
     <p>
         <label>Credit Account Limit:</label>
-        <input type="number" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+        <input type="number" name="limit" value="<?limit?>" />
     </p>
     <p>
         <label>Current Credit Balance:</label>
@@ -40,18 +40,15 @@
     </p>
 	<p>
         <label>Credit Hold:</label>
-		<input type="radio" id="rdbCreditHoldY" name="rdbCreditHold" value="Y" <? echo ( 'checked' if $$variable{'rdbCreditHold'} eq 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldY">Yes</label>
-		<input type="radio" id="rdbCreditHoldN" name="rdbCreditHold" value="N" <? echo ( 'checked' if $$variable{'rdbCreditHold'} ne 'Y' ) ?> />
-		<label class="radio" for="rdbCreditHoldN">No</label>
+		<? echo ( ssi::radio( 'credithold', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'credithold'} ); ) ?>
     </p>
     <p>
         <label>Required Downpayment:</label>
-		<input type="number" name="txtDownpayment" value="<?txtDownpayment?>"/>%
+		<input type="number" name="downpayment" value="<?downpayment?>" max="100" />%
 	</p>
     <p>
         <label>Required COD:</label>
-		<input type="number" name="COD" value="<?COD?>"/>%
+		<input type="number" name="cod" value="<?cod?>" max="100" />%
 	</p>
 	<p class="buttons">
 		<? echo ( join('',

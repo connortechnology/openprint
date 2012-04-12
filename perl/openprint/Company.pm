@@ -342,7 +342,9 @@ sub start_year {
 } # end sub start_year
 
 sub Credit {
-	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$_[1] } );
+	my $supplier = $_[1] ? $_[1] : $openprint::config{'Owner'};;
+
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
 sub dropdown {
