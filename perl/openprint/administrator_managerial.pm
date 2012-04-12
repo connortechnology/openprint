@@ -381,12 +381,12 @@ sub company_profiles {
 	);
 
 	my %credit_fields = (
-			'txtDenyDays'			=>	'DenyDays',
-			'txtWarnDays'			=>	'WarnDays',
-			'txtCreditLimit'	=>	'Limit',
-			'rdbCreditHold'	 =>	'Hold',
-			'txtDownpayment'	=>	'Downpayment',
-			'COD'			=>	'COD',
+			'denydays'          =>  'denydays',
+			'warndays'          =>  'warndays',
+			'creditlimit'    =>  'limit',
+			'rdbCreditHold'     =>  'hold',
+			'downpayment'    =>  'downpayment',
+			'cod'			=>	'cod',
 			);
 
 	my $index = $param{'ddmCustomer'};
@@ -468,8 +468,8 @@ sub company_profiles {
 
 			$Company->save_tradereferences( \%params );
 
-			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
-			$variable{'error'} .= $Credit->save( { map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
+			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'} } );
+			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );

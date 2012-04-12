@@ -248,28 +248,28 @@ sub make_order_from_quote {
 
 sub check_credit {
 	my ( $amount ) = @_;
-	my $credit = new openprint::customer_credit( $session{'company_id'} );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'Owner'} } );
 
-	if ( $credit->value('Hold') eq 'Y' ) {
+	if ( $Credit->hold() eq 'Y' ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
 	if ( $config{'EnforceCredit'} eq 'Y' ) {
-		if ( ! $credit->value('DenyDays') ) {
+		if ( ! $Credit->denydays() ) {
 			if ( $credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/account/credit_application.html">here</a> to apply for a credit account now.';
 				$error .= list_orders( $log, $dbh, $credit->denied_orders() );
 				return misc::error( $log, $dbh, \%variable, 'No Credit', $error );
 			} # end if
 		} else {
-			if ( my @orders = $credit->denied_orders() ) {
-				my $error = 'You have orders that are more than ' . $credit->value('DenyDays') . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
+			if ( my @orders = $Credit->denied_orders() ) {
+				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
 				$error .=	list_orders( $log, $dbh, @orders );
 				return misc::error( $log, $dbh, \%variable, 'Overdue Orders', $error );
 			} # end if
 
 # check if the price fits in their credit limit
-			if ( $credit->debt() + $amount > $credit->value('Limit') ) {
+			if ( $Credit->debt() + $amount > $Credit->limit() ) {
 				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
 				$error .= list_orders( $log, $dbh, $credit->outstanding_orders() );
 				return misc::error( $log, $dbh, \%variable, 'Credit Exceeded', $error );
