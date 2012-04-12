@@ -22,12 +22,14 @@ sub edit {
 	my $Product = new openprint::Product( $param{'product_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		if ( (! $param{'product_id'}) and openprint::Product->find( 'name' => $param{'name'} ) ) {
+		if ( (! $param{'product_id'}) and openprint::Product->find( 'name lc' => lc openprint::Product->transform('name',$param{'name'}) ) ) {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
 		if ( $param{'category'} ) {
 			delete $param{'category_id'};
+		} else {
+			delete $param{'category'};
 		} # end if
 			
 		$variable{'error'} = $Product->save( \%param );
@@ -190,6 +192,10 @@ sub _prices {
 	} # end if
 } # end sub _prices
 
+sub _specification {
+	my $Spec = $variable{'Spec'} = new openprint::Product_Specification($param{'spec_id'});
+} # end sub _specification
+
 sub _specifications {
 	my $Product = $variable{'Product'} = new openprint::Product( $param{'product_id'} );
 	foreach my $Spec ( $Product->Specifications() ) {
@@ -201,10 +207,10 @@ sub _specifications {
 		} # end if
 	} # end foreach spec
 	if ( $param{'func'} eq 'Add' ) {
-		my $Spec = new openprint::Product_Specification();
-		$variable{'error'} .= $Spec->save({'product_id'=>$Product->id(),'name'=>$param{'spec_name-New'}, 'value'=>$param{'spec_value-New'}});
+		my $Spec = $variable{'Spec'} = new openprint::Product_Specification();
+		$variable{'error'} .= $Spec->save({'product_id'=>$Product->id(),'name'=>$param{'name'}, 'value'=>$param{'value'}});
 	} elsif ( $param{'func'} eq 'Del' ) {
-		my $Spec = new openprint::Product_Specification($param{'spec_id'});
+		my $Spec = $variable{'Spec'} = new openprint::Product_Specification($param{'spec_id'});
 		$variable{'error'} .= $Spec->delete();
 	} # end if
 } # end sub _specifications

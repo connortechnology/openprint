@@ -41,7 +41,7 @@ $serial = 'products_id_seq';
 	'project_id'	=>	undef,
 	'owner_id'		=>	q`$session{'company_id'}`,
 	'deleted'		=>	0,
-	'created_on'	=>	q`NOW()`,
+	'created_on'	=>	q`'NOW()'`,
 );
 
 sub destroy {
@@ -81,43 +81,6 @@ sub prices {
 sub Prices {
 	return $_[0]->prices();
 } # end sub Prices
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	# Super Save will load at the end, wiping out the specs hash
-	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
-	$$self{'owner_id'} = $openprint::config{'owner_id'};
-
-	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
-		return $error;
-	} else {
-		my $ac = sql::start_transaction( $dbh );
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		my %specs = sql::execute( $log, $dbh, $_, $$self{'id'});
-		foreach my $spec ( keys %new_specs ) {
-			if ( exists $specs{$spec} ) {
-				if ( $specs{$spec} ne $new_specs{$spec} ) {
-					sql::update( undef, undef, 'Product_Specifications', ['product_id=? AND name=?', $$self{'id'}, $spec ], 
-							'value', $new_specs{$spec} );
-				#} else {
-					#$log->debug(" equal ( $specs{$spec} ) = ( $$self{'Specifications'}{$spec} )" );
-				} # end if
-				delete $specs{$spec};
-			} else {
-				sql::insert( undef, undef, 'Product_Specifications', [ 'product_id', $$self{'id'},
-						'Name', $spec, 'Value', $new_specs{$spec} ] );
-			} # end if
-		} # end foreach
-		foreach my $spec ( keys %specs ) {
-			sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=? AND name=?}, $$self{'id'}, $spec );
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
-		$self->load();
-	} # end if
-	
-	return;
-} # end sub save
 
 sub category {
 	if ( @_ > 1 ) {

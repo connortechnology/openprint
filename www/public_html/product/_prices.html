@@ -27,30 +27,23 @@
 				<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />
 			</td>
 			<td class="Cost"> 
-				<input type="number" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->cost(),4,4 ); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);">
+				<input type="number" name="cost-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->cost(),2,2 ); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;floatize(this);calc_from_cost(this);" onclick="this.onkeyup();"/>
 			</td>
 			<td class="Markup"> 
-				<input type="number" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);">
+				<input type="number" name="markup-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->markup(); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;floatize(this);calc_from_markup(this);" onclick="this.onkeyup()" />
 			</td>
 			<td class="Price"> 
-				<input type="number" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->price(),4,4); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);">
+				<input type="number" name="price-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->price(),2,2); ) ?>"  onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;floatize(this);calc_from_price(this);" onclick="this.onkeyup();"/>
 			</td>
 			<td class="Discount"> 
-				<input type="radio" id="discount-<? echo ( $$variable{'Price'}->id(); ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id(); ) ?>" value='Y' 
-<? echo ( 'checked="checked"' if $$variable{'discount'} ne 'N' ) ?>
-/>
-				<label class="radio" for="discount-<? echo ( $$variable{'Price'}->id(); ) ?>Y">Yes</label>
-				<input type="radio" id="discount-<? echo ( $$variable{'Price'}->id(); ) ?>N" name="discount-<? echo ( $$variable{'Price'}->id(); ) ?>" value='N' 
-<? echo ( 'checked="checked"' if $$variable{'discount'} eq 'N' ) ?>
-/>
-				 <label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-<? echo ( $$variable{'Price'}->id(); ) ?>N">No</label>
+				<? echo ( ssi::radio( 'discount-'.$$variable{'Price'}->id(), [ 'Y', 'Yes', 'N', 'No' ], $$variable{'discount'}, { 'onclick'=>qq`$('chk-$$variable{Price}{id}').checked=true;` } ); ) ?>
 			</td>
 		</tr>
 		<? endwhile ( $$variable{'Price'} = shift @{$$variable{'Prices'}}; ) ?>
 <? endif ( @{$$variable{'PRICES_'.$$variable{'listid'}.'-'.$$variable{'equipment_index'}}} ) ?>
 	<? endwhile ( @$variable{'equipment_index','equipment'} = splice @{$$variable{'Equipment'.$$variable{'listid'}}},0,2; ) ?>
 		<tr>
-			<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
+			<td class="checkbox"><input type="checkbox" id="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" name="chk-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" /></td>
 			<td class="Range"> 
 				<input type="number" name="min-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />
 				<input type="number" name="max-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');" />

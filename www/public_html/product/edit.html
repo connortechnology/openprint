@@ -108,44 +108,33 @@
 		</div>
 		<div class="rightColumn">
 			<fieldset><legend>Specifications</legend>
-				<div id="Specifications">
 			<? if ( $$variable{'Product'}->id() ) ?>
-<table class="List">
+<table class="List" id="specifications">
 	<tr>
 		<th class="name">Name</th>
 		<th class="value">Value</th>
-		<th class="buttons">&nbsp;</th>
+		<th class="buttons">
+	<? echo ( ssi::button( 'AddSpec', { onclick=>"new Ajax.Request('/product/_specifications.json', { parameters:{func:'Add', product_id: $$variable{Product}{id} } } );", text=>'+', title=>'Add' } ); ) ?>
+		</th>
 	</tr>
 <? echo (
 		my $html;
 		my $rowclass;
 		my $Product = $$variable{'Product'};
+		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/product/_specification.html');
 		foreach my $Spec ( $Product->Specifications() ) {
-			$html .= sprintf('
-<tr%1$s>
-	<td class="name"><input type="text" id="spec_name-%1$d" name="spec_name-%1$d" value="%2$s" /></td>
-	<td class="value"><input type="text" id="spec_value-%1$d" name="spec_value-%1$d" value="%3$s" /></td>
-	<td class="buttons">%4$s</td>
-</tr>',
-				$rowclass, $Spec->id(), ssi::htmlize( $Spec->name(), $Spec->value() ),
-		ssi::button( 'DelSpec'.$Spec->id(), { onclick=>"new Ajax.Request( '/product/_specifications.json', { parameters:{ func: 'Del', spec_id: $$Spec{id} } } );", text=>'-',title=>'Delete' } ),
- );
+			$html .= ssi::variable_substitution( \$template, {
+				'Spec'=>$Spec,
+				'rowclass'	=>	$rowclass,
+				} );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach
 		return $html;
 ) ?>
-	<tr>
-		<td class="name"><input type="text" id="spec_name" name="spec_name" value=""/></td>
-		<td class="value"><input type="text" id="spec_value-New" name="spec_value" value=""/></td>
-		<td class="buttons">
-	<? echo ( ssi::button( 'AddSpec', { onclick=>"new Ajax.Request('/product/_specifications.json', { parameters:{func:'Add', product_id: $$variable{Product}{id}, name: \$('spec_name'), value: \$('spec_value') } } );", text=>'+' } ); ) ?>
-		</td>
-	</tr>
 </table>
 			<? else ( $$variable{'Product'}->id() ) ?>
 					Please save your new Product before setting specifications.
 			<? endif ( $$variable{'Product'}->id() ) ?>
-				</div>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
