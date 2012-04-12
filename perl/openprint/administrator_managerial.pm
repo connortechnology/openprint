@@ -468,8 +468,8 @@ sub company_profiles {
 
 			$Company->save_tradereferences( \%params );
 
-			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'} } );
-			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
+			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'owner_id'} } );
+			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'owner_id'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );

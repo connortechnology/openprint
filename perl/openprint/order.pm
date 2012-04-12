@@ -248,7 +248,7 @@ sub make_order_from_quote {
 
 sub check_credit {
 	my ( $amount ) = @_;
-	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'Owner'} } );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'owner_id'} } );
 
 	if ( $Credit->hold() eq 'Y' ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
@@ -256,9 +256,9 @@ sub check_credit {
 
 	if ( $config{'EnforceCredit'} eq 'Y' ) {
 		if ( ! $Credit->denydays() ) {
-			if ( $credit->debt() > 0 ) {
+			if ( $Credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/account/credit_application.html">here</a> to apply for a credit account now.';
-				$error .= list_orders( $log, $dbh, $credit->denied_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->denied_orders() );
 				return misc::error( $log, $dbh, \%variable, 'No Credit', $error );
 			} # end if
 		} else {
@@ -271,7 +271,7 @@ sub check_credit {
 # check if the price fits in their credit limit
 			if ( $Credit->debt() + $amount > $Credit->limit() ) {
 				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
-				$error .= list_orders( $log, $dbh, $credit->outstanding_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->outstanding_orders() );
 				return misc::error( $log, $dbh, \%variable, 'Credit Exceeded', $error );
 			} # end if
 		} # end if

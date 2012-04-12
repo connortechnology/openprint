@@ -400,7 +400,14 @@ sub credit_application {
 				'granted_cod'			=>	$param{'cod'},
 				});
 		
-		$variable{'error'} .= $Credit->save( \%param );
+		$variable{'error'} .= $Credit->save( {
+			'company_id'	=>	$Application->company_id(),
+			'denydays'		=>	$param{'denydays'},
+			'warndays'		=>	$param{'warndays'},
+			'limit'			=>	$param{'limit'},
+			'downpayment'	=>	$param{'downpayment'},
+			'cod'			=>	$param{'cod'},
+			} );
 		if ( ! $variable{'error'} ) {
 
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
