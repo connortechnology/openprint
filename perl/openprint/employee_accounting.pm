@@ -411,9 +411,9 @@ sub credit_application {
 		if ( ! $variable{'error'} ) {
 
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-			$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
+			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-			my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%variable );
+			my $template = ssi::variable_substitution( \$_, \%variable );
 			$variable{'error'} .= ( new openprint::Email())->send(
 					FROM	=> $config{'AdministratorEmail'},
 					TO		=> $Application->User()->email(),
