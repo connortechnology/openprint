@@ -563,8 +563,8 @@ td.Company, th.Company {
 	text-align: left;
 	overflow:hidden;
 }
-td.checkbox, th.checkbox {
-	width: 20px;
+table .checkbox {
+	width: 30px;
 	text-align: center;
 }
 td.Price, th.Price {
@@ -783,3 +783,7 @@ input::-webkit-inner-spin-button {
     margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
+table .project_id {
+	text-align: left;
+	width: 75px;
+}

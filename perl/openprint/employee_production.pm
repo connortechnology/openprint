@@ -1471,7 +1471,7 @@ sub _li_change {
 					$variable{'error'} .= 'Cant add that many forms.';
 				} else {
 					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $params{'forms'} - @service_ids )." for press schedule");
+					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{'forms'} - @service_ids )." for press schedule");
 					while ( @service_ids < $param{'forms'} ) {
 						push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
 								'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,

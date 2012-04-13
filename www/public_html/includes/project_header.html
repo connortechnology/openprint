@@ -16,12 +16,12 @@
 	  		<label>Ordered Quantity:</label>
 	  		<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
    		</p>
-		<? if ( $$variable{'Project'}->Order()->downpayment() ) ?>
+		<? if ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
 		<p>
 			<label>Required Downpayment:</label>
 			<? echo ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>%
 		</p>
-		<? endif ( $$variable{'Project'}->Order()->downpayment() ) ?>
+		<? endif ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
 		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 		<p>
 			<label>Required COD:</label>

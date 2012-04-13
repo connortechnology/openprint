@@ -127,3 +127,8 @@ table .po_id {
 	width: 60px;
 	text-align: left;
 }
+table .status {
+	text-align: left;
+	padding-left: 7px;
+	width: 80px;
+}

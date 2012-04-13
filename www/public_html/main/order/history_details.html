@@ -44,7 +44,7 @@ Projects listed in red have changed price from the time this order was originall
 </span>
 <div style="float: right; text-align: right;">
 	<!--#include virtual="/includes/order_totals.html" -->
-	<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+<? if ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
 	<table width="250" border="0" cellspacing="0" cellpadding="0" cols="2">
 		<tr> 
 			<td height="0" width="175">&nbsp;</td>
@@ -60,6 +60,12 @@ Projects listed in red have changed price from the time this order was originall
 			<td align="right"><?CurrencySymbol?><?DepositDue?></td>
 		</tr>
 		<? endif ( $$variable{'DepositDue'} ) ?>
+		<? if ( $$variable{'Order'}->cod_owing() ) ?>
+		<tr class="cod_owing"> 
+			<td><label>COD Owing</label></td>
+			<td><? echo ( openprint::Currency::format( $$variable{'Order'}->cod_owing() ); ) ?></td>
+		</tr>
+		<? endif ( $$variable{'Order'}->cod_owing() ) ?>
 		<? if ( $$variable{'AmountOutstanding'} ) ?>
 		<tr> 
 			<td align="right"><b>Amount Owing:</b></td>
@@ -67,7 +73,7 @@ Projects listed in red have changed price from the time this order was originall
 		</tr>
 		<? endif ( $$variable{'AmountOutstanding'} ) ?>
 	</table>
-	<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+<? endif ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
 </div>
 <br class="spacer"/>
 	<span class="Currency">All prices listed in <?CurrencyName?>.</span>

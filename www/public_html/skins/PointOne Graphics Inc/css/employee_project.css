@@ -16,3 +16,16 @@ text-align: right;
 	width: 75px;
 	text-align: left;
 }
+.total .service,
+.paid .service,
+.downpayment .service,
+.cod .service {
+	font-weight: bold;
+	text-align: right;
+}
+.total .service:after,
+.paid .service:after,
+.downpayment .service:after,
+.cod .service:after {
+	content: ":";
+}

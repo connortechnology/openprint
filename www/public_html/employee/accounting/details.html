@@ -13,9 +13,9 @@
 	<br class="spacer"/>
 	<table class="List" style="table-layout: auto;">
 		<tr>
-			<th width="65" align="left">Project #</th>
+			<th class="project_id">Project #</th>
 			<th align="left">Reference</th>
-			<th align="left">Status</th>
+			<th class="status">Status</th>
 			<th class="Date">Requested Date</th>
 			<th class="Date">Due Date</th>
 			<th align="right">Qty</th>
@@ -23,9 +23,9 @@
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<tr<?rowclass?>>
-			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td class="project_id"><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
 			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
-			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
+			<td class="status"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
@@ -39,17 +39,23 @@
 		<table>
 			<tr> 
 				<td width="175" align="right"><b>Amount Paid:</b></td>
-				<td width="75" align="right"><?CurrencySymbol?> <?AmountPaid?></td>
+				<td width="75" align="right"><? echo ( openprint::Currency::format( $$variable{'Order'}->paid() ); ) ?></td>
 			</tr>
 			<? if ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
 			<tr> 
 				<td align="right"><b>Deposit Due:</b></td>
-				<td align="right"><?CurrencySymbol?> <?DepositDue?></td>
+				<td align="right"><? echo ( openprint::Currency::format( $$variable{'Order'}->downpayment_owing() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
+        <? if ( $$variable{'Order'}->cod_owing() ) ?>
+        <tr class="cod_owing">
+            <td><label>COD Owing</label></td>
+            <td><? echo ( openprint::Currency::format( $$variable{'Order'}->cod_owing() ); ) ?></td>
+        </tr>
+        <? endif ( $$variable{'Order'}->cod_owing() ) ?>
 			<tr> 
 				<td align="right"><b>Amount Owing:</b></td>
-				<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Order'}->owing(); ) ?></td>
+				<td align="right"><? echo ( openprint::Currency::format( $$variable{'Order'}->owing() ); ) ?></td>
 			</tr>
 		</table>
 		<br/>
@@ -73,7 +79,7 @@
 				<td>&nbsp;<?type?></td>
 				<td>&nbsp;<?description?></td>
 				<td class="Price"><? echo ( openprint::Currency::format($$variable{'amount'}); ) ?></td>
-				<td align="right"><script type="text/javascript">writeButton('Delete<?payment_index?>','',"confirm_delete( document.f1, '<?payment_index?>' );", '', 'Delete' );</script></td>
+				<td align="right"><? echo ( ssi::button('Delete'.$$variable{'payment_index'}, { onclick=>"confirm_delete( document.f1, '$$variable{payment_index}' );", text=> 'Delete' } ); ) ?></td>
 			</tr>
 			<? eval ( $$variable{'colRow'} = $$variable{'colRow'} ? '' : 'colRow' ) ?>
 		<? endwhile ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
