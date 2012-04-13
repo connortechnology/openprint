@@ -3,12 +3,12 @@
 	<fieldset class="filters"><legend>Select Company</legend>
 		<p>
 			<label>Account #</label>
-			<input type="text" name="txtSearchAccountNum" size="13"/>
+			<input type="text" name="txtSearchAccountNum" />
 			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</p>
-		<p>
-			<label>Customer</label>
-            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" />
+		<p class="company">
+			<label>Company</label>
+            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
