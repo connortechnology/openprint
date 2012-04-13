@@ -1467,13 +1467,18 @@ sub _li_change {
 					$$sig_specs{'SignatureIndex'};
 					} @service_ids ) . ' from press schedule.' );
 			} elsif ( $Job->forms() < $param{'forms'} ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-				while ( @service_ids < $param{'forms'} ) {
-					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} for press schedule");
-					push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
-							'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
-							}, 'Ordered' );
-				} # end while	
+				if ( $param{'forms'} > 100 ) {
+					$variable{'error'} .= 'Cant add that many forms.';
+				} else {
+					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
+					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $params{'forms'} - @service_ids )." for press schedule");
+					while ( @service_ids < $param{'forms'} ) {
+						push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
+								'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
+								}, 'Ordered' );
+					} # end while	
+					return;
+				} # end if
 				$sql{'service_id'} = \@service_ids;
 			} # end if
 		} # end if
