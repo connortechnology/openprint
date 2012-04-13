@@ -282,26 +282,63 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			</td>
 		</tr>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-		<tr class="totals">
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<tr class="totals total">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+<<<<<<< HEAD
 			<td class="service"><b>Total</b></td>
+=======
+			<td class="service">Total</td>
+>>>>>>> 9b5783caf17d6fb68c21e2d8efb0fb0b72629823
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td class="status"></td>
 		</tr>
+
+		<tr class="paid">
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="checkbox unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="service">Paid</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->paid() ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+		<? if ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
+		<tr class="downpayment">
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="checkbox unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="service">Downpayment Owing</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->downpayment_owing() ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+		<? endif ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
+		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<tr class="cod">
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="checkbox unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="service">COD Owing</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+		<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+<<<<<<< HEAD
 			<td class="service"><b>Originally Ordered Price</b></td>
+=======
+			<td class="service"><b>Originally Ordered Price:</b></td>
+>>>>>>> 9b5783caf17d6fb68c21e2d8efb0fb0b72629823
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
-		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>

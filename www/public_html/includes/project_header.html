@@ -17,6 +17,18 @@
 						<label>Status</label>
 						<? echo ( $$variable{'Project'}->status() ) ?>
 					</li>
+					<? if ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
+					<li>
+						<label>Required Downpayment</label>
+						<? echo ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>%
+					</li>
+					<? endif ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
+					<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+					<li>
+						<label>Required COD</label>
+						<? echo ( $$variable{'Project'}->Order()->cod_percent() ) ?>%
+					</li>
+					<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 					<li> 
 						<label>Creation Date</label>
 						<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
@@ -63,7 +75,6 @@
 					<li>
 						<label>Prepress Operator</label>
 						<? echo ( $$variable{'Project'}->Operator()->name() ) ?>
-						<?PrepressOperator?>
 					</li>
 					<? endif ( $$variable{'Project'}->Operator()->id() ) ?>
 

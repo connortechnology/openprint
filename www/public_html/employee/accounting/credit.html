@@ -88,8 +88,8 @@
 				next if sets::isin( $Order->status(), ['Cancelled','Incomplete','Deleted'] );
 				$html .= sprintf( '
 				<tr%1$s> 
-					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
 					<td class="Date">%4$s</td>
 					<td class="Status">%9$s</td>
 					<td class="invoice_id">%5$s</td>
@@ -109,7 +109,7 @@
 					$total_total += $Order->total();
 				} # end foreach Order
 				$html .= sprintf('<tr class="totals">
-					<td colspan="6" align="right">Totals</td>
+					<td colspan="6">Totals</td>
 					<td class="Price">%s</td>
 					<td class="Price">%s</td>
 					<td>&nbsp;</td>
