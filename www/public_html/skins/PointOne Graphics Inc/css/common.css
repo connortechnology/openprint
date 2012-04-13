@@ -787,3 +787,8 @@ table .project_id {
 	text-align: left;
 	width: 75px;
 }
+#trustlogo {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
