@@ -471,9 +471,6 @@ sub signature_calc {
 		$$specs{'alert'} .= 'There is no Folding capable equipment.';
 		return;
 	} # end if
-foreach my $E ( @my_equipment ) {
-$openprint::log->debug("Equipment: $$E{strid}");
-}
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
@@ -554,8 +551,9 @@ $openprint::log->debug("Equipment: $$E{strid}");
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
 			foreach my $I ( @Impositions ) {
-				my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-				my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+				# Used to be sprintf...
+				my $width_folds = int(($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+				my $height_folds = int(($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				if ( $width_folds and $height_folds ) {
 	# All impositions must be 1 out. This may not be true
 					my $Singleton = $I->copy();
