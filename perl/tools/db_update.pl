@@ -114,6 +114,9 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{'externalrefnumber'} ) {
 		$dbh->do('ALTER TABLE projects add externalrefnumber text');
 	}
+	if ( ! exists $$data{'markup'} ) {
+		$dbh->do('ALTER TABLE projects add markup float');
+	}
 	if ( exists $$data{'index'} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');

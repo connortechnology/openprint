@@ -34,6 +34,7 @@ CREATE	TABLE	Projects	(
 	rush					BOOLEAN default false,
 	style_id				INTEGER, FOREIGN KEY (style_id) REFERENCES QuoteLevels (id),
 	summary					TEXT,
+	markup					float,
 	PRIMARY	KEY	(id)
 );
 

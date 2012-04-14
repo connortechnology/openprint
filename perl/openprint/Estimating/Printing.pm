@@ -3911,9 +3911,7 @@ $openprint::log->debug("Using cached folding");
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $press_setup_front->{'Plate Total'};
-			$price{'Plate Setup Price'} = $press_setup_front->{'Plate Price'};
-			$price{'Plate Setup Count'} = $press_setup_front->{'Plate Count'};
-			$price{'Plate Setup Units'} = $press_setup_front->{'Plate Units'};
+			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( $$press_setup_front{units} ne 'Total' ) {
 				my $back_press_setup = press_setup_cost( $Press, 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 				$press_setup += $back_press_setup->{'Total'};
@@ -3922,38 +3920,30 @@ $openprint::log->debug("Using cached folding");
 				$price{'Plate Setup Count'} += $back_press_setup->{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{'side_one_colours'}} ) {
-			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
-			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-			$price{'Plate Total'} += $_->{'Plate Total'};
-			$price{'Plate Setup Price'} = $_->{'Plate Price'};
-			$price{'Plate Setup Count'} = $_->{'Plate Count'};
-			$price{'Plate Setup Units'} = $_->{'Plate Units'};
+			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			$press_setup += $$press_setup_front{'Total'};
+			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
+			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
+			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{'side_two_colours'}} ) {
-			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
-			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-			$price{'Plate Total'} += $_->{'Plate Total'};
-			$price{'Plate Setup Price'} = $_->{'Plate Price'};
-			$price{'Plate Setup Count'} = $_->{'Plate Count'};
-			$price{'Plate Setup Units'} = $_->{'Plate Units'};
+			my $press_setup_back = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			$press_setup += $$press_setup_back{'Total'};
+			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
+			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
+			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
-		$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
-		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-		$price{'Plate Total'} += $_->{'Plate Total'};
-		$price{'Plate Setup Price'} = $_->{'Plate Price'};
-		$price{'Plate Setup Count'} = $_->{'Plate Count'};
-			$price{'Plate Setup Units'} = $_->{'Plate Units'};
+		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		$press_setup += $$press_setup_cost{'Total'};
+		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
+		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
+		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-		$press_setup += $_->{'Total'};
-		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-		$price{'Plate Total'} += $_->{'Plate Total'};
-		$price{'Plate Setup Price'} = $_->{'Plate Price'};
-		$price{'Plate Setup Count'} = $_->{'Plate Count'};
-		$price{'Plate Setup Units'} = $_->{'Plate Units'};
+		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		$press_setup += $$press_setup_cost{'Total'};
+		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
+		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
+		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 	} # end if
 	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'};
 
