@@ -1477,7 +1477,6 @@ sub _li_change {
 								'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
 								}, 'Ordered' );
 					} # end while	
-					return;
 				} # end if
 				$sql{'service_id'} = \@service_ids;
 			} # end if
