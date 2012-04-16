@@ -1,3 +1,5 @@
+use strict;
+
 package openprint::employee_it;
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
@@ -13,8 +15,7 @@ require openprint::Host;
 require openprint::Blacklist;
 require openprint::RADIUS_Check;
 require openprint::User_Type;
-
-use strict;
+require openprint::Session;
 
 sub logs {
 	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
