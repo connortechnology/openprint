@@ -30,7 +30,7 @@
             <td class="description"><input type="text" name="Description" /></td>
 			<td class="ReceivedOn"><? echo ( ssi::date_select('received_on'); ) ?></td>
             <td class="Price"><?CurrencySymbol?><input type="number" id="Amount" name="Amount" value="<? echo ( $$variable{'Order'}->owing() ) ?>"/></td>
-            <td class="actions"><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
+            <td class="actions"><? echo (ssi::button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", href=>'', text=>'Add' } ); ) ?></td>
         </tr>
 <? else ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
         <tr>

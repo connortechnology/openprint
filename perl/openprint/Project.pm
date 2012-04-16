@@ -63,6 +63,10 @@ $serial = 'lngProjectIndex_seq';
 	'rush'				=>	'rush',
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
+	'markup'			=>	'markup',
+);
+%transforms = (
+	'markup'	=> [ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -76,6 +80,7 @@ $serial = 'lngProjectIndex_seq';
 	'price3'		=>	undef,
 	'order_id'		=>	undef,
 	'due_date'		=>	undef,
+	'markup'		=>	undef,
 );
 
 %find_fields = (
