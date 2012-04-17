@@ -129,10 +129,8 @@
 					<div class="content">
 						<ul>
 							<? echo (
-								my @Events = sets::object_union(
-									openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time - 72*3600 ) ),
-									openprint::Event->find('attending any'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time-(72*3600) ) ),
-								);
+								my @Events = 
+									openprint::Event->find('attending any'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time-(72*3600) ) );
 								if ( ! @Events ) {
 									return '<li>No upcoming events</li>';
 								} # end if

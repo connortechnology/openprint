@@ -1,6 +1,8 @@
+use strict;
 package openprint;
 
-use strict;
+require Apache::Session::Postgres;
+require Apache2::Cookie;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 
@@ -16,6 +18,7 @@ sub session_init {
 		} # end if
 		# Store this, will be useful
 		$session{'ip'} = $ENV{'REMOTE_ADDR'};
+		$session{'lastupdated'} = time;
 	} # end if
 
 	if ( $cookie ne $session{_session_id} ) {
@@ -31,6 +34,8 @@ sub session_init {
 			$log->error("No Cookie.  Does db have a sessions table?");
 		} # end if
 	} # end if
+	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
+$log->error("IP : $session{ip}");
 
 # Now set some defaults right away, if we can
 	if ( $r->param('Country') ) {
