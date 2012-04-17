@@ -86,7 +86,6 @@ sub from_file {
 	my $file = $_[0];
 # Process the contents of the config file
 	our %Config;
-$openprint::log->debug("Loading from $file");
 	my $rc = do($file);
 
 # Check for errors
@@ -98,12 +97,6 @@ $openprint::log->debug("Loading from $file");
 		$openprint::log->error( "ERROR: Failure processing '$file'" );
 	}
 	@config{keys %Config} = values %Config;
-foreach my $k ( keys %Config ) {
-$openprint::log->debug("Config $k => $Config{$k}");
-}
-foreach my $k ( keys %config ) {
-$openprint::log->debug("config $k => $config{$k}");
-}
 } # end sub from_file
 
 sub from_db {

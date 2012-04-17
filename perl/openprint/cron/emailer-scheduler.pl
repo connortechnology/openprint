@@ -67,7 +67,7 @@ $ENV{'DOCUMENT_ROOT'} = $config{'DOCUMENT_ROOT'};
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign->find( 'active' => 'Y', 'misc' => '(nextrun < now()) AND ( timeofday IS NULL or timeofday <= NOW()::time)' );
+my @campaign_ids = openprint::EmailCampaign->find( 'active' => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
