@@ -1,18 +1,21 @@
 <fieldset><legend>Photos</legend>
 	<div id="assets" class="droparea">
-		<div id="Photos"><!--#include virtual="_album_photos.html"--></div>
-
+<? if ( $$variable{'Album'}->can_edit() ) ?>
+		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
 		<div id="uploadinstructions">
-		To upload files to this album,
-		<span id="dragndropuploadmessage" style="display:none;">
-		simply drag and drop them here. Or </span>
-		<span id="formuploadmessage">select the file using the input below and click on the Upload button. There is a 1GB file size limit.</span>
-		<input type="file" name="file" /><? echo ( ssi::button( 'Upload', { onclick=>q`$('f1').submit();` } ); ) ?>
+			To upload files to this album,
+			<span id="dragndropuploadmessage" style="display:none;">
+			simply drag and drop them here. Or </span>
+			<span id="formuploadmessage">select the file using the input below and click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
+		<input type="file" name="file" /><? echo ( ssi::button( 'Upload', { onclick=>q`$('f1').submit();` } ); ) ?>
 		<ul id="upload_list" class="preview"></ul>
 <div id="file-uploader"></div>
 	</div>
 	<div class="disclaimer"><? echo ( $config{'PhotoUploadDisclaimer'} ) ?></div>
+<? else ( $$variable{'Album'}->can_edit() ) ?>
+		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+<? endif ( $$variable{'Album'}->can_edit() ) ?>
 </fieldset>
 <script type="text/javascript">
     if ( window.FileReader ) {
@@ -34,7 +37,7 @@ var uploader = new qq.FileUploader({
         UploadType: 'Photo_Album'
     },
     onComplete: function(id, fileName){
-        new Ajax.Updater( 'Photos', '_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
+        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
     }
 
 });
@@ -47,10 +50,10 @@ var uploader = new qq.FileUploader({
     droparea.addEventListener('drop', handleDrop, false );
     droparea.upload_list = $('upload_list');
     droparea.refresh = function( filename ) {
-        new Ajax.Updater( 'Photos', '_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', filename: filename, func: 'add' } } );
+        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', filename: filename, func: 'add' } } );
     };
     droparea.onComplete= function(id, fileName){
-        new Ajax.Updater( 'Photos', '_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
+        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
     }
     droparea.destination = '/upload.htm?UploadType=Photo_Album&id=<? echo ( $$variable{'Album'}->id() ) ?>';
 } 

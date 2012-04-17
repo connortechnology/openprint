@@ -116,7 +116,7 @@ sub User {
 sub can_edit {
 	return 1 if ! $_[0]{'id'};
 	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return 1 if $openprint::session{'user_id'} and ( $_[0]{'user_id'} == $openprint::session{'user_id'} );
 	return 0;
 } # end sub can_edit
 
