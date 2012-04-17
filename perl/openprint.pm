@@ -19,6 +19,7 @@ sub session_init {
 		# Store this, will be useful
 		$session{'ip'} = $ENV{'REMOTE_ADDR'};
 		$session{'lastupdated'} = time;
+		$session{'HTTP_USER_AGENT'} = $ENV{'HTTP_USER_AGENT'};
 	} # end if
 
 	if ( $cookie ne $session{_session_id} ) {
