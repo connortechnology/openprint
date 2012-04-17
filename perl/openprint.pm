@@ -36,7 +36,6 @@ sub session_init {
 		} # end if
 	} # end if
 	$session{'ip'} = $ENV{'REMOTE_ADDR'} if $ENV{'REMOTE_ADDR'} and ! $session{'ip'};
-$log->error("IP : $session{ip}");
 
 # Now set some defaults right away, if we can
 	if ( $r->param('Country') ) {

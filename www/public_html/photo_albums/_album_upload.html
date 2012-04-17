@@ -1,5 +1,5 @@
 <fieldset><legend>Photos</legend>
-	<div id="assets" class="droparea">
+	<div id="assets" class="droparea qq-upload-drop-area">
 <? if ( $$variable{'Album'}->can_edit() ) ?>
 		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
 		<div id="uploadinstructions">
@@ -8,15 +8,18 @@
 			simply drag and drop them here. Or </span>
 			<span id="formuploadmessage">select the file using the input below and click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
-		<input type="file" name="file" /><? echo ( ssi::button( 'Upload', { onclick=>q`$('f1').submit();` } ); ) ?>
-		<ul id="upload_list" class="preview"></ul>
-<div id="file-uploader"></div>
+<!--
+		<input type="file" name="file" />
+-->
+<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<ul id="upload_list" class="preview qq-upload-list"></ul>
 	</div>
 	<div class="disclaimer"><? echo ( $config{'PhotoUploadDisclaimer'} ) ?></div>
 <? else ( $$variable{'Album'}->can_edit() ) ?>
 		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
 <? endif ( $$variable{'Album'}->can_edit() ) ?>
 </fieldset>
+<? if ( $$variable{'Album'}->can_edit() ) ?>
 <script type="text/javascript">
     if ( window.FileReader ) {
         $('dragndropuploadmessage').show();
@@ -24,14 +27,16 @@
         $('dragndropuploadmessage').show();
         $('formuploadmessage').hide();
     }
-if ( 0 ) {
+if ( 1 ) {
 var uploader = new qq.FileUploader({
-    element: $('file-uploader'),
+	debug: true,
+    element: $('assets'),
+	template: null,
     droparea: $('assets'),
     action: '/upload.htm',
     limit: 5,
     allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
-    sizeLimit: 2147483647,
+    sizeLimit: 1024*1024*1024,
     params: {
         id: <? echo ( $$variable{'Album'}->id() ) ?>,
         UploadType: 'Photo_Album'
@@ -58,3 +63,4 @@ var uploader = new qq.FileUploader({
     droparea.destination = '/upload.htm?UploadType=Photo_Album&id=<? echo ( $$variable{'Album'}->id() ) ?>';
 } 
 </script>
+<? endif ( $$variable{'Album'}->can_edit() ) ?>
