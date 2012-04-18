@@ -28,8 +28,8 @@ $dst_db = 'point-one' if ! $dst_db;
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
 
-	if ( ! -e "/media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2" ) {
-		die "No db dump /media/ARCHIVE1/Backups/$src_db/$month-$day-$year.sql.bz2";
+	if ( ! -e "/media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2" ) {
+		die "No db dump /media/Prinergy/Backups/database/$src_db/$month-$day-$year.sql.bz2";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -37,8 +37,8 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
-	print "Loading db... from /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2";
-	`su postgres -c "bunzip2 < /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
+	print "Loading db... from /media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2";
+	`su postgres -c "bunzip2 < /media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2 | pg_restore -Fc -d $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty
@@ -49,7 +49,7 @@ if ( ! $path ) {
 	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
 	print "Loading db... directly";
-	`su postgres -c "bunzip2 < $path | psql $dst_db"`;
+	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	#if ( $src_host ) {
 		#`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
 	#} else {
@@ -60,12 +60,14 @@ if ( ! $path ) {
 } # end if
 
 `chmod +x $lib_path/tools/db_update.pl`;
-print "upgrading structures 2...";
-`$lib_path/tools/db_update.pl $dst_db point-one point-one 2>&1 > /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one 2>&1 > /tmp/db_update2.log` or $log->error($!);
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one 2>&1 > /tmp/db_update3.log` or $log->error($!);
+print "upgrading structures 1...\n";
+`$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading structures 2...\n";
+`$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading structures 3...\n";
+`$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one 2>&1 > /tmp/update_signatures.log` or $log->error($!);
+`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
@@ -109,6 +111,7 @@ if ( $BrochureType ) {
 	}
 } else {
 	$log->error("No Brochures");
+	die;
 }
 if ( 0 ) {
 new openprint::ProjectType_Template()->save({
