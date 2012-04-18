@@ -39,12 +39,12 @@
 		<p>
 			<label for="email">E-mail</label>
 			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" onkeyup="update_userid(this);" /><br/>
-			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+			<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
 		</p>
 		<p> 
 			<label for="password">Password</label>
 			<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
 		</p>
 		<p>
 			<label>Remember me</label>
@@ -55,27 +55,11 @@
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"LoginForm.submit();",'','Submit'),
-				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"LoginForm.reset();",'','Reset'),
+				ssi::button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';LoginForm.submit();", text=>'Login' } ),
+				ssi::button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';LoginForm.submit();", text=>'Forgot Password' } ),
 			); ) ?>
 		</p>
 	</fieldset>
+	<input type="hidden" name="btnFunction" value="Login" />
 </form>
 <script type="text/javascript">document.LoginForm.email.focus();</script>
-<br/>
-<form name="f2" method="post" action="/employee/account/password_confirmation.html">
-	<fieldset><legend>Forget your Password?</legend>
-		To have your password e-mailed to you, please submit your e-mail address below.<br/>
-		<p>
-			<label for="txtEmail2">E-mail</label>
-			<input type="email" id="txtEmail2" name="txtEmail2" />
-		</p>
-		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Submit2','submit.gif',"f2.btnSendCustomerPassword.value='Send';f2.submit();",'','Submit'),
-				ssi::writeButton( $log, $dbh, 'Reset2','reset.gif',"f2.btnSendCustomerPassword.value='';f2.reset();",'','Reset'),
-				); ) ?>
-		</p>
-		<input type="hidden" name="btnSendCustomerPassword"/>
-	</fieldset>
-</form>
