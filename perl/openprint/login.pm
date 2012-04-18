@@ -420,7 +420,7 @@ sub forgotten_password {
 				SUBJECT => 'Forgotten Password',
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body );
-		$variable{'information'} = 'Your password has been mailed to you.';
+		$variable{'information'} = 'Your password has been e-mailed to you.';
 	} else {
 		$variable{'error'} = 'We were unable to email your password to you. Please contact support.';
 	} # end if
