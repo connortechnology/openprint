@@ -136,9 +136,10 @@ sub history {
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
 		my @Recipients = new openprint::Company($param{'company_id'})->AccountingContacts();
-		new openprint::Email()->send(
+		(new openprint::Email())->send(
 					FROM    => $config{'AccountingEmail'},
-					TO      =>  \@Recipients,
+					#TO      =>  \@Recipients,
+					TO      => new openprint::User( $session{'user_id'} ),
 					BCC     => new openprint::User( $session{'user_id'} ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					ATTACHMENTS	=>	\@attachments,
