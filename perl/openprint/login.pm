@@ -13,8 +13,10 @@ require openprint::usergroup;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $r %variable %param %session %config);
+use vars qw( $r $dbh $log %variable %param %session %config);
 *r = \$openprint::r;
+*log = \%openprint::log;
+*dbh = \%openprint::dbh;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
@@ -26,9 +28,14 @@ sub save_destination {
 
 	if ( ! $destination ) {
 		$destination = $r->uri();
-		if ( %param ) {
-			$destination .= '?' . join('&', map { $_ . '=' . $param{$_}} keys %param );
-		} # end if
+        my @values;
+        foreach my $key ( keys %param ) {
+            next if $key eq 'password';
+            push @values, map { $key.'='.$_ } ( ref $param{$key} eq 'ARRAY' ? @{$param{$key}} : $param{$key} );
+        } # end ofreach     
+        if ( @values ) {
+            $destination .= '?' . join('&', @values );
+        } # end if
 	} # end if
 
 # if someone sets the Destination flag, keep it through the login process.
@@ -170,16 +177,34 @@ sub verify_login {
 		foreach my $p ( split('&', $2 ) ) {
 			my ( $k, $v ) = split('=', $p );
 			$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
+			if ( $openprint::param{$k} ) {
+				if ( ref $openprint::param{$k} eq 'ARRAY' ) {
+					push @{$openprint::param{$k}}, $v;
+				} else {
+					$openprint::param{$k} = [ $openprint::param{$k}, $v ];
+				} # end if
+			} else {
+				$openprint::param{$k} = $v;
+			}
 		} # end foreach
+		delete $session{'Destination'};
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
      
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {
 			my ( $k, $v ) = split('=', $p );
 			$openprint::log->debug("Psrsmd: $p, $k = $v ");
-			$openprint::param{$k} = $v;
+			if ( $openprint::param{$k} ) {
+				if ( ref $openprint::param{$k} eq 'ARRAY' ) {
+					push @{$openprint::param{$k}}, $v;
+				} else {
+					$openprint::param{$k} = [ $openprint::param{$k}, $v ];
+				} # end if
+			} else {
+				$openprint::param{$k} = $v;
+			}
 		} # end foreach
+		delete $session{'Destination'};
 	} # end if
 
 } # sub verify_login
@@ -365,6 +390,41 @@ sub password_strength {
 
 } # end sub password_strength
 
+sub forgotten_password {
+	if ( ! $openprint::param{'email'} ) {
+		$openprint::variable{'error'} = 'Please enter the email address of the account to retrieve.';
+		return;
+	} # end if
+
+	$openprint::param{'email'} =~ tr/[A-Z]/[a-z]/;
+	my @Users = openprint::User::find('email'=>$openprint::param{'email'} );
+	if ( ! @Users ) {
+		$variable{'error'} = 'The account you entered does not exist.';
+		return;
+	} # end if
+
+	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
+		my %info = (
+				'User' =>$Users[0],
+				);
+
+		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
+		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+
+		my %mail = (
+				SMTP    => $openprint::config{'Mail Server'},
+				FROM    => $openprint::config{'AdministratorEmail'},
+				TO      => sprintf('"%s %s" <%s>', $Users[0]->get('firstname','lastname','email') ),
+				SUBJECT => 'Forgotten Password',
+				);
+		misc::send_email_with_attachment( $log, \%mail, @body );
+		$variable{'information'} = 'Your password has been mailed to you.';
+	} else {
+		$variable{'error'} = 'We were unable to email your password to you. Please contact support.';
+	} # end if
+} # end sub forgotten_password
 1;
 
 __END__

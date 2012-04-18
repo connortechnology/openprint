@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T -w
-use lib '/var/www/p1/perl';
+use lib '/var/www/point-one/perl';
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);

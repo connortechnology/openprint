@@ -505,7 +505,7 @@ sub find {
     if ( ! $data ) {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $local_dbh->errstr );
     } elsif ( ! @$data ) {
-        $openprint::log->debug("No $type ($sql) (@values) " );
+        $openprint::log->debug("No $type ($sql) (@values) " ) if $debug;
     } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if

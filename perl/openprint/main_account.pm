@@ -439,42 +439,9 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $openprint::param{'btnFunction'} eq 'Forgotten Password' ) {
-		if ( ! $openprint::param{'email'} ) {
-			$openprint::variable{'error'} = 'Please enter the email address of the account to retrieve.';
-			return;
-		} # end if
-
-		$openprint::param{'email'} =~ tr/[A-Z]/[a-z]/;
-		my @Users = openprint::User::find('email'=>$openprint::param{'email'} );
-		if ( ! @Users ) {
-			$variable{'error'} = 'The account you entered does not exist.';
-			return;
-		} # end if
-
-		if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
-			my %info = (
-					'User' =>$Users[0],	
-					);
-
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-
-			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM 	=> $openprint::config{'AdministratorEmail'},
-					TO		=> sprintf('"%s %s" <%s>', $Users[0]->get('firstname','lastname','email') ),
-					SUBJECT	=> 'Forgotten Password',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-			$variable{'information'} = 'Your password has been mailed to you.';
-		} else {
-			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
-		} # end if
+		openprint::login::forgotten_password();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-
 	} # end if
 } # end sub login
 
