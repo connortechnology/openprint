@@ -61,6 +61,8 @@ sub load_simple {
 		} # end if
 	} # end if
 
+	my %defaults = sql::execute( $log, $dbh, q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex IS NULL} );
+	@variable{keys %defaults} = values %defaults;
 	my $services = $variable{'Project'}->services();
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );
@@ -71,9 +73,7 @@ sub load_simple {
 		# Load defaults
         $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
         my %defaults = sql::execute( $log, $dbh, $_, $variable{'ProjectType'}->id() );
-        foreach my $k ( keys %defaults ) {
-            $variable{$k} = $defaults{$k};
-        } # end foreach
+		@variable{keys %defaults} = values %defaults;
 	} # end if
 
 	# So that default services start turned on
