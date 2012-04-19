@@ -91,8 +91,8 @@ $openprint::log->debug("Making order from quote");
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
-		foreach my $project_index ( sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id ) ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $project_index );
+		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$order_id) ) {
+			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
 		} # end foreach
 	} elsif ( $param{'Product'} and $param{'Quantity'} ) {
 		( $order_id, $error ) = openprint::order::add_product( $order_id, @param{'Product','Quantity'} );
@@ -206,8 +206,8 @@ sub submit {
 
 	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
 		
-		foreach my $Project ( $Order->Projects() ) {
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $Project->id() );
+		foreach my $OP ( openprint::OrderedProject->find('order_id'=>$Order->id() ) ) {
+			$variable{'error'} .= openprint::order::save_project_information( $order_id, $OP );
 		} # end foreach
 		foreach my $Product ( $Order->Products() ) {
 			if ( exists $param{'ProductQuantity'.$Product->id()} ) {
@@ -216,7 +216,7 @@ sub submit {
 			} # end if
 			#my %price = $Product->Product()->get_price( $Product->quantity() );
 			#$Product->price( $price{Price} );
-			$variable{'error'} .= openprint::order::save_project_information( $order_id, $Product->Project()->id() );
+			$variable{'error'} .= openprint::order::save_project_information( $order_id, $Product );
 			# Need to update price to include shipping costs
 			my %Price = $Product->Product()->get_price( $Product->quantity() );
 $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
@@ -286,6 +286,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	} # end foreach  Project
 	if ( @errors ) {
 		%param = ();
+		$param{'OrderID'} = $order_id;
 		$variable{'error'} .= join('<br/>', @errors );
 		$variable{'Redirect'} = '/main/order/information.html';
 		return;
