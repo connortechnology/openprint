@@ -433,6 +433,7 @@ my %config_actions = (
 	'Host offline'	=>	101,
 	'Host rebooted'	=>	102,
 	'Long response time'	=>	103,
+	'Copy Material'	=>	43,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
