@@ -6,18 +6,7 @@
 	} # end if
 ) ?>
 <ul>
-<li>
-	<label>Quantity</label>
-	<? echo (
-		my $html;
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( type=>"number", id=>"txtQuantity$qty_index", name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, onkeyup=>"cardinalize(this);calc(this.form.name);");
-			$html .= '</span>';
-		} # end foreach qty_index
-		return $html;
-	) ?>
-</li>
+<!--#include virtual="/includes/main/proj/_quantities.html"-->
 <? if ( $$variable{'Project'}->Type()->name() ne 'Envelopes' ) ?>
 <li class="stockformat">
 	<label>Stock Format</label>
@@ -513,17 +502,5 @@
 
 <!--#include virtual="/includes/main/proj/_unit_price.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<li>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
-	</span>
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</li>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<!--#include virtual="/includes/main/proj/_breakdown.html"-->
 </ul>

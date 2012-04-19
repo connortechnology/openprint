@@ -83,7 +83,7 @@ sub new {
 # First off, for now, don't cache figure that out later
 		#@$id{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
-$log->debug("New by hash @keys : " . $id->to_string() );
+#$log->debug("New by hash @keys : " . $id->to_string() );
 		$id->load( $data );
 #$log->debug("New by hash @keys : " . $id->to_string() );
 		return $id;
