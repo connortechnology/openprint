@@ -742,13 +742,13 @@ $Imposition->display("Folding on press");
 										my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
 										my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 										$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
-										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
+										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 # If folds are on width, we grip on height...
 											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
 												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).") if DEBUG;
 												$Fold = undef;
 											} # end if
-										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
+										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
 												$Fold = undef;
 												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.") if DEBUG;
@@ -866,8 +866,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 
 						foreach my $F ( @{$folds{$key}} ) {
 #$openprint::log->debug("Overriding FOlds and Angles $$F{folds} $$F{angles}");
-							$F->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-							$F->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+							$$F{'folds'} = $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+							$$F{'angles'} = $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found ) {
@@ -941,8 +941,8 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				$fold_specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->imposition();
 				$fold_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->columns();
 				$fold_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->rows();
-				$fold_specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->folds();
-				$fold_specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->angles();
+				$fold_specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $$Fold{'folds'};
+				$fold_specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $$Fold{'angles'};
 				$fold_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->runspeed($Paper->gsm());
 				$fold_index += 1;
 
@@ -963,18 +963,18 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					$width_folds = int($Imposition->image_width()/$Imposition->object_width())-1;
 					$height_folds = int($Imposition->image_height()/$Imposition->object_height())-1;
 				} # end if
-				if ( $Fold->folds() or $Fold->angles() ) {
-					if ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) {
-					} elsif ( $width_folds == $Fold->angles() and $height_folds == $Fold->folds() ) {
-						$width_folds = $Fold->angles();
-						$height_folds = $Fold->folds();
+				if ( $$Fold{'folds'} or $$Fold{'angles'} ) {
+					if ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) {
+					} elsif ( $width_folds == $$Fold{'angles'} and $height_folds == $$Fold{'folds'} ) {
+						$width_folds = $$Fold{'angles'};
+						$height_folds = $$Fold{'folds'};
 					} else {
-						$width_folds = $Fold->folds();
-						$height_folds = $Fold->angles();
+						$width_folds = $$Fold{'folds'};
+						$height_folds = $$Fold{'angles'};
 					} # end if
 				} else {
-					$Fold->folds( $width_folds );
-					$Fold->angles( $height_folds );
+					$$Fold{'folds'} = $width_folds;
+					$$Fold{'angles'} = $height_folds;
 				} # end if
 				my $width = 0;
 				if ( $width_folds and $height_folds ) {

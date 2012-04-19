@@ -1766,7 +1766,9 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous') ) {
 	$S->delete();
 } # end if
 
+if ( 0 ) {
 foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
+
 	if ( ! openprint::Service->find('name'=>'Aqueous Gloss Overall MakeReady') ) {
 		print "Converting Service Aqueous MakeReady\n";
 		$S->name('Aqueous Gloss Overall MakeReady');
@@ -1810,6 +1812,7 @@ foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
 		} # end foreach
 	} # en dif
 } # end if
+}
 if ( ! openprint::ServiceType->find('name'=>'Varnish') ) {
 	my $S = new openprint::ServiceType();
 	$S->save({

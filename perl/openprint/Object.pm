@@ -415,10 +415,7 @@ sub find_operators {
 	my %results;
 
 	if ( exists $$params{$k.' ='} ) {
-		#if ( sets::isin( $$params{$k.' ='}, \@sql_functions ) ) {
-		#} else {
 			push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
-		#} # end if
 	} # end if
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
@@ -794,7 +791,7 @@ sub AUTOLOAD {
 	$name =~ s/.*://;
 	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
-$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
+#$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
 		return $_[0]{$name} = $_[1];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
