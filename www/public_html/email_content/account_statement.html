@@ -19,14 +19,15 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	foreach my $Invoice ( @Invoices ) {
 		next if $Invoice->is_paid();
 		next if $Invoice->bad_debt();
-		$period_start = $Invoice->created_on() if ( $Invoice->created_on() lt $period_start ) or ! $period_start;
-		$period_end = $Invoice->created_on() if ( $Invoice->created_on() gt $period_end );
+		$period_start = $Invoice->created_on() if ( $Invoice->created_on() gt $period_start ) or ! $period_start;
+		$period_end = $Invoice->created_on() if ( $Invoice->created_on() lt $period_end );
 	} # end foreach Invoice
 
+	# Periods must be defined if there are any invoices.
 	@{$$variable{'Taxes'}} = openprint::Tax->find(
-		( $period_end ? ( 'period_end_null_or_>='	=> $period_end ) : () ),
-		( $period_start ? ( 'period_start_null_or_<=' => $period_start ) : () ),
-		'order'		=>	'period_start,name',
+			'period_end_null_or_>='	=> $period_end,
+			'period_start_null_or_<=' => $period_start,
+			'order'		=>	'period_start,name',
 	);
 	foreach my $Invoice ( @Invoices ) {
 		next if $Invoice->is_paid();
@@ -40,7 +41,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		$$variable{'interest_total'} += $Invoice->interest();
 		$$variable{'owing_total'} += $Invoice->owing();
 
-		if ( ( time - Date::Parse::str2time( $Invoice->due_on() ) ) > ( 60*60*24*30 ) ) {
+		if ( ( time - Date::Parse::str2time( $Invoice->due_on() ) ) > ( 60*60*24*30*3 ) ) {
 			$$variable{'3monthwarning'} = 1;
 		} # end if
 	} # end foreach Invoice
@@ -67,7 +68,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
 	) ?>
 	<tr<?rowclass?>> 
-		<td class="invoice_id"><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?>i</a></td>
+		<td class="invoice_id"><a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Invoice'}->id(); ) ?>"><? echo ( $$variable{'Invoice'}->id(); ) ?></a></td>
 		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->posted_on() ) ); ) ?></td>
 		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>

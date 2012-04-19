@@ -1,12 +1,12 @@
-package openprint::Invoice_Tax;
-@ISA = qw(openprint::Object);
-
 use strict;
+require Math::Round;
+require openprint::Tax;
+package openprint::Invoice_Tax;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
-
-$debug = 1;
+$debug = 0;
 
 $table = 'invoice_taxes';
 $serial = 'invoice_taxes_id_seq';
@@ -24,6 +24,9 @@ $serial = 'invoice_taxes_id_seq';
 %defaults = (
 );
 
+sub Tax {
+	return new openprint::Tax( $_[0]{'tax_id'} );
+} # end sub Tax
 sub name {
 	return $_[0]->Tax()->name();
 } # end sub name
@@ -37,7 +40,7 @@ sub amount {
 	if ( $$self{'invoice_id'} and ! defined $$self{'amount'} ) {
 		$$self{'amount'} = ($$self{'rate'}/100) * $self->Invoice()->subtotal();
 	} # end if
-	return sprintf('%.2f', $$self{'amount'} );
+	return Math::Round::nearest( 0.01, $$self{'amount'} );
 } # end sub amount
 
 1;

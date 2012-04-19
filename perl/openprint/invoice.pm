@@ -127,6 +127,7 @@ sub history {
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} elsif ( $param{'btnFunction'} eq 'Account Statement' ) {
+		_history();
 		my %data;
 
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
@@ -138,18 +139,15 @@ sub history {
 		my @Recipients = new openprint::Company($param{'company_id'})->AccountingContacts();
 		(new openprint::Email())->send(
 					FROM    => $config{'AccountingEmail'},
-					#TO      =>  \@Recipients,
-					TO      => new openprint::User( $session{'user_id'} ),
+					TO      =>  \@Recipients,
+					#TO      => new openprint::User( $session{'user_id'} ),
 					BCC     => new openprint::User( $session{'user_id'} ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					ATTACHMENTS	=>	\@attachments,
 					);
 		$variable{'information'} .= 'Account statement sent to ' . join('<br/>', map { sprintf('&quot;%s %s&quot; &lt;%s&gt;',$_->get('firstname','lastname','email')) } @Recipients );
 	} # end if
-	ssi::save_params( '/invoice/history.html', ( 
-		'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 
-		'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 
-		'paid','company_id','bad_debt') );
+	_history();
 	ssi::setup_date_select( '/invoice/history.html', 'created_on_start', -365 );
 	ssi::setup_date_select( '/invoice/history.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/invoice/history.html', 'due_on_start', -365 );
