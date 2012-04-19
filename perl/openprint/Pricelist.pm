@@ -106,5 +106,36 @@ sub Currency {
 	return new openprint::Currency( $_[0]{'currency_id'} );
 } # end sub Currency
 
+sub get_current {
+
+	if ( $openprint::session{'Pricelist_id'} ) {
+		# Validity of session variables is the job of openprint.pm, so it is done once per hit
+		return new openprint::Pricelist( $openprint::session{'Pricelist_id'} );
+	} # end if
+
+	my $list_id;
+
+	my $Company = new openprint::Company( $openprint::session{'company_id'} );
+	if ( $Company->id() > 0 ) {
+		$list_id = $Company->pricelist_id();
+	} # end if
+
+	if ( (! $list_id) and $Company->country() ) {
+		$list_id = $openprint::config{'Default'.$Company->country().'Pricelist'};
+	} # end if
+
+	if ( (! $list_id) and $openprint::session{'Country'} ) {
+		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
+	} # end if
+	if ( ! $list_id ) {
+		$list_id = $openprint::config{'DefaultPricelist'};
+	} # end if
+	if ( ! $list_id ) {
+		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
+	} # end if
+	
+	$openprint::session{'Pricelist_id'} = $list_id;
+	return new openprint::Pricelist( $list_id );
+} # end sub get_current
 1;
 __END__

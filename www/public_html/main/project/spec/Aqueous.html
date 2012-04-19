@@ -5,12 +5,9 @@
 	} else {
 	$$variable{'Columns'} = 'Two';
 	} # end if
-	push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service->find('name'=>'UVCoatingOverall');
-	push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service->find('name'=>'UVCoatingSpot');
-	push @{$$variable{'uvoptions'}}, 'None';
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Aqueous Coating</legend>
 		<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
@@ -20,13 +17,13 @@
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
 				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
 				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideOne' ) ) {
-					next if ! ( $colour =~ /Aqueous/i );
-					$$variable{'FrontCoatings'} .= $colour . '<br/>';
+					next if ! ( $$colour{'name'} =~ /Aqueous/i );
+					$$variable{'FrontCoatings'} .= $$colour{'name'} . '<br/>';
 				} # end foreach
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
 				foreach my $colour ( openprint::Estimating::Printing::get_colours( $$variable{'sig_specs'}, 'SideTwo' ) ) {
-					next if ! ( $colour =~ /Aqueous/i );
-					$$variable{'BackCoatings'} .= $colour . '<br/>';
+					next if ! ( $$colour{'name'} =~ /Aqueous/i );
+					$$variable{'BackCoatings'} .= $$colour{'name'} . '<br/>';
 				} # end foreach
 				$$variable{'BackCoatings'} = 'None' if ! $$variable{'BackCoatings'};
 			) ?>
@@ -47,77 +44,66 @@
 				</div>
 				<br class="spacer"/>
 				<div id="Results-<?SignatureIndex?>" >
+					<ul>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-					<p><label>Make Ready (<?CurrencySymbol?>)</label>
-					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-						<span class="<?Columns?>Columns">
-						<input type="text" name="MakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-						<input type="checkbox" id="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-						<label class="radio" for="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-						</span>
-					<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-					</p>
-					<p><label>Blanket (<?CurrencySymbol?>)</label>
-					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-						<span class="<?Columns?>Columns">
-						<input type="text" name="BlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"BlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-						<input type="checkbox" id="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-						<label class="radio" for="OverrideBlanketPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-						</span>
-					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-					</p>
-					<p><label>Service (<?CurrencySymbol?>)</label>
-					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-						<span class="<?Columns?>Columns">
-						<input type="text" name="ServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"ServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-						<input type="checkbox" id="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-						<label class="radio" for="OverrideServicePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-						</span>
+					<li><label>Make Ready (<?CurrencySymbol?>)</label>
+					<? echo ( my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= ssi::input( type=>"number", name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
+							$html .= ssi::write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+						} # end foreach qty_index
+						return $html;
+					) ?>
+					</li>
+					<li><label>Blanket (<?CurrencySymbol?>)</label>
+					<? echo ( my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= ssi::input( type=>"number", name=>"BlanketPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"BlanketPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
+							$html .= ssi::write_override( "OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+						} # end foreach qty_index
+						return $html;
+					) ?>
+					</li>
+					<li><label>Service (<?CurrencySymbol?>)</label>
+					<? echo ( my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= ssi::input( type=>"number", name=>"ServicePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"ServicePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
+							$html .= ssi::write_override( "OverrideServicePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+						} # end foreach qty_index
+						return $html;
+					) ?>
 					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 
-					</p>
-					<p><label>Material (<?CurrencySymbol?>)</label>
-					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-						<span class="<?Columns?>Columns">
-						<input type="text" name="MaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-						<input type="checkbox" id="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-						<label class="radio" for="OverrideMaterialPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-						</span>
-					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-					</p>
-					<p><label>Signature Total (<?CurrencySymbol?>)</label>
-					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-						<span class="<?Columns?>Columns">
-						<input type="text" name="SignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"SignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-						<input type="checkbox" id="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-						<label class="radio" for="OverrideSignaturePrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
-						</span>
-					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-
-					</p>
+					</li>
+					<li><label>Material (<?CurrencySymbol?>)</label>
+					<? echo ( my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= ssi::input( type=>"number", name=>"MaterialPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MaterialPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
+							$html .= ssi::write_override( "OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+						} # end foreach qty_index
+						return $html;
+					) ?>
+					</li>
+					<li><label>Signature Total (<?CurrencySymbol?>)</label>
+					<? echo ( my $html;
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<span class="'.$$variable{Columns}.'Columns">';
+							$html .= ssi::input( type=>"number", name=>"SignaturePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"SignaturePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
+							$html .= ssi::write_override( "OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+						} # end foreach qty_index
+						return $html;
+					) ?>
+					</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 					<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+					</ul>
 				</div>
 				<br class="spacer"/>
 			</fieldset>
@@ -125,7 +111,9 @@
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}} ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<ul>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

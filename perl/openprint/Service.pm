@@ -88,14 +88,15 @@ sub prices {
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
-	if ( ! $Pricelist ) {
-		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id());
-	} # end if
+	$Pricelist = openprint::Pricelist::get_current() if ! $Pricelist;
     my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
 	$price{'currency_id'} = $Pricelist->currency_id();
+	$price{'ServiceName'} = $$self{'name'};
+	$price{'Service'} = $self;
 	openprint::Currency::convert( \%price );
+$openprint::log->debug("Get price: $$self{name} $price{Price}");
     return %price;
 } # end sub get_price
 

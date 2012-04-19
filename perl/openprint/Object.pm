@@ -406,12 +406,16 @@ sub Creator {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
 
+my @sql_functions = (
+	'NOW()','CURRENT_TIME',
+);
+
 sub find_operators {
 	my ( $params, $k, $f ) = @_;
 	my %results;
 
 	if ( exists $$params{$k.' ='} ) {
-		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
+			push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
 	} # end if
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
@@ -445,6 +449,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.'_null_or_>'} ) {
 		push @{$results{'_null_or_>'}}, "( $f > ? OR $f IS NULL )", $$params{$k.'_null_or_>'};
+	} # end if
+	if ( exists $$params{$k.'_null_or_<'} ) {
+		push @{$results{'_null_or_<'}}, "( $f < ? OR $f IS NULL )", $$params{$k.'_null_or_<'};
 	} # end if
 	if ( exists $$params{$k.' is null or ='} ) {
 		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
@@ -784,7 +791,7 @@ sub AUTOLOAD {
 	$name =~ s/.*://;
 	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
-$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
+#$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
 		return $_[0]{$name} = $_[1];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';

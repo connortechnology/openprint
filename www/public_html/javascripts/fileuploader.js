@@ -1,16 +1,3 @@
-/**
- * http://github.com/valums/file-uploader
- *
- * Multiple file upload component with progress-bar, drag-and-drop.
- * © 2010 Andrew Valums ( andrew(at)valums.com )
- *
- * Licensed under GNU GPL 2 or later, see license.txt.
- */
-
-//
-// Helper functions
-//
-
 var qq = qq || {};
 
 /**
@@ -236,7 +223,7 @@ qq.FileUploaderBasic = function(o){
 	this._options = {
 		// set to true to see the server response
 		debug: false,
-		action: '/server/upload',
+		action: '/upload.htm',
 		params: {},
 		button: null,
 		multiple: true,
@@ -362,13 +349,14 @@ qq.FileUploaderBasic.prototype = {
 		this._button.reset();
 	},
 	_uploadFileList: function(files){
-		for (var i=0; i<files.length; i++){
+		var num_files = files.length;
+		for (var i=0; i<num_files; i++){
 			if ( !this._validateFile(files[i])){
 				return;
 			}		
 		}
 	
-		for (var i=0; i<files.length; i++){
+		for (var i=0; i<num_files; i++){
 			this._uploadFile(files[i]);	
 		}	
 	},	
@@ -507,7 +495,8 @@ qq.FileUploader = function(o){
 	qq.extend(this._options, o);	
 
 	this._element = this._options.element;
-	this._element.innerHTML = this._options.template;	
+	if ( this._options.template )
+		this._element.innerHTML = this._options.template;
 	this._listElement = this._options.listElement || this._find(this._element, 'list');
 
 	this._classes = this._options.classes;
@@ -536,8 +525,8 @@ qq.extend(qq.FileUploader.prototype, {
 	_setupDragDrop: function(){
 		var self = this;
 		var dropArea;
-		if ( this._droparea )
-			dropArea = this._droparea;
+		if ( this._options.droparea )
+			dropArea = this._options.droparea;
 		else
 			dropArea = this._find(this._element, 'drop');					
 
@@ -554,7 +543,7 @@ qq.extend(qq.FileUploader.prototype, {
 				dropArea.removeClassName( self._classes.dropActive );
 			},
 			onDrop: function(e){
-				dropArea.hide()
+				//dropArea.hide()
 				dropArea.removeClassName( self._classes.dropActive );
 				self._uploadFileList(e.dataTransfer.files);
 			}
@@ -1188,19 +1177,22 @@ qq.extend(qq.UploadHandlerXhr.prototype, {
 		params = params || {};
 		params['qqfile'] = name;
 		var queryString = qq.obj2url(params, this._options.action);
-
 		xhr.open("POST", queryString, true);
 		xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 		xhr.setRequestHeader("X-File-Name", encodeURIComponent(name));
 		xhr.setRequestHeader("Content-Type", "multipart/form-data; boundary=xxxxxxxx"); // simulate a file MIME POST request.
-		var body = "--xxxxxxxx\r\n";
+
+		var reader = new FileReader();
+		reader.onload = function(evt) {
+			var body = "--xxxxxxxx\r\n";
 			body += "Content-Disposition: form-data; name=myFile; filename=" + encodeURIComponent(name) + "\r\n";
 			body += "Content-Type: application/octet-stream\r\n\r\n";
-			body += file + "\r\n";
+			body += evt.target.result + "\r\n";
 			body += "--xxxxxxxx--";
-		xhr.sendAsBinary(body);
-		//xhr.setRequestHeader("Content-Type", "application/octet-stream");
-		//xhr.send(file);
+			xhr.sendAsBinary(body);
+		};
+		reader.readAsBinaryString(file);
+
 	},
 	_onComplete: function(id, xhr){
 		// the request was aborted/cancelled

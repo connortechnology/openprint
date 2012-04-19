@@ -103,7 +103,7 @@ foreach my $Feed ( openprint::Feed->find() ) {
 #print "RSS: " . Data::Dumper::Dumper($rss) . "\n";
     # print the channel items
     foreach my $item (@{$rss->{'items'}}) {
-$log->debug("Item: " . Data::Dumper::Dumper($item));
+#$log->debug("Item: " . Data::Dumper::Dumper($item));
 #print "Item: " . Data::Dumper::Dumper($item) ."\n";
 		next unless defined($item->{'title'}) && defined($item->{'link'});
 		my $Article = openprint::Article->find_one('title'=>$item->{'title'});

@@ -435,4 +435,10 @@ sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 
 	if ( my $STC = openprint::ServiceType_Category->find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
+foreach my $qty_index ( 1 .. 3 ) {
+	if ( !( my $STD = openprint::ServiceType_Default->find_one('name'=>'MatchGrain'.$qty_index, 'service_type'=>'Signature') ) ) {
+		my $STD = new openprint::ServiceType_Default();
+		$STD->save({'name'=>'MatchGrain'.$qty_index, 'value'=>'Y', 'service_type'=>'Signature' });
+	} # end if
+} # end foreach
 $dbh->disconnect();

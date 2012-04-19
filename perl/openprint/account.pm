@@ -694,7 +694,7 @@ sub search {
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/search.html', 'last_online_start', -365 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
 	$session{'/account/search.html?paging_per_page'} = 5;
 } # end sub search

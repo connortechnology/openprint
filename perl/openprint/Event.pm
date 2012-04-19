@@ -34,6 +34,7 @@ $serial = 'events_id_seq';
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	'name+info'	=>	q`name || info`,
 );
 
 %defaults = (
@@ -165,7 +166,7 @@ sub html {
 			`, $Event->id(),
 			$Event->Asset()->thumbnail_url(),
 			ssi::htmlize($Event->name()),
-			( $Event->starting() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
+			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),
 
 			);
 	my @Comments = $Event->Comments();

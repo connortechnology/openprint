@@ -3,7 +3,6 @@
 <h2>Search</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_events = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -24,9 +23,8 @@
 	}
 	function load_events( form ) {
 		$('EventsList').innerHTML = 'Please wait...';
-		new Ajax.Updater('EventsList','_search.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('EventsList','_search.html', {parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Event"><div class="Search">
@@ -71,6 +69,9 @@
 					<select id="city_id" name="city_id" onchange=""><option value=""> All </option>
 					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $session{'/event/search.html?city_id'} ); ) ?>
 					</select>
+					</li>
+					<li><label>Text Search</label>
+						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
 					</li>
 				</ul>
 			</div>

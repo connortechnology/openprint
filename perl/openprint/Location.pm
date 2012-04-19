@@ -427,5 +427,13 @@ sub save_location {
 	return $error if $error;
 	return $Location;
 } # end sub save_location
+
+sub googlemap_html {
+	if ( ! exists $_[0]{'googlemap_html'} ) {
+		$_[0]{'googlemap_html'} = sprintf('<iframe src="http://maps.google.com/maps?f=q&hl=en&ll=%1$s,%2$s&q=%3$s&z=13&output=embed" style="width: 100%; height:400px;"></iframe>', 
+				$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+	} # end if
+	return $_[0]{'googlemap_html'};
+} # end sub googlemap_html
 1;
 __END__

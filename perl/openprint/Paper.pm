@@ -1431,5 +1431,17 @@ sub short {
 	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
 }
 
+sub start_width {
+	if ( @_ > 1 ) {
+		$_[0]{'start_width'} = $_[1];
+	} 
+	return $_[0]{'start_width'};
+} # end sub start_width
+sub start_height {
+	if ( @_ > 1 ) {
+		$_[0]{'start_height'} = $_[1];
+	} 
+	return $_[0]{'start_height'};
+} # end sub start_height
 1;
 __END__

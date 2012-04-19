@@ -227,5 +227,11 @@ sub Imposition {
 	} # end if
 	return $_[0]{'Imposition'};
 } # end sub Imposition
+sub imposition {
+	if ( @_ > 1 ) {
+		$_[0]{'imposition'} = $_[1];
+	} # end if
+	return $_[0]{'imposition'};
+} # end sub imposition
 1;
 __END__

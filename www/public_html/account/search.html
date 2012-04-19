@@ -19,14 +19,6 @@
 							<input type="text" name="name" id="name" onkeyup="if(this.value.length > 2){load_results();};" />
 						</li>
 <!--
-						<li><label>Distance</label>
-							<select name="distance" id="distance">
-								<option value="">select</option>
-								<? echo ( ssi::make_drop_down( [ map { $_, $_.'km' } ( 5, 10, 50, 100 ) ], $session{'/account/search.html?distance'} ); ) ?>
-							</select>
-						</li>
--->
-<!--
 						<li>
 							<label>Registered</label>
 							<span class="DateSelectorCT">
@@ -92,7 +84,7 @@
 			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
 			$html .= '</select>';
 		} elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
-			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ( $value ? $value : $Field->default() ), $$Field{'type'} );
+			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ''.( $value ? $value : $Field->default() ), $$Field{'type'} );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field
