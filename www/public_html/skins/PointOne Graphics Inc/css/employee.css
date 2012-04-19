@@ -127,8 +127,9 @@ table .po_id {
 	width: 60px;
 	text-align: left;
 }
+/* Was 80, but project status needs 200 */
 table .status {
 	text-align: left;
 	padding-left: 7px;
-	width: 80px;
+	width: 140px;
 }
