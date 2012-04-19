@@ -225,13 +225,13 @@ sub send {
 
 	my $Email = new openprint::Email();
 	my $results = $Email->send(
-		'BCC'			=>	sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
-		'TO'			=>	[$self->Invoicee()->AccountingContacts()],
+		'BCC'			=>	new openprint::User( $session{'user_id'} ),
+		'TO'			=>	new openprint::User( $session{'user_id'} ),
+		#'TO'			=>	[$self->Invoicee()->AccountingContacts()],
 		'FROM'			=>	$config{'AccountingEmail'},
 		'ATTACHMENTS'	=>	\@attachments,
 		'SUBJECT'		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 	);
-$openprint::log->debug("Email results: $results");
 	$self->add_to_log( $results );
 	return $results;
 } # end sub send

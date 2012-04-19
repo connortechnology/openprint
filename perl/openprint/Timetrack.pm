@@ -10,7 +10,7 @@ require openprint::Service;
 
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';
@@ -97,7 +97,7 @@ sub Price {
 
 	if ( lc $Price{'units'} eq '/month' ) {
 		$elapsed = sprintf('%.0f',$elapsed/(60*60*24*30));
-		$openprint::log->debug('Month pricing ' . $elapsed );
+		#$openprint::log->debug('Month pricing ' . $elapsed );
 		$Price{'Total'} = $Price{'Price'} * $elapsed;
 	} elsif ( lc $Price{'units'} eq '/hr.' ) {
 		$Price{'Total'} = $Price{'Price'} * $elapsed / 3600;

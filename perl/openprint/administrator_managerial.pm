@@ -710,12 +710,17 @@ sub page_settings {
 			if ( 
 					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
-					( $PS->user_level() ne $param{'user_level-'.$PS->id()} )
+					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or
+					( $PS->keywords() ne $param{'keywords-'.$PS->id()} ) or
+					( $PS->description() ne $param{'description-'.$PS->id()} ) 
+	
 				) {
 				$variable{'error'} .= $PS->save({
-						'url'=>$param{'url-'.$$PS{id}},
-						'cacheable'=>$param{'cacheable-'.$$PS{id}},
-						'user_level'=>$param{'user_level-'.$$PS{id}},
+						'url'			=>	$param{'url-'.$$PS{id}},
+						'cacheable'		=>	$param{'cacheable-'.$$PS{id}},
+						'user_level'	=>	$param{'user_level-'.$$PS{id}},
+						'keywords'		=>	$param{'keywords-'.$$PS{id}},
+						'description'	=>	$param{'description-'.$$PS{id}},
 						});
 			} # end if need to save
 		} # end foreach PS

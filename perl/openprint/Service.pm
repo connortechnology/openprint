@@ -96,7 +96,6 @@ sub get_price {
 	$price{'ServiceName'} = $$self{'name'};
 	$price{'Service'} = $self;
 	openprint::Currency::convert( \%price );
-$openprint::log->debug("Get price: $$self{name} $price{Price}");
     return %price;
 } # end sub get_price
 
