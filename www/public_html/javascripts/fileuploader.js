@@ -813,10 +813,10 @@ qq.UploadButton.prototype = {
 			self._element.removeClassName( self._options.hoverClass );
 		});
 		qq.attach(input, 'focus', function(){
-			addClassName(self._element, self._options.focusClass);
+			self._element.addClassName( self._options.focusClass);
 		});
 		qq.attach(input, 'blur', function(){
-			removeClassName(self._element, self._options.focusClass);
+			self._element.removeClassName( self._options.focusClass);
 		});
 
 		// IE and Opera, unfortunately have 2 tab stops on file input
