@@ -707,10 +707,13 @@ sub radio {
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
         $html .= sprintf(q`
-                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+                <input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
                 <label class="radio" for="%1$s%2$s">%3$s</label>
-                `, $name, $value, $label, checked( $value eq $selected ), $onclick ? ' onclick="'.$onclick.'"' : '' );
-    } # end foreach value
+                `, $name, $value, $label, checked( $value eq $selected ), 
+				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
+				$$options{id},
+				);
+	} # end foreach value
     return $html;
 } # end sub radio
 sub checkboxes {
