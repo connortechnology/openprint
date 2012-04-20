@@ -104,7 +104,8 @@ sub edit {
 } # end sub edit
 
 sub _album_photos {
-	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
+	$param{'album_type'} = 'openprint::Photo_Album' if ! $param{'album_type'};
+	my $Album = $variable{'Album'} = $param{'album_type'}->new($param{'album_id'});
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
 	} elsif ( $param{'action'} eq 'add to album' ) {
@@ -136,7 +137,7 @@ sub _album_photos {
 		# Why am I deleting the asset?
 		#$variable{'error'} .= $Asset->delete();
 	} # end if
-} # end sub photos
+} # end sub _album_photos
 
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;

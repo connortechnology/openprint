@@ -241,5 +241,12 @@ sub asset_html {
 	return $_[0]{'asset_html'};
 } # end sub asset_html
 
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	$Album->save({ 'Photos for event: ' . $$self{'name'} }) if ! $Album->id();
+	return $Album->upload( @_ );
+} # end sub upload
+
 1;
 __END__
