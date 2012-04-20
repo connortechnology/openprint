@@ -6,7 +6,7 @@
 			To upload files to this album,
 			<span id="dragndropuploadmessage" style="display:none;">
 			simply drag and drop them here. Or </span>
-			<span id="formuploadmessage">select the file using the input below and click on the Upload button. There is a 1GB file size limit.</span>
+			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
 		</div>
 <!--
 		<input type="file" name="file" />
@@ -38,11 +38,11 @@ var uploader = new qq.FileUploader({
     allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
     sizeLimit: 1024*1024*1024,
     params: {
-        id: <? echo ( $$variable{'Album'}->id() ) ?>,
-        UploadType: 'Photo_Album'
+        id: '<? echo ( $$variable{'Album'}->id() ) ?>',
+        UploadType: '<? echo ( my $type = ref $$variable{'Album'}; $type =~ s/^openprint:://; return $type; ) ?>'
     },
     onComplete: function(id, fileName){
-        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
+        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', album_type: '<? echo ( ref $$variable{'Album'} ) ?>' } } );
     }
 
 });
