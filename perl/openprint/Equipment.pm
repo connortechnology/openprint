@@ -18,7 +18,7 @@ use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %d
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -139,10 +139,6 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
-		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
-			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
-			next;
-		} # end if
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;

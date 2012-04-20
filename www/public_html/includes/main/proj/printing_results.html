@@ -131,6 +131,7 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </li>
 <? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
+<li>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -138,6 +139,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+</li>
 <? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
 <li>
 	<label>Bleed Size</label>
@@ -242,6 +244,7 @@
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
 
 
+</ul>
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -254,7 +257,6 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
-</ul>
 <ul id="Plates" <? if ( $$variable{'PrintingType'} eq 'Digital' ) ?>style="display:none"<? endif ( $$variable{'PrintingType'} eq 'Digital' ) ?>>
 <? if ( sql::execute( undef, undef, q{SELECT DISTINCT strvalue FROM tbl_Equipment_specifications WHERE strname='Plate Type'} ) > 1 ) ?>
 	<li>
@@ -378,7 +380,9 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
+</ul>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
+<ul>
 <li class="stockquantity">
 	<label>Stock Quantity</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>

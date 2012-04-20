@@ -51,12 +51,13 @@
 		} # end foreach
 	} # end if
 	if ( $debug ) {
-		foreach my $key ( keys %specs ) {
+		foreach my $key ( sort keys %specs ) {
 			$log->debug("$key => $specs{$key}");
 		} # end foreach
 	} # end if debug
     foreach my $key ( @vars ) {
         if ( (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
+$log->debug("Deleting $key cuz it's the same $key") if $debug;
 			delete $specs{$key};
         } # end if
     } # end foreach
