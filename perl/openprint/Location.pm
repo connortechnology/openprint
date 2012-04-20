@@ -453,11 +453,11 @@ sub from_ip {
 		$State = new openprint::Location();
 		$State->save({'name'=>$record->region_name(),'type'=>'state','parent_id'=>$Country->id()});
 	} # end if
-	my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city_name(),'parent_id'=>$State->id());
+	my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city(),'parent_id'=>$State->id());
 
 	if ( ! $City ) {
 		$City = new openprint::Location();
-		$City->save({'name'=>$record->city_name(),'type'=>'city','parent_id'=>$State->id()});
+		$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
 	} # end if
 	return $City;
 } # end sub from_ip
