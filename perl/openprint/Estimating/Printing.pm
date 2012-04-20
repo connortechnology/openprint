@@ -32,6 +32,7 @@ my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 
 my %stitching_cache;
+my %price_cache;
 
 #use warnings;
 use POSIX qw(ceil);
@@ -2063,6 +2064,7 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 		} 
 
 		%stitching_cache = ();
+		%price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 #$openprint::log->debug("versions: @versions");
 # Only thread qtys 2 and 3
@@ -2123,10 +2125,11 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 
 		#$$specs{'hdnBreakdown'.$qty_index} = breakdown( $b_price, $specs );
 		$$specs{'hdnBreakdown'.$qty_index} = $$best_price{'Breakdown'};
+$log->debug($$specs{'hdnBreakdown'.$qty_index});
 
 		$Imposition->save( $specs, $qty_index );
 		@{$$specs{'Additional Impositions'.$qty_index}} = @{$$best_price{'Impositions'}};
-if ( 1 ) {
+if ( 0 ) {
 					if ( $$best_price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $$best_price{'Impositions'} } ) {
 					$I->display( "Results: $qty_index " );
@@ -2900,6 +2903,10 @@ if ( 0 ) {
 						#$openprint::r->print(" ");
 						#$openprint::r->rflush;
 						#return {} if $openprint::r->connection->aborted;
+						my $key = join(',',$qty_index,$$Press{id},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()));
+						if ( $price_cache{$key} ) {
+							$sig_price = $price_cache{$key};
+						} else {
 
 						$$imp{'Price'} = $$price{'Comparison Cost'};
 						if ( %best_price ) {
@@ -2915,6 +2922,8 @@ if ( 0 ) {
 		#$openprint::log->debug("recursing with no best price ");
 							$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 						} # end if
+							$price_cache{$key} = $sig_price;
+						} # end if cache
 					} # end if too deep
 			
 # get_project_price is recursive so we are done

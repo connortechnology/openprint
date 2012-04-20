@@ -1,4 +1,4 @@
-<p>
+<li>
 	<label># of  hours</label>
-	<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="this.value=this.value.replace(/[^\-\.\d]/,'');calc(this.form.name);" /> Hours
-</p>
+	<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="floatize(this);calc(this.form.name);" /> Hours
+</li>

@@ -12,11 +12,11 @@
 		<? echo (
 			my $html;
 			if ( $$variable{'ServiceIndex'} ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Recalculate', 'recalculate.gif', "calc('f1',true);", '', 'Recalculate' );
-				$html .= ssi::writeButton( $log, $dbh, 'Save', 'save_and_continue.gif', "submit_handler('f1');", '', 'Save and Continue' );
-				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' );
+				$html .= ssi::button( 'Recalculate', { onclick=>"calc('f1',true);" } );
+				$html .= ssi::button( 'Save', { onclick=>"submit_handler('f1');", text=>'Save and Continue' } );
+				$html .= ssi::button( 'Reset', { onclick=>"f1.reset();calc('f1');" } );
 			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Close', 'close.gif', "window.close();", '', 'Close' );
+				$html .= ssi::button( 'Close', { onclick=>"window.close();" } );
 			} # end if
 			return $html;
 		) ?>

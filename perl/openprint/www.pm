@@ -152,6 +152,7 @@ $log->debug("Sending js redirect");
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
+		$variable{'PageSetting'} = $page_settings{$page};
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();

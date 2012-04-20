@@ -46,32 +46,35 @@
 				<div id="Results-<?SignatureIndex?>" >
 					<ul>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-					<li><label>Make Ready (<?CurrencySymbol?>)</label>
+					<li class="MakeReadyPrice"><label>Make Ready (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= ssi::input( type=>"number", name=>"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
 							$html .= ssi::write_override( "OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
 					</li>
-					<li><label>Blanket (<?CurrencySymbol?>)</label>
+					<li class="BlanketPrice"><label>Blanket (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= ssi::input( type=>"number", name=>"BlanketPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"BlanketPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
 							$html .= ssi::write_override( "OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideBlanketPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
 					</li>
-					<li><label>Service (<?CurrencySymbol?>)</label>
+					<li class="ServicePrice"><label>Service (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= ssi::input( type=>"number", name=>"ServicePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"ServicePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
 							$html .= ssi::write_override( "OverrideServicePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideServicePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
@@ -80,22 +83,24 @@
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 
 					</li>
-					<li><label>Material (<?CurrencySymbol?>)</label>
+					<li class="MaterialPrice"><label>Material (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= ssi::input( type=>"number", name=>"MaterialPrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"MaterialPrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
 							$html .= ssi::write_override( "OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideMaterialPrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>
 					</li>
-					<li><label>Signature Total (<?CurrencySymbol?>)</label>
+					<li class="SignaturePrice"><label>Signature Total (<?CurrencySymbol?>)</label>
 					<? echo ( my $html;
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{Columns}.'Columns">';
 							$html .= ssi::input( type=>"number", name=>"SignaturePrice-$$variable{SignatureIndex}-$qty_index", value=> $$variable{"SignaturePrice-$$variable{SignatureIndex}-$qty_index"}, onkeyup=>"floatize(this);calc(this.form.name);" );
 							$html .= ssi::write_override( "OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index", $$variable{"OverrideSignaturePrice-$$variable{SignatureIndex}-$qty_index"}, '', q`calc('f1')` );
+							$html .= '</span>';
 						} # end foreach qty_index
 						return $html;
 					) ?>

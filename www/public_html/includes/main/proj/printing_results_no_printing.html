@@ -5,7 +5,7 @@
 	$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
-<p>
+<li>
 	<label>Sheet Size</label>
 		<input type="text" name="StockWidth" value="<?StockWidth?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" /> x
 		<input type="text" name="StockHeight" value="<?StockHeight?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
@@ -19,8 +19,8 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
-<p>
+</li>
+<li>
     <label><? echo ( ssi::writeTip( 'Run style' ); ) ?></label>
 	<select name="ddmRunStyle" size="1" onchange="calc(this.form.name);">
 		<option value="">No runstyle selected</option>
@@ -33,9 +33,9 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>
 <? if ( $$variable{'txtSignatureType'} ) ?>
-<p>
+<li>
 	<label>Page Quantity</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -53,10 +53,9 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
-
-<p>
+<li>
     <label><? echo ( ssi::writeTip('Imposition'); ) ?></label>
     <input type="text" name="txtImposition" value="<?txtImposition?>" size="4" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> out
 	<input type="text" size="3" name="hdnImpositionColumns" value="<?hdnImpositionColumns?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" /> x
@@ -75,4 +74,4 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
         <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>

@@ -332,28 +332,29 @@ sub make_order {
 	return $order_id;
 } # end sub make_order
 
+# Now takes an OrderedProject or Product object
 sub save_project_information {
-	my ( $order_id, $project_index ) = @_;
+	my ( $order_id, $OP ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $error;
+	my $Project = $OP->Project();
+	my $project_index = $OP->project_id();
 
 	if ( $param{"rdbQuantity$project_index"} ) {
-		$Project->ordered_quantity_index( $param{"rdbQuantity$project_index"} );
+		$OP->quantity_index( $param{"rdbQuantity$project_index"} );
 	} elsif ( ! $Project->ordered_quantity_index() ) {
 		my @qtys = $Project->quantity_indexes();
 		if ( 1 == scalar @qtys ) {
-			$Project->ordered_quantity_index( $qtys[0] );
+			$OP->quantity_index( $qtys[0] );
 		} # end if
 	} # end if
-$openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 
 	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
 
 		if ( ! check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
 			return q{Date is not valid. Please select a correct date.};
 		} # end if
-		$Project->requested_date( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
+		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
 	my $services = $Project->services();
@@ -416,7 +417,7 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 				$log->warn($$specs{'alert'}) if $$specs{'alert'};
 			} # end foreach service_id
 		} # end foreach ShippingType
-		$Project->shippingtype( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
+		$OP->shipping_type( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
 
 		if ( $quantity_shipped > 0 ) {
 			$error .= $quantity_shipped . ' more items need to be shipped or picked up.';	
@@ -425,9 +426,10 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 		} # end if
 	} # end if
 
-	$Project->reference( $param{"Reference$project_index"} ) if $param{"Reference$project_index"};
-	$Project->price( $Project->ordered_quantity_index(), undef );
-	$error .= $Project->save();
+	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	$error .= $OP->save();
 	return $error;
 
 } # end foreach save_project_information
