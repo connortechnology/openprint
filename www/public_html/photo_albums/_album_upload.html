@@ -42,7 +42,7 @@ var uploader = new qq.FileUploader({
         UploadType: '<? echo ( my $type = ref $$variable{'Album'}; $type =~ s/^openprint:://; return $type; ) ?>'
     },
     onComplete: function(id, fileName){
-        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', album_type: <? echo ( ref $$variable{'Album'} ) ?> } } );
+        new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', album_type: '<? echo ( ref $$variable{'Album'} ) ?>' } } );
     }
 
 });

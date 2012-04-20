@@ -770,7 +770,7 @@ qq.UploadButton.prototype = {
 			this._input.remove();
 		}			
 	
-		removeClassName(this._element, this._options.focusClass);
+		this._element.removeClassName( this._options.focusClass);
 		this._input = this._createInput();
 	},
 	_createInput: function(){			
