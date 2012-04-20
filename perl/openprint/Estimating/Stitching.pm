@@ -859,7 +859,7 @@ sub get_price {
 		$price{'MPrice'} *= ( 1 - $price{'SpineLength Discount'}/100);
 	} # end if
 
-	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
+	$price{'txtPrice'} = Math::Round::nearest(0.01,$price{'MakeReady'} + $price{'Service'} + $price{'Insert'});
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$ServiceType{'name'} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;
 	return \%price;
 } # end sub get_price

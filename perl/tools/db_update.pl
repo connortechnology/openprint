@@ -1045,7 +1045,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
 			my $spread_size = $pages/($columns*$rows);
 			my $fold = sprintf('%dx%d-%dPage-%sSignatureFold', $columns, $rows, $pages, $spine_direction );
-			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$Spec->value(),type=>$pages.'PageFold',pages=>$pages);
+			my $Fold = openprint::Fold->find_one('equipment_id'=>$E->id(),'name'=>$Spec->value(),type=>$pages.'PageFold',pages=>$pages,spine_direction=>$spine_direction);
 			if ( ! $Fold ) {
 				$Fold = new openprint::Fold();
 				$Fold->equipment_id( $E->id() );
@@ -1072,9 +1072,9 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 				$Fold->spine_direction( $spine_direction );
 				if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
 					if ( $spine_direction eq 'Vertical' ) {
-						$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)) );
+						$Fold->min_width( Math::Round::nearest( 0.001, ($_->value()/$columns)) );
 					} else {
-						$Fold->min_height( sprintf( '%.3f', ($_->value()/$columns)) );
+						$Fold->min_height( Math::Round::nearest( 0.001, ($_->value()/$columns)) );
 					} # end if
 					$_->delete();
 				} #end if
