@@ -1,6 +1,7 @@
 use strict;
 package openprint::location;
 
+use Geo::IP;
 require openprint::Location;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -125,6 +126,20 @@ sub search {
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
 	#} # end if
+	my $Location = new openprint::User( $session{'user_id'} )->Location() if $session{user_id};;
+	if ( ! ( $Location and $Location->id() ) ) {
+		my $gi = Geo::IP->new(GEOIP_STANDARD);
+		my $record = $gi->record_by_name($ENV{'REMOTE_ADDR'});
+		if ( $record ) {
+$log->debug("GI: " . $record->region());
+		} else {
+$log->error("NO record for $ENV{'REMOTE_ADDR'}");
+		} # end if
+	} # end if
+	if ( $Location and $Location->id() ) {
+		$session{'/location/search.html?state_id'} = $Location->ancestor('type'=>'state') if ! $session{'/location/search.html?state_id'};
+		$session{'/location/search.html?country_id'} = $Location->ancestor('type'=>'country') if ! $session{'/location/search.html?country_id'};
+	} # end if
 } # end sub search
 sub _search {
 	if ( ! $param{'btnFunction'} ) {
