@@ -131,8 +131,8 @@ sub search {
 		$Location = openprint::Location::from_ip();
 	} # end if
 	if ( $Location and $Location->id() ) {
-		$Country = $Location->ancestor('type'=>'country');
-		$State = $Location->ancestor('type'=>'state');
+		my $Country = $Location->ancestor('type'=>'country');
+		my $State = $Location->ancestor('type'=>'state');
 		$session{'/location/search.html?state_id'} = $State->id() if $State and ! exists $session{'/location/search.html?state_id'};
 		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
 	} # end if
