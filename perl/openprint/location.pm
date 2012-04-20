@@ -1,7 +1,6 @@
 use strict;
 package openprint::location;
 
-use Geo::IP;
 require openprint::Location;
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -126,24 +125,17 @@ sub search {
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
 	#} # end if
+
 	my $Location = new openprint::User( $session{'user_id'} )->Location() if $session{user_id};;
-	my $CountryLocation;
-	my $StateLocation;
 	if ( ! ( $Location and $Location->id() ) ) {
-		my $gi = Geo::IP->open("/var/lib/geoip/GeoLiteCity.dat");
-		my $record = $gi->record_by_name($ENV{'REMOTE_ADDR'});
-		if ( $record ) {
-			$CountryLocation = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
-			$StateLocation = openprint::Location->find_one('type'=>'state','name lc'=>lc $record->region_name());
-		} else {
-$log->warn("NO record for $ENV{'REMOTE_ADDR'}");
-		} # end if
-	} else {
-		$CountryLocation = $Location->ancestor('type'=>'country');
-		$StateLocation = $Location->ancestor('type'=>'state');
+		$Location = openprint::Location::from_ip();
 	} # end if
-	$session{'/location/search.html?state_id'} = $StateLocation->id() if $StateLocation and ! exists $session{'/location/search.html?state_id'};
-	$session{'/location/search.html?country_id'} = $CountryLocation->id() if $CountryLocation and ! exists $session{'/location/search.html?country_id'};
+	if ( $Location and $Location->id() ) {
+		$Country = $Location->ancestor('type'=>'country');
+		$State = $Location->ancestor('type'=>'state');
+		$session{'/location/search.html?state_id'} = $State->id() if $State and ! exists $session{'/location/search.html?state_id'};
+		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
+	} # end if
 } # end sub search
 sub _search {
 	if ( ! $param{'btnFunction'} ) {

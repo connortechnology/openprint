@@ -6,6 +6,7 @@ require openprint::Photo_Album;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 require Geo::Coder::Googlev3;
+require Geo::IP;
 
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
@@ -435,5 +436,31 @@ sub googlemap_html {
 	} # end if
 	return $_[0]{'googlemap_html'};
 } # end sub googlemap_html
+
+sub from_ip {
+	my $gi = Geo::IP->open("/var/lib/geoip/GeoLiteCity.dat");
+	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
+	return if ! $record;
+
+	my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
+	if ( ! $Country ) {
+		$Country = new openprint::Location();
+		$Country->save({'name'=>$record->country_name(),'type'=>'country'});
+	} # end if
+
+	my $State = openprint::Location->find_one('type'=>'state','name lc'=>lc $record->region_name(),'parent_id'=>$Country->id());
+	if ( ! $State ) {
+		$State = new openprint::Location();
+		$State->save({'name'=>$record->region_name(),'type'=>'state','parent_id'=>$Country->id()});
+	} # end if
+	my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city_name(),'parent_id'=>$State->id());
+
+	if ( ! $City ) {
+		$City = new openprint::Location();
+		$City->save({'name'=>$record->city_name(),'type'=>'city','parent_id'=>$State->id()});
+	} # end if
+	return $City;
+} # end sub from_ip
+
 1;
 __END__
