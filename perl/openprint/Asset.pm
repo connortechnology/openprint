@@ -90,10 +90,12 @@ sub url {
 # Will look for, generate thumbnails, returning the on disk path
 sub thumbnail_url {
 	my $src = $_[0]->on_disk_path();
-	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
-		mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
-		$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
-		return '/images/icons/file.png';
+	if ( $openprint::config{'AssetPath'} ) {
+		if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
+			mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
+			$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
+			return '/images/icons/file.png';
+		} # end if
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
@@ -101,24 +103,28 @@ sub thumbnail_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
-		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
-		if ( ! -e $dest ) {
-			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
-				$openprint::log->error("ERror creating thumbnail. Reason: $1");
-			} # end if convert
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+				if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
+					$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				} # end if convert
+			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
-		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
-		if ( ! -e $dest ) {
-			#$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
-			`mv /tmp/00000001.jpg $dest`;
-			if ( $! ) {
-				$openprint::log->error("Unable to create thumbnail at $dest: $!" );
-				return '/images/icons/image.png';
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
+			if ( ! -e $dest ) {
+				#$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+				`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
+				`mv /tmp/00000001.jpg $dest`;
+				if ( $! ) {
+					$openprint::log->error("Unable to create thumbnail at $dest: $!" );
+					return '/images/icons/image.png';
+				} # end if
 			} # end if
 		} # end if
 		return  '/thumbnails/'.$blah.'.jpg';
