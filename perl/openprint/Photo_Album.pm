@@ -40,20 +40,25 @@ sub Thumbnail {
 		if ( ! $_[0]{'thumbnail_id'} ) {
 	$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
 			my @Photos = $_[0]->Photos();
-	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned, showing first. $Photos[0]{asset_id}");
-			$_[0]{'Thumbnail'} = $Photos[0] if @Photos;
+	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned");
+			if ( @Photos ) {
+$openprint::log->debug(", showing first. $Photos[0]{asset_id}");
+			$_[0]{'Thumbnail'} = $Photos[0];
+			} # end if
+		} else {
+			$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
 		} # end if
 		if ( ! $_[0]{'Thumbnail'} ) {
-		$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
-		} # end if
-		if ( ! $_[0]{'Thumbnail'} ) {
-			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album( { 'album_id'=>$_[0]{'id'} } );
+			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album();
+			$_[0]{'Thumbnail'}->set( { 'album_id'=>$_[0]{'id'} } );
 		} # end if
 	} # end if
 	return $_[0]{'Thumbnail'};
 } # end sub Thumbnail
 
 sub thumbnail_url {
+	my $Thumbnail = $_[0]->Thumbnail();
+	$openprint::log->debug(ref$Thumbnail);
 	return $_[0]->Thumbnail()->thumbnail_url();
 } # end sub thumbnail_url
 

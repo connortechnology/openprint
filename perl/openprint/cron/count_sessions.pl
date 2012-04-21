@@ -45,28 +45,41 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 
 my $count = 0;
-my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-foreach my $session ( @session_ids ) {
-    $session =~ s/\s//g;
+my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
+my @online;
+foreach my $session_id ( @$session_ids ) {
+    $session_id =~ s/\s//g;
     my %session;
     if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-        $log->debug("Error fetching Session: $session: $@");
+        $log->debug("Error fetching Session: $session_id: $@");
         next;
     }
     if ( ! $session{'lastupdated'} ) {
-		$log->warn("Updating time $session");
+		$log->warn("Updating time $session_id");
         $session{'lastupdated'} = time;
         untie %session;
     } elsif ( time - $session{'lastupdated'} < ( 60*60 ) ) {
+		push @online, $session_id;
 		$count += 1;
 	} # end if
 	undef %session;
 } # end foreach
-@session_ids = ();
+@$session_ids = ();
 
 if ( $$opts{'output'} ) {
 	open (MYFILE, '>'.$$opts{'output'}) or die "unable to open output at $$opts{output} : $!";
 	print MYFILE "$count currently online\n";
+	foreach my $session_id ( @online ) {
+		my %session;
+		if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+			$log->debug("Error fetching Session: $session_id: $@");
+			next;
+		} # en dif
+		next if ! $session{'user_id'};
+		my $User = new openprint::User( $session{'user_id'} );
+		print MYFILE $User->thumbnail_html();
+		undef %session;
+	}
 	close (MYFILE); 
 } # end if
 $dbh->disconnect() if $dbh;

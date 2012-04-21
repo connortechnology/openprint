@@ -308,16 +308,21 @@ sub rad2deg {
 	return ($_[0] * 180 / PI);
 }
 
-sub Asset {
-    if ( ! $_[0]{'Asset'} ) {
+sub thumbnail_id {
+	if ( ! exists $_[0]{'thumbnail_id'} ) {
         my $Album = $_[0]->Album();
         if ( $$Album{'thumbnail_id'} ) {
-            $_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+			$_[0]{'thumbnail_id'} = $$Album{'thumbnail_id'};
         } elsif ( $$Album{'id'} and my @Photos = $Album->Photos() ) {
-            $_[0]{'Asset'} = $Photos[0];
-        } else {
-            $_[0]{'Asset'} = new openprint::Asset();
+            $_[0]{'thumbnail_id'} = $Photos[0]->asset_id();
         } # end if
+	} # end if
+	return $_[0]{'thumbnail_id'};
+} # end sub thumbnail_id
+
+sub Asset {
+    if ( ! $_[0]{'Asset'} ) {
+		$_[0]{'Asset'} = new openprint::Asset( $_[0]->thumbnail_id() );
     } # end if
     return $_[0]{'Asset'};
 } # end sub Asset
@@ -462,5 +467,14 @@ sub from_ip {
 	return $City;
 } # end sub from_ip
 
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save({ 'Photos for location: ' . $$self{'name'} });
+		$self->save({'album_id'=>$Album->id()});
+	} # end if
+	return $Album->upload( @_ );
+} # end sub upload
 1;
 __END__
