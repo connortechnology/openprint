@@ -2,6 +2,7 @@
 use lib '/var/www/testing/perl';
 use strict;
 use warnings;
+use File::Basename qw(basename);
 
 require configuration;
 require sets;
@@ -56,7 +57,7 @@ $session{'company_id'} = $User->company_id();
 foreach my $file ( @ARGV ) {
 	if ( -e $file ) {
 		my $Asset = new openprint::Asset();
-		$Asset->save({'filename'=>$file,
+		$Asset->save({'filename'=> basename($file),
 				'created_by'	=>	$session{'user_id'},
 				'company_id'	=>	$session{'company_id'},
 					});

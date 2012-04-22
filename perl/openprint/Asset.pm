@@ -21,7 +21,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -118,11 +118,18 @@ sub thumbnail_url {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
 			if ( ! -e $dest ) {
-				#$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-				`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
-				`mv /tmp/00000001.jpg $dest`;
+				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+				
+				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
 				if ( $! ) {
 					$openprint::log->error("Unable to create thumbnail at $dest: $!" );
+					return '/images/icons/image.png';
+				} else {
+					$openprint::log->debug($_);
+				} # end if
+				`mv /tmp/00000001.jpg $dest`;
+				if ( $! ) {
+					$openprint::log->error("Unable to mv thumbnail  $dest: $!" );
 					return '/images/icons/image.png';
 				} # end if
 			} # end if

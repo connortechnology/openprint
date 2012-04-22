@@ -41,11 +41,10 @@
 						<ul>
 							<li><label>Filename</label>
 							<? echo ( 
-									my $html = $$variable{'Asset'}->filename() ;
-									if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/i ) {
-										$html .= '<br/><img src="'.$$variable{'Asset'}->url().'" />';
-									} # end if
-									return $html;
+								my $html = $$variable{'Asset'}->filename() ;
+								$html .= $$variable{'Asset'}->thumbnail_html();
+
+								return $html;
 							) ?>
 							</li>
 							<li><label>Attribution</label>
