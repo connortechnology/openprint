@@ -3,19 +3,20 @@ use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 
+require configuration;
 require sets;
 require sql;
 require logger;
 require openprint::User;
 require openprint::Asset;
-use Apache::Session::Postgres;
 use Getopt::Long;
 
 use openprint ();
-use vars qw($log $dbh %config);
+use vars qw($log $dbh %config %session);
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
 *config = \%openprint::config;
+*session = \%openprint::session;
 
 my $program = 'insert_asset.pl';
 $log = logger->new('warn');
@@ -46,12 +47,21 @@ $dbh = sql::open_sql( $log,
         );
 
 die 'Error opening db' if ! $dbh;
+configuration::init();
 
+my $User = openprint::User->find_one('email like'=>'isaac%');
+die "Coulnt find isaac." if ! $User;
+$session{'user_id'} = $User->id();
+$session{'company_id'} = $User->company_id();
 foreach my $file ( @ARGV ) {
 	if ( -e $file ) {
 		my $Asset = new openprint::Asset();
-		$Asset->save({'filename'=>$file});
-		`mv $file $config{'AssetPath'}.'/'.$Asset->on_disk_filename()`;
+		$Asset->save({'filename'=>$file,
+				'created_by'	=>	$session{'user_id'},
+				'company_id'	=>	$session{'company_id'},
+					});
+		my $mv_command = "$file $config{'AssetPath'}/".$Asset->on_disk_filename();
+		`mv $mv_command`;
 	} # end if
 } # end foreach file
 print "ARGS @ARGV\n";
