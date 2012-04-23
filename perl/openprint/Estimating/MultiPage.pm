@@ -144,10 +144,7 @@ sub calc {
 	my %override_pages;
 $openprint::log->debug("Groups: @Groups");
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		if ( $override_pages{$group_id} ) {
-# DO nothing
-		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
 		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
 			$override_pages{$group_id} = 2;
@@ -184,7 +181,7 @@ $log->warn("NO GROUP ID $group_id");
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );

@@ -917,7 +917,7 @@ foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
 my $FoldingService = openprint::Service->find_one('name'=>'Folding');
 if ( $FoldingService ) {
 
-	foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y','When Printing']}) ) {
+	foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y','When Printing','When Stitching']}) ) {
 		foreach my $Spec ( $E->Specifications() ) {
 			if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
 				my $pages = $1;
@@ -1039,7 +1039,7 @@ if ( $FoldingService ) {
 
 
 	
-foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
+foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>['When Printing','When Stitching']}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d)x(\d)-(\d*)Page-(\w*)SignatureFoldDescription$/ ) {
 			my ( $columns, $rows, $pages, $spine_direction ) = ( $1, $2, $3, $4 );
