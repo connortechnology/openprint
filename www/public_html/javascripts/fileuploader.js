@@ -226,6 +226,7 @@ qq.FileUploaderBasic = function(o){
 		action: '/upload.htm',
 		params: {},
 		button: null,
+		other_types: [],
 		multiple: true,
 		maxConnections: 3,
 		// validation	
@@ -350,8 +351,12 @@ qq.FileUploaderBasic.prototype = {
 	},
 	_uploadFileList: function(files){
 		var num_files = files.length;
+		if ( ! num_files ) {
+			alert('No files?');
+		}
 		for (var i=0; i<num_files; i++){
 			if ( !this._validateFile(files[i])){
+
 				return;
 			}		
 		}
@@ -545,8 +550,22 @@ qq.extend(qq.FileUploader.prototype, {
 			onDrop: function(e){
 				//dropArea.hide()
 				dropArea.removeClassName( self._classes.dropActive );
-				self._uploadFileList(e.dataTransfer.files);
-			}
+				var dt = e.dataTransfer;
+				if ( dt.files && dt.files.length ) {
+					self._uploadFileList(dt.files);
+				} else {
+					for(var i=0, num=dt.types.length; i < num; i += 1  ) {
+						var item = dt.types.item(i);
+            //var data = dt.getData(item);
+    //alert(item + ': ' + data);
+						for ( var type_i = 0; type_i < self._options.other_types.length; type_i += 1 ) {
+							if ( self._options.other_types[type_i].type == item ) {
+								self._options.other_types[type_i].onComplete(e,item);
+							} // end if
+						} // end if
+					} // end for
+				} // endif
+			} // end onDrop
 		});
 			
 		//dropArea.style.display = 'none';
@@ -725,8 +744,24 @@ qq.UploadDropZone.prototype = {
 
 		// dt.effectAllowed is none in Safari 5
 		// dt.types.contains check is for firefox		
-		return dt && dt.effectAllowed != 'none' &&
-			(dt.files || (!isWebkit && dt.types.contains && dt.types.contains('Files')));
+		var rc = dt && dt.effectAllowed != 'none' &&
+			(dt.files || (!isWebkit && dt.types.contains && dt.types.contains('Files')) );
+		if ( rc ) { 
+			return rc;
+		} // end if
+		// Check for other valid drops
+		if ( isWebkit ) return false;
+ 		alert ('checking for ');
+		if ( dt.types.contains('application/x-moz-file-promise-dest-filename') ) {
+			return true;
+		} // end if
+for(var i=0, num=dt.types.length; i < num; i += 1  ) {
+            var item = dt.types.item(i);
+    alert (item);
+            var data = dt.getData(item);
+    alert(data);
+        } // end for
+		return rc;
 	
 	}	
 };

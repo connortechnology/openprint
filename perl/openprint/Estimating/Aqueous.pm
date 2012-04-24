@@ -96,7 +96,6 @@ sub signature_needs {
 	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
 		return 1 if $$_{'name'} =~ /Aqueous/;
 	} # end foreach colour
-$openprint::log->warn("AQUEOUS NOT NEEDED");
 } # end sub signature_needs
 
 sub calc {

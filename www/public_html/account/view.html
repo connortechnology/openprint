@@ -54,7 +54,7 @@
 			) ?>
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
-			<fieldset><legend>Photo Albums</legend>
+			<fieldset><legend>Photos/Videos</legend>
 				<? if ( $$variable{'User'}->can_edit() ) ?>
 				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
 				<? endif ( $$variable{'User'}->can_edit() ) ?>
@@ -70,28 +70,6 @@
 				) ?>
 			</fieldset>
 		</div>
-		<div id="VideoAlbums">
-			<fieldset><legend>Video Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<span class="buttons"><? echo ( ssi::button( 'AddVideoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<? echo (
-					my $html = '';
-					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
-					return 'no albums' if ! @Albums;
-					foreach my $Album ( @Albums ) {
-						next if ! $Album->can_view();
-						
-						my $Video = $Album->Thumbnail();
-						if ( $Video->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-		</div><!--Albums-->
 		<div id="UserInformation">
 			<fieldset><legend>User Information</legend>
 				<div class="content">

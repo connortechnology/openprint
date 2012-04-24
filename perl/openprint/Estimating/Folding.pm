@@ -1259,6 +1259,7 @@ sub calc {
 		my @Signature_Impositions;
 		foreach ( $Project->signatures() ) {
 			my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
+			next if ! $$s_specs{'txtImposition'.$qty_index};
 			my $i = new openprint::Imposition();
 			$i->load( $s_specs, $qty_index );
 			push @Signature_Impositions, $i;
