@@ -1,12 +1,10 @@
 use strict;
 package openprint;
-
-require Apache::Session::Postgres;
-require Apache2::Cookie;
-
 use vars qw( $r %variable %session %param %config $log $dbh );
 
 sub session_init {
+	require Apache2::Cookie;
+	require Apache::Session::Postgres;
 	my $cookies = Apache2::Cookie->fetch( $r );
 	my $cookie = $$cookies{'_session_id'};
 	$cookie = $cookie->value if $cookie;
