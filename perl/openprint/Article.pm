@@ -212,6 +212,10 @@ sub view_url {
 	return '/article/view.html?article_id='.$_[0]{'id'};	
 } # end sub view_url
 
+sub link_to {
+	return '<a href="'.$_[0]->view_url().'">'.ssi::html_escape($_[0]->name()).'</a>';
+} # end sub link_to
+
 sub Assets {
 	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
 } # end sub Assets
