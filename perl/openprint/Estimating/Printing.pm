@@ -25,7 +25,6 @@ my %Papers;
 my %impositions;
 my $max_recursion_depth = 3;
 my %converted_imposition_cache;
-my $use_converted_imposition_cache = 0;
 my %filtered_imposition_cache;
 my $use_filtered_imposition_cache = 0;
 
@@ -250,25 +249,27 @@ sub variables {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
 
-	foreach my $side ( 'SideOne','SideTwo' ) {
-		foreach my $k ( keys %$new_specs ) {
-#$openprint::log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
-			if ( my ( $index ) = $k =~ /ColourCoating(\d+)$side/ ) {
-#$openprint::log->debug("Saving $side $k $$new_specs{$k} $index");
-				push @v, 'chkColourCoating'.$index.$side;
-				push @v, 'ColourCoatingType'.$index.$side;
-				push @v, 'ColourCoatingColour'.$index.$side;
-				push @v, 'ColourCoatingCoverage'.$index.$side;
-			} # end if
-		} # end foreach k
-	} # end foreach side
-	my $Project = new openprint::Project( $project_index );
-	foreach my $version ( 1 .. $$new_specs{'versions'} ) {
-		push @v, "version-$version-description";
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "version-$version-quantity$qty_index";
-		} # end foreach qty_index
-	} # end foreach version
+	if ( $new_specs ) {
+		foreach my $side ( 'SideOne','SideTwo' ) {
+			foreach my $k ( keys %$new_specs ) {
+	#$openprint::log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
+				if ( my ( $index ) = $k =~ /ColourCoating(\d+)$side/ ) {
+	#$openprint::log->debug("Saving $side $k $$new_specs{$k} $index");
+					push @v, 'chkColourCoating'.$index.$side;
+					push @v, 'ColourCoatingType'.$index.$side;
+					push @v, 'ColourCoatingColour'.$index.$side;
+					push @v, 'ColourCoatingCoverage'.$index.$side;
+				} # end if
+			} # end foreach k
+		} # end foreach side
+		my $Project = new openprint::Project( $project_index );
+		foreach my $version ( 1 .. $$new_specs{'versions'} ) {
+			push @v, "version-$version-description";
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				push @v, "version-$version-quantity$qty_index";
+			} # end foreach qty_index
+		} # end foreach version
+	} # end if
 	return @v;
 } # end sub variables
 
@@ -282,6 +283,7 @@ sub no_outputs {
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
+$openprint::log->debug("Un get_unspecified_pages $Project, $service_index, $printing_specs, $specs, $qty_index");
 
 	my $specified_pages = 0;
 	foreach my $ssid ( $Project->signatures( {'Group'=>$$specs{'Group'}} ) ) {
@@ -290,7 +292,7 @@ sub get_unspecified_pages {
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
 	} # end foreach
 
-	#$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+	$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -298,6 +300,7 @@ sub setup_project {
 	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage, $Paper ) = @_;
 
 	my %project = (
+			'txtSpreadSize',	$$specs{'txtSpreadSize'},
 			'ComboItems',		$$specs{'txtPressSheetComboItems'},
 			'Add Grip Width',	$$specs{'GripWidth'},
 			'Add Grip Height',	$$specs{'GripHeight'},
@@ -2154,7 +2157,9 @@ sub calculate_impositions {
 		$SpreadLayout = 0;
 #$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 	} elsif ( $$sig_specs{'txtSignatureType'} ) {
-		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$sig_specs{'txtSpreadSize'};
+$openprint::log->debug("Spread: $SpreadLayout");
+		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
+$openprint::log->debug("Spread: $SpreadLayout");
 	} # end if
 	my $cache_string = join('-', $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
 	if ( ! $Press ) {
@@ -2165,17 +2170,7 @@ sub calculate_impositions {
 		@impositions = @{$_};
 	} else {
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
-			if ( $use_converted_imposition_cache and ( $_ = $converted_imposition_cache{$cache_string} ) ) {
-	#$openprint::log->debug("Sugin Cache string: $cache_string");
-				@impositions = @{$_};
-			} else {
-	#$openprint::log->debug("NOTin Cache string: $cache_string");
-my $time = gettimeofday();
-				$converted_imposition_cache{$cache_string} = [ sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, $$impositions{$Press->id()} ) ];
-$openprint::log->debug("convert_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-				@impositions = @{$converted_imposition_cache{$cache_string}};
-			} # end if
+			@imposition = sort { $$b{pages} <=> $$a{pages} } openprint::imposition::convert_impositions( $SpreadLayout, $$project{'txtSpreadSize'}, $$impositions{$Press->id()} );
 		} else {
 			@impositions = @{$$impositions{$Press->id()}} if $$impositions{$Press->id()};
 		} # end if
@@ -2500,7 +2495,7 @@ sub get_new_specs {
 sub get_project_price {
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
-#$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
+$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
 
 	my $services = $Project->services();
 
@@ -2513,9 +2508,10 @@ sub get_project_price {
 			$openprint::log->debug("Wrong type " . $Press->strid() . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if $debug;
 			next;
 		} # end if
-#my $time = gettimeofday();
+my $time = gettimeofday();
+$openprint::log->debug("calling calculate_impositions $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions");
 my @Is = calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
-#$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		foreach my $imp ( @Is ) {
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
 			$$sig_specs{'ddmPress'.$qty_index} = $Press->strid();
@@ -2927,7 +2923,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 
-							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $Service->specs(), $Service->specs(), $qty, $qty_index, 
+							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $specs, $specs, $qty, $qty_index, 
 							\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
 
 							if ( $$sig_price{'Imposition'} ) {
@@ -4627,7 +4623,7 @@ sub summary {
 		return '' if ! $$specs{'txtImposition'.$qty_index};
 		my $html;
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
-			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp ' : '';
+			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
 		$html .= sprintf(qq{%dout %s},
 				$$specs{'txtImposition'.$qty_index},
