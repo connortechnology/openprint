@@ -16,7 +16,7 @@ $table = 'videos_in_albums';
 
 # Filenames will be passed in @_
 # Filenames will be converted to 
-sub handle_upload {
+sub upload {
 	my $self = shift;
 	my $error;
 	foreach my $upload_name ( @_ ) {

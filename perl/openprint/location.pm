@@ -30,7 +30,7 @@ sub edit {
 
 sub view {
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
-	if ( $param{'function'} eq 'Save' ) {
+	if ( $param{'action'} eq 'Save' ) {
 		my $parent_id;
 		if ( $param{'country'} ) {
 			my $Country = openprint::Location->find_one('name lc'=> lc $param{'country'}, 'type'=>'country' );
@@ -65,20 +65,39 @@ sub view {
 			
 		if ( ( $_ = openprint::Location->find_one(
 			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
-			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), ) ) ) {
+			'name lc'=> lc openprint::Location->transform('name',$param{'name'}), 
+			( $param{'type_id'} ? ( type_id=>$param{type_id} ) : () ),
+			) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
 		} else {
+			if ( $param{'url'} ) {
+				if ( ! ( $param{'url'} =~ /^https?:\/\//i ) ) {
+					$param{'url'} = 'http://'.$param{'url'};
+				} # end if
+			} # end if
 			$variable{'error'} .= $Location->save({
 					'name'			=>	$param{'name'}, 
 					'description'	=>	$param{'description'},
 					'parent_id'		=>	$parent_id, 
-					'type'			=>	'place', 
 					'address'		=>	$param{'address'},
 					'postalcode'	=>	$param{'postalcode'},
 					'url'			=>	$param{'url'},
+					'latitude'		=>	$param{'latitude'},
+					'longitude'		=>	$param{'longitude'},
+					( $param{'type_id'} ? ( 'type_id' => $param{'type_id'} ) : ( 'type'	=>	'place' ) ),
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Location->delete();
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		$variable{'error'} .= $Location->destroy();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/location/list.html';
+			$variable{'information'} = 'Location destroyed.';
+		} # end if
+	} elsif ( $param{'action'} eq 'Undelete' ) {
+		$variable{'error'} .= $Location->undelete();
 	} elsif ( $param{'filename'} ) {
 		my $Album = $Location->Album();
 		if ( ! $Album->id() ) {
@@ -99,5 +118,35 @@ sub _photos {
 		$variable{'error'} .= $Photo->delete() if $Photo->id();
 	} # end if
 } # end sub _photos
+
+sub search {
+	_search();
+	#if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
+		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
+	#} # end if
+
+	my $Location = new openprint::User( $session{'user_id'} )->Location() if $session{user_id};;
+	if ( ! ( $Location and $Location->id() ) ) {
+		$Location = openprint::Location::from_ip();
+	} # end if
+	if ( $Location and $Location->id() ) {
+		my $Country = $Location->ancestor('type'=>'country');
+		my $State = $Location->ancestor('type'=>'state');
+		$session{'/location/search.html?state_id'} = $State->id() if $State and ! exists $session{'/location/search.html?state_id'};
+		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
+	} # end if
+} # end sub search
+sub _search {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/location/search.html', ( 
+				#'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				#'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'type_id', 'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+	} # end if
+	$session{'/location/search.html?type_id'} = openprint::Location_Type->find_one('name'=>'place')->id() if ! exists $session{'/location/search.html?type_id'};
+} # end sub _search
+sub _ddm {
+} # end sub _ddm
 1;
 __END__

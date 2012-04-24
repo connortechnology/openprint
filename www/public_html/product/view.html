@@ -1,0 +1,68 @@
+<script type="text/javascript" src="/javascripts/pricing.js"></script>
+<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Product">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
+			<p class="buttons">
+				<? echo ( join( '', 
+					($session{'user_type'} eq 'A' ? (
+						ssi::button( 'Edit',{ href=>'/product/edit.html?product_id='.$$variable{'Product'}->id() } ),
+						ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);" } ),
+						ssi::button( 'New',{ href=>'/product/edit.html' } ),
+					) : () ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<br class="spacer"/><hr/><br class="spacer"/>
+		<div class="leftColumn">
+			<fieldset><legend>Product Information</legend>
+				<ul>
+					<li> 
+						<label>Product ID</label>
+						<? echo ( $$variable{'Product'}->id(); ) ?>
+					</li>
+					<li> 
+						<label>Product Name</label>
+						<? hecho ( $$variable{'Product'}->name(); ) ?>
+					</li>
+					<li> 
+						<label>Category</label>
+						<? hecho ( $$variable{'Product'}->category(); ) ?>
+					</li>
+					<li> 
+						<label>Description</label>
+						<? hecho ( $$variable{'Product'}->description(); ) ?>
+					</li>
+				</ul>
+			</fieldset>
+		</div>
+		<div class="rightColumn">
+			<fieldset><legend>Specifications</legend>
+				<div id="Specifications">
+<table class="List">
+<? echo (
+		my $html;
+		my $rowclass;
+		my $Product = $$variable{'Product'};
+		foreach my $Spec ( $Product->Specifications() ) {
+			$html .= sprintf('
+<tr%1$s>
+	<td class="name">%2$s</td>
+	<td class="value">%3$s</td>
+</tr>',
+				$rowclass, ssi::htmlize( $Spec->name(), $Spec->value() ) );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+) ?>
+</table>
+				</div>
+			</fieldset>
+		</div>
+		<br class="spacer"/>
+		<fieldset><legend>Prices</legend>
+			<div id="Prices">
+			</div>
+		</fieldset>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div>

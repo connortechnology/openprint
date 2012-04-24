@@ -14,8 +14,10 @@
 	} # end if
 ) ?>
 <fieldset><legend>UPS Shipping</legend>
-<? if ( $$variable{'Product'} ) ?>
-<!--#include virtual="_project_shipping_quantity.html"-->
-<? endif ( $$variable{'Product'} ) ?>
+	<div class="content">
+	<ul>
+	<!--#include virtual="_project_shipping_quantity.html"-->
+	</ul>
+	</div>
 <!--#include virtual="_project_shipping_address.html"-->
 </fieldset>

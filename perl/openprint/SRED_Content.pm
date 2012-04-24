@@ -116,8 +116,15 @@ sub Assets {
 	my $self = shift;
 	my %params = @_;
 	$params{'content_id'} = $$self{'id'};
-	return openprint::SRED_Asset->find(%params);
+	if ( @_ ) {
+		return openprint::SRED_Asset->find(%params);
+	} # end if
+	if ( ! exists $_[0]{'Assets'} ) {
+		@{$_[0]{'Assets'}} = openprint::SRED_Asset->find(%params);
+	} # end if
+	return @{$_[0]{'Assets'}};
 } # end sub Assets
+
 sub Type {
 	return new openprint::SRED_Content_Type( $_[0]{'type_id'} );
 } # end sub Type

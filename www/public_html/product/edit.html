@@ -1,30 +1,30 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Product">
-	<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
 		Please select a product to view/edit. 
 		<fieldset class="filters"><legend>Search Information</legend>
 			<ul>
-			<li> 
-				<label>Category</label>
-				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
-					<option value="">All</option>
-					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} );
-							) ?>
-				</select>
-			</li>
-			<li> 
-				<label>Product</label>
-				<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
-					<option value="">select</option>
-					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product->find( 
-									( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
-									'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
-					) ?>
-				</select>
-			</li>
+				<li> 
+					<label>Category</label>
+					<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
+						<option value="">All</option>
+						<? echo (
+								return ssi::make_drop_down( openprint::Product_Category->dropdown('order'=>'lower(name)'), $param{'ddmSearchCategory'} );
+								) ?>
+					</select>
+				</li>
+				<li> 
+					<label>Product</label>
+					<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
+						<option value="">select</option>
+						<? echo (
+								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product->find( 
+										( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
+										'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
+						) ?>
+					</select>
+				</li>
 			</ul>
 			<p class="buttons">
 				<? echo ( join( '', 
@@ -61,13 +61,14 @@
 						<input type="text" name="name" value="<? hecho ( $$variable{'Product'}->name(); ) ?>" />
 					</li>
 					<li> 
-						<label>Category</label>
-						<select name="category_id">
+						<label onclick="$('category_id').toggle();$('category').toggle();">Category</label>
+						<select name="category_id" id="category_id">
 							<option value="">Select a category</option>
 							<? echo (
-								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
+								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product_Category->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
 							) ?>
 						</select>
+						<input type="text" name="category" id="category" style="display:none;"/>
 					</li>
 					<li> 
 						<label>Description</label>
@@ -75,8 +76,9 @@
 					</li>
 					<li>
 						<label>Sort</label>
-						<input type="number" name="sort" value="<? echo ( $$variable{'Product'}->sort(); ) ?>" />
+						<input type="number" name="sort" value="<? echo ( 1*$$variable{'Product'}->sort(); ) ?>" />
 					</li>
+<? if ( openprint::ProjectType->find_one() ) ?>
 					<li>
 						<label>Template</label>
 						<select name="project_id" id="project_id">
@@ -84,6 +86,7 @@
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
 						</select>
 					</li>
+<? endif ( openprint::ProjectType->find_one() ) ?>
 				</ul>
 			</fieldset>
 			<fieldset><legend>Tax Information</legend>
@@ -102,17 +105,36 @@
 					<label class="radio" for="taxexempt2N">No</label>
 				</p>
 			</fieldset>
-			<input type="hidden" name="btnFunction"/>
 		</div>
 		<div class="rightColumn">
 			<fieldset><legend>Specifications</legend>
-				<div id="Specifications">
 			<? if ( $$variable{'Product'}->id() ) ?>
-					<!--#include virtual="_specifications.html"-->
+<table class="List" id="specifications">
+	<tr>
+		<th class="name">Name</th>
+		<th class="value">Value</th>
+		<th class="buttons">
+	<? echo ( ssi::button( 'AddSpec', { onclick=>"new Ajax.Request('/product/_specifications.json', { parameters:{func:'Add', product_id: $$variable{Product}{id} } } );", text=>'+', title=>'Add' } ); ) ?>
+		</th>
+	</tr>
+<? echo (
+		my $html;
+		my $rowclass;
+		my $Product = $$variable{'Product'};
+		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/product/_specification.html');
+		foreach my $Spec ( $Product->Specifications() ) {
+			$html .= ssi::variable_substitution( \$template, {
+				'Spec'=>$Spec,
+				'rowclass'	=>	$rowclass,
+				} );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+) ?>
+</table>
 			<? else ( $$variable{'Product'}->id() ) ?>
 					Please save your new Product before setting specifications.
 			<? endif ( $$variable{'Product'}->id() ) ?>
-				</div>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
@@ -125,5 +147,6 @@
 		<? endif ( $$variable{'Product'}->id() ) ?>
 			</div>
 		</fieldset>
+		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

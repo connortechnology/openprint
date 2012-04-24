@@ -1,18 +1,18 @@
 use strict;
-package openprint::upload_handler;
+package handlers::upload;
 
-use Apache2::Request ();    # instead of CGI, it's MUCH faster, and does nice things.
-use Apache2::RequestRec ();
+require Apache2::Request;    # instead of CGI, it's MUCH faster, and does nice things.
+require Apache2::RequestRec;
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
-use Apache2::Log ();
-use Apache2::ServerUtil ();
-use Apache2::RequestIO ();
+require Apache2::Log;
+require Apache2::ServerUtil;
+require Apache2::RequestIO;
+require Apache2::Upload;
 
 require sql;
 require ssi;
 require misc;
 require configuration;
-require openprint::login;
 require openprint::Upload;
 require openprint::File;
 require openprint::Company;
@@ -55,22 +55,22 @@ sub handler {
 		$uploaded = 0;
 		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
-		my $rsize=$request->headers_in->{'Content-Length'};
+		my $rsize = $request->headers_in->{'Content-Length'};
 		if ( $serial ) {
 			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
 		} else {
 			($serial) = sql::execute( undef, undef, q`SELECT nextval('uploads_id_seq')` );
 		} # end if
-		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'type', 'Web' ] );
+		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company', $company, 'type', 'Web' ] );
 
 		my $upload_hook = sub {
 			my ( $upload, $data, $data_len, $hook_data ) = @_;
-$log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
-			$data_len = length $data if ( ! $data_len );
-
-			#my ( $size, $total ) = sql::execute( undef, undef, q{SELECT size, total FROM Uploads WHERE id=?}, $serial );
-			$uploaded += $data_len;	
-			sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $uploaded] ) if $data_len;
+#$log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
+			$data_len = length $data if ! $data_len;
+			if ( $data_len ) {
+				$uploaded += $data_len;	
+				sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $uploaded] );
+			} # end if
 		};
 		$r = Apache2::Request->new( $request, UPLOAD_HOOK=>$upload_hook );
 	} else {
@@ -99,15 +99,16 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
+
 		foreach my $key ( sort $r->param() ) {
 			$log->debug("Parameter $key is (" . $r->param($key) . ")" );
 			$param{$key} = $r->param($key);
 		} # end foreach
-		configuration::init_cache( $r->dir_config() );
+		configuration::init( $r->dir_config() );
 		openprint::session_init();
 		if ( $serial ) {
 			my $rsize=$request->headers_in->{'Content-Length'};
-			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'company_id', $session{'company_id'}, 'size', $rsize ] );
 		#} else {
 			#$log->error("No serial in upload, dumping session");
 			#foreach my $k ( keys %session ) {
@@ -116,12 +117,19 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		} # end if
 		if ( $param{'UploadType'} ) {
 			my $error;
-			eval(sprintf('require openprint::%1$s;
-				$error = openprint::%1$s->handle_upload( $param{qqfile} );
-			', $param{'UploadType'} ));
-			$log->warn( "Eval error of Upload type  $param{'UploadType'} Reason: " . $@ ) if $@;
+			require "openprint/$param{'UploadType'}.pm";
+			my $uploads = $r->upload;
+			if ( $uploads and %$uploads ) {
+				my $Object = ('openprint::'.$param{'UploadType'})->new( $param{'id'} );
+				while ( my ( $field, $upload ) = each %$uploads ) {
+					$error .= $Object->upload( $field );
+				} # end while
+			} else {
+				$log->error('no uploads'.$r->body());
+			}
+
 			$r->content_type('application/json');
-			if ( $error ) {
+			if ( $error and ref $error ne 'openprint::'.$param{'UploadType'} ) {
 				$log->debug("Printing success:false $error");
 				$r->print( qq|{ "success": false, "error": "$error" }| );
 			} else {
@@ -130,6 +138,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 			} # end if
 		} else {
 $log->debug("Doing standrad upload");
+
 			upload_files();
 			my $page = '/upload/_upload_complete.html';
 			my @page_path = split('/', $page );

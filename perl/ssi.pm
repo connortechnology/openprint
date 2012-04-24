@@ -84,7 +84,7 @@ sub do_new_substitution {
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result = htmlize($result);
+		$result = html_escape($result);
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
@@ -141,13 +141,16 @@ sub variable_substitution {
 	return do_include( $text, $variable );
 } # end sub variable_substitution
 
+my %html_replacements = (
+	'&'	=>	'&amp;',
+	'"'	=>	'&quot;',
+	'<' =>	'&lt;',
+	'>' =>	'&gt;',
+);
+my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-	$_ = shift;
-	$_ =~ s/&/&amp;/mg;
-	$_ =~ s/"/&quot;/mg;
-	$_ =~ s/</&lt;/mg;
-	$_ =~ s/>/&gt;/mg;
-	return $_;
+	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+    return $_[0];
 }
 
 sub escape_quotes {
@@ -455,7 +458,7 @@ sub button {
 	} elsif ( $openprint::config{'SimpleButtons'} ) {
 		$html .= $$options{'text'};
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
 	}
 	$html .= "</a>\n";
 	return $html;
@@ -560,10 +563,10 @@ sub date_select {
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C', 'title'=>'Clear', 'class'=>'Clear'} );
+		$html .= ssi::button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C', title=>'Clear', class=>'Clear'} );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'T', 'title'=>'Today', 'class'=>'Today'} );
+		$html .= ssi::button( $prefix.'_today', { 'onclick'=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today', class=>'Today'} );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';
@@ -643,7 +646,7 @@ $openprint::log->error("No date from $value");
 		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $F('%1$s_year'), $F('%1$s_month'), $F('%1$s_day') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
+		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
@@ -704,10 +707,13 @@ sub radio {
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
         $html .= sprintf(q`
-                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+                <input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
                 <label class="radio" for="%1$s%2$s">%3$s</label>
-                `, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
-    } # end foreach value
+                `, $name, $value, $label, checked( $value eq $selected ), 
+				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
+				$$options{id},
+				);
+	} # end foreach value
     return $html;
 } # end sub radio
 sub checkboxes {

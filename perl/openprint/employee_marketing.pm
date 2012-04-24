@@ -19,6 +19,7 @@ package openprint::employee_marketing;
 
 require openprint::EmailCampaign;
 require openprint::MarketingCategory;
+require openprint::Banner;
 require openprint::Survey;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -155,7 +156,8 @@ sub email_templates {
 	} # end if
 } # end sub email_templates
 
+sub banners {
+} # end sub banners
+
 1;
-
 __END__
-

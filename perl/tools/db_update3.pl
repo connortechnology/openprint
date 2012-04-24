@@ -25,7 +25,7 @@ $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -88,6 +88,18 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'attribution'} ) {
 		$dbh->do('ALTER TABLE Assets ADD attribution TEXT');
+	} # end if
+	if ( ! exists $$data{'optimised'} ) {
+		$dbh->do('ALTER TABLE Assets ADD optimised BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( ! exists $$data{'width'} ) {
+		$dbh->do('ALTER TABLE Assets ADD width integer');
+	} # end if
+	if ( ! exists $$data{'height'} ) {
+		$dbh->do('ALTER TABLE Assets ADD height integer');
+	} # end if
+	if ( ! exists $$data{'layout'} ) {
+		$dbh->do('ALTER TABLE Assets ADD layout text');
 	} # end if
 } # end if
 
@@ -161,6 +173,12 @@ if ( exists $$data{'monitor'} ) {
 } elsif ( ! exists $$data{'monitored'} ) {
 	$dbh->do('ALTER TABLE hosts add monitored BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
+if ( ! exists $$data{'offline_seconds'} ) {
+	$dbh->do('ALTER TABLE hosts add offline_seconds INTEGER');
+} # end if
+if ( ! exists $$data{'state_changed_on'} ) {
+	$dbh->do('ALTER TABLE hosts add state_changed_on INTEGER');
+} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {
@@ -182,6 +200,21 @@ if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
 	} # end if
 	if ( ! $$data{'searchable'} ) {
 		$dbh->do('ALTER TABLE user_profile_fields add searchable BOOLEAN not null default false');
+	} # end if
+	if ( ! $$data{'search_default'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add search_default TEXT');
+	} # end if
+	if ( ! $$data{'defaults'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields ADD defaults TEXT[]');
+	} # end if
+	if ( ! $$data{'match'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add match TEXT');
+	} # end if
+	if ( ! $$data{'viewable'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add viewable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! $$data{'on_registration'} ) {
+		$dbh->do('ALTER TABLE user_profile_fields add on_registration BOOLEAN NOT NULL default false');
 	} # end if
 } # end if
 if ( ! sets::isin( 'user_profiles', \@tables ) ) {
@@ -242,13 +275,22 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
+	} # end if
+} # end if
+if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Photos_in_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photos_in_albums'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
 		$dbh->do( 'ALTER TABLE photos_in_albums ADD id SERIAL' );
 		$dbh->do( 'ALTER TABLE photos_in_albums DROP CONSTRAINT photos_in_albums_pkey');
 		$dbh->do( 'ALTER TABLE photos_in_albums ADD PRIMARY KEY (id)' );
 	} # end if
-} # end if
+}
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -308,6 +350,9 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
+	if ( ! exists $$data{'deleted'} ) {
+	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
+	} # end if
 		
 } # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
@@ -388,19 +433,30 @@ my %config_actions = (
 	'Host offline'	=>	101,
 	'Host rebooted'	=>	102,
 	'Long response time'	=>	103,
+	'Copy Material'	=>	43,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);
 	if ( $Action ) {
 		if ( $Action->id() != $config_actions{$config_action} ) {
+			$log->debug("Must renumber the action: $config_action want $config_actions{$config_action} have $$Action{id}");
+
+			# Look for existing actions with this id
 			my $RealAction = openprint::Log_Action->find_one('id'=>$config_actions{$config_action});
 			if ( ! $RealAction ) {
+				# No existing action
+				$log->debug("No existing");
+
+				# Create an action type with the right name, and the right id, but we already have one with the right name, and the wrong id, so... we are renumbering?
+				my $ac = sql::start_transaction( $dbh );
 				my $New = $Action->copy();
-				$New->save({'id'=>$config_actions{$config_action}});
+				$New->save({'id'=>$config_actions{$config_action}}, 1 );
 				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
 					$Log->save({'action_id'=>$config_actions{$config_action}});
 				} # end foreach Log
+				sql::end_transaction( $dbh, $ac );
 			} elsif ( $RealAction->name() eq $config_action ) {
+				# Shouldnt happen, basically means that there must be duplicates
 				foreach my $Log ( openprint::Log->find('action_id'=>$Action->id()) ) {
 					$Log->save({'action_id'=>$config_actions{$config_action}});
 				} # end foreach Log
@@ -411,6 +467,7 @@ foreach my $config_action ( keys %config_actions ) {
 		} # end if
 	} # end if
 } # end foreach config_action
+die $dbh->errstr() if $dbh->errstr();
 
 
 if ( ! sets::isin( 'comments', \@tables ) ) {
@@ -569,6 +626,14 @@ $dbh->do(q`insert into Configuration values ('public_URIs', '/,/index.html,/acco
 if ( ! sets::isin( 'page_settings', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Page_Settings.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='page_settings'", 'column_name');
+	if ( ! exists $$data{'keywords'} ) {
+		$dbh->do('ALTER TABLE page_settings add keywords TEXT');
+	} # end if
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE page_settings add description TEXT');
+	} # end if
 }
 
 if ( ! sets::isin( 'opinion_types', \@tables ) ) {
@@ -870,6 +935,66 @@ if ( ! sets::isin( 'usergroups', \@tables ) ) {
 		$dbh->do('ALTER TABLE usergroups ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 	} # end if
 } # end if
+if ( ! sets::isin( 'banners', \@tables )) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Banners.sql}) );
+	die if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'product_specifications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Specifications.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_specifications'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Product_Specifications add id SERIAL');
+		$dbh->do('ALTER TABLE Product_Specifications add PRIMARY KEY (id)');
+	} # end if
+} # end if
+if ( ! sets::isin( 'feeds', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Feeds.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='feeds'", 'column_name');
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do('ALTER TABLE feeds add type TEXT');
+	} # end if
+	if ( ! exists $$data{'category_id'} ) {
+		$dbh->do('ALTER TABLE feeds add category_id INTEGER');
+		$dbh->do('ALTER TABLE feeds add FOREIGN KEY (category_id) REFERENCES Article_Categories (id)');
+	} # end if
+	if ( ! exists $$data{'filters'} ) {
+		$dbh->do('ALTER TABLE feeds add filters TEXT');
+	} # en dif
+	if ( ! exists $$data{'published'} ) {
+		$dbh->do('ALTER TABLE feeds add published boolean NOT NULL default false');
+	} # en dif
+}
+if ( ! sets::isin( 'creditapplications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Credit_Applications.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='creditapplications'", 'column_name');
+	if ( ! exists $$data{'grantedcod'} ) {
+		$dbh->do('ALTER TABLE creditapplications add grantedcod float');
+	} # end if
+} # end if
+if ( ! sets::isin( 'company_credit', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Company_Credit.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='company_credit'", 'column_name');
+	if ( ! exists $$data{'cod'} ) {
+		$dbh->do('ALTER TABLE company_credit add cod float');
+	} # end if
+} # end if
+if ( ! sets::isin( 'affiliates', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='affiliates'", 'column_name');
+	if ( ! exists $$data{'sort'} ) {
+		$dbh->do('ALTER TABLE affiliates add sort integer');
+	} # end if
+}
 $dbh->disconnect();
 1;
 __END__

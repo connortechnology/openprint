@@ -1,4 +1,4 @@
-<p> 
+<li> 
 	<label>How many <? echo ( ssi::writeTip( 'negatives' ); ) ?> need <?ServiceTypeName?></label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -11,4 +11,4 @@
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>

@@ -1,7 +1,121 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
 
 <script type="text/javascript">
-<!--
+function dragOver(e) {
+	e.stopPropagation();
+	if ( e.preventDefault ) {
+		e.preventDefault();
+	} 
+	e.dataTransfer.dropEffect = 'move';
+}
+function dragEnter(e) {
+	e.stopPropagation();
+	this.classList.add('dragover');
+}
+function dragLeave(e) {
+	e.stopPropagation();
+	this.classList.remove('dragover');
+}
+function handleDrop(e,element) {
+	// this / e.target is current target element.
+
+	if ( e.stopPropagation ) e.stopPropagation(); 
+	if ( e.preventDefault ) e.preventDefault();
+	if ( e.dataTransfer ) {
+		// See the section on the DataTransfer object.
+		for(var i=0, num=e.dataTransfer.types.length; i < num; i += 1  ) {
+			var item = e.dataTransfer.types.item(i);
+	//alert (item);
+			var data = e.dataTransfer.getData(item);
+	//alert(data);
+			if ( item == 'application/x-moz-file-promise-dest-filename' ) {
+				new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>', filename: data, func: 'add' } } );
+			} // end if
+		} // end for
+		if ( e.dataTransfer.files.length ) {
+			handleFiles(e.dataTransfer.files);
+			sendFiles();
+		}
+	} else {
+		alert(e);
+	} // end if
+	return false;
+}
+function sendFiles() {  
+	var imgs = document.querySelectorAll(".obj");  
+
+	for (var i = 0; i < imgs.length; i++) {  
+		new FileUpload(imgs[i], imgs[i].file);  
+	}  
+}  
+function handleFiles(files) {  
+	var fileList = $('asset_uploads');
+
+	if (!files.length) {  
+		fileList.innerHTML = "<p>No files selected!</p>";  
+	} else {  
+		var list = $('upload_list');
+		for (var i = 0; i < files.length; i++) {  
+			var li = document.createElement("li");  
+			list.appendChild(li);  
+
+			var img = document.createElement("img");  
+			img.src = window.URL.createObjectURL(files[i]);  
+			img.li = li;
+			img.classList.add("obj");  
+			img.file = files[i];  
+			img.height = 60;  
+			img.onload = function(e) {  
+				window.URL.revokeObjectURL(this.src);  
+			}
+			li.appendChild(img);  
+
+			var info = document.createElement("span");  
+			info.innerHTML = files[i].name + ": " + files[i].size + " bytes";  
+			li.appendChild(info);  
+		}  
+	}  
+} // handleFiles
+function FileUpload(img, file) {
+    this.ctrl = createThrobber( img, img.li );
+    var xhr;
+	if (XMLHttpRequest) xhr = new XMLHttpRequest();
+	else if ( window.ActiveXObject) xhr = new ActiveXObject("Microsoft.XMLHTTP");
+	else { throw new Error("XHR not available. Browser too old."); return false; }
+
+    this.xhr = xhr;
+
+    var self = this;
+    this.xhr.upload.addEventListener("progress", function(e) {
+			if (e.lengthComputable) {
+            var percentage = Math.round((e.loaded * 100) / e.total);
+            self.ctrl.update(percentage);
+            }
+            }, false);
+
+    xhr.upload.addEventListener("load", function(e){
+			self.ctrl.update(100);
+			var canvas = self.ctrl.ctx.canvas;
+			canvas.parentNode.removeChild(canvas);
+			new Ajax.Updater( 'article_assets', '_assets.html', { parameters: { article_id: '<? echo ( $$variable{'Article'}->id() ) ?>' } } );
+			img.li.remove();
+			}, false);
+	xhr.open("POST", "http://pseudo.pleasurablethings.ca/upload.htm?UploadType=Article&id=<? echo ( $$variable{'Article'}->id() ) ?>");
+	xhr.setRequestHeader("Content-Type", "multipart/form-data; boundary=xxxxxxxx"); // simulate a file MIME POST request.
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+		var body = "--xxxxxxxx\r\n";  
+            body += "Content-Disposition: form-data; name='myFile'; filename='" + img.file.name + "'\r\n";    
+            body += "Content-Type: application/octet-stream\r\n\r\n";    
+            body += evt.target.result + "\r\n";    
+            body += "--xxxxxxxx--";
+        xhr.sendAsBinary(body);
+    };
+    reader.readAsBinaryString(file);
+}
+
+
 	tinyMCE.init({
 		relative_urls : false,
 		convert_urls : false,
@@ -13,7 +127,6 @@
 		theme_advanced_buttons2 : "forecolor,backcolor,forecolorpicker,backcolorpicker,bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,pastetext,pasteword,selectall,pastetext,charmap",
 		theme_advanced_buttons3 : ""
 	});
--->
 </script>
 <div class="Article"><div class="Edit">
 	<!--#include virtual="/includes/error_reporting.html"-->
@@ -24,6 +137,24 @@
 			<? endif ( $$variable{'Article'}->deleted() ) ?>
 			
 			<input type="hidden" name="article_id" value="<? echo ( $$variable{'Article'}->id() ) ?>" />
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					#$html = ssi::button( 'Back', { 'href'=>'history.html'} );
+					
+					if ( $$variable{'Article'}->id() ) {
+						$html = ssi::button( 'Reset1', { 'onclick'=>'f1.reset();check_time_published_on(f1);', text=>'Reset' } );
+						$html .= ssi::button( 'Destroy1', { 'onclick' => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}", text=>'Delete' } );
+						$html .= ssi::button( 'Copy1', { 'onclick'=> "f1.func.value='Copy';f1.submit();", text=>'Copy' } );
+						if ( $$variable{'Article'}->source() ) {
+							$html .= ssi::button( 'Reload1', { 'onclick'=> "f1.func.value='Reload';f1.submit();", text=>'Reload' } );
+						} # end if
+						$html .= ssi::button( 'View1', { 'href'=>'/article/view.html?article_id='.$$variable{'Article'}->id(), 'target'=>'_blank', text=>'View' } );
+					} # end if
+					$html .= ssi::button( 'Save1', { 'onclick'=>"f1.func.value='Save';f1.submit();", text=>'Save' } );
+					return $html;
+				) ?>
+			</p>
 			<div class="content leftColumn">
 				<ul>
 					<li><label for="company_id">Company</label>
@@ -103,6 +234,10 @@
 				<fieldset><legend>Assets in this article</legend>
 				<ul id="article_assets"><!--#include virtual="/article/_assets.html"--></ul>
 				</fieldset>
+				<fieldset><legend>Assets to be uploaded</legend>
+				<div id="asset_uploads"></div>
+				<ul id="upload_list"></ul>
+				</fieldset>
 				<fieldset><legend>Search for Assets</legend>
 				<ul id="asset_search">
 					<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '_asset_search_results.html', { parameters: { asset_name: this.value } } ); };"/></li>
@@ -121,3 +256,12 @@
 		<input type="hidden" name="func" />
 	</form>
 </div></div>
+<script type="text/javascript">
+	var ul = $('article_assets');
+	//ul.addEventListener('dragstart',dragStart, false);
+	ul.addEventListener('dragenter',dragEnter, false);
+	ul.addEventListener('dragover',dragOver, false);
+	ul.addEventListener('dragleave',dragLeave, false);
+	ul.addEventListener('drop', handleDrop, false );
+	
+</script>

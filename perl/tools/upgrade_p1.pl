@@ -61,15 +61,15 @@ if ( ! $path ) {
 
 `chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 2...";
-`$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update.pl $dst_db point-one point-one 2>&1 > /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update2.pl $dst_db point-one point-one 2>&1 > /tmp/db_update2.log` or $log->error($!);
+`$lib_path/tools/db_update3.pl $dst_db point-one point-one 2>&1 > /tmp/db_update3.log` or $log->error($!);
 print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one 2>&1 > /tmp/update_signatures.log` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
@@ -432,4 +432,10 @@ sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 
 	if ( my $STC = openprint::ServiceType_Category->find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
+foreach my $qty_index ( 1 .. 3 ) {
+	if ( !( my $STD = openprint::ServiceType_Default->find_one('name'=>'MatchGrain'.$qty_index, 'service_type'=>'Signature') ) ) {
+		my $STD = new openprint::ServiceType_Default();
+		$STD->save({'name'=>'MatchGrain'.$qty_index, 'value'=>'Y', 'service_type'=>'Signature' });
+	} # end if
+} # end foreach
 $dbh->disconnect();

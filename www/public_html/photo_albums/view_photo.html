@@ -49,7 +49,7 @@
 				} # end if
 				$html .= ssi::button( 'Back', { 'href' => "/photo_albums/view.html?album_id=$$Album{'id'}", 'text'=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/ ) {
+				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/i ) {
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
@@ -76,7 +76,16 @@ if ( 0 ) {
 					#} else {
 						#$html .= '<label>Keywords</label>' . $Photo->keywords() . '<br/>';
 					} # end if
+				} elsif ( $Photo->Asset()->filename() =~ /\.(flv)$/ ) {
+					$html .= sprintf(q`
+<script type="text/javascript">
+    var FO = {      movie:"/flvplayer.swf",width:"320",height:"240",majorversion:"7",build:"0",bgcolor:"#FFFFFF",
+        flashvars:"file=%s&showdigits=false&showicons=false&autostart=false&showfsbutton=false&repeat=false" };
+    UFO.create(FO, "Video");
+</script>
+`, $Photo->url() );
 				} else {
+					$html .= '<a href="'.$Photo->Asset()->url().'">'.$Photo->Asset()->thumbnail_html().'</a>';
 					$log->error("Not a photo at view_photo : " . $Photo->url() );
 				} # end if
 				return $html;

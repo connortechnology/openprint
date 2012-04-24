@@ -91,7 +91,14 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 sub Author {
-	return new openprint::User( $_[0]{'created_by'} );
+	if ( ! $_[0]{'Author'} ) {
+		$_[0]{'Author'} = new openprint::User( $_[0]{'created_by'} );
+	} # end if
+	if ( ! $_[0]{'Author'}->id() ) {
+		$_[0]{'Author'}->company_id( $_[0]{'company_id'} );
+	} # end if
+	return $_[0]{'Author'};
+		
 } # end sub Author
 
 sub category {
@@ -205,9 +212,14 @@ sub view_url {
 	return '/article/view.html?article_id='.$_[0]{'id'};	
 } # end sub view_url
 
+sub link_to {
+	return '<a href="'.$_[0]->view_url().'">'.ssi::html_escape($_[0]->name()).'</a>';
+} # end sub link_to
+
 sub Assets {
 	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
 } # end sub Assets
+
 sub published_on_string {
 	if ( ! $_[0]{'published_on_string'} ) {
 		$_[0]{'published_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'published_on'} ) );
@@ -215,5 +227,18 @@ sub published_on_string {
 	return $_[0]{'published_on_string'};
 } # end sub published_on_string
 
+sub upload {
+	my $error;
+	my $Asset = openprint::Asset::upload( $_[1] );
+	if ( ref $Asset ne 'openprint::Asset' ) {
+		return $Asset;
+	} # end if
+	my $Article_Asset = new openprint::Article_Asset({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	if ( $Article_Asset->asset_id() ) {
+		return 'Asset already in article.';
+	} else {
+		return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	} # end if
+} # end sub upload
 1;
 __END__

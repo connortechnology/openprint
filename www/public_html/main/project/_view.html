@@ -37,6 +37,12 @@
 			if ( my $function = $function_name->can('summary') ) {
 				$summary = $function->($Project, $$services{''}[0], $printing_specs );
 			} # end if
+
+			my $Service = $Project->Service( $$services{''}[0] );
+			if ( $Service->overrides() ) {
+				$summary .= '<br/><b>With Overrides</b>';
+			} # end if
+
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
 					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
@@ -136,6 +142,10 @@
 					my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
+					my $Service = $Project->Service( $service_id );
+					if ( $Service->overrides() ) {
+						$summary .= '<br/><b>With Overrides</b>';
+					} # end if
 					$html .= '</td>';
 				} # end foreach qty_index
 				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';

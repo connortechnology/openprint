@@ -4,17 +4,14 @@
 		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
 	} // end function update_product
     function add_timetrack( timetrack_id ) {
-        new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
-                method:'get',
+        new Ajax.Updater( 'Timetracks', '_timetracks.html', {
                 parameters: {
                     invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
-                    timetrack_id: timetrack_id
+                    timetrack_id: timetrack_id,
+					action: 'add'
                 },
-                onSuccess: function(transport) {
-                    new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
-                        method:'get',
-                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
-                        } );
+                onComplete: function(transport) {
+					TableKit.reload();
                 },
                 onFailure: function(transport) {
                     alert('failure to include');
@@ -22,17 +19,14 @@
         } );
     } // end function add_timetrack( invoice_id)
     function del_timetrack( timetrack_id ) {
-        new Ajax.Updater( 'AvailableTimetracks', '_available_timetracks.html', {
-                method:'get',
+        new Ajax.Updater( 'Timetracks', '_timetracks.html', {
                 parameters: {
                     invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?>,
-                    timetrack_id: timetrack_id
+                    timetrack_id: timetrack_id,
+					action: 'remove'
                 },
-                onSuccess: function(transport) {
-                    new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
-                        method:'get',
-                        parameters: { invoice_id: <? echo ( $$variable{'Invoice'}->id() ) ?> }
-                        } );
+                onComplete: function(transport) {
+					TableKit.reload();
                 },
                 onFailure: function(transport) {
                     alert('failure to remove timetrack');
@@ -106,11 +100,8 @@
 		</p>
 	</fieldset>
 <? if ( $$variable{'Invoice'}->id() ) ?>
-<div id="InvoicedTimetracks">
-	<!--#include virtual="_invoiced_timetracks.html"-->
-</div>
-<div id="AvailableTimetracks">
-	<!--#include virtual="_available_timetracks.html"-->
+<div id="Timetracks">
+	<!--#include virtual="_timetracks.html"-->
 </div>
 <div id="InvoicedProducts">
 	<!--#include virtual="_invoiced_products.html"-->

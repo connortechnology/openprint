@@ -10,7 +10,12 @@
 			<? echo (
 				my $html = '';
 				if ( $$variable{'Location'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+					if ( $$variable{'Location'}->deleted() ) {
+						$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.elements['action'].value='Undelete';f1.submit();" } );
+						$html .= ssi::button( 'Destroy', { 'onclick' => "if(confirm('Are you sure?')){f1.elements['action'].value='Destroy';f1.submit();}" } );
+					} else {
+						$html .= ssi::button( 'Delete', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();" } );
+					} # end if
 					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?location_id='.$$variable{'Location'}->id() } );
 				} # end if
 				return $html;
@@ -27,13 +32,6 @@
 			if ( $Asset and $Asset->id() ) {
 				$html .= '<img class="Asset" src="'. $Asset->url().'" alt="" />';
 			} # end if
-			my $Location = $$variable{'Location'}->Location();
-			if ( $Location ) {
-				$Location->get_latitude_and_longitude();
-				if ( $Location->latitude() and $Location->longitude() ) {
-					$html .= '<img src="http://maps.googleapis.com/maps/api/staticmap?center='.$Location->latitude().','.$Location->longitude().'&zoom=11&size=200x200&sensor=false">';
-				} 
-			} 
 			return $html;
 		) ?>
 		<fieldset><legend>All about it</legend>
@@ -43,26 +41,62 @@
 						<label for="description">Description</label>
 						<? echo ( $$variable{'Location'}->description() ) ?>
 					</li>
+					<li class="info">
+						<label for="type">Type</label>
+						<? echo ( $$variable{'Location'}->type() ) ?>
+					</li>
 				</ul>
 			</div>
 		</fieldset>
 		<fieldset><legend>Where</legend>
 			<div class="content">
+				<div class="leftColumn">
 				<ul>
 					<li><label>Location</label>
-						<? echo ( $$variable{'Location'}->where(); ) ?>
+						<? echo ( my $html = $$variable{'Location'}->where();
+							if ( $session{'user_id'} ) {
+								my $MyLocation = new openprint::User($session{'user_id'})->Location();
+								if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+									$MyLocation->get_latitude_and_longitude();
+								} # en dif
+								if ( $MyLocation and $MyLocation->latitude() and $MyLocation->longitude() and $$variable{'Location'}->latitude() and $$variable{'Location'}->longitude() ) {
+									my $distance = openprint::Location::distance( $$variable{'Location'}->latitude(), $$variable{'Location'}->longitude(), $MyLocation->latitude(), $MyLocation->longitude(), 'K' );
+									if ( $distance ) {
+									$html .= '<br/>'.int($distance).'km from you.';
+									} # end if
+								} # end if
+							} # end if
+							return $html;
+						) ?>
 					</li>
 				</ul>
+<div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
+				</div>
+					<div class="rightColumn">
+					<? echo ( my $html;
+						my $Location = $$variable{'Location'};
+						if ( $Location ) {
+							if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
+								$Location->save() if $Location->get_latitude_and_longitude();
+							} # end if
+							if ( $Location->latitude() and $Location->longitude() ) {
+								$html .= $Location->googlemap_html();
+							}  # end if
+						} 
+						return $html;
+					) ?>
+				</div>
 			</div>
 		</fieldset>
-		<fieldset><legend>Photos</legend>
 <? if ( $$variable{'Location'}->id() ) ?>
-	<div id="Photos">
-		<!--#include virtual="_photos.html"-->
-	</div>
-<? endif ( $$variable{'Location'}->id() ) ?>
+	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
+	<!--#include virtual="/photo_albums/_album_upload.html"-->
+		<fieldset><legend>Upcoming Events</legend>
+		<div id="Events">
+			<!--#include virtual="_events.html"-->
+		</div>
 		</fieldset>
-<div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
+<? endif ( $$variable{'Location'}->id() ) ?>
 	</fieldset>
 	</form>
 </div></div>

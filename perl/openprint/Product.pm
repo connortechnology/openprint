@@ -2,7 +2,8 @@ use strict;
 package openprint::Product;
 our @ISA = qw( openprint::Object );
 
-require openprint::ProductCategory;
+require openprint::Product_Specification;
+require openprint::Product_Category;
 require openprint::Log;
 require sql;
 
@@ -22,9 +23,11 @@ $serial = 'products_id_seq';
 	'taxexempt2'	=>	'taxexempt2',
 	'sort'			=>	'sort',
 	'category_id'	=>	'category_id',
+	'category'		=>	undef,
 	'project_id'	=>	'project_id',
 	'deleted'		=>	'deleted',
 	'owner_id'		=>	'owner_id',
+	'created_on'	=>	'created_on',
 );
 
 %transforms = (
@@ -38,6 +41,7 @@ $serial = 'products_id_seq';
 	'project_id'	=>	undef,
 	'owner_id'		=>	q`$session{'company_id'}`,
 	'deleted'		=>	0,
+	'created_on'	=>	q`'NOW()'`,
 );
 
 sub destroy {
@@ -78,49 +82,23 @@ sub Prices {
 	return $_[0]->prices();
 } # end sub Prices
 
-sub save {
-	my ( $self, $param ) = @_;
-
-	# Super Save will load at the end, wiping out the specs hash
-	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
-	$$self{'owner_id'} = $openprint::config{'owner_id'};
-
-	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
-		return $error;
-	} else {
-		my $ac = sql::start_transaction( $dbh );
-		$_ = q{SELECT name, value FROM Product_Specifications WHERE product_id=?};
-		my %specs = sql::execute( $log, $dbh, $_, $$self{'id'});
-		foreach my $spec ( keys %new_specs ) {
-			if ( exists $specs{$spec} ) {
-				if ( $specs{$spec} ne $new_specs{$spec} ) {
-					sql::update( undef, undef, 'Product_Specifications', ['product_id=? AND name=?', $$self{'id'}, $spec ], 
-							'value', $new_specs{$spec} );
-				#} else {
-					#$log->debug(" equal ( $specs{$spec} ) = ( $$self{'Specifications'}{$spec} )" );
-				} # end if
-				delete $specs{$spec};
-			} else {
-				sql::insert( undef, undef, 'Product_Specifications', [ 'product_id', $$self{'id'},
-						'Name', $spec, 'Value', $new_specs{$spec} ] );
-			} # end if
-		} # end foreach
-		foreach my $spec ( keys %specs ) {
-			sql::execute( undef, undef, q{DELETE FROM Product_Specifications WHERE product_id=? AND name=?}, $$self{'id'}, $spec );
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
-		$self->load();
-	} # end if
-	
-	return;
-} # end sub save
-
 sub category {
-$log->error("deprecated Product->category()");
-	return new openprint::ProductCategory( $_[0]{'category_id'} );
+	if ( @_ > 1 ) {
+		my $Category = openprint::Product_Category->find_one('name lc'=>lc openprint::Product_Category->transform('name',$_[1]));
+		if ( ! $Category ) {
+			$Category = new openprint::Product_Category();
+			$Category->save({'name'=>$_[1]});
+		} # end if
+		$_[0]{'category_id'} = $Category->id();
+		$_[0]{'category'} = $Category->name();
+	} elsif ( ( ! defined $_[0]{'category'} ) and $_[0]{'category_id'} ) {
+		$_[0]{'category'} = $_[0]->Category()->name();
+	} # end if
+	return $_[0]{'category'};
 } # end sub category
+
 sub Category {
-	return new openprint::ProductCategory( $_[0]{'category_id'} );
+	return new openprint::Product_Category( $_[0]{'category_id'} );
 } # end sub Category
 
 sub get_price {
@@ -145,6 +123,10 @@ $log->debug("Looking at $$Price{min}");
 	openprint::Currency::convert( \%price );
 	return %price;
 } # end sub get_price
+
+sub Specifications {
+	return openprint::Product_Specification->find({'product_id'=>$_[0]{'id'}});
+} # end sub Specifications
 
 sub specifications {
 	my $self = shift;
@@ -198,6 +180,7 @@ sub previous {
 	
 	return new openprint::Product( $id );
 } # end sub previous
+
 
 1;
 __END__

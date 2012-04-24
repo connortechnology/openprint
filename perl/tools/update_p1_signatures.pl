@@ -376,6 +376,12 @@ foreach my $D ( openprint::ProjectType_Default->find('projecttype'=>'ScratchPads
 	$D->save({'name'=>'PageQuantity'});
 }
 
+require openprint::ServiceType_Default;
+if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain1', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+} # end if
 $dbh->disconnect();
 	
 1;

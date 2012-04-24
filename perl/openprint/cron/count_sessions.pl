@@ -3,8 +3,10 @@ use lib '/var/www/testing/perl';
 use strict;
 use warnings;
 
+require sets;
 require sql;
 require logger;
+require openprint::User;
 use Apache::Session::Postgres;
 use Getopt::Long;
 
@@ -44,29 +46,46 @@ $dbh = sql::open_sql( $log,
 
 die 'Error opening db' if ! $dbh;
 
-my $count = 0;
-my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-foreach my $session ( @session_ids ) {
-    $session =~ s/\s//g;
+my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
+my @online;
+$log->debug("Sessions: " . @$session_ids );
+foreach my $session_id ( @$session_ids ) {
+    $session_id =~ s/\s//g;
     my %session;
-    if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
-        $log->debug("Error fetching Session: $session: $@");
+    if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+        $log->error("Error fetching Session: $session_id: $@");
         next;
     }
     if ( ! $session{'lastupdated'} ) {
-		$log->warn("Updating time $session");
+		$log->warn("Updating time $session_id");
         $session{'lastupdated'} = time;
         untie %session;
     } elsif ( time - $session{'lastupdated'} < ( 60*60 ) ) {
-		$count += 1;
+		push @online, $session_id;
 	} # end if
 	undef %session;
 } # end foreach
-@session_ids = ();
+@$session_ids = ();
 
 if ( $$opts{'output'} ) {
 	open (MYFILE, '>'.$$opts{'output'}) or die "unable to open output at $$opts{output} : $!";
-	print MYFILE "$count currently online\n";
+	print MYFILE @online." currently online<br/>\n";
+	
+	my @user_ids;
+	foreach my $session_id ( @online ) {
+		my %session;
+		if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session_id, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+			$log->debug("Error fetching Session: $session_id: $@");
+			next;
+		} # en dif
+		next if ! $session{'user_id'};
+		push @user_ids, $session{'user_id'};
+		undef %session;
+	} # en d foreach session_id
+	foreach my $user_id ( sets::union(@user_ids) ) {
+		my $User = new openprint::User( $user_id );
+		print MYFILE $User->thumbnail_html();
+	} # end foreach user_id
 	close (MYFILE); 
 } # end if
 $dbh->disconnect() if $dbh;

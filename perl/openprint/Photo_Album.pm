@@ -15,6 +15,7 @@ $table = 'photo_albums';
 	'id'				=>	'id',
 	'user_id'			=>	'user_id',
 	'name'				=>	'name',
+	'description'		=>	'description',
 	'thumbnail_id'		=>	'thumbnail_id',
 	'created_on'		=>	'created_on',
 	'privacy_mode_id'	=>	'privacy_mode_id',
@@ -39,20 +40,25 @@ sub Thumbnail {
 		if ( ! $_[0]{'thumbnail_id'} ) {
 	$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
 			my @Photos = $_[0]->Photos();
-	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned, showing first. $Photos[0]{asset_id}");
-			$_[0]{'Thumbnail'} = $Photos[0] if @Photos;
+	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned");
+			if ( @Photos ) {
+$openprint::log->debug(", showing first. $Photos[0]{asset_id}");
+			$_[0]{'Thumbnail'} = $Photos[0];
+			} # end if
+		} else {
+			$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
 		} # end if
 		if ( ! $_[0]{'Thumbnail'} ) {
-		$_[0]{'Thumbnail'} = openprint::Photo_in_Album->find_one( 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} );
-		} # end if
-		if ( ! $_[0]{'Thumbnail'} ) {
-			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album( { 'album_id'=>$_[0]{'id'} } );
+			$_[0]{'Thumbnail'} = new openprint::Photo_in_Album();
+			$_[0]{'Thumbnail'}->set( { 'album_id'=>$_[0]{'id'} } );
 		} # end if
 	} # end if
 	return $_[0]{'Thumbnail'};
 } # end sub Thumbnail
 
 sub thumbnail_url {
+	my $Thumbnail = $_[0]->Thumbnail();
+	$openprint::log->debug(ref$Thumbnail);
 	return $_[0]->Thumbnail()->thumbnail_url();
 } # end sub thumbnail_url
 
@@ -77,9 +83,9 @@ $openprint::log->debug("Photo no asset"  );
 
 sub Photos {
 	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
-		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find('album_id'=>$_[0]{'id'},'order'=>'asset_id');
+		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find('album_id'=>$_[0]{'id'},'order'=>'asset_id') if $_[0]{'id'};
 	} # end if
-	return @{$_[0]{'Photos'}};
+	return $_[0]{'Photos'} ? @{$_[0]{'Photos'}} : ();
 } # end sub Photos
 
 sub destroy {
@@ -115,7 +121,7 @@ sub User {
 sub can_edit {
 	return 1 if ! $_[0]{'id'};
 	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return 1 if $openprint::session{'user_id'} and ( $_[0]{'user_id'} == $openprint::session{'user_id'} );
 	return 0;
 } # end sub can_edit
 

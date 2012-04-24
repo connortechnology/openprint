@@ -3,7 +3,9 @@
 Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
 <br/>
 <form id="f1" name="f1" method="post" action="/employee/accounting/search.html">
-	<fieldset class="filters leftColumn">
+	<fieldset class="filters">
+		<div class="content">
+		<div class="leftColumn">
 		<p>
 			<label>Docket #</label>
 			<input type="number" id="StartDocket" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
@@ -12,7 +14,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p>
 			<label>Order ID</label>
-			<input type="text" id="order_id" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" size="13" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
+			<input type="text" id="order_id" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
 			<? echo ( ssi::button( 'OrderGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
 		<p>
@@ -22,12 +24,12 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p>
 			<label>Project ID</label>
-			<input type="number" name="project_id" value="<? echo ( $param{'project_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
+			<input type="number" id="project_id" name="project_id" value="<? echo ( $param{'project_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
 			<? echo ( ssi::button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
 		</p>
-	</fieldset>
-	<fieldset class="filters rightColumn">
-		<p>
+</div>
+	<div class="rightColumn">
+		<p class="company">
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
 			<select id="ddmCustomer" name="ddmCustomer" size="1">
@@ -75,6 +77,8 @@ Choose criteria and click show results. You may the download the results in CSV 
 			to 
 			<input type="number" name="dblTotal2" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal2'} ) ?>"	/>
 		</p>
+	</div>
+	</div>
 		<p class="buttons">
 		<? echo ( join('',
 					ssi::button( 'ShowResults', { 'onclick'=>
@@ -85,10 +89,9 @@ Choose criteria and click show results. You may the download the results in CSV 
 					); ) ?>
 		</p>
 	</fieldset>
-	</div>
 	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="Results"><!--#include virtual="/employee/accounting/_search.html"--></div>
+<div id="Results">Select criteria and click Show Results.</div>
 </div></div>
 <script type="text/javascript">document.forms['f1'].StartDocket.focus();</script>

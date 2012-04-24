@@ -91,7 +91,7 @@ sub handler {
 	} # end if
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $r->dir_config() );
+	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
@@ -152,6 +152,7 @@ $log->debug("Sending js redirect");
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
+		$variable{'PageSetting'} = $page_settings{$page};
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();

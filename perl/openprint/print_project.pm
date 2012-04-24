@@ -169,7 +169,6 @@ sub choose_service {
 
 	# get the printing service
 	my $status = openprint::service::status( $Project->id(), $$services{''}[0] ) if $$services{''};
-$log->debug("Status of projec type: $status");
 	
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)
@@ -638,6 +637,8 @@ sub create_edit_process {
 	$Project->programs( $param{'chkPrograms'} );
 	$Project->other_programs( $param{'txtOtherPrograms'} );
 	$Project->currency_id( $session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 # Handle ProjectType
 	if ( $OldProjectType->id() ne $ProjectType->id() ) {

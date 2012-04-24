@@ -12,6 +12,8 @@ $serial = 'page_settings_id_seq';
 	'url'	=>	'url',
 	'user_level'	=>	'user_level',
 	'cacheable'	=>	'cacheable',
+	'keywords'	=>	'keywords',
+	'description'	=>	'description',
 );
 %defaults = (
 	'user_level'	=>	undef,

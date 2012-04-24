@@ -13,8 +13,8 @@
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
 		<li><label>Asset #</label>
-			<input type="text" id="asset_id" name="asset_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load_page( $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "load_page( \$('f1'));",'','Go' ); ) ?>
+			<input type="number" id="asset_id" name="asset_id" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load_page( $('f1') );}" onkeyup="integerize(this);" />
+			<? echo ( ssi::button( 'Go3', { onclick=>"load_page( \$('f1'));", text=>'Go' } ); ) ?>
 		</li>
 		</ul>
 		<hr/>
@@ -22,34 +22,38 @@
 		<li><label>Company</label>
 			<select name="company_id" onchange="load_page($('f1'));">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/employee/asset/history.html?company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/assets/history.html?company_id'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Created By</label>
 			<select name="created_by" onchange="load_page($('f1'));">
 				<option value="">All</option>
 				<? echo ( 
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/asset/history.html?created_by'} ); ) ?>
+					ssi::make_drop_down( openprint::User->dropdown( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ), $session{'/employee/assets/history.html?created_by'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type</label>
 			<select name="type_id" onchange="load_page($('f1'));">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Asset_Type->find( 'order'=>'lower(name)' ) ], $session{'/employee/asset/history.html?type_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( openprint::Asset_Type->dropdown( 'order'=>'lower(name)' ), $session{'/employee/assets/history.html?type_id'} ); ) ?>
 			</select>
 		</li>
 		<li>
 			<label>Date</label>
 			<span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/assets/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             </span>
             to
             <span class="DateSelectorCT">
-<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/assets/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             </span>
 		</li>
 		<li><label>Deleted</label>
-			<? echo ( ssi::radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/asset/history.html?deleted'}, { 'onclick'=> "load_page(\$('f1'));" } ); ) ?>
+			<? echo ( ssi::radio( 'deleted', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/employee/assets/history.html?deleted'}, { 'onclick'=> "load_page(\$('f1'));" } ); ) ?>
+		</li>
+		<li><label>Search</label>
+			<input type="text" name="search" onkeydown="if(event.keyCode == 13){load_page( $('f1') );}"/>
+		</li>
 		</ul>
 		<p class="buttons">
 				<? echo ( join( '',

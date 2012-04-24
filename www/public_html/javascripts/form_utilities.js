@@ -489,7 +489,7 @@ function element_changed( element ) {
 	}
 
 	if ( element.type == 'select-one' ) {
-		for ( var i = 0, len = element.options.length; i < len; optionIndex += 1 ) {
+		for ( var i = 0, len = element.options.length; i < len; i += 1 ) {
 			if ( element.options[i].selected != element.options[i].defaultSelected ) {
 				return true;
 			} // end if
@@ -701,20 +701,19 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
-function Location_onchange( parent_element, child_element, type ) {
-	if ( parent_element.getValue() ) {
+function Location_onchange( parent_element, type ) {
+	//if ( parent_element.getValue() ) {
 		// only do anything if we have selected something	
-		new Ajax.Request( '/account/_location_ddm.json', { 
+		new Ajax.Request( '/location/_ddm.json', { 
 			parameters: { 
 					type: type,
 					parent_element: parent_element.id,
 					parent_id: parent_element.getValue(), 
-					child_element: child_element.id
 				}, evalScripts: true
 			}
 			);
-	} // end if
-	if ( type == 'state' ) {
+	//} // end if
+	if ( type == 'country' ) {
 		var state_label = $(parent_element.name + '_state');
 		var postal_label = $(parent_element.name + '_postal');
 		var country = get_ddm_text( parent_element );
@@ -726,7 +725,7 @@ function Location_onchange( parent_element, child_element, type ) {
 			if ( postal_label ) postal_label.innerHTML='Postal Code:';
 		} else {
 			if ( state_label ) state_label.innerHTML='State/Province:';
-			if ( postal_label ) postal_label.innerHTML='Postal Code:';
+			if ( postal_label ) postal_label.innerHTML='Postal/ZIP Code:';
 		}  // end if
 	} // end if
 }
@@ -1261,34 +1260,6 @@ function changed( e, div ) {
 	} // end if
 } // end function changed
 
-function cardinalize(e) {
-	e.value = e.value.replace(/\D/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function integerize(e) {
-	e.value = e.value.replace(/[^\d\-]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function floatize(e) {
-	e.value = e.value.replace(/[^\d\-\.]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
-function hexize(e) {
-	e.value = e.value.replace(/[^\da-fA-F]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
-}
 if (!Array.prototype.map)
 {
   Array.prototype.map = function(fun /*, thisp*/)
@@ -1323,3 +1294,66 @@ function get_form_element_array( form, name ) {
 	} // end if
 	return values;
 } // end function get_form_element_array
+
+function cardinalize(e) {
+	e.value = e.value.replace(/\D/g,'');
+}
+function integerize(e) {
+	e.value = e.value.replace(/[^\d\-]/g,'');
+}
+function floatize(e) {
+	e.value = e.value.replace(/[^\d\-\.]/g,'');
+}
+function hexize(e) {
+	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+}
+function createThrobber( img, preview ) {
+    var x = img.x;
+    var y = img.y;
+ 
+    var canvas = document.createElement("canvas");
+    preview.appendChild(canvas);
+    canvas.width = preview.getStyle('width');
+    canvas.height = preview.getStyle('height');
+alert(img.getStyle('width'));
+    var size = Math.min(canvas.height, canvas.width);
+    canvas.style.top = y + "px";
+    canvas.style.left = x + "px";
+    canvas.classList.add("throbber");
+    var ctx = canvas.getContext("2d");
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.font = "15px monospace";
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.shadowBlur = 14;
+    ctx.shadowColor = "white";
+ 
+    var ctrl = {};
+    ctrl.ctx = ctx;
+    ctrl.update = function(percentage) {
+        var ctx = this.ctx;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.fillStyle = "rgba(0, 0, 0, " + (0.8 - 0.8 * percentage / 100)+ ")";
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.beginPath();
+        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+                size / 6, 0, Math.PI * 2, false);
+        ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+        ctx.lineWidth = size / 10 + 4;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(ctx.canvas.width / 2, ctx.canvas.height / 2,
+                size / 6, -Math.PI / 2, (Math.PI * 2) * (percentage / 100) + -Math.PI / 2, false);
+        ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+        ctx.lineWidth = size / 10;
+        ctx.stroke();
+        ctx.fillStyle = "white";
+        ctx.baseLine = "middle";
+        ctx.textAlign = "center";
+        ctx.font = "10px monospace";
+        ctx.fillText(percentage + "%", ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+    ctrl.update(0);
+    return ctrl;
+}

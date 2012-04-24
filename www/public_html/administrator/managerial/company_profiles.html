@@ -437,12 +437,16 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 	<fieldset><legend>Credit Information</legend>
 		<ul>
 			<li> 
-				<label>Terms</label>
-				<input type="text" name="txtTerms" value="<?txtTerms?>" /> Days
+				<label>Deny after</label>
+				<input type="number" name="denydays" value="<?denydays?>" /> Days
+			</li>
+			<li> 
+				<label>Warn after</label>
+				<input type="number" name="warndays" value="<?warndays?>" /> Days
 			</li>
 			<li> 
 				<label>Credit Account Limit</label>
-				<input type="text" name="txtCreditLimit" value="<?txtCreditLimit?>" />
+				<input type="number" name="creditlimit" value="<?creditlimit?>" />
 			</li>
 			<li> 
 				<label>Current Credit Balance</label>
@@ -454,14 +458,15 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 			</li>
 			<li> 
 				<label>Credit Hold</label>
-				<input type="radio" name="rdbCreditHold" id="rdbCreditHoldY" value="Y" <?rdbCreditHoldY?> />
-				<label class="radio" for="rdbCreditHoldY">Yes</label>
-				<input type="radio" name="rdbCreditHold" id="rdbCreditHoldN" value="N" <?rdbCreditHoldN?> />
-				<label class="radio" for="rdbCreditHoldN">No</label>
+				<? echo ( ssi::radio( 'rdbCreditHold', ['Y', 'Yes', 'N', 'No' ], $$variable{'rdbCreditHold'} ); ) ?>
 			</li>
 			<li> 
 				<label>Required Downpayment Amount</label>
-				<input type="text" name="txtDownpayment" value="<?txtDownpayment?>" />
+				<input type="number" name="downpayment" value="<?downpayment?>" max="100" onkeyup="floatize(this);"/> %
+			</li>
+			<li> 
+				<label>Required COD:</label>
+				<input type="number" name="cod" value="<?cod?>" max="100" onkeyup="floatize(this);"/> %
 			</li>
 		</ul>
 	</fieldset>

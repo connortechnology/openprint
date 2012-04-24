@@ -20,7 +20,7 @@
 			<? echo ( 
 				my $html;
 				if ( $$variable{'User'}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", 'text'=>'Delete Profile' } );
+					$html .= ssi::button( 'Delete', { href=>"/account/search.html?action=Delete&amp;user_id=$$variable{'User'}{'id'}", text=>'Delete Profile' } );
 					$html .= ssi::button( 'Edit', { 'href'=>'/account/user_profile.html?ddmUser='.$$variable{'User'}->id() } );
 				} # end if
 				if ( $$variable{'User'}->id() and ( $session{'user_id'} != $$variable{'User'}->id() ) ) {
@@ -41,7 +41,7 @@
 				if ( $Asset->id() ) {
 					my $Album = openprint::Photo_Album->find_one('asset_id any'=>$$Asset{'id'},'user_id'=>$$variable{'User'}->id());
 					if ( ! $Album ) {
-						$log->error("COuldn'tget album!");
+						# Happens when the asset is the fallback default icon
 						$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
 					} else {
 						$html = sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s"/></a>', $$Album{'id'}, $Asset->url(), $Asset->description() );
@@ -54,10 +54,10 @@
 			) ?>
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
-			<fieldset><legend>Photo Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+			<fieldset><legend>Photos/Videos</legend>
+				<? if ( $$variable{'User'}->can_edit() ) ?>
 				<span class="buttons"><? echo ( ssi::button( 'AddPhotoAlbum', { 'href'=>'/photo_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
+				<? endif ( $$variable{'User'}->can_edit() ) ?>
 				<? echo (
 					my $html = '';
 					my @Albums = openprint::Photo_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
@@ -70,32 +70,11 @@
 				) ?>
 			</fieldset>
 		</div>
-		<div id="VideoAlbums">
-			<fieldset><legend>Video Albums</legend>
-				<? if ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<span class="buttons"><? echo ( ssi::button( 'AddVideoAlbum', { 'href'=>'/video_albums/edit.html', 'text'=>'Add' } ); ) ?></span>
-				<? endif ( $session{'user_id'} == $$variable{'User'}->id() ) ?>
-				<? echo (
-					my $html = '';
-					my @Albums = openprint::Video_Album->find( { 'user_id' => $variable{'User'}->id(), 'order'=>'id' } );
-					return 'no albums' if ! @Albums;
-					foreach my $Album ( @Albums ) {
-						next if ! $Album->can_view();
-						
-						my $Video = $Album->Thumbnail();
-						if ( $Video->asset_id() ) {
-							$html .= sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Album->id(), $Video->thumbnail_url(), $Video->name() );
-					
-						} # end if Thumbnail
-					} # end foreach Album
-					return $html;
-				) ?>
-			</fieldset>
-		</div><!--Albums-->
 		<div id="UserInformation">
 			<fieldset><legend>User Information</legend>
 				<div class="content">
 					<ul>
+						<li><label>Couple</label><? echo ( $$variable{'User'}->Company()->name() ) ?></li>
 						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
 					</ul>
 				</div>
@@ -128,10 +107,8 @@
 					<div class="content">
 						<ul>
 							<? echo (
-								my @Events = sets::object_union(
-									openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time - 72*3600 ) ),
-									openprint::Event->find('attending any'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time-(72*3600) ) ),
-								);
+								my @Events = 
+									openprint::Event->find('attending any'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time-(72*3600) ) );
 								if ( ! @Events ) {
 									return '<li>No upcoming events</li>';
 								} # end if

@@ -25,7 +25,13 @@ sub save_article {
 		return;
 	} # end if
 	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
-	$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+
+	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
+		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+	} else {
+		delete $param{'published_on'};
+		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
+	} # end if
 	if ( $param{'category_id'} ) {
 		delete $param{'category'};
 	} elsif ($param{'category'}) {
@@ -146,20 +152,15 @@ sub history {
 		$variable{'error'} .= $Article->destroy();
 	} # end if
 
+	_history();
+
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/article/history.html', 'published_on_start', -31 );
 		ssi::setup_date_select( '/article/history.html', 'published_on_end', '' );
 		ssi::setup_date_select( '/article/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/article/history.html', 'created_on_end', '' );
 	} # end if
-	ssi::save_params( '/article/history.html', ( 
-				'created_on_start_year','created_on_start_month','created_on_start_day',
-				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'published_on_start_year','published_on_start_month','published_on_start_day',
-				'published_on_end_year','published_on_end_month','published_on_end_day',
-				'published','employee_id','company_id', 'category_id' ) );
 
-	$session{'/article/history.html?published'} = '0' if ! $session{'/article/history.html?published'};
 } # end sub history
 
 sub _history {
@@ -167,9 +168,28 @@ sub _history {
 		ssi::save_params( '/article/history.html', ( 
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-				'published_on_start_year','published_on_start_month','published_on_start_day',
-				'published_on_end_year','published_on_end_month','published_on_end_day',
+		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
 				'published','employee_id','company_id', 'category_id' ) );
+	} 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->delete();
+		} # end foreach id
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->destroy();
+		} # end foreach id
 	} # end if
 } # end sub _history
 
@@ -189,6 +209,10 @@ sub edit {
 			return;
 		} # end if
 		$variable{'error'} .= $Article->destroy();
+		if ( ! $variable{'error'} ) {
+			%param = ();
+			$variable{'ExternalRedirect'} = '/article/history.html';
+		} # end if
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
@@ -206,9 +230,11 @@ sub edit {
 			} # end if
 		} # end if
 	} # end if
-	if ( time - $session{'/article/edit.html?lastupdated'} < ( 12*60*60 ) ) {
-		$variable{'Article'}->company_id( $session{'/article/edit.html?company_id'} ) if ! $variable{'Article'}->company_id();
-		$variable{'Article'}->published_on( $session{'/article/edit.html?ending'} ) if ! $variable{'Article'}->published_on();
+	if ( ! $variable{'Article'}->id() ) {
+		$variable{'Article'}->company_id( $session{'company_id'} ) if ! $variable{'Article'}->company_id();
+		$variable{'Article'}->published_on( Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ) ) if ! $variable{'Article'}->published_on();
+$log->debug(Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ));
+$log->debug($variable{'Article'}->published_on());
 	} # end if
 } # end sub edit
 
@@ -299,8 +325,25 @@ sub _assets {
 	if ( $param{'func'} eq 'delete' ) {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
 		$variable{'error'} .= $Asset->delete();
-	} else {
-		$log->error("article/_assets: Uknown function");
+	} elsif ( $param{'func'} eq 'add' ) {
+		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
+			
+		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
+		if ( $Asset ) {
+			my $AA = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$$Asset{'id'}});
+			if ( ! $$AA{'asset_id'} ) {
+				$variable{'error'} .= $AA->save({
+					'asset_id'	=>	$$Asset{'id'},
+					'article_id'	=>	$param{'article_id'},
+				});
+			} else {
+				$variable{'error'} .= 'Asset already in article.';
+			} # end if
+		} else {
+			$variable{'error'} .= 'Asset not found.';
+		} # end if
+	} elsif ( $param{'func'} ) {
+		$log->error("article/_assets: Uknown function $param{'func'}");
 	} # end if
 } # end sub _assets
 

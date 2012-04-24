@@ -1,4 +1,5 @@
 use strict;
+require openprint::User_Profile_Field;
 package openprint::User_Profile_Entry;
 our @ISA = qw( openprint::Object );
 

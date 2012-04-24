@@ -49,7 +49,7 @@ sub list {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'user_id'} = $session{'user_id'};
 		$variable{'error'} .= $Album->save(\%param);
-		new openprint::Log()->save({'action'=>'Create Photo Album'}) if ! $param{'id'};
+		(new openprint::Log())->save({action=>'Create Photo Album', Object=>$Album}) if ! $param{'album_id'};
 		$variable{'error'} .= $Album->Privacy()->save( {
 				map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
 			} );
@@ -76,7 +76,7 @@ sub view {
 sub edit {
 	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'user_id'} = $session{'user_id'};
+		$param{'user_id'} = $session{'user_id'} if ! ( ( $session{'user_type'} eq 'A' ) and $param{'user_id'} );
 		$variable{'error'} .= $Album->save(\%param);
 		(new openprint::Log())->save({'action'=>'Create Photo Album','url'=>'/photo_albums/view.html?album_id='.$Album->id(), 'Object'=>$Album}) if ! $param{'id'};
 
@@ -103,10 +103,32 @@ sub edit {
 	$variable{'Privacy'} = $Album->Privacy();
 } # end sub edit
 
-sub _photos {
-	my $Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
+sub _album_photos {
+	$param{'album_type'} = 'openprint::Photo_Album' if ! $param{'album_type'};
+	my $Album = $variable{'Album'} = $param{'album_type'}->new($param{'album_id'});
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+	} elsif ( $param{'action'} eq 'add' ) {
+		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
+$log->debug("$id , $filename ");
+			
+		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
+		if ( ! $Asset ) {
+			# May be a thumbnail, so let's strip off the extension
+			my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+			$Asset = openprint::Asset->find_one('id'=>$id, 'filename like'=>$blah.'%' );
+		} # end if
+		if ( $Asset ) {
+			if ( sets::isin( $Asset->id(), [ map { $_->asset_id() } $Album->Photos() ] ) ) {
+				$variable{'error'} .= 'Asset already in article.';
+			} else {
+				my $Photo = new openprint::Photo_in_Album();
+				$variable{'error'} .= $Photo->save({'album_id'=>$$Album{id}, 'asset_id'=>$Asset->id()});
+				delete $$Album{'Photos'};
+			} # end if
+		} else {
+			$variable{'error'} .= 'Asset not found.';
+		} # end if
 	} elsif ( $param{'action'} eq 'add to album' ) {
 		my $A = new openprint::Photo_Album( $param{'a_id'} );
 		if ( ! $A->id() ) {
@@ -136,7 +158,7 @@ sub _photos {
 		# Why am I deleting the asset?
 		#$variable{'error'} .= $Asset->delete();
 	} # end if
-} # end sub photos
+} # end sub _album_photos
 
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
@@ -173,13 +195,17 @@ sub view_photo {
 				$variable{'error'} .= $DoDontPhoto->delete() if $DoDontPhoto;
 			} # end if
 			
-		} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-			$variable{'error'} .= $Photo->delete();
-			if ( ! $variable{'error'} ) {
-				$variable{'ExternalRedirect'} = '/photo_album/view.html?album_id='.$param{'album_id'};
+		} elsif ( $param{'action'} eq 'Delete' ) {
+			if ( $Photo->can_edit() ) {
+				$variable{'error'} .= $Photo->delete();
+				if ( ! $variable{'error'} ) {
+					$variable{'ExternalRedirect'} = '/photo_albums/view.html?album_id='.$param{'album_id'};
+				} # end if
+			} else {
+				$variable{'error'} .= 'You cant delete that!';
 			} # end if
 
-		} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		} elsif ( $param{'action'} eq 'Undelete' ) {
 			$variable{'error'} .= $Photo->undelete();
 		} elsif ( $param{'btnFunction'} eq 'Save' ) {
 $log->debug("Saving");
@@ -269,5 +295,10 @@ sub _photo_actions {
 		} # end if
 	} # end if function
 } # end sub _photo_actions
+sub photos {
+} # end sub photos
+sub _photos {
+} # end sub _photos
+
 1;
 __END__

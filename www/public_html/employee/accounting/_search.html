@@ -25,6 +25,9 @@
 		'order'		=> $openprint::Order::fields{'created_on'},
 		);
 	} # end if
+	if ( @{$$variable{'Orders'}} > 10 ) {
+		openprint::Company->find();
+	} # end if
 ) ?>
 	<? if ( @{$$variable{'Orders'}} ) ?>
 <table class="List">
@@ -46,8 +49,8 @@
 		foreach my $Order ( @{$$variable{'Orders'}} ) {
 			$html .= sprintf(q`
 <tr%1$s> 
-	<td class="order_id"><a href="details.html?order_id=%2$d">%2$d</a></td>
-	<td class="Docket"><a href="details.html?order_id=%2$d">%3$d</a></td>
+	<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
+	<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
 	<td class="Date">%4$s</td>
 	<td class="Company">%5$s</td>
 	<td class="status">%6$s</td>
@@ -59,8 +62,8 @@
 	$rowclass, $$Order{'id'}, $$Order{'docket'}, 
 	Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Order->created_on() ) ),
 	ssi::html_escape( $Order->Company->name() ),
-	$Order->status(),
-	ssi::html_escape( $Order->invoice_id() ),
+	$$Order{'status'},
+	ssi::html_escape( $$Order{'invoice_id'} ),
 	ssi::html_escape( $Order->po() ),
 	openprint::Currency::format( $Order->total() ),
 	openprint::Currency::format( $Order->owing() ),
@@ -73,7 +76,7 @@
 		return $html;
 	) ?>
 	<tr class="totals"> 
-		<td colspan="7" align="right"><b>Report Total:</b></td>
+		<td colspan="7">Report Total</td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 	</tr>

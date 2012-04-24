@@ -1,6 +1,5 @@
 use strict;
 package openprint::administrator_managerial;
-use MIME::QuotedPrint ();
 
 use openprint ();
 
@@ -14,7 +13,6 @@ require openprint::logs;
 require openprint::address;
 require openprint::Company;
 require openprint::Company_Profile;
-require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
@@ -25,6 +23,7 @@ require openprint::Timetrack;
 require openprint::User_Profile_Field;
 require openprint::Company_Profile_Field;
 require openprint::Company_Category;
+require openprint::Company_Credit;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -153,7 +152,7 @@ sub currency {
 sub user_profiles {
 
 	my $user_id = $param{'ddmUser'};
-	my $User = new openprint::User( $user_id );
+	my $User = $variable{'User'} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
 
@@ -195,6 +194,7 @@ sub user_profiles {
 			foreach my $U ( @Users ) {
 				$error .= sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
 			} # end foreach U
+		
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 
@@ -381,11 +381,12 @@ sub company_profiles {
 	);
 
 	my %credit_fields = (
-			'txtDenyDays'			=>	'DenyDays',
-			'txtWarnDays'			=>	'WarnDays',
-			'txtCreditLimit'	=>	'Limit',
-			'rdbCreditHold'	 =>	'Hold',
-			'txtDownpayment'	=>	'Downpayment',
+			'denydays'          =>  'denydays',
+			'warndays'          =>  'warndays',
+			'creditlimit'    =>  'limit',
+			'rdbCreditHold'     =>  'hold',
+			'downpayment'    =>  'downpayment',
+			'cod'			=>	'cod',
 			);
 
 	my $index = $param{'ddmCustomer'};
@@ -467,12 +468,8 @@ sub company_profiles {
 
 			$Company->save_tradereferences( \%params );
 
-			my $customer_credit = new openprint::customer_credit( $index );
-			my %params;
-			foreach my $field ( keys %credit_fields ) {
-				$params{$credit_fields{$field}} = $param{$field} if defined $param{$field};
-			} # end foreach
-			$customer_credit->set( \%params );
+			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'owner_id'} } );
+			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'owner_id'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Company = new openprint::Company( $param{'company_id'} );
@@ -491,7 +488,6 @@ sub company_profiles {
 		$Company->undelete();
 	} # end if btnFunction
 
-	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @customers_categories;
 	my $total;
 	my $payments;
@@ -501,8 +497,9 @@ sub company_profiles {
 		} 
 		my $shipping_address = $Company->get_shipping_address();
 		@variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-		my $customer_credit = new openprint::customer_credit( $index );
-		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		# Credit fields are all numeric, we don't need to htmlize them
+		my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
+		@variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
 		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
@@ -592,9 +589,14 @@ sub user_profile_fields {
 				'name'	=>	$param{'name-'.$Field->id()},
 				'description'	=>	$param{'description-'.$Field->id()},
 				'type'	=>	$param{'type-'.$Field->id()},
-				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'values'	=>	[ misc::trim( split(',', $param{'values-'.$Field->id()} ) ) ],
+				'defaults'	=>	[ misc::trim( split(',', $param{'defaults-'.$Field->id()} ) ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				'search_default'	=>	$param{'search_default-'.$Field->id()},
+				'match'	=>	$param{'match-'.$Field->id()},
+				'viewable'	=>	$param{'viewable-'.$Field->id()},
+				'on_registration'	=>	$param{'on_registration-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if
@@ -696,7 +698,7 @@ sub _company_fields_tbody {
 			$i += 1;
 		} # end foreach $feild_id
 	} # end if
-} # end sub _user_fields_tbody
+} # end sub _company_fields_tbody
 
 sub _search_by_email {
 } # end sub _search_by_email
@@ -708,12 +710,17 @@ sub page_settings {
 			if ( 
 					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
-					( $PS->user_level() ne $param{'user_level-'.$PS->id()} )
+					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or
+					( $PS->keywords() ne $param{'keywords-'.$PS->id()} ) or
+					( $PS->description() ne $param{'description-'.$PS->id()} ) 
+	
 				) {
 				$variable{'error'} .= $PS->save({
-						'url'=>$param{'url-'.$$PS{id}},
-						'cacheable'=>$param{'cacheable-'.$$PS{id}},
-						'user_level'=>$param{'user_level-'.$$PS{id}},
+						'url'			=>	$param{'url-'.$$PS{id}},
+						'cacheable'		=>	$param{'cacheable-'.$$PS{id}},
+						'user_level'	=>	$param{'user_level-'.$$PS{id}},
+						'keywords'		=>	$param{'keywords-'.$$PS{id}},
+						'description'	=>	$param{'description-'.$$PS{id}},
 						});
 			} # end if need to save
 		} # end foreach PS

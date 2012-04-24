@@ -1,3 +1,4 @@
+use strict;
 package misc;
 use strict;
 require Exporter;
@@ -9,6 +10,7 @@ use Date::Calc qw(Add_Delta_Days);
 use Date::Format qw( time2str );
 
 use Mail::Sendmail ();
+
 use openprint ();
 
 sub send_email_with_attached_files {
@@ -471,34 +473,6 @@ sub add_delta_business_days {
 
 	return ( $year, $month, $day );
 } # end sub add_delta_business_days
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 sub smart_time {
 	my $difference = time - $_[0];

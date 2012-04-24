@@ -1,10 +1,10 @@
 <? eval (
 	@{$$variable{'Articles'}} = ();
 	foreach my $Article ( openprint::Article->find( 
-		ssi::date_filter( 'created_on_start','created_on >=' ),
-		ssi::date_filter( 'created_on_end','created_on <=' ),
-		ssi::date_filter( 'published_on_start','published_on >=' ),
-		ssi::date_filter( 'published_on_end','published_on <=' ),
+		ssi::date_filter( '/article/history.html?created_on_start','created_on >=' ),
+		ssi::date_filter( '/article/history.html?created_on_end','created_on <=' ),
+		ssi::date_filter( '/article/history.html?published_on_start','published_on >=' ),
+		ssi::date_filter( '/article/history.html?published_on_end','published_on <=' ),
 		( $session{'/article/history.html?published'} ? ( 'published' => $session{'/article/history.html?published'} ) : () ),
 		( $session{'/article/history.html?company_id'} ? ( 'company_id'	=> $session{'/article/history.html?company_id'} ) : () ),
 		( $session{'/article/history.html?employee_id'} ? ( 'employee_id' => $session{'/article/history.html?employee_id'} ) : () ), 
@@ -24,6 +24,7 @@
 	</div>
 	<table class="List">
 		<tr> 
+			<th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'article_id', this.checked );"/></th>
 			<th class="Author">Author</th>
 			<th class="Category">Category</th>
 			<th class="DateTime">Created On</th>
@@ -38,6 +39,7 @@
 
 				$html .= sprintf(q` 
 				<tr title="%2$s" %8$s> 
+					<td class="checkbox"><input type="checkbox" name="article_id" value="%1$d"/></td>
 					<td class="Author"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
 					<td class="Category"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
 					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>

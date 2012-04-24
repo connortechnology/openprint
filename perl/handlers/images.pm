@@ -21,11 +21,13 @@ use vars qw( $r %session %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+use constant DEBUG => 0;
+
 sub handler {
 
 	my $request = $_[0];
 	$r = Apache2::Request->new( $request );
-	my $starttime = gettimeofday();
+	my $starttime = gettimeofday() if DEBUG;
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
@@ -40,7 +42,7 @@ sub handler {
 
 	my $return_code = Apache2::Const::OK;
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $r->dir_config() );
+	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
 		openprint::session_init();
@@ -51,7 +53,6 @@ sub handler {
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id ) = $r->uri() =~ /^\/(.*)\/(\d+)_.+$/;
-$log->debug("{Path: $path, id: $id");
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
 			if ( $Asset->id() ) {
@@ -64,12 +65,10 @@ $log->debug("{Path: $path, id: $id");
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
-$log->debug("Sending " .  $Asset->id() );
-$log->debug("Sending " .  $Asset->thumbnail_path() );
 							$r->sendfile( $Asset->thumbnail_path() );
 						} else {
-$log->debug("Sending " .  $Asset->on_disk_path() );
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
 					} else {
@@ -77,15 +76,13 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
-$log->debug("Sending " .  $Asset->id() );
-$log->debug("Sending " .  $Asset->thumbnail_path() );
 							$r->sendfile( $Asset->thumbnail_path() );
 						} else {
-$log->debug("Sending " .  $Asset->on_disk_path() );
-					# No album means has to be an article image, or a generic site image.
-					$r->sendfile( $Asset->on_disk_path() );
-}
+# No album means has to be an article image, or a generic site image.
+							$r->sendfile( $Asset->on_disk_path() );
+						}
 				} # end if
 			} else {
 $log->error("NOT FOUND");
@@ -100,7 +97,7 @@ $log->error("No value for aset. " . $r->uri() );
 	} else {
 	$log->warn("No dbh!");
 	} # end if dbh
-	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
+	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if DEBUG;
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	return $return_code;
 } # end sub handler

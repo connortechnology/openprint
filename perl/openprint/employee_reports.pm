@@ -58,7 +58,10 @@ sub _project_history_results {
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
 		foreach my $Project ( openprint::Project::find( %filters ) ) {
-			if ( $param{'previous_status'} ) {
+			if ( $param{'previous_status'} and (
+						Date::Calc::check_date( @param{'status_on_start_year','status_on_start_month','status_on_start_day'} ) or 
+						Date::Calc::check_date( @param{'status_on_end_year','status_on_end_month','status_on_end_day'} )
+						) ) {
 				my @statuses = split(',', $param{'previous_status'} );
 				my $keep = 0;
 				if ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
@@ -192,7 +195,7 @@ $log->warn("Paper was supplied");
 }
 sub _order_history_results {
 	my %parameters; 
-	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) {
 		$parameters{'SalesPerson'} = $session{'user_id'};
 		$parameters{'or'} = "companies.id=(SELECT company_id FROM users WHERE users.id=$session{'user_id'})";
 	} elsif ( $param{'CSR'} ) {

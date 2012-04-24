@@ -21,13 +21,13 @@ $serial = 'sred_projects_id_seq';
 );
 
 %transforms = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
 	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
 );
 
 %defaults = (
 	'deleted'	=>	0,
+	'created_on'	=>	'NOW()',
+	'updated_on'	=>	'NOW()',
 );
 
 sub Created_By {

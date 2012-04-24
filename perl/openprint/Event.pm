@@ -34,6 +34,7 @@ $serial = 'events_id_seq';
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	'name+info'	=>	q`name || info`,
 );
 
 %defaults = (
@@ -92,7 +93,7 @@ sub Asset {
 		if ( $$Album{'thumbnail_id'} ) {
 			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
 		} elsif ( my @Photos = $Album->Photos() ) {
-			$_[0]{'Asset'} = $Photos[0];
+			$_[0]{'Asset'} = $Photos[0]->Asset();;
 		} else {
 			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
@@ -165,7 +166,7 @@ sub html {
 			`, $Event->id(),
 			$Event->Asset()->thumbnail_url(),
 			ssi::htmlize($Event->name()),
-			( $Event->starting() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
+			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),
 
 			);
 	my @Comments = $Event->Comments();
@@ -239,6 +240,16 @@ sub asset_html {
 	} # end if
 	return $_[0]{'asset_html'};
 } # end sub asset_html
+
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save({ 'Photos for event: ' . $$self{'name'} });
+		$self->save({'album_id'=>$Album->id()});
+	} # end if
+	return $Album->upload( @_ );
+} # end sub upload
 
 1;
 __END__
