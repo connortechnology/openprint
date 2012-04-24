@@ -291,28 +291,30 @@ sub variables {
 		push @v, $k if sets::isin( 'save', $variables{$k} );
 	} # end foreach;
 
-	foreach my $side ( 'SideOne','SideTwo' ) {
-		foreach my $k ( keys %$new_specs ) {
-#$openprint::log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
-			if ( my ( $index ) = $k =~ /ColourCoating(\d+)$side/ ) {
-#$openprint::log->debug("Saving $side $k $$new_specs{$k} $index");
-				push @v, 'chkColourCoating'.$index.$side;
-				push @v, 'ColourCoatingType'.$index.$side;
-				push @v, 'ColourCoatingColour'.$index.$side;
-				push @v, 'ColourCoatingCoverage'.$index.$side;
-				push @v, 'ColourCoatingPrice'.$index.$side;
-				push @v, 'ColourCoatingMileage'.$index.$side;
-			} # end if
-		} # end foreach k
-	} # end foreach side
-	my $Project = new openprint::Project( $project_index );
-	if ( $$new_specs{'versions'} ) {
-		foreach my $version ( 1 .. $$new_specs{'versions'} ) {
-			push @v, "version-$version-description";
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				push @v, "version-$version-quantity$qty_index";
-			} # end foreach qty_index
-		} # end foreach version
+	if ( $new_specs ) {
+		foreach my $side ( 'SideOne','SideTwo' ) {
+			foreach my $k ( keys %$new_specs ) {
+	#$openprint::log->debug("Variables: $side $k old: $$specs{$k} new: $$new_specs{$k}");
+				if ( my ( $index ) = $k =~ /ColourCoating(\d+)$side/ ) {
+	#$openprint::log->debug("Saving $side $k $$new_specs{$k} $index");
+					push @v, 'chkColourCoating'.$index.$side;
+					push @v, 'ColourCoatingType'.$index.$side;
+					push @v, 'ColourCoatingColour'.$index.$side;
+					push @v, 'ColourCoatingCoverage'.$index.$side;
+					push @v, 'ColourCoatingPrice'.$index.$side;
+					push @v, 'ColourCoatingMileage'.$index.$side;
+				} # end if
+			} # end foreach k
+		} # end foreach side
+		my $Project = new openprint::Project( $project_index );
+		if ( $$new_specs{'versions'} ) {
+			foreach my $version ( 1 .. $$new_specs{'versions'} ) {
+				push @v, "version-$version-description";
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					push @v, "version-$version-quantity$qty_index";
+				} # end foreach qty_index
+			} # end foreach version
+		} # end if
 	} # end if
 	return @v;
 } # end sub variables
@@ -354,6 +356,7 @@ sub outputs {
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
+$openprint::log->debug("Un get_unspecified_pages $Project, $service_index, $printing_specs, $specs, $qty_index");
 
 	my $specified_pages = 0;
 	foreach my $ssid ( $Project->signatures( {'Group'=>$$specs{'Group'}} ) ) {
@@ -362,7 +365,7 @@ sub get_unspecified_pages {
 		$specified_pages += $$sig_specs{"PageQuantity$qty_index"};
 	} # end foreach
 
-	#$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
+	$openprint::log->debug("Unspec: Qty$qty_index G$$specs{'Group'} GPQ:$$specs{'GroupPageQuantity'} - S$specified_pages = U" . ($$specs{'GroupPageQuantity'} - $specified_pages) );
 	return $$specs{'GroupPageQuantity'} - $specified_pages;
 } # end sub get_unspecified_pages
 
@@ -370,6 +373,7 @@ sub setup_project {
 	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage, $Paper ) = @_;
 
 	my %project = (
+			'txtSpreadSize',	$$specs{'txtSpreadSize'},
 			'ComboItems',		$$specs{'txtPressSheetComboItems'},
 			'Add Grip Width',	$$specs{'GripWidth'},
 			'Add Grip Height',	$$specs{'GripHeight'},
@@ -2718,7 +2722,7 @@ sub get_new_specs {
 sub get_project_price {
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
-#$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
+$openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
 
 	my $services = $Project->services();
 	my $txtUnspecifiedPageQuantity = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index};
@@ -3177,7 +3181,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
 							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 
-							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $Service->specs(), $Service->specs(), $qty, $qty_index, 
+							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $specs, $specs, $qty, $qty_index, 
 							\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
 
 							if ( $$sig_price{'Imposition'} ) {
@@ -4792,7 +4796,7 @@ sub summary {
 		return '' if ! $$specs{'txtImposition'.$qty_index};
 		my $html;
 		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
-			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp ' : '';
+			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pg ' : '';
 		} # end if
 		$html .= sprintf(qq{%dout %s},
 				$$specs{'txtImposition'.$qty_index},
