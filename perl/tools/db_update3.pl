@@ -180,6 +180,11 @@ if ( ! exists $$data{'state_changed_on'} ) {
 	$dbh->do('ALTER TABLE hosts add state_changed_on INTEGER');
 } # end if
 
+if ( ! sets::isin( 'host_notifications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Host_Notifications.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 if ( ! exists $$data{'equipment_id'} ) {
 	$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
