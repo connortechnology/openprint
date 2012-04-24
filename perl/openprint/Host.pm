@@ -56,6 +56,7 @@ $serial = 'hosts_id_seq';
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
 	'state_changed_on'	=>	'state_changed_on',
+	'offline_seconds'	=>	'offline_seconds',
 );
 %transforms = (
 );
@@ -74,6 +75,7 @@ $serial = 'hosts_id_seq';
 	'online'	=>	undef,
 	'type_id'	=>	undef,
 	'state_changed_on'	=>	undef,
+	'offline_seconds'	=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;
