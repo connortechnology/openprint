@@ -1,9 +1,9 @@
 use strict;
 require openprint::Object;
 require openprint::Object_Asset;
-use Net::ARP;
-use Net::Ping;
-use IO::Interface::Simple;
+use Net::ARP ();
+use Net::Ping ();
+use IO::Interface::Simple ();
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );

@@ -1,6 +1,5 @@
-package openprint;
-
 use strict;
+package openprint;
 
 use vars qw( $r %variable %session %param %config $log $dbh );
 
