@@ -3,7 +3,6 @@ require openprint;
 require Digest::MD5;
 require openprint::Keyword;
 
-require Image::Size;
 
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
@@ -277,6 +276,7 @@ sub caption {
 
 sub width {
 	if ( ! $_[0]{'width'} ) {
+require Image::Size;
 # get the image size, and print it out
 		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
 	} # end if
@@ -285,6 +285,7 @@ sub width {
 
 sub height {
 	if ( ! $_[0]{'height'} ) {
+require Image::Size;
 # get the image size, and print it out
 		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
 	} # end if
