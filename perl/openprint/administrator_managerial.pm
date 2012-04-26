@@ -339,6 +339,7 @@ sub user_profiles {
 		my @domains = email::domains();
 		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 		if ( sets::isin( $domain, \@domains ) ) {
+			$variable{'DoEmail'} = 1;
 			@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
 			@{$variable{'Aliases'}} = email::aliases( $User->email() );
 		} # end if
