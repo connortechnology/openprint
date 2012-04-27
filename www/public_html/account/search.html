@@ -80,14 +80,14 @@
 			} else {
 				$html .= sprintf(q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>`, $Field->id() );
 			} # end if
-			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->default() );
+			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->search_default() );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value=""> </option>`, $Field->id() );
-			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->default() );
+			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $value ? $value : $Field->search_default() );
 			$html .= '</select>';
 		} elsif ( sets::isin( $Field->type(), [ 'text','number' ] ) ) {
-			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ''.( $value ? $value : $Field->default() ), $$Field{'type'} );
+			$html .= sprintf( q`<input type="%3$s" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), ''.( $value ? $value : $Field->search_default() ), $$Field{'type'} );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field
