@@ -54,26 +54,31 @@ if ( $BrochureType ) {
 
 
 if ( 1 ) {
-$log->warn("Updating $projects_count projects for $company_id");
+$log->warn("Updating $projects_count projects for $company_id or just $project_id");
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
-	( $project_id ? ( 'id'=>$project_id) : () ),
+	( $project_id ? ( 'id'=>$project_id) : 
 	( $company_id ? ('company_id'=>$company_id) : () ),
+	),
 	'limit'=>$projects_count ) ) {
 $log->warn("Updating rpoject $$Project{id}");
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	if ( ! $Project->signatures() ) {
+		$log->warn("Not signatures ");
+	} # end if
 
 	foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
 		next if ! $sig_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+			$log->debug("Changing ServiceType to Signatuer");
 			# Don't need to delete, becaeuse insert does a delete by default
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ServiceType', 'Signature' );
 		} # end if
 			
 		if ( $$sig_specs{'SignatureIndex'} eq '' ) {
-$log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
+			$log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $sig_index ) = sql::execute( undef, undef, $_, $Project->id() );
 			$sig_index += 1;
@@ -336,52 +341,6 @@ if ( 1 ) {
 	} # end if Type
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 }
-$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripHeight'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripWidth'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbWaxFree'`);
-require openprint::ProjectType_Default;
-require openprint::ServiceType_Default;
-my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
-if ( ! $ServiceType ) {
-	die 'Should have Signature by now';
-}
-foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
-	my $SD = new openprint::ServiceType_Default();
-	$SD->save({	
-			'name'			=>	$Default->name(),
-			'value'			=>	$Default->value(),
-			'projecttype_id'=>	$Default->projecttype_id(),
-			'servicetype_id'	=>	$ServiceType->id(),
-			} );
-	$Default->destroy();
-} # end foreach
-foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
-	if ( ! openprint::ServiceType_Default->find_one('name'=>$Default->name(), 'value'=>$Default->value(), 'projecttype_id'=>$Default->projecttype_id(), 'servicetype_id'=>$ServiceType->id()) ) {
-		my $SD = new openprint::ServiceType_Default();
-		$SD->save({	
-				'name'			=>	$Default->name(),
-				'value'			=>	$Default->value(),
-				'projecttype_id'=>	$Default->projecttype_id(),
-				'servicetype_id'	=>	$ServiceType->id(),
-				} );
-	} # end if
-	$Default->destroy();
-} # end foreach
-foreach my $D ( openprint::ServiceType_Default->find('name'=>'rdbColourBar','value'=>'') ) {
-	$D->destroy();
-}
-foreach my $D ( openprint::ProjectType_Default->find('projecttype'=>'ScratchPads', 'name'=>'rdbPageQuantity') ) {
-	$D->save({'name'=>'PageQuantity'});
-}
-
-require openprint::ServiceType_Default;
-if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
-    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain1', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
-    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
-    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
-} # end if
 $dbh->disconnect();
 	
 1;

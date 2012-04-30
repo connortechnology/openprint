@@ -436,9 +436,55 @@ sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
 foreach my $qty_index ( 1 .. 3 ) {
-	if ( !( my $STD = openprint::ServiceType_Default->find_one('name'=>'MatchGrain'.$qty_index, 'service_type'=>'Signature') ) ) {
+	if ( !( my $STD = openprint::ServiceType_Default->find_one('name'=>'MatchGrain'.$qty_index, 'servicetype'=>'Signature') ) ) {
 		my $STD = new openprint::ServiceType_Default();
-		$STD->save({'name'=>'MatchGrain'.$qty_index, 'value'=>'Y', 'service_type'=>'Signature' });
+		$STD->save({'name'=>'MatchGrain'.$qty_index, 'value'=>'Y', 'servicetype'=>'Signature' });
 	} # end if
 } # end foreach
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbWaxFree'`);
+require openprint::ProjectType_Default;
+require openprint::ServiceType_Default;
+my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+if ( ! $ServiceType ) {
+	die 'Should have Signature by now';
+}
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			'servicetype_id'	=>	$ServiceType->id(),
+			} );
+	$Default->destroy();
+} # end foreach
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
+	if ( ! openprint::ServiceType_Default->find_one('name'=>$Default->name(), 'value'=>$Default->value(), 'projecttype_id'=>$Default->projecttype_id(), 'servicetype_id'=>$ServiceType->id()) ) {
+		my $SD = new openprint::ServiceType_Default();
+		$SD->save({	
+				'name'			=>	$Default->name(),
+				'value'			=>	$Default->value(),
+				'projecttype_id'=>	$Default->projecttype_id(),
+				'servicetype_id'	=>	$ServiceType->id(),
+				} );
+	} # end if
+	$Default->destroy();
+} # end foreach
+foreach my $D ( openprint::ServiceType_Default->find('name'=>'rdbColourBar','value'=>'') ) {
+	$D->destroy();
+}
+foreach my $D ( openprint::ProjectType_Default->find('projecttype'=>'ScratchPads', 'name'=>'rdbPageQuantity') ) {
+	$D->save({'name'=>'PageQuantity'});
+}
+
+require openprint::ServiceType_Default;
+if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain1', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+} # end if
 $dbh->disconnect();
