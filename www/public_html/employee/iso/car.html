@@ -26,8 +26,14 @@
 					return 0;
 				} // end if
 			} // end if
+		} // end if
+		if ( form.reprint && ( get_rdb_value( form.reprint ) == 'Yes' ) ) {
 			if ( form.reprint_value && ! form.reprint_value.value ) {
 				alert('Please enter the reprint value');
+				return 0;
+			} // end if
+			if ( form.reprint_quantity && ! form.reprint_quantity.value ) {
+				alert('Please enter the reprint quantity');
 				return 0;
 			} // end if
 		} // end if
@@ -39,37 +45,6 @@
 		} // end if
 	} // end function area_id_onchange(e)
 </script>
-<style type="text/css">
-	#CAR {
-	}
-	#CAR table {
-		background-color: white;
-		border: 1px solid black;
-		table-layout: fixed;
-	}
-	#CAR table td {
-		border: 1px solid black;
-		width: 10%;
-		vertical-align: top;
-	}
-	table.View tr td {
-	padding: 5px;
-	}
-	table tr td textarea {
-		width: 99%;
-	}
-	table tr td select {
-		padding: 1px;
-	}
-	table tr td select option {
-		padding: 1px;
-	}
-@media print {
-	form#part1form, form#part2form, form#part3form, form#part4form {
-		display: none;
-	}
-}
-</style>
 <div id="CAR">
 	<? if ( $param{'car_id'} and ! $$variable{'CAR'}->id() ) ?>
 	Invalid CAR # specified.

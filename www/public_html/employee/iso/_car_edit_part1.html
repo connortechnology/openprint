@@ -124,9 +124,9 @@ $html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="
 	<tr>
 		<td colspan="1">Reprint Req:</td>
 		<td colspan="2">
-			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').show();"/>
+			<input type="radio" name="reprint" value="Yes" id="reprintYes" <? echo ( $$variable{'CAR'}->reprint() eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').show();$('reprint_questions').show();"/>
 			<label class="radio" for="reprintYes">Yes</label>
-			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').hide();"/>
+			<input type="radio" name="reprint" value="No" id="reprintNo" <? echo ( $$variable{'CAR'}->reprint() ne 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('reprint_on').hide();$('reprint_questions').hide();"/>
 			<label class="radio" for="reprintNo">No</label>
 		</td>
 		<td width="10%" colspan="1">Art Work:</td>
@@ -155,33 +155,20 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 			</span>
 		</td>
 	</tr>
-<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 </table>
 <br/>
-<table class="View" style="table-layout:fixed;">
+<table id="reprint_questions" class="View"<? echo ( $$variable{'CAR'}->reprint() eq 'No' ? ' style="display:none;"' : '' ) ?>
+<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 	<tr>
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-		<th></th>
-	</tr>
-	<tr>
-		<td colspan="2">Re-print Approved:</td>
-		<td colspan="3">
+		<td>Re-print Approved:</td>
+		<td>
 			<input type="radio" name="reprint_approval" value="Yes" id="reprint_approvalYes" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'Yes' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_approvalYes">Yes</label>
 			<input type="radio" name="reprint_approval" value="No" id="reprint_approvalNo" <? echo ( $$variable{'CAR'}->reprint_approval() eq 'No' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_approvalNo">No</label>
 		</td>
-		<td colspan="2">Reprint Charge:</td>
-		<td colspan="3">
+		<td>Reprint Charge:</td>
+		<td>
 			<input type="radio" name="reprint_charge" value="Yes" id="reprint_chargeYes" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Yes' ? 'checked="checked"' : '' ) ?> />
 			<label class="radio" for="reprint_chargeYes">Yes</label>
 			<input type="radio" name="reprint_charge" value="Discount" id="reprint_chargeDiscount" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'Discount' ? 'checked="checked"' : '' ) ?> />
@@ -190,19 +177,28 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 			<label class="radio" for="reprint_chargeNo">No</label>
 		</td>
 	</tr>
+<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
+    <tr>
+        <td>Reprint Approved:</td>
+        <td><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
+        <td>Charge:</td>
+        <td><? echo ( $$variable{'CAR'}->reprint_charge() ) ?></td>
+    </tr>
+<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="2">Reprint Quantity:</td>
-		<td colspan="3"><input type="number" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
-		<td colspan="2">Reprint Value (CAD):</td>
-		<td colspan="3"><input type="number" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
+		<td>Reprint Quantity:</td>
+		<td><input type="number" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
+		<td>Reprint Value (CAD):</td>
+		<td><input type="number" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
 	</tr>
+<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="2">Approved by:</td>
-		<td colspan="3">
+		<td>Approved by:</td>
+		<td>
 			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(strfirstname),lower(strlastname)') ], $session{'user_id'} ); ) ?></select>
 		</td>
-		<td colspan="1">Approved on:</td>
-		<td colspan="4">
+		<td>Approved on:</td>
+		<td>
 <? eval (
 	if ( $$variable{'CAR'}->approved_on() ) {
 	@$variable{'approved_on_years','approved_on_months','approved_on_days','Start'} = ssi::get_dates( $log, $dbh, split('-',$$variable{'CAR'}->approved_on()) );
@@ -215,24 +211,15 @@ if ( $$variable{'CAR'}->reprint_on() ) {
             <select name="approved_on_day"><?approved_on_days?></select>
 </td>
 	</tr>
-</table>
 <? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
-<? if ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
     <tr>
-        <td colspan="2">Reprint Approved:</td>
-        <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_approval() ) ?></td>
-        <td colspan="2">Charge:</td>
-        <td colspan="3"><? echo ( $$variable{'CAR'}->reprint_charge() ) ?></td>
+        <td>Approved by:</td>
+        <td><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
+        <td>Approved on:</td>
+        <td><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
     </tr>
-    <tr>
-        <td colspan="2">Approved by:</td>
-        <td colspan="3"><? hecho ( new openprint::User( $$variable{'CAR'}->approved_by_id())->name() ) ?></td>
-        <td colspan="2">Approved on:</td>
-        <td colspan="3"><? echo ( $$variable{'CAR'}->approved_on() ) ?></td>
-    </tr>
-</table>
-<? endif ( $$variable{'CAR'}->reprint() ne 'No' ) ?>
 <? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
+</table>
 	<input type="hidden" name="car_id" value="<? echo ( $$variable{'CAR'}->id() ) ?>" />
 	<input type="hidden" name="btnFunction" value="Save" />
 </form>
