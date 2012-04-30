@@ -339,6 +339,7 @@ sub user_profiles {
 		my @domains = email::domains();
 		my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 		if ( sets::isin( $domain, \@domains ) ) {
+			$variable{'DoEmail'} = 1;
 			@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
 			@{$variable{'Aliases'}} = email::aliases( $User->email() );
 		} # end if
@@ -707,7 +708,9 @@ sub page_settings {
 	require openprint::Page_Setting;
 	if ( $param{'action'} eq 'save' ) {
 		foreach my $PS ( openprint::Page_Setting->find() ) {
-			if ( 
+			if ( ! $param{'url-'.$PS->id()} ) {
+				$PS->delete();
+			} elsif ( 
 					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
 					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or

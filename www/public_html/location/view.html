@@ -89,11 +89,8 @@
 			</div>
 		</fieldset>
 <? if ( $$variable{'Location'}->id() ) ?>
-		<fieldset><legend>Photos</legend>
-		<div id="Photos">
-			<!--#include virtual="_photos.html"-->
-		</div>
-		</fieldset>
+	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
+	<!--#include virtual="/photo_albums/_album_upload.html"-->
 		<fieldset><legend>Upcoming Events</legend>
 		<div id="Events">
 			<!--#include virtual="_events.html"-->

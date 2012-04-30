@@ -198,7 +198,7 @@ sub signature_calc_stock_cutting {
 		} # end if
 $openprint::log->warn("No clac_hash? $calc_hash");
 		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
-		@{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}} = @my_equipment;
+		$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'} = \@my_equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -881,6 +881,8 @@ sub calc {
 	my $services = $Project->services();
 	my $calc_hash = {};
 
+	my @signatures = $Project->signatures();
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int($$specs{"txtQuantity$qty_index"});
@@ -890,10 +892,14 @@ sub calc {
 		my $mprice;
 
 # For the non-book case, this devolves into the printing service
-		foreach my $signature_service_index ( $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $signature_index<br/>";
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'no imposition.';
+				next;
+			} # end if
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->paper( $Paper );

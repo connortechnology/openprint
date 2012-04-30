@@ -404,9 +404,11 @@ sub icon {
 } # end sub icon
 
 sub thumbnail_html {
+if ( 0 ) {
 	if ( ! $openprint::session{'user_id'} ) {
 		return '';
 	} # end if
+} # end if
 	if ( ! $_[0]{'icon'} ) {
 		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
 			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );

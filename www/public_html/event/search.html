@@ -3,6 +3,7 @@
 <h2>Search</h2>
 </div>
 <script type="text/javascript">
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	function delete_confirm(form) {
 		var number_of_deleted_events = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -21,6 +22,7 @@
 			} // end if
 		} // end if
 	}
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	function load_events( form ) {
 		$('EventsList').innerHTML = 'Please wait...';
 		new Ajax.Updater('EventsList','_search.html', {parameters:Form.serialize(form)});
@@ -34,7 +36,7 @@
 			<div class="leftColumn">
 				<ul>
 		<? if ( @{$$variable{'Categories'}} = openprint::Event_Category->find('order'=>'lower(name)') ) ?>
-					<li><label>Category</label>
+					<li><label>Type</label>
 						<select name="category_id" id="category_id" onchange="load_events(this.form);">
 							<option value="">All</option>
 							<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/event/search.html?category_id'} ); ) ?>
@@ -50,6 +52,9 @@
 						<span class="DateSelector">
 						<? echo ( ssi::date_select_session( '/event/search.html', 'starting_on_end', {onchange=>'load_events(this.form);'} ); ) ?>
 						</span>
+					</li>
+					<li><label>Text</label>
+						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
 					</li>
 				</ul>
 			</div>
@@ -70,8 +75,10 @@
 					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $session{'/event/search.html?city_id'} ); ) ?>
 					</select>
 					</li>
-					<li><label>Text Search</label>
-						<input type="text" name="search" value="<? echo ( $param{search} ) ?>"/>
+					<li><label>Distance</label>
+						<select name="distance">
+							<? echo ( make_drop_down( [ '', '', '25', '25km', '100', '100km' ], $session{'/event/search.html?distance'} ); ) ?>
+						</select>
 					</li>
 				</ul>
 			</div>

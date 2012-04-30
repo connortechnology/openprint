@@ -12,11 +12,15 @@ require sql;
 use Memoize;
 memoize('fits');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
+$cache_field = 'strid';
+sub cache_field {
+    return $cache_field;
+}
 
 $debug = 1;
 %fields = (

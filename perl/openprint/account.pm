@@ -705,6 +705,7 @@ sub _search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
+				'photos',
 				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked

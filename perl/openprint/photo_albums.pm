@@ -108,6 +108,27 @@ sub _album_photos {
 	my $Album = $variable{'Album'} = $param{'album_type'}->new($param{'album_id'});
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+	} elsif ( $param{'action'} eq 'add' ) {
+		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
+$log->debug("$id , $filename ");
+			
+		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
+		if ( ! $Asset ) {
+			# May be a thumbnail, so let's strip off the extension
+			my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+			$Asset = openprint::Asset->find_one('id'=>$id, 'filename like'=>$blah.'%' );
+		} # end if
+		if ( $Asset ) {
+			if ( sets::isin( $Asset->id(), [ map { $_->asset_id() } $Album->Photos() ] ) ) {
+				$variable{'error'} .= 'Asset already in article.';
+			} else {
+				my $Photo = new openprint::Photo_in_Album();
+				$variable{'error'} .= $Photo->save({'album_id'=>$$Album{id}, 'asset_id'=>$Asset->id()});
+				delete $$Album{'Photos'};
+			} # end if
+		} else {
+			$variable{'error'} .= 'Asset not found.';
+		} # end if
 	} elsif ( $param{'action'} eq 'add to album' ) {
 		my $A = new openprint::Photo_Album( $param{'a_id'} );
 		if ( ! $A->id() ) {
