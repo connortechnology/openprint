@@ -992,6 +992,16 @@ if ( ! sets::isin( 'affiliates', \@tables ) ) {
 		$dbh->do('ALTER TABLE affiliates add sort integer');
 	} # end if
 }
+if ( sets::isin('upload_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'uploads_id_seq', \@sequences ) ) {
+		# Do nothing
+	} else {
+		$dbh->do('CREATE SEQUENCE uploads_id_seq');
+		$dbh->do(q`SELECT setval('uploads_id_seq', (SELECT MAX (id) FROM Uploads))` );
+		$dbh->do(q`ALTER TABLE uploads alter id set default nextval('uploads_id_seq')`);
+	} # end if
+	$dbh->do('DROP SEQUENCE upload_id_seq');
+} # end if
 $dbh->disconnect();
 1;
 __END__
