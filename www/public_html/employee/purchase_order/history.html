@@ -24,7 +24,7 @@
 		} // end if
 	} // end function open_decline_window()
 	function filter_vendors ( ddm ) {
-		new Ajax.Updater( ddm.form.supplier_id, '_vendor_dropdown.html', { 
+		new Ajax.Updater( ddm.form.supplier_id, '/employee/purchase_order/_vendor_dropdown.html', { 
 			parameters: { vendor_category_id: ddm.getValue(), supplier_id: ddm.form.supplier_id.getValue() }
 			} );
 	} // end function filter_vendors
