@@ -152,7 +152,7 @@ $log->debug("Sending js redirect");
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
-		$variable{'PageSetting'} = $page_settings{$page};
+		$variable{'PageSetting'} = $page_settings{$page} ? $page_settings{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();
@@ -240,7 +240,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -266,7 +266,7 @@ sub parse_page {
 
 	# This deals with things like /account/login.html//balhblahblah.php
 	my ($real_uri) = $uri =~ /^([^\.]+\.[^\.]+)/i;
-$openprint::log->debug("URI: $real_uri");
+#$openprint::log->debug("URI: $real_uri");
 	my @thing = split( '/', $real_uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash

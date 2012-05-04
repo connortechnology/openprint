@@ -8,7 +8,7 @@ use IO::Interface::Simple ();
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'host_notifications';
 @identified_by = ( 'host_id','user_id' );
 
@@ -20,7 +20,7 @@ $table = 'host_notifications';
 package openprint::Host_Type;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %fields %transforms %defaults %types );
-$debug = 1;
+$debug = 0;
 $table = 'host_types';
 $serial = 'host_types_id_seq';
 %fields = (

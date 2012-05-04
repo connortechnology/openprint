@@ -217,11 +217,9 @@ $log->debug("Saving");
 			$variable{'information'} .= $Photo->send();
 		} # end if btnfunction
 	} else {
-if ( ! $Photo ) {
-$log->error('Photo not found.');
-} else {
-$log->error("Not woner of photo");
-}
+		if ( ! $Photo ) {
+			$log->error('Photo not found.');
+		}
 	} # end if owner of the photo
 	$variable{'Photo'} = $Photo;
 } # end sub view_photo
