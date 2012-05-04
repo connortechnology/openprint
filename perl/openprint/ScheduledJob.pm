@@ -17,6 +17,8 @@ require Date::Parse;
 require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
+require openprint::employee_project;
+require openprint::employee_production;
 
 $debug = 0;
 
@@ -339,27 +341,27 @@ sub get_li {
 		} # end if
 			$html .= ssi::button( 'Bump'.$$self{'id'}, { 'onclick'=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", 'text'=>'B','title'=>'Bump to next shift' } );
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::button( 'Complete'.$$self{'id'}, { 'onclick'=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", 'text'=>'C','Complete Job' } );
+			$html .= ssi::button( 'Complete'.$$self{'id'}, { 'onclick'=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", 'text'=>'C',title=>'Complete Job' } );
 			$html .= ssi::button( 'House'.$$self{'id'}, { 'onclick'=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", 'text'=>'H', 'title'=>'House Stock' } );
 			$html .= ssi::button( 'PO'.$$self{'id'}, { 'target'=>'_blank', 'href'=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", 'text'=>'PO', 'title'=>'Create PO' } );
 		} # end if
 		$html .= ssi::button( 'Remove'.$$self{'id'}, { 'onclick'=>"if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", 'text'=>'D','title'=>'Delete Job from Schedule' } );
 		if ( $$self{'project_id'} ) {
 			if ( @{$$self{'service_id'}} == 2 ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' );
+				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", text=> 'S', title=>'Split Job' } );
 			} elsif ( @{$$self{'service_id'}} > 2 ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
+				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+				$html .= ssi::button( 'Stock'.$$self{'id'}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id='+$$self{'project_id'} );", text=> 'P', title=>'Paper' } );
 			} else {
 				$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
+			$html .= ssi::button( 'Start'.$$self{'id'}, { onclick=> "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", text=> 'Start' } );
 		} elsif ( ( $self->starttime_seconds() < time ) and ( (!$$self{'project_id'}) or $self->status() eq 'In Production' ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
+			$html .= ssi::button( 'Stop'.$$self{'id'}, { onclick=> "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", text=> 'Stop' } );
 		} # end if
 		$html .= '</span>';
 		if ( $$self{'project_id'} ) {
@@ -384,11 +386,11 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			if ( sets::isin( $self->ServiceType()->name(), [ '','Signature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+				$html .= ssi::button( 'Paper'.$$self{'id'}, { onclick=> "popup_window('/employee/production/_stock_details.html','project_id=$$self{'project_id'}' );", text=> 'P', title=>'Paper' } );
 			} # end if
 		} # end if
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
+			$html .= ssi::button( 'Start'.$$self{'id'}, { onclick=>"new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", text=> 'Start' } );
 		} # end if
 		$html .= '</span>';
 		if ( $$self{'project_id'} ) {
@@ -839,6 +841,7 @@ sub approve {
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
 	} # end if
 	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+	openprint::employee_project::send_proofs_approved_email( $Project->id() );
 	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from schedule' );
 	$Project->update_status();

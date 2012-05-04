@@ -1420,7 +1420,7 @@ sub _li_change {
 		if ( $$Job{'project_id'} ) {
 			my $Project = $Job->Project();
 			$Project->due_date( $param{duedate} );
-			if ( ! $variable{'error'} .= $Project->save() ) {
+			if ( ! ( $variable{'error'} = $Project->save() ) ) {
 				$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
 			} # end if
 		} else {

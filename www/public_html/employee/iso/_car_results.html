@@ -11,15 +11,12 @@
 <form id="CARResults" name="CARResults" action="cars.html" method="post">
 	<table class="List">
 		<tr>
-<!--
-			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'cars',this.checked);" /></th>
--->
-			<th align="left" width="75">CAR ID</th>
-			<th align="left" width="75">Issued To</th>
-			<th align="left" width="75">Issued On</th>
-			<th align="left" width="60">Docket</th>
-			<th align="left" width="60">Status</th>
-			<th align="left">Problem</th>
+			<th class="car_id"">CAR ID</th>
+			<th class="User"">Issued To</th>
+			<th class="Date">Issued On</th>
+			<th class="Docket">Docket</th>
+			<th class="Status">Status</th>
+			<th class="Description">Problem</th>
 		</tr>
 		<? echo (
 			my $html;
@@ -27,15 +24,22 @@
 			foreach my $CAR ( @{$$variable{'CARs'}} ) {
 				next if $CAR->part4_signed_on() and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Closed', split(',', $session{'/employee/iso/cars.html?status'} ) );
 				next if (!$CAR->part4_signed_on()) and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Open', split(',', $session{'/employee/iso/cars.html?status'} ) );
-				$html .= "<tr$rowclass>";
-				#$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
-				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'} );
-				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, $CAR->issued_to()->name() );
-				$html .= sprintf( '<td><a href="car.html?car_id=%d">%s</a></td>', $$CAR{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ), );
-				$html .= '<td>'. $CAR->docket(). '</td>';	
-				$html .= '<td>'. ( $CAR->part4_signed_on() ? 'Closed' : 'Open' ). '</td>';	
-				$html .= '<td>'.$CAR->problem().'</td>';	
-				$html .= '</tr>';
+				$html .= sprintf( q`
+<tr%1$s>
+	<td class="car_id"><a href="car.html?car_id=%2$d">%2$d</a></td>
+	<td class="User"><a href="car.html?car_id=%2$d">%3$s</a></td>
+	<td class="Date"><a href="car.html?car_id=%2$d">%4$s</a></td>
+	<td class="Docket"><a href="car.html?car_id=%2$d">%5$s</a></td>
+	<td class="Status"><a href="car.html?car_id=%2$d">%6$s</a></td>
+	<td class="Description"><a href="car.html?car_id=%2$d">%7$s</a></td>
+</tr>`,
+					$rowclass, $$CAR{'id'}, 
+					$CAR->issued_to()->name(),
+					Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($CAR->issued_on()) ),
+					$CAR->docket(),
+					( $CAR->part4_signed_on() ? 'Closed' : 'Open' ),
+					$CAR->problem(),
+				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach CAR
 			return $html;
@@ -43,11 +47,6 @@
 	</table>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<!--
-<span class="unprintable" style="float: left;">
-<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.CARResults);",'','Delete Checked' ); ) ?>
-</span>
--->
 <? else ( @{$$variable{'CARs'}} ) ?>
 There were no CARs matching your search criteria.
 <? endif ( @{$$variable{'CARs'}} ) ?>

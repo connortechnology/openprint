@@ -1,9 +1,9 @@
+use strict;
 package openprint::PaperInventory;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
 
-use strict;
 use openprint ();
 use vars qw($log $dbh $table $serial %variable %fields %transforms %defaults );
 *log = \$openprint::log;

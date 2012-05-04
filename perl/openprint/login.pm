@@ -6,10 +6,14 @@ require ssi;
 require misc;
 require openprint::usergroup;
 require openprint::Log;
+require MIME::QuotedPrint;
+require Encode;
 
 use openprint ();
-use vars qw( $r %variable %param %session %config);
+use vars qw( $r $dbh $log %variable %param %session %config);
 *r = \$openprint::r;
+*log = \%openprint::log;
+*dbh = \%openprint::dbh;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
@@ -21,9 +25,14 @@ sub save_destination {
 
 	if ( ! $destination ) {
 		$destination = $r->uri();
-		if ( %param ) {
-			$destination .= '?' . join('&', map { $_ . '=' . $param{$_}} keys %param );
-		} # end if
+        my @values;
+        foreach my $key ( keys %param ) {
+            next if $key eq 'password';
+            push @values, map { $key.'='.$_ } ( ref $param{$key} eq 'ARRAY' ? @{$param{$key}} : $param{$key} );
+        } # end ofreach     
+        if ( @values ) {
+            $destination .= '?' . join('&', @values );
+        } # end if
 	} # end if
 
 # if someone sets the Destination flag, keep it through the login process.
@@ -171,9 +180,17 @@ sub verify_login {
 		$$variable{'ExternalRedirect'} = $1;
 		#foreach my $p ( split('&', $2 ) ) {
 			#my ( $k, $v ) = split('=', $p );
-			#$openprint::log->debug("Psrsmd: $p, $k = $v ");
-			#$openprint::param{$k} = $v;
+			#if ( $openprint::param{$k} ) {
+				#if ( ref $openprint::param{$k} eq 'ARRAY' ) {
+					#push @{$openprint::param{$k}}, $v;
+				#} else {
+					#$openprint::param{$k} = [ $openprint::param{$k}, $v ];
+				#} # end if
+			#} else {
+				#$openprint::param{$k} = $v;
+			#}
 		#} # end foreach
+		#delete $session{'Destination'};
 	} # end if
 
 } # sub verify_login
@@ -348,6 +365,37 @@ sub password_strength {
 
 } # end sub password_strength
 
-1;
+sub forgotten_password {
+	if ( ! $param{'email'} ) {
+		$variable{'error'} = 'Please enter the email address of the account to retrieve.';
+		return;
+	} # end if
 
+	my $User = openprint::User->find_one('email lc'=>openprint::User->transform('email', $param{'email'} ) );
+	if ( ! $User ) {
+		$variable{'error'} = 'The account you entered does not exist.';
+		return;
+	} # end if
+
+	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
+		my %info = (
+				'User' =>$User,
+				);
+
+		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+
+		$_ = (new openprint::Email())->send(
+				FROM    => $config{'AdministratorEmail'},
+				TO      => $User,
+				SUBJECT => 'Forgotten Password',
+				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
+				);
+		$variable{'information'} = 'Your password has been e-mailed to you.';
+	} else {
+		$variable{'error'} = 'We were unable to email your password to you. Please contact support.';
+	} # end if
+} # end sub forgotten_password
+
+1;
 __END__

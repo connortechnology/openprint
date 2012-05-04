@@ -311,11 +311,6 @@ $openprint::log->debug("Getfile");
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
-		if ( $filename eq 'login_confirmation.html' ) {
-			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-			return $status if $variable{'Redirect'};	
-		} # end if
-
 		if ( $second eq 'proj' ) {
 			require openprint::print;
 			require openprint::print_project;
@@ -382,11 +377,6 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 					} # end if
 				} # end if
 			} # end if
-		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-			$variable{'error'} = 'Unauthorized';
-			$variable{'details'} = 'You are not authorized to view this page.';
-			$variable{'Redirect'} = $config{'errorpage'};
-			return;
 		} else {
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {
