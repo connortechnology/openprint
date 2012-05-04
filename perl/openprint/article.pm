@@ -143,15 +143,6 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 } # end sub save_article
 
 sub history {
-	if ( $param{'func'} eq 'Destroy' ) {
-		my $Article = new openprint::Article( $param{'article_id'} );
-		if ( ! $Article->can_edit() ) {
-			$variable{'error'} .= 'You do not have rights to destroy this article.';
-			return;
-		} # end if
-		$variable{'error'} .= $Article->destroy();
-	} # end if
-
 	_history();
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -195,6 +186,10 @@ sub _history {
 
 sub edit {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	if ( ! $Article->can_edit() ) {
+		$variable{'error'} .= 'You do not have rights to edit this article.';
+		return;
+	} # end if
 	if ( $param{'func'} eq 'Save' ) {
 		save_article();
 		if ( $variable{'error'} or $variable{'warning'} ) {
@@ -202,13 +197,9 @@ sub edit {
 			%param = ();
 			$variable{'ExternalRedirect'} = '/article/history.html';
 		} # end if
-	} elsif ( $param{'func'} eq 'Destroy' ) {
-		my $Article = new openprint::Article( $param{'article_id'} );
-		if ( ! $Article->can_edit() ) {
-			$variable{'error'} .= 'You do not have rights to destroy this article.';
-			return;
-		} # end if
-		$variable{'error'} .= $Article->destroy();
+	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
+		my $func = $Article->can($param{'func'});
+		$variable{'error'} .= $func->( $Article );
 		if ( ! $variable{'error'} ) {
 			%param = ();
 			$variable{'ExternalRedirect'} = '/article/history.html';

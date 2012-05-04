@@ -396,9 +396,20 @@ sub destroy {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
-	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	my @identified_by = eval '@'.$type.'::identified_by';
+	@identified_by = ( 'id' ) if ! @identified_by;
+	if ( ! $$self{$identified_by[0]} ) {
+		$log->error("Called delete on object with no id of type $type : " . $self->to_string());
+		return "Object::delete: No id in object: " . $self->to_string();
+	} # end if
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+	my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+	sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
+	return $local_dbh->errstr if $local_dbh->errstr;
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+	return;
 } # end sub destroy
 
 sub Creator {

@@ -144,7 +144,12 @@ function FileUpload(img, file) {
 					
 					if ( $$variable{'Article'}->id() ) {
 						$html = ssi::button( 'Reset1', { 'onclick'=>'f1.reset();check_time_published_on(f1);', text=>'Reset' } );
-						$html .= ssi::button( 'Destroy1', { 'onclick' => "if(confirm('Are you sure?')){f1.func.value='Destroy';f1.submit();}", text=>'Delete' } );
+						if ( $$variable{'Article'}->deleted() ) {
+							$html .= ssi::button( 'destroy1', { onclick => "if(confirm('Are you sure?')){f1.func.value='destroy';f1.submit();}", text=>'Destroy' } );
+							$html .= ssi::button( 'undelete1', { onclick => "f1.func.value='undelete';f1.submit();", text=>'Undelete' } );
+						} else {
+							$html .= ssi::button( 'delete1', { onclick => "f1.func.value='delete';f1.submit();", text=>'Delete' } );
+						} # end if
 						$html .= ssi::button( 'Copy1', { 'onclick'=> "f1.func.value='Copy';f1.submit();", text=>'Copy' } );
 						if ( $$variable{'Article'}->source() ) {
 							$html .= ssi::button( 'Reload1', { 'onclick'=> "f1.func.value='Reload';f1.submit();", text=>'Reload' } );
