@@ -665,5 +665,16 @@ sub _vendor_dropdown {
 	ssi::save_params( '/employee/purchase_order/history.html', ( 'vendor_category_id', 'supplier_id' ) );
 } # end sub _vendor_dropdown
 
+sub _assets {
+	$variable{'PurchaseOrder'} = new openprint::PurchaseOrder( $param{'po_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $PA = openprint::Object_Asset->find_one( 'object_type'=>'openprint::PurchaseOrder','object_id'=>$param{'po_id'}, 'asset_id'=>$param{'asset_id'} );
+		if ( ! $PA ) {
+			$variable{'error'} .= 'Asset not found. Nothing deleted.<br/>';
+		} else {
+			$PA->delete();
+		} # end if
+	} # end if
+} # end sub _assets
 1;
 __END__
