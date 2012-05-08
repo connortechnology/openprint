@@ -130,13 +130,13 @@ sub ancestor {
 	return if ! @_;
 	my ( $value ) = $self->get( $_[0] );
 	if ( sets::isin( $value, $_[1] ) ) {
-		$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
+		#$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
 		return $self;
-	} else {
-		$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
+	#} else {
+		#$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
 	} # end if
 	if ( $$self{'parent_id'} ) {
-$openprint::log->debug("Recursing" );
+#$openprint::log->debug("Recursing" );
 		return $self->Parent()->ancestor( @_ );
 	} # end if
 	return;
