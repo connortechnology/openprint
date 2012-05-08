@@ -41,7 +41,7 @@ sub debt {
 	if ( ! exists $_[0]{'debt'} ) {
 		$_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )};
 		my ( $debt ) = sql::execute( undef, undef, $_, $_[0]{'company_id'} );
-		$_ = q{SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND company_id=?};
+		$_ = q{SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND company_id=?};
 		my ( $payments ) = sql::execute( undef, undef, $_, $_[0]{company_id} );
 		$_[0]{'debt'} = $debt - $payments;
 	} # end if
@@ -64,8 +64,8 @@ sub outstanding_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
     AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
-    OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
+    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
     return sql::execute( undef, undef, $_, $$self{company_id} );
 } # end sub outstanding_orders
 
@@ -73,8 +73,8 @@ sub warn_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
     AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
+    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '?  days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','warndays'} );
 } # end sub warn_orders
@@ -83,8 +83,8 @@ sub denied_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
     AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
+    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '? days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','denydays'} );
 } # end sub denied_orders
