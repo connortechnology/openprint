@@ -14,10 +14,10 @@ $debug = 1;
 
 sub send {
 	my ( $self, %params ) = @_;
-#$openprint::log->debug("Sending an email");
-#foreach my $k ( keys %params ) {
-#$openprint::log->debug("Params: $k => $params{$k}");
-#} # end 
+$openprint::log->debug("Sending an email");
+foreach my $k ( keys %params ) {
+$openprint::log->debug("Params: $k => $params{$k}");
+} # end 
 
 	my $results;
 	if ( $params{'FROM'} ) {
