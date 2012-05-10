@@ -69,9 +69,9 @@ sub history_details {
 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) or ( $variable{'Quote'}->company_id() == $session{'company_id'} ) ) {
 		openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $quote_id );
 		if ( $param{'btnFunction'} eq 'Resend' ) {
-			$variable{'Quote'}->send();
-			$variable{'Quote'}->add_log('Resent');
-			$variable{'information'} .= 'Quote resent.';
+			my $results = $variable{'Quote'}->send();
+			$variable{'Quote'}->add_log('Resent. Results: ' . $results);
+			$variable{'information'} .= 'Quote resent. Results: '. $results;
 		} # end if
 	} # end if
 } # end sub history_details
@@ -179,6 +179,10 @@ sub information {
 					'quote_id'		=> $NewQuote->id(),
 					'project_id'	=> $NewProject->id(),
 					});
+		} # end foreach QP
+		foreach my $QP ( $Quote->Products() ) {
+			my $NewQP = $QP->copy();
+			$variable{'error'} .= $NewQP->save({'quote_id'=>$NewQuote->id()});
 		} # end foreach QP
 
 		my %by;
@@ -336,9 +340,10 @@ sub submit {
 			$QP->save();
 		} # end foreach
 		foreach my $QP ( $Quote->Products() ) {
-				$QP->save({
-						'markup'	=> $param{'markup_'.$QP->id()},
-						'quantity'	=> $param{'quantity_'.$QP->id()},
+				$variable{'error'} .= $QP->save({
+						'cost'		=> $param{'cost-'.$QP->id()},
+						'markup'	=> $param{'markup-'.$QP->id()},
+						'quantity'	=> $param{'quantity-'.$QP->id()},
 				});
 		} # end foreach
     } # end if btnFunction eq Continue
