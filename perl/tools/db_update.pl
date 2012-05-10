@@ -396,6 +396,9 @@ if ( $data ) {
 		$dbh->do(q`alter table companies alter deleted set not null`);
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	if ( ! exists $$data{'offers_credit'} ) {
+		$dbh->do('ALTER TABLE companies ADD offers_credit BOOLEAN NOT NULL default false');
+	} # end if
 } else {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if

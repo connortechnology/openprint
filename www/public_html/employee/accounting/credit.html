@@ -17,39 +17,34 @@
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
-<fieldset><legend>Credit Information</legend>
-    <p>
-        <label>Deny Purchases after</label>
-		<input type="number" name="denydays" value="<?denydays?>" /> Days
-    </p>
-    <p>
-        <label>Warn about credit after</label>
-		<input type="number" name="warndays" value="<?warndays?>" /> Days
-    </p>
-    <p>
-        <label>Credit Account Limit</label>
-        <input type="number" name="limit" value="<?limit?>" />
-    </p>
-    <p>
-        <label>Current Credit Balance</label>
-		<?CreditBalance?>
-    </p>
-    <p>
-        <label>Remaining Credit</label>
-        <?CreditRemaining?>
-    </p>
-	<p>
-        <label>Credit Hold</label>
-		<? echo ( ssi::radio( 'credithold', [ 'Y', 'Yes', 'N', 'No' ], $$variable{'credithold'} ); ) ?>
-    </p>
-    <p>
-        <label>Required Downpayment</label>
-		<input type="number" name="downpayment" value="<?downpayment?>" max="100" onkeyup="floatize(this);"/>%
-	</p>
-    <p>
-        <label>Required COD</label>
-		<input type="number" name="cod" value="<?cod?>" max="100" onkeyup="floatize(this);"/>%
-	</p>
+	<fieldset>
+<? echo (
+    my $html;
+    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+        my $Credit = $$variable{'Company'}->Credit($Supplier->id());
+
+        $html .= sprintf(q`
+    <fieldset><legend>Credit Information for %2$s:</legend>
+        <ul>
+            <li><label>Warn after</label><input type="number" name="warndays-1$d" value="%3$d"/> Days</li>
+            <li><label>Deny after</label><input type="number" name="denydays-1$d" value="%4$d"/> Days</li>
+            <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
+            <li><label>Current Credit Balance</label>%6$s</li>
+            <li><label>Remaining Credit</label>%7$s</li>
+            <li><label>Credit Hold</label>%8$s</li>
+            <li><label>Required Downpayment Amount</label><input type="number" name="downpayment->%1$d" value="%9$f" max="100" onkeyup="floatize(this);"/> %</li>
+            <li><label>Required COD</label><input type="number" name="COD" value="%10$f" max="100" onkeyup="floatize(this);"/> %</li>
+        </ul>
+    </fieldset>
+        `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
+        openprint::Currency::format( $Credit->limit() ),
+        openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
+        ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
+        $Credit->downpayment(), $Credit->cod(),
+);
+    } # end foreach Company
+    return $html;
+) ?>
 	<p class="buttons">
 		<? echo ( join('',
 			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
