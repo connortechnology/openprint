@@ -28,7 +28,7 @@ if ( $$variable{'CAR'}->part3_signed_on() ) {
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part3','_car_view_part3.html', {method:'get',parameters: Form.serialize( \$('part3form') ),
+		ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "new Ajax.Updater('Part3','/employee/iso/_car_view_part3.html', {method:'get',parameters: Form.serialize( \$('part3form') ),
 			evalScripts: true,
  } );", '','Save' ),
 		); ) ?>
