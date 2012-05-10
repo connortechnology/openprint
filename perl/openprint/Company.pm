@@ -58,6 +58,7 @@ require openprint::Company_Credit;
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %transforms = (
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
@@ -73,6 +74,7 @@ require openprint::Company_Credit;
 	'mailinglist'	=>	'N',
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 my $debug = 1;
@@ -135,6 +137,10 @@ sub find {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
+	} # end if
+	if ( $params{'offers_credit'} ) {
+		$sql .= q{ AND offers_credit=?};
+		push @values, $params{'offers_credit'};
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= q{ AND category_id=?};

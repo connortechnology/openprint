@@ -133,21 +133,11 @@ sub details {
 
 sub credit {
 
-	my %credit_fields = (
-			'denydays'		=>	'denydays',
-			'warndays'		=>	'warndays',
-			'limit'			=>	'limit',
-			'credithold'	=>	'hold',
-			'downpayment'	=>	'downpayment',
-			'cod'			=>	'cod',
-			);
-
-	my $company_index = $param{'ddmCustomer'};
-	my $Credit = new openprint::Company_Credit( { 'company_id' => $company_index, 'supplier_id' => (new openprint::User($session{'user_id'})->company_id()) } );
+	my $company_id = $param{'ddmCustomer'};
 
 	if ( $param{'btnFunction'} eq 'Go' ) {
 		 if ( $param{'txtSearchAccountNum'} ne '' ) {
-			( $company_index ) = sql::execute( $log, $dbh,'SELECT Index from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
+			( $company_id ) = sql::execute( $log, $dbh,'SELECT Index from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'} );
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
@@ -157,6 +147,10 @@ sub credit {
 			my @errors;
 			foreach my $order_id ( ref $param{'PAID'} eq 'ARRAY' ? @{$param{'PAID'}} : $param{'PAID'} ) {
 				my $Order = new openprint::Order( $order_id );
+				if ( $Order->company_id() != $company_id ) {
+					push @errors, 'Order ' . $Order->id() . ' does not belong to ' . new openprint::Company($company_id)->name().'.';
+					next;
+				} # end if
 				push @errors, $Order->pay();
 			} # end foreach
 			if ( @errors ) {
@@ -164,20 +158,16 @@ sub credit {
 			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$Credit->set({ 'company_id' => $company_index, 'supplier_id' => (new openprint::User($session{'user_id'})->company_id()) } ) if ! $Credit->company_id();
-		$variable{'error'} .= $Credit->save( { map { $credit_fields{$_} => $param{$_} } keys %credit_fields } );
+		foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+			my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
+
+			$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
+				map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+		} # end foreach Supplier
 	} # end if
 
-	if ( $company_index ) {
-		@variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
-		$variable{'CreditBalance'} = openprint::Currency::format( $Credit->debt() );
-		if ( $variable{'txtCreditLimit'} < $Credit->debt() ) {
-			$variable{'CreditRemaining'} = openprint::Currency::format(0);
-		} else {
-			$variable{'CreditRemaining'} = openprint::Currency::format( $variable{'txtCreditLimit'} - $Credit->debt() );
-		} # end if
-		$variable{'CompanyIndex'} = $company_index;
-	} # end if customer_index
+	$variable{'CompanyIndex'} = $company_id;
+	$variable{'Company'} = new openprint::Company($company_id);
 } # end sub credit
 
 sub stock {

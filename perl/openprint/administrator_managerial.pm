@@ -338,6 +338,7 @@ sub company_profiles {
 			'txtPricingLevel'		=>  'Discount',
 			'notes'					=>	'notes',
 			'category_id'			=>	'category_id',
+			'offers_credit'			=>	'offers_credit',
 	);
 	my %shipping_fields = (
 			'txtShippingCompanyName'    =>  'CompanyName',
@@ -356,14 +357,6 @@ sub company_profiles {
 			'txtShippingEmail'          =>  'Email',
 	);
 
-	my %credit_fields = (
-			'txtDenyDays'          =>  'denydays',
-			'txtWarnDays'          =>  'warndays',
-			'txtCreditLimit'    =>  'limit',
-			'rdbCreditHold'     =>  'hold',
-			'txtDownpayment'    =>  'downpayment',
-			'COD'			=>	'cod',
-			);
 
 	my $index = $openprint::param{'ddmCustomer'};
 	my $Company = new openprint::Company( $index );
@@ -519,8 +512,12 @@ if ( 0 ) {
 
 			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
 
-			my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'} } );
-			$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$openprint::config{'Owner'}, map { $credit_fields{$_}, $param{$_} } keys %credit_fields } );
+			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+				my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
+
+				$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
+					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+			} # end foreach Supplier
 		} # end if $index
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$index = $Company->next();
@@ -546,16 +543,11 @@ if ( 0 ) {
 		$$variable{'rdbAccountActivation'.$$variable{'rdbAccountActivation'}} = 'CHECKED';
 
 		$$variable{'txtPricingLevel'} = sprintf ( "%.3f", $$variable{'txtPricingLevel'} ) . "%";
-		$$variable{'txtDownpayment'} = sprintf ( "%.2f", $$variable{'txtDownpayment'} ) . "%";
 
 		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
 		my $shipping_address = $customer->get_shipping_address();
 		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		$$variable{'rdbShippingSalutation'.$$variable{'rdbShippingSalutation'}} = 'CHECKED';
-
-		# Credit fields are all numeric, we don't need to htmlize them
-		my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>(new openprint::User($openprint::session{'user_id'})->company_id())} );
-		@$variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
 	} # end if
 
     # Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
@@ -584,22 +576,6 @@ if ( 0 ) {
 
     $_ = "SELECT Index, Name FROM Pricelists ORDER BY lower(Name)";
     $$variable{'ddmPriceList'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'ddmPriceList'} );
-
-	my $total;
-	my $payments;
-	if ( $index ) {
-		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex='$index'\n".
-			"AND strStatus IN ('Pending Deposit','In Production','Paid')";
-		( $total ) = sql::execute( $log, $dbh, $_ );
-		( $payments ) = sql::execute( $log, $dbh, 'SELECT SUM(curAmount) FROM Payments WHERE company_id=?',$index);
-	} # end if
-
-	$$variable{'CreditBalance'} = '$ '.sprintf( "%.2f", ( $total - $payments ) );
-	if ( $$variable{'txtCreditLimit'} < ($total - $payments) ) {
-		$$variable{'CreditRemaining'} = '$ 0.00';
-	} else {
-		$$variable{'CreditRemaining'} = '$ '.sprintf( '%.2f', ( $$variable{'txtCreditLimit'} - ($total - $payments) ) );
-	} # end if
 
 	$$variable{'Company'} = $Company;
 	$$variable{'CustomerIndex'} = $index;
