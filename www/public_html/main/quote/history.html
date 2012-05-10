@@ -26,41 +26,47 @@
 	} // end function load_quotes
 -->
 </script>	 
-<? if ( $session{'user_id'} == 0 ) ?>
-Only logged in customers have a quote history. 
-<? else ( $session{'user_id'} == 0 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Quote"><div class="History">
-	<form name="f1" method="post" action="history.html">
+	<form id="f1" name="f1" method="post" action="history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
-			<p>
+			<ul>
+			<li>
 				<label for="QuoteID">Quote ID</label>
-				<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
-			</p>
-			<p>
+				<input type="text" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
+			</li>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li>
+				<label>Company</label>
+				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
+<? echo ( openprint::Company::get_dropdown($session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
+				</select>
+			</li>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li>
 				<label for="QuotedFor">Quoted For</label>
-				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="load_quotes(this.form);" />
-			</p>
-			<p>
+				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="if( this.value.length > 1 ){load_quotes(this.form);}" />
+			</li>
+			<li>
 				<label for="ddmStartDay">Quote Date</label>
 				<span class="DateSelector">
 	<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_start', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
-				to&nbsp;
 				</span>
+				to
 				<span class="DateSelector">
 	<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_end', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
 				</span>
-			</p>
+			</li>
+			<ul>
 			<p class="buttons">
 					<? echo ( join( '',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::button( 'ShowResults', { onclick=>'f1.submit();', href=>'', text=>'Show Results' } ),
+					ssi::button( 'Add', { onclick=>'', href=>'/main/quote/information.html?btnFunction=New', text=>'Create New' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 					); ) ?>
 			</p>
 		</fieldset>
 	</form>
 <div id="QuoteList"><!--#include virtual="_history.html"--></div>
-<? endif ( $session{'user_id'} == 0 ) ?>
 	</div>
 </div>

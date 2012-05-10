@@ -287,7 +287,11 @@ sub store_user_for_info {
 } # end sub store_for_info
 
 sub description {
+	if ( ! $_[0]{'reference'} ) {
 	return join('<br/>', map { $_->reference() } $_[0]->Projects() );
+	} else {
+		return $_[0]{'reference'};
+	} # end if
 }
 
 sub send {
@@ -309,9 +313,9 @@ sub send {
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
 		my %var;
-			$var{'Quote'} = $self;
-			$var{'Project'} = $Project->Project();
-			$var{'QuotedProject'} = $Project;
+		$var{'Quote'} = $self;
+		$var{'Project'} = $Project->Project();
+		$var{'QuotedProject'} = $Project;
 		if ( $Project->template_id() ) {
 			$var{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
 			misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html' );
@@ -432,6 +436,7 @@ $log->debug("Sending quote to admin");
 					);
 		} # end if
 	} # end if
+	$self->add_log( $results );
 	return $results;
 } # end sub send
 
