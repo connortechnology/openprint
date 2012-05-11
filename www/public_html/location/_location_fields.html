@@ -13,7 +13,10 @@
 		</script>
 `, $$variable{'Location'}->name() );
 	$html .= '</li>';
+	if ( $session{'user_type'} eq 'A' ) {
 	$html .= '<li><label>Type</label><select name="type_id" id="type_id"><option value=""></option>'.ssi::make_drop_down( openprint::Location_Type->dropdown(), $$variable{'Location'}->type_id() ).'</select></li>';
+	} else {
+	} # end if
 	$html .= sprintf('
 	<li><label>Address</label><input type="text" name="address" id="address" value="%s" /></li>
 	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
