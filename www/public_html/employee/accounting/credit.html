@@ -26,14 +26,14 @@
         $html .= sprintf(q`
     <fieldset><legend>Credit Information for %2$s:</legend>
         <ul>
-            <li><label>Warn after</label><input type="number" name="warndays-1$d" value="%3$d"/> Days</li>
-            <li><label>Deny after</label><input type="number" name="denydays-1$d" value="%4$d"/> Days</li>
+            <li><label>Warn after</label><input type="number" name="warndays-%1$d" value="%3$d"/> Days</li>
+            <li><label>Deny after</label><input type="number" name="denydays-%1$d" value="%4$d"/> Days</li>
             <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
             <li><label>Current Credit Balance</label>%6$s</li>
             <li><label>Remaining Credit</label>%7$s</li>
             <li><label>Credit Hold</label>%8$s</li>
-            <li><label>Required Downpayment Amount</label><input type="number" name="downpayment->%1$d" value="%9$f" max="100" onkeyup="floatize(this);"/> %</li>
-            <li><label>Required COD</label><input type="number" name="COD" value="%10$f" max="100" onkeyup="floatize(this);"/> %</li>
+            <li><label>Required Downpayment Amount</label><input type="number" name="downpayment->%1$d" value="%9$.2f" max="100" onkeyup="floatize(this);"/> %</li>
+            <li><label>Required COD</label><input type="number" name="cod-%1$d" value="%10$.2f" max="100" onkeyup="floatize(this);"/> %</li>
         </ul>
     </fieldset>
         `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
