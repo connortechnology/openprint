@@ -15,25 +15,26 @@ function delete_confirm(form) {
 		<input type="hidden" name="btnFunction" value="Delete Quote"/>
 		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
 	<? echo ( my $html = '';
-			$html .= ssi::button( 'Print', { onclick=>'window.print();', href=>'', text=>'Print' } );
+			$html .= ssi::button( 'Print', { onclick=>'window.print();', text=>'Print' } );
 			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', '', {width: 800} );", '', 'View Log' );
+				$html .= ssi::button( 'Log', { onclick=>"popup_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', '', {width: 800} );", text=> 'View Log' } );
 			} # end if
-			$html .= ssi::button( 'Delete', { onclick=>"f1.action='/main/quote/history.html';delete_confirm(f1);", href=>'', text=>'Delete' } );
+			$html .= ssi::button( 'Delete', { onclick=>"f1.action='/main/quote/history.html';delete_confirm(f1);", text=>'Delete' } );
 				if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) {
-					$html .= ssi::button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", href=>'', text=>'Copy to' } );
+					$html .= ssi::button( 'Reuse', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy to' } );
+					$html .= ssi::button( 'Move', { onclick=>"f1.action='/main/quote/history.html';f1.btnFunction.value='Move To';f1.submit();", text=>'Move to' } );
 					$html .= '<select name="company_id" id="company_id">';
 					$html .= openprint::Company::get_dropdown( $session{'company_id'} );
 					$html .= '</select>';
 				} else {
-					$html .= ssi::button( 'Reuse', { onclick=>"f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", href=>'', text=>'Copy' } );
+					$html .= ssi::button( 'Reuse', { onclick=>"f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", text=>'Copy' } );
 				} # end if
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
-				$html .= ssi::button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", href=>'', text=>'Resend' } );
-				$html .= ssi::button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", href=>'', text=>'Order' } );
-				$html .= ssi::button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Edit' } );
+				$html .= ssi::button( 'Resend', { onclick=>"f1.action='/main/quote/history_details.html';f1.btnFunction.value='Resend';f1.submit();", text=>'Resend' } );
+				$html .= ssi::button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
+				$html .= ssi::button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
 			} else {
-				$html .= ssi::button( 'Continue', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
+				$html .= ssi::button( 'Continue', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Continue' } );
 			} # end if
 			return $html;
 		) ?>

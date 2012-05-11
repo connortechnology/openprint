@@ -1,12 +1,12 @@
 <? eval (         
 	if ( $param{'QuoteID'} ) {
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
-			'company_id'		=>	$session{'company_id'},
+			( sets::isin($session{'user_type'}, ['E','A'] ) ? () : ( 'company_id'		=>	$session{'company_id'} ) ),
 			'id_like'			=>	'%'.$param{'QuoteID'}.'%',
 		);
 	} else {
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
-			'company_id'		=> $session{'company_id'},
+			( sets::isin($session{'user_type'}, ['E','A'] ) ? ('company_id'=>$session{'/main/quote/history.html?company_id'}) : ( 'company_id'		=>	$session{'company_id'} ) ),
 ( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?created_on_start_year','/main/quote/history.html?created_on_start_month','/main/quote/history.html?created_on_start_day'}),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?created_on_end_year','/main/quote/history.html?created_on_end_month','/main/quote/history.html?created_on_end_day'}),

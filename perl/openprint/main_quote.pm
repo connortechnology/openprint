@@ -47,21 +47,34 @@ sub history {
 	} # end if
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
-    ssi::save_params( '/main/quote/history.html',
-            'created_on_start_year', 'created_on_start_month','created_on_start_day',
-            'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor',
-            );
+	_history();
 } # end sub history
 sub _history {
     ssi::save_params( '/main/quote/history.html',
             'created_on_start_year', 'created_on_start_month','created_on_start_day',
             'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor',
+			'QuotedFor', 'company_id',
             );
 } # end sub _history
 
 sub history_details {
+	if ( $param{'btnFunction'} eq 'Move To' ) {
+		my $Quote = new openprint::Quote( $param{'quote_id'} );
+		if ( ! $Quote->id() ) {
+			$variable{'error'} .= 'Empty or invalid quote id.<br/>';
+		} elsif ( ! $param{'company_id'} ) {
+			$variable{'error'} = 'You must select a company first.<br/>';
+		} elsif ( $Quote->company_id() == $param{'company_id'} ) {
+			$variable{'error'} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
+		} else {
+			$variable{'error'} .= $Quote->save({'company_id'=>$param{'company_id'}});
+		} # end if
+		if ( ! $variable{'error'} ) {
+			%param = ();
+			$variable{'ExternalRedirect'} = '/main/quote/history.html';
+			return;
+		} # end if
+	} # end if
 	my $quote_id = $param{'quote_id'};
 	$quote_id =~ s/\D//g;
 	$quote_id = $session{'quote_id'} if ! $quote_id;
@@ -379,6 +392,9 @@ sub confirmation {
 		} # end foreach QP
 		foreach my $Product ( $Quote->Products() ) {
 			$Product->save({'cost'=>$Product->cost()});
+			$subtotals[1] += $Product->price();
+			$subtotals[2] += $Product->price();
+			$subtotals[3] += $Product->price();
 		} # end foreach Product
 		foreach my $qty_index ( 1 .. 3 ) {
 			$Quote->total( $qty_index, $subtotals[$qty_index] );
