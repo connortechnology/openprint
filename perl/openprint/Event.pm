@@ -217,6 +217,10 @@ sub time_string {
 	return $_[0]{'time_string'};
 } # end sub time_string
 
+sub thumbnail_id {
+	return undef;
+} # end sub thumbnail_id
+
 sub thumbnail_html {
 	if ( ! $_[0]{'thumbnail_html'} ) {
 		my $Asset = $_[0]->Asset();

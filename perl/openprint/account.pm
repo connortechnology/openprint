@@ -487,36 +487,7 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $param{'btnFunction'} eq 'Forgotten Password' ) {
-		if ( ! $param{'email'} ) {
-			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
-			return;
-		} # end if
-
-		my $User = openprint::User->find_one('email lc'=> lc $param{'email'} );
-		if ( ! $User ) {
-			$variable{'error'} = 'The account you entered does not exist.';
-			return;
-		} # end if
-
-		if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
-			my %info = ( 'User' => $User );
-
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			my $results = (new openprint::Email())->send(
-					FROM 	=> $config{'AdministratorEmail'},
-					TO		=> $User,
-					SUBJECT	=> 'Forgotten Password',
-					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
-					);
-			if ( $results ) {
-				$variable{'information'} = 'Your password has been mailed to you.';
-			} else {
-				$variable{'error'} .= 'Your password was not email for some reason. Please contact support.';
-			} # end if
-		} else {
-			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
-		} # end if
+		openprint::login::forgotten_password();
 	} elsif ( $param{'btnFunction'} eq 'Login' ) {
 		if ( ! $param{'email'} ) {
 			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
@@ -725,7 +696,7 @@ sub search {
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -365 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
-	$session{'/account/search.html?paging_per_page'} = 5;
+	$session{'/account/search.html?paging_per_page'} = 20;
 } # end sub search
 
 sub _search {

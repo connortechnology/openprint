@@ -68,6 +68,7 @@ foreach my $session ( @$session_ids ) {
 		undef %session;
 	} # end if
 } # end foreach
+@$session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
 if ( 1 ) {

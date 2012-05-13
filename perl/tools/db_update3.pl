@@ -645,42 +645,34 @@ if ( ! sets::isin( 'opinion_types', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Opinion_Types.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 }
-if ( ! sets::isin( 'likes', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Opinions.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='likes'", 'column_name');
-	if ( ! exists $$data{'created_on'} ) {
-		$dbh->do('ALTER TABLE likes add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
-	} # end if
-	if ( exists $$data{'object_type'} ) {
-		if ( ! exists $$data{'object_type_id'} ) {
-		$dbh->do('ALTER TABLE likes add object_type_id INTEGER');
-		$dbh->do('UPDATE likes set object_type_id=(SELECT id FROM object_types WHERE name=object_type)');
-		$dbh->do('ALTER TABLE likes add FOREIGN KEY (object_type_id) REFERENCES object_types (id)');
-		$dbh->do('ALTER TABLE likes alter object_type_Id SET NOT NULL');
-		
-		} # end if
-		$dbh->do('ALTER TABLE likes DROP object_type');
-		$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
-	} # end if
-	if ( ! exists $$data{'value'} ) {
-		$dbh->do('ALTER TABLE likes ADD value INTEGER');
-		$dbh->do('ALTER TABLE likes ADD FORIEGN KEY (value) REFERENCES opinion_types (id)');
-	} # end if
-	if ( ! exists $$data{'opinion_type_id'} ) {
-		$dbh->do('ALTER TABLE likes ADD opinion_type_id INTEGER');
-		$dbh->do('ALTER TABLE likes ADD FOREIGN KEY (opinion_type_id) REFERENCES Opinion_Types (id)');
-		$dbh->do('UPDATE likes SET opinion_type_id=value');
-		if ( $$data{'opinion_type'} ) {
-		$dbh->do('DELETE FROM Likes where opinion_type IS NULL');
-		} # end if
-		$dbh->do( 'ALTER TABLE likes DROP CONSTRAINT likes_pkey');
-		$dbh->do( 'ALTER TABLE likes ADD PRIMARY KEY (object_id, object_type_id, user_id, opinion_type_id)' );
-	} # end if
-}
 if ( ! sets::isin( 'opinions', \@tables ) ) {
 	if ( sets::isin( 'likes', \@tables ) ) {
+		my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='likes'", 'column_name');
+		if ( exists $$data{'object_type'} ) {
+			if ( ! exists $$data{'object_type_id'} ) {
+				$dbh->do('ALTER TABLE likes add object_type_id INTEGER');
+				$dbh->do('UPDATE likes set object_type_id=(SELECT id FROM object_types WHERE name=object_type)');
+				$dbh->do('ALTER TABLE likes add FOREIGN KEY (object_type_id) REFERENCES object_types (id)');
+				$dbh->do('ALTER TABLE likes alter object_type_Id SET NOT NULL');
+			} # end if
+			$dbh->do('ALTER TABLE likes DROP object_type');
+			$dbh->do('CREATE INDEX likes_idx ON comments ( object_type_id, object_id )');
+		} # end if
+		if ( ! exists $$data{'created_on'} ) {
+			$dbh->do('ALTER TABLE likes add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+		} # end if
+		if ( ! exists $$data{'value'} ) {
+			$dbh->do('ALTER TABLE likes ADD value INTEGER');
+			$dbh->do('ALTER TABLE likes ADD FORIEGN KEY (value) REFERENCES opinion_types (id)');
+		} # end if
+		if ( ! exists $$data{'opinion_type_id'} ) {
+			$dbh->do('ALTER TABLE likes ADD opinion_type_id INTEGER');
+			$dbh->do('ALTER TABLE likes ADD FOREIGN KEY (opinion_type_id) REFERENCES Opinion_Types (id)');
+			$dbh->do('UPDATE likes SET opinion_type_id=value');
+			if ( $$data{'opinion_type'} ) {
+				$dbh->do('DELETE FROM Likes where opinion_type IS NULL');
+			} # end if
+		} # end if
 		$dbh->do('ALTER TABLE likes RENAME to opinions');
 		$dbh->do( 'ALTER TABLE opinions DROP CONSTRAINT likes_pkey');
 		$dbh->do( 'ALTER TABLE opinions ADD PRIMARY KEY (object_id, object_type_id, user_id, opinion_type_id)' );
@@ -1000,6 +992,16 @@ if ( ! sets::isin( 'affiliates', \@tables ) ) {
 		$dbh->do('ALTER TABLE affiliates add sort integer');
 	} # end if
 }
+if ( sets::isin('upload_id_seq', \@sequences ) ) {
+	if ( sets::isin( 'uploads_id_seq', \@sequences ) ) {
+		# Do nothing
+	} else {
+		$dbh->do('CREATE SEQUENCE uploads_id_seq');
+		$dbh->do(q`SELECT setval('uploads_id_seq', (SELECT MAX (id) FROM Uploads))` );
+		$dbh->do(q`ALTER TABLE uploads alter id set default nextval('uploads_id_seq')`);
+	} # end if
+	$dbh->do('DROP SEQUENCE upload_id_seq');
+} # end if
 $dbh->disconnect();
 1;
 __END__

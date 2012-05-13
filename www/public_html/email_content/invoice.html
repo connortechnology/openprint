@@ -108,6 +108,7 @@
 			</tr>
 			<? echo ( 
 				my $html = '';
+				my $rowclass;
 				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= sprintf('<tr%1$s>

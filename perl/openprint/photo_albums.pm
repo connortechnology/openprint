@@ -151,9 +151,11 @@ $log->debug("$id , $filename ");
 		$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $Asset = new openprint::Asset( $param{'asset_id'} );
-		foreach my $Photo ( openprint::Photo_in_Album->find( 'album_id'=>$$Album{'id'}, 'asset_id' => $Asset->id() ) ) {
+		foreach my $Photo ( $Album->Photos() ) {
+			next if $Photo->asset_id() != $Asset->id();
 			$variable{'error'} .= $Photo->delete();
 		} # end foreach Photo
+		$Album->Photos(undef); # Refresh cache
 
 		# Why am I deleting the asset?
 		#$variable{'error'} .= $Asset->delete();
@@ -217,11 +219,9 @@ $log->debug("Saving");
 			$variable{'information'} .= $Photo->send();
 		} # end if btnfunction
 	} else {
-if ( ! $Photo ) {
-$log->error('Photo not found.');
-} else {
-$log->error("Not woner of photo");
-}
+		if ( ! $Photo ) {
+			$log->error('Photo not found.');
+		}
 	} # end if owner of the photo
 	$variable{'Photo'} = $Photo;
 } # end sub view_photo

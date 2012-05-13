@@ -240,5 +240,19 @@ sub upload {
 		return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
 	} # end if
 } # end sub upload
+
+sub destroy {
+	my $error = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach ( $_[0]->Assets() ) {
+		$error .= $_->destroy();
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::destroy() if ! $error;
+	$openprint::dbh->rollback() if $error;
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub destroy
+	
 1;
 __END__

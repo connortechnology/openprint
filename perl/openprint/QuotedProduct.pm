@@ -1,17 +1,13 @@
-package openprint::QuotedProduct;
-@ISA = qw(openprint::Product);
-
 use strict;
+package openprint::QuotedProduct;
+our @ISA = qw(openprint::Product);
+
 use openprint ();
-use vars qw( $log $dbh %session %config $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*session = \%openprint::session;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
+require Math::Round;
 
-my $debug = 0;
+$debug = 1;
 
 $table = 'Quoted_Products';
 $serial = 'Quoted_Products_id_seq';
@@ -74,7 +70,7 @@ sub price {
 		$$self{'price'} = $new_value;
 	} # end if
 	if ( ! defined $$self{'price'} ) {
-		$$self{'price'} = sprintf('%.2f', $self->cost() * ( 1 + $$self{'markup'}/100 ) );
+		$$self{'price'} = Math::Round::nearest(0.01, $self->cost() * ( 1 + $$self{'markup'}/100 ) );
 	} # end if
 	return $$self{'price'};
 } # end sub total
@@ -96,6 +92,16 @@ sub save {
 	delete $$Quote{'Products'};
 	return;
 } # end sub save
+sub copy {
+	no strict 'refs';
+	my $type = ref $_[0];
+	my $new = new $type;
+	my $fields = \%{$type.'::fields'};
+	@$new{keys %$fields} = @{$_[0]}{keys %$fields};
+	delete $$new{id};
+
+	return $new;
+}
 1;
 
 __END__

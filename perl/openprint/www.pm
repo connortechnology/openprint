@@ -152,7 +152,7 @@ $log->debug("Sending js redirect");
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
-		$variable{'PageSetting'} = $page_settings{$page};
+		$variable{'PageSetting'} = $page_settings{$page} ? $page_settings{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();
@@ -240,7 +240,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -266,7 +266,7 @@ sub parse_page {
 
 	# This deals with things like /account/login.html//balhblahblah.php
 	my ($real_uri) = $uri =~ /^([^\.]+\.[^\.]+)/i;
-$openprint::log->debug("URI: $real_uri");
+#$openprint::log->debug("URI: $real_uri");
 	my @thing = split( '/', $real_uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
@@ -311,11 +311,6 @@ $openprint::log->debug("Getfile");
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
-		if ( $filename eq 'login_confirmation.html' ) {
-			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-			return $status if $variable{'Redirect'};	
-		} # end if
-
 		if ( $second eq 'proj' ) {
 			require openprint::print;
 			require openprint::print_project;
@@ -382,11 +377,6 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 					} # end if
 				} # end if
 			} # end if
-		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-			$variable{'error'} = 'Unauthorized';
-			$variable{'details'} = 'You are not authorized to view this page.';
-			$variable{'Redirect'} = $config{'errorpage'};
-			return;
 		} else {
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {

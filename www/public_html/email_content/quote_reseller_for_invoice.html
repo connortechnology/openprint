@@ -27,11 +27,11 @@
 				foreach my $qty_index ( $QP->Project()->quantity_indexes() ) {
 					my $weight;
 
-					if ( $services{'BulkSkids'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+					if ( $$services{'BulkSkids'} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
 						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-					} elsif ( $services{'PlainCartons'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+					} elsif ( $$services{'PlainCartons'} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
 					} else {
 						$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
@@ -53,7 +53,7 @@
 			return $html;
 		) ?>
 	</table>
-<? endif ( $$variable{'Quote'}->Projects() ) ?>
+<? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
 <? if ( $$variable{'Quote'}->Products() ) ?>
 <table>
 	<thead>
@@ -80,7 +80,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 		$html .= '<tr class="totals">';
-		$html .= '<td colspan="2" style="text-align: right;">Subtotal</td><td class="newprice">';
+		$html .= '<td colspan="2">Subtotal</td><td class="newprice">';
 		$html .= openprint::Currency::format( $subtotal );
 		$html .= '</td></tr>';
 			return $html;

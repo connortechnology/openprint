@@ -41,10 +41,8 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM database_info LIMIT 1', {} );
 if ( ! $data ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/database_info.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/database_info.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } 
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -363,8 +361,8 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do('CREATE SEQUENCE companies_id_seq');
 		$dbh->do(q`SELECT setval('companies_id_seq', (SELECT MAX(id) FROM Companies))`);
 		$dbh->do(q`ALTER TABLE companies alter id set default nextval('companies_id_seq')`);
-		$dbh->do('DROP SEQUENCE IF EXISTS tbl_Customer_lngCustomerID_seq');
-		$dbh->do('DROP SEQUENCE IF EXISTS companyindex_seq');
+		$dbh->do('DROP SEQUENCE IF EXISTS tbl_Customer_lngCustomerID_seq') if sets::isin( 'tbl_customer_lngcustomerid_seq', \@sequences );
+		$dbh->do('DROP SEQUENCE IF EXISTS companyindex_seq') if sets::isin( 'companyindex_seq', \@sequences );
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
@@ -398,12 +396,15 @@ if ( $data ) {
 		$dbh->do(q`alter table companies alter deleted set not null`);
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	if ( ! exists $$data{'offers_credit'} ) {
+		$dbh->do('ALTER TABLE companies ADD offers_credit BOOLEAN NOT NULL default false');
+	} # end if
 } else {
-	$log->debug( 'No Companies found.' );
+	die  'No Companies found.' . $dbh->errstr();
 } # end if
 
 if ( ! sets::isin( 'todos', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Todos.sql' ) ) or die;
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Todos.sql' ) ) or die $dbh->errstr();
 }
 if ( ! sets::isin( 'bug_statuses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Statuses.sql' ) ) or die;
