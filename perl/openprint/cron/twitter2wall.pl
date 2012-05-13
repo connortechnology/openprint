@@ -105,13 +105,19 @@ $log->debug($content);
 
 	foreach my $item (@{$rss->{'items'}}) {
 		$$item{title} =~ s/^$$Twitter_ID{value}: //i;
-		my $Wall = openprint::Wall->find_one('user_id'=>$Twitter_ID->user_id(),'author_id'=>$Twitter_ID->user_id(),'message'=>$$item{'title'});
+		my $Wall = openprint::Wall->find_one(
+			'user_id'=>$Twitter_ID->user_id(),
+			'author_id'=>$Twitter_ID->user_id(),
+			'message'=>$$item{'title'},
+			'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+		);
 		next if $Wall;
 		$Wall = new openprint::Wall();
 		$Wall->save({
 				'user_id'	=>	$Twitter_ID->user_id(),
 				'author_id'	=>	$Twitter_ID->user_id(),
 				'message'	=>	$$item{'title'},
+			'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 		});
 	} # end foreach item
 
