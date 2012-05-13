@@ -76,8 +76,8 @@ die 'Error opening db' if ! $dbh;
 
 my $ID_Field = openprint::User_Profile_Field->find_one('name'=>'Twitter ID');
 die "No User Profile Field found for Twitter ID\n" if ! $ID_Field;
-my $Password_Field = openprint::User_Profile_Field->find_one('name'=>'Twitter Password');
-die "No User Profile Field found for Twitter Password\n" if ! $Password_Field;
+#my $Password_Field = openprint::User_Profile_Field->find_one('name'=>'Twitter Password');
+#die "No User Profile Field found for Twitter Password\n" if ! $Password_Field;
 
 # create new instance of XML::RSS
 my $rss = new XML::RSS;
