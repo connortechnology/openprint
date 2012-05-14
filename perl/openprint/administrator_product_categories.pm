@@ -1,15 +1,15 @@
 use strict;
 require openprint::Product_Category;
 package openprint::administrator_product_categories;
-use openprint;
+require openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
+*session = \%openprint::session;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
 sub list {
-	my ( $r, $log, $dbh, $variable ) = @_;
 	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$ProductCategory->save( \%param );
@@ -23,14 +23,13 @@ sub list {
 } # end sub list
 
 sub edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
 	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$ProductCategory = $ProductCategory->copy();
 		$ProductCategory->save();
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Name', 'Description' );
-	    my @data = sql::execute( $log, $dbh, 'SELECT name, description FROM Product_Categories' );
+	    my @data = map { @$_{'name','description'} } openprint::Product_Category->find();
     	misc::export_csv( $r, $log, \%variable, 'Product_Categories.csv', \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Import' ) {
 		my $error = '';
@@ -67,5 +66,3 @@ sub edit {
 
 1;
 __END__
-
-

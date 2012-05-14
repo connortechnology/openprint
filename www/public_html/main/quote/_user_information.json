@@ -1,6 +1,5 @@
 <? echo ( 
 	my $html = '';
-	$r->content_type('text/javascript');
 	my $User = new openprint::User( $param{'user_id'} );
 	my %data = (
 		#'ForSalutation'	=>	$User->salutation(),
@@ -21,4 +20,3 @@
 
 	return $html;
 ) ?>
-
