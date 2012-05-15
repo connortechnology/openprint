@@ -5,7 +5,7 @@ CREATE TABLE Users (
 	id		SERIAL,
 	company_id	INTEGER NOT NULL,
 	email		TEXT NOT NULL, UNIQUE(email), 
-	password		TEXT NOT NULL,
+	password		TEXT,
 	title		TEXT,
 	firstName	TEXT NOT NULL,
 	lastName		TEXT,

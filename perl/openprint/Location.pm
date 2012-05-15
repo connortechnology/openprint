@@ -6,6 +6,7 @@ require openprint::Photo_Album;
 package openprint::Location;
 our @ISA = qw( openprint::Object );
 require Geo::Coder::Googlev3;
+require Geo::IP;
 
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
@@ -45,7 +46,9 @@ $serial = 'locations_id_seq';
 %transforms = (
 	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
-	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
+    'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'postalcode'	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
 	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );
@@ -129,13 +132,13 @@ sub ancestor {
 	return if ! @_;
 	my ( $value ) = $self->get( $_[0] );
 	if ( sets::isin( $value, $_[1] ) ) {
-		$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
+		#$openprint::log->debug( "Returning Location: $_[0] ($$self{name}) ($value) != $_[1]");
 		return $self;
-	} else {
-		$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
+	#} else {
+		#$openprint::log->debug( "nA Location: $_[0] ($$self{name}) ($value) != $_[1]");
 	} # end if
 	if ( $$self{'parent_id'} ) {
-$openprint::log->debug("Recursing" );
+#$openprint::log->debug("Recursing" );
 		return $self->Parent()->ancestor( @_ );
 	} # end if
 	return;
@@ -307,16 +310,21 @@ sub rad2deg {
 	return ($_[0] * 180 / PI);
 }
 
-sub Asset {
-    if ( ! $_[0]{'Asset'} ) {
+sub thumbnail_id {
+	if ( ! exists $_[0]{'thumbnail_id'} ) {
         my $Album = $_[0]->Album();
         if ( $$Album{'thumbnail_id'} ) {
-            $_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+			$_[0]{'thumbnail_id'} = $$Album{'thumbnail_id'};
         } elsif ( $$Album{'id'} and my @Photos = $Album->Photos() ) {
-            $_[0]{'Asset'} = $Photos[0];
-        } else {
-            $_[0]{'Asset'} = new openprint::Asset();
+            $_[0]{'thumbnail_id'} = $Photos[0]->asset_id();
         } # end if
+	} # end if
+	return $_[0]{'thumbnail_id'};
+} # end sub thumbnail_id
+
+sub Asset {
+    if ( ! $_[0]{'Asset'} ) {
+		$_[0]{'Asset'} = new openprint::Asset( $_[0]->thumbnail_id() );
     } # end if
     return $_[0]{'Asset'};
 } # end sub Asset
@@ -395,18 +403,29 @@ sub save_location {
 
 	if ( $$param{'location'} ) {
 		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+			( $$param{'address'} ? ( 'address lc'=>lc openprint::Location->transform('address',$$param{'address'}) ) : () ),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
+		if ( ( ! $Location ) and $$param{'address'} ) {
+		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
+			);
+		} # end if
 		if ( ( ! $Location ) or 
 				( $Location->address() and $$param{'address'} and ( $Location->address() ne openprint::Location->transform('address',$$param{'address'}) ) ) or
-				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('address',$$param{'postalcode'}) ) ) or
+				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('postalcode',$$param{'postalcode'}) ) ) or
 				( $Location->parent_id() != $parent_id )
 		   ) {
+#$openprint::log->debug("Blah");
+#$openprint::log->debug('No location') if ! $Location;
+#$openprint::log->debug("Address: $$Location{address} $$param{address} " . openprint::Location->transform('address',$$param{'address'}) );
+#$openprint::log->debug("PostalCode: $$Location{postalcode} $$param{postalcode} " . openprint::Location->transform('postalcode',$$param{'postalcode'}) );
+			# Different from what we have in db, add new
 			$Location = new openprint::Location();
 			$error .= $Location->save({
 					'name'			=>	$$param{'location'}, 
 					'parent_id'		=>	$parent_id, 
-					'type'			=>	'place', 
+					($$param{'type_id'}?('type_id'=>$$param{'type_id'}):('type'			=>	'place')), 
 					'address'		=>	$$param{'address'},
 					'postalcode'	=>	$$param{'postalcode'},
 					});
@@ -416,6 +435,7 @@ sub save_location {
 			$change{'address'} = $$param{'address'} if $$param{'address'} and ! $Location->address();
 			$change{'postalcode'} = $$param{'postalcode'} if $$param{'postalcode'} and ! $Location->postalcode();
 			if ( %change ) {
+$openprint::log->debug("Change:");
 				$error .= $Location->save( \%change );
 			} # end if
 		} # end if
@@ -427,5 +447,51 @@ sub save_location {
 	return $error if $error;
 	return $Location;
 } # end sub save_location
+
+sub googlemap_html {
+	if ( ! exists $_[0]{'googlemap_html'} ) {
+		$_[0]{'googlemap_html'} = sprintf('<iframe src="http://maps.google.com/maps?f=q&hl=en&ll=%1$s,%2$s&q=%3$s&z=13&output=embed" style="width: 100%; height:400px;"></iframe>', 
+				$_[0]->latitude(), $_[0]->longitude(), join('+',$_[0]->name(), $_[0]->address(), ( $_[0]->postalcode() ? $_[0]->postalcode() : () ), map{$_->name()} ( $_[0]->Parents() ) ) );
+	} # end if
+	return $_[0]{'googlemap_html'};
+} # end sub googlemap_html
+
+sub from_ip {
+	my $gi = Geo::IP->open("/var/lib/geoip/GeoLiteCity.dat");
+	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
+	return if ! $record;
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
+	my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
+	if ( ! $Country ) {
+		$Country = new openprint::Location();
+		$Country->save({'name'=>$record->country_name(),'type'=>'country'});
+	} # end if
+
+	my $State = openprint::Location->find_one('type'=>'state','name lc'=>lc $record->region_name(),'parent_id'=>$Country->id());
+	if ( ! $State ) {
+		$State = new openprint::Location();
+		$State->save({'name'=>$record->region_name(),'type'=>'state','parent_id'=>$Country->id()});
+	} # end if
+	my $City = openprint::Location->find_one('type'=>'city','name lc'=>lc $record->city(),'parent_id'=>$State->id());
+
+	if ( ! $City ) {
+		$City = new openprint::Location();
+		$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $City;
+} # end sub from_ip
+
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save({ 'Photos for location: ' . $$self{'name'} });
+		$self->save({'album_id'=>$Album->id()});
+	} # end if
+	return $Album->upload( @_ );
+} # end sub upload
 1;
 __END__

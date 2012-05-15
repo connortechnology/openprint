@@ -101,7 +101,7 @@ while(1) {
 			sleep 5;
 			next;
 		} # end if ! dbh
-		configuration::init_cache( $log, $dbh );
+		configuration::init( $log, $dbh );
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );

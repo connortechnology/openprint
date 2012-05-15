@@ -65,7 +65,7 @@ print "upgrading db ...";
 `./db_update3.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 require openprint::PaymentType;
 my $PayPal = new openprint::PaymentType();
 $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});

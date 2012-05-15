@@ -17,10 +17,12 @@ $serial = 'affiliates_id_seq';
 	'image_url'		=>	'image_url',
 	'supplier_id'	=>	'supplier_id',
 	'title'			=>	'title',
+	'sort'			=>	'sort',
 );
 
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
+	'sort'			=>	undef,
 );
 
 sub Supplier {

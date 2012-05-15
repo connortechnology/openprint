@@ -8,7 +8,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
 $table = 'uploads';
-$serial = 'upload_id_seq';
+$serial = 'uploads_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'start'			=>	'start',

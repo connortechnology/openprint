@@ -3,10 +3,11 @@ require openprint;
 require Digest::MD5;
 require openprint::Keyword;
 
+
 package openprint::Asset_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table $serial );
-$debug = 1;
+$debug = 0;
 $table = 'asset_types';
 $serial = 'asset_types_id_seq';
 %fields = (
@@ -37,6 +38,10 @@ $debug = 1;
 	'attribution'	=>	'attribution',
 	'license'		=>	'license',
 	'keywords'		=>	undef,
+	'optimised'		=>	'optimised',
+	'layout'		=>	'layout',
+	'width'			=>	'width',
+	'height'		=>	'height',
 );
 %defaults = (
 	'data'		=>	undef,
@@ -47,8 +52,14 @@ $debug = 1;
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'md5'		=>	undef,
 	'deleted'	=>	0,
+	'optimised'	=>	0,
+	'layout'	=>	'',
+	'width'		=>	undef,
+	'height'	=>	undef,
 );
 %transforms = (
+	'width'			=>	[ 's/\D//g' ],
+	'height'			=>	[ 's/\D//g' ],
 	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
 	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
@@ -78,10 +89,12 @@ sub url {
 # Will look for, generate thumbnails, returning the on disk path
 sub thumbnail_url {
 	my $src = $_[0]->on_disk_path();
-	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
-		mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
-		$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
-		return '/images/icons/file.png';
+	if ( $openprint::config{'AssetPath'} ) {
+		if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
+			mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
+			$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
+			return '/images/icons/file.png';
+		} # end if
 	} # end if
 
 	my $filename = $_[0]->on_disk_filename();
@@ -89,24 +102,35 @@ sub thumbnail_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
-		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
-		if ( ! -e $dest ) {
-			$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
-				$openprint::log->error("ERror creating thumbnail. Reason: $1");
-			} # end if convert
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$filename;
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+				if ( system(qq`convert -adaptive-resize 75x "$src" "$dest"`) ) {
+					$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				} # end if convert
+			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
 		return '/thumbnails/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
-		my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
-		if ( ! -e $dest ) {
-			#$openprint::log->debug("Creating thumbnail at 75x $src $dest");
-			`mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
-			`mv /tmp/00000001.jpg $dest`;
-			if ( $! ) {
-				$openprint::log->error("Unable to create thumbnail at $dest: $!" );
-				return '/images/icons/image.png';
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$blah.'.jpg';
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating thumbnail at 75x $src $dest");
+				
+				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=75:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
+				if ( $! ) {
+					$openprint::log->error("Unable to create thumbnail at $dest: $!" );
+					return '/images/icons/image.png';
+				} else {
+					$openprint::log->debug($_);
+				} # end if
+				`mv /tmp/00000001.jpg $dest`;
+				if ( $! ) {
+					$openprint::log->error("Unable to mv thumbnail  $dest: $!" );
+					return '/images/icons/image.png';
+				} # end if
 			} # end if
 		} # end if
 		return  '/thumbnails/'.$blah.'.jpg';
@@ -115,10 +139,12 @@ sub thumbnail_url {
 			return '/images/icons/'.(lc $extension).'.png';
 		} # end if
 	} # end if
+$openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)");
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
 
 sub thumbnail_html {
+	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->thumbnail_url(), $_[0]->name() );
 } # end sub thumbnail_html
 
@@ -247,6 +273,35 @@ sub caption {
 		return $_[0]{'filename'};
 	} # end if
 } # end sub caption
+
+sub width {
+	if ( ! $_[0]{'width'} ) {
+require Image::Size;
+# get the image size, and print it out
+		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+	} # end if
+	return $_[0]{'width'};
+} # end sub width
+
+sub height {
+	if ( ! $_[0]{'height'} ) {
+require Image::Size;
+# get the image size, and print it out
+		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+	} # end if
+	return $_[0]{'height'};
+} # end sub height
+
+sub layout {
+	if ( ! $_[0]{'layout'} ) {
+		if ( $_[0]->width() > $_[0]->height() ) {
+			$_[0]{'layout'} = 'Landscape';
+		} else {
+			$_[0]{'layout'} = 'Portrait';
+		} # end if
+	} # end if
+	return $_[0]{'layout'};
+} # end sub layout
 
 1;
 __END__

@@ -7,39 +7,43 @@
 			<th class="cost">Cost</th>
 			<th class="markup">Markup</th>
 			<th class="price">Price</th>
-			<th>&nbsp;</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 	</thead>
 	<tbody>
 		<? echo (
 			my $html;
 			my $rowclass;
+			my $sub_total;
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
-				$html .= sprintf('<tr%1$s>
-									<td class="description">%3$s</td>
-									<td class="quantity"><input type="text" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" /></td>
-									<td class="price">%5$.2f</td>
-									<td class="markup"><input type="text" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" /></td>
-									<td class="newprice"><input type="text" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
-									<td>%8$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->description(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
-									ssi::writeButton( $log, $dbh, 'delProduct'.$Product->id(), 'del.gif', qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, '', 'Del' ),
+				$html .= sprintf('
+<tr%1$s>
+	<td class="description">%3$s</td>
+	<td class="quantity"><input type="number" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" onkeyup="calc_from_quantity(this);"/></td>
+	<td class="price"><input type="number" id="cost-%2$d" value="%5$.2f" name="cost-%2$d" onkeyup="calc_from_cost(this);"/></td>
+	<td class="markup"><input type="number" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" onkeyup="calc_from_markup(this);"/></td>
+	<td class="newprice"><input type="number" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
+	<td class="buttons">%8$s</td>
+</tr>', $rowclass, $Product->id(), $Product->description(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
+									ssi::button( 'removeProduct'.$Product->id(), { onclick=>qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, text=>'-', title=>'Remove' } ),
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$sub_total += $Product->price();
 			} # end foreach Product
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= sprintf('<tr%1$s>
 									<td class="description"><select id="product_id-" name="product_id-">%2$s</select></td>
-									<td class="quantity"><input type="text" id="quantity-" name="quantity-" value="" /></td>
-									<td class="price"><input type="text" id="cost-" name="cost-" value="" /></td>
-									<td class="markup"><input type="text" id="markup-" name="markup-" value="" /></td>
-									<td class="newprice"><input type="text" id="price-" name="price-" value="" /></td>
-									<td>%3$s</td>
+									<td class="quantity"><input type="text" id="quantity-" name="quantity-" /></td>
+									<td class="price"><input type="text" id="cost-" name="cost-" /></td>
+									<td class="markup"><input type="text" id="markup-" name="markup-" /></td>
+									<td class="newprice"><input type="text" id="price-" name="price-" /></td>
+									<td class="buttons">%3$s</td>
 									</tr>', $rowclass, 
-									ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product->find('order'=>'lower(name)') ] ),
-									ssi::writeButton( $log, $dbh, 'addProduct', 'add.gif', q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`, '', 'Add' ),
+									ssi::make_drop_down( [ '', 'select', map { $_->id(), $_->name() } openprint::Product->find('order'=>'lower(name)') ] ),
+									ssi::button( 'addProduct', { onclick=>q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`, text=>'+',title=>'Add' } ),
 					);
 			} # end if
+			$html .= '<tr class="totals"><td colspan="4">Subtotal</td><td class="subtotal" id="products_subtotal">'.openprint::Currency::format($sub_total).'</td><td></td></tr>';
 			
 			return $html;
 		) ?>

@@ -105,6 +105,10 @@
 			</p>
 		</fieldset>
 		<div id="ArticleList"><!--#include virtual="_history.html"--></div>
+	<p class="buttons">
+		<? echo ( ssi::button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
+		<? echo ( ssi::button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_history.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
+	</p>
 	</form>
 	</div>
 </div>

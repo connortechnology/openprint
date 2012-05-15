@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/var/www/testing/perl';
 use 5.10.0;
 use utf8;
@@ -8,6 +8,7 @@ use strict;
 use XML::RSS;
 use LWP::Simple;
 
+use Data::Dumper;
 require configuration;
 require sql;
 require ssi;
@@ -18,7 +19,10 @@ require Email::Valid;
 require openprint::Email;
 require openprint::User_Notification;
 require logger;
-require openprint::Upload;
+require openprint::Article;
+require openprint::Feed;
+require Date::Parse;
+require Date::Format;
 use openprint ();
 
 use vars qw( $log $dbh %config );
@@ -30,9 +34,8 @@ use File::Basename qw(basename);
 use Getopt::Long;
 use Mail::Sendmail;
 use MIME::QuotedPrint;
-use MIME::Base64 qw(encode_base64);
 use Time::HiRes qw(usleep);
-use Encode;
+use Encode qw(encode);
 
 my $program = basename($0);
 
@@ -48,41 +51,46 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$log = new logger('level'=>'debug');
-# Get our configuration information
-if (my $err = ReadCfg('/etc/rss2article.conf')) {
-    die $err;
-}
+$log = new logger( {'level'=>'debug'});
+configuration::from_file('/etc/rss2article.conf');
+configuration::merge( $opts );
+$log->level($config{'log_level'}) if $config{'log_level'};
+
 # Declare variables
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $CFG::Config{'db_host'},
-	'database'	=> $CFG::Config{'db_name'},
+	'host'		=> $config{'db_host'},
+	'database'	=> $config{'db_name'},
 	'driver'	=> 'Pg',
-	'login'		=> $CFG::Config{'db_user'},
-	'password'	=> $CFG::Config{'db_pass'},
+	'login'		=> $config{'db_user'},
+	'password'	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-configuration::init_cache( $log, $dbh, \%CFG::Config );
+configuration::init( $log, $dbh, \%CFG::Config );
+configuration::from_file('/etc/rss2article.conf');
+configuration::merge( $opts );
 
 # create new instance of XML::RSS
 my $rss = new XML::RSS;
 
-foreach my $RSS_Feed ( split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RSS_Feeds'} : $config{'RSS_Feeds'} ) ) ) {
+#my @Feeds = split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RSS_Feeds'} : $config{'RSS_Feeds'} ) );
+#@Feeds = openprint::Feed->find() if ! @Feeds;
+
+foreach my $Feed ( openprint::Feed->find('active'=>1) ) {
 	my $content;
 	my $file;
-	my $arg = $RSS_Feed;
+	my $arg = $Feed->url();
 # argument is a URL
 	if ($arg=~ /http:/i) {
-		$content = get($arg);
+		$content = Encode::encode('utf-8',get($arg));
 		die "Could not retrieve $arg" unless $content;
 # parse the RSS content
 		$rss->parse($content);
+##$log->debug($content);
 
 # argument is a file
 	} else {
@@ -92,101 +100,55 @@ foreach my $RSS_Feed ( split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RS
 		$rss->parsefile($file);
 	} # end if
 
+#$log->debug("RSS: " . Data::Dumper::Dumper($rss));
+#print "RSS: " . Data::Dumper::Dumper($rss) . "\n";
     # print the channel items
     foreach my $item (@{$rss->{'items'}}) {
+#$log->debug("Item: " . Data::Dumper::Dumper($item));
+#print "Item: " . Data::Dumper::Dumper($item) ."\n";
 		next unless defined($item->{'title'}) && defined($item->{'link'});
-		print "<li><a href=\"$item->{'link'}\">$item->{'title'}</a><BR>\n";
 		my $Article = openprint::Article->find_one('title'=>$item->{'title'});
 		if ( ! $Article ) {
+			my $User;
+			if ( $$item{'dc'} and $$item{dc}{creator} ) {
+				$User = openprint::User->find_one('company_id'=>$Feed->company_id(), 'firstname'=>$$item{dc}{creator});
+			} # end if
+			$item->{'description'} =~ s/\n/ /g;
+
+			# Get rid of the feedburner stuff
+			if ( $$item{'http://rssnamespace.org/feedburner/ext/1.0'} and $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'} ) {
+				$$item{'link'} = $$item{'http://rssnamespace.org/feedburner/ext/1.0'}{'origLink'};
+			} # end if
+
+			if ( $Feed->filters() ) {
+				foreach my $filter ( split("\n", $Feed->filters() ) ) {
+$log->debug("Apply filter $filter");
+					eval q`$item->{'description'} =~ `.$filter;
+					$log->error( "Eval error, Reason: " . $@ ) if $@;
+				} # end foreach filter
+$log->debug("after filtering: $$item{'description'}");
+			} else {
+				$log->warn("No filters ");
+				$log->debug("No filters $$Feed{'filters'}");	
+			} # end $Feed->filters
 			$Article = new openprint::Article();
 			$Article->save({
 				'title'	=>	$item->{'title'},
 				'body'	=>	$item->{'description'},
 				'source'	=>	$item->{'link'},
+				'published'	=>	$Feed->published(),
+				'published_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+				'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+				'company_id'	=>	$Feed->company_id(),
+				'category_id'	=>	$Feed->category_id(),
+				( $User ? ( 'created_by'	=> $User->id() ) : () ),
 			});
+		#$log->debug( $Article->to_string() );
+		} else {
+$log->debug( "Already have article for $$item{title}" );
 		} # end if
     } # en dforeach
-} # end foreach RSS_Feed
+} # end foreach Feed
 
-
-# SUBROUTINES
-sub print_html {
-    my $rss = shift;
-    print <<HTML;
-<table bgcolor="#000000" border="0" width="200"><tr><td>
-<TABLE CELLSPACING="1" CELLPADDING="4" BGCOLOR="#FFFFFF" BORDER=0 width="100%">
-  <tr>
-  <td valign="middle" align="center" bgcolor="#EEEEEE"><font color="#000000" face="Arial,Helvetica"><B><a href="$rss->{'channel'}->{'link'}">$rss->{'channel'}->{'title'}</a></B></font></td></tr>
-<tr><td>
-HTML
-
-    # print channel image
-    if ($rss->{'image'}->{'link'}) {
-		print <<HTML;
-		<center>
-			<p><a href="$rss->{'image'}->{'link'}"><img src="$rss->{'image'}->{'url'}" alt="$rss->{'image'}->{'title'}"
-HTML
-		print " width=\"$rss->{'image'}->{'width'}\"" if $rss->{'image'}->{'width'};
-		print " height=\"$rss->{'image'}->{'height'}\"" if $rss->{'image'}->{'height'};
-		print "></a></center><p>\n";
-    } # end if
-
-
-    # if there's a textinput element
-    if ($rss->{'textinput'}->{'title'}) {
-		print <<HTML;
-	<form method="get" action="$rss->{'textinput'}->{'link'}">
-	$rss->{'textinput'}->{'description'}<BR> 
-	<input type="text" name="$rss->{'textinput'}->{'name'}"><BR>
-	<input type="submit" value="$rss->{'textinput'}->{'title'}">
-	</form>
-HTML
-    } # en dif
-
-    # if there's a copyright element
-    if ($rss->{'channel'}->{'copyright'}) {
-		print <<HTML;
-		<p><sub>$rss->{'channel'}->{'copyright'}</sub></p>
-HTML
-	} # end if
-
-	print <<HTML;
-	</td
-		</TR>
-		</TABLE>
-		</td></tr></table>
-HTML
-} # END sub print_html
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
-
-1;
-__END__
 1;
 __END__

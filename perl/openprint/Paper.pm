@@ -2,9 +2,9 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use Carp qw( cluck );
-use Math::Round ();
+require Math::Round;
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -34,7 +34,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -1431,5 +1431,17 @@ sub short {
 	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
 }
 
+sub start_width {
+	if ( @_ > 1 ) {
+		$_[0]{'start_width'} = $_[1];
+	} 
+	return $_[0]{'start_width'};
+} # end sub start_width
+sub start_height {
+	if ( @_ > 1 ) {
+		$_[0]{'start_height'} = $_[1];
+	} 
+	return $_[0]{'start_height'};
+} # end sub start_height
 1;
 __END__

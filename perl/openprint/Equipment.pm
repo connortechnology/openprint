@@ -12,13 +12,17 @@ require sql;
 use Memoize;
 memoize('fits');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
+$cache_field = 'strid';
+sub cache_field {
+    return $cache_field;
+}
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -139,10 +143,6 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
-		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
-			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
-			next;
-		} # end if
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;

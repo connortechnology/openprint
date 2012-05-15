@@ -42,7 +42,7 @@ sub handler {
 
 	my $return_code = Apache2::Const::OK;
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $r->dir_config() );
+	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
 		openprint::session_init();
@@ -65,6 +65,7 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
 						} else {
@@ -75,6 +76,7 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
 						} else {

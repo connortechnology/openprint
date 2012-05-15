@@ -84,7 +84,7 @@ sub do_new_substitution {
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result = htmlize($result);
+		$result = html_escape($result);
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
@@ -707,10 +707,13 @@ sub radio {
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
         $html .= sprintf(q`
-                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+                <input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
                 <label class="radio" for="%1$s%2$s">%3$s</label>
-                `, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
-    } # end foreach value
+                `, $name, $value, $label, checked( $value eq $selected ), 
+				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
+				$$options{id},
+				);
+	} # end foreach value
     return $html;
 } # end sub radio
 sub checkboxes {

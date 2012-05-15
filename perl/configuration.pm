@@ -2,30 +2,30 @@ use strict;
 package configuration;
 
 require openprint;
-use vars qw( %cache );
+use vars qw( %config );
 
 require sql;
 
-*cache = \%openprint::config;
+*config = \%openprint::config;
 
-sub init_cache {
+sub init {
 	
-	%cache = ();
+	%config = ();
 	if ( $openprint::dbh ) {
 		#my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration' );
 		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
-		#%cache = @{$data};
+		#%config = @{$data};
 		foreach (@{$data}) {
-			$cache{$$_{name}} = $$_{value};
+			$config{$$_{name}} = $$_{value};
 		} # end foreach
 	} # end if
 	
 	# Anything specified in dir_config override configuration
 	if ( @_ ) {
-		@cache{ keys %{$_[0]}} = values %{$_[0]};
+		@config{ keys %{$_[0]}} = values %{$_[0]};
 	} # end if
-	#return %cache;
-}
+	#return %config;
+} # end sub init
 
 sub get_values {
 	my ( $log, $dbh, @names ) = @_;
@@ -60,7 +60,7 @@ sub insert_entry {
 	$name =~ s/^\s*(.*?)\s*$/$1/;
 	$value =~ s/^\s*(.*?)\s*$/$1/;
 	sql::insert( $log, $dbh, 'Configuration', 'Name', $name, 'Value', $value ); 
-	$cache{$name} = $value;
+	$config{$name} = $value;
 } # end sub insert_entry
 
 sub update_entry {
@@ -69,7 +69,7 @@ sub update_entry {
 	$name =~ s/^\s*(.*?)\s*$/$1/;
 	$value =~ s/^\s*(.*?)\s*$/$1/;
 	sql::update( $log, $dbh, 'Configuration', ['Name=?', $name], 'Value', $value );
-	$cache{$name} = $value;
+	$config{$name} = $value;
 } # end sub update_entry
 
 sub save_config {
@@ -78,9 +78,39 @@ sub save_config {
 sub get_config {
 	my ( $log, $dbh ) = @_;
    
-	my %config = sql::execute( $log, $dbh, 'SELECT Name, Value FROM Configuration' );
+	%config = sql::execute( $log, $dbh, 'SELECT Name, Value FROM Configuration' );
 	return \%config;
 } # end sub get_config
+
+sub merge { 
+	@config{keys %{$_[0]}} = values %{$_[0]};
+} # end sub merge
+
+sub from_file {
+	my $file = $_[0];
+# Process the contents of the config file
+	our %Config;
+	my $rc = do($file);
+
+# Check for errors
+	if ($@) {
+		$openprint::log->error( "ERROR: Failure compiling '$file' - $@" );
+	} elsif (! defined($rc)) {
+		$openprint::log->error( "ERROR: Failure reading '$file' - $!" );
+	} elsif (! $rc) {
+		$openprint::log->error( "ERROR: Failure processing '$file'" );
+	}
+	@config{keys %Config} = values %Config;
+} # end sub from_file
+
+sub from_db {
+	if ( $openprint::dbh ) {
+		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
+		foreach (@{$data}) {
+			$config{$$_{name}} = $$_{value};
+		} # end foreach
+	} # end if
+}
 
 1;
 __END__

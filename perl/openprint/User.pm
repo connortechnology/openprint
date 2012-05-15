@@ -97,6 +97,7 @@ $debug = 1;
 	'email_quotes_to_myself'	=>	0,
 	'asset_id'			=>	undef,
 	'password_changed_on'		=>	undef,
+	'password'			=>	'',
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -403,11 +404,13 @@ sub icon {
 } # end sub icon
 
 sub thumbnail_html {
+if ( 0 ) {
 	if ( ! $openprint::session{'user_id'} ) {
 		return '';
 	} # end if
+} # end if
 	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s&amp;user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
 			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
@@ -466,7 +469,7 @@ sub last_logged_in {
 	if ( ! $_[0]{'last_logged_on'} ) {
 		# Almost any entry means we were logged in.  
 		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs == 1 ) {
+		if ( @Logs >= 1 ) {
 			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
 		} else {
 			$openprint::log->debug("@ of logs returned " . @Logs );

@@ -1,4 +1,16 @@
 
+function calc_from_quantity( element ) {
+	var re = /quantity-(.*)/
+	var matches = re.exec( element.name );
+	if ( matches ) {
+		var index = matches[1];
+		var quantity = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
+		var markup = parseFloat(1*element.form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
+		var cost = parseFloat(1*element.form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ));
+		element.form.elements['price-'+index].value = do_decimals( cost * quantity * ( 1 + markup ), 5 ); 
+	} // end if
+} // end function calc_from_quantity
+
 function calc_from_cost( element ) {
 	var re = /cost-(.*)/
 	var matches = re.exec( element.name );
@@ -6,7 +18,11 @@ function calc_from_cost( element ) {
 		var index = matches[1];
 		var cost = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		var markup = parseFloat(1*element.form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
-		element.form.elements['price-'+index].value = do_decimals( cost * ( 1 + markup ), 5 ); 
+		var quantity = 1;
+		if ( element.form.elements['quantity-'+index] ) {
+			quantity =  parseFloat(1*element.form.elements['quantity-'+index].value.replace(/[^\d\-\.]/g,''));
+		} // end if
+		element.form.elements['price-'+index].value = do_decimals( cost * quantity * ( 1 + markup ), 5 ); 
 	} // end if
 } // end function calc_from_cost
 function calc_from_markup( element ) {
@@ -18,7 +34,11 @@ function calc_from_markup( element ) {
 		var cost = parseFloat( element.form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( cost != '' ) {
 			var markup = parseFloat( 1*(element.value.replace(/[^\d\-\.]/g, '' ) ) );
-			var newvalue = cost * ( markup/100 + 1 );
+			var quantity = 1;
+			if ( element.form.elements['quantity-'+index] ) {
+				quantity =  parseFloat(1*element.form.elements['quantity-'+index].value.replace(/[^\d\-\.]/g,''));
+			} // end if
+			var newvalue = cost * quantity * ( markup/100 + 1 );
 			element.form.elements['price-'+index].value = do_decimals( newvalue, 5 );
 		} // end if
 	} // end if
@@ -32,7 +52,11 @@ function calc_from_price( element ) {
 		var cost = parseFloat(element.form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		var price = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		if ( cost ) {
-			element.form.elements['markup-'+index].value = do_decimals( ((price / cost)-1)*100, 2 );
+			var quantity = 1;
+			if ( element.form.elements['quantity-'+index] ) {
+				quantity =  parseFloat(1*element.form.elements['quantity-'+index].value.replace(/[^\d\-\.]/g,''));
+			} // end if
+			element.form.elements['markup-'+index].value = do_decimals( ((price / (cost*quantity))-1)*100, 2 );
 		} // end if
 	} // end if
 } // end function

@@ -125,6 +125,17 @@ sub search {
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
 	#} # end if
+
+	my $Location = new openprint::User( $session{'user_id'} )->Location() if $session{user_id};;
+	if ( ! ( $Location and $Location->id() ) ) {
+		$Location = openprint::Location::from_ip();
+	} # end if
+	if ( $Location and $Location->id() ) {
+		my $Country = $Location->ancestor('type'=>'country');
+		my $State = $Location->ancestor('type'=>'state');
+		$session{'/location/search.html?state_id'} = $State->id() if $State and ! exists $session{'/location/search.html?state_id'};
+		$session{'/location/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/location/search.html?country_id'};
+	} # end if
 } # end sub search
 sub _search {
 	if ( ! $param{'btnFunction'} ) {

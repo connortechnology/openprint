@@ -27,9 +27,10 @@ $dst_db = 'point-one' if ! $dst_db;
 
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
+	$path = "/media/Storage/Backups/database/$src_db/$year-$month-$day.sql.bz2";
 
-	if ( ! -e "/media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2" ) {
-		die "No db dump /media/ARCHIVE1/Backups/$src_db/$month-$day-$year.sql.bz2";
+	if ( ! -e $path ) {
+		die "No db dump $path";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -37,8 +38,8 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
-	print "Loading db... from /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2";
-	`su postgres -c "bunzip2 < /media/ARCHIVE1/Backups/$src_db/$year-$month-$day.sql.bz2 | psql $dst_db"`;
+	print "Loading db... from $path";
+	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty
@@ -49,7 +50,7 @@ if ( ! $path ) {
 	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
 	print "Loading db... directly";
-	`su postgres -c "bunzip2 < $path | psql $dst_db"`;
+	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	#if ( $src_host ) {
 		#`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
 	#} else {
@@ -60,16 +61,18 @@ if ( ! $path ) {
 } # end if
 
 `chmod +x $lib_path/tools/db_update.pl`;
-print "upgrading structures 2...";
-`$lib_path/tools/db_update.pl $dst_db point-one point-one 2>&1 > /tmp/db_update.log` or $log->error($!);
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one 2>&1 > /tmp/db_update2.log` or $log->error($!);
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one 2>&1 > /tmp/db_update3.log` or $log->error($!);
+print "upgrading structures 1...\n";
+`$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading structures 2...\n";
+`$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
+print "upgrading structures 3...\n";
+`$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one 2>&1 > /tmp/update_signatures.log` or $log->error($!);
+`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
@@ -109,6 +112,7 @@ if ( $BrochureType ) {
 	}
 } else {
 	$log->error("No Brochures");
+	die;
 }
 if ( 0 ) {
 new openprint::ProjectType_Template()->save({
@@ -432,4 +436,56 @@ sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 
 	if ( my $STC = openprint::ServiceType_Category->find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
+foreach my $qty_index ( 1 .. 3 ) {
+	if ( !( my $STD = openprint::ServiceType_Default->find_one('name'=>'MatchGrain'.$qty_index, 'servicetype'=>'Signature') ) ) {
+		my $STD = new openprint::ServiceType_Default();
+		$STD->save({'name'=>'MatchGrain'.$qty_index, 'value'=>'Y', 'servicetype'=>'Signature' });
+	} # end if
+} # end foreach
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbWaxFree'`);
+require openprint::ProjectType_Default;
+require openprint::ServiceType_Default;
+my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+if ( ! $ServiceType ) {
+	die 'Should have Signature by now';
+}
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			'servicetype_id'	=>	$ServiceType->id(),
+			} );
+	$Default->destroy();
+} # end foreach
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
+	if ( ! openprint::ServiceType_Default->find_one('name'=>$Default->name(), 'value'=>$Default->value(), 'projecttype_id'=>$Default->projecttype_id(), 'servicetype_id'=>$ServiceType->id()) ) {
+		my $SD = new openprint::ServiceType_Default();
+		$SD->save({	
+				'name'			=>	$Default->name(),
+				'value'			=>	$Default->value(),
+				'projecttype_id'=>	$Default->projecttype_id(),
+				'servicetype_id'	=>	$ServiceType->id(),
+				} );
+	} # end if
+	$Default->destroy();
+} # end foreach
+foreach my $D ( openprint::ServiceType_Default->find('name'=>'rdbColourBar','value'=>'') ) {
+	$D->destroy();
+}
+foreach my $D ( openprint::ProjectType_Default->find('projecttype'=>'ScratchPads', 'name'=>'rdbPageQuantity') ) {
+	$D->save({'name'=>'PageQuantity'});
+}
+
+require openprint::ServiceType_Default;
+if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain1', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+    (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
+} # end if
 $dbh->disconnect();

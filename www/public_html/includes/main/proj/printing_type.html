@@ -59,12 +59,12 @@
 	@{$$variable{'Types'}} = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} );
 ) ?>
 <? if ( 1 < @{$$variable{'Types'}} ) ?>
-<p>
+<li>
 	<label>Printing type</label>
 	<select name="PrintingType" onchange="calc(this.form.name);">
 		<? echo (
 			ssi::make_drop_down( [ '', 'No Preference', map { $_, $_ } @{$$variable{'Types'}} ], $$variable{'PrintingType'} );
 		) ?>
 	</select>
-</p>
+</li>
 <? endif ( 1 < @{$$variable{'Types'}} ) ?>

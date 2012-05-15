@@ -52,5 +52,6 @@ FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
 	detail_level			integer,
 	notes					text,
 	deleted					BOOLEAN NOT NULL default false,
+	offers_credit			BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );

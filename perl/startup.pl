@@ -49,7 +49,8 @@ BEGIN {
 	use pagination ();
 
 	use openprint::www ();
-	use openprint::upload_handler ();
+	use handlers::upload ();
+	use handlers::images ();
 
 	use Date::Calc ();
 	use Date::Format ();
@@ -94,6 +95,7 @@ BEGIN {
 	use MapImage;
 	use Lingua::EN::Inflect ();
 	use	openprint::Location ();
+	use	openprint::Affiliate ();
 
 }
 

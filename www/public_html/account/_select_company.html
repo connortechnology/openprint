@@ -7,7 +7,7 @@ Any orders or quotes you make will be recorded in the selected company's history
 		<ul>
 		<li>
 			<label>Company</label>
-			<input name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4"/>
+			<input class="filter" name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" />
 			<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value="">Select a Company</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>

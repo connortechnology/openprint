@@ -1,18 +1,19 @@
-<p> 
+<li> 
 	<label>Will you be supplying the die</label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y">Yes</label>
 	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( ssi::checked( (exists $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ) and ($$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ) ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N">No</label>
-</p>
-<div id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>" >
-	<p> 
+</li>
+</ul>
+<ul id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>" >
+	<li> 
 		<label>Die image size? (WxH In Inches)</label>
 		<input name="txtDieWidth-<?SignatureIndex?>" size="9" value="<?txtDieWidth?>" onkeyup="calc(this.form.name);" /> x <input name="txtDieHeight-<?SignatureIndex?>" size="9" value="<?txtDieHeight?>" onkeyup="calc(this.form.name);" />
 		<input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverrideDimensions"} eq 'Y' ) ?> />
 		<label class="radio" for="chkOverrideDimensions">Override</label>
-	</p>
-	<p> 
+	</li>
+	<li> 
 		<label>Die Type</label>
 		<input type="radio" id="rdbDieCutting-<?SignatureIndex?>Simple" name="rdbDieCutting-<?SignatureIndex?>" value="Simple" onclick="calc(this.form.name);" <? echo ( $$variable{'rdbDieCutting-'.$$variable{'SignatureIndex'}} eq 'Simple' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbDieCutting-<?SignatureIndex?>Simple">Simple</label>
@@ -23,9 +24,9 @@
 		<br/>
 		<input name="txtSteelRuleLength-<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtSteelRuleLength-'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc(this.form.name);" /> 
 		Linear Inches
-	</p>
+	</li>
 <!--
-	<p> 
+	<li> 
 		<span class="required">*</span>
 		<span class="input">
 			<input name="txtDieCutBends" size="9" value="<?txtDieCutBends?>"  onkeyup="calc(this.form.name);" />
@@ -33,8 +34,8 @@
 		</span>
 		<label>How many bends are included in your die cut image. (ie. Circles - 4 Bends, Half Moon - 2 Bends, Five Point Star Burst - 10 bends.)</span>
 		<br class="spacer"/>
-	</p>
-	<p> 
+	</li>
+	<li> 
 		<span class="required">*</span>
 		<span class="input"> <input name="txtDieCutPunches" size="9" value="<?txtDieCutPunches?>"  onkeyup="calc(this.form.name);" />
 			Quantity of Die Cut Punches</span>
@@ -42,10 +43,11 @@
 			than 1&quot; in diameter? If yes, please specify how many areas need to 
 			be die cut punched to a diameter of 1&quot; or less.</span>
 		<br class="spacer"/>
-	</p>
+	</li>
 -->
-</div>
-<p> 
+</ul>
+<ul>
+<li> 
 	<label># of holes to clear</label>
 	<input name="txtHoleClearingHoles-<?SignatureIndex?>" size="4" value="<? echo ( $$variable{'txtHoleClearingHoles-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);" />
-</p>
+</li>

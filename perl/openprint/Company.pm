@@ -67,6 +67,7 @@ $serial = 'companies_id_seq';
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %find_fields = (
 	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -90,6 +91,7 @@ $serial = 'companies_id_seq';
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 sub Currency {
@@ -236,7 +238,9 @@ sub save_tradereferences {
 
 
 sub Credit {
-	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$_[1] } );
+	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
+
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
 sub dropdown {

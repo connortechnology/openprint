@@ -57,6 +57,17 @@ sub search {
 		ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
 	} # end if
+	my $Location = new openprint::User($session{'user_id'})->Location() if $session{user_id};
+	if ( ! ( $Location and $Location->id() ) ) {
+		$Location = openprint::Location::from_ip( $ENV{'REMOTE_ADDR'} );
+	} # end if
+	if ( $Location and $Location->id() ) {
+		my $Country = $Location->ancestor('type'=>'country');
+		my $State = $Location->ancestor('type'=>'state');
+
+		$session{'/event/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/event/search.html?country_id'};
+		$session{'/event/search.html?state_id'} = $State->id() if $State and ! exists $session{'/event/search.html?state_id'};
+	} # end if
 } # end sub search
 sub _search {
 	if ( ! $param{'btnFunction'} ) {
@@ -150,17 +161,6 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
-	} elsif ( $param{'filename'} ) {
-		my $Album = $Event->Album();
-		if ( ! $Album->id() ) {
-			$variable{'error'} .= $Album->save({'name'=>'Photos for ' . $Event->name()});
-			$variable{'error'} .= $Event->save({'album_id'=>$Album->id()});
-		} # end if
-		$variable{'error'} = $Album->upload( 'filename' );
-		if ( ! $variable{'error'} ) {
-			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
-		} # end if
 	} # end if
 } # end sub view
 
@@ -168,14 +168,6 @@ sub _view {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	$Event->set( \%param );
 } # end sub _view
-
-sub _photos {
-	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'action'} eq 'delete' ) {
-		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
-		$variable{'error'} .= $Photo->delete() if $Photo->id();
-	} # end if
-} # end sub _photos
 
 sub _attendance {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );

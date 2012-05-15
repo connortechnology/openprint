@@ -80,7 +80,7 @@
 								$Location->save() if $Location->get_latitude_and_longitude();
 							} # end if
 							if ( $Location->latitude() and $Location->longitude() ) {
-								$html .= '<iframe src="http://maps.google.com/maps?f=q&source=s_q&hl=en&ll='.$Location->latitude().','.$Location->longitude().'&sll='.$Location->latitude().','.$Location->longitude().'&q='.join('+',$Location->name(), $Location->address(), ( $Location->postalcode() ? $Location->postalcode() : () ), map{$_->name()} ( $Location->Parents() ) ).'&z=13&output=embed" style="width: 100%; height:400px;"></iframe>';	
+								$html .= $Location->googlemap_html();
 							}  # end if
 						} 
 						return $html;
@@ -89,11 +89,8 @@
 			</div>
 		</fieldset>
 <? if ( $$variable{'Location'}->id() ) ?>
-		<fieldset><legend>Photos</legend>
-		<div id="Photos">
-			<!--#include virtual="_photos.html"-->
-		</div>
-		</fieldset>
+	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
+	<!--#include virtual="/photo_albums/_album_upload.html"-->
 		<fieldset><legend>Upcoming Events</legend>
 		<div id="Events">
 			<!--#include virtual="_events.html"-->

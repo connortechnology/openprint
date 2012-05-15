@@ -143,15 +143,6 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 } # end sub save_article
 
 sub history {
-	if ( $param{'func'} eq 'Destroy' ) {
-		my $Article = new openprint::Article( $param{'article_id'} );
-		if ( ! $Article->can_edit() ) {
-			$variable{'error'} .= 'You do not have rights to destroy this article.';
-			return;
-		} # end if
-		$variable{'error'} .= $Article->destroy();
-	} # end if
-
 	_history();
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -171,11 +162,34 @@ sub _history {
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
 				'published','employee_id','company_id', 'category_id' ) );
+	} 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->delete();
+		} # end foreach id
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->destroy();
+		} # end foreach id
 	} # end if
 } # end sub _history
 
 sub edit {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	if ( ! $Article->can_edit() ) {
+		$variable{'error'} .= 'You do not have rights to edit this article.';
+		return;
+	} # end if
 	if ( $param{'func'} eq 'Save' ) {
 		save_article();
 		if ( $variable{'error'} or $variable{'warning'} ) {
@@ -183,13 +197,13 @@ sub edit {
 			%param = ();
 			$variable{'ExternalRedirect'} = '/article/history.html';
 		} # end if
-	} elsif ( $param{'func'} eq 'Destroy' ) {
-		my $Article = new openprint::Article( $param{'article_id'} );
-		if ( ! $Article->can_edit() ) {
-			$variable{'error'} .= 'You do not have rights to destroy this article.';
-			return;
+	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
+		my $func = $Article->can($param{'func'});
+		$variable{'error'} .= $func->( $Article );
+		if ( ! $variable{'error'} ) {
+			%param = ();
+			$variable{'ExternalRedirect'} = '/article/history.html';
 		} # end if
-		$variable{'error'} .= $Article->destroy();
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
 		$variable{'error'} .= $variable{'Article'}->save();
@@ -303,7 +317,9 @@ sub _assets {
 		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
 		$variable{'error'} .= $Asset->delete();
 	} elsif ( $param{'func'} eq 'add' ) {
-		my $Asset = openprint::Asset->find_one('filename'=>$param{'filename'} );
+		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
+			
+		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
 		if ( $Asset ) {
 			my $AA = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$$Asset{'id'}});
 			if ( ! $$AA{'asset_id'} ) {
@@ -317,8 +333,8 @@ sub _assets {
 		} else {
 			$variable{'error'} .= 'Asset not found.';
 		} # end if
-	} else {
-		$log->error("article/_assets: Uknown function");
+	} elsif ( $param{'func'} ) {
+		$log->error("article/_assets: Uknown function $param{'func'}");
 	} # end if
 } # end sub _assets
 

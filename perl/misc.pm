@@ -165,15 +165,13 @@ sub export {
 sub get_destination {
 	my ( $r, $uri ) = @_;
 	my $dest = $uri ? $uri : $r->uri();
-	my @keys = $r->param();
-	if ( @keys ) {
-		$dest .= '?';
-		my @params;
-		foreach my $key ( @keys ) {
-			next if $key eq 'password';
-			push @params, join( '=', ($key, $r->param($key)));
-		} # end foreach
-		$dest .=	join( '&', @params );
+	my @values;
+	foreach my $key ( $r->param() ) {
+		next if $key eq 'password';
+		push @values, map { $key.'='.$_ } ( ref $r->param($key) eq 'ARRAY' ? @{$r->param($key)} : $r->param($key) );
+	} # end ofreach     
+	if ( @values ) {
+		$dest .= '?' . join('&', @values );
 	} # end if
 	return $dest;
 } # end sub get_destination
@@ -473,34 +471,6 @@ sub add_delta_business_days {
 
 	return ( $year, $month, $day );
 } # end sub add_delta_business_days
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 sub smart_time {
 	my $difference = time - $_[0];

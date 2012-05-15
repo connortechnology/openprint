@@ -62,6 +62,8 @@ sub load_simple {
 		} # end if
 	} # end if
 
+	my %defaults = sql::execute( $log, $dbh, q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex IS NULL} );
+	@variable{keys %defaults} = values %defaults;
 	my $services = $variable{'Project'}->services();
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );

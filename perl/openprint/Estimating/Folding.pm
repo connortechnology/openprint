@@ -551,8 +551,9 @@ sub signature_calc {
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
 			foreach my $I ( @Impositions ) {
-				my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-				my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+				# Used to be sprintf...
+				my $width_folds = int(($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+				my $height_folds = int(($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 				if ( $width_folds and $height_folds ) {
 	# All impositions must be 1 out. This may not be true
 					my $Singleton = $I->copy();
@@ -584,7 +585,7 @@ sub signature_calc {
 					push @Set_Of_Impositions, $I;
 				} # end if
 			} # end foreach I in the set of impositons
-		} # end if
+		} # end if finalwidth and height
 		# Now we have a base set of Maximal Impositions.  Now some of the I's in this set may have an imposition > 1.  
 		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.  
 		if ( DEBUG and 1 ) {
@@ -741,13 +742,13 @@ $Imposition->display("Folding on press");
 										my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
 										my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 										$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if DEBUG;
-										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
+										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 # If folds are on width, we grip on height...
 											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
 												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).") if DEBUG;
 												$Fold = undef;
 											} # end if
-										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
+										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) ) {
 											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
 												$Fold = undef;
 												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.") if DEBUG;
@@ -784,9 +785,9 @@ $Imposition->display("Folding on press");
 									'page_columns'		=>	$Imposition->page_columns(),
 									'page_rows'			=>	$Imposition->page_rows(),
 									'spine_direction'	=>	$$Imposition{'image_orientation'},
-									'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-									'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-									'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
+									'stitching'			=>	(($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0),
+									'perfectbind'		=>	($$services{'PerfectBound'} ? 1 : 0),
+									'spinepaste'		=>	($$services{'SpinePaste'} ? 1 : 0),
 									'gsm'				=>	$Paper->gsm(),
 									'calliper'			=>	$$Paper{'calliper'},
 									'imposition'		=>	$$Imposition{'imposition'},
@@ -865,8 +866,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 
 						foreach my $F ( @{$folds{$key}} ) {
 #$openprint::log->debug("Overriding FOlds and Angles $$F{folds} $$F{angles}");
-							$F->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-							$F->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+							$$F{'folds'} = $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+							$$F{'angles'} = $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found ) {
@@ -940,8 +941,8 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 				$fold_specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->imposition();
 				$fold_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->columns();
 				$fold_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Imposition->rows();
-				$fold_specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->folds();
-				$fold_specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->angles();
+				$fold_specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $$Fold{'folds'};
+				$fold_specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $$Fold{'angles'};
 				$fold_specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} = $Fold->runspeed($Paper->gsm());
 				$fold_index += 1;
 
@@ -962,18 +963,18 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					$width_folds = int($Imposition->image_width()/$Imposition->object_width())-1;
 					$height_folds = int($Imposition->image_height()/$Imposition->object_height())-1;
 				} # end if
-				if ( $Fold->folds() or $Fold->angles() ) {
-					if ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) {
-					} elsif ( $width_folds == $Fold->angles() and $height_folds == $Fold->folds() ) {
-						$width_folds = $Fold->angles();
-						$height_folds = $Fold->folds();
+				if ( $$Fold{'folds'} or $$Fold{'angles'} ) {
+					if ( $width_folds == $$Fold{'folds'} and $height_folds == $$Fold{'angles'} ) {
+					} elsif ( $width_folds == $$Fold{'angles'} and $height_folds == $$Fold{'folds'} ) {
+						$width_folds = $$Fold{'angles'};
+						$height_folds = $$Fold{'folds'};
 					} else {
-						$width_folds = $Fold->folds();
-						$height_folds = $Fold->angles();
+						$width_folds = $$Fold{'folds'};
+						$height_folds = $$Fold{'angles'};
 					} # end if
 				} else {
-					$Fold->folds( $width_folds );
-					$Fold->angles( $height_folds );
+					$$Fold{'folds'} = $width_folds;
+					$$Fold{'angles'} = $height_folds;
 				} # end if
 				my $width = 0;
 				if ( $width_folds and $height_folds ) {
@@ -1255,16 +1256,15 @@ sub calc {
 
 		my $previous_imposition;
 
+		my @signatures = sort $Project->signatures();
 		my @Signature_Impositions;
-		foreach ( $Project->signatures() ) {
-			my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
+		foreach ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $i = new openprint::Imposition();
-			$i->load( $s_specs, $qty_index );
+			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
-		} # end foreach ss_id
-		# Clear them all first
-		foreach my $signature_service_index ( sort $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				foreach my $index ( 1 .. 4 ) {
 					$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
@@ -1280,13 +1280,11 @@ sub calc {
 		} # end foreach signature
 
 		my $calc_hash = {};
-
-		foreach my $signature_service_index ( sort $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
@@ -1347,7 +1345,7 @@ sub calc {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 					} # end if
 					$status = 'uncalculated';
-$openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
+					$$specs{'alert'} .= "Unable to fold form $$sig_specs{SignatureIndex} qty $qty_index<br/>";
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';

@@ -83,7 +83,7 @@ sub new {
 # First off, for now, don't cache figure that out later
 		#@$id{@keys} = @$id{@keys};
 #$log->debug("New by hash @keys : " . $self->to_string() );
-$log->debug("New by hash @keys : " . $id->to_string() );
+#$log->debug("New by hash @keys : " . $id->to_string() );
 		$id->load( $data );
 #$log->debug("New by hash @keys : " . $id->to_string() );
 		return $id;
@@ -138,7 +138,7 @@ sub load {
 } # end sub load
 
 sub save {
-	my ( $self, $data ) = @_;
+	my ( $self, $data, $force_insert ) = @_;
 
 	my $type = ref $self;
 	my $local_dbh = eval '$'.$type.'::dbh';
@@ -174,7 +174,7 @@ if ( $debug ) {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
-		my $insert = 0;
+		my $insert = $force_insert;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 $log->debug("No serial") if $debug;
@@ -227,10 +227,12 @@ $log->debug("No serial") if $debug;
 			} # end if
 		} # end if
 	} else { # not identified_by
-		if ( ! $$self{'id'} ) {
-			my $serial = eval '$'.$type.'::serial';
-			if ( $serial ) {
-				($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+		if ( ( ! $$self{'id'} ) or $force_insert ) {
+			if ( ! $$self{'id'} ) {
+				my $serial = eval '$'.$type.'::serial';
+				if ( $serial ) {
+					($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+				} # end if
 			} # end if
 			my @keys = keys %sql;
 			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
@@ -308,12 +310,14 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 		} # end if
 
 		if ( defined $$fields{$field} ) {
-			my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-			$log->debug("Transforms: @transforms") if $debug;
+			if ( $$self{$field} ) {
+				my @transforms = eval('@{$'.$type.'::transforms{$field}}');
+				$log->debug("Transforms: @transforms") if $debug;
 
-			foreach my $transform ( @transforms ) {
-				eval '$$self{$field} =~ ' . $transform;
-			} # end foreach
+				foreach my $transform ( @transforms ) {
+					eval '$$self{$field} =~ ' . $transform;
+				} # end foreach
+			} # end if $$self{field}
 
 			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
@@ -392,9 +396,20 @@ sub destroy {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
-	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$$fields{'id'}.'=?', $$self{'id'} );
-	delete $openprint::Object::cache{$config{'db_name'}}{$type}{$$self{id}};
+	my @identified_by = eval '@'.$type.'::identified_by';
+	@identified_by = ( 'id' ) if ! @identified_by;
+	if ( ! $$self{$identified_by[0]} ) {
+		$log->error("Called delete on object with no id of type $type : " . $self->to_string());
+		return "Object::delete: No id in object: " . $self->to_string();
+	} # end if
+	my $local_dbh = eval '$'.$type.'::dbh';
+	$local_dbh = $openprint::dbh if ! $local_dbh;
+	my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+	sql::execute( undef, $local_dbh, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
+	return $local_dbh->errstr if $local_dbh->errstr;
+	delete $openprint::Object::cache{$config{'db_name'}}{$type}{join('-',@$self{@identified_by})};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+	return;
 } # end sub destroy
 
 sub Creator {
@@ -402,12 +417,16 @@ sub Creator {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
 
+my @sql_functions = (
+	'NOW()','CURRENT_TIME',
+);
+
 sub find_operators {
 	my ( $params, $k, $f ) = @_;
 	my %results;
 
 	if ( exists $$params{$k.' ='} ) {
-		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
+			push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
 	} # end if
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
@@ -441,6 +460,9 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.'_null_or_>'} ) {
 		push @{$results{'_null_or_>'}}, "( $f > ? OR $f IS NULL )", $$params{$k.'_null_or_>'};
+	} # end if
+	if ( exists $$params{$k.'_null_or_<'} ) {
+		push @{$results{'_null_or_<'}}, "( $f < ? OR $f IS NULL )", $$params{$k.'_null_or_<'};
 	} # end if
 	if ( exists $$params{$k.' is null or ='} ) {
 		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
@@ -780,7 +802,7 @@ sub AUTOLOAD {
 	$name =~ s/.*://;
 	return if $name eq 'DESTROY';
 	if ( @_ > 1 ) {
-$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
+#$openprint::log->debug("Autoload $type $name $_[0] $_[1] $self $newvalue");
 		return $_[0]{$name} = $_[1];
 	} else {
 		my $fields = eval '\%'.$type.'::fields';

@@ -4,7 +4,6 @@
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend>Cutting Services</legend>
 			<ul>
-
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -42,12 +41,12 @@ $html .= '</span>';
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
 	</li>
-	<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
 	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) ?>
 	<li>
     	<label>Additional cuts</label>
-        <input name="txtAdditionalCuts<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc('f1');" />
+        <input name="txtAdditionalCuts<?SignatureIndex?>" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc('f1');" />
 	</li>
 	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $session{'user_type'},['E','A']) ) ?>
 	</ul>
@@ -81,7 +80,7 @@ $html .= '</span>';
 		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</li>
 	<li>
-		<label><b>Equipment</b></label>
+		<label>Equipment</label>
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -102,7 +101,7 @@ $html .= '</span>';
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= sprintf(q`<span class="%1$sColumns"><input name="txtStockCutPrice-%2$d-%3$d" size="9" readonly="readonly" /></span>`,
+				$html .= sprintf(q`<span class="%1$sColumns"><input name="txtStockCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index,
 					);
 			} # end foreach qty_index
@@ -131,7 +130,7 @@ $html .= '</span>';
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
-					<input name="txtCalculatedCuts-%2$d-%3$d" size="6" value="%4$s" onkeyup="calc('f1');" />%5$s
+					<input name="txtCalculatedCuts-%2$d-%3$d" value="%4$s" onkeyup="calc('f1');" />%5$s
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtCalculatedCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
@@ -147,7 +146,7 @@ $html .= '</span>';
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
-					<input name="txtVerticalCuts-%2$d-%3$d" size="6" value="%4$s" onkeyup="calc('f1');" />%5$s
+					<input name="txtVerticalCuts-%2$d-%3$d" value="%4$s" onkeyup="calc('f1');" />%5$s
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtVerticalCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
@@ -164,7 +163,7 @@ $html .= '</span>';
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
-					<input name="txtHorizontalCuts-%2$d-%3$d" size="6" value="%4$s" onkeyup="calc('f1');" />%5$s
+					<input name="txtHorizontalCuts-%2$d-%3$d" value="%4$s" onkeyup="calc('f1');" />%5$s
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtHorizontalCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
@@ -180,7 +179,7 @@ $html .= '</span>';
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
-					<input name="txtDVerticalCuts-%2$d-%3$d" size="6" value="%4$s" onkeyup="calc('f1');" />%5$s
+					<input name="txtDVerticalCuts-%2$d-%3$d" value="%4$s" onkeyup="calc('f1');" />%5$s
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtDVerticalCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
@@ -197,7 +196,7 @@ $html .= '</span>';
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 				$html .= sprintf(q`<span class="%1$sColumns">
-					<input name="txtDHorizontalCuts-%2$d-%3$d" size="6" value="%4$s" onkeyup="calc('f1');" />%5$s
+					<input name="txtDHorizontalCuts-%2$d-%3$d" value="%4$s" onkeyup="calc('f1');" />%5$s
 					</span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index, 
 					$$variable{"txtDHorizontalCuts-$$variable{SignatureIndex}-$$variable{QTYIndex}"},
@@ -229,7 +228,7 @@ $html .= '</span>';
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= sprintf(q`<span class="%1$sColumns"><input id="txtRegularCutPrice-%2$d-%3$d" name="txtRegularCutPrice-%2$d-%3$d" size="9" readonly="readonly" /></span>`,
+				$html .= sprintf(q`<span class="%1$sColumns"><input id="txtRegularCutPrice-%2$d-%3$d" name="txtRegularCutPrice-%2$d-%3$d" readonly="readonly" /></span>`,
 					@$variable{'Columns','SignatureIndex'}, $qty_index,
 					);
 			} # end foreach qty_index

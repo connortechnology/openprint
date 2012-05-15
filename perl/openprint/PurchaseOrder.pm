@@ -248,11 +248,11 @@ $openprint::log->debug('send_to_me');
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$_[0]{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-PO'.$$_[0]{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my $receipt = (new openprint::Email())->send(
 			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
@@ -328,10 +328,13 @@ sub notifications {
 	if ( $new ) {
 		@{$$self{'notifications'}} = @{$new};
 		if ( $$self{'id'} ) {
+			my $ac = sql::start_transaction( $openprint::dbh );
+			$dbh->do( 'LOCK TABLE PurchaseOrder_Notifications IN ACCESS EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
 			sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 			foreach ( @{$$self{'notifications'}} ) {
 				sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
 			} # end foreach
+			sql::end_transaction( $openprint::dbh, $ac );
 		} # end if
 	} # end if
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {

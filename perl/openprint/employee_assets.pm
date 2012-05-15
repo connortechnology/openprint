@@ -36,7 +36,7 @@ sub history {
 	} # end if
 	
 	if ( ( ! $session{'/employee/assets/history.html?lastupdated'} ) or ( time - $session{'/employee/assets/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', '' );
+		ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', -30 );
 		ssi::setup_date_select( '/employee/assets/history.html', 'created_on_end', '' );
 		$session{'/employee/assets/history.html?deleted'} = 0 if ! exists $session{'/employee/assets/history.html?deleted'};
 	} # end if
@@ -73,6 +73,7 @@ sub view {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
 		if ( $param{'filename'} ) {
+			$Asset->upload( 'filename' );
 			my $upload = $r->upload('filename');
 			if ( ! $upload ) {
 				$Asset->save({'filename'=>''});
