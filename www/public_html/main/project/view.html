@@ -205,7 +205,9 @@ There is no current project.
 <br class="spacer"/>
 <br/>
 <div style="float:left; p\osition: relative; height: 19px;">
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "if(confirm('Are you sure?')){f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();}", '', 'Delete' ); ) ?>

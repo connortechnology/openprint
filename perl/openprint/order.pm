@@ -1195,7 +1195,7 @@ sub send_sales_order {
 		#BCC		=>	'iconnor@penultima.org',
 		SUBJECT => "Order $order_id",
 );
-	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
+	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
