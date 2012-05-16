@@ -512,7 +512,7 @@ sub send_sales_order {
 		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
-		ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries ],
+		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
