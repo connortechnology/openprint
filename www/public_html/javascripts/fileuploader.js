@@ -751,15 +751,14 @@ qq.UploadDropZone.prototype = {
 		} // end if
 		// Check for other valid drops
 		if ( isWebkit ) return false;
- 		alert ('checking for ');
 		if ( dt.types.contains('application/x-moz-file-promise-dest-filename') ) {
 			return true;
 		} // end if
 for(var i=0, num=dt.types.length; i < num; i += 1  ) {
             var item = dt.types.item(i);
-    alert (item);
+    //alert (item);
             var data = dt.getData(item);
-    alert(data);
+    //alert(data);
         } // end for
 		return rc;
 	

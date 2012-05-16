@@ -13,6 +13,10 @@ $table = 'product_specifications';
 		'name'				=>	'name',
 		'value'				=>	'value',
 );
+%transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'value' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 
 %defaults = (
 );

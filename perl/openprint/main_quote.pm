@@ -467,6 +467,9 @@ sub overview {
 sub _quote_list {
 } # end sub _quote_list
 
+sub _products_dropdown {
+} # end sub _products_dropdown
+
 1;
 
 __END__

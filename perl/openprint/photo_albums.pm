@@ -104,10 +104,22 @@ sub edit {
 } # end sub edit
 
 sub _album_photos {
-	$param{'album_type'} = 'openprint::Photo_Album' if ! $param{'album_type'};
-	my $Album = $variable{'Album'} = $param{'album_type'}->new($param{'album_id'});
+	my $Object;
+	my $Album;
+	if ( ( ! $param{'album_type'} ) or ( $param{'album_type'} eq 'openprint::Photo_Album' ) ) {
+		$Album = $variable{'Album'} = new openprint::Photo_Album( $param{'album_id'} );
+	} else {
+		$Object = $variable{'Album'} = $param{'album_type'}->new( $param{'album_id'} );
+		$Album = $Object->Album();
+		if ( ! $Album->id() ) {
+			$Album->save();
+			$Object->save({'album_id'=>$Album->id()});
+		} # end if
+	} # end if
+
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
+		$variable{'error'} .= $Object->save({'thumbnail_id'=>$param{'asset_id'}}) if $Object;;
 	} elsif ( $param{'action'} eq 'add' ) {
 		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
 $log->debug("$id , $filename ");
@@ -120,11 +132,11 @@ $log->debug("$id , $filename ");
 		} # end if
 		if ( $Asset ) {
 			if ( sets::isin( $Asset->id(), [ map { $_->asset_id() } $Album->Photos() ] ) ) {
-				$variable{'error'} .= 'Asset already in article.';
+				$variable{'error'} .= 'Asset already in album.';
 			} else {
 				my $Photo = new openprint::Photo_in_Album();
 				$variable{'error'} .= $Photo->save({'album_id'=>$$Album{id}, 'asset_id'=>$Asset->id()});
-				delete $$Album{'Photos'};
+				$Album->Photos(undef);
 			} # end if
 		} else {
 			$variable{'error'} .= 'Asset not found.';

@@ -4,10 +4,17 @@
 </div>
 Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
 <br/>
-<form name="f1" method="post" action="/main/quote/confirmation.html">
+<form id="f1" name="f1" method="post" action="/main/quote/confirmation.html">
 	<div class="Quote"><div class="Submit">
+	<p class="buttons">
+		<? echo ( join('',
+					ssi::button( 'Back', { href=>'/main/quote/information.html?quote_id='.$$variable{'Quote'}->id(), text=>'Back' } ),
+					ssi::button( 'SubmitQuote', { onclick=>"f1.btnFunction.value='Submit Quote';f1.submit();", href=>'', text=>'Submit Quote' } ),
+					); ) ?>
+	</p>
 		<div class="Header">
 			<!--#include virtual="/includes/quote_header.html"-->
+<br class="spacer"/>
 			<!--#include virtual="/includes/quote_information.html"-->
 		</div>
 		<!--#include virtual="_projects.html"-->
@@ -20,11 +27,11 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 				</p>
 				<p>
 					<label>Administrator Comments</label>
-					<textarea name="AdministratorComments" rows="<? echo ( scalar split("\n", $$variable{'AdministratorComments'}) ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+					<textarea name="AdministratorComments" rows="<? echo ( ssi::count_lines( $$variable{'AdministratorComments'}); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 				</p>
 			</fieldset>
 		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
-		<div style="width:49%; float: right;" align="right"><br/><span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+		<div style="width:49%; float: right; text-align: right;"><br/><span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 			Prices are subject to applicable taxes.<br/>
 		</div>
 		<br class="spacer"/>
@@ -48,8 +55,5 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	} # end if
 	return $html;
 ) ?>
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'SubmitQuote', 'submitQuote.gif', "f1.btnFunction.value='Submit Quote';f1.submit();", '', 'Submit Quote' ); ) ?>
-	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
