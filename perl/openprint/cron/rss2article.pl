@@ -80,7 +80,7 @@ my $rss = new XML::RSS;
 #my @Feeds = split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RSS_Feeds'} : $config{'RSS_Feeds'} ) );
 #@Feeds = openprint::Feed->find() if ! @Feeds;
 
-foreach my $Feed ( openprint::Feed->find() ) {
+foreach my $Feed ( openprint::Feed->find('active'=>1) ) {
 	my $content;
 	my $file;
 	my $arg = $Feed->url();

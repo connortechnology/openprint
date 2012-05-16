@@ -17,6 +17,10 @@ $table = 'Product_Categories';
 		'projecttype_id'	=>	'projecttype_id',
 );
 
+%transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'description' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 %defaults = (
 		'projecttype_id'	=>	undef,
 );
@@ -63,10 +67,7 @@ sub products {
 } # end sub products
 
 sub ProjectType {
-	my $self = shift;
-
-	return new openprint::ProjectType( $$self{projecttype_id} );
-	
+	return new openprint::ProjectType( $_[0]{projecttype_id} );
 } # end sub Type
 
 1;

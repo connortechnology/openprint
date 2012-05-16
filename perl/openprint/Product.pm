@@ -170,7 +170,7 @@ sub del_specification {
 
 sub next {
 	my $self = shift;
-	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name > (SELECT name FROM Products WHERE Id=?) ORDER BY name LIMIT 1}, $$self{'id'} );
+	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name >= (SELECT name FROM Products WHERE id=?) ORDER BY lower(name) LIMIT 1}, $$self{'id'} );
 	$id = $$self{'id'} if ! $id;
 	
 	return new openprint::Product( $id );

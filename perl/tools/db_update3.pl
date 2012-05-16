@@ -964,6 +964,9 @@ if ( ! sets::isin( 'feeds', \@tables ) ) {
 	if ( ! exists $$data{'published'} ) {
 		$dbh->do('ALTER TABLE feeds add published boolean NOT NULL default false');
 	} # en dif
+	if ( ! exists $$data{'active'} ) {
+		$dbh->do('ALTER TABLE feeds add active boolean NOT NULL default false');
+	} # en dif
 }
 if ( ! sets::isin( 'creditapplications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Credit_Applications.sql}) );

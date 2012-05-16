@@ -416,10 +416,10 @@ sub save_location {
 				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('postalcode',$$param{'postalcode'}) ) ) or
 				( $Location->parent_id() != $parent_id )
 		   ) {
-$openprint::log->debug("Blah");
-$openprint::log->debug('No location') if ! $Location;
-$openprint::log->debug("Address: $$Location{address} $$param{address} " . openprint::Location->transform('address',$$param{'address'}) );
-$openprint::log->debug("PostalCode: $$Location{postalcode} $$param{postalcode} " . openprint::Location->transform('postalcode',$$param{'postalcode'}) );
+#$openprint::log->debug("Blah");
+#$openprint::log->debug('No location') if ! $Location;
+#$openprint::log->debug("Address: $$Location{address} $$param{address} " . openprint::Location->transform('address',$$param{'address'}) );
+#$openprint::log->debug("PostalCode: $$Location{postalcode} $$param{postalcode} " . openprint::Location->transform('postalcode',$$param{'postalcode'}) );
 			# Different from what we have in db, add new
 			$Location = new openprint::Location();
 			$error .= $Location->save({
