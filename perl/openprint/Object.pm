@@ -337,6 +337,7 @@ sub copy {
 	my $fields = \%{$type.'::fields'};
 	@$new{keys %$fields} = @{$_[0]}{keys %$fields};
 	delete $$new{id};
+	delete $$new{album_id};
 
 	return $new;
 } # end sub copy
