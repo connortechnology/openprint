@@ -34,7 +34,7 @@ function delete_confirm(form) {
 				$html .= ssi::button( 'Order', { onclick=>"f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", text=>'Order' } );
 				$html .= ssi::button( 'Edit', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Edit' } );
 			} else {
-				$html .= ssi::button( 'Continue', { onclick=>"f1.action='/main/quote/information.html';f1.btnFunction.value='Continue';f1.submit();", text=>'Continue' } );
+				$html .= ssi::button( 'Continue', { href=>"/main/quote/information.html?quote_id=$$variable{'Quote'}{id}", text=>'Continue' } );
 			} # end if
 			return $html;
 		) ?>
@@ -47,6 +47,7 @@ To save, process a new quote or process an order from this quotation, please cli
 <div class="Quote">
 	<div class="Header">
 		<!--#include virtual="/includes/quote_header.html" -->
+<br class="spacer"/>
 		<!--#include virtual="/includes/quote_information.html" -->
 	</div>
 	<!--#include virtual="_projects.html"-->

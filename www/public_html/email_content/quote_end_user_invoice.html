@@ -68,36 +68,7 @@
 
 	</table>
 <? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
-<? if ( $$variable{'Quote'}->Products() ) ?>
-<table>
-	<thead>
-		<tr>
-			<th class="description">Product</th>
-			<th class="quantity">Quantity</th>
-			<th class="price">Price</th>
-		</tr>
-	</thead>
-	<tbody>
-		<? echo (
-			my $html;
-			my $rowclass;
-			foreach my $Product ( $$variable{'Quote'}->Products() ) {
-				$html .= sprintf('
-<tr%1$s>
-	<td class="description">%3$s</td>
-	<td class="quantity">%4$d</td>
-	<td class="price">%5$s</td>
-</tr>', $rowclass, $Product->id(), $Product->description(), $Product->quantity(), 
-openprint::Currency::format($Product->price()),
-);
-				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end foreach Product
-			
-			return $html;
-		) ?>
-	</tbody>
-</table>
-<? endif ( $$variable{'Quote'}->Products() ) ?>
+	<!--#include virtual="/email_content/_quote_products_for.html" -->
 	<br/>
 	<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
 	<br/>

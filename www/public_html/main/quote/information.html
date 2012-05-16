@@ -30,14 +30,13 @@
 </script>
 <? if ( ! $$variable{'Quote'}->id() ) ?>
 	There is no current quote.
-	<? echo ( ssi::button( 'create', { onclick=>'', href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
+	<? echo ( ssi::button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
 <? else ( ! $$variable{'Quote'}->id() ) ?>
 
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 	If you would like to send a copy of this quotation to someone on your behalf 
 	please fill in the necessary information below. This quote will be stored in 
-	quote history. If it is for your own personal reference leave the &quot;Prepared 
-	For&quot; fields blank.<br/>
+	quote history. If it is for your own personal reference leave the &quot;Prepared For&quot; fields blank.<br/>
 	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <br/>
 <div class="Quote">

@@ -17,11 +17,13 @@ $serial = 'feeds_id_seq';
 	'category_id'	=>	'category_id',
 	'filters'		=>	'filters',
 	'published'		=>	'published',
+	'active'		=>	'active',
 );
 
 %defaults = (
 	'company_id'	=>	q`$openprint::session{'company_id'}`,
 	'published'		=>	0,
+	'active'		=>	0,
 );
 
 1;

@@ -82,6 +82,10 @@ sub get_config {
 	return \%config;
 } # end sub get_config
 
+sub merge { 
+	@config{keys %{$_[0]}} = values %{$_[0]};
+} # end sub merge
+
 sub from_file {
 	my $file = $_[0];
 # Process the contents of the config file

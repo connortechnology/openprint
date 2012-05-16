@@ -54,7 +54,10 @@ sub edit {
 		$Product = $NewProduct;
 
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$Product->delete();
+		if ( ! ( $variable{'error'} .= $Product->delete() ) ) {
+			$variable{'information'} .= 'Product deleted successfully.';
+			$Product = $Product->next();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq '>>' ) {
 		$Product = $Product->next();
 	} elsif ( $param{'btnFunction'} eq '<<' ) {

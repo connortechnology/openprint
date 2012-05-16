@@ -1471,6 +1471,10 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
