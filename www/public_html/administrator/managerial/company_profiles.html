@@ -99,9 +99,11 @@
 			<input type="radio" name="rdbReseller" value="Y" <?rdbResellerY?> /> Yes
 			<input type="radio" name="rdbReseller" value="N" <?rdbResellerN?> /> No
 		</p>
+<? if ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) ?>
 		<p><label>Offers Credit:</label>
 			<? echo ( ssi::radio( 'offers_credit', ['1','Yes','0','No'], $$variable{'Company'}->offers_credit() ); ) ?>
 		</p>
+<? endif ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) ?>
 		<p> 
 			<label>Pricing List:</label>
 			<select name="ddmPriceList">

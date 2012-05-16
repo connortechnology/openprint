@@ -39,7 +39,7 @@ $table = 'company_credit';
 
 sub debt {
 	if ( ! exists $_[0]{'debt'} ) {
-		$_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )};
+		$_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up','Paid','Re-Opened','Waiting For Customer Approval','Waiting For QA Approval','Order Submitted' )};
 		my ( $debt ) = sql::execute( undef, undef, $_, $_[0]{'company_id'} );
 		$_ = q{SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND company_id=?};
 		my ( $payments ) = sql::execute( undef, undef, $_, $_[0]{company_id} );
@@ -63,7 +63,7 @@ sub remaining {
 sub outstanding_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
-    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
+    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up', 'Re-Opened','Waiting For Customer Approval','Waiting For QA Approval' )
     AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
     OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
     return sql::execute( undef, undef, $_, $$self{company_id} );

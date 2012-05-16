@@ -24,7 +24,7 @@
         my $Credit = $$variable{'Company'}->Credit($Supplier->id());
 
         $html .= sprintf(q`
-    <fieldset><legend>Credit Information for %2$s:</legend>
+    <div class="Credit"><fieldset><legend>Credit Information for %2$s:</legend>
         <ul>
             <li><label>Warn after</label><input type="number" name="warndays-%1$d" value="%3$d"/> Days</li>
             <li><label>Deny after</label><input type="number" name="denydays-%1$d" value="%4$d"/> Days</li>
@@ -35,7 +35,7 @@
             <li><label>Required Downpayment Amount</label><input type="number" name="downpayment-%1$d" value="%9$.2f" max="100" onkeyup="floatize(this);"/> %</li>
             <li><label>Required COD</label><input type="number" name="cod-%1$d" value="%10$.2f" max="100" onkeyup="floatize(this);"/> %</li>
         </ul>
-    </fieldset>
+    </fieldset></div>
         `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
         openprint::Currency::format( $Credit->limit() ),
         openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
