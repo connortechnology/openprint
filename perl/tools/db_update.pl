@@ -861,7 +861,7 @@ if ( $version < 1901 ) {
 	if ( @Services ) {
 		my $Service = $Services[0];
 		foreach my $Equipment ( openprint::Equipment->find('category'=>'Printing') ) {
-			foreach my $Price ( openprint::ServicePrice->find('Equipment'=>$Equipment, 'Service'=>$Service )) {
+			foreach my $Price ( openprint::ServicePrice->find('equipment_id'=>$Equipment->id(), 'service_id'=>$Service->id() )) {
 				if ( $$Price{'units'} eq 'Per Unit' ) {
 					$$Price{'cost'} = $$Price{'cost'}/$$Price{'min'};
 					$$Price{'price'} = $$Price{'price'}/$$Price{'min'};
