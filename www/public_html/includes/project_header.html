@@ -25,7 +25,7 @@
 		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 		<p>
 			<label>Required COD:</label>
-			<? echo ( $$variable{'Project'}->Order()->cod_percent() ) ?>%
+			<? echo ( $$variable{'Project'}->Order()->cod_owing_percent() ) ?>% remaining
 		</p>
 		<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 	  	<? endif ( $$variable{'Project'}->docket() ) ?>
