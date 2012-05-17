@@ -70,6 +70,7 @@ sub copy {
 	@$Product{keys %fields} = @$self{keys %fields};
 	$$Product{'name'} = 'Copy of '.$$Product{'name'};
 	delete $$Product{'id'};
+	delete $$Product{'album_id'};
 	$self->specifications();
 	%{$$Product{'Specifications'}} = %{$$self{'Specifications'}};
 	return $Product;
