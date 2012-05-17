@@ -3,12 +3,12 @@
 <fieldset class="filters">
 <p><label>Docket #</label><input type="text" name="Docket" id="Docket"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
- <? echo ( ssi::button( 'Go1', { onclick=>"f2.submit();", href=>'', text=>'Go' } ); ) ?>
+ <? echo ( ssi::button( 'Go1', { onclick=>"f2.submit();", text=>'Go' } ); ) ?>
 </p>
 
 <p><label>Project #</label><input type="text" name="project_id" id="project_id"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
- <? echo ( ssi::button( 'Go2', { onclick=>"f2.submit();", href=>'', text=>'Go' } ); ) ?>
+ <? echo ( ssi::button( 'Go2', { onclick=>"f2.submit();", text=>'Go' } ); ) ?>
 </p>
 </fieldset>
 </form>
@@ -42,7 +42,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 <div class="Project">
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
-<form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
+<form id="f1" name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
 			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -95,7 +95,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 &nbsp;</td>
 			<td class="Price">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
+			<? echo ( openprint::Currency->format($$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
 			<td class="status" id="status<?index?>"><!--#include virtual="_status.html"--></td>
@@ -195,7 +195,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td colspan="2">Add Service:<select name="NewServiceType"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td>
-			<? echo ( ssi::button( 'AddServiceType', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", href=>'', text=>'Add Service' } ); ) ?></td>
+			<? echo ( ssi::button( 'AddServiceType', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", text=>'Add Service' } ); ) ?></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
@@ -205,17 +205,35 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="service"><input type="text" name="txtServiceName" /></td>
 			<td class="Price"><input type="number" name="txtPrice" /></td>
 			<td>
-			<? echo ( ssi::button( 'AddToProject', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", href=>'', text=>'Add Custom Service' } ); ) ?>
+			<? echo ( ssi::button( 'AddToProject', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", text=>'Add Custom Service' } ); ) ?>
 			</td>
 		</tr>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-		<tr class="totals total">
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+		<tr class="totals subtotal">
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="checkbox unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="service">Subtotal</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+<? if ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+		<tr class="tax">
+			<td class="checkbox unprintable"></td>
+			<td class="service">HST</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->harmonized_tax() ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+<? endif ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+		<tr class="total">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">Total</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->total() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 
@@ -227,7 +245,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->paid() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? if ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
+		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
 		<tr class="downpayment">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
@@ -236,17 +254,23 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->downpayment_owing() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
-		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<? endif ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
+		<? if ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 		<tr class="cod">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">COD Owing</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() ); ) ?></td>
+			<td class="Price"><? echo ( 
+					if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
+						return openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() );
+					} else {
+						return $$variable{'Project'}->Order()->cod_owing_percent().'%';
+					} # end if
+			 ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<? endif ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -257,7 +281,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -277,6 +301,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="status"></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 		
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -288,11 +313,11 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
-		ssi::button( 'DocketButton', { onclick=>"open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", href=>'', text=>'Docket' } ),
-		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
-		 ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } ),
-		 ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", href=>'', text=>'JDF' } ),
-		 ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", href=>'', text=>'MXML' } ),
+		ssi::button( 'DocketButton', { onclick=>"open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
+		ssi::button( 'Summary', { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}" } ),
+		 ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+		 ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", text=>'JDF' } ),
+		 ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", text=>'MXML' } ),
 		 ); ) ?>
 	</span>
 	
@@ -300,9 +325,9 @@ if ( $$variable{'HiddenSignatures'} ) {
 		<? echo ( 
 			my $html;
 			if ( ! $$variable{'Project'}->rush() ) {
-				$html .= ssi::button( 'Rush', { onclick=>"if(confirm('Are you sure you want to rush this job?')) {f1.btnFunction.value='Rush';f1.submit();}", href=>'', text=>'Rush' } );
+				$html .= ssi::button( 'Rush', { onclick=>"if(confirm('Are you sure you want to rush this job?')) {f1.btnFunction.value='Rush';f1.submit();}", text=>'Rush' } );
 			} else {
-				$html .= ssi::button( 'NoRush', { onclick=>"f1.btnFunction.value='No Rush';f1.submit();", href=>'', text=>'No Rush' } );
+				$html .= ssi::button( 'NoRush', { onclick=>"f1.btnFunction.value='No Rush';f1.submit();", text=>'No Rush' } );
 			} # end if
 			
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
@@ -319,36 +344,36 @@ $log->debug("Have no job: $Job");
 				} # end foreach sig_id
 
 				if ( $need_add ) {
-					$html .= ssi::button( 'AddToPressSchedule', { onclick=>"f1.btnFunction.value='AddToPressSchedule';f1.submit();", href=>'', text=>'Add To Press Schedule' } );
+					$html .= ssi::button( 'AddToPressSchedule', { onclick=>"f1.btnFunction.value='AddToPressSchedule';f1.submit();", text=>'Add To Press Schedule' } );
 				} else {
-					$html .= ssi::button( 'RemoveFromPressSchedule', { onclick=>"f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", href=>'', text=>'Remove from Press Schedule' } );
+					$html .= ssi::button( 'RemoveFromPressSchedule', { onclick=>"f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", text=>'Remove from Press Schedule' } );
 				} # end if
 				if ( $pending ) {
-					$html .= ssi::button( 'ScheduleJob', { onclick=>"f1.btnFunction.value='BumpSchedule';f1.submit();", href=>'', text=>'Schedule' } );
+					$html .= ssi::button( 'ScheduleJob', { onclick=>"f1.btnFunction.value='BumpSchedule';f1.submit();", text=>'Schedule' } );
 				} # end if
-				$html .= ssi::button( 'CompletePrinting', { onclick=>"f1.btnFunction.value='Complete Printing';f1.submit();", href=>'', text=>'Complete Printing' } ) if $$variable{'Project'}->status() eq 'Approved';
+				$html .= ssi::button( 'CompletePrinting', { onclick=>"f1.btnFunction.value='Complete Printing';f1.submit();", text=>'Complete Printing' } ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
 
 			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Bindery' );
 
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
-				$html .= ssi::button( 'AddToBinderySchedule', { onclick=>"f1.btnFunction.value='AddToBinderySchedule';f1.submit();", href=>'', text=>'Add To Bindery Schedule' } );
+				$html .= ssi::button( 'AddToBinderySchedule', { onclick=>"f1.btnFunction.value='AddToBinderySchedule';f1.submit();", text=>'Add To Bindery Schedule' } );
 			} # end if
 			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
-			#$html .= ssi::button( 'Complete', { onclick=>"f1.btnFunction.value='Complete';f1.submit();", href=>'', text=>'Complete' } );
+			#$html .= ssi::button( 'Complete', { onclick=>"f1.btnFunction.value='Complete';f1.submit();", text=>'Complete' } );
 			#} # end if
 			if ( @bindery_services ) {
-				$html .= ssi::button( 'CompleteBindery', { onclick=>"f1.btnFunction.value='BinderyComplete';f1.submit();", href=>'', text=>'Complete Bindery' } );
+				$html .= ssi::button( 'CompleteBindery', { onclick=>"f1.btnFunction.value='BinderyComplete';f1.submit();", text=>'Complete Bindery' } );
 			} # end if
 			if ( sets::isin( $$variable{'ShippingType'}, [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
 
-				$html .= ssi::button( 'Shipped', { onclick=>"f1.btnFunction.value='Shipped';f1.submit();", href=>'', text=>'Shipped' } );
+				$html .= ssi::button( 'Shipped', { onclick=>"f1.btnFunction.value='Shipped';f1.submit();", text=>'Shipped' } );
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
-				$html .= ssi::button( 'PickedUp', { onclick=>"f1.btnFunction.value='Picked Up';f1.submit();", href=>'', text=>'Picked Up' } );
+				$html .= ssi::button( 'PickedUp', { onclick=>"f1.btnFunction.value='Picked Up';f1.submit();", text=>'Picked Up' } );
 			} # end if
 			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
-				$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='DeleteServices';f1.submit();", href=>'', text=>'Delete Checked Services' } );
+				$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='DeleteServices';f1.submit();", text=>'Delete Checked Services' } );
 			} # end if
 
 			return $html;
@@ -358,13 +383,13 @@ $log->debug("Have no job: $Job");
 	<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
 	<fieldset><legend>Additional Charges Actions</legend>
 		<span style="float: right;">
-		<? echo ( ssi::button( 'Approve', { onclick=>"f1.btnFunction.value='Approve';f1.submit();", href=>'', text=>'Approve New Charges' } ); )?>
+		<? echo ( ssi::button( 'Approve', { onclick=>"f1.btnFunction.value='Approve';f1.submit();", text=>'Approve New Charges' } ); )?>
 		</span>
 		To approve the additional charges, click Approve:<br class="spacer"/>
 		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', new openprint::Order( $$variable{'OrderID'} )->get('first_name','last_name','email') ); ) ?><br/>
 
 		<span style="float: right;">
-	 	<? echo ( ssi::button( 'AdditionalChargeNotify', { onclick=>"f1.btnFunction.value='AdditionalChargeNotify';f1.submit();", href=>'', text=>'Send' } );) ?>
+	 	<? echo ( ssi::button( 'AdditionalChargeNotify', { onclick=>"f1.btnFunction.value='AdditionalChargeNotify';f1.submit();", text=>'Send' } );) ?>
 		</span>
 		Additional recipients (separate with a comma):<input type="email" style="width: 66%;" name="AdditionalEmailRecipients"  />
 
