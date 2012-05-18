@@ -83,8 +83,9 @@ if ( $CFG::Config{'pid_file'} ) {
 	} # end if
 } # end if
 
+$config{'ping_wait'} = 1 if ! $config{'ping_wait'};
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',10);
+my $p = Net::Ping->new('icmp',$config{'ping_wait'});
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
