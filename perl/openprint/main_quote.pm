@@ -348,7 +348,7 @@ sub submit {
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->Project()->quantity_indexes() ) {
-				$QP->markup( $qty_index, $param{'markup'.$qty_index.'_'.$QP->project_id()} );
+				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
 			} # end foreach
 			$QP->save();
 		} # end foreach

@@ -1297,15 +1297,19 @@ function get_form_element_array( form, name ) {
 
 function cardinalize(e) {
 	e.value = e.value.replace(/\D/g,'');
+	return e.value;
 }
 function integerize(e) {
 	e.value = e.value.replace(/[^\d\-]/g,'');
+	return e.value;
 }
 function floatize(e) {
 	e.value = e.value.replace(/[^\d\-\.]/g,'');
+	return e.value;
 }
 function hexize(e) {
 	e.value = e.value.replace(/[^\da-fA-F]/g,'');
+	return e.value;
 }
 function createThrobber( img, preview ) {
     var x = img.x;

@@ -8,8 +8,8 @@
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
 			( sets::isin($session{'user_type'}, ['E','A'] ) ? ('company_id'=>$session{'/main/quote/history.html?company_id'}) : ( 'company_id'		=>	$session{'company_id'} ) ),
 ( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
-			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?created_on_start_year','/main/quote/history.html?created_on_start_month','/main/quote/history.html?created_on_start_day'}),
-			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?created_on_end_year','/main/quote/history.html?created_on_end_month','/main/quote/history.html?created_on_end_day'}),
+			ssi::date_filter( '/main/quote/history.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/main/quote/history.html?created_on_end', 'created_on <=' ),
 			'order'				=> $openprint::Quote::fields{'created_on'}.' DESC',
 			);
 	} # end if
@@ -26,30 +26,43 @@
 			The following are results belonging to other companies:<br/>
 			<table class="List">
 				<tr> 
-					<th width="75" align="left">Quote ID</th>
-					<th align="left">Company</th>
-					<th align="left">Quoted For</th>
+					<th class="quote_id"">Quote ID</th>
+					<th class="CompanyName">Company</th>
+					<th class="QuotedFor">Quoted For</th>
 					<th class="Date">Date</th>
 					<th class="Price">Total1</th>
 					<th class="Price">Total2</th>
 					<th class="Price">Total3</th>
 				</tr>
-				<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
-				<tr<?rowclass?>> 
-					<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
-					<td align="left"><? hecho ( $$variable{'Quote'}->Company()->name(); ) ?></td>
-					<td align="left"><? hecho ( $$variable{'Quote'}->for_name(); ) ?></td>
-					<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
-				</tr>
-				<tr<?rowclass?>>
-					<td>&nbsp;</td>
-					<td colspan="6"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
-				</tr>
-				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-				<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
+				<? echo (
+					my $html;
+					my $rowclass;
+					foreach my $Quote ( @{$$variable{'Quotes'}} ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td class="quote_id"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%2$d</a></td>
+	<td class="CompanyName"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%4$s</a></td>
+	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%5$s</a></td>
+	<td class="Date"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%6$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%7$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%8$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d&amp;btnFunction=SelectCompany&amp;ddmCompany=%3$d">%9$s</a></td>
+</tr>
+<tr%1$s>
+	<td>&nbsp;</td>
+	<td colspan="6">%10$s</td>
+</tr>`, $rowclass, $Quote->id(), $Quote->company_id(), ssi::html_escape( $Quote->Company()->name() ),
+					ssi::html_escape( $Quote->for_name() ), 
+					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Quote->created_on() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+);
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach Quote
+					return $html;
+				) ?>
 			</table>
 		<? endif ( @{$$variable{'Quotes'}} > 0 ) ?>
 		
@@ -65,32 +78,45 @@
 	</div>
 	<table class="List">
 		<tr> 
-			<th width="75" align="left">Quote ID</th>
-			<th align="left">Quoted For</th>
+			<th class="quote_id">Quote ID</th>
+			<th class="QuotedFor">Quoted For</th>
 			<th class="Date">Date</th>
 			<th class="Price">Total1</th>
 			<th class="Price">Total2</th>
 			<th class="Price">Total3</th>
 			<th class="checkbox"><input type="checkbox" name="checkall" onclick="select_all(this.form,'chkDelete',this.checked);" /></th>
 		</tr>
-		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
-		<tr<?rowclass?>> 
-			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
-			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></a></td>
-			<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
-			<td class="checkbox"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
-		</tr>
-		<tr<?rowclass?>>
-			<td>&nbsp;</td>
-			<td colspan="6"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
+				<? echo (
+					my $html;
+					my $rowclass;
+					foreach my $Quote ( @{$$variable{'Quotes'}} ) {
+				$html .= sprintf(q`
+<tr%1$s> 
+	<td class="quote_id"><a href="history_details.html?quote_id=%2$d">%2$d</a></td>
+	<td class="QuotedFor"><a href="history_details.html?quote_id=%2$d">%3$s</a></td>
+	<td class="Date"><a href="history_details.html?quote_id=%2$d">%4$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d">%5$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d">%6$s</a></td>
+	<td class="Price"><a href="history_details.html?quote_id=%2$d">%7$s</a></td>
+	<td class="checkbox"><input type="checkbox" name="chkDelete" value="%2$d" /></td>
+</tr>
+<tr%1$s>
+	<td>&nbsp;</td>
+	<td colspan="6">%8$s</td>
+</tr>`, $rowclass, $Quote->id(), 
+					ssi::html_escape( $Quote->for_name() ), 
+					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Quote->created_on() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total1() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total2() ) ),
+					openprint::Currency::format( $Quote->Currency()->convert_from( $Quote->total3() ) ),
+					$Quote->description(),
+);
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach Quote
+					return $html;
+				) ?>
 	</table>
-	<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';delete_confirm(f2);", '', 'Delete' ); ) ?></p>
+	<p class="buttons"><? echo ( ssi::button( 'Delete', { onclick=>"f2.btnFunction.value='Delete';delete_confirm(f2);", text=>'Delete' } ); ) ?></p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>

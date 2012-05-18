@@ -22,7 +22,7 @@
 	} // end function delete_confirrm
 	function load_quotes( form ) {
 		$('QuoteList').innerHTML = 'Please wait...';
-		new Ajax.Updater('QuoteList','/main/quote/_history.html', {method:'get',parameters:form.serialize(true)});
+		new Ajax.Updater('QuoteList','/main/quote/_history.html', {parameters:form.serialize(true)});
 	} // end function load_quotes
 -->
 </script>	 
@@ -33,11 +33,11 @@
 			<ul>
 			<li>
 				<label for="QuoteID">Quote ID</label>
-				<input type="text" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
+				<input type="number" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="cardinalize(this);if( this.value.length > 3 ){load_quotes( this.form );}" />
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li>
-				<label>Company</label>
+				<label>Quoted By Company</label>
 				<select name="company_id" id="company_id" onchange="load_quotes(this.form);">
 <? echo ( openprint::Company::get_dropdown($session{'/main/quote/history.html?company_id'} ? $session{'/main/quote/history.html?company_id'} : $session{'company_id'}) ) ?>				
 				</select>
