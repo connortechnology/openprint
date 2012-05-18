@@ -34,13 +34,8 @@ if ($opts->{help}) {
 }
 
 # Get our configuration information
-if (my $err = ReadCfg('/etc/iq_monitor.conf')) {
+if (my $err = ReadCfg('/etc/camera_reboot.conf')) {
     die $err;
-#} else {
-	#$log->debug("Successfully read cfg");
-	#foreach my $k ( keys %CFG::Config ) {
-		#$log->debug("$k => $CFG::Config{$k}");
-	#} # end foreach
 }
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
@@ -84,51 +79,62 @@ if ( $CFG::Config{'pid_file'} ) {
 } # end if
 
 
-	$log->debug("Connecting to db");	
-	$dbh = sql::open_sql( $log,
-			'host'		=> $CFG::Config{'db_host'},
-			'database'	=> $CFG::Config{'db_name'},
-			'driver'	=> 'Pg',
-			'login'		=> $CFG::Config{'db_user'},
-			'password'	=> $CFG::Config{'db_pass'},
-			);
-	if ( ! $dbh ) {
-		die "Error opening db. $!";
+$log->debug("Connecting to db");	
+$dbh = sql::open_sql( $log,
+		'host'		=> $CFG::Config{'db_host'},
+		'database'	=> $CFG::Config{'db_name'},
+		'driver'	=> 'Pg',
+		'login'		=> $CFG::Config{'db_user'},
+		'password'	=> $CFG::Config{'db_pass'},
+		);
+if ( ! $dbh ) {
+	die "Error opening db. $!";
+} # end if
+configuration::init_cache( $log, $dbh );
+
+# udp has less network traffic overhead
+my $p = Net::Ping->new('icmp',10);
+
+my @Hosts = openprint::Host->find('monitored'=>1,'type in'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W','AIC250','AIC250W' ]);
+$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
+foreach my $Host ( @Hosts ) {
+	if ( ! $Host->ip() ) {
+		$log->debug( "Monitored host without ip: " . $Host->to_string() );
+		next;
 	} # end if
-	configuration::init_cache( $log, $dbh );
-
-	# udp has less network traffic overhead
-	my $p = Net::Ping->new('icmp',10);
-
-	$log->debug( "Getting hosts" );
-	my @Hosts = openprint::Host->find('monitored'=>1,'type any'=>[ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ]);
-	$log->debug( 'Monitoring ' . @Hosts . ' hosts.' );
-	foreach my $Host ( @Hosts ) {
-		if ( ! $Host->ip() ) {
-			$log->debug( "Monitored host without ip: " . $Host->to_string() );
-			next;
-		} # end if
-		my @ping = $p->ping($Host->ip());
-		my $ping = $ping[0];
+	my @ping = $p->ping($Host->ip());
+	my $ping = $ping[0];
 #$openprint::log->debug("Ping1: @ping");
-		if ( ! @ping ) {
-			$log->warn("Problem with ping for " . $Host->hostname() );
-			next;
+	if ( ! @ping ) {
+		$log->warn("Problem with ping for " . $Host->hostname() );
+		next;
+	} # end if
+
+	if ( $Host->online() and $ping ) {
+
+		if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
+			$log->debug('Sending reboot to ' . $Host->hostname());
+			my $browser = LWP::UserAgent->new();
+			$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
+
+			my $response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
+			$log->debug($response->is_success);
+		} elsif ( sets::isin( $Host->type(), [ 'AIC250', 'AIC250W' ] ) ) {
+			$log->debug('Sending reboot to ' . $Host->hostname());
+			my $browser = LWP::UserAgent->new();
+			$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHi' );
+			my $response = $browser->get('http://'.$Host->hostname().'/Reply.htm?Reset=Yes');
+			$log->debug($response->is_success);
+		
+		} elsif ( $Host->type() ) {
+			$log->warn("unsupported type: " . $Host->type() );
 		} # end if
-
-		if ( $Host->online() and $ping ) {
-
-			if ( sets::isin( $Host->type(), [ 'AIC500', 'AIC500W', 'AIC777W', 'AIC747W' ] ) ) {
-				my $browser = LWP::UserAgent->new();
-				$browser->credentials( $Host->hostname().':80', 'Netcam', 'admin'=>'p1GraPHic' );
-
-				my $response = $browser->get('http://'.$Host->hostname().'/admin/reboot.cgi?type=0');
-				$log->debug($response->is_success);
-			} elsif ( $Host->type() ) {
-				$log->warn("unsupported type: " . $Host->type() );
-			} # end if
-		} # end if online
-	} # end foreach $Host
+	} elsif ( $Host->online() ) {
+		$log->debug("No ping for $$Host{hostname}");
+	} else {
+		$log->debug("$$Host{hostname} is offline: ping $ping");
+	} # end if online
+} # end foreach $Host
 $p->close();
 $dbh->disconnect() if $dbh;
 exit 0;
