@@ -1,0 +1,70 @@
+<? echo ( 
+	my @Pricelists;
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+		@Pricelists = openprint::Pricelist->find('order'=>'lower(name)');
+	} else {
+		@Pricelists = openprint::Pricelist->get_current();
+	} # end if
+	my $html = '';
+	my $admin = sets::isin( $session{'user_type'}, ['E','A'] );
+
+	foreach my $Pricelist ( @Pricelists ) {
+		$html .= '<fieldset>';
+		$html .= "<legend>Prices for Price List: $$Pricelist{name}</legend>" if $admin;
+		my @Prices = openprint::ProductPrice->find( 'product_id' => $$variable{'Product'}->id(), 'pricelist_id' => $Pricelist->id(), 'order' => 'min NULLS FIRST' );
+		if ( $admin ) {
+			$html .= '
+		<table class="List">
+			<tr>
+				<th class="Range">Unit Range</th>
+				<th class="Units">Units</th>
+				<th class="Cost">Cost</th>
+				<th class="Markup">Markup</th>
+				<th class="Price">Price</th>
+				<th class="Discount">Discount</th>
+			</tr>';
+		} else {
+			$html .= '
+		<table class="List">
+			<tr>
+				<th class="Range">Unit Range</th>
+				<th class="Units">Units</th>
+				<th class="Price">Price</th>
+			</tr>';
+		} # end if admin
+
+		foreach my $Price ( @Prices ) {
+			if ( $admin ) {
+				$html .= sprintf(q`
+		<tr> 
+			<td class="Range">%1$s - %2$s</td>
+			<td class="Units">%3$s</td>
+			<td class="Cost">%4$s</td>
+			<td class="Markup">%5$s%</td>
+			<td class="Price">%6$s</td>
+		</tr>`, 
+				( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ),
+				( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
+				$Price->units(), 
+				openprint::Currency::format( $Price->cost() ),
+				$Price->markup(),
+				openprint::Currency::format( $Price->price() ),
+				);
+			} else {
+				$html .= sprintf(q`
+		<tr> 
+			<td class="Range">%1$s - %2$s</td>
+			<td class="Units">%3$s</td>
+			<td class="Price">%4$s</td>
+		</tr>`, 
+				( $Price->min() ne '' ? Number::Format::format_number( $Price->min(), 0, 0 ) : '' ),
+				( $Price->max() ne '' ? Number::Format::format_number( $Price->max(), 0, 0 ) : '' ),
+				$Price->units(), 
+				openprint::Currency::format( $Price->price() ),
+				);
+			} # end if admin
+		} # end foreach Price
+		$html .= '</table></fieldset>';
+	} # end foreach Pricelist
+	return $html;
+) ?>

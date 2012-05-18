@@ -25,7 +25,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'config=s',
  );
 
 if ($opts->{help}) {
@@ -33,49 +33,32 @@ if ($opts->{help}) {
     exit 0;
 }
 
-# Get our configuration information
-if (my $err = ReadCfg('/etc/iq_monitor.conf')) {
-    die $err;
-#} else {
-	#$log->debug("Successfully read cfg");
-	#foreach my $k ( keys %CFG::Config ) {
-		#$log->debug("$k => $CFG::Config{$k}");
-	#} # end foreach
-}
+configuration::init( );
+configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+configuration::merge( $opts );
 
 foreach my $param ( 'db_name','db_user','db_pass','from','recipient','smtp-server' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 
-foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'skin_path','document_root','site_title','site_url' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-} # end foreach non-required param
-
-if ( $CFG::Config{'site_url'} ) {
-	$CFG::Config{'siteURL'} = $CFG::Config{'site_url'};
-	$CFG::Config{'ExternalSiteURL'} = $CFG::Config{'site_url'};
+if ( $config{'site_url'} ) {
+	$config{'siteURL'} = $config{'site_url'};
+	$config{'ExternalSiteURL'} = $config{'site_url'};
 } # end if
-$CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
-$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
+$config{'SiteTitle'} = $config{'site_title'};
+$config{'SkinPath'} = $config{'skin_path'};
 
-$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
+$config{'log_level'} = 'debug' if ! $config{'log_level'};
+$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 
-$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
-#$log->debug("Sleep duration $CFG::Config{sleep}");
+$config{'sleep'} = 1.0 if ! $config{'sleep'};
 
-#$log->debug("Finalised cfg");
-#foreach my $k ( keys %CFG::Config ) {
-	#$log->debug("$k => $CFG::Config{$k}");
-#} # end foreach
-
-if ( $CFG::Config{'pid_file'} ) {
-	#$log->debug("Creating pid file at $CFG::Config{'pid_file'} $$");
+if ( $config{'pid_file'} ) {
+	#$log->debug("Creating pid file at $config{'pid_file'} $$");
 	my $pidh;
-	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{'pid_file'} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
@@ -83,25 +66,28 @@ if ( $CFG::Config{'pid_file'} ) {
 	} # end if
 } # end if
 
+$config{'ping_wait'} = 1 if ! $config{'ping_wait'};
 # udp has less network traffic overhead
-my $p = Net::Ping->new('icmp',10);
+my $p = Net::Ping->new('icmp',$config{'ping_wait'});
 
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
 		$dbh = sql::open_sql( $log,
-				'host'		=> $CFG::Config{'db_host'},
-				'database'	=> $CFG::Config{'db_name'},
+				'host'		=> $config{'db_host'},
+				'database'	=> $config{'db_name'},
 				'driver'	=> 'Pg',
-				'login'		=> $CFG::Config{'db_user'},
-				'password'	=> $CFG::Config{'db_pass'},
+				'login'		=> $config{'db_user'},
+				'password'	=> $config{'db_pass'},
 				);
 		if ( ! $dbh ) {
 			$log->error( 'Error opening db. Sleeping for 5.' );
 			sleep 5;
 			next;
 		} # end if ! dbh
-		configuration::init( $log, $dbh );
+		configuration::init( );
+		configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/iq_monitor.conf' );
+		configuration::merge( $opts );
 	} # end if ! dbh
 
 	$log->debug( "Getting hosts" );
@@ -215,7 +201,7 @@ Please investigate.",
 			} # end if
 		} # end if online
 	} # end foreach $Host
-	sleep $CFG::Config{'sleep'};
+	sleep $config{'sleep'};
 } # end while
 $p->close();
 $dbh->disconnect() if $dbh;
@@ -234,35 +220,6 @@ Command-line options:
 
 EOH
 } # end sub usage
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
-
 
 1;
 __END__

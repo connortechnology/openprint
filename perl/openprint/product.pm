@@ -43,8 +43,7 @@ sub edit {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
 
-# Add record to audit log - action "Copy Product".
-		openprint::logs::insertLogRecord('60', "Original Product ID: " . $param{'product_id'} . " Name: " . $NewProduct->name(),);
+		(new openprint::Log())->save({'action'=>'Copy Product', 'note'=>'Original Product ID: ' . $param{'product_id'} . ' Name: ' . $NewProduct->name(), 'Object'=>$NewProduct });
 
 		foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $param{'product_id'} ) ) {
 			$$Price{'product_id'} = $NewProduct->id();

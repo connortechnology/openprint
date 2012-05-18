@@ -67,6 +67,7 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
+	die if $dbh->errstr();
 }
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
@@ -439,6 +440,7 @@ my %config_actions = (
 	'Host rebooted'	=>	102,
 	'Long response time'	=>	103,
 	'Copy Material'	=>	43,
+	'Copy Product'	=>	60,
 );
 foreach my $config_action ( keys %config_actions ) {
 	my $Action = openprint::Log_Action->find_one('name'=>$config_action);

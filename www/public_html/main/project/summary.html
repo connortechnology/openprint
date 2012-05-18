@@ -4,7 +4,7 @@
 </div>
 <style type="text/css">
 <? eval ( 
-	$$variable{'QTYS'} = $$variable{'Project'}->ordered_quantity() ? 1 : scalar  $$variable{'Project'}->quantity_indexes();
+	$$variable{'QTYS'} = ($$variable{'Project'} and $$variable{'Project'}->ordered_quantity() ) ? 1 : scalar  $$variable{'Project'}->quantity_indexes();
     if ( $$variable{'QTYS'} == 3 ) {
 		$$variable{'Columns'} = 'Three';
     } else {

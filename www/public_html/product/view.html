@@ -38,6 +38,7 @@
 		<div class="rightColumn">
 			<fieldset><legend>Specifications</legend>
 				<div id="Specifications">
+
 <table class="List">
 <? echo (
 		my $html;
@@ -58,11 +59,18 @@
 				</div>
 			</fieldset>
 		</div>
+<div class="Photos">
+<fieldset><legend>Photos</legend>
+<? eval ( $$variable{'Album'} = $$variable{'Product'} ) ?>
+<!--#include virtual="/photo_albums/_album_photos.html"-->
+</div>
 		<br class="spacer"/>
+<div class="Prices">
 		<fieldset><legend>Prices</legend>
-			<div id="Prices">
+			<div id="Prices"><!--#include virtual="_prices_view.html"-->
 			</div>
 		</fieldset>
+</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

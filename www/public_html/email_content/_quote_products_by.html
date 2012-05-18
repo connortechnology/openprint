@@ -1,6 +1,5 @@
-<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Quote'}->Products() ) ?>
-<table class="List">
+<table>
 	<thead>
 		<tr>
 			<th class="thumbnail">&nbsp;</th>
@@ -18,7 +17,7 @@
 			my $subtotal = 0;
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
 				$html .= sprintf('<tr%1$s>
-									<td class="thumbnail">%8$s</td>
+									<td class="thumbnail">%8$s
 									<td class="description">%3$s</td>
 									<td class="quantity">%4$s</td>
 									<td class="price">%5$s</td>
@@ -29,7 +28,7 @@
 									openprint::Currency::format( $Product->cost() ), 
 									1*$Product->markup().'%', 
 									openprint::Currency::format( $Product->price() ),
-						$Product->Product()->thumbnail_html(),
+									$Product->Product()->thumbnail_html(),
 					);
 				$subtotal += $Product->price();
 				$rowclass = $rowclass ? '' : ' class="colRow"';

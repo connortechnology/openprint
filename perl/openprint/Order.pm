@@ -512,7 +512,7 @@ sub send_sales_order {
 		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
-		ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries ],
+		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
@@ -668,7 +668,7 @@ sub cod_owing {
 } # end sub cod_owing
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
-	return int($_[0]->paid()/$cod_total) * 100 if $cod_total;
+	return 100-int($_[0]->paid()*100/$cod_total) if $cod_total;
 	return 0;
 } # end sub cod_owing_percent
 
