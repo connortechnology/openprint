@@ -143,9 +143,11 @@ sub type {
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	}
-	if ( ! exists $_[0]{'type'} ) {
+	if ( ! $_[0]{'type'} ) {
 		$_[0]{'type'} = new openprint::Host_Type( $_[0]{'type_id'} )->name();
+$openprint::log->debug("Host::type $_[0]{type_id}");
 	} # end if
+$openprint::log->debug("Host::type $_[0]{type_id} $_[0]{type}");
 	return $_[0]{'type'};
 } # end sub type
 

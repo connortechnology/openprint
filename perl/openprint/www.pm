@@ -160,10 +160,10 @@ $log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 			$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
-		$log->warn($variable{'PageContent'});
-$log->debug("starting print " . ( time - $starttime ) );
+		#$log->warn($variable{'PageContent'});
+#$log->debug("starting print " . ( time - $starttime ) );
 			$r->print( $variable{'PageContent'} );
-$log->debug("ending print " . ( time - $starttime ) );
+#$log->debug("ending print " . ( time - $starttime ) );
 		} # end if
 	} # end if
 

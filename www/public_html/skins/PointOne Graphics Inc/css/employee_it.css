@@ -48,3 +48,6 @@ table .description {
 table .action_type, table .note {
 	text-align: left;
 }
+table .type {
+	text-align: left;
+}
