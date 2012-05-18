@@ -143,6 +143,10 @@ $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for 
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
 
+sub html {
+	return '' if ! $_[0]{'id'};
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->url(), $_[0]->name() );
+} # end sub html
 sub thumbnail_html {
 	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->thumbnail_url(), $_[0]->name() );

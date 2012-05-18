@@ -35,6 +35,12 @@
 							<li><label>Description</label>
 							<? echo ( $$variable{'Asset'}->description() ) ?>
 							</li>
+							<li><label>Full Size URL</label>
+							<? echo ( $config{'ExternalSiteURL'}.$$variable{'Asset'}->url() ) ?>
+							</li>
+							<li><label>Thumbnail URL</label>
+							<? echo ( $config{'ExternalSiteURL'}.$$variable{'Asset'}->thumbnail_url() ) ?>
+							</li>
 						</ul>
 					</div>
 					<div class="rightColumn">
@@ -42,7 +48,7 @@
 							<li><label>Filename</label>
 							<? echo ( 
 								my $html = $$variable{'Asset'}->filename() ;
-								$html .= $$variable{'Asset'}->thumbnail_html();
+								$html .= $$variable{'Asset'}->html();
 
 								return $html;
 							) ?>
