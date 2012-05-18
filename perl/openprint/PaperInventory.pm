@@ -71,11 +71,14 @@ sub find {
 		push @values, $params{'skid_id'};
 	} # end if
 	if ( exists $params{'paper_id'} ) {
-		if ( defined $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
+		if ( ref $params{'paper_id'} eq 'ARRAY' ) {
+			$sql .= ' AND paper_id IN ('. join(',', map {'?'} @{$params{'paper_id'}} ) . ')';
+			push @values, @{$params{'paper_id'}};
+		} elsif ( defined $params{'paper_id'} ) {
+			$sql .= ' AND paper_id=?';
+			push @values, $params{'paper_id'};
 		} else {
-		$sql .= ' AND paper_id IS NULL';
+			$sql .= ' AND paper_id IS NULL';
 		} # end if
 	} # end if
 	if ( exists $params{'docket'} ) {

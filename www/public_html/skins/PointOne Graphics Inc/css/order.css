@@ -69,3 +69,12 @@ div.OrderHeader fieldset p label {
 	float: right;
 	font-weight: bold;
 }
+.cod_owing td {
+	text-align: right;
+}
+.cod_owing label {
+	font-weight: bold;
+}
+.cod_owing label:after {
+	content: ":";
+}

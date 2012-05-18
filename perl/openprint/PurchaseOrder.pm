@@ -336,10 +336,13 @@ sub notifications {
 	if ( $new ) {
 		@{$$self{'notifications'}} = @{$new};
 		if ( $$self{'id'} ) {
+			my $ac = sql::start_transaction( $openprint::dbh );
+			$dbh->do( 'LOCK TABLE PurchaseOrder_Notifications IN ACCESS EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
 			sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
 			foreach ( @{$$self{'notifications'}} ) {
 				sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
 			} # end foreach
+			sql::end_transaction( $openprint::dbh, $ac );
 		} # end if
 	} # end if
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {

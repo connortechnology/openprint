@@ -1,5 +1,5 @@
 #!/usr/bin/perl -T -w
-use lib '/var/www/p1/perl';
+use lib '/var/www/point-one/perl';
 use Net::Server::PreFork;
 
 @ISA = qw(Net::Server::PreFork);
@@ -52,7 +52,7 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www4') );
+	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
 
 	# Have to reload scanner here
 

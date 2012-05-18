@@ -27,6 +27,8 @@ $debug = 1;
 	'harmonized_tax'			=> 'curharmtax',
 	'total'						=> 'curtotalsale',
 	'downpayment'				=> 'curdownpayment',
+	'cod_percent'				=>	'cod_percent',
+	'downpayment_percent'		=>	'downpayment_percent',
 	'created_on'				=> 'dtmorderdate',
 	'company_name'				=> 'strcompanyname',
 	'salutation'				=> 'strsalutation',
@@ -531,6 +533,42 @@ sub paid_on {
 	} # end if
 	return $Last_Payment->received_on();
 } # end sub paid_on
+
+sub downpayment_owing {
+	if ( ! exists $_[0]{'downpayment_owing'} ) {
+		$_[0]{'downpayment_owing'} = $_[0]->downpayment() - $_[0]->paid();
+		$_[0]{'downpayment_owing'} = 0 if $_[0]{'downpayment_owing'} < 0;
+	} # end if
+	return $_[0]{'downpayment_owing'};
+} # end sub downpayment_owing
+sub downpayment_percent {
+	if ( ! defined $_[0]{'downpayment_percent'} ) {
+		my $Credit = $_[0]->Company()->Credit();
+		$_[0]{'downpayment_percent'} = $Credit->downpayment();
+	} # end if
+	return $_[0]{'downpayment_percent'};
+} # end sub downpayment_percent
+sub cod_percent {
+	my $Credit = $_[0]->Company()->Credit();
+	return $Credit->cod();
+} # end sub cod_percent
+
+sub cod { 
+	return Math::Round::nearest( .01,$_[0]{'total'} * ($_[0]->cod_percent/100));
+} # end sub cod
+# Returns the remmaining amount to pay on delivery
+sub cod_owing {
+	if ( ! exists $_[0]{'cod_owing'} ) {
+		$_[0]{'cod_owing'} = $_[0]->cod() - $_[0]->paid();
+		$_[0]{'cod_owing'} = 0 if $_[0]{'cod_owing'} < 0;
+	} # end if
+	return $_[0]{'cod_owing'};
+} # end sub cod_owing
+sub cod_owing_percent {
+	my $cod_total = $_[0]->cod();
+	return 100-int($_[0]->paid()*100/$cod_total) if $cod_total;
+	return 0;
+} # end sub cod_owing_percent
 
 1;
 __END__

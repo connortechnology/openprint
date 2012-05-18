@@ -1,3 +1,44 @@
 input[type="text"],input[type="number"], textarea {
 	width: 100%;
 }
+
+table .car_id {
+	width: 50px;
+	text-align: left;
+}
+table .status {
+	width: 75px;
+	text-align: left;
+}
+table .Description {
+	text-align: left;
+}
+	#CAR {
+	}
+	#CAR table {
+		background-color: white;
+		border: 1px solid black;
+		table-layout: fixed;
+	}
+	#CAR table td {
+		border: 1px solid black;
+		width: 10%;
+		vertical-align: top;
+	}
+	table.View tr td {
+	padding: 5px;
+	}
+	table tr td textarea {
+		width: 99%;
+	}
+	table tr td select {
+		padding: 1px;
+	}
+	table tr td select option {
+		padding: 1px;
+	}
+@media print {
+	form#part1form, form#part2form, form#part3form, form#part4form {
+		display: none;
+	}
+}

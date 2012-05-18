@@ -7,7 +7,7 @@ require openprint::SurveyQuestionAvailableAnswer;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 $table = 'survey_questions';
-$serial = 'survey_questions_id_seq';
+$serial = 'survey_question_id_seq';
 
 %fields = (
 	'id'			=>	'id',

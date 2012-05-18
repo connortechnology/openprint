@@ -619,6 +619,8 @@ sub send_proofs_complete_email {
 	my %info;
 
 	my $Project = new openprint::Project( $project_index );
+	$order_id = $Project->order_id() if ! $order_id;
+
 	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
 	$info{'ProjectIndex'} = $project_index;
 
@@ -664,13 +666,13 @@ sub send_proofs_complete_email {
 
 sub send_proofs_approved_email {
 	my ( $project_index, $order_id ) = @_;
-
 # Send email to sales rep
 	my %info;
 	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 
 	my $Project = new openprint::Project( $project_index );
+	$order_id = $Project->order_id() if ! $order_id;
 	@info{'DocketNumber','ProjectReference'} = ( $Project->docket(), $Project->reference() );
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;

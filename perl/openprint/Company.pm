@@ -1,14 +1,14 @@
-package openprint::Company;
-@ISA = qw( openprint::Object );
 use strict;
-use Text::Unaccent;
+package openprint::Company;
+our @ISA = qw( openprint::Object );
+require Text::Unaccent;
 
 use vars qw( %fields %defaults %transforms );
 use openprint ();
 
 require sql;
 require openprint::Object;
-require openprint::customer_credit;
+require openprint::Company_Credit;
 
 %fields = (
 		'id'						=>	'index',
@@ -58,6 +58,7 @@ require openprint::customer_credit;
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %transforms = (
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
@@ -73,6 +74,7 @@ require openprint::customer_credit;
 	'mailinglist'	=>	'N',
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 my $debug = 1;
@@ -135,6 +137,10 @@ sub find {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
+	} # end if
+	if ( $params{'offers_credit'} ) {
+		$sql .= q{ AND offers_credit=?};
+		push @values, $params{'offers_credit'};
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= q{ AND category_id=?};
@@ -342,9 +348,9 @@ sub start_year {
 } # end sub start_year
 
 sub Credit {
-	my ( $self, $supplier ) = @_;
-	
-	return new openprint::customer_credit( $$self{id}, $supplier );
+	my $supplier = $_[1] ? $_[1] : $openprint::config{'Owner'};;
+
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
 sub dropdown {

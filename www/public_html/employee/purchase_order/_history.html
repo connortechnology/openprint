@@ -47,14 +47,7 @@
 					if ( $C->description() =~ /$param{'contains'}/i ) {
 						$next = 0;
 						last;
-					} # end if
-				} # end foreach
-				next if $next;
-			} # end if
-			if ( $param{'item_contains'} ) {
-				my $next = 1;
-				foreach my $C ($PO->Contents()) {
-					if ( $C->item() =~ /$param{'item_contains'}/i ) {
+					} elsif ( $C->item() =~ /$param{'contains'}/i ) {
 						$next = 0;
 						last;
 					} # end if

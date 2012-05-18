@@ -246,9 +246,8 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
 		if ( $filename eq 'login_confirmation.html' ) {
-			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-$openprint::log->debug("REDIRECT: $variable{'Redirect'}");
-			#$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			require openprint::employee_account;
+			openprint::employee_account::login_confirmation();
 			return $status if $variable{'Redirect'};	
 		} # end if
 

@@ -20,11 +20,11 @@ require openprint::customer;
 require openprint::obj_customer;
 require openprint::address;
 require openprint::Company;
-require openprint::customer_credit;
 require openprint::Email;
 require openprint::Email_Account;
 require openprint::UserGroup;
 require openprint::Company_Category;
+require openprint::Company_Credit;
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -338,6 +338,7 @@ sub company_profiles {
 			'txtPricingLevel'		=>  'Discount',
 			'notes'					=>	'notes',
 			'category_id'			=>	'category_id',
+			'offers_credit'			=>	'offers_credit',
 	);
 	my %shipping_fields = (
 			'txtShippingCompanyName'    =>  'CompanyName',
@@ -356,13 +357,6 @@ sub company_profiles {
 			'txtShippingEmail'          =>  'Email',
 	);
 
-	my %credit_fields = (
-			'txtDenyDays'          =>  'DenyDays',
-			'txtWarnDays'          =>  'WarnDays',
-			'txtCreditLimit'    =>  'Limit',
-			'rdbCreditHold'     =>  'Hold',
-			'txtDownpayment'    =>  'Downpayment',
-			);
 
 	my $index = $openprint::param{'ddmCustomer'};
 	my $Company = new openprint::Company( $index );
@@ -518,12 +512,12 @@ if ( 0 ) {
 
 			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
 
-			my $customer_credit = new openprint::customer_credit( $index );
-			my %params;
-			foreach my $field ( keys %credit_fields ) {
-				$params{$credit_fields{$field}} = $openprint::param{$field} if defined $openprint::param{$field};
-			} # end foreach
-			$customer_credit->set( \%params );
+			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+				my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
+
+				$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
+					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+			} # end foreach Supplier
 		} # end if $index
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$index = $Company->next();
@@ -549,15 +543,11 @@ if ( 0 ) {
 		$$variable{'rdbAccountActivation'.$$variable{'rdbAccountActivation'}} = 'CHECKED';
 
 		$$variable{'txtPricingLevel'} = sprintf ( "%.3f", $$variable{'txtPricingLevel'} ) . "%";
-		$$variable{'txtDownpayment'} = sprintf ( "%.2f", $$variable{'txtDownpayment'} ) . "%";
 
 		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
 		my $shipping_address = $customer->get_shipping_address();
 		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		$$variable{'rdbShippingSalutation'.$$variable{'rdbShippingSalutation'}} = 'CHECKED';
-
-		my $customer_credit = new openprint::customer_credit( $index );
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 	} # end if
 
     # Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
@@ -587,166 +577,9 @@ if ( 0 ) {
     $_ = "SELECT Index, Name FROM Pricelists ORDER BY lower(Name)";
     $$variable{'ddmPriceList'} = ssi::fill_drop_down( $log, $dbh, $_, $$variable{'ddmPriceList'} );
 
-	my $total;
-	my $payments;
-	if ( $index ) {
-		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex='$index'\n".
-			"AND strStatus IN ('Pending Deposit','In Production','Paid')";
-		( $total ) = sql::execute( $log, $dbh, $_ );
-		( $payments ) = sql::execute( $log, $dbh, 'SELECT SUM(curAmount) FROM Payments WHERE company_id=?',$index);
-	} # end if
-
-	$$variable{'CreditBalance'} = '$ '.sprintf( "%.2f", ( $total - $payments ) );
-	if ( $$variable{'txtCreditLimit'} < ($total - $payments) ) {
-		$$variable{'CreditRemaining'} = '$ 0.00';
-	} else {
-		$$variable{'CreditRemaining'} = '$ '.sprintf( '%.2f', ( $$variable{'txtCreditLimit'} - ($total - $payments) ) );
-	} # end if
-
 	$$variable{'Company'} = $Company;
 	$$variable{'CustomerIndex'} = $index;
 } # end sub company_profiles
-
-
-sub credit_applications {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-		if ( $r->param('btnFunction') eq 'Save' ) {
-			my %credit_fields = (
-					'txtTerms'			=>	'Terms',
-					'CreditLimit'		=>	'CreditLimit',
-					'txtDownpayment'	=>	'Downpayment',
-					);
-			my $credit_app = $r->param('credit_index');
-
-			if ( $credit_app ) {
-				sql::update( $log, $dbh, 'CreditApplications', "Id = $credit_app", 
-						'strStatus',			$r->param('verdict'),
-						'lngGrantedTerms',			$r->param('txtTerms'),
-						'dblGrantedCreditLimit',	$r->param('CreditLimit'),
-						'dblGrantedDownpayment',	$r->param('txtDownpayment'),
-						);
-				$_ = "SELECT company_id, user_id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,strAnnualPurchases, dblCreditLimit, strAccountsPayableContact, to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI') FROM CreditApplications ".
-					"WHERE id=?";
-
-				@$variable{
-					'hiddenCustomerID',
-					'UserIndex',
-					'Signature',
-					'FinancialStatementAvailable',
-					'FirstOrderValue',
-					'AnnualPurchases',
-					'AccountLimitDesired',
-					'AccountsPayableContact',
-					'SubmissionDate',
-				} = sql::execute( $log, $dbh, $_, $credit_app );
-
-				if ( ! sql::execute( $log, $dbh, 'SELECT index FROM company WHERE index=?', $$variable{'hiddenCustomerID'} ) ) {
-					return misc::error( $log, $dbh, $variable, 'Deleted Customer', "The company that created this credit app has been deleted from the system.  This credit app has been deleted." );
-				} # end if
-
-				$$variable{'FinancialStatementAvailable'} = $$variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No';
-
-				my $customer_credit = new openprint::customer_credit( $$variable{'hiddenCustomerID'}, $openprint::session{'company_id'} );
-				my %params;
-
-				foreach my $field ( keys %credit_fields ) {
-					$params{$credit_fields{$field}} = $r->param($field) if defined $r->param($field);
-				} # end foreach
-				$params{'txtSignature'} = $$variable{'Signature'};
-				$customer_credit->set( \%params );
-				$params{'siteURL'} = $openprint::config{'siteURL'};
-				$params{'SecureSiteURL'} = $openprint::config{'SecureSiteURL'};
-
-				my ( $email ) = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE index=?', $$variable{'UserIndex'} );
-
-				$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-				$params{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$params{'ReplacementText'}, \%params );
-				$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-				my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%params );
-				my %mail = (
-						SMTP	=> $openprint::config{'Mail Server'},
-						FROM	=> $openprint::config{'AdministratorEmail'},
-						TO		=> $email,
-						SUBJECT => 'Credit Status Changed.'
-						);
-				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
-			} # end if
-		} # end if
-
-	ssi::get_start_end_dates( $log, $dbh, $variable,
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
-
-	@{$$variable{'CreditApps'}} = ();
-	$_ = "SELECT Id, strSignature, date(dtmCreationDate), (SELECT strName FROM Company WHERE index=company_id), strStatus\n".
-		"FROM CreditApplications\n".
-		"WHERE date(dtmCreationDate) BETWEEN date('$$variable{'StartDate'}') AND date('$$variable{'EndDate'}')\n";
-	$_ .= "AND strStatus = 'Approved'\n" if $r->param('ddmStatus') eq 'Approved';
-	$_ .= "AND strStatus = 'Declined'\n" if $r->param('ddmStatus') eq 'Declined';
-	$_ .= "AND strStatus != 'Non-Reviewed'\n" if $r->param('ddmStatus') eq 'Reviewed';
-	$_ .= "AND strStatus = 'Non-Reviewed'\n" if $r->param('ddmStatus') eq 'Non-Reviewed';
-	$_ .= "AND company_Id = '".$r->param('ddmCompany')."'\n" if $r->param('ddmCompany');
-	#$_ .= "AND lngSupplierIndex = '$openprint::session{'company_id'}'";
-	$_ .= "ORDER BY dtmCreationDate, Id";
-	@{$$variable{'CreditApps'}} = sql::execute( $log, $dbh, $_ );
-
-	$$variable{$r->param('ddmStatus')} = 'SELECTED';
-} # end sub credit_applications
-
-sub credit_application {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	my %credit_fields = (
-		'txtTerms'			=>	'Terms',
-		'CreditLimit'		=>	'CreditLimit',
-		'txtDownpayment'	=>	'Downpayment',
-	);
-
-	my $credit_app = $r->param('credit_index');
-	$$variable{'credit_index'} = $credit_app;
-
-	if ( $credit_app ) {
-		$_ = "SELECT company_Id, User_Id, strSignature, ysnFinancialStatementAvailable,strFirstOrderValue,\n".
-			"strAnnualPurchases, dblCreditLimit, lngTerms, strAccountsPayableContact,\n".
-			"to_char(dtmCreationDate,'Day Month DD, YYYY HH24:MI'), strStatus, lngGrantedTerms, dblGrantedCreditLimit, dblGrantedDownpayment\n".
-			"FROM CreditApplications ".
-			"WHERE Id=?";
-		
-		 @$variable{
-			'hiddenCustomerID',
-			'UserIndex',
-			'Signature',
-			'FinancialStatementAvailable',
-			'FirstOrderValue',
-			'AnnualPurchases',
-			'AccountLimitDesired',
-			'AccountTermsDesired',
-			'AccountsPayableContact',
-			'SubmissionDate',
-			'verdict',
-			'GrantedTerms',
-			'GrantedCreditLimit',
-			'GrantedDownpayment',
-			} = sql::execute( $log, $dbh, $_, $credit_app );
-
-		$$variable{'FinancialStatementAvailable'} = $$variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No';
-		$$variable{'verdict'.$$variable{'verdict'}} = 'CHECKED';
-
-		my $customer_credit = new openprint::customer_credit( $$variable{'hiddenCustomerID'}, $openprint::session{'company_id'} );
-
-		my $Company = $$variable{'Company'} = new openprint::Company( $$variable{'hiddenCustomerID'} );
-		my $User = $$variable{'User'} = new openprint::User( $$variable{'UserIndex'} );
-
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
-		$$variable{'rdbTerms'.$$variable{'rdbTerms'}} = 'CHECKED';
-
-	} # end if
-} # end sub admin_credit_app
 
 sub emails {
 	my $mail_dbh = email::db_connect();

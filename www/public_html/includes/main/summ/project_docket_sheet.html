@@ -209,7 +209,7 @@
 				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
 					$type = 'COATED 1 SIDE';
 				} # end if
-				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
+				$html .= sprintf('Custom: %s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
