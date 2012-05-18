@@ -25,7 +25,7 @@ require openprint::quote;
 sub try_to_delete {
 	my $quote_id = shift;
 	my $Quote = new openprint::Quote( $quote_id );
-	if ( $session{'company_id'} == $Quote->company_id() ) {
+	if ( ( $session{'user_type'} eq 'A' ) or ( $session{'company_id'} == $Quote->company_id() ) ) {
 		$Quote->delete();
 	} else {
 		return "Quote $quote_id does not belong to you.  Not deleted.<br>";
