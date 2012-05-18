@@ -95,7 +95,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 &nbsp;</td>
 			<td class="Price">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-			<? echo ( openprint::Currency::format($$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
+			<? echo ( openprint::Currency::format(1*$$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
 			<td class="status" id="status<?index?>"><!--#include virtual="_status.html"--></td>
@@ -242,7 +242,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">Paid</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->paid() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( 1*$$variable{'Project'}->Order()->paid() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
