@@ -44,7 +44,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 <div class="Project">
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
-<form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
+<form id="f1" name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
 			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -282,13 +282,31 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			</td>
 		</tr>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-		<tr class="totals total">
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+		<tr class="totals subtotal">
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="checkbox unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<td class="service">Subtotal</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+<? if ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+		<tr class="tax">
+			<td class="checkbox unprintable"></td>
+			<td class="service">HST</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->harmonized_tax() ); ) ?></td>
+			<td class="status"></td>
+		</tr>
+<? endif ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+		<tr class="total">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">Total</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->total() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 
@@ -300,7 +318,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->paid() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? if ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
+		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
 		<tr class="downpayment">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
@@ -309,17 +327,23 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->downpayment_owing() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>
-		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<? endif ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
+		<? if ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 		<tr class="cod">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">COD Owing</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() ); ) ?></td>
+			<td class="Price"><? echo ( 
+					if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
+						return openprint::Currency::format( $$variable{'Project'}->Order()->cod_owing() );
+					} else {
+						return $$variable{'Project'}->Order()->cod_owing_percent().'%';
+					} # end if
+			 ) ?></td>
 			<td class="status"></td>
 		</tr>
-		<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<? endif ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -330,7 +354,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
+		<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
@@ -350,6 +374,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="status"></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
@@ -360,11 +385,11 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
-		ssi::button( 'DocketButton', { onclick=>"open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
-		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
-		 ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
-		 ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", text=>'JDF' } ),
-		 ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", text=>'MXML' } ),
+					ssi::button( 'DocketButton', { onclick=>"open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
+					ssi::button( 'Summary', { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}" } ),
+					ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
+					ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", text=>'JDF' } ),
+					ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", text=>'MXML' } ),
 		 ); ) ?>
 	</span>
 	

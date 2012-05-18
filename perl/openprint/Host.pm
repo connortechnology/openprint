@@ -34,7 +34,7 @@ $serial = 'host_types_id_seq';
 package openprint::Host;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
@@ -55,8 +55,12 @@ $serial = 'hosts_id_seq';
 	'online'		=>	'online',
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
+	'offline_seconds'	=>	'offline_seconds',
 	'state_changed_on'	=>	'state_changed_on',
 	'offline_seconds'	=>	'offline_seconds',
+);
+%find_fields = (
+	'type'	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
 );
 %transforms = (
 );
@@ -142,7 +146,7 @@ sub type {
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	}
-	if ( ! exists $_[0]{'type'} ) {
+	if ( ! $_[0]{'type'} ) {
 		$_[0]{'type'} = new openprint::Host_Type( $_[0]{'type_id'} )->name();
 	} # end if
 	return $_[0]{'type'};
