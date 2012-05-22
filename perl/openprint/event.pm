@@ -89,9 +89,6 @@ sub edit {
 sub _locations {
 } # end sub _locations
 
-sub list {
-} # end sub list
-
 sub category {
 	my $Category = $variable{'Category'} = new openprint::Event_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
