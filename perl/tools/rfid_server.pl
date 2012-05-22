@@ -49,7 +49,7 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www4') );
+	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'database') );
 
 	# Have to reload scanner here
 
