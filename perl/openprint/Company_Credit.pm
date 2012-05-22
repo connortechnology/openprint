@@ -99,5 +99,13 @@ sub supplier_id {
 	return $_[0]{'supplier_id'};
 } # end if supplier_id
 
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
+
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+
 1;
 __END__

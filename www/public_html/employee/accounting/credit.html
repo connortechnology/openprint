@@ -1,12 +1,13 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" method="post" action="credit.html">
+<form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Select Company:</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Account #:</label>
-			<input type="text" name="txtSearchAccountNum" size="13"/>
+			<input type="text" name="txtSearchAccountNum" />
 			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Customer:&nbsp;</label>
             <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
@@ -14,6 +15,14 @@
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+ssi::input( name=>'import', id=>'import'. type=>'file' ),
+ssi::button('Import',{ onclick=>q`f1.btnFunction.value='Import';f1.submit();` } ),
+ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } ),
+); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>

@@ -164,6 +164,14 @@ sub credit {
 			$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
 				map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
 		} # end foreach Supplier
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 'Balance', 'Remaining', 'Hold', 'Downpayment', 'COD' );
+		my @data;
+		foreach my $Credit ( openprint::Company_Credit->find() ) {
+			push @data, $Credit->Supplier()->name(), $Credit->Company()->name(), $Credit->Company()->business_name(),
+			$Credit->warndays(), $Credit->denydays(), $Credit->limit(), $Credit->debt(), $Credit->remaining(), $Credit->hold(), $Credit->downpayment(), $Credit->cod();
+		} # ebd foreach Credut
+		misc::export_csv( $r, $log, \%variable, 'Credit.csv', \@header, \@data );
 	} # end if
 
 	$variable{'CompanyIndex'} = $company_id;
