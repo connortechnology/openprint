@@ -424,7 +424,7 @@
 		</ul>
 	</fieldset>
 		`, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(), 
-		openprint::Currency::format( $Credit->limit() ), 
+		openprint::Currency::format( 1* $Credit->limit() ), 
 		openprint::Currency::format( $Credit->debt() ), $Credit->remaining(), 
 		ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
 		$Credit->downpayment(), $Credit->cod(),

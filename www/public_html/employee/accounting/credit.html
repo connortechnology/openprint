@@ -19,7 +19,7 @@
 		</ul>
 		<p class="buttons">
 			<? echo ( join('',
-ssi::input( name=>'import', id=>'import'. type=>'file' ),
+ssi::input( name=>'import', id=>'import', type=>'file' ),
 ssi::button('Import',{ onclick=>q`f1.btnFunction.value='Import';f1.submit();` } ),
 ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } ),
 ); ) ?>
@@ -46,7 +46,7 @@ ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } 
         </ul>
     </fieldset></div>
         `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
-        openprint::Currency::format( $Credit->limit() ),
+        openprint::Currency::format( 1*$Credit->limit() ),
         openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
         ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
         $Credit->downpayment(), $Credit->cod(),
