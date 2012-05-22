@@ -1,6 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Photo">
 	<div class="View">
+<? if ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
 		<form id="f1" name="f1" action="view_photo.html" method="post">
 			<input type="hidden" name="action" />
 			<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Photo'}->asset_id() ) ?>" />
@@ -96,5 +97,8 @@ if ( 0 ) {
 		<div id="Opinions"><? echo ( $$variable{'Photo'}->Asset()->opinions('Opinions') ) ?></div>
 		<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_photo_comments.html"--></fieldset></div>
 	<? endif ( $session{'user_id'} ) ?>
+<? else ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
+No photo specified
+<? endif ( $variable{'Photo'} and $variable{'Photo'}->asset_id() ) ?>
 	</div><!--View-->
 </div><!--Photo-->
