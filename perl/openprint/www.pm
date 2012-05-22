@@ -160,10 +160,10 @@ $log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 			$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
-		$log->warn($variable{'PageContent'});
-$log->debug("starting print " . ( time - $starttime ) );
+		#$log->warn($variable{'PageContent'});
+#$log->debug("starting print " . ( time - $starttime ) );
 			$r->print( $variable{'PageContent'} );
-$log->debug("ending print " . ( time - $starttime ) );
+#$log->debug("ending print " . ( time - $starttime ) );
 		} # end if
 	} # end if
 
@@ -246,9 +246,8 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
 		if ( $filename eq 'login_confirmation.html' ) {
-			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-$openprint::log->debug("REDIRECT: $variable{'Redirect'}");
-			#$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			require openprint::employee_account;
+			openprint::employee_account::login_confirmation();
 			return $status if $variable{'Redirect'};	
 		} # end if
 

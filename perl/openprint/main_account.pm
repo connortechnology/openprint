@@ -9,11 +9,13 @@ use strict;
 require sql;
 require ssi;
 require misc;
+require Encode;
 
 require openprint::user;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
+require openprint::Credit_Application;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -129,15 +131,17 @@ sub registration {
 		} # end if
 
 		# Setup default Credit
-		my $customer_credit = new openprint::customer_credit( $Company->id() );
-		my %params = (
-				'WarnDays'	=>	1*$openprint::config{'DefaultWarnDays'},
-				'DenyDays'	=>	1*$openprint::config{'DefaultDenyDays'},
-				'Limit'	=>	1*$openprint::config{'DefaultCreditLimit'},
-				'Hold'	=>	$openprint::config{'DefaultCreditHold'},
-				'Downpayment'	=>	1*$openprint::config{'DefaultDownpayment'},
-				);
-		$customer_credit->set( \%params );
+		my $Credit = new openprint::Company_Credit();
+		$Credit->save({
+				'company_id'	=>	$Company->id(),
+				'supplier_id'	=>	$openprint::config{'Owner'},
+				'warndays'		=>	$openprint::config{'DefaultWarnDays'},
+				'denydays'		=>	$openprint::config{'DefaultDenyDays'},
+				'limit'			=>	$openprint::config{'DefaultCreditLimit'},
+				'hold'			=>	$openprint::config{'DefaultCreditHold'},
+				'downpayment'	=>	$openprint::config{'DefaultDownpayment'},
+				'cod'			=>	$openprint::config{'DefaultCOD'},
+				});
 
 		my $User = new openprint::User();
 		$User->set( \%openprint::param );
@@ -435,42 +439,9 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $openprint::param{'btnFunction'} eq 'Forgotten Password' ) {
-		if ( ! $openprint::param{'email'} ) {
-			$openprint::variable{'error'} = 'Please enter the email address of the account to retrieve.';
-			return;
-		} # end if
-
-		$openprint::param{'email'} =~ tr/[A-Z]/[a-z]/;
-		my @Users = openprint::User::find('email'=>$openprint::param{'email'} );
-		if ( ! @Users ) {
-			$variable{'error'} = 'The account you entered does not exist.';
-			return;
-		} # end if
-
-		if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
-			my %info = (
-					'User' =>$Users[0],	
-					);
-
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
-			my @body = ('', $_, 'text/html', 'quoted-printable');
-
-			my %mail = (
-					SMTP	=> $openprint::config{'Mail Server'},
-					FROM 	=> $openprint::config{'AdministratorEmail'},
-					TO		=> sprintf('"%s %s" <%s>', $Users[0]->get('firstname','lastname','email') ),
-					SUBJECT	=> 'Forgotten Password',
-					);
-			misc::send_email_with_attachment( $log, \%mail, @body );
-			$variable{'information'} = 'Your password has been mailed to you.';
-		} else {
-			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
-		} # end if
+		openprint::login::forgotten_password();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-
 	} # end if
 } # end sub login
 
@@ -588,45 +559,43 @@ sub credit_application {
 		$variable{'error'} .= $Company->save( \%param );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
 
-		my $creditlimit = $param{'DesiredCreditLimit'};
-		$creditlimit =~ s/[^\d\.]//g;
-		sql::insert( $log, $dbh, 'CreditApplications',
-				'User_Id',	 $session{'user_id'},
-				'company_id', $session{'company_id'},
-				( defined $param{'Signature'} ? ( 'strSignature',	 $param{'Signature'} ) : () ),
-				( defined $param{'FinancialStatementAvailable'} ? ( 'ysnFinancialStatementAvailable', $param{'FinancialStatementAvailable'} ) : () ),
-				( defined $param{'FirstOrderValue'} ? ( 'strFirstOrderValue', $param{'FirstOrderValue'} ) : () ),
-				( defined $param{'AnnualPurchases'} ? ( 'strAnnualPurchases', $param{'AnnualPurchases'} ) : () ),
-				( $creditlimit ne '' ? ( 'dblCreditLimit',	$creditlimit ) : () ),
-				'lngTerms',						$param{'DesiredTerms'},
-				'strAccountsPayableContact',	$param{'AccountsPayableContact'},
-				'strStatus',		'Non-Reviewed',
-				'dtmCreationDate',	'NOW()',
-				);
+		my $App = new openprint::Credit_Application();
+		$variable{'error'} .= $App->save({
+				'desired_limit'			=>	$param{'DesiredCreditLimit'},
+				'user_id'				=>	$session{'user_id'},
+				'company_id'			=>	$session{'company_id'},
+				'signature'				=>	$param{'Signature'},
+				'financialstatementavailable'	=>	$param{'FinancialStatementAvailable'},
+				'firstordervalue'		=>	$param{'FirstOrderValue'},
+				'annualpurchases'		=>	$param{'AnnualPurchases'},
+				'desired_limit'			=>	$param{'DesiredCreditLimit'},
+				'desired_terms'			=>	$param{'DesiredTerms'},
+				'accountspayablecontact'	=>	$param{'AccountsPayableContact'},
+				'status'				=>	'Non-Reviewed',
+				});
 
+		if ( ! $variable{'error'} ) {
 # Now send email notifications
-		my %info;
-		$info{'Company'} = $Company;
-		$info{'User'} = new openprint::User( $session{user_id} );
+			my %info;
+			$info{'Company'} = $Company;
+			$info{'User'} = new openprint::User( $session{user_id} );
+			$info{'CreditAppIndex'} = $App->id();
 
-		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
+			my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		my $template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
-
-		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'CreditApplicationEmail'},
-				#TO		=> $openprint::config{'CreditApplicationEmail'},
-				TO		=>	'iconnor@point-one.com',
-				SUBJECT => "New Credit Application"
-				);
-
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
-	} # end if Apply
+			$_ = ( new openprint::Email() )->send(
+					FROM	=>	$openprint::config{'CreditApplicationEmail'},
+					TO		=>	$openprint::config{'CreditApplicationEmail'},
+					BCC		=>	'iconnor@point-one.com',
+					SUBJECT =>	'New Credit Application',
+					ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8', $template)), 'text/html', 'quoted-printable' ],
+					);
+			$log->error($_) if $_;
+		} # end if Apply
+	} # end if error
 
 } # sub credit_application
 

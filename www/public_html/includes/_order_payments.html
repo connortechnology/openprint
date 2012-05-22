@@ -26,8 +26,8 @@
         <? endif ( $$variable{'PAYMENTS'} ) ?>
         <tr class="totals unprintable">
             <td colspan="3">Add new payment:</td>
-            <td><input type="text" name="Description" style="width: 100%;"/></td>
-            <td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
+            <td><input type="text" name="Description" /></td>
+            <td align="right"><?CurrencySymbol?><input type="text" name="Amount" /></td>
             <td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
         </tr>
     </table>

@@ -24,10 +24,11 @@ use vars qw( $log $dbh %config );
 use File::Basename qw(basename);
 use Getopt::Long;
 use Mail::Sendmail;
-use MIME::QuotedPrint;
+use MIME::QuotedPrint qw(encode_qp);;
 use MIME::Base64 qw(encode_base64);
 use Time::HiRes qw(usleep);
-use Encode;
+use Encode ();
+use Data::Dumper;
 
 my $program = basename($0);
 
@@ -106,6 +107,7 @@ $openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
+my %Users; # Cache of User Objects keyed by user/email address
 
 my $scoreboard = get_scoreboard( $config{'scoreboard'} );
 my $fifoh;
@@ -121,6 +123,7 @@ if (open($fifoh, "< $config{fifo}")) {
 		if ( $@ ) {
 			die unless $@ eq "alarm\n";
 			check_scoreboard();
+			# Update DB scoreboard
 			next;
 		} elsif ($line) {
 			chomp($line);
@@ -215,17 +218,21 @@ if ( $config{'pid_file'} ) {
 
 sub check_scoreboard {
 	my $scoreboard = get_scoreboard( $config{'scoreboard'} );
-	my @users = map { $$_{'sce_user'} } @$scoreboard;
+	my @users = map { $$_{'user'} } @$scoreboard;
 	#$log->debug( "Users: @users in scoreboard\n" );
 
-	foreach my $user ( keys %uploads ) {
-		if ( ! sets::isin( $user, \@users ) ) {
-			$log->debug( "Sending mail for $user\n" );
+	foreach my $username ( keys %uploads ) {
+		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! $Users{$username};
+		my $User = $Users{$username};
+
+
+		if ( ! sets::isin( $username, \@users ) ) {
+			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
-			send_email( @{$uploads{$user}} );
-			delete $uploads{$user};
+			send_email( @{$uploads{$username}} );
+			delete $uploads{$username};
 		} else {
-			$log->debug( "Holding mail for $user\n" );
+			$log->debug( "Holding mail for $username\n" );
 		} # end if
 	} # end foreach $user
 } # end sub check_scoreboard
@@ -542,21 +549,21 @@ sub get_scoreboard {
 	my ( $score_file ) = @_;
 	my ($server_uptime, $record);
 	my @scoreboard;
-#  pid_t sce_pid;
-#  uid_t sce_uid;
-#  gid_t sce_gid;
-#  char sce_user[32];
-#  int sce_server_port;
-#  char sce_server_addr[80], sce_server_label[32];
-#  char sce_client_addr[INET_ADDRSTRLEN];
-#  char sce_client_name[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
-#  char sce_class[32];
-#  char sce_cwd[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
-#  char sce_cmd[5];
-#  char sce_cmd_arg[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
-#  time_t sce_begin_idle, sce_begin_session;
-#  off_t sce_xfer_size, sce_xfer_done, sce_xfer_len;
-#  unsigned long sce_xfer_elapsed;
+#  pid_t pid;
+#  uid_t uid;
+#  gid_t gid;
+#  char user[32];
+#  int server_port;
+#  char server_addr[80], server_label[32];
+#  char client_addr[INET_ADDRSTRLEN];
+#  char client_name[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  char class[32];
+#  char cwd[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  char cmd[5];
+#  char cmd_arg[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  time_t begin_idle, begin_session;
+#  off_t xfer_size, xfer_done, xfer_len;
+#  unsigned long xfer_elapsed;
 #0000000 beef dead 0000 0000 0002 0104 0000 0000
 #0000010 2c20 0000 0000 0000 3d87 4c78 0000 0000
 #0000020 307c 0000 0021 0000 0021 0000 6369 6e6f

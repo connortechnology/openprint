@@ -1,6 +1,6 @@
-.status {
+table .status {
 	width: 200px;
-text-align: right;
+text-align: left;
 }
 .Price {
 	width: 100px;
@@ -15,4 +15,21 @@ text-align: right;
 .quantity {
 	width: 75px;
 	text-align: left;
+}
+.subtotal .service,
+.tax .service,
+.total .service,
+.paid .service,
+.downpayment .service,
+.cod .service {
+	font-weight: bold;
+	text-align: right;
+}
+.subtotal .service:after,
+.total .service:after,
+.tax .service:after,
+.paid .service:after,
+.downpayment .service:after,
+.cod .service:after {
+	content: ":";
 }

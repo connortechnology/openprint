@@ -85,15 +85,15 @@
 				</tr>
 			</table>
 			<br class="spacer"/>
-		<table>
-		<tr>
-			<th class="quantity">QTY</th>
-			<th class="product">ITEM</th>
-			<th class="description">ITEM / DESCRIPTION</th>
-			<th class="docket">DOCKET</th>
-			<th class="price">UNIT PRICE</th>
-			<th class="total">LINE TOTAL</th>
-		</tr>
+			<table>
+				<tr>
+					<th class="quantity">QTY</th>
+					<th class="product">ITEM</th>
+					<th class="description">ITEM / DESCRIPTION</th>
+					<th class="docket">DOCKET</th>
+					<th class="price">UNIT PRICE</th>
+					<th class="total">LINE TOTAL</th>
+				</tr>
 		<? echo ( my $html = '';
 		foreach my $C ( $$variable{'PurchaseOrder'}->Contents() ) {
 			$html .= sprintf('<tr>
@@ -109,7 +109,7 @@
 		) ?>
 		<tr>
 			<td colspan="5" class="totals">SUBTOTAL:</td>
-			<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+			<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 		</tr>
 		<? echo ( 
 			my $html;
@@ -122,9 +122,42 @@
 		) ?>
 		<tr>
 			<td colspan="5" class="totals">TOTAL:</td>
-			<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
+			<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 		</tr>
 		</table>
+<div id="Assets">
+<h3>Attachments:</h3>
+<table>
+    <thead>
+        <tr>
+            <th class="Name">Name</th>
+            <th class="Filename">Filename</th>
+            <th class="DateTime">Added On</th>
+            <th class="Thumbnail">Thumbnail</th>
+        </tr>
+    </thead>
+    <tbody>
+<? echo ( 
+my $html;
+foreach my $Object_Asset ( $$variable{'PurchaseOrder'}->Assets() ) {
+    my $Asset = $Object_Asset->Asset();
+    $html .= sprintf('
+        <tr>
+            <td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+            <td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+            <td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+            <td class="Thumbnail"><a href="/assets/%1$s" target="_blank"><img src="%5$s" alt=""/></a></td>
+        </tr>
+        ', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+        Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
+        $Asset->thumbnail_url(),
+        );
+} # end foreach Asset
+return $html;
+) ?>
+    </tbody>
+</table>
+</div>
 			<div class="leftColumn">
 				<ol>
 					<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>

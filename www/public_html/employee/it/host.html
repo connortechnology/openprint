@@ -12,11 +12,11 @@
 			<ul>
 				<li>
 					<label>Hostname:</label>
-					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{'Host'}->hostname() ) ?>" />
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{'Host'}->hostname() ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onchange="this.onkeyup.call(this);"/>
 				</li>
 				<li>
 					<label>IP Address:</label>
-					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" />
+					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onchange="this.onkeyup.call(this);" />
 					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( ssi::checked( $$variable{'Host'}->dhcp() ); ) ?> />
 					<label class="radio" for="dhcp">DHCP?</label>
 				</li>
@@ -44,12 +44,11 @@
 				</li>
 				<li>
 					<label>Monitor:</label>
-					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{'Host'}->monitored() ); ) ?>
+					<? echo ( ssi::radio( 'monitored', [ '1','Yes','0','No' ], $$variable{'Host'}->monitored(), { 'onclick'=>q`if(this.value==1){$('offline_seconds').show();}else{$('offline_seconds').hide()};`} ); ) ?>
 				</li>
-				<? if ( $$variable{'Host'}->monitored() ) ?>
-				<li><label>Actions:</label>
+				<li id="offline_seconds"<? echo ( $$variable{'Host'}->monitored() ? '' : ' style="display: none;"' ) ?>><label>Seconds offline before notification:</label>
+					<input type="number" name="offline_seconds" value="<? echo ( $$variable{'Host'}->offline_seconds() ) ?>" />
 				</li>
-				<? endif ( $$variable{'Host'}->monitored() ) ?>
 				<li>
 					<label>Online:</label><? echo ( $$variable{'Host'}->online() ? 'Yes' : 'No' ) ?>
 				</li>

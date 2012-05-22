@@ -157,6 +157,9 @@ sub _cameras_available {
 		$session{'cameras_viewing'} = join(',', sets::exclude( [ $param{'camera_id'} ], [ split( ',', $session{'cameras_viewing'} ) ] ) );
 	} # end if
 } # end sub _cameras_available
+sub _camera { # .json 
+	$session{'/employee/it/camera_viewer.html?monitor_size-'.$param{'monitor_id'}} = join('x', @param{'width','height'} );
+}
 
 sub blacklist {
 	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
@@ -289,6 +292,12 @@ sub sessions {
 } # end sub sessions
 
 sub _sessions {
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $session_id ( ref $param{'session_id'} eq 'ARRAY' ? @{$param{'session_id'}} : $param{'session_id'} ) {
+			next if ! $session_id;
+			sql::execute(undef,undef,'DELETE FROM sessions WHERE id=?', $session_id );
+		} # end foreach
+	} # end if
 	ssi::save_params( '/employee/it/sessions.html', 
 			'created_on_start_year', 'created_on_start_month','created_on_start_day',
 			'created_on_end_year', 'created_on_end_month','created_on_end_day',

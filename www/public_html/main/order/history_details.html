@@ -44,7 +44,7 @@ Projects listed in red have changed price from the time this order was originall
 </span>
 <div style="float: right; text-align: right;">
 	<!--#include virtual="/includes/order_totals.html" -->
-	<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+<? if ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
 	<table width="250" border="0" cellspacing="0" cellpadding="0" cols="2">
 		<tr> 
 			<td height="0" width="175">&nbsp;</td>
@@ -60,6 +60,12 @@ Projects listed in red have changed price from the time this order was originall
 			<td align="right"><?CurrencySymbol?><?DepositDue?></td>
 		</tr>
 		<? endif ( $$variable{'DepositDue'} ) ?>
+		<? if ( $$variable{'Order'}->cod_owing() ) ?>
+		<tr class="cod_owing"> 
+			<td><label>COD Owing</label></td>
+			<td><? echo ( openprint::Currency::format( $$variable{'Order'}->cod_owing() ); ) ?></td>
+		</tr>
+		<? endif ( $$variable{'Order'}->cod_owing() ) ?>
 		<? if ( $$variable{'AmountOutstanding'} ) ?>
 		<tr> 
 			<td align="right"><b>Amount Owing:</b></td>
@@ -67,7 +73,7 @@ Projects listed in red have changed price from the time this order was originall
 		</tr>
 		<? endif ( $$variable{'AmountOutstanding'} ) ?>
 	</table>
-	<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+<? endif ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
 </div>
 <br class="spacer"/>
 	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
@@ -107,7 +113,7 @@ Projects listed in red have changed price from the time this order was originall
 			} elsif ( $$variable{'ORDER_STATUS'} eq 'Incomplete') {
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
 				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
-			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
+			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
 				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled'; 

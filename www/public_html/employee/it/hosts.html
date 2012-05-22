@@ -17,12 +17,11 @@ Please select a host to view/edit.<br>
 		<ul>
 		<li>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
+			<input type="text" id="ip" name="ip" value="<? echo ( $session{'/employee/it/hosts.html?ip'} ) ?>" onkeyup="this.value=this.value.replace(/[^\.\d%\/\*]/g,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host($('f1'));}" onchange="this.onkeyup.call(this);this.onkeydown.call(this);"/>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" value="<? echo ( $session{'/employee/it/hosts.html?hostname'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
-			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
-			<? echo ( ssi::button( 'Load', { 'onclick'=>"load_host(\$('f1'));" } ); ) ?>
+			<input type="text" id="mac" name="mac" value="<? echo ( $session{'/employee/it/hosts.html?mac'} ) ?>" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event && event.keyCode == 13){load_host( $('f1') );}" />
 		</li>
 		<li>
 			<label>Date Added:</label>

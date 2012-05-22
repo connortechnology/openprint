@@ -21,7 +21,7 @@ require openprint::service;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -323,7 +323,7 @@ sub signature_calc {
 		} else {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 				my $Press = shift @Press;
-				if ( $Press->specification('Folding Capable') ) {
+				if ( $Press->specification('Folding Capable') eq 'When Printing' ) {
 					unshift @my_equipment, $Press;
 				} # end if
 			} # end if
@@ -344,6 +344,9 @@ sub signature_calc {
 		$$specs{'alert'} .= 'There is no Folding capable equipment.';
 		return;
 	} # end if
+foreach my $E ( @my_equipment ) {
+$openprint::log->debug("Equipment: $$E{strid}");
+}
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
@@ -604,10 +607,12 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
 	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' );
+	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if $$services{'SaddleStitching'};
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -669,13 +674,12 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Printing'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'For Pocket Folders'}, 'order'=>'lower(strname)' ) if $Project->Type()->name() eq 'Presentation Folders';
+    my @folding_capable = ('Y','When Printing');
+    push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+    push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+    push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-		@equipment = sets::exclude( [ openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) ], \@equipment );
-	} # end if
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 
 	@{$$variable{'Signatures'}} = ();

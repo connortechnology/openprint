@@ -16,6 +16,18 @@
 	  		<label>Ordered Quantity:</label>
 	  		<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
    		</p>
+		<? if ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
+		<p>
+			<label>Required Downpayment:</label>
+			<? echo ( $$variable{'Project'}->Order()->downpayment_percent() ) ?>%
+		</p>
+		<? endif ( $$variable{'Project'}->Order()->downpayment() > 0 ) ?>
+		<? if ( $$variable{'Project'}->Order()->cod_percent() ) ?>
+		<p>
+			<label>Required COD:</label>
+			<? echo ( $$variable{'Project'}->Order()->cod_owing_percent() ) ?>% remaining
+		</p>
+		<? endif ( $$variable{'Project'}->Order()->cod_percent() ) ?>
 	  	<? endif ( $$variable{'Project'}->docket() ) ?>
    		<p>
 			<label>Status:</label>
@@ -71,6 +83,9 @@
 			) ?>
 		</p>
 		<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<? if ( $$variable{'Project'}->reprint() ) ?>
+		<p><label>Reprint Reason:</label><? echo ( $$variable{'Project'}->reprint_reason() ) ?></p>
+		<? endif ( $$variable{'Project'}->reprint() ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
 		<p>

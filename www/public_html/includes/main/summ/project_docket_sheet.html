@@ -209,7 +209,7 @@
 				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
 					$type = 'COATED 1 SIDE';
 				} # end if
-				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
+				$html .= sprintf('Custom: %s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
@@ -254,7 +254,12 @@
 			} # end if
 			$html .= '</td><td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
+			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs ) . '<br/>';
+			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
+				if ( $$sig_specs{'chkBleed'.$edge} ne $edge ) {
+					$html .= 'No ' . $edge . ' bleed<br/>';
+				} # end if
+			} # end foreach edge
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';

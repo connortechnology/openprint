@@ -170,6 +170,7 @@
 								<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
 								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock</a></li>
 								<li><a href="/employee/accounting/credit_applications.html;NOSSL">&raquo; Credit Applications</a></li>
+								<li><a href="/payment/history.html;NOSSL">&raquo; Payment History</a></li>
 							</ul>
 						</li>
 						<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -213,6 +214,7 @@
 								<li><a href="/employee/it/logs.html;NOSSL">&raquo; Login Log</a></li>
 								<li><a href="/location/list.html;NOSSL">&raquo; Locations</a></li>
 								<li><a href="/employee/it/sessions.html;NOSSL">&raquo; Sessions</a></li>
+								<li><a href="/employee/it/uploads.html;NOSSL">&raquo; Uploads</a></li>
 							</ul>
 						</li>
 						<li id="SREDMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/sred/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SREDMenu'), 'off', 'on');return false;">SRED</a>

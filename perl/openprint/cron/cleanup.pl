@@ -28,7 +28,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $r;
-$log = logger->new('debug');
+$log = logger->new('warn');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -43,10 +43,10 @@ $openprint::Object::no_cache = 1;
 configuration::init_cache( $log, $dbh );
 
 # Clear out old sessions
-my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @session_ids . " sessionsn in system");
+my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
+$log->warn("Cleaning out sessions: " . @$session_ids . " sessionsn in system");
 my $deleted_session_count = 0;
-foreach my $session ( @session_ids ) {
+foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
     my %session;
     if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
@@ -67,7 +67,7 @@ foreach my $session ( @session_ids ) {
 		undef %session;
 	} # end if
 } # end foreach
-@session_ids = ();
+@$session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
 if ( 1 ) {

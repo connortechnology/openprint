@@ -6,11 +6,6 @@ table .impressions {
 	text-align: right;
 	width: 80px;
 }
-table .status {
-	text-align: left;
-	padding-left: 7px;
-	width: 80px;
-}
 table .order_id {
 	text-align: left;
 	width: 80px;
@@ -18,10 +13,6 @@ table .order_id {
 table .docket {
 	text-align: left;
 	width: 60px;
-}
-table .project_id {
-	text-align: left;
-	width: 75px;
 }
 table .form {
 	text-align: left;

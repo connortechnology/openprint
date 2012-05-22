@@ -160,13 +160,13 @@ sub get_destination {
 	my ( $r, $log, $uri ) = @_;
 	my $dest = $uri ? $uri : $r->uri();
 	my @keys = $r->param();
-	if ( @keys ) {
-		$dest .= '?';
-		my @params;
-		foreach my $key ( @keys ) {
-			push @params, join( '=', ($key, $r->param($key)));
-		} # end foreach
-		$dest .=  join( '&', @params );
+	my @values;
+	foreach my $key ( @keys ) {
+		next if $key eq 'password';
+		push @values, map { $key.'='.$_ } ( ref $r->param($key) eq 'ARRAY' ? @{$r->param($key)} : $r->param($key) );
+	} # end ofreach     
+	if ( @values ) {
+		$dest .= '?' . join('&', @values );
 	} # end if
 	return $dest;
 } # end sub get_destination
