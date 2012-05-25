@@ -254,5 +254,16 @@ sub destroy {
 	return $error;
 } # end sub destroy
 	
+sub Photos {
+    #if ( ! $_[0]{'album_id'} ) {
+        #return ();
+    #} # end if
+    return openprint::Article_Asset->find('article_id'=>$_[0]{'id'});
+} # end sub Photos
+
+sub Album {
+    #return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
+
 1;
 __END__
