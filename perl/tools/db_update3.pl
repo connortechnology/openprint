@@ -1007,6 +1007,24 @@ if ( sets::isin('upload_id_seq', \@sequences ) ) {
 	} # end if
 	$dbh->do('DROP SEQUENCE upload_id_seq');
 } # end if
+
+if ( ! sets::isin('paycheques_timetracks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques_Timetracks.sql}) );
+	die if $dbh->errstr();
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='timetracks'", 'column_name');
+if ( exists $$data{'paycheque_id'} ) {
+	require openprint::Timetrack;
+	require openprint::Paycheque_Timetrack;
+	foreach my $Timetrack ( openprint::Timetrack->find('paycheque_id is null'=>0) ) {
+		if ( ! openprint::Paycheque_Timetrack->find_one('paycheque_id'=>$Timetrack->paycheque_id(),'timetrack_id'=>$Timetrack->id()) ) {
+			$_ = (new openprint::Paycheque_Timetrack())->save({'paycheque_id'=>$Timetrack->paycheque_id(),'timetrack_id'=>$Timetrack->id()});
+			die $_ if $_;
+		} # end if
+	} # end foreach Timetrack
+	$dbh->do('ALTER TABLE timetracks drop paycheque_id');
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

@@ -30,7 +30,14 @@
 		<div class="rightColumn">
 		<? echo (
 			my $html;
-			$html .= $$variable{'Event'}->asset_html();
+			my $Asset = $$variable{'Event'}->Asset();
+
+			if ( $Asset->id() ) {
+				my $Album = $$variable{'Event'}->Album();
+				$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d">%s</a>', 
+					$Asset->id(), $Album->id(), $Asset->html() );
+				#$html .= $$variable{'Event'}->Asset()->html();
+			} # end if
 			my $Location = $$variable{'Event'}->Location();
 			if ( $Location ) {
 				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {

@@ -91,12 +91,12 @@
 					<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Timetrack'}->invoice_id() ) ?>"><? echo ( $$variable{'Timetrack'}->invoice_id() ) ?></a>
 				</li>
 				<? endif ( $$variable{'Timetrack'}->invoice_id() ) ?>
-				<? if ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+				<? if ( $$variable{'Timetrack'}->Paycheques() ) ?>
 				<li>
 					<label>Paycheque</label>
-					<a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?>"><? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?></a>
+					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{'Timetrack'}->Paycheques() ); ) ?>
 				</li>
-				<? endif ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+				<? endif ( $$variable{'Timetrack'}->Paycheques() ) ?>
 			</ul>
 		</div>
 		</div>
