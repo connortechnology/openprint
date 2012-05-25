@@ -224,8 +224,6 @@ sub edit {
 	if ( ! $variable{'Article'}->id() ) {
 		$variable{'Article'}->company_id( $session{'company_id'} ) if ! $variable{'Article'}->company_id();
 		$variable{'Article'}->published_on( Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ) ) if ! $variable{'Article'}->published_on();
-$log->debug(Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ));
-$log->debug($variable{'Article'}->published_on());
 	} # end if
 } # end sub edit
 
