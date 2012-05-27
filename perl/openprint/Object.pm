@@ -1034,7 +1034,7 @@ sub Comments {
 		$_[1]{'object_type'} = ref $_[0],
 		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
 
-		return openprint::Comment->find($_[1]);
+		return openprint::Comment->find(%{$_[1]});
 	} # end if
 
 	if ( ! defined $_[0]{'Comments'} ) {

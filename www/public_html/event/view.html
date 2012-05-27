@@ -95,9 +95,11 @@
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? if ( $$variable{'Event'}->id() ) ?>
-	<? eval ( $$variable{'Album'} = $$variable{'Event'};
+	<? eval ( $$variable{'Object'} = $$variable{'Album'} = $$variable{'Event'};
 	 ) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
+	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
+	
 <? endif ( $$variable{'Event'}->id() ) ?>
 	</fieldset>
 	</form>
