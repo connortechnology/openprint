@@ -323,26 +323,21 @@ function filterDDM( filter, ddm ) {
  *	is February, the default return value is 29.
  */
 function returnNumberOfDays(month, year) {
-	var numberOfDays;
-
 	if(month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12 ) {
 		// January
-		numberOfDays = 31;
+		return 31;
 	} else if(month == 2) {
 		// February
 		if(isLeapYear(year) && year) {
-		 numberOfDays = 29;
+		return 29;
 		} else {
-		 numberOfDays = 28;
+		return 28;
 		}
 	} else if(month == 4 || month == 6 || month == 9 || month == 11 ) {
 		// April
-		numberOfDays = 30;
-	} else {
-		numberOfDays = 31;
+		return 30;
 	}
-
-	return numberOfDays;
+	return 31;
 }
 
 
@@ -352,19 +347,14 @@ function returnNumberOfDays(month, year) {
  *	False = Year passed is not a leap year
  */
 function isLeapYear(year) {
-	var isLeapYear;
-
 	if(year % 4 != 0) {
-		isLeapYear = false;
+		return false;
 	} else if(year % 400 == 0) {
-		isLeapYear = true;
+		return true;
 	} else if(year % 100 == 0) {
-		isLeapYear = false;
-	} else {
-		isLeapYear = true;
+		return false;
 	}
-
-	return isLeapYear;
+	return true;
 }
 
 /*
@@ -855,18 +845,21 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	} // end if
 
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
     } else {
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value );
     } // end if
 
     if ( start > end ) {
         ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
         ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
 		form.elements[ending_prefix+suffix+'_month'].onchange();
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
+		if ( parseInt(form.elements[ending_prefix+suffix+'_day'].value) < parseInt(form.elements[starting_prefix+suffix+'_day'].value) ) {
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
+		} else {
+		} 
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );

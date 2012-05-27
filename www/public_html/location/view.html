@@ -91,11 +91,13 @@
 <? if ( $$variable{'Location'}->id() ) ?>
 	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
+	<div id="EventsList">
 		<fieldset><legend>Upcoming Events</legend>
 		<div id="Events">
 			<!--#include virtual="_events.html"-->
 		</div>
 		</fieldset>
+	</div>
 <? endif ( $$variable{'Location'}->id() ) ?>
 	</fieldset>
 	</form>
