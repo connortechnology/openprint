@@ -180,6 +180,9 @@ if ( ! exists $$data{'offline_seconds'} ) {
 if ( ! exists $$data{'state_changed_on'} ) {
 	$dbh->do('ALTER TABLE hosts add state_changed_on INTEGER');
 } # end if
+if ( ! exists $$data{'notified'} ) {
+	$dbh->do('ALTER TABLE hosts add notified BOOLEAN NOT NULL DEFAULT FALSE');
+} # end if
 
 if ( ! sets::isin( 'host_notifications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Host_Notifications.sql' ) );
