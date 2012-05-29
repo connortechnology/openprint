@@ -70,6 +70,8 @@ $config{'ping_wait'} = 1 if ! $config{'ping_wait'};
 # udp has less network traffic overhead
 my $p = Net::Ping->new('icmp',$config{'ping_wait'});
 
+my %times;
+
 while(1) {
 	if ( ! ( $dbh and $dbh->ping ) ) {
 		$log->debug("Connecting to db");	
@@ -110,30 +112,34 @@ while(1) {
 		} # end if
 
 		if ( $Host->online() != $ping ) {
-			# Make sure
-			if ( $Host->offline_seconds() ) {
-				if ( time - $$Host{'state_changed_on'} > $$Host{'offline_seconds'} ) {
-					$Host->save({'online'=>$ping,'state_changed_on'=>time});
-					(new openprint::Log())->save({'action_id'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
-					$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
-					my @To = map { $_->User() } $Host->Notifications();
-					if ( @To and ( @To < 10 ) ) {
-						my $results = (new openprint::Email())->send(
-								'TO'	=>	\@To,
-								'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
-								'FROM'		=>	$config{'TechSupportEmail'},
-								'BODY'		=>	"
-								IP: $$Host{ip}
+			# Have a change, so it should get logged, only email notifications should use the offline seconds
+			if ( $_ = $Host->save({'online'=>$ping,'state_changed_on'=>time,'notified'=>0}) ) {
+				$log->error($_);
+				next;
+			} # end if	
+			
+			(new openprint::Log())->save({'action_id'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
+			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+
+			if ( $ping or ( ! $$Host{'offline_seconds'} ) ) {
+				# Do immediate notifications
+				my @To = map { $_->User() } $Host->Notifications();
+				if ( @To and ( @To < 10 ) ) {
+					my $results = (new openprint::Email())->send(
+							'TO'	=>	\@To,
+							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+							'FROM'		=>	$config{'TechSupportEmail'},
+							'BODY'		=>	"
+							IP: $$Host{ip}
 Description: $$Host{'description'}
 
 Please investigate.",
 );
-					} # end if @To > 10
-				} # end if
-			} else {
-				$Host->save({'online'=>$ping,'state_changed_on'=>time});
-				(new openprint::Log())->save({'action_id'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
-				$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
+				} # end if to < 10
+			} # end if immediate notifications
+		} elsif ( $Host->offline_seconds() and ( ! $ping ) and ( ! $$Host{'notified'} ) ) {
+			if ( time - $$Host{'state_changed_on'} > $$Host{'offline_seconds'} ) {
+				$Host->save({'notified'=>1});
 				my @To = map { $_->User() } $Host->Notifications();
 				if ( @To and ( @To < 10 ) ) {
 					my $results = (new openprint::Email())->send(
