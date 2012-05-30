@@ -102,8 +102,8 @@
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'ShowResults', { onclick=>"load_expenses(\$('f1'));", text=> 'Show Results' ),
-				ssi::button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" ),
+				ssi::button( 'ShowResults', { onclick=>"load_expenses(\$('f1'));", text=> 'Show Results' } ),
+				ssi::button( 'Download', { onclick=>"f1.btnFunction.value='Download';f1.submit();" } ),
 				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
 				ssi::button( 'New', { href=>'expense.html', text=>'New Expense' } ),
 				); ) ?>

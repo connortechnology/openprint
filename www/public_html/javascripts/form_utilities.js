@@ -814,13 +814,29 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 } // end function set_today
 
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
-	ddm_select_by_value( e_y, '' );
-	ddm_select_by_value( e_m, '' );
-	ddm_select_by_value( e_d, '' );
+	var onchange=e_y.onchange;
+	e_y.onchange='';
+	e_y.selectedIndex = 0;
+	e_y.onchange=onchange;
+
+	onchange=e_m.onchange;
+	e_m.onchange='';
+	e_m.selectedIndex = 0;
+	e_m.onchange=onchange;
+
+	onchange=e_d.onchange;
+	e_d.onchange='';
+	e_d.selectedIndex = 0;
+	e_d.onchange=onchange;
+	//ddm_select_by_value( e_y, '' );
+	//ddm_select_by_value( e_m, '' );
+	//ddm_select_by_value( e_d, '' );
 	if ( e_h )
-		ddm_select_by_value( e_h, '' );
+	e_h.selectedIndex = 0;
+		//ddm_select_by_value( e_h, '' );
 	if ( e_min )
-		ddm_select_by_value( e_min, '' );
+	e_min.selectedIndex = 0;
+		//ddm_select_by_value( e_min, '' );
 } // end function date_clear
 
 function set_date( form, from, to ) {
@@ -853,12 +869,14 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
     } // end if
 
     if ( start > end ) {
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
-		form.elements[ending_prefix+suffix+'_month'].onchange();
+		if ( form.elements[ending_prefix+suffix+'_year'] != form.elements[starting_prefix+suffix+'_year'].value ) 
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
+		if ( form.elements[ending_prefix+suffix+'_month'] != form.elements[starting_prefix+suffix+'_month'].value ) {
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
+			form.elements[ending_prefix+suffix+'_month'].onchange();
+		} // end if
 		if ( parseInt(form.elements[ending_prefix+suffix+'_day'].value) < parseInt(form.elements[starting_prefix+suffix+'_day'].value) ) {
 			ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
-		} else {
 		} 
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
