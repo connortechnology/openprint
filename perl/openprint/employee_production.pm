@@ -1852,5 +1852,8 @@ sub _add_docket {
 sub _stock_allocations {
 } # end sub _stock_allocations
 
+sub datacollection {
+} # end sub datacollection
+
 1;
 __END__

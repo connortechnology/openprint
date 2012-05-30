@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title><?PageTitle?> - Employee</title>
+		<meta charset="utf-8" />
+		<link href="/css/common.css" rel="stylesheet" type="text/css" />
+		<link href="/css/button.css" rel="stylesheet" type="text/css" />
+<? echo (
+	my @html;
+	my $css = $$variable{'uri'};
+	$css =~ s/^\///;
+	$css =~ s/\..+$//;
+	my @parts = split '/', $css;
+	while ( @parts ) {
+		$css = join('_', @parts ) . '.css';
+		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
+		}
+		pop @parts;
+	} # end while
+	return join("\n", reverse @html );
+) ?>
+		<!-- calendar stylesheet -->
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<link rel="shortcut icon" href="/images/favicon.ico" />
+		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+		<div id="Content" style="margin-left: 0;"> 
+			<div id="ContentInner"> 
+				<?PageContent?>
+			</div>
+		</div>
+	</body>
+</html>

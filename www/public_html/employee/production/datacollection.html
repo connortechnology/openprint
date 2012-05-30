@@ -1,0 +1,51 @@
+<script type="text/javascript" src="/javascripts/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="/javascripts/signaturepad.js"></script>
+<script type="text/javascript">
+	var current_input;
+</script>
+<form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html">
+
+<fieldset><legend>Data Collection</legend>
+	<div class="leftColumn">
+		<ul>
+			<li><label>Docket</label><input type="number" name="docket" id="docket" onblur="current_input=this;"/></li>
+			<li><label>Form</label><input type="number" name="form" id="form" onblur="current_input=this;"/></li>
+			<li><label>Quantity</label><input type="number" name="quantity" id="quantity" onblur="current_input=this;"/></li>
+			<li><label>Equipment</label>
+				<select name="equipment_id" id="equipment_id">
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
+				</select>
+			</li>
+			<li><label>Note</label><textarea name="note" id="note"></textarea></li>
+		</ul>
+	</div>
+	<div class="rightColumn">
+			<? echo ( join('<br/>',
+				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
+				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
+				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
+				join('', 
+					ssi::button('S'),
+					ssi::button('0', { onclick=>qq`current_input.value += '0';` } ),
+					ssi::button('D', { onclick=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);` } ),
+				),
+			); ) ?>
+	</div>
+</fieldset>
+<fieldset><legend>Signature</legend>
+	<canvas class="pad"></canvas>
+	<input type="hidden" name="output" class="output">
+</fieldset>
+<p class="buttons">
+<? echo ( join('',
+			ssi::button('Clear', { onclick=>q`$('.sigPad').clearCanvas();` } ),
+			ssi::button('Submit', { onclick=>q`$('.sigPad').submit();` } ),
+			); ) ?>
+</p>
+</form>
+<script>
+$(document).ready(function() {
+  $('.sigPad').signaturePad({drawOnly:true});
+});
+</script>
+
