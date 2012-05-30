@@ -120,6 +120,9 @@ if ( ! exists $$data{'amount_locked'} ) {
 if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
+if ( ! exists $$data{'attention'} ) {
+	$dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
+}
 if ( ! exists $$data{'business_use_amount'} ) {
 	$dbh->do('ALTER TABLE expenses add business_use_amount float');
 }

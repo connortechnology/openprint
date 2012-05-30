@@ -28,7 +28,7 @@ sub handler {
 	my $request = $_[0];
 	$r = Apache2::Request->new( $request );
 	my $starttime = gettimeofday() if DEBUG;
-	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
+	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
 

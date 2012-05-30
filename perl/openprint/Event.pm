@@ -255,5 +255,9 @@ sub upload {
 	return $Album->upload( @_ );
 } # end sub upload
 
+sub view_url {
+	return '/event/view.html?event_id='.$_[0]{'id'};
+} # end sub view_url
+
 1;
 __END__

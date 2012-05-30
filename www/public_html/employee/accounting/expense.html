@@ -112,7 +112,7 @@ function update_total( form ) {
 					</select>	
 				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
-					<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" size="8" />
+					<input type="number" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" />
 					<? echo ( ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ) ) ?>
 					<select name="currency_id" id="currency_id">
 						<option value="">select</option>
@@ -157,6 +157,10 @@ function update_total( form ) {
 				<li>
 					<label for="description">Description</label>
 					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
+				</li>
+				<li>
+					<label>Attention</label>
+					<? echo ( ssi::radio( 'attention', [ '1', 'Yes', '0', 'No' ], $$variable{'Expense'}->attention() ); ) ?>
 				</li>
 			</ul>
 		</div>
