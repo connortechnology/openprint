@@ -40,18 +40,18 @@
 			<li><label>Start</label>
 			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
 						{
-						'onchange'	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
-						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) 
-						'with_today'	=>	1,
+						onchange	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
+						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						with_today	=>	1,
 						} ); ) ?>
 </span>
 			</li>
 			<li><label>End</label>
 			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
 						{
-						'onchange'	=>	q`update_duration(this.form,'starting','ending');`,
-						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
-						'with_today'	=>	1,
+						onchange	=>	q`update_duration(this.form,'starting','ending');`,
+						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						with_today	=>	1,
 						} ); ) ?>
 </span>
 			</li>
