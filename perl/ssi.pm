@@ -797,9 +797,7 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} # end if
-	if ( $options{type} ) {
-		$html .= ' type="'.$options{type}.'"' if $options{type};
-	} # end if
+	$html .= ' type="'.$options{type}.'"' if $options{type};
 	$html .= ' value="'.$options{value}.'"' if $options{value};
 	$html .= ' name="'.$options{name}.'"' if $options{name};
 	$html .= ' id="'.$options{id}.'"' if $options{id};
