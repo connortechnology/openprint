@@ -1048,30 +1048,21 @@ function toggletinymce(textarea_id, toggle ) {
 } // end function toggletinymce
 
 function cardinalize(e) {
-	e.value = e.value.replace(/\D/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
+	if ( e.value.match(/\D/g) )
+		e.value = e.value.replace(/\D/g,'');
+	return e.value;
 }
 function integerize(e) {
-	e.value = e.value.replace(/[^\d\-]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
+	if ( e.value.match(/[^\d\-]/g) )
+		e.value = e.value.replace(/[^\d\-]/g,'');
+	return e.value;
 }
 function floatize(e) {
-	e.value = e.value.replace(/[^\d\-\.]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
+	if ( e.value.match(/[^\d\-\.]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
+	return e.value;
 }
 function hexize(e) {
-	e.value = e.value.replace(/[^\da-fA-F]/g,'');
-	e.focus();
-	var v = e.value;
-	e.value = '';
-	e.value = v;
+    e.value = e.value.replace(/[^\da-fA-F]/g,'');
+    return e.value;
 }
