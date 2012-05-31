@@ -8,9 +8,12 @@
 <fieldset><legend>Data Collection</legend>
 	<div class="leftColumn">
 		<ul>
-			<li><label>Docket</label><input type="number" name="docket" id="docket" onblur="current_input=this;"/></li>
-			<li><label>Form</label><input type="number" name="form" id="form" onblur="current_input=this;"/></li>
-			<li><label>Quantity</label><input type="number" name="quantity" id="quantity" onblur="current_input=this;"/></li>
+			<li><label>Docket</label>
+				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;' ); ) ?></li>
+			<li><label>Form</label>
+				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;'); ) ?></li>
+			<li><label>Quantity</label>
+				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'current_input=this;'); ) ?></li>
 			<li><label>Equipment</label>
 				<select name="equipment_id" id="equipment_id">
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
@@ -33,7 +36,7 @@
 	</div>
 </fieldset>
 <fieldset><legend>Signature</legend>
-	<canvas class="pad"></canvas>
+	<canvas class="pad" width="750px" height="200px"></canvas>
 	<input type="hidden" name="output" class="output">
 </fieldset>
 <p class="buttons">
@@ -43,7 +46,8 @@
 			); ) ?>
 </p>
 </form>
-<script>
+<script type="text/javascript">
+document.f1.docket.focus();
 $(document).ready(function() {
   $('.sigPad').signaturePad({drawOnly:true});
 });

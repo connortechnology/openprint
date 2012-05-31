@@ -756,17 +756,12 @@ sub input {
         } # end if
         $options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
     } # end if
-	$html .= ' type="'.$options{type}.'"' if $options{type};
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
-	$html .= ' name="'.$options{name}.'"' if $options{name};
-	$html .= ' id="'.$options{id}.'"' if $options{id};
-	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
-    $html .= ' onkeydown="'.$options{onkeydown}.'"' if $options{onkeydown};
-    $html .= ' onchange="'.$options{onchange}.'"' if $options{onchange};
-    $html .= ' class="'.$options{class}.'"' if $options{class};
+	foreach ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern' ) {
+		$html .= qq` $_="$options{$_}"` if $options{$_};
+	} # end foreach
     $html .= ' required' if $options{required};
     $html .= ' readonly="readonly"' if $options{readonly};
-    $html .= ' pattern="'.$options{pattern}.'"' if $options{pattern};
 	$html .= '/>';
 	return $html;
 } # end sub input
