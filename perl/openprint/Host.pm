@@ -57,6 +57,7 @@ $serial = 'hosts_id_seq';
 	'type'			=>	undef,
 	'offline_seconds'	=>	'offline_seconds',
 	'state_changed_on'	=>	'state_changed_on',
+	'notified'			=>	'notified',
 );
 %find_fields = (
 	'type'	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
@@ -77,6 +78,7 @@ $serial = 'hosts_id_seq';
 	'type_id'	=>	undef,
 	'state_changed_on'	=>	undef,
 	'offline_seconds'	=>	undef,
+	'notified'=>	0,
 );
 sub resolve {
 	my ( $self ) = @_;
