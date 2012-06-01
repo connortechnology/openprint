@@ -29,7 +29,7 @@ ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } 
 	<fieldset>
 <? echo (
     my $html;
-    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1,'order'=>'index') ) {
         my $Credit = $$variable{'Company'}->Credit($Supplier->id());
 
         $html .= sprintf(q`
