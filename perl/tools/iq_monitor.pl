@@ -133,6 +133,8 @@ while(1) {
 		} # end if
 
 		if ( $Host->online() != $ping ) {
+			my $last_changed_on = $$Host{'state_changed_on'};
+
 			# Have a change, so it should get logged, only email notifications should use the offline seconds
 			if ( $_ = $Host->save({'online'=>$ping,'state_changed_on'=>time,'notified'=>0}) ) {
 				$log->error($_);
@@ -142,14 +144,14 @@ while(1) {
 			(new openprint::logRecord())->save({'action_type'=>( $ping ? 100 : 101 ), 'ip_address'=>$Host->ip(), 'note'=>sprintf('<a href="/employee/it/host.html?host_id=%d">%s</a>', @$Host{'id','hostname'}) });
 			$log->debug( $Host->hostname() . ' is now ' . ( $Host->online() ? 'online' : 'offline' ) );
 
-			if ( $ping or ( ! $$Host{'offline_seconds'} ) ) {
+			if ( ( $ping and (time-$last_changed_on > $$Host{'offline_seconds'}) ) or ( ! $$Host{'offline_seconds'} ) ) {
 $log->warn("BLAH should be 0 $ping $$Host{'offline_seconds'}");
 				# Do immediate notifications
 				my @To = map { $_->User() } $Host->Notifications();
 				if ( @To and ( @To < 10 ) ) {
 					my $results = (new openprint::Email())->send(
 							'TO'	=>	\@To,
-							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname(),
+							'SUBJECT'	=>	'Host has gone ' . ($ping?'online':'offline') . ': ' . $Host->hostname() . ' ' . (time-$last_changed_on) . ' seconds ago.',
 							'FROM'		=>	$config{'TechSupportEmail'},
 							'BODY'		=>	"
 							IP: $$Host{ip}
