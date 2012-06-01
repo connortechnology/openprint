@@ -158,12 +158,16 @@ sub credit {
 			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-			my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
+		if ( ! $company_id ) {
+			$variable{'error'} .= 'No customer specified.<br/>';
+		} else {
+			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
 
-			$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
-				map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
-		} # end foreach Supplier
+				$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
+					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+			} # end foreach Supplier
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 
 				'Hold', 'Downpayment', 'COD', 'Balance', 'Remaining', 'Note' );
