@@ -136,6 +136,24 @@ sub history {
 		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
+		my @Invoices = openprint::Invoice->find(
+				ssi::date_filter('/invoice/history.html?created_on_start', 'created_on >=' ),
+				ssi::date_filter('/invoice/history.html?created_on_end', 'created_on >=' ),
+				'invoicee_id'       => $session{'/invoice/history.html?company_id'},
+				'invoicer_id'       => $session{'company_id'},
+				'order'             => 'id',
+				);
+		foreach my $Invoice ( @Invoices ) {
+			next if $Invoice->is_paid();
+			next if $Invoice->bad_debt();
+
+			$data{'uri'} = 'invoice';
+			$data{'Invoice'} = $Invoice;
+			$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
+			$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+			push @attachments, 'Invoice '.$$Invoice{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+		} # end foreach Invoice
+
 		my @Recipients = new openprint::Company($param{'company_id'})->AccountingContacts();
 		(new openprint::Email())->send(
 					FROM    => $config{'AccountingEmail'},
