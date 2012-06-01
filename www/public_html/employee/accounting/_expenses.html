@@ -22,6 +22,8 @@
 			ssi::date_filter( '/employee/accounting/expenses.html?due_on_end', 'due_on <=' ),
 			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_start', 'paid_on >=' ),
 			ssi::date_filter( '/employee/accounting/expenses.html?paid_on_end', 'paid_on <=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?entered_on_start', 'created_on >=' ),
+			ssi::date_filter( '/employee/accounting/expenses.html?entered_on_end', 'created_on <=' ),
 			'owner_id'		=> $session{'company_id'},
 			'order'				=> 'paid_on,due_on',
 			);

@@ -386,10 +386,14 @@ sub expenses {
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_end', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_start', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_end', '' );
 	} # end if
 } # end sub expenses
 sub _expenses {
 	ssi::save_params( '/employee/accounting/expenses.html', ( 
+				'entered_on_start_year','entered_on_start_month','entered_on_start_day',
+				'entered_on_end_year','entered_on_end_month','entered_on_end_day',
 				'invoiced_on_start_year','invoiced_on_start_month','invoiced_on_start_day',
 				'invoiced_on_end_year','invoiced_on_end_month','invoiced_on_end_day',
 				'due_on_start_year','due_on_start_month','due_on_start_day',
@@ -397,6 +401,7 @@ sub _expenses {
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 				'category_id', 'recipient_id', 'account_id','attention',
+				
 				) );
 } # end sub _expenses
 

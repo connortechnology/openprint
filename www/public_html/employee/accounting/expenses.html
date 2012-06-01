@@ -65,6 +65,16 @@
 		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'paid_on_end', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 						</span>
 					</li>
+					<li>
+						<label>Entered On</label>
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'entered_on_start', { 'onchange'=>q`check_time_starting($('f1'), 'entered_on_start','entered_on_end');load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+							to 
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'entered_on_end', { 'onchange'=>q`load_expenses($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+					</li>
 				</ul>
 			</div>
 		</div>
