@@ -9,9 +9,12 @@
 <fieldset class="filters"><legend>Enter Docket #</legend>
 	<p>
 		<label>Docket #:</label>
-		<input type="number" name="StartDocket" value="<?StartDocket?>" onkeyup="integerize(this);" autofocus/>
-		to <input type="number" name="EndDocket" value="<?EndDocket?>" onkeyup="integerize(this);" />
-		<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Go' ); ) ?>
+		<? echo ( join(' ',
+					ssi::input(type=>'cardinal',name=>'StartDocket',value=>$$variable{StartDocket}, autofocus=>1, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}' ),
+					'to',
+					ssi::input(type=>'cardinal',name=>'EndDocket',value=>$$variable{EndDocket}, onkeydown=>'if(event.keyCode == 13){load_projects(f1);}'),
+					ssi::button( 'Go', { onclick=>q`load_projects(f1);` } ),
+		); ) ?>
 	</p>
 </fieldset>
 <fieldset class="filters"><legend>Search Information</legend>
