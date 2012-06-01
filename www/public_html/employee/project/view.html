@@ -315,7 +315,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="checkbox unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 			<td class="service">Paid</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->paid() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( 1*$$variable{'Project'}->Order()->paid() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>

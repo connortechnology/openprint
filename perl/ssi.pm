@@ -150,7 +150,7 @@ my %html_replacements = (
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
 	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-    return $_[0];
+	return $_[0];
 }
 
 sub escape_quotes {
@@ -700,21 +700,21 @@ sub count_lines {
 } # end sub count_lines
 
 sub radio {
-    my ( $name, $values, $selected, $options ) = @_;
+	my ( $name, $values, $selected, $options ) = @_;
 
-    my $onclick = $$options{'onclick'} if $options;
-    my $html;
+	my $onclick = $$options{'onclick'} if $options;
+	my $html;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
-        $html .= sprintf(q`
-                <input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
-                <label class="radio" for="%1$s%2$s">%3$s</label>
-                `, $name, $value, $label, checked( $value eq $selected ), 
+		$html .= sprintf(q`
+				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				<label class="radio" for="%1$s%2$s">%3$s</label>
+				`, $name, $value, $label, checked( $value eq $selected ), 
 				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
 				$$options{id},
 				);
 	} # end foreach value
-    return $html;
+	return $html;
 } # end sub radio
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
@@ -749,12 +749,12 @@ sub date_filter {
 		#} # end foreach
 	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
-        return ();
-    } # end if
-    my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+		return ();
+	} # end if
+	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-    $month = 1 if ! $month;
-    $day = 1 if ! $day;
+	$month = 1 if ! $month;
+	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
@@ -766,7 +766,7 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
 sub input {
@@ -797,17 +797,12 @@ sub input {
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} # end if
-	$html .= ' type="'.$options{type}.'"' if $options{type};
-	$html .= ' value="'.$options{value}.'"' if $options{value};
-	$html .= ' name="'.$options{name}.'"' if $options{name};
-	$html .= ' id="'.$options{id}.'"' if $options{id};
-	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
-	$html .= ' onkeydown="'.$options{onkeydown}.'"' if $options{onkeydown};
-	$html .= ' onchange="'.$options{onchange}.'"' if $options{onchange};
-	$html .= ' class="'.$options{class}.'"' if $options{class};
+	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+	foreach ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern' ) {
+		$html .= qq` $_="$options{$_}"` if $options{$_};
+	} # end foreach
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
-	$html .= ' pattern="'.$options{pattern}.'"' if $options{pattern};
 	$html .= '/>';
 	return $html;
 } # end sub input
