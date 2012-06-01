@@ -1030,6 +1030,10 @@ if ( exists $$data{'paycheque_id'} ) {
 	} # end foreach Timetrack
 	$dbh->do('ALTER TABLE timetracks drop paycheque_id');
 } # end if
+if ( ! sets::isin('object_views', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Views.sql}) );
+	die if $dbh->errstr();
+} # end if
 
 $dbh->disconnect();
 1;
