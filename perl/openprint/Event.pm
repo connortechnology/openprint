@@ -160,10 +160,11 @@ sub html {
 	my $Event = $_[0];
 	my $html = sprintf(q`
 			<div class="Event">
-			<a class="thumbnail" href="/event/view.html?event_id=%1$d"><img alt="" src="%2$s"/></a>
-			<span class="name"><a href="/event/view.html?event_id=%1$d">%3$s</a></span>
-			<span class="when">%4$s</span>
+			<a class="thumbnail %2$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%3$s"/></a>
+			<span class="name"><a href="/event/view.html?event_id=%1$d">%4$s</a></span>
+			<span class="when">%5$s</span>
 			`, $Event->id(),
+			$Event->Asset()->layout(),
 			$Event->Asset()->thumbnail_url(),
 			ssi::htmlize($Event->name()),
 			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),

@@ -86,6 +86,117 @@ sub url {
 	return '/assets/'.$_[0]->on_disk_filename();
 }
 
+sub medium_url {
+	my $src = $_[0]->on_disk_path();
+	if ( $openprint::config{'AssetPath'} ) {
+		if ( ! -e $openprint::config{'AssetPath'}.'/medium/' ) {
+			mkdir $openprint::config{'AssetPath'}.'/medium/';
+			$openprint::log->error("Unable to create medium path $openprint::config{'AssetPath'}/medium/: $!" );
+			return '/images/icons/file.png';
+		} # end if
+	} # end if
+
+	my $filename = $_[0]->on_disk_filename();
+#$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
+
+	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/medium/'.$filename;
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating small at 75x $src $dest");
+				if ( system(qq`convert -adaptive-resize $openprint::config{'Medium Asset Width'}x "$src" "$dest"`) ) {
+					$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				} # end if convert
+			} # end if
+		} # end if
+#$openprint::log->debug("Return /thumbnails/$filename");
+		return '/medium/'.$filename;
+	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/medium/'.$blah.'.jpg';
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating medium at $openprint::config{'Medium Asset Width'}x $src $dest");
+				
+				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$openprint::config{'Medium Asset Width'}:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
+				if ( $! ) {
+					$openprint::log->error("Unable to create medium thumbnail at $dest: $!" );
+					return '/images/icons/image.png';
+				} else {
+					$openprint::log->debug($_);
+				} # end if
+				`mv /tmp/00000001.jpg $dest`;
+				if ( $! ) {
+					$openprint::log->error("Unable to mv thumbnail  $dest: $!" );
+					return '/images/icons/image.png';
+				} # end if
+			} # end if
+		} # end if
+		return  '/medium/'.$blah.'.jpg';
+	} else {
+		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
+			return '/images/icons/'.(lc $extension).'.png';
+		} # end if
+	} # end if
+$openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
+}  # end sub
+
+sub small_url {
+	my $src = $_[0]->on_disk_path();
+	if ( $openprint::config{'AssetPath'} ) {
+		if ( ! -e $openprint::config{'AssetPath'}.'/small/' ) {
+			mkdir $openprint::config{'AssetPath'}.'/small/';
+			$openprint::log->error("Unable to create small path $openprint::config{'AssetPath'}/small/: $!" );
+			return '/images/icons/file.png';
+		} # end if
+	} # end if
+
+	my $filename = $_[0]->on_disk_filename();
+#$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
+
+	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/small/'.$filename;
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating small at 75x $src $dest");
+				if ( system(qq`convert -adaptive-resize $openprint::config{'Small Asset Width'}x "$src" "$dest"`) ) {
+					$openprint::log->error("ERror creating thumbnail. Reason: $1");
+				} # end if convert
+			} # end if
+		} # end if
+#$openprint::log->debug("Return /thumbnails/$filename");
+		return '/small/'.$filename;
+	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
+		if ( $openprint::config{'AssetPath'} ) {
+			my $dest = $openprint::config{'AssetPath'}.'/small/'.$blah.'.jpg';
+			if ( ! -e $dest ) {
+				$openprint::log->debug("Creating thumbnail at $openprint::config{'Small Asset Width'}x $src $dest");
+				
+				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$openprint::config{'Small Asset Width'}:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
+				if ( $! ) {
+					$openprint::log->error("Unable to create thumbnail at $dest: $!" );
+					return '/images/icons/image.png';
+				} else {
+					$openprint::log->debug($_);
+				} # end if
+				`mv /tmp/00000001.jpg $dest`;
+				if ( $! ) {
+					$openprint::log->error("Unable to mv thumbnail  $dest: $!" );
+					return '/images/icons/image.png';
+				} # end if
+			} # end if
+		} # end if
+		return  '/small/'.$blah.'.jpg';
+	} else {
+		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
+			return '/images/icons/'.(lc $extension).'.png';
+		} # end if
+	} # end if
+$openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
+	return '/images/icons/file.png';
+} # end small_url
+
 # Will look for, generate thumbnails, returning the on disk path
 sub thumbnail_url {
 	my $src = $_[0]->on_disk_path();
