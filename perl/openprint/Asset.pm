@@ -104,14 +104,14 @@ sub medium_url {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $openprint::config{'AssetPath'}.'/medium/'.$filename;
 			if ( ! -e $dest ) {
-				$openprint::log->debug("Creating small at 75x $src $dest");
+				$openprint::log->debug("Creating medium at $openprint::config{'Medium Asset Width'}x $src $dest");
 				if ( system(qq`convert -adaptive-resize $openprint::config{'Medium Asset Width'}x "$src" "$dest"`) ) {
 					$openprint::log->error("ERror creating thumbnail. Reason: $1");
 				} # end if convert
 			} # end if
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
-		return '/medium/'.$filename;
+		return '/assets/medium/'.$filename;
 	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $openprint::config{'AssetPath'}.'/medium/'.$blah.'.jpg';
@@ -132,7 +132,7 @@ sub medium_url {
 				} # end if
 			} # end if
 		} # end if
-		return  '/medium/'.$blah.'.jpg';
+		return  '/assets/medium/'.$blah.'.jpg';
 	} else {
 		if ( -e $openprint::config{'SkinPath'}.'/images/icons/'.(lc $extension).'png' ) {
 			return '/images/icons/'.(lc $extension).'.png';
@@ -254,6 +254,11 @@ $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for 
 	return '/images/icons/file.png';
 } # end sub thumbnail_url
 
+sub medium_html {
+	return '' if ! $_[0]{'id'};
+	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->medium_url(), $_[0]->name() );
+} # end sub medium_html
+
 sub html {
 	return '' if ! $_[0]{'id'};
 	return sprintf('<img src="%1$s" alt="%2$s" title="%2$s" />', $_[0]->url(), $_[0]->name() );
@@ -271,6 +276,11 @@ sub thumbnail_path {
 		return $openprint::config{'SkinPath'}.$url;
 	} # end if
 } # end sub thumbnail_path
+sub medium_path {
+	my $url = $_[0]->medium_url();
+	$url =~ s/^\/assets//;
+	return $openprint::config{'AssetPath'}.$url;
+} # end sub medium_path
 
 sub md5 {
 	if ( @_ > 1 ) {

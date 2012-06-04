@@ -27,6 +27,10 @@ sub thumbnail_url {
 	return $_[0]->Asset()->thumbnail_url();
 } # end sub url
 
+sub medium_html {
+	my $Asset = $_[0]->Asset();
+	return sprintf('<a class="medium %s" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $Asset->layout(), $_[0]{'article_id'},$Asset->medium_url(), $Asset->caption() );
+} # end sub thumbnail_html
 sub thumbnail_html {
 	my $Asset = $_[0]->Asset();
 	return sprintf('<a class="thumbnail" href="/article/view.html?article_id=%d"><img src="%s" alt="%s"/></a>', $_[0]{'article_id'},$Asset->thumbnail_url(), $Asset->caption() );
