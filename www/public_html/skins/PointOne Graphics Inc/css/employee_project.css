@@ -33,3 +33,7 @@ text-align: right;
 .cod .service:after {
 	content: ":";
 }
+
+#Labels .Date {
+	text-align: left;
+}

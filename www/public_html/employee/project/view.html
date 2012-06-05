@@ -424,6 +424,20 @@ $log->debug("Have no job: $Job");
 	return $html;
 ) ?>
 	</table>
+<? echo (
+	my $html;
+	my @Files = openprint::File->find(project_id=>$$variable{'Project'}->id());
+	if ( @Files ) {
+		$html .= '<fieldset><legend>Files</legend>';
+		$html .= '<table class="List"><tr><th class="filename">Filename</th><th class="size">Size</th></tr>';
+		foreach my $File ( @Files ) {
+			$html .= sprintf('<tr><td class="filename">%s</td><td class="size">%s</td></tr>',
+				$File->filename(), $File->size_text(),
+				);
+		$html .= '</table></fieldset>';
+	} # end foreach File
+	return $html;
+) ?>
 </fieldset>
 <? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
 </div>

@@ -245,7 +245,7 @@ sub upload_files {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+				foreach my $File ( openprint::File->find( ('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef), 'filename'=>$destdir.$filename) ) {
 					$File->delete();
 				} # end foreach
 				my $File = new openprint::File();
