@@ -1,15 +1,15 @@
-<table class="List" style="table-layout: auto;">
+<table class="List">
 	<tr><th class="Date">Created</th>
 		<th align="left">Type</th>
 		<th align="left">Reference</th>
-		<th style="width:70px;">&nbsp;</th>
+		<th class="buttons">&nbsp;</th>
 	</tr>
 <? echo ( 
 	require openprint::Label;
 	my $html = '';
 	my @Labels = openprint::Label->find('docket'=>$$variable{'Project'}->docket(),'order'=>'id');
 	foreach my $Label ( @Labels ) {
-		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td>%7$s</td></tr>', 
+		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td class="buttons">%7$s</td></tr>', 
 			$Label->id(), $$variable{'Project'}->id(), 
 			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
 			Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
@@ -32,8 +32,8 @@
 			</select>
 		</td>
 		<td><input type="text" name="reference" id="reference" /></td>	
-		<td>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddLabel', 'add.gif', q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, '', 'Add' ); ) ?>
+		<td class="buttons">
+			<? echo ( ssi::button( 'AddLabel', { onclick=> q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, text=>'Add' } ); ) ?>
 		</td>
 	</tr>
 </table>

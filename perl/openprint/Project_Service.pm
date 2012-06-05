@@ -10,7 +10,7 @@ require openprint::ServiceType;
 use vars qw( $log $debug %fields %transforms %defaults $table $serial @identified_by );
 *log = \$openprint::log;
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',

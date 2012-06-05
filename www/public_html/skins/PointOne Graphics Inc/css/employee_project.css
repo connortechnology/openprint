@@ -37,3 +37,11 @@ text-align: right;
 #Labels .Date {
 	text-align: left;
 }
+#Labels .buttons,
+#Files .buttons {
+	width: 75px;
+	text-align: right;
+}
+#Files .filename {
+	text-align: left;
+}

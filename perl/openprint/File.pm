@@ -19,6 +19,7 @@ $serial = 'project_files_id_seq';
 		'upload_id'		=>	'upload_id',
 		'size'			=>	'size',
 		'deleted'		=>	'deleted',
+		'archive'		=>	'archive',
 		);
 %transforms = (
 );

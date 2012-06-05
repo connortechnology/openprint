@@ -28,6 +28,7 @@ require openprint::RFIDTag;
 require openprint::ScheduledJob;
 require openprint::ServiceType_Category;
 require openprint::SignatureCapture;
+require openprint::File;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );

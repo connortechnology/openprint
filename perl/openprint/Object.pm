@@ -48,8 +48,8 @@ sub new {
 		if ( $id and (!$data) ) {
 			if ( $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 				return $openprint::Object::cache{$parent}{$id};
-			} else {
-				$log->debug("Not loading from cache $id $parent ");
+			#} else {
+				#$log->debug("Not loading from cache $id $parent ");
 			} # end if
 		} # end if
 
@@ -556,7 +556,7 @@ sub to_string {
 
 sub dropdown {
     my $type = shift;
-$log->debug("dropdown $type");
+#$log->debug("dropdown $type");
     return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
