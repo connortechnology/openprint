@@ -1,27 +1,17 @@
-package openprint::LabelType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
+package openprint::LabelType;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+
 use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
-require ssi;
-require misc;
-
-my $debug = 1;
-
+$debug = 0;
 $table = 'labeltypes';
 $serial = 'labeltypes_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'name'		=>	'name',
+	'id'	=>	'id',
+	'name'	=>	'name',
 );
 
 %transforms = (

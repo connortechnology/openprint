@@ -116,7 +116,6 @@ $openprint::log->debug($other_shipped_quantity);
 
 sub summary {
 	my ( $Project, $service_id, $specs, $qty_index ) = @_;
-	#$openprint::log->debug("Customer Pickup Summary $Project, $service_id, $specs, $qty_index");
 	my $services = $Project->services();
 	if ( $qty_index ) {
 		if ( $$services{'BulkSkids'} ) {

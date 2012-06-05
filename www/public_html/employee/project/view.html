@@ -498,6 +498,21 @@ $log->debug("Have no job: $Job");
 	</table>
 </fieldset>
 <? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
+<? echo (
+	my $html;
+	my @Files = openprint::File->find(project_id=>$$variable{'Project'}->id());
+	if ( @Files ) {
+		$html .= '<fieldset><legend>Files</legend><div id="Files">';
+		$html .= '<table class="List"><tr><th class="filename">Filename</th><th class="buttons">&nbsp;</th></tr>';
+		foreach my $File ( @Files ) {
+			$html .= sprintf('<tr><td class="filename">%s</td><td class="size">%s</td></tr>',
+				$File->filename(), '', 
+				);
+		} # end foreach File
+		$html .= '</table></div></fieldset>';
+	} # end if
+	return $html;
+) ?>
 </div>
 <div class="rightColumn">
 	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html" onsubmit="if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');return false;} else {return true};">
