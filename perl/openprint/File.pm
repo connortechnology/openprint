@@ -18,7 +18,7 @@ $serial = 'project_files_id_seq';
 	'size'			=>	'size',
 	'company_id'	=>	'company_id',
 	'archive'		=>	'archive',
-
+);
 %transforms = (
 );
 %defaults = (

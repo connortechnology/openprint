@@ -292,14 +292,19 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="status"></td>
 		</tr>
 		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-<? if ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+		<? echo (
+			my $html;
+			foreach my $Tax ( openprint::Order_Tax->find('order_id'=>$$variable{'Project'}->Order()->id() ) ) {
+				$html .= sprintf(q`
 		<tr class="tax">
 			<td class="checkbox unprintable"></td>
-			<td class="service">HST</td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->harmonized_tax() ); ) ?></td>
+			<td class="service">%s</td>
+			<td class="Price">%s</td>
 			<td class="status"></td>
-		</tr>
-<? endif ( $$variable{'Project'}->Order()->harmonized_tax() ) ?>
+		</tr>`, $Tax->Tax()->name(), openprint::Currency::format($Tax->amount()) );
+			} # end foreach Tax
+			return $html;
+			) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="total">
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
