@@ -1186,16 +1186,25 @@ function LoadContent( divID, page, parameters, message ) {
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 }
 
+function photo_popup( asset_id, album_id ) {
+	popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
+} // end function photo_popup
+
 var popupWin;
 function popup_window( url, parameters, options ) {
+	if ( ! options ) options = {};
+	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
+	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
+	if ( options.maximizable == undefined ) options.maximizable = false;
+	if ( options.resizable == undefined ) options.resizeable = true;
+	if ( options.hideEffect == undefined ) options.hideEffect = Element.hide;
+	if ( options.showEffect == undefined ) options.showEffect = Element.show;
+	if ( options.destroyOnClose == undefined ) options.destroyOnClose = true;
+	if ( options.className == undefined ) options.className = 'alphacube';
+	if ( options.recenterAuto == undefined ) options.recenterAuto = false;
+
 	if ( ! popupWin ) {
-		var width = 400;
-		var height = 400;
-		if ( options ) {
-			if ( options.width ) width = options.width;
-			if ( options.height ) height = options.height;
-		} // end if
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
+		popupWin = new Window(options);
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
