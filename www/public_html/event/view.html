@@ -34,7 +34,9 @@
 
 			if ( $Asset->id() ) {
 				my $Album = $$variable{'Event'}->Album();
-				$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d">%s</a>', 
+				$html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`,
+#popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d', '', { width: window.innerWidth-100, height: window.innerHeight-100 } );">%s</a>`, 
+				##$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%1$d&amp;album_id=%2$d" onclick="popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d');">%s</a>', 
 					$Asset->id(), $Album->id(), $Asset->html() );
 				#$html .= $$variable{'Event'}->Asset()->html();
 			} # end if
