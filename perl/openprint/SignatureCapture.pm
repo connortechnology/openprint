@@ -22,6 +22,7 @@ $serial = 'signaturecapture_id_seq';
 );
 %defaults = (
 	'deleted'		=>	0,
+	'created_on'	=>	'NOW()',
 );
 
 sub file_path {
@@ -58,9 +59,17 @@ sub file_path {
 		$_ = $self->save({'image_data'=>$blobs[0],'type'=>'gif'});
 		$openprint::log->error($_) if $_;
 	} # end if
-	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.gif', $$self{'image_data'} );
-	return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.gif';
+	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type}, $$self{'image_data'} );
+	return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type};
 } # end sub file_path
+
+sub html {
+	# if it's an image like a gif, return an image tag, for svg, blah blah
+	#if ( $_[0]->type() eq 'gif' ) {
+		return sprintf('<img src="%s" alt=""/>', $_[0]->file_path() );
+
+} # end sub html
+
 sub additional_file_path {
 	my $self = $_[0];
 	# Not only returns the path relative to url root, but also makes sure that the image is there. o

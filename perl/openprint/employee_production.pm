@@ -1850,13 +1850,50 @@ sub _stock_allocations {
 sub datacollection {
 	if ( $param{action} eq 'Submit' ) {
 		$param{'docket'} =~ s/\D//g;
-		my @Projects = openprint::Project->find('docket'=>$param{'docket'});
+		$param{'form'} =~ s/\D//g;
+		if ( ! $param{'docket'} ) {
+			$variable{'error'} .= 'Please enter a docket.<br/>';
+			return;
+		} # end if
+		my @Projects = openprint::Project->find('docket'=>$param{'docket'},'limit'=>100);
 		if ( ! @Projects ) {
 			$variable{'error'} .= 'Docket not found.';
 			return;
 		} # end if
+		$param{'signature'} = URI::Escape::uri_unescape( $param{'signature'} ) if $param{'signature'};
 		# In case there is more than 1 project in the docket, it will get saved to both.
 		foreach my $Project ( @Projects ) {
+			if ( $param{'form'} ) {
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $Service = $Project->Service($sig_id);
+					my $sig_specs = $Service->specs();
+					if ( $$sig_specs{'SignatureIndex'} == $param{'form'} ) {
+						$param{'service_id'} = $sig_id;
+						last;
+					} # end if
+				} # end foreach signature
+			} # end if
+			my $Signature = new openprint::SignatureCapture();
+			if ( $param{'signature'} ) {
+				$Signature->save({
+					'image_data'	=>	$param{'signature'},
+					'type'			=>	'svg',
+					'project_id'	=>	$Project->id(),
+					'service_id'	=>	$param{'service_id'},
+				});
+			} # end if
+				
+			my $PF = new openprint::ProductionFeedback();
+			$variable{'error'} .= $PF->save({
+					'project_id'	=>	$Project->id(),
+					'service_id'	=>	$param{'service_id'},
+					'user_id'		=>	$session{'user_id'},
+					'starting_on'	=>	$param{'starting_on'},
+					'ending_on'		=>	$param{'ending_on'},
+					'comment'		=>	$param{'comment'},
+					'signature_id'	=>	$Signature ? $Signature->id() : (),
+				});
+			
 		} # end foreach Project
 		
 	} # end if Submit

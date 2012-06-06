@@ -76,3 +76,8 @@ box-sizing: border-box;
 label:after {
 	content: ':';
 }
+#signature {
+	width: 100%;
+	height: 200px;
+	background-color: white;
+}
