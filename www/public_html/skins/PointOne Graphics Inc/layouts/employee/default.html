@@ -133,6 +133,7 @@
 								<li><a href="/employee/performance/setup.html;NOSSL">&raquo; Performance Setup</a></li>
 								<li><a href="/employee/performance/history.html;NOSSL">&raquo; Performance History</a></li>
 								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/production/datacollection.html;NOSSL">&raquo; Data Collection</a></li>
 							</ul>
 						</li>
 						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>

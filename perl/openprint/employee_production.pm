@@ -870,8 +870,6 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $ac = sql::start_transaction( $dbh );
 	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
-
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
 		$Job->delete();
@@ -937,7 +935,6 @@ sub _bump_job {
 sub _pending_approved {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
-$log->debug("REFERRER ($referer)");
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
@@ -947,13 +944,11 @@ $log->debug("REFERRER ($referer)");
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
 	} # end if
-$log->debug("Equipment: @{$variable{'Equipment'}}");
 } # end sub _pending_approved
 
 sub _pending {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
-$log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {
@@ -1017,12 +1012,12 @@ sub _drop {
 				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
-$log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
+#$log->debug("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
 					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
 					my @service_type_ids = sets::union( map { $_->servicetype_id() } @PS );
-$log->error("ProjectServices in Project st: " . join(',', @service_type_ids ) );
+#$log->debug("ProjectServices in Project st: " . join(',', @service_type_ids ) );
 					@service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, @service_type_ids );
-$log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
+#$log->debug("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
 					if ( ! @service_type_ids ) {
 						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 							my $ST = new openprint::ServiceType( $servicetype_id );
@@ -1042,7 +1037,7 @@ $log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { n
 		} # end if param{'action'} ne 'add_services'
 
 		# Coalesce Jobs
-$log->debug("Order before coalesce: @order");
+#$log->debug("Order before coalesce: @order");
 		my $previous;
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
@@ -1056,7 +1051,7 @@ $log->debug("Order before coalesce: @order");
 						my $service_id = $Project->add_service( new openprint::ServiceType( $servicetype_id ) );
 					} # end foreach servicetype_id
 				} # end if add_services
-$log->debug("Bindery:, servicetypes different");
+#$log->debug("Bindery:, servicetypes different");
 				my $services = $Project->services();
 				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 					my $ST = new openprint::ServiceType( $servicetype_id );
@@ -1268,26 +1263,26 @@ sub reorder_jobs {
 	} # end foreach Job
 
 	my $start_time = time;
-$log->debug("Reordering from $start_time");
+#$log->debug("Reordering from $start_time");
 	my $row = $order[0];
 	push @{$variable{'changed'}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
-$log->debug("Running job,moving up starttime");
+#$log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
-$log->debug("Grab all");
+#$log->debug("Grab all");
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
 			'equipment_id'	=>	$$row{'equipment_id'},
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
 			'order'			=>	'starttime',
 			);
-foreach my $S ( @Shifts ) {
-$log->debug("Shifts: " . $S->to_string() );
-last;
-} # end foreach S
+#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts: " . $S->to_string() );
+#last;
+#} # end foreach S
 	if ( ! @Shifts ) {
 $log->debug("No shifts");
 		# First, grab most recent shift, this will give us the last equipment shift.
@@ -1853,6 +1848,18 @@ sub _stock_allocations {
 } # end sub _stock_allocations
 
 sub datacollection {
+	if ( $param{action} eq 'Submit' ) {
+		$param{'docket'} =~ s/\D//g;
+		my @Projects = openprint::Project->find('docket'=>$param{'docket'});
+		if ( ! @Projects ) {
+			$variable{'error'} .= 'Docket not found.';
+			return;
+		} # end if
+		# In case there is more than 1 project in the docket, it will get saved to both.
+		foreach my $Project ( @Projects ) {
+		} # end foreach Project
+		
+	} # end if Submit
 } # end sub datacollection
 
 1;
