@@ -160,15 +160,16 @@ sub html {
 	my $Event = $_[0];
 	my $html = sprintf(q`
 			<div class="Event">
-			<a class="thumbnail %2$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%3$s"/></a>
-			<span class="name"><a href="/event/view.html?event_id=%1$d">%4$s</a></span>
-			<span class="when">%5$s</span>
-			`, $Event->id(),
+			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
+			<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
+			<div class="When">%4$s</div>
+			<div class="Where">%5$s</div>
+			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
+                    $Event->time_string(),
+                    $Event->where(),
 			$Event->Asset()->layout(),
-			$Event->Asset()->small_url(),
-			ssi::htmlize($Event->name()),
-			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),
-
+			$Event->Asset()->medium_url(),
 			);
 	my @Comments = $Event->Comments();
 	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );

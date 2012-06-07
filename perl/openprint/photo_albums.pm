@@ -174,6 +174,10 @@ $log->debug("$id , $filename ");
 	} # end if
 } # end sub _album_photos
 
+sub _view_photo {
+view_photo();
+} # end sub _view_photo
+
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
