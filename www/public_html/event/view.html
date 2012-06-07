@@ -1,4 +1,27 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{'Event'}->id() ) ?>
+<script type="text/javascript">
+    function invitation_set_users(input, li) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        user_ids.push(li.id);
+
+        if ( li.id ) {
+            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+        } // end if
+    }
+    function invitation_remove_user( user_id ) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        user_ids = user_ids.without( user_id );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+    }
+    // adds the currently selected users, so that we can filter them out of returned results
+    function invitation_add_user_ids( input, query ) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        query += '&user_id=' + user_ids.join('&user_id=');
+        return query;
+    }
+</script>
+<? endif ( $$variable{'Event'}->id() ) ?>
 <? if ( $$variable{'Event'}->can_view() ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
@@ -10,16 +33,18 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Event'}->can_edit() ) {
-					if ( $$variable{'Event'}->deleted() ) {
-					$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
-					} else {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+				if ( $$variable{'Event'}->id() ) {
+					if ( $$variable{'Event'}->can_edit() ) {
+						if ( $$variable{'Event'}->deleted() ) {
+						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
+						} else {
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+						} # end if
+						$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
+						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
 					} # end if
-					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
-					$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
-				$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				return $html;
 			) ?>
 		</p>

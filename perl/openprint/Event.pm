@@ -4,6 +4,7 @@ require Date::Format;
 require openprint::Event_Category;
 require openprint::Comment;
 require openprint::Event_Attendance;
+require openprint::Event_Invitation;
 
 package openprint::Event;
 our @ISA = qw( openprint::Object );
@@ -260,6 +261,14 @@ sub upload {
 sub view_url {
 	return '/event/view.html?event_id='.$_[0]{'id'};
 } # end sub view_url
+
+sub invited_user_ids {
+	return map { $_->id() } openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub invited_user_ids
+
+sub Invitations {
+	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub Invitations
 
 1;
 __END__

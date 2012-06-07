@@ -183,5 +183,26 @@ sub _invitation_popup {
 	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
 } # end sub _invitation_popup
 
+sub _invitation_users {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( $param{'action'} eq 'set' ) {
+		my %old = map { $_->user_id(), $_ } $Event->Invitations();
+		foreach my $user_id ( sets::exclude( ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ], [ keys %old ] ) ) {
+			$old{$user_id}->delete();
+		} # end foreach
+		foreach my $user_id ( sets::exclude( [ keys %old ], ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ] ) ) {
+			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
+		} # end foreach
+	} elsif ( $param{'action'} eq 'add' ) {
+		if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$param{user_id}) ) {
+			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});
+			#$Event->invited_user_ids(undef);
+		} # end if
+	} # end if
+} # end sub _invitation_users
+
+sub _user_name {
+} # end sub _user_name
+
 1;
 __END__
