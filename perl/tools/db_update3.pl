@@ -120,6 +120,9 @@ if ( ! exists $$data{'amount_locked'} ) {
 if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
+if ( ! exists $$data{'attention'} ) {
+	$dbh->do('ALTER TABLE expenses add attention BOOLEAN NOT NULL default false');
+}
 if ( ! exists $$data{'business_use_amount'} ) {
 	$dbh->do('ALTER TABLE expenses add business_use_amount float');
 }
@@ -179,6 +182,9 @@ if ( ! exists $$data{'offline_seconds'} ) {
 } # end if
 if ( ! exists $$data{'state_changed_on'} ) {
 	$dbh->do('ALTER TABLE hosts add state_changed_on INTEGER');
+} # end if
+if ( ! exists $$data{'notified'} ) {
+	$dbh->do('ALTER TABLE hosts add notified BOOLEAN NOT NULL DEFAULT FALSE');
 } # end if
 
 if ( ! sets::isin( 'host_notifications', \@tables ) ) {
@@ -377,6 +383,10 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 } # end if
 if ( ! sets::isin( 'event_attendance', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'event_invitations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
@@ -987,6 +997,10 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 	if ( ! exists $$data{'cod'} ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
+	if ( ! exists $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE company_credit add supplier_id INTEGER');
+		$dbh->do('ALTER TABLE company_credit ADD FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
+	} # end if
 } # end if
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
@@ -1007,6 +1021,28 @@ if ( sets::isin('upload_id_seq', \@sequences ) ) {
 	} # end if
 	$dbh->do('DROP SEQUENCE upload_id_seq');
 } # end if
+
+if ( ! sets::isin('paycheques_timetracks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques_Timetracks.sql}) );
+	die if $dbh->errstr();
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='timetracks'", 'column_name');
+if ( exists $$data{'paycheque_id'} ) {
+	require openprint::Timetrack;
+	require openprint::Paycheque_Timetrack;
+	foreach my $Timetrack ( openprint::Timetrack->find('paycheque_id is null'=>0) ) {
+		if ( ! openprint::Paycheque_Timetrack->find_one('paycheque_id'=>$Timetrack->paycheque_id(),'timetrack_id'=>$Timetrack->id()) ) {
+			$_ = (new openprint::Paycheque_Timetrack())->save({'paycheque_id'=>$Timetrack->paycheque_id(),'timetrack_id'=>$Timetrack->id()});
+			die $_ if $_;
+		} # end if
+	} # end foreach Timetrack
+	$dbh->do('ALTER TABLE timetracks drop paycheque_id');
+} # end if
+if ( ! sets::isin('object_views', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Object_Views.sql}) );
+	die if $dbh->errstr();
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

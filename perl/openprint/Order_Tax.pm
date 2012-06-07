@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
+require Math::Round;
 require openprint::Order;
 require openprint::Tax;
 require openprint::OrderedProject;
@@ -50,7 +50,7 @@ sub amount {
 				$$self{'amount'} += $Product->price() * ($$self{'rate'}/100);
 			} # end foreach Project
 		} # end if
-		$$self{'amount'} = sprintf('%.2f', $$self{'amount'} );
+		$$self{'amount'} = Math::Round::nearest( 0.01, $$self{'amount'} );
 	} # end if
 	return $$self{'amount'};
 } # end sub amount

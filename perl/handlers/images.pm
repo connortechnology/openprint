@@ -28,7 +28,7 @@ sub handler {
 	my $request = $_[0];
 	$r = Apache2::Request->new( $request );
 	my $starttime = gettimeofday() if DEBUG;
-	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
+	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
 
@@ -53,6 +53,7 @@ sub handler {
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id ) = $r->uri() =~ /^\/(.*)\/(\d+)_.+$/;
+		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
 			if ( $Asset->id() ) {
@@ -68,6 +69,8 @@ sub handler {
 						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
+						} elsif ( $path eq 'medium' ) {
+							$r->sendfile( $Asset->medium_path() );
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
@@ -79,6 +82,8 @@ $log->error("FORBIDDEN");
 						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
+						} elsif ( $path eq 'medium' ) {
+							$r->sendfile( $Asset->medium_path() );
 						} else {
 # No album means has to be an article image, or a generic site image.
 							$r->sendfile( $Asset->on_disk_path() );

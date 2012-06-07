@@ -195,16 +195,9 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
       <tbody>
 <? echo (
 	my $html;
-	foreach my $index ( 1 .. 5 ) {
-		if ( $param{'fileUpload'.$index} ) {
-			my $filename = $param{'fileUpload'.$index};
-			$filename =~ s/.*[\/\\](.*)/$1/;
-			$filename =~ s/ /_/g;
-			my $size = misc::format_bytes( $r->upload('fileUpload'.$index)->size() );
-            $html .= qq~<tr><td nowrap="nowrap">$filename</td><td>$param{'txtDescription'.$index}</td><td align="right">$size</td></tr>~;
-
-		} # end if
-	} # end foreach
+	foreach my $File ( openprint::File->find('upload_id'=>$param{'serial'} ) ) {
+		$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td>%s</td><td align="right">%s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
+	} # end foreach File
 	return $html;
 ) ?>
       </tbody>

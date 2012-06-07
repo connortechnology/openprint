@@ -8,6 +8,7 @@ use openprint ();
 require sets;
 require openprint::Opinion;
 require openprint::Opinion_Type;
+require openprint::Object_View;
 require openprint::Comment;
 require openprint::View;
 require openprint::Privacy;
@@ -1034,7 +1035,7 @@ sub Comments {
 		$_[1]{'object_type'} = ref $_[0],
 		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
 
-		return openprint::Comment->find($_[1]);
+		return openprint::Comment->find(%{$_[1]});
 	} # end if
 
 	if ( ! defined $_[0]{'Comments'} ) {
@@ -1068,6 +1069,16 @@ sub Assets {
 $openprint::log->debug("# of Assets: " . scalar @Assets );
 	return @Assets;
 } # end sub Assets
+
+sub View {
+	return if ! $session{user_id};
+	my $View = openprint::Object_View->find_one('object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'} );
+	if ( ! $View ) {
+		$View = new openprint::Object_View();
+		$View->save({'object_id'=>$_[0]{'id'}, 'object_type'=>ref $_[0], 'user_id'=>$session{'user_id'}});
+	} # end if
+	return $View;
+} # end sub View
 
 1;
 __END__

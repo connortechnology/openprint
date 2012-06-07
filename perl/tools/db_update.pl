@@ -219,6 +219,12 @@ if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 }
 if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_files'", 'column_name');
+	if ( ! $$data{'archive'} ){ 
+		$dbh->do('ALTER TABLE project_files add archive TEXT');
+	} # end if
+	
 }
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');

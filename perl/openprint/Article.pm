@@ -179,17 +179,17 @@ sub html {
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
+			<div class="Assets">%8$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			Posted on %7$s by <a href="/account/view.html?user_id=%5$d">%6$s</a><br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
-			<div class="Assets">%8$s</div>
 			`, $Article->id(),
-			ssi::htmlize($Article->title()),
+			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
 			$Article->created_by(),
-			ssi::htmlize( $Article->Author()->name() ),
+			ssi::escape_quotes( $Article->Author()->name() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
@@ -254,5 +254,16 @@ sub destroy {
 	return $error;
 } # end sub destroy
 	
+sub Photos {
+    #if ( ! $_[0]{'album_id'} ) {
+        #return ();
+    #} # end if
+    return openprint::Article_Asset->find('article_id'=>$_[0]{'id'});
+} # end sub Photos
+
+sub Album {
+    #return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
+
 1;
 __END__

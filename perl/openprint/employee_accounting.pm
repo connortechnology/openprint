@@ -157,16 +157,131 @@ sub credit {
 			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
-			my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
+		if ( ! $company_id ) {
+			$variable{'error'} .= 'No customer specified.<br/>';
+		} else {
+			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
 
-			$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
-				map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
-		} # end foreach Supplier
-	} # end if
+				$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
+					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+			} # end foreach Supplier
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
+		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 
+				'Hold', 'Downpayment', 'COD', 'Balance', 'Remaining', 'Note' );
+		my @data;
+		foreach my $Credit ( openprint::Company_Credit->find() ) {
+			push @data, ( $Credit->Supplier()->name(), $Credit->Company()->name(), $Credit->Company()->business_name(),
+				 $Credit->warndays(), $Credit->denydays(), $Credit->limit(), 
+				 $Credit->hold(), $Credit->downpayment(), $Credit->cod(),
+				 $Credit->debt(), $Credit->remaining(), '',
+				 );
+		} # ebd foreach Credut
+		misc::export_csv( $r, $log, \%variable, 'Credit.csv', \@header, \@data );
+	} elsif ( $param{'btnFunction'} eq 'Import' ) {
+		my $upload;
+		if ( ! $param{'import'} ) {
+			$variable{'error'} = 'Please select a file for import.';
+		} elsif ( ! ( $upload = $r->upload('import') ) ) {
+			$variable{'error'} = 'Something wrong with upload.';
+		} else {
+			my $io = $upload->io();
+			$_ = <$io>;
 
-	$variable{'CompanyIndex'} = $company_id;
-	$variable{'Company'} = new openprint::Company($company_id);
+			my %Companies = map { $_->name(), $_ } openprint::Company->find();
+			my %Legal = map { $_->business_name(), $_ } values %Companies;
+			my $csv = Text::CSV_XS->new({binary=>1});
+			my $ac = sql::start_transaction( $dbh );
+			while ( <$io> ) {
+				$csv->parse($_);
+				#my ( $creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note ) = misc::trim( $csv->fields() );
+				my ( $creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note ) = $csv->fields();
+$log->debug("$creditor_name, $company_name, $legal_name, $warndays, $denydays, $limit, $hold, $downpayment, $cod, $note");
+				next if ! $creditor_name;
+				next if ! $company_name;
+				if ( ! $Companies{$creditor_name} ) {
+					$variable{'error'} .= "Unknown creditor $creditor_name<br/>";
+					next;
+				} elsif ( ! $Companies{$creditor_name}->offers_credit() ) {
+					$variable{'error'} .= "Creditor $creditor_name doesn't offer credit.  Adding anyways.<br/>";
+				} # end if
+				if ( ! $Companies{$company_name} ) {
+					if ( $Legal{$company_name} ) {
+						$Companies{$company_name} = $Legal{$company_name};
+					} elsif ( $legal_name and $Legal{$legal_name} ) {
+						$Companies{$company_name} = $Legal{$legal_name};
+					} elsif ( substr( $company_name, -1,1) eq '.' and $Companies{substr($company_name,0,-1)} ) {
+						$Companies{$company_name} = $Companies{substr($company_name,0,-1)};
+					} elsif ( substr( $company_name, -1,1) ne '.' and $Companies{$company_name.'.'} ) {
+						$Companies{$company_name} = $Companies{$company_name.'.'};
+					} elsif ( substr( $company_name, -3,3) ne 'Inc' and $Companies{$company_name.' Inc'} ) {
+						$Companies{$company_name} = $Companies{$company_name.' Inc'};
+					} elsif ( substr( $company_name, -3,3) ne 'Ltd' and $Companies{$company_name.' Ltd'} ) {
+						$Companies{$company_name} = $Companies{$company_name.' Ltd'};
+					} elsif ( substr( $company_name, -4,4) eq ' Inc' and $Companies{substr($company_name,0,-4)} ) {
+						$Companies{$company_name} = $Companies{substr($company_name,0,-4)};
+					} elsif ( substr( $company_name, -5,5) eq ' Inc.' and $Companies{substr($company_name,0,-5)} ) {
+						$Companies{$company_name} = $Companies{substr($company_name,0,-5)};
+					} elsif ( substr( $company_name, -4,4) eq ' Ltd' and $Companies{substr($company_name,0,-4)} ) {
+						$Companies{$company_name} = $Companies{substr($company_name,0,-4)};
+					} elsif ( substr( $company_name, -5,5) eq ' Ltd.' and $Companies{substr($company_name,0,-5)} ) {
+						$Companies{$company_name} = $Companies{substr($company_name,0,-5)};
+					} else {
+$log->debug("$company_name " . substr( $company_name, -1,1) . ','. substr($company_name,0,-1) );
+						$variable{'error'} .= "Unknown company $company_name<br/>";
+						next;
+					} # end if
+				} # end if
+				$warndays = openprint::Company_Credit->transform('warndays', $warndays);
+				$denydays = openprint::Company_Credit->transform('denydays', $denydays);
+				$limit = openprint::Company_Credit->transform('limit', $limit);
+				$downpayment = openprint::Company_Credit->transform('downpayment', $downpayment);
+				$cod = openprint::Company_Credit->transform('cod', $cod);
+				$hold = 1 if sets::isin(lc $hold, [ 'y','yes' ] );
+				$hold = 0 if $hold != 1;
+				my $Credit = $Companies{$company_name}->Credit($Companies{$creditor_name}->id());
+				if ( 
+					( $warndays eq '' or $Credit->warndays() == $warndays ) and
+					( $denydays eq '' or $Credit->denydays() == $denydays ) and
+					( $limit eq '' or $Credit->limit() == $limit ) and
+					( $hold eq '' or $Credit->hold() == $hold ) and
+					( $downpayment eq '' or $Credit->downpayment() == $downpayment ) and
+					( $cod eq '' or $Credit->cod() == $cod ) 
+	) {
+					$variable{'information'} .= "No change made for $creditor_name for $company_name $legal_name<br/>";
+					next;
+				} # end if
+
+$variable{'information'} .= "$company_name for $creditor_name changed:".join(', ',
+					(( $warndays eq '' or $Credit->warndays() == $warndays ) ? () : ('warn days: '.$Credit->warndays().' to '.$warndays )),
+					(( $denydays eq '' or $Credit->denydays() == $denydays ) ? () : ('deny days: '.$Credit->denydays().' to '.$denydays )),
+					(( $limit eq '' or $Credit->limit() == $limit )? () : ('limit: ' . $Credit->limit().' to ' . $limit )),
+					(( $hold eq '' or $Credit->hold() == $hold ) ? () : ( 'hold: ' . $Credit->hold().' to ' . $hold )),
+					(( $downpayment eq '' or $Credit->downpayment() == $downpayment ) ? () : ( 'downpayment: ' . $Credit->downpayment() . $downpayment )),
+					(( $cod eq '' or $Credit->cod() == $cod ) ? () : ('cod: ' . $Credit->cod() . ' to ' . $cod ) ),
+).'<br/>';
+
+				$variable{error} .= $Credit->save({
+					( $$Credit{'company_id'} ? () : ( 'company_id'=>$Companies{$company_name}->id() ) ),
+					( $$Credit{'supplier_id'} ? () : ( 'supplier_id'=>$Companies{$creditor_name}->id() ) ),
+					( $warndays ne '' ? ('warndays'=>$warndays) : () ),
+					( $denydays ne '' ? ('denydays'=>$denydays) : () ),
+					( $limit ne '' ? ('limit'=>$limit) : () ),
+					( $hold ne '' ? ('hold'=>$hold) : () ),
+					( $downpayment ne '' ? ('downpayment'=>$downpayment) : () ),
+					( $cod ne '' ? ('cod'=>$cod) : () ),
+					});
+				$variable{'error'} .= (new openprint::logRecord())->save({'action_type'=>104,user_id=>$session{user_id},company_id=>$session{company_id},note=>$note. " for $company_name for $creditor_name"}) if $note;
+			$log->debug($Credit->to_string());
+			} # end while
+			(new openprint::logRecord())->save({'action_type'=>104,user_id=>$session{user_id},company_id=>$session{company_id},note=>$variable{'error'}.$variable{'information'}});
+			sql::end_transaction( $dbh, $ac );
+		} # end if	
+	} # end if btnFunction
+
+$variable{'CompanyIndex'} = $company_id;
+$variable{'Company'} = new openprint::Company($company_id);
 } # end sub credit
 
 sub ledger {
@@ -264,32 +379,29 @@ sub expenses {
 		} # end if
 		delete $param{'expense_id'};
 	} else {
-		ssi::save_params( '/employee/accounting/expenses.html', ( 
-			'invoiced_on_start_year','invoiced_on_start_month','invoiced_on_start_day',
-			'invoiced_on_end_year','invoiced_on_end_month','invoiced_on_end_day',
-			'due_on_start_year','due_on_start_month','due_on_start_day',
-			'due_on_end_year','due_on_end_month','due_on_end_day',
-			'paid_on_start_year','paid_on_start_month','paid_on_start_day',
-			'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-			'category_id', 'recipient_id', 'account_id',
-) );
+		_expenses();
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'invoiced_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'invoiced_on_end', '' );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_end', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_start', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'entered_on_end', '' );
 	} # end if
 } # end sub expenses
 sub _expenses {
 	ssi::save_params( '/employee/accounting/expenses.html', ( 
+				'entered_on_start_year','entered_on_start_month','entered_on_start_day',
+				'entered_on_end_year','entered_on_end_month','entered_on_end_day',
 				'invoiced_on_start_year','invoiced_on_start_month','invoiced_on_start_day',
 				'invoiced_on_end_year','invoiced_on_end_month','invoiced_on_end_day',
 				'due_on_start_year','due_on_start_month','due_on_start_day',
 				'due_on_end_year','due_on_end_month','due_on_end_day',
 				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
-				'category_id', 'recipient_id', 'account_id',
+				'category_id', 'recipient_id', 'account_id','attention',
+				
 				) );
 } # end sub _expenses
 

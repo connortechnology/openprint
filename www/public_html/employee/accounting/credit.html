@@ -1,26 +1,35 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" method="post" action="credit.html">
+<form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Select Company</legend>
-		<p>
-			<label>Account #</label>
+		<ul>
+		<li>
+			<label>Account #:</label>
 			<input type="text" name="txtSearchAccountNum" />
 			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
-		</p>
-		<p class="company">
-			<label>Company</label>
-            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
+		</li>
+		<li>
+			<label>Customer:&nbsp;</label>
+            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+ssi::input( name=>'import', id=>'import', type=>'file' ),
+ssi::button('Import',{ onclick=>q`f1.btnFunction.value='Import';f1.submit();` } ),
+ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } ),
+); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
 	<fieldset>
 <? echo (
     my $html;
-    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1,'order'=>'id') ) {
         my $Credit = $$variable{'Company'}->Credit($Supplier->id());
 
         $html .= sprintf(q`
@@ -37,7 +46,7 @@
         </ul>
     </fieldset></div>
         `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
-        openprint::Currency::format( $Credit->limit() ),
+        openprint::Currency::format( 1*$Credit->limit() ),
         openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
         ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
         $Credit->downpayment(), $Credit->cod(),
@@ -47,7 +56,7 @@
 ) ?>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			ssi::button( 'Save', { onclick=>"if(!f1.ddmCustomer.getValue()){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
 			ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>

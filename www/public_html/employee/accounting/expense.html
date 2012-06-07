@@ -112,8 +112,10 @@ function update_total( form ) {
 					</select>	
 				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
-					<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" size="8" />
-					<? echo ( ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ) ) ?>
+					<? echo ( join("\n",
+						ssi::input(type=>'float', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);' ),
+						ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ),
+					); ) ?>
 					<select name="currency_id" id="currency_id">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Expense'}->currency_id() ? $$variable{'Expense'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
@@ -125,11 +127,13 @@ function update_total( form ) {
 				</ul>
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
-					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_amount_from_total(this.form);" size="8" />
-					<? echo ( ssi::write_override( 'total_locked', $$variable{'Expense'}->total_locked() ); ) ?>
+					<? echo ( join("\n",
+						ssi::input(type=>'float', name=>'total', id=>'total', value=>$$variable{'Expense'}->total(), onkeyup=>'calc_amount_from_total(this.form);' ),
+						ssi::write_override( 'total_locked', $$variable{'Expense'}->total_locked() ),
+					); ) ?>
 				</li>
 				<li><label for="business_use">Business %</label>
-					<input type="text" name="business_use" id="business_use" value="<? echo ( $$variable{'Expense'}->business_use() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />%
+					<? echo ( ssi::input(type=>'cardinal',name=>'business_use',id=>'business_use', value=>$$variable{'Expense'}->business_use() ); ) ?>
 				</li>
 			</ul>
 		</div>
@@ -157,6 +161,10 @@ function update_total( form ) {
 				<li>
 					<label for="description">Description</label>
 					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
+				</li>
+				<li>
+					<label>Attention</label>
+					<? echo ( ssi::radio( 'attention', [ '1', 'Yes', '0', 'No' ], $$variable{'Expense'}->attention() ); ) ?>
 				</li>
 			</ul>
 		</div>

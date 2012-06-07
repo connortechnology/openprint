@@ -11,14 +11,14 @@
 	return $html;
 	) ?>
 	</div>
-	<h1><? hecho ( $$variable{'Article'}->title() ) ?></h1>
+	<h1><? echo ( $$variable{'Article'}->title() ) ?></h1>
 	<p class="buttons">
 		<? echo ( 
 join('',
 	( $$variable{'Article'}->can_edit() ?
 		(
-			ssi::button( 'Edit', { 'href'=>'edit.html?article_id='.$$variable{'Article'}->id() } ),
-			ssi::button( 'Destroy', { 'href'=>'history.html?func=Destroy&amp;article_id='.$$variable{'Article'}->id() } ),
+			ssi::button( 'Edit', { href=>'edit.html?article_id='.$$variable{'Article'}->id() } ),
+			ssi::button( 'Destroy', { href=>'history.html?func=Destroy&amp;article_id='.$$variable{'Article'}->id() } ),
 		) : () ),
 		'<span class="GooglePlusOne"><g:plusone></g:plusone></span>',
 	);
