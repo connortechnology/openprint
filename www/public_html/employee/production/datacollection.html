@@ -22,11 +22,14 @@ function form_submit() {
 	<div class="leftColumn">
 		<ul>
 			<li><label>Docket</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;' ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
+				<span class="error" id="docket_alert"></span>
+			</li>
+			<li><label>Company</label><span id="company_name"></span></li>
 			<li><label>Form</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;'); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;', value=>$param{form} ); ) ?></li>
 			<li><label>Quantity</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'current_input=this;'); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'current_input=this;', value=>$param{quantity} ); ) ?></li>
 			<li><label>Equipment</label>
 				<select name="equipment_id" id="equipment_id">
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
@@ -41,9 +44,19 @@ function form_submit() {
 				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
 				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
 				join('', 
-					ssi::button('S'),
+					ssi::button('C', { onclick=>qq`current_input.value = '';`, title=>'Clear' } ),
 					ssi::button('0', { onclick=>qq`current_input.value += '0';` } ),
-					ssi::button('D', { onclick=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);` } ),
+					ssi::button('D', { onclick=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
+				),
+				join('', 
+					ssi::button('Minus', { onclick=>qq`current_input.value += '-';`, text=>'-' } ),
+					ssi::button('Plus', { onclick=>qq`current_input.value += '+';`, text=>'+' } ),
+					ssi::button('S', { onclick=>qq`current_input.value += ' ';` } ),
+				),
+				join('', 
+					ssi::button('Multiply', { onclick=>qq`current_input.value += '*';`, text=>'*' } ),
+					ssi::button('Divide', { onclick=>qq`current_input.value += '/';`, text=>'/' } ),
+					ssi::button('Equals', { onclick=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
 				),
 			); ) ?>
 	</div>
@@ -59,6 +72,38 @@ function form_submit() {
 			); ) ?>
 </p>
 </form>
+<br class="spacer"/>
+<fieldset><legend>Log</legend>
+	<table class="List">
+		<tr>
+			<th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th></tr>
+			<? echo (
+				my $html;
+				foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 'limit'=>100) ) {
+					my $Project = $PF->Project();
+					my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
+					my $specs = $Service->specs() if $Service;
+
+					my $rowclass;
+					$html .= sprintf(q`
+<tr%s>
+	<td class="Docket">%d</td>
+	<td class="Company">%s</td>
+	<td class="form">%d</td>
+	<td class="quantity">%d</td>
+	<td class="Equipment">%s</td>
+</tr>
+`, $rowclass, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->quantity(), $PF->Equipment()->strid() );
+					if ( $PF->comment() ) {
+						$html .= '<tr'.$rowclass.'><td colspan="5">'.$PF->comment().'</td></tr>';
+					} # end if
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach PF
+			
+				return $html;
+			) ?>
+	</table>
+</fieldset>
 <script type="text/javascript"> document.f1.docket.focus(); 
 	//$('body').bind('touchmove', 
 	Event.observe($('body'),'touchmove', function(event) { event.preventDefault() }); // turns off

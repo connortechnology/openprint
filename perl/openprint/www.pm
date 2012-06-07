@@ -103,6 +103,16 @@ $variable{'uri'} = $page;
 		} # end if
 	} # end while
 
+    if ( $lastpage =~ /\.html/ ) {
+        $r->content_type(q{text/html; charset=utf-8});
+    } elsif ( $lastpage =~ /\.json/ ) {
+        $r->content_type(q{text/javascript; charset=utf-8});
+    } elsif ( $lastpage =~ /\.xml/ ) {
+        $r->content_type(q{text/xml; charset=utf-8});
+    } elsif ( $lastpage =~ /\.rss/ ) {
+        $r->content_type(q{application/rss+xml; charset=utf-8});
+    } # end if
+
     if ( $variable{'ExternalRedirect'} ) {
         $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
         $r->status(Apache2::Const::REDIRECT);
@@ -160,7 +170,7 @@ $log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 			$log->debug("ending variable subst of template " . ( time - $starttime ) );
 		} else {
 			##$log->warn("No template!");
-		#$log->warn($variable{'PageContent'});
+		$log->warn($variable{'PageContent'});
 #$log->debug("starting print " . ( time - $starttime ) );
 			$r->print( $variable{'PageContent'} );
 #$log->debug("ending print " . ( time - $starttime ) );
