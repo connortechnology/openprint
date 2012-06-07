@@ -179,5 +179,9 @@ $log->debug("Got: " . $Attending->to_string() );
 	} # end if
 } # end sub _attendance
 
+sub _invitation_popup {
+	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
+} # end sub _invitation_popup
+
 1;
 __END__
