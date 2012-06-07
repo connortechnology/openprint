@@ -26,6 +26,10 @@ function form_submit() {
 				<span class="error" id="docket_alert"></span>
 			</li>
 			<li><label>Company</label><span id="company_name"></span></li>
+			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
+				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
+				</select>
+			</li>
 			<li><label>Form</label>
 				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;', value=>$param{form} ); ) ?></li>
 			<li><label>Quantity</label>
