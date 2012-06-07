@@ -1,9 +1,22 @@
-<script type="text/javascript" src="/javascripts/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="/javascripts/signaturepad.js"></script>
 <script type="text/javascript">
+function return_str_to_html(str){
+	var form = $('f1');
+	form.signature.value = escape(str);
+	form.elements['action'].value = 'Submit';
+	form.submit();
+}
+function form_submit() {
+	var form = $('f1');
+	form.signature.value = escape(top.getSignature());
+	form.elements['action'].value = 'Submit';
+	form.submit();
+}
+
 	var current_input;
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html">
+	<input type="hidden" name="action"/>
 
 <fieldset><legend>Data Collection</legend>
 	<div class="leftColumn">
@@ -19,7 +32,7 @@
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
 				</select>
 			</li>
-			<li><label>Note</label><textarea name="note" id="note"></textarea></li>
+			<li><label>Comment</label><textarea name="comment" id="comment"></textarea></li>
 		</ul>
 	</div>
 	<div class="rightColumn">
@@ -36,20 +49,22 @@
 	</div>
 </fieldset>
 <fieldset><legend>Signature</legend>
-	<canvas class="pad" width="750px" height="200px"></canvas>
-	<input type="hidden" name="output" class="output">
+<embed id="signature" src="/images/signature.svg?v=4" type="image/svg+xml"/>
+<input type="hidden" name="signature"/>
 </fieldset>
 <p class="buttons">
 <? echo ( join('',
-			ssi::button('Clear', { onclick=>q`$('.sigPad').clearCanvas();` } ),
-			ssi::button('Submit', { onclick=>q`$('.sigPad').submit();` } ),
+			ssi::button('Clear', { onclick=>q`top.clearSignature();$('signature').value='';` } ),
+			ssi::button('Submit', { onclick=>'form_submit();' } ),
 			); ) ?>
 </p>
 </form>
-<script type="text/javascript">
-document.f1.docket.focus();
-$(document).ready(function() {
-  $('.sigPad').signaturePad({drawOnly:true});
-});
+<script type="text/javascript"> document.f1.docket.focus(); 
+	//$('body').bind('touchmove', 
+	Event.observe($('body'),'touchmove', function(event) { event.preventDefault() }); // turns off
+
+//$('body').unbind('touchmove'); // turns on
+
+
 </script>
 

@@ -70,7 +70,7 @@ my @re = (
 );
 
 my $ac = sql::start_transaction( $dbh );
-$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+#$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM HOSTS where whitelist=?', 1 );
 
