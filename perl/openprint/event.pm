@@ -22,10 +22,12 @@ require openprint::Location;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->delete();
 		%param = ();
@@ -117,6 +119,7 @@ sub category {
 } # end sub category
 
 sub view {
+	$param{'event_id'} =~ s/\D//g;
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	if ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $Event->delete();
