@@ -263,7 +263,7 @@ sub view_url {
 } # end sub view_url
 
 sub invited_user_ids {
-	return map { $_->id() } openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+	return map { $_->user_id() } openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
 } # end sub invited_user_ids
 
 sub Invitations {

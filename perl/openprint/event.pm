@@ -190,9 +190,11 @@ sub _invitation_users {
 		foreach my $user_id ( sets::exclude( ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ], [ keys %old ] ) ) {
 			$old{$user_id}->delete();
 		} # end foreach
-		foreach my $user_id ( sets::exclude( [ keys %old ], ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ] ) ) {
-			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
-		} # end foreach
+		if ( $param{user_id} ) {
+			foreach my $user_id ( sets::exclude( [ keys %old ], ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ] ) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
+			} # end foreach
+		} # end if
 	} elsif ( $param{'action'} eq 'add' ) {
 		if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$param{user_id}) ) {
 			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});

@@ -10,7 +10,7 @@
         } // end if
     }
     function invitation_remove_user( user_id ) {
-        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
         user_ids = user_ids.without( user_id );
         new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
     }

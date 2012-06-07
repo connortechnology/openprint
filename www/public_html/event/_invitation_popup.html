@@ -1,13 +1,13 @@
-<form id="invitations" name="invitations">
+<form id="invitations" name="invitations" onsubmit="return false;">
 <fieldset><legend>Invitations</legend>
 	<ul>
-		<li><label>By Name:</label>
+		<li><label>By Name</label>
 			<input type="text" name="user_name" id="user_name"/><br/>
 			<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
 			<script type="text/javascript">
 			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/event/_user_name.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: ',', callback: invitation_add_user_ids } );
 			</script>
-			<div id="users"><!--#include virtual="/event/_invitation_users.html"--></div>
+			<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
 		</li>
 	</ul>
 </fieldset>
