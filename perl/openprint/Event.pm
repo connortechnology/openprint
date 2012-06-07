@@ -165,7 +165,7 @@ sub html {
 			<span class="when">%5$s</span>
 			`, $Event->id(),
 			$Event->Asset()->layout(),
-			$Event->Asset()->thumbnail_url(),
+			$Event->Asset()->small_url(),
 			ssi::htmlize($Event->name()),
 			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),
 

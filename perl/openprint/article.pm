@@ -264,6 +264,7 @@ sub category {
 sub view {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	$Article->set( \%param );
+	$Article->View();
 } # end sub view
 
 sub _comments {
