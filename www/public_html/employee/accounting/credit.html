@@ -9,7 +9,7 @@
 		</li>
 		<li>
 			<label>Customer:&nbsp;</label>
-            <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
+            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
@@ -20,8 +20,8 @@
 		<p class="buttons">
 			<? echo ( join('',
 ssi::input( name=>'import', id=>'import', type=>'file' ),
-ssi::button('Import',{ onclick=>q`f1.btnFunction.value='Import';f1.submit();` } ),
-ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } ),
+ssi::button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
+ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -35,28 +35,31 @@ ssi::button('Export',{ onclick=>q`f1.btnFunction.value='Export';f1.submit();` } 
         $html .= sprintf(q`
     <div class="Credit"><fieldset><legend>Credit Information for %2$s:</legend>
         <ul>
-            <li><label>Warn after</label><input type="number" name="warndays-%1$d" value="%3$d"/> Days</li>
-            <li><label>Deny after</label><input type="number" name="denydays-%1$d" value="%4$d"/> Days</li>
+            <li><label>Warn after</label>%3$s Days</li>
+            <li><label>Deny after</label>%4$s Days</li>
             <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
             <li><label>Current Credit Balance</label>%6$s</li>
             <li><label>Remaining Credit</label>%7$s</li>
             <li><label>Credit Hold</label>%8$s</li>
-            <li><label>Required Downpayment Amount</label><input type="number" name="downpayment-%1$d" value="%9$.2f" max="100" onkeyup="floatize(this);"/> %</li>
-            <li><label>Required COD</label><input type="number" name="cod-%1$d" value="%10$.2f" max="100" onkeyup="floatize(this);"/> %</li>
+            <li><label>Required Downpayment Amount</label>%9$s %</li>
+            <li><label>Required COD</label>%10$s %</li>
         </ul>
     </fieldset></div>
-        `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
+        `, $Supplier->id(), $Supplier->name(),
+		ssi::input(type=>'cardinal', name=>'warndays-'.$$Supplier{id}, value=>$Credit->warndays() ),
+		ssi::input(type=>'cardinal', name=>'denydays-'.$$Supplier{id}, value=>$Credit->denydays() ),
         openprint::Currency::format( 1*$Credit->limit() ),
         openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
         ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
-        $Credit->downpayment(), $Credit->cod(),
+		ssi::input(type=>'cardinal', name=>'downpayment-'.$$Supplier{id}, value=>$Credit->downpayment(), max=>100 ),
+		ssi::input(type=>'cardinal', name=>'cod-'.$$Supplier{id}, value=>$Credit->cod(), max=>100 ),
 );
     } # end foreach Company
     return $html;
 ) ?>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::button( 'Save', { onclick=>"if(!f1.ddmCustomer.getValue()){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
+			ssi::button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
 			ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>

@@ -11,6 +11,11 @@
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<? if ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<? endif ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
 <? echo (
 	my @html;
 	my $css = $$variable{'uri'};

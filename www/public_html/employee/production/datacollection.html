@@ -25,13 +25,21 @@ function form_submit() {
 				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
 				<span class="error" id="docket_alert"></span>
 			</li>
-			<li><label>Company</label><span id="company_name"></span></li>
+			<li><label>Company</label><span id="company_name"><? echo ( 
+				if ( $param{docket} ) {
+					my $Order = openprint::Order->find_one('docket'=>$param{docket});
+					return $Order->Company()->name() if $Order;
+				} # end if
+				return '';
+			) ?></span></li>
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
 				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
 				</select>
 			</li>
 			<li><label>Form</label>
 				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;', value=>$param{form} ); ) ?></li>
+			<li><label>Version</label>
+				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onblur=>'current_input=this;', value=>$param{version} ); ) ?></li>
 			<li><label>Quantity</label>
 				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'current_input=this;', value=>$param{quantity} ); ) ?></li>
 			<li><label>Equipment</label>
@@ -43,24 +51,28 @@ function form_submit() {
 		</ul>
 	</div>
 	<div class="rightColumn">
-			<? echo ( join('<br/>',
-				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
-				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
-				join("\n", map { ssi::button($_, { onclick=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
+			<? echo ( 
+				my $ipoo = $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i;
+$ipoo = 1;
+				my $event = $ipoo ? 'ontouch' : 'onclick';
+				return join('<br/>',
+				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
+				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 4 .. 6 ) ),
+				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 7 .. 9 ) ),
 				join('', 
-					ssi::button('C', { onclick=>qq`current_input.value = '';`, title=>'Clear' } ),
-					ssi::button('0', { onclick=>qq`current_input.value += '0';` } ),
-					ssi::button('D', { onclick=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
+					ssi::button('C', { $event=>qq`current_input.value = '';`, title=>'Clear' } ),
+					ssi::button('0', { $event=>qq`current_input.value += '0';` } ),
+					ssi::button('D', { $event=>qq`current_input.value = current_input.value.substr(0,current_input.value.length-1);`,title=>'Delete' } ),
 				),
 				join('', 
-					ssi::button('Minus', { onclick=>qq`current_input.value += '-';`, text=>'-' } ),
-					ssi::button('Plus', { onclick=>qq`current_input.value += '+';`, text=>'+' } ),
-					ssi::button('S', { onclick=>qq`current_input.value += ' ';` } ),
+					ssi::button('Minus', { $event=>qq`current_input.value += '-';`, text=>'-' } ),
+					ssi::button('Plus', { $event=>qq`current_input.value += '+';`, text=>'+' } ),
+					ssi::button('S', { $event=>qq`current_input.value += ' ';` } ),
 				),
 				join('', 
-					ssi::button('Multiply', { onclick=>qq`current_input.value += '*';`, text=>'*' } ),
-					ssi::button('Divide', { onclick=>qq`current_input.value += '/';`, text=>'/' } ),
-					ssi::button('Equals', { onclick=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
+					ssi::button('Multiply', { $event=>qq`current_input.value += '*';`, text=>'*' } ),
+					ssi::button('Divide', { $event=>qq`current_input.value += '/';`, text=>'/' } ),
+					ssi::button('Equals', { $event=>qq`current_input.value = eval(current_input.value);`, text=>'=' } ),
 				),
 			); ) ?>
 	</div>
