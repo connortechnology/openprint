@@ -67,7 +67,7 @@
 					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Miss' ); ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
-   				<li class="required"> 
+   				<li class="required" class="firstname">
    					<label for="firstname">First Name</label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
    				</li>
