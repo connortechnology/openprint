@@ -15,7 +15,7 @@ require openprint::address;
 require openprint::Company_Profile;
 require openprint::Company_Credit;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
