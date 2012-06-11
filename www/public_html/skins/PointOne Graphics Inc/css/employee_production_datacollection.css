@@ -7,6 +7,10 @@
 	width: 25px;
 	height: 25px;
 }
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide {
+	background-color: #000088;
+}
 @media only screen and (max-device-width: 480px) {
 	#Button1, #Button2, #Button3,
 	#Button4, #Button5, #Button6,
