@@ -7,7 +7,9 @@
 			<script type="text/javascript">
 			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/event/_user_name.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: ',', callback: invitation_add_user_ids } );
 			</script>
-			<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
+		</li>
+		<li><label>Invited</label>
+		<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
 		</li>
 	</ul>
 </fieldset>

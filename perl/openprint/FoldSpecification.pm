@@ -1,17 +1,14 @@
-package openprint::FoldSpecification;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::FoldSpecification;
+our @ISA = qw( openprint::Object );
 use openprint ();
-use openprint::Fold;
-require sql;
+require openprint::Fold;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$table = 'Fold_Specifications';
+$debug = 1;
+$table = 'fold_specifications';
 $serial = 'foldspecification_id_seq';
-
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 %fields = (
 	'id'			=>	'id',
@@ -30,19 +27,14 @@ $serial = 'foldspecification_id_seq';
 %defaults = (
 	'min_weight'	=>	undef,
 	'max_weight'	=>	undef,
-	'weight_units'	=>	'gsm',
+	'weight_units'	=>	q`'gsm'`,
 	'runspeed'		=>	0,
 	'interpolate'	=>	0,
 );
 
-my $debug = 0;
-
-
 sub Fold {
-	my $self = shift;
-	return new openprint::Fold( $$self{fold_id} );
+	return new openprint::Fold( $_[0]{fold_id} );
 } # end sub Equipment
-
 
 1;
 __END__
