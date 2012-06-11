@@ -2332,10 +2332,14 @@ $Currency->save({'short'=>'CAD'});
 				'category'=> 'Email Notifications'] );
 	} # end if
 if ( ! sets::isin( 'productionfeedback', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql}) );
+} else {
+	$dbh->do('alter table productionfeedback alter service_id drop not null');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='productionfeedback'", 'column_name');
+	if ( ! $$data{signature_id} ) {
+		$dbh->do('alter table productionfeedback add signature_id INTEGER');
+		$dbh->do('alter table productionfeedback add foreign key (signature_iD) references signaturecapture (id)');
+	} # end if
 } # end if
 if ( ! sets::isin( 'cip3_ppf', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
