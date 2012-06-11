@@ -143,6 +143,9 @@ if ( ! exists $$data{'count'} ) {
 	$dbh->do('ALTER TABLE hosts add count integer');
 	$dbh->do('UPDATE hosts set count=(SELECT count FROM blacklist WHERE blacklist.ip=hosts.ip)');
 }
+if ( ! exists $$data{description} ) {
+	$dbh->do('ALTER TABLE hosts add description TEXT');
+} 
 if ( ! exists $$data{'blacklist'} ) {
 	$dbh->do('ALTER TABLE hosts add blacklist BOOLEAN NOT NULL default false');
 } # end if

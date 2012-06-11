@@ -504,6 +504,10 @@ if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_specifications'", 'column_name');
 $dbh->do('alter table material_specifications add interpolate boolean') if ! exists $$data{'interpolate'};
+if ( ! exists $$data{equipment_id} ) {
+	$dbh->do('ALTER TABLE material_specifications ADD equipment_id INTEGER');
+	$dbh->do('ALTER TABLE material_specifications ADD FORIEGN KEY (equipment_id) REFERENCES tbl_Equipment (id)');
+} # end if
 if ( $version < 1381 ) {
 	print "Updating to version 1381\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_ink_colours LIMIT 1', {} );

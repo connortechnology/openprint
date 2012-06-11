@@ -53,13 +53,11 @@ sub edit {
 			my $list = $List->id();
 			my $price_set = new openprint::material_priceset( $log, $dbh, $list, $Material->id() );
 			foreach my $key ( %param ) {
-				if ( $key =~ /ddmEquipment-$list-(.*)/ ) {
+				if ( $key =~ /^ddmEquipment-$list-(.*)$/ ) {
 					my $equipment_index = $1;
-$openprint::log->debug("Doing equipment ($equipment_index)");
 					foreach my $key ( %param ) {
 						if ( $key =~ /chk-$list-$equipment_index-(.*)/ ) {
 							
-$openprint::log->debug("Doing price ( $list $equipment_index $1)");
 							my $price = new openprint::material_price( $log, $dbh, $price_set );
 							$price->set( 
 									$param{"ddmEquipment-$list-$equipment_index"} ? $param{"ddmEquipment-$list-$equipment_index"} : undef,
@@ -79,27 +77,28 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 			$price_set->save();
 		} # end foreach
 
-		my %Specs = map { $_->id() => $_ } = $Material->Specifications();
+		my %Specs = map { $_->id() => $_ } $Material->Specifications();
 
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^txtSpecificationName(.*)/ ) {
 				my $Spec = $Specs{$1};
 				$Spec = new openprint::MaterialSpecification() if ! $Spec;
-				
+
 				if ( ! $param{$key} ) {
 					$Spec->delete();
 				} else {
 					$variable{'error'} .= $Spec->save({
-					'material_id'	=>	$Material->id(),
-					'equipment_id'	=>	( $param{'spec_equipment_id-'.$1} ? $openprint::param{'spec_equipment_id-'.$1} : undef ),
-					'min'			=>	( $param{'txtSpecificationMin'.$1} ? $param{'txtSpecificationMin'.$1} : undef ),
-					'max'			=>	( $param{'txtSpecificationMax'.$1} ? $param{'txtSpecificationMax'.$1} : undef ),
-					'units'			=>	$param{'txtSpecificationUnits'.$1},
-					'name'			=>	$param{'txtSpecificationName'.$1},
-					'value'			=>	$param{'txtSpecificationValue'.$1},
-					'interpolate'	=>	$param{'interpolate'.$1},
-				});
-			} # end if
+							'material_id'	=>	$Material->id(),
+							'equipment_id'	=>	( $param{'spec_equipment_id-'.$1} ? $openprint::param{'spec_equipment_id-'.$1} : undef ),
+							'min'			=>	( $param{'txtSpecificationMin'.$1} ? $param{'txtSpecificationMin'.$1} : undef ),
+							'max'			=>	( $param{'txtSpecificationMax'.$1} ? $param{'txtSpecificationMax'.$1} : undef ),
+							'units'			=>	$param{'txtSpecificationUnits'.$1},
+							'name'			=>	$param{'txtSpecificationName'.$1},
+							'value'			=>	$param{'txtSpecificationValue'.$1},
+							'interpolate'	=>	$param{'interpolate'.$1},
+							});
+				} # end if name is empty
+			} # end if key
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 
