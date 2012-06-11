@@ -2579,17 +2579,28 @@ if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding'
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 } # end if
-if ( ! sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_ProjectType_Defaults.sql}) );
+
+if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
+	$dbh->do('alter table tbl_projecttype_defaults rename to projecttype_defaults');
+} 
+
+if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Defaults.sql}) );
 } else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projecttype_defaults'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttype_defaults'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD id SERIAL');
-		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD PRIMARY KEY (id)');
+		$dbh->do('ALTER TABLE projecttype_defaults ADD id SERIAL');
+		$dbh->do('ALTER TABLE projecttype_defaults ADD PRIMARY KEY (id)');
+	} # end if
+	if ( exists $$data{strfieldname} ) {
+		$dbh->do('ALTER TABLE projecttype_defaults RENAME strfieldname to name');
+	}
+	if ( exists $$data{strdefaultvalue} ) {
+		$dbh->do('ALTER TABLE projecttype_defaults RENAME strdefaultvalue to value');
 	} # end if
 } # end if
-sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
-sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+sql::update( undef, undef, 'projecttype_defaults', ['name=? AND value=?','rdbCardboardBacking','Y'], [ 'name', 'Backing', 'value', 'Cardboard' ] );
+sql::update( undef, undef, 'projecttype_defaults', ['name=? AND value=?','rdbCardboardBacking','N'], [ 'name', 'Backing', 'value', 'None']  );
 
 foreach my $PT ( openprint::ProjectType->find() ) {
 	if ( $PT->name() =~ / / ) {
