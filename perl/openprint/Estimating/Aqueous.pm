@@ -221,7 +221,7 @@ sub signature_calc {
 			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
 
 	my @different_types = sets::union( @front_aq, @back_aq );
 

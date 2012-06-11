@@ -79,22 +79,26 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 			$price_set->save();
 		} # end foreach
 
-		sql::execute( $log, $dbh, q{DELETE FROM Material_Specifications WHERE material_id=?}, $Material->id() );
+		my %Specs = map { $_->id() => $_ } = $Material->Specifications();
+
 		foreach my $key ( keys %param ) {
-			if ( $key =~ /txtSpecificationName(.*)/ and $param{$key} ne '' ) {
-				my $i = $1;
-				$param{'txtSpecificationMin'.$i} =~ s/[^\d\.]//g;
-				$param{'txtSpecificationMax'.$i} =~ s/[^\d\.]//g;
-				my @params = (
-					'material_id',	$Material->id(),
-					'min',			( $param{'txtSpecificationMin'.$1} ? $param{'txtSpecificationMin'.$1} : undef ),
-					'max',			( $param{'txtSpecificationMax'.$1} ? $param{'txtSpecificationMax'.$1} : undef ),
-					'units',		$param{'txtSpecificationUnits'.$1},
-					'name',			$param{'txtSpecificationName'.$1},
-					'value',		$param{'txtSpecificationValue'.$1},
-					'interpolate',	$param{'interpolate'.$1},
-				);
-				sql::insert( $log, $dbh, 'Material_Specifications', \@params );
+			if ( $key =~ /^txtSpecificationName(.*)/ ) {
+				my $Spec = $Specs{$1};
+				$Spec = new openprint::MaterialSpecification() if ! $Spec;
+				
+				if ( ! $param{$key} ) {
+					$Spec->delete();
+				} else {
+					$variable{'error'} .= $Spec->save({
+					'material_id'	=>	$Material->id(),
+					'equipment_id'	=>	( $param{'spec_equipment_id-'.$1} ? $openprint::param{'spec_equipment_id-'.$1} : undef ),
+					'min'			=>	( $param{'txtSpecificationMin'.$1} ? $param{'txtSpecificationMin'.$1} : undef ),
+					'max'			=>	( $param{'txtSpecificationMax'.$1} ? $param{'txtSpecificationMax'.$1} : undef ),
+					'units'			=>	$param{'txtSpecificationUnits'.$1},
+					'name'			=>	$param{'txtSpecificationName'.$1},
+					'value'			=>	$param{'txtSpecificationValue'.$1},
+					'interpolate'	=>	$param{'interpolate'.$1},
+				});
 			} # end if
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
