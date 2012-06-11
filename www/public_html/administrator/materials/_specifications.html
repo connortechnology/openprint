@@ -1,22 +1,29 @@
 <fieldset><legend>Specifications</legend>
 		<table class="List">
 			<tr>
-				<th>Specification</th>
-				<th width="10%">Min</th>
-				<th width="10%">Max</th>
+				<th class="Name">Specification</th>
+				<th class="Equipment">Equipment</th>
+				<th class="Min">Min</th>
+				<th class="Max">Max</th>
 				<th width="10%">Value</th>
 				<th width="10%">Units</th>
-				<th width="90">Interpolate</th>
+				<th class="interpolate">Interpolate</th>
 			</tr>
-			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Material'}->Specifications(); ) ?>
+			<? eval ( 
+				@{$$variable{'Specifications'}} = $$variable{'Material'}->Specifications();
+				$$variable{'Equipment'} = [ map { $_->id(), $_->strid() . $_->name() } openprint::Equipment->find('order'=>'lower(strid)') ];
+			 ) ?>
 			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
 			<tr<?rowclass?>> 
 				<td><input type="text" name="txtSpecificationName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
+				<td><select name="spec_equipment_id-<? echo ( $$variable{'Spec'}->id() ) ?>"><option value="">All</option>
+					<? echo ( ssi::make_drop_down( $$variable{'Equipment'}, $$variable{Spec}{equipment_id} ); ) ?>
+					</select></td>
+				<td class="Min"><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
+				<td class="Max"><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
 				<td><input type="text" name="txtSpecificationValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
 				<td><input type="text" name="txtSpecificationUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
-				<td>
+				<td class="interpolate">
 					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
 					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
 					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Spec'}->interpolate() ) ?> />
@@ -27,11 +34,14 @@
 			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
 			<tr> 
 				<td><input type="text" name="txtSpecificationNameNew" /></td>
+				<td><select name="spec_equipment_id-New"><option value="">All</option>
+					<? echo ( ssi::make_drop_down( $$variable{'Equipment'} ); ) ?>
+					</select></td>
 				<td><input type="text" name="txtSpecificationMinNew" /></td>
 				<td><input type="text" name="txtSpecificationMaxNew" /></td>
 				<td><input type="text" name="txtSpecificationValueNew" /></td>
 				<td><input type="text" name="txtSpecificationUnitsNew" /></td>
-				<td>
+				<td class="interpolate">
 					<input type="radio" id="interpolateNewtrue" name="interpolateNew" value="true"/>
 					<label class="radio" for="interpolateNewtrue">Yes</label>
 					<input type="radio" id="interpolateNewfalse" name="interpolateNew" value="false"/>

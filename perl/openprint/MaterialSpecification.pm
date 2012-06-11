@@ -1,11 +1,11 @@
-package openprint::MaterialSpecification;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::MaterialSpecification;
+our @ISA = qw( openprint::Object );
 use openprint ();
 use openprint::Material;
 require sql;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'Material_Specifications';
@@ -14,6 +14,7 @@ $serial = 'materialspecification_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'material_id'	=>	'material_id',
+	'equipment_id'	=>	'equipment_id',
 	'min'			=>	'min',
 	'max'			=>	'max',
 	'units'			=>	'units',
@@ -25,9 +26,10 @@ $serial = 'materialspecification_id_seq';
 %transforms = (
 );
 %defaults = (
+	'equipment_id'	=>	undef,
 );
 
-my $debug = 0;
+$debug = 0;
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;

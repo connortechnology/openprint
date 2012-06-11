@@ -82,6 +82,7 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 				$openprint::param{'txtSpecificationMax'.$i} =~ s/[^\d\.]//g;
 				my @params = (
 					'material_id',	$Material->id(),
+					'equipment_id',	( $openprint::param{'spec_equipment_id-'.$1} ? $openprint::param{'spec_equipment_id-'.$1} : undef ),
 					'min',			( $openprint::param{'txtSpecificationMin'.$1} ? $openprint::param{'txtSpecificationMin'.$1} : undef ),
 					'max',			( $openprint::param{'txtSpecificationMax'.$1} ? $openprint::param{'txtSpecificationMax'.$1} : undef ),
 					'units',		$openprint::param{'txtSpecificationUnits'.$1},

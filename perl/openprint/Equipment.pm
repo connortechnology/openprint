@@ -51,6 +51,8 @@ sub init_cache {
 } # end sub init_cache
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Equipment';
+	shift @_ if ref $_[0] eq 'openprint::Equipment';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -59,6 +61,8 @@ sub find_one {
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::Equipment';
+	shift @_ if ref $_[0] eq 'openprint::Equipment';
 	my %params = @_;
 
 	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
