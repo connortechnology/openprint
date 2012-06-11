@@ -1043,6 +1043,16 @@ if ( ! sets::isin('object_views', \@tables ) ) {
 	die if $dbh->errstr();
 } # end if
 
+if ( ! sets::isin('projects', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

@@ -1477,10 +1477,6 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
@@ -2056,22 +2052,42 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
 	} # end if
 	if ( exists $$data{'dtmdate'} ) {
-		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		if ( ! exists $$data{received_on} ) {
+			$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column dtmdate');
+		} # end if
 	} # end if
 	if ( exists $$data{'date'} ) {
-		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		if ( ! exists $$data{received_on} ) {
+		$dbh->do('ALTER TABLE Payments rename column date to received_on');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set received_on=date where received_on IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column date');
+		} # end if
 	} # end if
 	if ( ! exists $$data{'received_on'} ) {
 		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	if ( exists $$data{'strmethod'} ) {
-		$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+		if ( ! exists $$data{method} ) {
+			$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set method=strmethod where method IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column method');
+		} # end if
 	} # end if
 	if ( exists $$data{'strtransactionid'} ) {
 		$dbh->do('ALTER TABLE Payments rename column strtransactionid to transaction_id');
 	} # end if
 	if ( exists $$data{'strdescription'} ) {
+		if ( ! exists $$data{memo} ) {
 		$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
+		} else {
+			$dbh->do('UPDATE TABLE payments set memo=strdescription where memo IS NULL');
+			$dbh->do('ALTER TABLE payments drop strdescription');
+		} # end if
 	} # end if
 	if ( ! exists $$data{'memo'} ) {
 		$dbh->do('ALTER TABLE payments add memo text');
