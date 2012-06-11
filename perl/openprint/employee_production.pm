@@ -1897,6 +1897,7 @@ sub datacollection {
 				});
 			
 		} # end foreach Project
+		$variable{'ExternalRedirect'} = '/employee/production/datacollection.html';
 		
 	} # end if Submit
 } # end sub datacollection

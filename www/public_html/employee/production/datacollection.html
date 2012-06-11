@@ -60,7 +60,7 @@ function switch_inputs(e) {
 	<div class="rightColumn">
 			<? echo ( 
 				my $ipoo = $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i;
-$ipoo = 1;
+$ipoo = 0;
 				my $event = $ipoo ? 'ontouch' : 'onclick';
 				return join('<br/>',
 				join("\n", map { ssi::button($_, { $event=>qq`current_input.value += '$_';` } ) } ( 1 .. 3 ) ),
@@ -74,7 +74,7 @@ $ipoo = 1;
 				join('', 
 					ssi::button('Minus', { $event=>qq`current_input.value += '-';`, text=>'-' } ),
 					ssi::button('Plus', { $event=>qq`current_input.value += '+';`, text=>'+' } ),
-					ssi::button('S', { $event=>qq`current_input.value += ' ';` } ),
+					ssi::button('Refresh', { $event=>qq`window.location.reload();`, text=>'R', title=>'Refresh' } ),
 				),
 				join('', 
 					ssi::button('Multiply', { $event=>qq`current_input.value += '*';`, text=>'*' } ),
@@ -99,7 +99,7 @@ $ipoo = 1;
 <fieldset><legend>Log</legend>
 	<table class="List">
 		<tr>
-			<th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th></tr>
+			<th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th><th class="Signature">Signature</th></tr>
 			<? echo (
 				my $html;
 				foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 'limit'=>100) ) {
@@ -115,8 +115,11 @@ $ipoo = 1;
 	<td class="form">%d</td>
 	<td class="quantity">%d</td>
 	<td class="Equipment">%s</td>
+	<td class="Signature">%s %d</td>
 </tr>
-`, $rowclass, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->quantity(), $PF->Equipment()->strid() );
+`, $rowclass, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->quantity(), $PF->Equipment()->strid(),
+( $PF->signature_id() ? $PF->Signature()->html() : '' ), $PF->signature_id()
+ );
 					if ( $PF->comment() ) {
 						$html .= '<tr'.$rowclass.'><td colspan="5">'.$PF->comment().'</td></tr>';
 					} # end if
