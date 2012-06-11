@@ -385,6 +385,10 @@ if ( ! sets::isin( 'event_attendance', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Attendance.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'event_invitations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -993,6 +997,10 @@ if ( ! sets::isin( 'company_credit', \@tables ) ) {
 	if ( ! exists $$data{'cod'} ) {
 		$dbh->do('ALTER TABLE company_credit add cod float');
 	} # end if
+	if ( ! exists $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE company_credit add supplier_id INTEGER');
+		$dbh->do('ALTER TABLE company_credit ADD FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
+	} # end if
 } # end if
 if ( ! sets::isin( 'affiliates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Affiliates.sql}) );
@@ -1035,6 +1043,16 @@ if ( ! sets::isin('object_views', \@tables ) ) {
 	die if $dbh->errstr();
 } # end if
 
+if ( ! sets::isin('projects', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Projects.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__
