@@ -1,6 +1,6 @@
-package openprint::Material;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Material;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
@@ -9,14 +9,14 @@ require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
 
-use vars qw{ $log $dbh %session $table $serial %fields %transforms %defaults };
+use vars qw{ $log $dbh %session $debug $table $serial %fields %transforms %defaults };
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \$openprint::session;
 $table = 'Materials';
 $serial = 'MaterialIndex_seq';
 
-my $debug = 1;
+$debug = 1;
 
 %fields = (
 		'id'				=>	'id',
@@ -68,11 +68,29 @@ sub prices {
 	return openprint::MaterialPrice::find('material_id'=>$$self{id});
 } # end sub prices
 
+sub New_Specification {
+	my ( $self, $name, $options ) = @_;
+
+	if ( ! $$self{'NewSpecifications'} ) {
+		foreach my $Spec ( openprint::MaterialSpecification::find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
+			push @{$$self{'NewSpecifications'}{$$Spec{equipment_id}}{$name}}, $Spec;
+		} # end foreach
+	} # end if
+	if ( ! ( $$self{'NewSpecifications'} and $$self{'NewSpecifications'}{$$options{equipment_id}} and $$self{NewSpecifications}{$$options{equipment_id}}{$name}) ) {
+		#$openprint::log->warn("No specfications for " . $self->name() );
+		return;
+	} # end if
+
+	return $$self{'NewSpecifications'}{$$options{equipment_id}}{$name}[0] if ! defined $$options{range};
+	return misc::find_entry( $$options{range}, $$self{'NewSpecifications'}{$$options{equipment_id}}{$name} );
+
+} # end sub New_Specification
+
 sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'min' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'min NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if

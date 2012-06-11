@@ -407,6 +407,9 @@ sub signature_calc_load_equipment {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
+	if ( $$services{'PerfectBound'} ) {
+		push @capabilities, 'When PerfectBinding';
+	} # end if
 	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
@@ -973,6 +976,9 @@ sub display {
 	my @capabilities = ('Y','When Printing','When Folding');
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
+	} # end if
+	if ( $$services{'PerfectBound'} ) {
+		push @capabilities, 'When PerfectBinding';
 	} # end if
 	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs','Decals','Signs'] ) ) {
 		push @capabilities, 'Large Format';
