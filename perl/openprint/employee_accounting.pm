@@ -162,6 +162,7 @@ sub credit {
 			$variable{'error'} .= 'No customer specified.<br/>';
 		} else {
 			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
 				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
 

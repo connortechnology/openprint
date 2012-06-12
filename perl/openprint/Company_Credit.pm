@@ -1,4 +1,7 @@
 use strict;
+require openprint::Currency;
+require openprint::Company;
+require openprint::User;
 package openprint::Company_Credit;
 our @ISA = qw( openprint::Object );
 
@@ -89,16 +92,6 @@ sub denied_orders {
     return sql::execute( undef, undef, $_, @$self{'company_id','denydays'} );
 } # end sub denied_orders
 
-sub supplier_id {
-	if ( @_ > 1 ) {
-		$_[0]{'supplier_id'} = $_[1];
-	}
-	if ( ! $_[0]{'supplier_id'} ) {
-		$_[0]{'supplier_id'} = $openprint::config{'Owner'};
-	} # end if
-	return $_[0]{'supplier_id'};
-} # end if supplier_id
-
 sub Supplier {
 	return new openprint::Company( $_[0]->supplier_id() );
 } # end sub Supplier
@@ -108,7 +101,8 @@ sub Company {
 } # end sub Company
 
 sub to_string {
-	return sprintf('for %s: warn after %d, deny after %d, limit %s, downpayment %d%, cod %d%', $_[0]->Supplier()->name(), $_[0]{warndays},$_[0]{denydays},$_[0]{limit},$_[0]{downpayment},$_[0]{cod} );
+	return sprintf('for %s: hold %s, warn after %d, deny after %d, limit %s, downpayment %d%, cod %d%', $_[0]->Supplier()->name(), 
+		$_[0]{hold}, $_[0]{warndays},$_[0]{denydays},openprint::Currency::format($_[0]{limit}),$_[0]{downpayment},$_[0]{cod} );
 } # end sub to_string
 
 1;
