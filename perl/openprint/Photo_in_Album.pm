@@ -20,6 +20,11 @@ sub thumbnail_html {
 	return sprintf('<a class="thumbnail %s" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d" title="%s"><img src="%s" alt=""/></a>',
 		$Asset->layout(), @{$_[0]}{'asset_id','album_id'}, $Asset->caption(), $Asset->thumbnail_url() );
 } # end sub thumbnail_html
+sub medium_html {
+	my $Asset = $_[0]->Asset();
+	return sprintf('<a class="medium %s" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d" title="%s"><img src="%s" alt=""/></a>',
+		$Asset->layout(), @{$_[0]}{'asset_id','album_id'}, $Asset->caption(), $Asset->medium_url() );
+} # end sub medium_html
 
 sub thumbnail_url {
 	my $Asset = $_[0]->Asset();
