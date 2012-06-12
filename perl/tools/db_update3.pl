@@ -34,6 +34,9 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 if ( ! exists $$data{'source'} ) {
 		$dbh->do('ALTER TABLE articles ADD source TEXT');
 } # end if
+if ( ! exists $$data{'keywords'} ) {
+		$dbh->do('ALTER TABLE articles ADD keywords TEXT');
+} # end if
 if ( ! exists $$data{'summary'} ) {
 		$dbh->do('ALTER TABLE articles ADD summary TEXT');
 } # end if

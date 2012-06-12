@@ -93,6 +93,9 @@
 					<li><label>Title</label>
 						<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
 					</li>
+					<li><label>Keywords</label>
+						<input type="text" id="keywords" name="keywords" value="<? echo ( $$variable{'Article'}->keywords() ) ?>" />
+					</li>
 					<li>
 						<label for="summary">Summary</label>
 						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{'Article'}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{'Article'}->summary() ); ) ?></textarea>
