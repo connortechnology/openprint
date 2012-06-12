@@ -428,7 +428,7 @@ sub find_operators {
 	my %results;
 
 	if ( exists $$params{$k.' ='} ) {
-			push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
+		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
 	} # end if
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};

@@ -73,6 +73,10 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
 } # end if
+$dbh->do('ALTER TABLE Users ALTER company_id DROP NOT NULL');
+$dbh->do('ALTER TABLE Users ALTER password DROP NOT NULL');
+$dbh->do('ALTER TABLE Users ALTER firstname DROP NOT NULL');
+
 if ( ! sets::isin( 'assets', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();

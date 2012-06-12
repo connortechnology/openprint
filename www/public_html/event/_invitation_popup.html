@@ -8,7 +8,16 @@
 			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/event/_user_name.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: ',', callback: invitation_add_user_ids } );
 			</script>
 		</li>
-		<li><label>Invited</label>
+		<li><label>By Relationship</label>
+			<select name="relationship_ip"><option value="">none</option>
+				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
+			</select>
+		</li>
+		<li><label>By Email</label>
+			<input type="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+			<? echo ( ssi::button('EmailInvite', { onclick=>q`invite_by_email($('email'));` } ); ) ?>
+		</li>
+		<li class="Invited"><label>Invited</label>
 		<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
 		</li>
 	</ul>
