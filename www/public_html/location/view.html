@@ -10,6 +10,7 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
+				$$variable{'Object'} = $$variable{'Album'} = $$variable{'Location'};
 				if ( $$variable{'Location'}->can_edit() ) {
 					if ( $$variable{'Location'}->deleted() ) {
 						$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.elements['action'].value='Undelete';f1.submit();" } );
@@ -72,6 +73,7 @@
 					</li>
 				</ul>
 <div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
+	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
 				</div>
 					<div class="rightColumn">
 					<? echo ( my $html;
@@ -89,7 +91,6 @@
 				</div>
 			</div>
 		</fieldset>
-	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
 	<div id="EventsList">
 		<fieldset><legend>Upcoming Events</legend>
