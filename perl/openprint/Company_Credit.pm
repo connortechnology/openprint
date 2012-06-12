@@ -1,7 +1,9 @@
 use strict;
 require openprint::Currency;
+require openprint::Order;
 require openprint::Company;
 require openprint::User;
+require misc;
 package openprint::Company_Credit;
 our @ISA = qw( openprint::Object );
 
@@ -42,11 +44,11 @@ $table = 'company_credit';
 
 sub debt {
 	if ( ! exists $_[0]{'debt'} ) {
-		$_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up','Paid','Re-Opened','Waiting For Customer Approval','Waiting For QA Approval','Order Submitted' )};
-		my ( $debt ) = sql::execute( undef, undef, $_, $_[0]{'company_id'} );
-		$_ = q{SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND company_id=?};
-		my ( $payments ) = sql::execute( undef, undef, $_, $_[0]{company_id} );
+		my ( $debt ) = misc::sum( map { $_->total() } $_[0]->outstanding_Orders() );
+	
+		my ( $payments ) = misc::sum( map { $_->amount() } openprint::Payment->find('payor_id'=>$_[0]{company_id}, 'recipient_id'=>$_[0]{supplier_id}, 'completed'=>1 ) );
 		$_[0]{'debt'} = $debt - $payments;
+$openprint::log->debug("Debt: $debt, payment: $payments");
 	} # end if
 	return $_[0]{'debt'};
 } # end sub debt
@@ -63,13 +65,27 @@ sub remaining {
 	return openprint::Currency::format( $limit - $debt );
 } # end sub remaining
 
+sub outstanding_Orders {
+	if ( ! $_[0]{'outstanding_Orders'} ) {
+   $_[0]{'outstanding_Orders'} = [ openprint::Order->find(
+	
+        'company_id'    =>	$_[0]{company_id},
+		'supplier_id'	=>	$_[0]{supplier_id},
+        'status not in' =>  [ 'Cancelled','Deleted','Incomplete' ],
+        'owing_>'   =>  0,
+        'order'     => 'created_on',
+        ) ];
+	} # end if
+	return @{$_[0]{'outstanding_Orders'}};
+} # end sub outstanding_Orders
+
 sub outstanding_orders {
-    my $self = shift;
-    $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
-    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up', 'Re-Opened','Waiting For Customer Approval','Waiting For QA Approval' )
-    AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
-    OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
-    return sql::execute( undef, undef, $_, $$self{company_id} );
+	return map { $_->id() } $_[0]->outstanding_Orders();
+    #$_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
+    #AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up', 'Re-Opened','Waiting For Customer Approval','Waiting For QA Approval' )
+    #AND ( curTotalSale > (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
+    #OR (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
+    #return sql::execute( undef, undef, $_, $$self{company_id} );
 } # end sub outstanding_orders
 
 sub warn_orders {

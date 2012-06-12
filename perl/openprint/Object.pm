@@ -428,6 +428,17 @@ sub find {
 					} # end if
 					delete $params{$k.' in'};
 				} # end if
+				if ( exists $params{$k.' not in'} ) {
+					if ( ref $params{$k.' not in'} eq 'ARRAY' ) {
+						$sql .= ' AND ' . $$f{$k}. ' NOT IN ('.join(',', map {'?'} @{$params{$k.' not in'}} ) . ')';
+						push @values, @{$params{$k.' not in'}};
+					} else {
+						$sql .= " AND ? NOT IN $$f{$k}";
+						push @values, $params{$k.' not in'};
+					} # end if
+					delete $params{$k.' not in'};
+				} # end if
+
 				if ( exists $params{$k.' !='} ) {
 					$sql .= " AND $$f{$k} != ?";
 					push @values, $params{$k.' !='};

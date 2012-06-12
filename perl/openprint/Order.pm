@@ -135,6 +135,15 @@ sub find {
 			push @values, $params{'status'};
 		} # end if
 	} # end if
+	if ( $params{'status not in'} ) {
+		if ( ref $params{'status not in'} eq 'ARRAY' ) {
+			$sql .= q{ AND strStatus NOT IN (} . join(',', map {'?'} @{$params{'status not in'}}). ')';
+			push @values, @{$params{'status not in'}};
+		} else {
+			$sql .= q{ AND (strStatus!=?)};
+			push @values, $params{'status not in'};
+		} # end if
+	} # end if
 	if ( $params{'salesrep_id'} ) {
 		$sql .= ' AND employeeindex=?';
 		push @values, $params{'salesrep_id'};
@@ -457,22 +466,20 @@ sub Currency {
 
 sub pay {
 	my $self = shift;
-	$_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND order_id=Orders.Index) FROM Orders WHERE Index=?';
-	my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
-	if ( $amount - $paid <= 0 ) {
+	if ( $self->owing() <= 0 ) {
 		$self->update_status();
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
-	my ( $error ) = sql::insert( $openprint::log, $openprint::dbh, 'Payments',
-			'order_id',	 $$self{id},
-			'company_id',	$$self{company_id},
-			'curAmount',		$amount - $paid,
-			'dtmDate',			'NOW()',
-			'strMethod',		'Manual',
-			'currency_id',		$$self{currency_id},
-			'strDescription',	'Order marked paid',
-			);
+	my $error = (new openprint::Payment())->save({
+			'order_id'		=>	$$self{id},
+			'payor_id'		=>	$$self{company_id},
+			'recipient_id'	=>	$self->supplier_id(),
+			'amount'		=>	$self->owing(),
+			'method'		=>	'Manual',
+			'currency_id'	=>	$$self{currency_id},
+			'memo'			=>	'Order marked paid',
+			});
 	if ( ! $error ) {
 		$self->update_status();
 	} # end if

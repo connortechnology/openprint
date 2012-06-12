@@ -69,11 +69,22 @@ sub details {
 		} # end if
 		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
-		$Order->pay();
+		$variable{'error'} .= $Order->pay();
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
 		$Order->invoice_id( $param{'invoice_id'} );
 		$Order->invoiced_on( 'NOW()' );
 		$Order->save();
+	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
+		if ( ! $param{'supplier_id'} ) {
+			$variable{'error'} .= 'No supplier specified.  No change made.<br/>';
+		} elsif ( $Order->supplier_id() == $param{'supplier_id'} ) {
+			$variable{'error'} .= 'Supplier is already ' . $Order->Supplier()->name().'. No change made.<br/>';
+		} else {
+			$Order->add_log( "Supplier changed from " . $Order->Supplier()->name() . ' to ' . (new openprint::Company($param{supplier_id}))->name() );
+			$variable{'error'} .= $Order->save({supplier_id=>$param{supplier_id}});
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
     } elsif ( $param{'btnFunction'} eq 'Save' ) {
 		
 		my $error;

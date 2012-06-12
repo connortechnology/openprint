@@ -14,7 +14,6 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Payment;
 
 sub history {
-	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'recipient_id'} = $session{'company_id'} if ! $param{'recipient_id'};
 		$param{'received_on'} = sprintf('%.4d-%.2d-%.2d', @param{'received_on_year','received_on_month','received_on_day'} );
@@ -27,6 +26,10 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
+    } else {
+        _history();
+        ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
+        ssi::setup_date_select( '/payment/history.html', 'received_on_end', '' );
 	} # end if
 } # end sub history
 
