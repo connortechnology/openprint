@@ -6,6 +6,7 @@ require MIME::QuotedPrint;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
+require openprint::Payment;
 require misc;
 require sql;
 
@@ -62,11 +63,11 @@ sub details {
 	if ( $param{'btnFunction'} eq 'Send' ) {
 		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		my $payment_index = $param{'PaymentIndex'};
-		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, "DELETE FROM Payments WHERE id=$payment_index" );
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		if ( $Payment->id() ) {
+			$variable{'error'} .= $Payment->delete();
 		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
@@ -75,19 +76,24 @@ sub details {
 		$Order->save();
     } elsif ( $param{'btnFunction'} eq 'Save' ) {
 		
-		if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
-			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
-		} # end if
+		my $error;
+		$error .= 'Please enter a valid monetary amount.<br/>' if ( ! $param{'amount'} ) or $param{'amount'} =~ /[^-\$\d\.]/;
+		$error .= 'Please enter a valid received on date.<br/>' if ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-			'Order_Id',		$order_id,
-			'Company_Id',	$Order->company_id(),
-			'curAmount',	$param{'Amount'},
-			'dtmDate',		'NOW()',
-			'strMethod',	'Manual',
-			'currency_id',	$Order->currency_id(),
-			'strDescription',	$param{'Description'},
-		);
+		return misc::error( $log, $dbh, \%variable, 'Payment errors', $error ) if $error;
+
+		my $Payment = new openprint::Payment();
+		$error = $Payment->save({
+			'order_id'			=>	$order_id,
+			'recipient_id'		=>	$Order->supplier_id(),
+			'payor_id'			=>	$Order->company_id(),
+			'amount'			=>	$param{'amount'},
+			'received_on'		=>  join('-', @param{'received_on_year','received_on_month','received_on_day'} ),
+			'method'			=>	$param{'method'},
+			'currency_id'		=>	$Order->currency_id(),
+			'memo'				=>	$param{'memo'},
+			'transaction_id'	=>	$param{'transaction_id'},
+		});
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} # end if
@@ -111,6 +117,7 @@ sub details {
 			} # end if
 			$Order->save();
 		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id();
 		#openprint::order::send_invoice( $r, $log, $dbh, $order_id );
     } elsif ( $param{'btnFunction'} eq 'Cancel' ) {
        openprint::order::cancel_order( $log, $dbh, $order_id );
@@ -125,9 +132,6 @@ sub details {
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-
-	$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-	@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
 	$variable{'Order'} = $Order;
 } # end sub details
 
@@ -174,7 +178,7 @@ sub credit {
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
                         ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
                         ) {
-                    my $note = 'Old credit: ' . $Credit->to_string();
+                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
@@ -195,6 +199,7 @@ sub credit {
 		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 
 				'Hold', 'Downpayment', 'COD', 'Balance', 'Remaining', 'Note' );
 		my @data;
+		openprint::Company->find();
 		foreach my $Credit ( openprint::Company_Credit->find() ) {
 			push @data, ( $Credit->Supplier()->name(), $Credit->Company()->name(), $Credit->Company()->business_name(),
 				 $Credit->warndays(), $Credit->denydays(), $Credit->limit(), 

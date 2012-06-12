@@ -55,6 +55,7 @@ $debug = 1;
 	'invoiced_on'				=>	'invoiced_on',
 	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
+	'supplier_id'				=>	'supplier_id',
 	);
 
 sub find_one {
@@ -141,6 +142,10 @@ sub find {
 	if ( $params{'currency_id'} ) {
 		$sql .= ' AND currencyindex=?';
 		push @values, $params{'currency_id'};
+	} # end if
+	if ( $params{'supplier_id'} ) {
+		$sql .= ' AND supplier_id=?';
+		push @values, $params{'supplier_id'};
 	} # end if
 	if ( exists $params{'owing_>'} ) {
 		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE order_id=Index),0) > ?) ';
@@ -569,6 +574,18 @@ sub cod_owing_percent {
 	return 100-int($_[0]->paid()*100/$cod_total) if $cod_total;
 	return 0;
 } # end sub cod_owing_percent
+sub supplier_id {
+	if ( @_ > 1 ) {
+		$_[0]{supplier_id} = $_[1];
+	} 
+	if ( ! $_[0]{supplier_id} ) {
+		$_[0]{supplier_id} = $openprint::config{'Owner'};
+	} # end if
+	return $_[0]{supplier_id};
+} # end sub supplier_id
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
 
 1;
 __END__

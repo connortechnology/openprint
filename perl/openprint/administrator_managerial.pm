@@ -527,7 +527,7 @@ if ( 0 ) {
                         ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
                         ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
                         ) {
-                    my $note = 'Old credit: ' . $Credit->to_string();
+                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();

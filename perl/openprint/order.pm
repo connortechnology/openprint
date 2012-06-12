@@ -946,7 +946,7 @@ sub finalise_order {
 			$Product->save();
 		} # end foreach Product
 
-		my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'Owner'}} );
+		my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$Order->supplier_id() } );
 		my ( $downpayment ) = $Credit->downpayment();
 		if ( $downpayment eq '' ) {
 			$downpayment = $openprint::config{'DefaultDownpayment'};
@@ -1074,11 +1074,12 @@ sub send_invoice {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
 
+	my $Order = new openprint::Order($order_id);
 	get_invoice_to( $log, $dbh, \%order, $order_id );
 	get_misc( $log, $dbh, \%order, $order_id );
 	get_projects( $log, $dbh, \%order, $order_id );
 
-	my $Credit = new openprint::Company_Credit( { 'company_id'=>$order{'CompanyIndex'}, 'supplier_id'=>$openprint::config{'Owner'} } );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$order{'CompanyIndex'}, 'supplier_id'=>$Order->supplier_id() } );
 	@order{keys %openprint::Company_Credit::fields} = $Credit->get(keys %openprint::Company_Credit::fields);
 
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtCity','txtStateProvince','txtCountry'} );
