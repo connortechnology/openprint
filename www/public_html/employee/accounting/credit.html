@@ -128,6 +128,20 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 There are no unpaid orders.
 <? endif ( @{$$variable{'UnpaidOrders'}} ) ?>
 </fieldset>
+<fieldset><legend>Credit Change History</legend>
+	<table class="List">
+		<tr><th class="DateTime">When</th><th class="User">Who</th><th class="note">Note</th></tr>
+<? echo ( my $html;
+	foreach my $Log ( openprint::logRecord->find('action_type'=>[104,105], object_id=>$$variable{CompanyIndex}, order=>'id desc','limit'=>5 ) ) {
+		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
+			 Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $Log->date_time() ) ),
+			$Log->User()->name(), $Log->note(),
+		);
+	} # end foreach Log
+	return $html;
+) ?>
+	</table>
+</fieldset>
 <? endif ( $$variable{'CompanyIndex'} ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

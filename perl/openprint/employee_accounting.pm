@@ -161,12 +161,34 @@ sub credit {
 		if ( ! $company_id ) {
 			$variable{'error'} .= 'No customer specified.<br/>';
 		} else {
+			my $ac = sql::start_transaction( $dbh );
 			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
 				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
 
-				$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
-					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+                if (
+                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+                        ( $Credit->hold() != openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+                        ) {
+                    my $note = 'Old credit: ' . $Credit->to_string();
+					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
+							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+                    $note .= '<br/>new credit: ' . $Credit->to_string();
+                    $variable{'error'} .= (new openprint::logRecord())->save( {
+							action_type	=>	105,
+							object_id	=>	$company_id,
+							user_id		=>	$session{user_id},
+							company_id	=>	$session{company_id},
+							note		=>	$note,
+});
+                } else {
+                    $variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+                } # end if
 			} # end foreach Supplier
+			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 

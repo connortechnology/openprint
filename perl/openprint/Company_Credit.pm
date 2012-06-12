@@ -107,5 +107,9 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
+sub to_string {
+	return sprintf('for %s: warn after %d, deny after %d, limit %s, downpayment %d%, cod %d%', $_[0]->Supplier()->name(), $_[0]{warndays},$_[0]{denydays},$_[0]{limit},$_[0]{downpayment},$_[0]{cod} );
+} # end sub to_string
+
 1;
 __END__

@@ -67,9 +67,9 @@ sub html {
 	# if it's an image like a gif, return an image tag, for svg, blah blah
 	if ( $_[0]->type() eq 'gif' ) {
 		return sprintf('<img src="%s" alt=""/>', $_[0]->file_path() );
-	} elsif ( $_[0]->type() eq 'svg' ) {
+	} elsif ( $_[0]->type() eq 'path' ) {
 		#return sprintf('<svg src="%s" />', $_[0]->file_path() );
-		return '<svg xmlns="http://www.w3.org/2000/svg"
+		return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
     xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <path d="'.$_[0]->image_data().'" style="stroke:#660000; fill:none;"/>    
