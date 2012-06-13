@@ -42,7 +42,7 @@ $serial = 'payments_id_seq';
 	'created_on'	=> q`'NOW()'`,
 	'updated_on'	=> q`'NOW()'`,
 	'received_on'	=>	q`'NOW()'`,
-	'completed'		=>	0,
+	'completed'		=>	1,
 	'deleted'		=>	0,
 	'owner_id'		=>	q`$openprint::config{'Owner'}`,
 );

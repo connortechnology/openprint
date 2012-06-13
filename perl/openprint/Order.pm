@@ -354,6 +354,7 @@ sub pay {
 			'method'		=>	'Manual',
 			'currency_id'	=>	$$self{currency_id},
 			'memo'			=>	'Order marked paid',
+			'received_on'	=>	'NOW()',
 			});
 	if ( ! $error ) {
 		$self->update_status();

@@ -37,12 +37,12 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
         <ul>
             <li><label>Warn after</label>%3$s Days</li>
             <li><label>Deny after</label>%4$s Days</li>
-            <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
+            <li><label>Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
             <li><label>Current Owing</label>%6$s</li>
             <li><label>Remaining Credit</label>%7$s</li>
-            <li><label>Credit Hold</label>%8$s</li>
-            <li><label>Required Downpayment</label>%9$s %</li>
-            <li><label>Required COD</label>%10$s %</li>
+            <li><label>On Hold</label>%8$s</li>
+            <li><label>Downpayment</label>%9$s %</li>
+            <li><label>COD</label>%10$s %</li>
         </ul>
     </fieldset></div>
         `, $Supplier->id(), $Supplier->name(),
