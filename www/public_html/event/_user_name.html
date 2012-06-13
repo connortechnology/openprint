@@ -3,7 +3,7 @@
 	my $html;
 	s/^\s+//, s/\s+$// for $param{'user_name'};
 	my @Companies = openprint::Company->find('name ilike'=>$param{'user_name'}.'%','limit'=>10,'id not in'=>$session{company_id});
-	my @user_ids = map { $_->id() } openprint::User->find('company_id in'=>[ map { $_->id() } @Companies ] );
+	my @user_ids = map { $_->id() } openprint::User->find('company_id in'=>[ map { $_->id() } @Companies ] ) if @Companies;
 	foreach my $Company (@Companies) {
 		foreach my $User ( $Company->Users() ) {
 			my $Asset = $User->Asset();
@@ -17,7 +17,6 @@
 			$html .= $User->html();
 		} # end foreach $User
 	} # end foreach $Company
-
 
 	my @Users = openprint::User->find('name ilike'=>$param{'user_name'}.'%','limit'=>10, 'id not in'=>[ $session{'user_id'}, @user_ids ] );
 	foreach my $User (@Users) {

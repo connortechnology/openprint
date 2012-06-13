@@ -270,5 +270,31 @@ sub Invitations {
 	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
 } # end sub Invitations
 
+sub send_invitations {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{'Event'} = $self;
+	$data{'uri'} = 'event';
+	$data{'User'} = new openprint::User($openprint::session{user_id});
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+
+	my $Email = new openprint::Email();
+	my $results = $Email->send(
+		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#'TO'			=>	[map { $_->$self->Invitations()],
+		'FROM'			=>	$self->Created_By(),
+		'ATTACHMENTS'	=>	\@attachments,
+		'SUBJECT'		=>	sprintf('You are invited to an event:', $$self{id} ),
+	);
+	$self->add_to_log( $results );
+	return $results;
+} # end sub send_invitations
+
 1;
 __END__

@@ -19,6 +19,7 @@ require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
 require openprint::Location;
+require Email::Valid;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
@@ -161,7 +162,9 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
-	} # end if
+	} elsif ( $param{function} eq 'Send' ) {
+		$variable{'error'} .= $Event->send_invitations();
+	} # end if function
 } # end sub view
 
 sub _view {
@@ -203,6 +206,22 @@ sub _invitation_users {
 			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});
 			#$Event->invited_user_ids(undef);
 		} # end if
+	} elsif ( $param{'email'} ) {
+		foreach my $address ( misc::trim(split(',',$param{email})) ) {
+			if ( ! Email::Valid->address( $address ) ) {
+				$variable{'error'} .= $address . ' is not a valid email address.<br/>';
+				next;
+			} # end if
+			my $User = openprint::User->find_one('email lc'=>lc $address);
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$User->save({email=>$address});
+			} # end if
+			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$$User{id}) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$$User{id}});
+#$Event->invited_user_ids(undef);
+			} # end if
+		} # end foreach address
 	} # end if
 } # end sub _invitation_users
 

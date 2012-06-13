@@ -46,6 +46,7 @@ $serial = 'articles_id_seq';
 	'source_content'	=>	'source_content',
 	'summary'			=>	'summary',
 	'user_type'			=>	'user_type',
+	'keywords'			=>	'keywords',
 );
 
 %transforms = (

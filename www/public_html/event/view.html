@@ -1,6 +1,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Event'}->id() ) ?>
 <script type="text/javascript">
+	function invite_by_email(input) {
+		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+	} // end function invite_by_email
     function invitation_set_users(input, li) {
         var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
         user_ids.push(li.id);
@@ -42,6 +45,7 @@
 						} # end if
 						$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
 						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+						$html .= ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
@@ -120,6 +124,7 @@
 	<br class="spacer"/>
 	<? if ( $session{'user_id'} ) ?>
 	<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
+	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? if ( $$variable{'Event'}->id() ) ?>

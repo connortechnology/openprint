@@ -108,7 +108,7 @@ $log->warn("registration errors $error");
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find_one('email lc'=>$param{email} ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>0 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
@@ -116,6 +116,7 @@ $log->warn("registration errors $error");
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
+	my $User = openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>1 );
 
 	my @agents = split(',', $config{'UserRegistrationEmail'} );
 	my $agent = $agents[0] if @agents;
@@ -179,7 +180,7 @@ $log->warn("registration errors $error");
 		} # end if
 	} # end if
 
-	my $User = new openprint::User();
+	$User = new openprint::User() if ! $User;;
 	$User->set( \%param );
 	$User->company_id( $Company->id() );
 	$User->ftp_active( 'Y' );
