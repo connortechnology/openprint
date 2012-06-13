@@ -452,6 +452,8 @@ my %config_actions = (
 	'Host offline'	=>	101,
 	'Host rebooted'	=>	102,
 	'Long response time'	=>	103,
+	'Credit Information Imported'	=>	104,
+	'Credit Information Changed'	=>	105,
 	'Copy Material'	=>	43,
 	'Copy Product'	=>	60,
 );
