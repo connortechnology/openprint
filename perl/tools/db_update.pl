@@ -54,7 +54,7 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
 	if ( ! $$data{supplier_id} ) {
 		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
-		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Company (Index)');
+		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
 }
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {

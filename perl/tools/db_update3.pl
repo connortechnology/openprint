@@ -494,6 +494,9 @@ foreach my $config_action ( keys %config_actions ) {
 			} # end if
 			$Action->destroy();
 		} # end if
+	} else {
+		$Action = new openprint::Log_Action();
+		$Action->save({name=>$config_action,id=>$config_actions{$config_action}});
 	} # end if
 } # end foreach config_action
 die $dbh->errstr() if $dbh->errstr();
