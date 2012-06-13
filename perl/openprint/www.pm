@@ -78,6 +78,7 @@ sub handler {
 			);
 
 	my $page = $r->uri();
+	my $lastpage = '';
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
@@ -153,7 +154,6 @@ $log->debug("Sending js redirect");
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );
 		$page = $variable{'Redirect'} if $variable{'Redirect'};	
 
-		my $lastpage = '';
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;

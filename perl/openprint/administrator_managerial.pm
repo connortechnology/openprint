@@ -477,11 +477,10 @@ sub company_profiles {
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
-                    $variable{'error'} .= (new openprint::logRecord())->save( {
-                            action_type =>  105,
+                    $variable{'error'} .= (new openprint::Log())->save( {
+                            action_id =>  105,
                             object_id   =>  $index,
-                            user_id     =>  $session{user_id},
-                            company_id  =>  $session{company_id},
+							object_type	=>	'openprint::Company',
                             note        =>  $note,
 							});
                 } else {

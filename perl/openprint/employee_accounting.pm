@@ -195,11 +195,10 @@ sub credit {
 					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
-                    $variable{'error'} .= (new openprint::logRecord())->save( {
-							action_type	=>	105,
+                    $variable{'error'} .= (new openprint::Log())->save( {
+							action_id	=>	105,
 							object_id	=>	$company_id,
-							user_id		=>	$session{user_id},
-							company_id	=>	$session{company_id},
+							object_type	=>	'openprint::Company',
 							note		=>	$note,
 });
                 } else {
@@ -314,10 +313,10 @@ $variable{'information'} .= "$company_name for $creditor_name changed:".join(', 
 					( $downpayment ne '' ? ('downpayment'=>$downpayment) : () ),
 					( $cod ne '' ? ('cod'=>$cod) : () ),
 					});
-				$variable{'error'} .= (new openprint::logRecord())->save({'action_type'=>104,user_id=>$session{user_id},company_id=>$session{company_id},note=>$note. " for $company_name for $creditor_name"}) if $note;
+				$variable{'error'} .= (new openprint::Log())->save({action_id=>104,object_id=>$Companies{$company_name}->id(),object_type=>'openprint::Company',note=>$note. " for $company_name for $creditor_name"}) if $note;
 			$log->debug($Credit->to_string());
 			} # end while
-			(new openprint::logRecord())->save({'action_type'=>104,user_id=>$session{user_id},company_id=>$session{company_id},note=>$variable{'error'}.$variable{'information'}});
+			(new openprint::Log())->save({'action_id'=>104,note=>$variable{'error'}.$variable{'information'}});
 			sql::end_transaction( $dbh, $ac );
 		} # end if	
 	} # end if btnFunction

@@ -9,7 +9,7 @@ require sql;
 require openprint::Host;
 require logger;
 require openprint::Email;
-require openprint::logRecord;
+require openprint::Log;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
