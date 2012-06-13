@@ -50,6 +50,15 @@ if ( ! exists $$data{'user_type'} ) {
 	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
 	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
 } # end if
+if ( ! sets::isin( 'photo_albums', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
+	} # end if
+} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -292,15 +301,6 @@ if ( ! sets::isin( 'car', \@tables ) ) {
 if ( ! sets::isin( 'event_categories', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'photo_albums', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
-	} # end if
 } # end if
 if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photos_in_Albums.sql' ) );

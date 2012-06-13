@@ -1,12 +1,11 @@
 use strict;
 package openprint::FoldSpecification;
 our @ISA = qw( openprint::Object );
-use openprint ();
 require openprint::Fold;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'fold_specifications';
 $serial = 'foldspecification_id_seq';
 
