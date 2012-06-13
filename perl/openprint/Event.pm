@@ -91,10 +91,15 @@ sub where {
 sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
-		if ( $$Album{'thumbnail_id'} ) {
-			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
-		} elsif ( my @Photos = $Album->Photos() ) {
-			$_[0]{'Asset'} = $Photos[0]->Asset();;
+		if ( $Album->id() ) {
+$openprint::log->debug("Album? " . $Album->to_string() );
+			if ( $$Album{'thumbnail_id'} ) {
+				$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+			} elsif ( my @Photos = $Album->Photos() ) {
+				$_[0]{'Asset'} = $Photos[0]->Asset();;
+			} else {
+				$_[0]{'Asset'} = new openprint::Asset();
+			} # end if
 		} else {
 			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
@@ -123,6 +128,7 @@ sub Photos {
 } # end sub Photos
 
 sub Album {
+$openprint::log->debug("Loading album: $_[0]{'album_id'}");
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 

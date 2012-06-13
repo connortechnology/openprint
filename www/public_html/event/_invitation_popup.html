@@ -14,8 +14,8 @@
 			</select>
 		</li>
 		<li><label>By Email</label>
-			<input type="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
-			<? echo ( ssi::button('EmailInvite', { onclick=>q`invite_by_email($('email'));` } ); ) ?>
+			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+			<? echo ( ssi::button('EmailInvite', { onclick=>q`invite_by_email($('email'));`,text=>'Invite By Email' } ); ) ?>
 		</li>
 		<li class="Invited"><label>Invited</label>
 		<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
