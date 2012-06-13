@@ -72,7 +72,7 @@ sub find {
 #$openprint::log->debug("Order::find @_");
 	my %params = @_;
 	my @values;
-	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE completed=true AND order_id=Index) AS paid FROM Orders WHERE 1>0';
+	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index) AS paid FROM Orders WHERE 1>0';
 	if ( $params{'id'} ) {
 		$sql .= ' AND index=?';
 		push @values, $params{'id'};
@@ -157,7 +157,7 @@ sub find {
 		push @values, $params{'supplier_id'};
 	} # end if
 	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE completed=true AND order_id=Index),0) > ?) ';
+		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index),0) > ?) ';
 		push @values, $params{'owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
@@ -191,7 +191,7 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE completed=true AND order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
 #$openprint::log->debug("Loaded order: " . $$self{'id'} );
 		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
 			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
@@ -479,6 +479,7 @@ sub pay {
 			'method'		=>	'Manual',
 			'currency_id'	=>	$$self{currency_id},
 			'memo'			=>	'Order marked paid',
+			'received_on'	=>	'NOW()',
 			});
 	if ( ! $error ) {
 		$self->update_status();

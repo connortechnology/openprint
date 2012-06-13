@@ -34,7 +34,7 @@ sub history {
 } # end sub history
 
 sub _history {
-	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
+	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'payor_id', 'recipient_id' );
 } # end sub _history
 
 sub edit {

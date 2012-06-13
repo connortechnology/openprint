@@ -5,7 +5,8 @@
 	foreach my $Payment ( openprint::Payment->find( 
 		ssi::date_filter( '/payment/history.html?received_on_start', 'received_on >=' ),
 		ssi::date_filter( '/payment/history.html?received_on_end', 'received_on <=' ),
-		( $session{'/payment/history.html?company_id'} ? ( 'payor_id'		=> $session{'/payment/history.html?company_id'} ) : () ),
+		( $session{'/payment/history.html?payor_id'} ? ( 'payor_id'		=> $session{'/payment/history.html?payor_id'} ) : () ),
+		( $session{'/payment/history.html?recipient_id'} ? ( 'recipient_id'		=> $session{'/payment/history.html?recipient_id'} ) : () ),
 		'recipient_id'		=> $session{'company_id'},
 		'order'				=> 'id',
 		) ) {
@@ -27,9 +28,9 @@
 	<table class="List">
 		<tr> 
 			<th class="ID">ID</th>
-			<th class="Date">When</th>
 			<th class="From">From</th>
 			<th class="Method">Method</th>
+			<th class="Date">Received On</th>
 			<th class="TransactionID">Transaction ID</th>
 			<th class="Memo">Memo</th>
 			<th class="Price">Amount</th>
@@ -38,9 +39,9 @@
 		<? while ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
 		<tr title="<? echo ( $$variable{'Payment'}->memo() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
 			<td class="ID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
-			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
 			<td class="From"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->Payor()->name(); ) ?></a></td>
 			<td class="Method"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->method(); ) ?></a></td>
+			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
 			<td class="TransactionID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->transaction_id(); ) ?></a></td>
 			<td class="Memo"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->memo(); ) ?></a></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Payment'}->amount() ); ) ?></td>
@@ -56,7 +57,7 @@
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
-<span class="unprintable" style="float: right;">
-<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
-</span>
+<p class="buttons">
+<? echo ( ssi::button( 'Delete', { onclick=>"delete_confirm(document.f1);", href=>'', text=>'Delete' } ); ) ?>
+</p>
 <? endif ( @{$$variable{'Payments'}} == 0 ) ?>
