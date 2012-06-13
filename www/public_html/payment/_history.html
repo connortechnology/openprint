@@ -37,7 +37,7 @@
 			<th class="Price">Remaining</th>
 		</tr>
 		<? while ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
-		<tr title="<? echo ( $$variable{'Payment'}->memo() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
+		<tr title="<? echo ( $$variable{'Payment'}->memo() ) ?>" <?rowclass?>> 
 			<td class="ID"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
 			<td class="From"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->Payor()->name(); ) ?></a></td>
 			<td class="Method"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->method(); ) ?></a></td>
@@ -56,8 +56,4 @@
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
-	<br class="spacer"/>
-<p class="buttons">
-<? echo ( ssi::button( 'Delete', { onclick=>"delete_confirm(document.f1);", href=>'', text=>'Delete' } ); ) ?>
-</p>
 <? endif ( @{$$variable{'Payments'}} == 0 ) ?>

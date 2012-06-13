@@ -3,30 +3,10 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
-	function delete_confirm(form) {
-		var number_of_deleted_payments = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( ! form.elements[index].name )
-				continue;
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
-				number_of_deleted_payments += 1;
-			} // end if
-
-		} // end for
-		if ( number_of_deleted_payments == 0 ) {
-			alert("To Delete Payments, click the checkbox beside the payment.");
-		} else {
-			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_payments + " payments from history?\n") ) {
-				form.submit();
-			} // end if
-		} // end if
-	}
 	function load_payments( form ) {
 		$('PaymentList').innerHTML = 'Please wait...';
 		new Ajax.Updater('PaymentList','/payment/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
 <!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" method="post" action="/payment/history.html">
@@ -60,8 +40,8 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'ShowResults', { onclick=>"load_payments(f1);", href=>'', text=>'Show Results' } ),
-					ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
+					ssi::button( 'ShowResults', { onclick=>"load_payments(f1);", text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();', text=>'Reset' } ),
 					ssi::button( 'New', { onclick=>'', href=>'edit.html', text=>'New Payment' } ),
 					); ) ?>
 			</p>
