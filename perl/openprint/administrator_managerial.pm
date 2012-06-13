@@ -478,7 +478,7 @@ sub company_profiles {
 							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
                     $note .= '<br/>new credit: ' . $Credit->to_string();
                     $variable{'error'} .= (new openprint::Log())->save( {
-                            action_id =>  105,
+                            action		=> 	'Credit Information Changed', 
                             object_id   =>  $index,
 							object_type	=>	'openprint::Company',
                             note        =>  $note,
