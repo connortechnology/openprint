@@ -133,3 +133,11 @@ table .status {
 	padding-left: 7px;
 	width: 140px;
 }
+table .order_id {
+	text-align: left;
+	width: 80px;
+}
+table .docket {
+	text-align: left;
+	width: 60px;
+}

@@ -44,7 +44,7 @@ $table = 'company_credit';
 
 sub debt {
 	if ( ! exists $_[0]{'debt'} ) {
-		$_[0]{'debt'} = misc::sum( map { $_->total() - $_->paid() } openprint::Order->find(company_id=>$_[0]{'company_id'},supplier_id=>$_[0]{supplier_id}) );
+		$_[0]{'debt'} = misc::sum( map { $_->total() - $_->paid() } openprint::Order->find(company_id=>$_[0]{'company_id'},supplier_id=>$_[0]{supplier_id},'status not in'=>['Cancelled','Incomplete','Deleted']) );
 	} # end if
 	return $_[0]{'debt'};
 } # end sub debt

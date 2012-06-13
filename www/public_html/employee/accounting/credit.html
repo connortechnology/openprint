@@ -38,7 +38,7 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
             <li><label>Warn after</label>%3$s Days</li>
             <li><label>Deny after</label>%4$s Days</li>
             <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
-            <li><label>Current Credit Balance</label>%6$s</li>
+            <li><label>Current Owing</label>%6$s</li>
             <li><label>Remaining Credit</label>%7$s</li>
             <li><label>Credit Hold</label>%8$s</li>
             <li><label>Required Downpayment Amount</label>%9$s %</li>
@@ -77,15 +77,15 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 <? if ( @{$$variable{'UnpaidOrders'}} ) ?>
 	<table class="List">
 		<tr> 
-			<th align="left" width="65">Order ID</th>
-			<th align="left" width="60">Docket</th>
+			<th class="order_id">Order ID</th>
+			<th class="Docket">Docket</th>
+			<th class="invoice_id">Invoice #</th>
+			<th class="po_id">P.O. #</th>
 			<th class="Date">Date</th>
 			<th class="Status">Status</th>
-			<th align="left" width="90">Invoice #</th>
-			<th align="right">P.O. #</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
-			<th align="center" width="55"><? echo ( ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ); ) ?></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all(this.form,'PAID',this.checked);"/></th>
 		</tr>
 		<? echo (
 			my $rowclass;
@@ -95,15 +95,15 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 			foreach my $Order ( @{$$variable{'UnpaidOrders'}} ) {
 				$html .= sprintf( '
 				<tr%1$s> 
-					<td><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
-					<td><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="invoice_id">%5$s</td>
+					<td class="po_id">%6$s</td>
 					<td class="Date">%4$s</td>
 					<td class="Status">%9$s</td>
-					<td align="left">&nbsp;%5$s</td>
-					<td align="right">&nbsp;%6$s</td>
 					<td class="Price">%7$s</td>
 					<td class="Price">%8$s</td>
-					<td align="center"><input type="checkbox" name="PAID" value="%2$d"/></td>
+					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
@@ -116,11 +116,14 @@ ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Exp
 					$total_total += $Order->total();
 				} # end foreach Order
 				$html .= sprintf('<tr class="totals">
-					<td colspan="6" align="right">Totals:</td>
+					<td colspan="2">%d Orders</td>
+					<td colspan="4">Totals:</td>
 					<td class="Price">%s</td>
 					<td class="Price">%s</td>
-					<td>&nbsp;</td>
-				</tr>', openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ) );
+					<td>%s</td>
+				</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+				ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
+				);
 			return $html;
 		) ?>
 	</table>
