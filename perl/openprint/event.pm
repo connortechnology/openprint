@@ -212,7 +212,7 @@ sub _invitation_users {
 				$variable{'error'} .= $address . ' is not a valid email address.<br/>';
 				next;
 			} # end if
-			my $User = openprint::User->find_one('email'=>$address);
+			my $User = openprint::User->find_one('email lc'=>lc $address);
 			if ( ! $User ) {
 				$User = new openprint::User();
 				$User->save({email=>$address});

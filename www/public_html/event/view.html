@@ -1,9 +1,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Event'}->id() ) ?>
 <script type="text/javascript">
-function invite_by_email(input) {
-	new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
-} // end function invite_by_email
+	function invite_by_email(input) {
+		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+	} // end function invite_by_email
     function invitation_set_users(input, li) {
         var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
         user_ids.push(li.id);

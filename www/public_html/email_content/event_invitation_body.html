@@ -1,5 +1,6 @@
 Hi <? echo ( $$variable{'User'}->name() ) ?>,
-<? echo ( $$variable{'Event'}->Created_By()->name() ) ?> has invited you to <? echo ( sprintf('<a href="/event/view.html?event_id='.$$variable{'Event'}->id()/'">'.$$variable{'Event'}->name().'</a>' ) ?>.<br/>
+<? echo ( $$variable{'Event'}->Created_By()->name() ) ?> has invited you to an event called <? echo ( sprintf('<a href="/event/view.html?event_id=%d">%s</a>',
+$$variable{'Event'}->id(),$$variable{'Event'}->name() ); ) ?>.<br/>
 
         <? echo (
             my $html;
@@ -7,8 +8,7 @@ Hi <? echo ( $$variable{'User'}->name() ) ?>,
 
             if ( $Asset->id() ) {
                 my $Album = $$variable{'Event'}->Album();
-                $html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`,
-#popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d', '', { width: window.innerWidth-100, height: window.innerHeight-100 } );">%s</a>`,
+                $html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`, $Asset->id(), $Album->id(), $Asset->html() );
             } # end if
 			return $html;
 		) ?><br/>
