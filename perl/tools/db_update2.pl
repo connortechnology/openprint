@@ -234,7 +234,7 @@ if ( ! openprint::Order_Tax->find_one() ) {
 				$new_amount = $$data{'curprovtax'};
 				} # end if
 			} else {
-				$new_amount = sprintf('%.2f', $Order->subtotal() * ( $Tax->rate()/100 ) );
+				$new_amount = Math::Round::nearest(0.01, $Order->subtotal() * ( $Tax->rate()/100 ) );
 			} # end if
 				
 			my $Order_Tax = new openprint::Order_Tax();

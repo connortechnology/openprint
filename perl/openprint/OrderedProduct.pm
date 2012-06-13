@@ -8,7 +8,7 @@ require openprint::Order;
 
 use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $serial = 'ordered_product_id_seq';
 $table = 'ordered_products';
 
