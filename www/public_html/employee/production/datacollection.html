@@ -22,7 +22,7 @@ function form_submit() {
 	<div class="leftColumn">
 		<ul>
 			<li><label>Docket</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;' ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'current_input=this;', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}else{alert('hi');}` ); ) ?></li>
 			<li><label>Form</label>
 				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'current_input=this;'); ) ?></li>
 			<li><label>Quantity</label>
