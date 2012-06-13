@@ -448,6 +448,10 @@ sub button {
 		$html .= 'onclick="';
 		$html .= $$options{'onclick'}."return false;\" ";
 	} # end if
+	if ( $$options{'ontouch'} ) {
+		$html .= 'ontouch="'.$$options{'ontouch'}.'" ';
+	} # end if
+	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
 		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
@@ -769,6 +773,8 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
+my @button_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max' );
+
 sub input {
 	my %options = @_;
 	my $html = '<input';
@@ -798,7 +804,8 @@ sub input {
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
-	foreach ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern' ) {
+
+	foreach (@button_options) {
 		$html .= qq` $_="$options{$_}"` if $options{$_};
 	} # end foreach
 	$html .= ' required' if $options{required};

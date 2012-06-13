@@ -591,6 +591,7 @@ sub find {
 	my @values;
 	my $local_dbh = ${$type.'::dbh'};
 	$local_dbh = $openprint::dbh if ! $local_dbh;
+<<<<<<< HEAD
 	if ( $$params{'dbh'} ) {
 		$local_dbh = $$params{'dbh'};
 		delete $$params{'dbh'};

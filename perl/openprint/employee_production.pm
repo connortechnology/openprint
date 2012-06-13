@@ -1887,19 +1887,25 @@ sub datacollection {
 				
 			my $PF = new openprint::ProductionFeedback();
 			$variable{'error'} .= $PF->save({
-					'project_id'	=>	$Project->id(),
-					'service_id'	=>	$param{'service_id'},
-					'user_id'		=>	$session{'user_id'},
-					'starting_on'	=>	$param{'starting_on'},
-					'ending_on'		=>	$param{'ending_on'},
-					'comment'		=>	$param{'comment'},
-					'signature_id'	=>	$Signature ? $Signature->id() : (),
+					project_id	=>	$Project->id(),
+					service_id	=>	$param{service_id},
+					user_id		=>	( $param{user_id} ? $param{user_id} : $session{user_id} ),
+					starting_on	=>	$param{starting_on},
+					ending_on		=>	$param{ending_on},
+					comment		=>	$param{comment},
+					signature_id	=>	($Signature ? $Signature->id() : ()),
+					equipment_id	=>	$param{equipment_id},
+					quantity		=>	$param{quantity},
 				});
 			
 		} # end foreach Project
+		$variable{'ExternalRedirect'} = '/employee/production/datacollection.html';
 		
 	} # end if Submit
 } # end sub datacollection
+
+sub _datacollection {
+} # end sub _datacollection
 
 1;
 __END__

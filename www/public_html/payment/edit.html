@@ -42,7 +42,14 @@
 	<fieldset><legend>Editing Payment</legend>
 		<div class="leftColumn">
 			<ul>
-			<li><label for="payor_id">Company</label>
+			<li><label for="recipient_id">Recipient</label>
+				<select id="recipient_id" name="recipient_id">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y',order=>'lower(strname)') ],
+						$$variable{'Payment'}->recipient_id() ? $$variable{'Payment'}->recipient_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</li>
+			<li><label for="payor_id">Payor</label>
 				<select id="payor_id" name="payor_id">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Payment'}->payor_id() ? $$variable{'Payment'}->payor_id() : $session{'company_id'} ); ) ?>
