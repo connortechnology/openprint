@@ -71,6 +71,10 @@ sub handler {
 							$r->sendfile( $Asset->thumbnail_path() );
 						} elsif ( $path eq 'medium' ) {
 							$r->sendfile( $Asset->medium_path() );
+						} elsif ( $path eq 'large' ) {
+							$r->sendfile( $Asset->large_path() );
+						} elsif ( $path eq 'small' ) {
+							$r->sendfile( $Asset->small_path() );
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
