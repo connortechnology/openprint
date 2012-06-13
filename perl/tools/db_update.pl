@@ -50,6 +50,12 @@ my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM informat
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+	if ( ! $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Company (Index)');
+	} # end if
 }
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
