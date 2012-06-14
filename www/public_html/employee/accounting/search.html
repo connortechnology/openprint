@@ -1,4 +1,4 @@
-<script type="/text/javascript" src="/javascripts/barcode.js"></script>
+<script type="text/javascript" src="/javascripts/barcode.js"></script>
 <div class="Accounting"><div class="Search">
 Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
 <br/>
@@ -8,14 +8,20 @@ Choose criteria and click show results. You may the download the results in CSV 
 		<div class="leftColumn">
 		<p>
 			<label>Docket #:</label>
-			<input type="number" id="StartDocket" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
-			- <input type="number" id="EndDocket" name="EndDocket" value="<? echo ( $param{'EndDocket'} ) ?>" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
-			<? echo ( ssi::button( 'DocketGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+			<? echo ( my $html;
+				$html .= ssi::input( type=>'cardinal', id=>'StartDocket', name=>'StartDocket', value=>$param{StartDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
+				$html .= ' - ';
+				$html .= ssi::input( type=>'cardinal', id=>'EndDocket', name=>'EndDocket', value=>$param{EndDocket}, onkeypress=>q`$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler(this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}`);
+				$html .= ssi::button( 'DocketGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } );
+				return $html;
+			) ?>
 		</p>
 		<p>
 			<label>Order ID:</label>
-			<input type="text" id="order_id" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" size="13" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
-			<? echo ( ssi::button( 'OrderGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+			<? echo ( join(' ',
+						ssi::input( type=>'cardinal', id=>'order_id', name=>'order_id', value=>$param{order_id}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);`, onkeydown=>q`if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}` ),
+						ssi::button( 'OrderGo', { 'onclick'=>q`f1.btnFunction.value='Go';f1.submit();`, 'text'=>'Go' } ) ,
+			); ) ?>
 		</p>
 		<p>
 			<label>Invoice ID:</label>
@@ -24,14 +30,15 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p>
 			<label>Project ID:</label>
-			<input type="number" name="project_id" value="<? echo ( $param{'project_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';f1.submit();}" />
-			<? echo ( ssi::button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ); ) ?>
+			<? echo ( join(' ',
+			ssi::input( type=>'cardinal', name=>'project_id', value=>$param{'project_id'}, onkeypress=>q`$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler(this,event);`, onkeydown=>q`if(event.keyCode==13){f1.btnFunction.value='Go';f1.submit();};` ),
+			ssi::button( 'ProjectGo', { 'onclick'=>"f1.btnFunction.value='Go';f1.submit();", 'text'=>'Go' } ), ); ) ?>
 		</p>
 </div>
 	<div class="rightColumn">
 		<p>
 			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4" />
+			<input class="filter" type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
 			<select id="ddmCustomer" name="ddmCustomer" size="1">
 				<option value="">All Customers</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/accounting/search.html?ddmCustomer'} ); ) ?>
@@ -73,9 +80,9 @@ Choose criteria and click show results. You may the download the results in CSV 
 		</p>
 		<p> 
 			<label>Total Range:</label>
-			<input type="number" name="dblTotal1" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal1'} ) ?>" />
+			<? echo ( ssi::input( type=>'float', name=>'dblTotal1', value=>$session{'/employee/accounting/search.html?dblTotal1'} ); ) ?>
 			to 
-			<input type="number" name="dblTotal2" value="<? echo ( $session{'/employee/accounting/search.html?dblTotal2'} ) ?>"	/>
+			<? echo ( ssi::input( type=>'float', name=>'dblTotal2', value=>$session{'/employee/accounting/search.html?dblTotal2'} ); ) ?>
 		</p>
 	</div>
 	</div>
@@ -89,7 +96,6 @@ Choose criteria and click show results. You may the download the results in CSV 
 					); ) ?>
 		</p>
 	</fieldset>
-	<br class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
 <div id="Results">Select criteria and click Show Results.</div>
