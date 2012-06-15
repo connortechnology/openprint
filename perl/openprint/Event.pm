@@ -296,7 +296,7 @@ sub send_invitations {
 		#'TO'			=>	[map { $_->$self->Invitations()],
 		'FROM'			=>	$self->Created_By(),
 		'ATTACHMENTS'	=>	\@attachments,
-		'SUBJECT'		=>	sprintf('You are invited to an event:', $$self{id} ),
+		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
 	);
 	$self->add_to_log( $results );
 	return $results;
