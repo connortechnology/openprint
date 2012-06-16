@@ -33,7 +33,7 @@ function switch_inputs(e) {
 	<div class="leftColumn">
 		<ul>
 			<li><label>Docket</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onblur=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
+				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
 				<span class="error" id="docket_alert"></span>
 			</li>
 			<li><label>Company</label><span id="company_name"><? echo ( 
@@ -48,11 +48,11 @@ function switch_inputs(e) {
 				</select>
 			</li>
 			<li><label>Form</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'switch_inputs(this);', value=>$param{form} ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?></li>
 			<li><label>Version</label>
-				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onblur=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
+				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
 			<li><label>Quantity</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onfocus=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
 			<li><label>Equipment</label>
 				<select name="equipment_id" id="equipment_id">
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
