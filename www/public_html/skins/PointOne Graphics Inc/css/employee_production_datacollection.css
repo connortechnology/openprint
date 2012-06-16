@@ -115,3 +115,6 @@ table .quantity {
 table .Equipment {
 	text-align: left;
 }
+.Focused {
+	background-color: yellow;
+}

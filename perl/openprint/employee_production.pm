@@ -1879,8 +1879,8 @@ sub datacollection {
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {
 				$Signature->save({
-					'image_data'	=>	$param{'signature'},
-					'type'			=>	'svg',
+					'image_data'	=>	URI::Escape::uri_unescape($param{'signature'}),
+					'type'			=>	'path',
 					'project_id'	=>	$Project->id(),
 					'service_id'	=>	$param{'service_id'},
 				});

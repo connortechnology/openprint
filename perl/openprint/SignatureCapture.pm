@@ -3,6 +3,7 @@ package openprint::SignatureCapture;
 our @ISA = qw( openprint::Object );
 use openprint ();
 use Image::Magick;
+use URI::Escape ();
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -64,15 +65,37 @@ sub file_path {
 } # end sub file_path
 
 sub html {
+my $image_data;
+	my $options = $_[1];
+	if ( $options ) {
+		my $width_factor = $$options{width} / $_[0]->width() if $$options{width};
+		my $height_factor = $$options{height} / $_[0]->height() if $$options{height};
+		$width_factor = $height_factor if ! $width_factor;
+		$height_factor = $width_factor if ! $height_factor;
+$openprint::log->debug("scaling by: $width_factor x $height_factor");
+
+		if ( $$options{width} or $$options{height} ) {
+			my @new_commands;
+			foreach my $command ( split(' ', $_[0]->image_data() ) ) {
+				$command =~ /^([ML])([\d\-]+),([\d\-]+)$/;
+				push @new_commands, $1.Math::Round::nearest(1,$2*$width_factor).','.Math::Round::nearest(1,$3*$height_factor);
+			} # end foreach command
+			$image_data = join(' ', @new_commands );
+$openprint::log->debug("New data: $image_data");
+		} # end if
+	} else {
+		$image_data = $_[0]->image_data();
+	} # end if
+
 	# if it's an image like a gif, return an image tag, for svg, blah blah
 	if ( $_[0]->type() eq 'gif' ) {
 		return sprintf('<img src="%s" alt=""/>', $_[0]->file_path() );
 	} elsif ( $_[0]->type() eq 'path' ) {
 		#return sprintf('<svg src="%s" />', $_[0]->file_path() );
-		return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+		return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="' . $_[0]->width() .'" height="'.$_[0]->height().'"
     xmlns:xlink="http://www.w3.org/1999/xlink">
 
-    <path d="'.$_[0]->image_data().'" style="stroke:#660000; fill:none;"/>    
+    <path d="'.$image_data.'" style="stroke:#000066; fill:none;"/>    
 </svg>';
 	} else {
 		$openprint::log->error('Unknown signature type :' . $_[0]->type().' for signature ' . $_[0]{id} . $_[0]->to_string() );
@@ -122,18 +145,60 @@ sub additional_file_path {
 
 sub type {
 	if ( @_ > 1 ) {
-		$_[0]{'type'} = $_[1];
+		$_[0]{type} = $_[1];
 	}
-	if ( ! $_[0]{'type'} ) {
-		if ( $_[0]{'image_data'} =~ /^GIF/ ) {
-			$_[0]{'type'} = 'gif';
-		} elsif ( $_[0]{'image_data'} =~ /^BM/ ) {
-			$_[0]{'type'} = 'bmp';
-		} elsif ( $_[0]{'image_data'} =~ /^<\?xml/i ) {
-			$_[0]{'type'} = 'svg';
+	if ( ! $_[0]{type} ) {
+		if ( $_[0]{image_data} =~ /^GIF/ ) {
+			$_[0]{type} = 'gif';
+		} elsif ( $_[0]{image_data} =~ /^BM/ ) {
+			$_[0]{type} = 'bmp';
+		} elsif ( $_[0]{image_data} =~ /^<\?xml/i ) {
+			$_[0]{type} = 'svg';
 		} # end if
 	} # end if
-}
+	return $_[0]{type};
+} # end sub type
 
+sub size {
+	if ( ! ( $_[0]{width} and $_[0]{height} ) ) {
+		if ( $_[0]{type} eq 'path' ) {
+			my ( $max_width, $max_height ) = (0,0);
+			foreach my $command ( split( ' ',$_[0]{image_data} ) ) {
+				if ( $command =~ /^[ML]([\-\d]+),([\-\d]+)$/ ) {
+					$max_width = $1 if $1 > $max_width;
+					$max_height = $2 if $2 > $max_height;
+				} else {
+					$openprint::log->warn("Wasnt a command in path data $command");
+				} # end if
+			} # end foreach command
+$openprint::log->debug("Dimensions of svg: $max_width, $max_height");
+			return ($max_width,$max_height);
+		} # end if
+	} # end if
+} # end sub size
+
+sub width {
+	if ( @_ > 1 ) {
+		$_[0]{width} = $_[1];
+	} 
+	if ( ! $_[0]{width} ) {
+		my ( $width, $height ) = $_[0]->size();
+		$_[0]{width} = $width;
+		$_[1]{height} = $height;
+	} # end if
+	return $_[0]{width};
+} # end sub width 
+
+sub height {
+	if ( @_ > 1 ) {
+		$_[0]{height} = $_[1];
+	} 
+	if ( ! $_[0]{height} ) {
+		my ( $width, $height ) = $_[0]->size();
+		$_[0]{width} = $width;
+		$_[1]{height} = $height;
+	} # end if
+	return $_[0]{height};
+} # end sub height 
 1;
 __END__
