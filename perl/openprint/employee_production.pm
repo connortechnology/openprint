@@ -1872,6 +1872,9 @@ sub datacollection {
 						last;
 					} # end if
 				} # end foreach signature
+				if ( ! $param{service_id} ) {
+					$param{service_id} = $Project->add_signature( $param{form}, 'Ordered' );
+				} # end if
 			} # end if
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {
