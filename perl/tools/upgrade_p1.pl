@@ -489,3 +489,6 @@ if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
 } # end if
 $dbh->disconnect();
+`/etc/init.d/postgresql restart`;
+0;
+__END__

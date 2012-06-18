@@ -323,26 +323,21 @@ function filterDDM( filter, ddm ) {
  *	is February, the default return value is 29.
  */
 function returnNumberOfDays(month, year) {
-	var numberOfDays;
-
 	if(month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12 ) {
 		// January
-		numberOfDays = 31;
+		return 31;
 	} else if(month == 2) {
 		// February
 		if(isLeapYear(year) && year) {
-		 numberOfDays = 29;
+		return 29;
 		} else {
-		 numberOfDays = 28;
+		return 28;
 		}
 	} else if(month == 4 || month == 6 || month == 9 || month == 11 ) {
 		// April
-		numberOfDays = 30;
-	} else {
-		numberOfDays = 31;
+		return 30;
 	}
-
-	return numberOfDays;
+	return 31;
 }
 
 
@@ -352,19 +347,14 @@ function returnNumberOfDays(month, year) {
  *	False = Year passed is not a leap year
  */
 function isLeapYear(year) {
-	var isLeapYear;
-
 	if(year % 4 != 0) {
-		isLeapYear = false;
+		return false;
 	} else if(year % 400 == 0) {
-		isLeapYear = true;
+		return true;
 	} else if(year % 100 == 0) {
-		isLeapYear = false;
-	} else {
-		isLeapYear = true;
+		return false;
 	}
-
-	return isLeapYear;
+	return true;
 }
 
 /*
@@ -824,13 +814,29 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 } // end function set_today
 
 function date_clear( e_y, e_m, e_d, e_h, e_min ) {
-	ddm_select_by_value( e_y, '' );
-	ddm_select_by_value( e_m, '' );
-	ddm_select_by_value( e_d, '' );
+	var onchange=e_y.onchange;
+	e_y.onchange='';
+	e_y.selectedIndex = 0;
+	e_y.onchange=onchange;
+
+	onchange=e_m.onchange;
+	e_m.onchange='';
+	e_m.selectedIndex = 0;
+	e_m.onchange=onchange;
+
+	onchange=e_d.onchange;
+	e_d.onchange='';
+	e_d.selectedIndex = 0;
+	e_d.onchange=onchange;
+	//ddm_select_by_value( e_y, '' );
+	//ddm_select_by_value( e_m, '' );
+	//ddm_select_by_value( e_d, '' );
 	if ( e_h )
-		ddm_select_by_value( e_h, '' );
+	e_h.selectedIndex = 0;
+		//ddm_select_by_value( e_h, '' );
 	if ( e_min )
-		ddm_select_by_value( e_min, '' );
+	e_min.selectedIndex = 0;
+		//ddm_select_by_value( e_min, '' );
 } // end function date_clear
 
 function set_date( form, from, to ) {
@@ -855,18 +861,23 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
 	} // end if
 
 	if ( do_time ){
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
     } else {
-        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
-        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
+        start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value-1, form.elements[starting_prefix+suffix+'_day'].value );
+        end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value-1, form.elements[ending_prefix+suffix+'_day'].value );
     } // end if
 
     if ( start > end ) {
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
-		form.elements[ending_prefix+suffix+'_month'].onchange();
-        ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
+		if ( form.elements[ending_prefix+suffix+'_year'] != form.elements[starting_prefix+suffix+'_year'].value ) 
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_year'], form.elements[starting_prefix+suffix+'_year'].value );
+		if ( form.elements[ending_prefix+suffix+'_month'] != form.elements[starting_prefix+suffix+'_month'].value ) {
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_month'], form.elements[starting_prefix+suffix+'_month'].value );
+			form.elements[ending_prefix+suffix+'_month'].onchange();
+		} // end if
+		if ( parseInt(form.elements[ending_prefix+suffix+'_day'].value) < parseInt(form.elements[starting_prefix+suffix+'_day'].value) ) {
+			ddm_select_by_value( form.elements[ending_prefix+suffix+'_day'], form.elements[starting_prefix+suffix+'_day'].value );
+		} 
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], form.elements[starting_prefix+suffix+'_hour'].value );
             ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], form.elements[starting_prefix+suffix+'_minute'].value );
@@ -1175,16 +1186,25 @@ function LoadContent( divID, page, parameters, message ) {
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
 }
 
+function photo_popup( asset_id, album_id ) {
+	popup_window('/photo_albums/_view_photo.html?asset_id='+asset_id+'&amp;album_id='+album_id, '', { width: window.innerWidth-100, height: window.innerHeight-100 } );
+} // end function photo_popup
+
 var popupWin;
 function popup_window( url, parameters, options ) {
+	if ( ! options ) options = {};
+	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
+	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
+	if ( options.maximizable == undefined ) options.maximizable = false;
+	if ( options.resizable == undefined ) options.resizeable = true;
+	if ( options.hideEffect == undefined ) options.hideEffect = Element.hide;
+	if ( options.showEffect == undefined ) options.showEffect = Element.show;
+	if ( options.destroyOnClose == undefined ) options.destroyOnClose = true;
+	if ( options.className == undefined ) options.className = 'alphacube';
+	if ( options.recenterAuto == undefined ) options.recenterAuto = false;
+
 	if ( ! popupWin ) {
-		var width = 400;
-		var height = 400;
-		if ( options ) {
-			if ( options.width ) width = options.width;
-			if ( options.height ) height = options.height;
-		} // end if
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
+		popupWin = new Window(options);
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -1295,16 +1315,20 @@ function get_form_element_array( form, name ) {
 	return values;
 } // end function get_form_element_array
 
+// We do the matching to prevent cursor movements
 function cardinalize(e) {
-	e.value = e.value.replace(/\D/g,'');
+	if ( e.value.match(/\D/g) )
+		e.value = e.value.replace(/\D/g,'');
 	return e.value;
 }
 function integerize(e) {
-	e.value = e.value.replace(/[^\d\-]/g,'');
+	if ( e.value.match(/[^\d\-]/g) )
+		e.value = e.value.replace(/[^\d\-]/g,'');
 	return e.value;
 }
 function floatize(e) {
-	e.value = e.value.replace(/[^\d\-\.]/g,'');
+	if ( e.value.match(/[^\d\-\.]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
 	return e.value;
 }
 function hexize(e) {
@@ -1361,3 +1385,10 @@ alert(img.getStyle('width'));
     ctrl.update(0);
     return ctrl;
 }
+var is_IOS = null;
+function isIOS() {
+	if ( is_IOS != null ) return is_IOS;
+	useragent = navigator.userAgent.toLowerCase();
+	is_IOS = useragent.search('iphone') || useragent.search('ipod') || useragent.search('ipad');
+	return is_IOS;
+} // end function isIOS

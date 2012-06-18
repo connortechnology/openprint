@@ -1,4 +1,30 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{'Event'}->id() ) ?>
+<script type="text/javascript">
+	function invite_by_email(input) {
+		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+	} // end function invite_by_email
+    function invitation_set_users(input, li) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        user_ids.push(li.id);
+
+        if ( li.id ) {
+            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+        } // end if
+    }
+    function invitation_remove_user( user_id ) {
+        var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
+        user_ids = user_ids.without( user_id );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+    }
+    // adds the currently selected users, so that we can filter them out of returned results
+    function invitation_add_user_ids( input, query ) {
+        var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
+        query += '&user_id=' + user_ids.join('&user_id=');
+        return query;
+    }
+</script>
+<? endif ( $$variable{'Event'}->id() ) ?>
 <? if ( $$variable{'Event'}->can_view() ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
@@ -10,15 +36,19 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Event'}->can_edit() ) {
-					if ( $$variable{'Event'}->deleted() ) {
-					$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
-					} else {
-					$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+				if ( $$variable{'Event'}->id() ) {
+					if ( $$variable{'Event'}->can_edit() ) {
+						if ( $$variable{'Event'}->deleted() ) {
+						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
+						} else {
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+						} # end if
+						$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
+						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+						$html .= ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
 					} # end if
-					$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
+					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
-				$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				return $html;
 			) ?>
 		</p>
@@ -34,7 +64,9 @@
 
 			if ( $Asset->id() ) {
 				my $Album = $$variable{'Event'}->Album();
-				$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d">%s</a>', 
+				$html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`,
+#popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d', '', { width: window.innerWidth-100, height: window.innerHeight-100 } );">%s</a>`, 
+				##$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%1$d&amp;album_id=%2$d" onclick="popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d');">%s</a>', 
 					$Asset->id(), $Album->id(), $Asset->html() );
 				#$html .= $$variable{'Event'}->Asset()->html();
 			} # end if
@@ -92,12 +124,15 @@
 	<br class="spacer"/>
 	<? if ( $session{'user_id'} ) ?>
 	<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
+	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? if ( $$variable{'Event'}->id() ) ?>
-	<? eval ( $$variable{'Album'} = $$variable{'Event'};
+	<? eval ( $$variable{'Object'} = $$variable{'Album'} = $$variable{'Event'};
 	 ) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
+	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
+	
 <? endif ( $$variable{'Event'}->id() ) ?>
 	</fieldset>
 	</form>

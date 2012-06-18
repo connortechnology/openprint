@@ -1,0 +1,50 @@
+<table class="List">
+	<tr>
+		<th class="payment_id">ID</th>
+		<th class="Date">Received On</th>
+		<th class="TransactionID">Transaction ID</th>
+		<th class="Method">Method</th>
+		<th class="Memo">Memo</th>
+		<th class="Price">Amount</th>
+		<th class="buttons"></th>
+	</tr>
+	<? echo ( 
+		my $html;
+		my $rowclass;
+		foreach my $Payment ( openprint::Payment->find('order_id'=>$$variable{'Order'}->id()) ) {
+			$html .= sprintf(q`
+				<tr%1$s> 
+					<td class="payment_id">%2$d</td>
+					<td class="Date">%3$s</td>
+					<td class="TransactionID">%4$s</td>
+					<td class="Method">%5$s</td>
+					<td class="Memo">%6$s</td>
+					<td class="Price">%7$s</td>
+					<td class="buttons">%8$s</td>
+				</tr>`, $rowclass, $Payment->id(),
+					( $Payment->received_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ) : '' ),
+					$Payment->transaction_id(),
+					$Payment->method(), $Payment->memo(), openprint::Currency::format($Payment->amount()),
+					ssi::button('Delete'.$$Payment{id}, { onclick=>"confirm_delete( document.f1, '$$Payment{id}' );", text=> 'Delete' } ),
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+		return $html;
+	) ?>
+	<tr class="totals">
+		<td class="payment_id">New</td>
+		<td class="Date"><? echo ( ssi::date_select('received_on'); ) ?></td>
+		<td class="TransactionID"><input type="text" name="transaction_id" /></td>
+		<td class="Method">                <select id="method" name="method">
+<? echo ( 
+my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' );
+return ssi::make_drop_down( [ map { $_, $_ } @options ] );
+) ?>
+			</select>
+</td>
+		<td class="Memo"><input type="text" name="memo" /></td>
+		<td class="Price"><? echo ( ssi::input( type=>'float', name=>'amount', onkeydown=>"this.lastValue = this.value;return check_decimal(this,event);" ); ) ?></td>
+		<td class="buttons"><? echo (ssi::button( 'AddPayment', { onclick=> q`f1.btnFunction.value='Save';f1.submit();`,text=>'Add' } ); ) ?></td>
+	</tr>
+</table>
+

@@ -1,10 +1,15 @@
 use strict;
+require openprint::Currency;
+require openprint::Order;
+require openprint::Company;
+require openprint::User;
+require misc;
 package openprint::Company_Credit;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'company_credit';
 @identified_by = ( 'company_id','supplier_id' );
 
@@ -39,11 +44,7 @@ $table = 'company_credit';
 
 sub debt {
 	if ( ! exists $_[0]{'debt'} ) {
-		$_ = q{SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up','Paid','Re-Opened','Waiting For Customer Approval','Waiting For QA Approval','Order Submitted' )};
-		my ( $debt ) = sql::execute( undef, undef, $_, $_[0]{'company_id'} );
-		$_ = q{SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND company_id=?};
-		my ( $payments ) = sql::execute( undef, undef, $_, $_[0]{company_id} );
-		$_[0]{'debt'} = $debt - $payments;
+		$_[0]{'debt'} = misc::sum( map { $_->total() - $_->paid() } openprint::Order->find(company_id=>$_[0]{'company_id'},supplier_id=>$_[0]{supplier_id},'status not in'=>['Cancelled','Incomplete','Deleted']) );
 	} # end if
 	return $_[0]{'debt'};
 } # end sub debt
@@ -60,21 +61,30 @@ sub remaining {
 	return openprint::Currency::format( $limit - $debt );
 } # end sub remaining
 
+sub outstanding_Orders {
+	if ( ! $_[0]{'outstanding_Orders'} ) {
+   $_[0]{'outstanding_Orders'} = [ openprint::Order->find(
+	
+        'company_id'    =>	$_[0]{company_id},
+		'supplier_id'	=>	$_[0]{supplier_id},
+        'status not in' =>  [ 'Cancelled','Deleted','Incomplete' ],
+        'owing_>'   =>  0,
+        'order'     => 'created_on',
+        ) ];
+	} # end if
+	return @{$_[0]{'outstanding_Orders'}};
+} # end sub outstanding_Orders
+
 sub outstanding_orders {
-    my $self = shift;
-    $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
-    AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up', 'Re-Opened','Waiting For Customer Approval','Waiting For QA Approval', 'Order Submitted' )
-    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index)
-    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ORDER BY Index};
-    return sql::execute( undef, undef, $_, $$self{company_id} );
+	return map { $_->id() } $_[0]->outstanding_Orders();
 } # end sub outstanding_orders
 
 sub warn_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
     AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index)
+    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '?  days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','warndays'} );
 } # end sub warn_orders
@@ -83,21 +93,24 @@ sub denied_orders {
     my $self = shift;
     $_ = q{SELECT Index FROM Orders WHERE CompanyIndex=?
     AND strStatus IN ('Pending Deposit','In Production','Complete','Shipped','Waiting For Pickup', 'Picked Up' )
-    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index)
-    OR (SELECT SUM(amount) FROM Payments WHERE strSessionID IS NULL and Payments.order_id=Orders.Index) IS NULL )
+    AND ( curTotalSale > (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index)
+    OR (SELECT SUM(amount) FROM Payments WHERE deleted=false AND completed=true and Payments.order_id=Orders.Index) IS NULL )
     AND dtmorderdate + '? days' < NOW() ORDER BY Index};
     return sql::execute( undef, undef, $_, @$self{'company_id','denydays'} );
 } # end sub denied_orders
 
-sub supplier_id {
-	if ( @_ > 1 ) {
-		$_[0]{'supplier_id'} = $_[1];
-	}
-	if ( ! $_[0]{'supplier_id'} ) {
-		$_[0]{'supplier_id'} = $openprint::config{'owner_id'};
-	} # end if
-	return $_[0]{'supplier_id'};
-} # end if supplier_id
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
+
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+
+sub to_string {
+	return sprintf('for %s: hold %s, warn after %d, deny after %d, limit %s, downpayment %d%, cod %d%', $_[0]->Supplier()->name(), 
+		$_[0]{hold}, $_[0]{warndays},$_[0]{denydays},openprint::Currency::format($_[0]{limit}),$_[0]{downpayment},$_[0]{cod} );
+} # end sub to_string
 
 1;
 __END__

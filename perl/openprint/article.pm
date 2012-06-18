@@ -195,14 +195,14 @@ sub edit {
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
 			%param = ();
-			$variable{'ExternalRedirect'} = '/article/history.html';
+			$variable{'ExternalRedirect'} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
 		} # end if
 	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
 		my $func = $Article->can($param{'func'});
 		$variable{'error'} .= $func->( $Article );
 		if ( ! $variable{'error'} ) {
 			%param = ();
-			$variable{'ExternalRedirect'} = '/article/history.html';
+			$variable{'ExternalRedirect'} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
 		} # end if
 	} elsif ( $param{'func'} eq 'Copy' ) {
 		$variable{'Article'} = $variable{'Article'}->copy();
@@ -225,6 +225,7 @@ sub edit {
 		$variable{'Article'}->company_id( $session{'company_id'} ) if ! $variable{'Article'}->company_id();
 		$variable{'Article'}->published_on( Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ) ) if ! $variable{'Article'}->published_on();
 	} # end if
+	$session{'/article/edit.html?referer'} = $ENV{'HTTP_REFERER'};
 } # end sub edit
 
 sub list {
@@ -264,6 +265,7 @@ sub category {
 sub view {
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	$Article->set( \%param );
+	$Article->View();
 } # end sub view
 
 sub _comments {

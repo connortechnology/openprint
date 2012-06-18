@@ -1,53 +1,65 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" method="post" action="credit.html">
+<form id="f1" name="f1" method="post" action="credit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Select Company</legend>
-		<p>
-			<label>Account #</label>
+		<ul>
+		<li>
+			<label>Account #:</label>
 			<input type="text" name="txtSearchAccountNum" />
 			<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
-		</p>
-		<p class="company">
-			<label>Company</label>
-            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" />
+		</li>
+		<li>
+			<label>Customer:&nbsp;</label>
+            <input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
 			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
+		</li>
+		</ul>
+		<p class="buttons">
+			<? echo ( join('',
+ssi::input( name=>'import', id=>'import', type=>'file' ),
+ssi::button('Import',{ onclick=>q`var form = $('f1');form.btnFunction.value='Import';form.submit();` } ),
+ssi::button('Export',{ onclick=>q`var form = $('f1');form.btnFunction.value='Export';form.submit();` } ),
+); ) ?>
 		</p>
 	</fieldset>
 <? if ( $$variable{'CompanyIndex'} ) ?>
 	<fieldset>
 <? echo (
     my $html;
-    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
+    foreach my $Supplier ( openprint::Company->find('offers_credit'=>1,'order'=>'id') ) {
         my $Credit = $$variable{'Company'}->Credit($Supplier->id());
 
         $html .= sprintf(q`
     <div class="Credit"><fieldset><legend>Credit Information for %2$s:</legend>
         <ul>
-            <li><label>Warn after</label><input type="number" name="warndays-%1$d" value="%3$d"/> Days</li>
-            <li><label>Deny after</label><input type="number" name="denydays-%1$d" value="%4$d"/> Days</li>
-            <li><label>Credit Account Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
-            <li><label>Current Credit Balance</label>%6$s</li>
+            <li><label>Warn after</label>%3$s Days</li>
+            <li><label>Deny after</label>%4$s Days</li>
+            <li><label>Limit</label><input type="text" name="limit-%1$d" value="%5$s" /></li>
+            <li><label>Current Owing</label>%6$s</li>
             <li><label>Remaining Credit</label>%7$s</li>
-            <li><label>Credit Hold</label>%8$s</li>
-            <li><label>Required Downpayment Amount</label><input type="number" name="downpayment-%1$d" value="%9$.2f" max="100" onkeyup="floatize(this);"/> %</li>
-            <li><label>Required COD</label><input type="number" name="cod-%1$d" value="%10$.2f" max="100" onkeyup="floatize(this);"/> %</li>
+            <li><label>On Hold</label>%8$s</li>
+            <li><label>Downpayment</label>%9$s %</li>
+            <li><label>COD</label>%10$s %</li>
         </ul>
     </fieldset></div>
-        `, $Supplier->id(), $Supplier->name(), $Credit->warndays(), $Credit->denydays(),
-        openprint::Currency::format( $Credit->limit() ),
+        `, $Supplier->id(), $Supplier->name(),
+		ssi::input(type=>'cardinal', name=>'warndays-'.$$Supplier{id}, value=>$Credit->warndays() ),
+		ssi::input(type=>'cardinal', name=>'denydays-'.$$Supplier{id}, value=>$Credit->denydays() ),
+        openprint::Currency::format( 1*$Credit->limit() ),
         openprint::Currency::format( $Credit->debt() ), $Credit->remaining(),
         ssi::radio('hold-'.$Supplier->id(), ['Y','Yes','N','No'], $Credit->hold() ),
-        $Credit->downpayment(), $Credit->cod(),
+		ssi::input(type=>'cardinal', name=>'downpayment-'.$$Supplier{id}, value=>$Credit->downpayment(), max=>100 ),
+		ssi::input(type=>'cardinal', name=>'cod-'.$$Supplier{id}, value=>$Credit->cod(), max=>100 ),
 );
     } # end foreach Company
     return $html;
 ) ?>
 	<p class="buttons">
 		<? echo ( join('',
-			ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();" } ),
+			ssi::button( 'Save', { onclick=>"if(!f1.ddmCustomer.value){alert('Please select a customer');}else{f1.btnFunction.value='Save';f1.submit();};" } ),
 			ssi::button( 'Reset', { onclick=>"f1.reset();" } ),
 			); ) ?>
     </p>
@@ -56,6 +68,7 @@
 <? eval (
 	@{$$variable{'UnpaidOrders'}} = openprint::Order->find(
 		'company_id'	=> $param{'ddmCustomer'},
+		'status not in'	=>	[ 'Cancelled','Deleted','Incomplete' ],
 		'owing >'	=>	0,
 		'order'		=> $openprint::Order::fields{'created_on'},
 		);
@@ -66,13 +79,13 @@
 		<tr> 
 			<th class="order_id">Order ID</th>
 			<th class="Docket">Docket</th>
-			<th class="Date">Date</th>
-			<th class="Status">Status</th>
 			<th class="invoice_id">Invoice #</th>
 			<th class="po_id">P.O. #</th>
+			<th class="Date">Date</th>
+			<th class="Status">Status</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
-			<th class="buttons"><? echo ( ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ); ) ?></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all(this.form,'PAID',this.checked);"/></th>
 		</tr>
 		<? echo (
 			my $rowclass;
@@ -80,18 +93,17 @@
 			my $total_total = 0;
 			my $html;
 			foreach my $Order ( @{$$variable{'UnpaidOrders'}} ) {
-				next if sets::isin( $Order->status(), ['Cancelled','Incomplete','Deleted'] );
 				$html .= sprintf( '
 				<tr%1$s> 
-					<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
-					<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
-					<td class="Date">%4$s</td>
-					<td class="Status">%9$s</td>
+					<td class="order_id"><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+					<td class="Docket"><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
 					<td class="invoice_id">%5$s</td>
 					<td class="po_id">%6$s</td>
+					<td class="Date">%4$s</td>
+					<td class="Status">%9$s</td>
 					<td class="Price">%7$s</td>
 					<td class="Price">%8$s</td>
-					<td class="buttons"><input type="checkbox" name="PAID" value="%2$d"/></td>
+					<td class="checkbox"><input type="checkbox" name="PAID" value="%2$d"/></td>
 				</tr>
 				', $rowclass, $Order->id(), $Order->docket(), 
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
@@ -104,17 +116,34 @@
 					$total_total += $Order->total();
 				} # end foreach Order
 				$html .= sprintf('<tr class="totals">
-					<td colspan="6">Totals</td>
+					<td colspan="2">%d Orders</td>
+					<td colspan="4">Totals</td>
 					<td class="Price">%s</td>
 					<td class="Price">%s</td>
-					<td>&nbsp;</td>
-				</tr>', openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ) );
+					<td>%s</td>
+				</tr>', scalar @{$$variable{'UnpaidOrders'}}, openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ),
+				ssi::button( 'Pay', { onclick=>"f1.btnFunction.value='Pay';f1.submit();" } ),
+				);
 			return $html;
 		) ?>
 	</table>
 <? else ( @{$$variable{'UnpaidOrders'}} ) ?>
 There are no unpaid orders.
 <? endif ( @{$$variable{'UnpaidOrders'}} ) ?>
+</fieldset>
+<fieldset><legend>Credit Change History</legend>
+	<table class="List">
+		<tr><th class="DateTime">When</th><th class="User">Who</th><th class="note">Note</th></tr>
+<? echo ( my $html;
+	foreach my $Log ( openprint::Log->find('action_id'=>[104,105], object_id=>$$variable{CompanyIndex}, order=>'id desc','limit'=>5 ) ) {
+		$html .= sprintf(q`<tr><td class="DateTime">%s</td><td class="User">%s</td><td class="note">%s</td></tr>`,
+			 Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time( $Log->date_time() ) ),
+			$Log->User()->name(), $Log->note(),
+		);
+	} # end foreach Log
+	return $html;
+) ?>
+	</table>
 </fieldset>
 <? endif ( $$variable{'CompanyIndex'} ) ?>
 	<input type="hidden" name="btnFunction"/>

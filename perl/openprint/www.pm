@@ -77,18 +77,8 @@ sub handler {
 			'password'	=> $r->dir_config('db_password'),
 			);
 
-	my $lastpage = '';
 	my $page = $r->uri();
-	if ( $page =~ /\.html/ ) {
-		$r->content_type(q{text/html; charset=utf-8});
-	} elsif ( $page =~ /\.json/ ) {
-		$r->content_type(q{text/javascript; charset=utf-8});
-	} elsif ( $page =~ /\.xml/ ) {
-		$r->content_type(q{text/xml; charset=utf-8});
-	} elsif ( $page =~ /\.rss/ ) {
-		$r->content_type(q{application/rss+xml; charset=utf-8});
-		#$r->content_type(q{text/html; charset=utf-8});
-	} # end if
+	my $lastpage = '';
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init( $r->dir_config() );
@@ -177,11 +167,21 @@ $log->debug("Sending js redirect");
 		} # end while
 	} # end if
 
-	if ( $variable{'ExternalRedirect'} ) {
-		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
-		$r->status(Apache2::Const::REDIRECT);
-		#$r->send_http_header;
-$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
+    if ( $lastpage =~ /\.html/ ) {
+        $r->content_type(q{text/html; charset=utf-8});
+    } elsif ( $lastpage =~ /\.json/ ) {
+        $r->content_type(q{text/javascript; charset=utf-8});
+    } elsif ( $lastpage =~ /\.xml/ ) {
+        $r->content_type(q{text/xml; charset=utf-8});
+    } elsif ( $lastpage =~ /\.rss/ ) {
+        $r->content_type(q{application/rss+xml; charset=utf-8});
+    } # end if
+
+    if ( $variable{'ExternalRedirect'} ) {
+        $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+        $r->status(Apache2::Const::REDIRECT);
+        #$r->send_http_header;
+		$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		if ( $variable{'File_Data'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {

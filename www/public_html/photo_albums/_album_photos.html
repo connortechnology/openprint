@@ -14,7 +14,7 @@
 
 	foreach my $Photo ( @Portrait, @Landscape ) {
 		$html .= '<div class="Photo">';
-		$html .= $variable{'photo_size'} eq 'full' ? $Photo->html() : $Photo->thumbnail_html();
+		$html .= $variable{'photo_size'} eq 'full' ? $Photo->html() : $Photo->medium_html();
 		$html .= '<br/>';
 
 		if ( ( $session{'user_type'} eq 'A' ) or ( $session{'user_id'} and ( $$variable{'Album'}->user_id() == $session{'user_id'} ) ) ) {

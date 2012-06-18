@@ -1,6 +1,7 @@
 use strict;
 package openprint::File;
 our @ISA = qw( openprint::Object );
+require misc;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -16,7 +17,9 @@ $serial = 'project_files_id_seq';
 	'deleted'		=>	'deleted',
 	'size'			=>	'size',
 	'company_id'	=>	'company_id',
-
+	'archive'		=>	'archive',
+);
+%transforms = (
 );
 %defaults = (
 	'deleted'		=>	0,
@@ -24,6 +27,11 @@ $serial = 'project_files_id_seq';
 	'project_id'	=>	undef,
 	'upload_id'		=>	undef,
 );
+
+sub size_text {
+	my ( $self ) = @_;
+	return misc::format_bytes( $$self{'size'} );
+} #end sub size_text
 
 1;
 __END__

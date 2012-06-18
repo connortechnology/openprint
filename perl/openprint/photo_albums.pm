@@ -119,7 +119,7 @@ sub _album_photos {
 
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
 		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
-		$variable{'error'} .= $Object->save({'thumbnail_id'=>$param{'asset_id'}}) if $Object;;
+		$variable{'error'} .= $Object->save({'thumbnail_id'=>$param{'asset_id'}}) if $Object;
 	} elsif ( $param{'action'} eq 'add' ) {
 		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
 $log->debug("$id , $filename ");
@@ -173,6 +173,10 @@ $log->debug("$id , $filename ");
 		#$variable{'error'} .= $Asset->delete();
 	} # end if
 } # end sub _album_photos
+
+sub _view_photo {
+view_photo();
+} # end sub _view_photo
 
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;

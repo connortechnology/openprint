@@ -50,6 +50,12 @@ my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM informat
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+	if ( ! $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
+	} # end if
 }
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
@@ -219,6 +225,12 @@ if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 }
 if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_files'", 'column_name');
+	if ( ! $$data{'archive'} ){ 
+		$dbh->do('ALTER TABLE project_files add archive TEXT');
+	} # end if
+	
 }
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
@@ -498,6 +510,10 @@ if ( ! sets::isin( 'material_specifications', \@tables ) ) {
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_specifications'", 'column_name');
 $dbh->do('alter table material_specifications add interpolate boolean') if ! exists $$data{'interpolate'};
+if ( ! exists $$data{equipment_id} ) {
+	$dbh->do('ALTER TABLE material_specifications ADD equipment_id INTEGER');
+	$dbh->do('ALTER TABLE material_specifications ADD FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id)');
+} # end if
 if ( $version < 1381 ) {
 	print "Updating to version 1381\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_ink_colours LIMIT 1', {} );
@@ -1471,10 +1487,6 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
@@ -2050,22 +2062,42 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
 	} # end if
 	if ( exists $$data{'dtmdate'} ) {
-		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		if ( ! exists $$data{received_on} ) {
+			$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column dtmdate');
+		} # end if
 	} # end if
 	if ( exists $$data{'date'} ) {
-		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+		if ( ! exists $$data{received_on} ) {
+		$dbh->do('ALTER TABLE Payments rename column date to received_on');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set received_on=date where received_on IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column date');
+		} # end if
 	} # end if
 	if ( ! exists $$data{'received_on'} ) {
 		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	if ( exists $$data{'strmethod'} ) {
-		$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+		if ( ! exists $$data{method} ) {
+			$dbh->do('ALTER TABLE Payments rename column strmethod to method');
+		} else {
+			$dbh->do('UPDATE TABLE Payments set method=strmethod where method IS NULL');
+			$dbh->do('ALTER TABLE Payments drop column method');
+		} # end if
 	} # end if
 	if ( exists $$data{'strtransactionid'} ) {
 		$dbh->do('ALTER TABLE Payments rename column strtransactionid to transaction_id');
 	} # end if
 	if ( exists $$data{'strdescription'} ) {
+		if ( ! exists $$data{memo} ) {
 		$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
+		} else {
+			$dbh->do('UPDATE TABLE payments set memo=strdescription where memo IS NULL');
+			$dbh->do('ALTER TABLE payments drop strdescription');
+		} # end if
 	} # end if
 	if ( ! exists $$data{'memo'} ) {
 		$dbh->do('ALTER TABLE payments add memo text');
@@ -2326,10 +2358,14 @@ $Currency->save({'short'=>'CAD'});
 				'category'=> 'Email Notifications'] );
 	} # end if
 if ( ! sets::isin( 'productionfeedback', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql}) );
+} else {
+	$dbh->do('alter table productionfeedback alter service_id drop not null');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='productionfeedback'", 'column_name');
+	if ( ! $$data{signature_id} ) {
+		$dbh->do('alter table productionfeedback add signature_id INTEGER');
+		$dbh->do('alter table productionfeedback add foreign key (signature_iD) references signaturecapture (id)');
+	} # end if
 } # end if
 if ( ! sets::isin( 'cip3_ppf', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
@@ -2553,17 +2589,28 @@ if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding'
 	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
 			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 } # end if
-if ( ! sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_ProjectType_Defaults.sql}) );
+
+if ( sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
+	$dbh->do('alter table tbl_projecttype_defaults rename to projecttype_defaults');
+} 
+
+if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ProjectType_Defaults.sql}) );
 } else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projecttype_defaults'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='projecttype_defaults'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD id SERIAL');
-		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD PRIMARY KEY (id)');
+		$dbh->do('ALTER TABLE projecttype_defaults ADD id SERIAL');
+		$dbh->do('ALTER TABLE projecttype_defaults ADD PRIMARY KEY (id)');
+	} # end if
+	if ( exists $$data{strfieldname} ) {
+		$dbh->do('ALTER TABLE projecttype_defaults RENAME strfieldname to name');
+	}
+	if ( exists $$data{strdefaultvalue} ) {
+		$dbh->do('ALTER TABLE projecttype_defaults RENAME strdefaultvalue to value');
 	} # end if
 } # end if
-sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
-sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+sql::update( undef, undef, 'projecttype_defaults', ['name=? AND value=?','rdbCardboardBacking','Y'], [ 'name', 'Backing', 'value', 'Cardboard' ] );
+sql::update( undef, undef, 'projecttype_defaults', ['name=? AND value=?','rdbCardboardBacking','N'], [ 'name', 'Backing', 'value', 'None']  );
 
 foreach my $PT ( openprint::ProjectType->find() ) {
 	if ( $PT->name() =~ / / ) {

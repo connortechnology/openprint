@@ -35,9 +35,6 @@
 			<fieldset><legend>Tell us about the location</legend>
 				<div class="content">
 					<ul>
-						<li><label>Name</label>
-							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Location'}->name() ) ?>" />
-						</li>
 						<li>
 							<label for="description">Description</label>
 							<textarea id="description" name="description" rows="<? echo ( ssi::count_lines( $$variable{'Location'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{'Location'}->description()); ) ?></textarea>
