@@ -1894,6 +1894,7 @@ sub datacollection {
 					starting_on	=>	$param{starting_on},
 					ending_on		=>	$param{ending_on},
 					comment		=>	$param{comment},
+					version		=>	$param{version},
 					signature_id	=>	($Signature ? $Signature->id() : ()),
 					equipment_id	=>	$param{equipment_id},
 					quantity		=>	$param{quantity},

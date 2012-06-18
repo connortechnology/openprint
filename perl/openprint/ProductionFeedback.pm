@@ -20,6 +20,7 @@ $serial = 'ProductionFeedback_id_seq';
 	'ending_on'		=>	'ending_on',
 	'user_id'		=>	'user_id',
 	'comment'		=>	'comment',
+	'version'		=>	'version',
 	'signature_id'	=>	'signature_id',
 	'equipment_id'	=>	'equipment_id',
 	'quantity'		=>	'quantity',

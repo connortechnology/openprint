@@ -89,7 +89,7 @@ $ipoo = 0;
 	</div>
 </fieldset>
 <fieldset><legend>Signature</legend>
-<embed id="signature" src="/images/signature.svg" type="image/svg+xml"/>
+<embed id="signature" src="/images/signature.svg?v=4" type="image/svg+xml"/>
 <input type="hidden" name="signature"/>
 </fieldset>
 <p class="buttons">
@@ -106,12 +106,12 @@ $ipoo = 0;
 			<th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th><th class="Signature">Signature</th></tr>
 			<? echo (
 				my $html;
+				my $rowclass;
 				foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 'limit'=>100) ) {
 					my $Project = $PF->Project();
 					my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
 					my $specs = $Service->specs() if $Service;
 
-					my $rowclass;
 					$html .= sprintf(q`
 <tr%s>
 	<td class="Docket"><a href="/employee/project/view.html?project_id=%d">%d</a></td>
@@ -137,7 +137,7 @@ $ipoo = 0;
 </fieldset>
 <script type="text/javascript"> document.f1.docket.focus(); 
 	//$('body').bind('touchmove', 
-	//Event.observe($('body'),'touchmove', function(event) { event.preventDefault() }); // turns off
+	Event.observe($('signature'),'touchmove', function(event) { event.preventDefault() }); // turns off
 
 //$('body').unbind('touchmove'); // turns on
 
