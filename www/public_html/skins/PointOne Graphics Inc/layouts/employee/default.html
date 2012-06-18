@@ -238,8 +238,8 @@
 <? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
 					<li class="off"><a href="/session.html">SESSION</a></li>
 <? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
-<li class="off"><a href="#" onclick="$('Header').hide();$('ShowMenu').show();$('Content').setStyle('margin-left: 0;');new Ajax.Request('/menu.json?menuoff=1' );">HIDE MENU</a></li>
 <? endif ( $session{'user_id'} ) ?>
+<li class="off"><a href="#" onclick="$('Header').hide();$('ShowMenu').show();$('Content').setStyle('margin-left: 0;');new Ajax.Request('/menu.json?menuoff=1' );">HIDE MENU</a></li>
 					</ul>
 				</div><!-- Menu -->
 			</div><!-- Header -->
