@@ -104,23 +104,6 @@ label:after {
 	height: 200px;
 	background-color: white;
 }
-table .form {
-	text-align: left;
-	width: 40px;
-}
-table .quantity {
-	text-align: left;
-	width: 80px;
-}
-table .Equipment {
-	text-align: left;
-}
-table .version {
-	text-align: left;
-}
 .Focused {
 	background-color: yellow;
-}
-.Signature {
-	width: 100px;
 }

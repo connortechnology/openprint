@@ -141,3 +141,20 @@ table .docket {
 	text-align: left;
 	width: 60px;
 }
+table .form {
+	text-align: left;
+	width: 40px;
+}
+table .quantity {
+	text-align: left;
+	width: 80px;
+}
+table .Equipment {
+	text-align: left;
+}
+table .version {
+	text-align: left;
+}
+.Signature {
+	width: 100px;
+}
