@@ -17,6 +17,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 <? endif ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
 <? echo (
+	$session{menuoff} = $param{menuoff} if exists $param{menuoff};
 	my @html;
 	my $css = $$variable{'uri'};
 	$css =~ s/^\///;
