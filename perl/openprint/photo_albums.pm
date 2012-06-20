@@ -322,8 +322,10 @@ sub _photo_actions {
 	} # end if function
 } # end sub _photo_actions
 sub photos {
+	_photos();
 } # end sub photos
 sub _photos {
+	ssi::save_params( '/photo_albums/photos.html', ( 'company_id','user_id' ) );
 } # end sub _photos
 
 1;
