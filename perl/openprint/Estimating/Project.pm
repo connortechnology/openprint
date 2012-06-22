@@ -299,6 +299,11 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			$$specs{'chkBlackSideTwo2'} = 'Black';
 			$$specs{'chkProcessColourSideOne2'} = undef;
 			$$specs{'chkProcessColourSideTwo2'} = undef;
+		} elsif ( $$specs{'Colours'} eq '1/0' ) {
+			$$specs{'chkBlackSideOne2'} = 'Black';
+			$$specs{'chkBlackSideTwo2'} = undef;
+			$$specs{'chkProcessColourSideOne2'} = undef;
+			$$specs{'chkProcessColourSideTwo2'} = undef;
 		} # end if
 		my $colourindex = 1;
 		if ( $$specs{'SideOneCoatingType2'} and ( $$specs{'SideOneCoatingType2'} ne 'None' ) ) {
