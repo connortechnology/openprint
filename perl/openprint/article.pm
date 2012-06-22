@@ -229,6 +229,8 @@ sub edit {
 } # end sub edit
 
 sub list {
+	$param{'category_id'} = openprint::Article_Category->transform('id',$param{'category_id'});
+
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	_list();
 	$session{'/article/list.html?paging_per_page'} = 5;
