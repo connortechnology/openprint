@@ -1902,6 +1902,8 @@ sub datacollection {
 			
 		} # end foreach Project
 		$variable{'ExternalRedirect'} = '/employee/production/datacollection.html';
+
+		ssi::save_params( '/employee/production/datacollection.html', ( 'user_id', 'equipment_id', 'category' ) );
 		
 	} # end if Submit
 } # end sub datacollection

@@ -309,6 +309,8 @@ sub id {
 } # end sub id
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -317,6 +319,7 @@ sub find_one {
 
 sub find {
 	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
