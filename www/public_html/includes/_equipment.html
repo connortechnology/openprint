@@ -1,0 +1,6 @@
+<? echo (
+	my $selected_id = $param{'selected_id'};
+	delete $param{'selected_id'};
+	my @Equipment = openprint::Equipment->find( %param );
+	return ssi::make_drop_down( [ '', 'no one', map { $_->id(), $_->name() } @Equipment ], @Equipment == 1 ? $Equipment[0]{'id'} : $selected_id );
+) ?>
