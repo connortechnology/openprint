@@ -43,6 +43,11 @@ function switch_inputs(e) {
 				} # end if
 				return '';
 			) ?></span></li>
+			<li><label>Category</label>
+<? echo (
+	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/print_overview.html?category'} );
+) ?>
+			</li>		
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
 				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
 				</select>
