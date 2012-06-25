@@ -23,6 +23,11 @@ function switch_inputs(e) {
 	current_input.addClassName('Focused');
 } 
 
+function category_onchange(ddm) {
+	new Ajax.Updater( 'operator_id', '/includes/_users.html', { parameters: { usergroup: ddm.value, type: [ 'E','A' ] } } );
+	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { category: ddm.value } } );
+} // end function category_onchange
+
 	var current_input;
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -44,9 +49,12 @@ function switch_inputs(e) {
 				return '';
 			) ?></span></li>
 			<li><label>Category</label>
+			<select name="category" id="category" onchange="category_onchange();">
+				<option value="">All</option>
 <? echo (
 	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/print_overview.html?category'} );
 ) ?>
+			</select>
 			</li>		
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
 				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
