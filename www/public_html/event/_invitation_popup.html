@@ -9,14 +9,18 @@
 			</script>
 		</li>
 		<li><label>By Relationship</label>
-			<select name="relationship_ip" onchange="invite_by_relationships(this.value);"><option value="">none</option>
+			<select name="relationship_ip" onchange="invite_by_relationship(this.value);"><option value="">none</option>
 				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
 			</select>
 		</li>
 		<li><label>By Email</label>
 			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
-			<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
 		</li>
+	</ul>
+	<p class="buttons">
+			<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
+	</p>
+	<ul>
 		<li class="Invited"><label>Invited</label>
 		<div id="invitation_users"><!--#include virtual="/event/_invitation_users.html"--></div>
 		</li>
