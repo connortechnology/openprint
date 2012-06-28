@@ -9,7 +9,7 @@
 			</script>
 		</li>
 		<li><label>By Relationship</label>
-			<select name="relationship_ip" onchange="invite_by_relationship(this.value);"><option value="">none</option>
+			<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
 				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
 			</select>
 		</li>

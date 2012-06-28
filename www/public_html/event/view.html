@@ -24,7 +24,7 @@
         return query;
     }
 	function invite_by_relationship( ddm ) {
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add_by_relationship', relationship_id: ddm.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	}
 </script>
 <? endif ( $$variable{'Event'}->id() ) ?>

@@ -206,6 +206,22 @@ sub _invitation_users {
 			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});
 			#$Event->invited_user_ids(undef);
 		} # end if
+	} elsif ( $param{action} eq 'add by relationship' ) {
+		if ( $param{relationship_id} ) {
+			my %old = map { $_->user_id(), $_ } $Event->Invitations();
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id1=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id2}});
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id2=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id1}});
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+		} # end if
 	} elsif ( $param{'email'} ) {
 		foreach my $address ( misc::trim(split(',',$param{email})) ) {
 			if ( ! Email::Valid->address( $address ) ) {
