@@ -13,14 +13,18 @@ $$variable{'Event'}->id(),$$variable{'Event'}->name() ); ) ?>.<br/>
 			return $html;
 		) ?><br/>
 <fieldset><legend>All about it</legend>
+	<div class="content">
 <ul>
 	<li><label>When</label> <? echo ( $$variable{'Event'}->time_string(); ) ?></li>
 	<li class="category"><label>Category</label><? echo ( $$variable{'Event'}->Category()->name() ) ?></li>
+<? if ( $$variable{Event}->info() ) ?>
 	<li class="info">
-		<label for="info">More info</label>
+		<label>More info</label>
 		<? echo ( $$variable{'Event'}->info() ) ?>
 	</li>
+<? endif ( $$variable{Event}->info() ) ?>
 </ul>
+</div>
 </fieldset>
 <fieldset><legend>Where</legend>
 	<div class="content">
@@ -28,18 +32,12 @@ $$variable{'Event'}->id(),$$variable{'Event'}->name() ); ) ?>.<br/>
 			<li><label>Location</label>
 				<? echo ( 
 						my $html .= $$variable{'Event'}->where();
-						if ( $session{'user_id'} ) {
-							my $MyLocation = new openprint::User($session{'user_id'})->Location();
-							if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
-								$MyLocation->get_latitude_and_longitude();
-							} # end if
-
-							my $Location = $$variable{'Event'}->Location();
-							if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
-								my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
-								$html .= '<br/>'.int($distance).'km from you.' if $distance;
-							} # end if
-						} # end if user_id
+						my $MyLocation = $$variable{User}->Location();
+						my $Location = $$variable{'Event'}->Location();
+						if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
+							my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
+							$html .= '<br/>'.int($distance).'km from you.' if $distance;
+						} # end if
 						return $html;
 				) ?>
 			</li>

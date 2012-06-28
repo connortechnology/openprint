@@ -190,7 +190,7 @@ sub html {
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
 			$Article->created_by(),
-			ssi::escape_quotes( $Article->Author()->name() ),
+			ssi::escape_quotes( $Article->Author()->alias() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 

@@ -7,6 +7,7 @@ require sets;
 require sql;
 require logger;
 require openprint::User;
+require openprint::Host;
 use Apache::Session::Postgres;
 use Getopt::Long;
 
@@ -61,6 +62,13 @@ foreach my $session_id ( @$session_ids ) {
         $session{'lastupdated'} = time;
         untie %session;
     } elsif ( time - $session{'lastupdated'} < ( 60*60 ) ) {
+		my $Host = openprint::Host->find_one( ip => $session{ip} ) if $session{ip};
+		next if ! $Host;
+		if ( $Host->hostname() ) {
+		next if $Host->hostname() =~ /googlebot/;
+		next if $Host->hostname() =~ /baidu/;
+		next if $Host->hostname() =~ /search/;
+		} # end if
 		push @online, $session_id;
 	} # end if
 	undef %session;

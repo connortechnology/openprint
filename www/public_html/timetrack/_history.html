@@ -11,6 +11,7 @@
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
 		( $session{'/timetrack/history.html?service_id'} ? ( 'service_id'	=> $session{'/timetrack/history.html?service_id'} ) : () ),
 		( $session{'/timetrack/history.html?billable'} ne '' ? ( 'billable'=>$session{'/timetrack/history.html?billable'} ) : () ),
+		( $session{'/timetrack/history.html?travel_associated'} ne '' ? ( 'travel_associated'=>$session{'/timetrack/history.html?travel_associated'} ) : () ),
 		'order'				=> 'starting',
 		) ) {
 		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );

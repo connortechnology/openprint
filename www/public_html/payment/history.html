@@ -11,29 +11,17 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" method="post" action="/payment/history.html">
    <div class="PaymentHistory">
-<<<<<<< HEAD
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
-			<p>
-				<label>Company</label>
-				<select name="company_id" id="company_id" onchange="load_payments(this.form);">
-					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $session{'/payment/history.html?company_id'} ); ) ?>
-				</select>
-			</p>
-			<p>
-				<label>Received On</label>
-=======
-		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<ul>
 			<li>
-				<label>Recipient:</label>
+				<label>Recipient</label>
 				<select name="recipient_id" id="recipient_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down([ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y','offers_credit'=>1,'order'=>'lower(strname)') ], $session{'/payment/history.html?recipient_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down([ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y','offers_credit'=>1,'order'=>'lower(name)') ], $session{'/payment/history.html?recipient_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
-				<label>Payor:</label>
+				<label>Payor</label>
 				<select name="payor_id" id="payor_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'/payment/history.html?company_id'} ); ) ?>
@@ -41,7 +29,6 @@
 			</li>
 			<li>
 				<label>Received On:</label>
->>>>>>> 5fd29c5d93fef5e9d67f86d16c1b7c8fe7332238
 				<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', {'onchange'=>q`load_payments($('f1'));`, 'with_today'=>1, 'with_clear'=>1} ); ) ?>
 				</span>

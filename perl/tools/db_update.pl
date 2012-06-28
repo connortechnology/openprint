@@ -1982,6 +1982,8 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
 			$dbh->do('ALTER TABLE Payments drop column dtmdate');
 		} # end if
+	} elsif ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	if ( exists $$data{'date'} ) {
 		if ( ! exists $$data{received_on} ) {
@@ -2008,7 +2010,7 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 	} # end if
 	if ( exists $$data{'strdescription'} ) {
 		if ( ! exists $$data{memo} ) {
-		$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
+			$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
 		} else {
 			$dbh->do('UPDATE TABLE payments set memo=strdescription where memo IS NULL');
 			$dbh->do('ALTER TABLE payments drop strdescription');
@@ -2469,7 +2471,9 @@ if ( ! sets::isin( 'projecttype_defaults', \@tables ) ) {
 		$dbh->do('ALTER TABLE projecttype_defaults ADD PRIMARY KEY (id)');
 	} # end if
 	if ( exists $$data{strfieldname} ) {
-		$dbh->do('ALTER TABLE projecttype_defaults RENAME strfieldname to name');
+		if ( ! exists $$data{name} ) {
+			$dbh->do('ALTER TABLE projecttype_defaults RENAME strfieldname to name');
+		} # end if
 	}
 	if ( exists $$data{strdefaultvalue} ) {
 		$dbh->do('ALTER TABLE projecttype_defaults RENAME strdefaultvalue to value');
