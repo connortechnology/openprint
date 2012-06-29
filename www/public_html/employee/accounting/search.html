@@ -84,8 +84,8 @@ Choose criteria and click show results. You may the download the results in CSV 
 					ssi::button( 'ShowResults', { 'onclick'=>
 						q`LoadContent('Results','/employee/accounting/_search.html', $('f1').serialize() );`,
 						'text'=>'Show Results' } ),
-					ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='accounting_search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+					#ssi::button( 'DownloadCSV', { onclick=>"f1.action='/employee/accounting/search.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+					ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
 					); ) ?>
 		</p>
 	</fieldset>

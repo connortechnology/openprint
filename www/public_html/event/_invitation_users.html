@@ -1,0 +1,23 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<ul>
+<? echo ( 
+	my $html;
+	my @user_ids = sets::exclude([$session{'user_id'}], [$$variable{'Event'}->invited_user_ids()]);
+	foreach my $User ( map { new openprint::User( $_ ) } @user_ids ) {
+		$html .= sprintf(q`
+			<li class="User">
+				<input type="hidden" name="invitation_user_id" value="%1$d"/>
+%2$s
+			<span class="buttons">%3$s</span>
+</li>`,$User->id(), $User->thumbnail_html(), 
+
+			( $$variable{'Event'}->can_edit()  ?
+			( ssi::button( 'Delete'.$User->id(), { 
+						   onclick=>qq`invitation_remove_user( $$User{id} );`,
+						   text=>'X', title=>'Remove'} ) ) : () ),
+
+			);
+	} # end foreach User
+	return $html;
+) ?>
+</ul>

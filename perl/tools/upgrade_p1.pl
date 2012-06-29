@@ -27,9 +27,10 @@ $dst_db = 'point-one' if ! $dst_db;
 
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
+	$path = "/media/ARCHIVE/Backups/database/$src_db/$year-$month-$day.sql.bz2";
 
-	if ( ! -e "/media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2" ) {
-		die "No db dump /media/Prinergy/Backups/database/$src_db/$month-$day-$year.sql.bz2";
+	if ( ! -e $path ) {
+		die "No db dump $path";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -37,8 +38,8 @@ if ( ! $path ) {
 	print "Create db...";
 	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
-	print "Loading db... from /media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2";
-	`su postgres -c "bunzip2 < /media/Prinergy/Backups/database/$src_db/$year-$month-$day.sql.bz2 | pg_restore -Fc -d $dst_db"`;
+	print "Loading db... from $path";
+	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	print "done\n";
 } else {
 #grab direclty
@@ -488,3 +489,6 @@ if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
 } # end if
 $dbh->disconnect();
+`/etc/init.d/postgresql restart`;
+0;
+__END__

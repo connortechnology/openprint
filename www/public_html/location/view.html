@@ -1,5 +1,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Location"><div class="View">
+<? if ( $$variable{'Location'}->id() ) ?>
 	<form id="f1" name="f1" action="/location/view.html?location_id=<? echo ( $$variable{'Location'}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="action"/>
 	<fieldset>
@@ -9,6 +10,7 @@
 		<p class="buttons">
 			<? echo (
 				my $html = '';
+				$$variable{'Object'} = $$variable{'Album'} = $$variable{'Location'};
 				if ( $$variable{'Location'}->can_edit() ) {
 					if ( $$variable{'Location'}->deleted() ) {
 						$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.elements['action'].value='Undelete';f1.submit();" } );
@@ -71,6 +73,7 @@
 					</li>
 				</ul>
 <div id="Opinions"><? echo ( $$variable{'Location'}->opinions('Opinions') ) ?></div>
+	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
 				</div>
 					<div class="rightColumn">
 					<? echo ( my $html;
@@ -88,15 +91,17 @@
 				</div>
 			</div>
 		</fieldset>
-<? if ( $$variable{'Location'}->id() ) ?>
-	<? eval ( $$variable{'Album'} = $$variable{'Location'};) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
+	<div id="EventsList">
 		<fieldset><legend>Upcoming Events</legend>
 		<div id="Events">
 			<!--#include virtual="_events.html"-->
 		</div>
 		</fieldset>
-<? endif ( $$variable{'Location'}->id() ) ?>
+	</div>
 	</fieldset>
 	</form>
+<? else ( $$variable{'Location'}->id() ) ?>
+No location specified.
+<? endif ( $$variable{'Location'}->id() ) ?>
 </div></div>

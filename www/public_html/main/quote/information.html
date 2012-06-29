@@ -1,67 +1,21 @@
+<script type="text/javascript" src="/javascripts/pricing.js"></script>
 <script type="text/javascript">
-<!--
 	function company_onchange( e ) {
-		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value } } );
+		new Ajax.Request( '_company_information.json', { parameters: { company_id: e.value } } );
 	} // end function
 	function user_onchange( e ) {
-		new Ajax.Request( '_user_information.json', { method: 'get', parameters: { user_id: e.value } } );
+		new Ajax.Request( '_user_information.json', { parameters: { user_id: e.value } } );
 	} // end function
-
-	function get_element_index( form, elem ) {
-		for ( var i=0; i < form.elements.length; i+= 1 ) {
-			if ( form.elements[i] == elem ) {
-				return i;
-			} // end if 
-		} // end for
-		return -1;
-	} // end function get_element_index( form, elem ) 
-
-	function calc_from_markup( form, elem ) {
-		var index = get_element_index( form, elem );
-		var newprice = form.elements[index+1].value * ((elem.value/100)+1);
-
-		form.elements[index+2].value = do_decimals( newprice,2 );
-		calc_subtotal( form );
-	} // end function calc_from_markup( elem ) 
-
-	function calc_from_price( form, elem ) {
-		var index = get_element_index( form, elem );
-		var markup = ( elem.value*100 / form.elements[index-1].value ) - 100;
-
-		form.elements[index-2].value = do_decimals( markup,2 );
-		calc_subtotal( form );
-	} // end function calc_from_price( elem ) 
-
-	function calc_subtotal(form) {
-		var subTotals = new Array();
-
-		for ( var i=0; i < form.elements.length-3; i += 1 ) {
-			name = form.elements[i].name.substr(0,11);
-			if ( name == 'txtNewPrice' ) {
-				var priceIndex = parseInt(form.elements[i].name.substr(11,1));
-				if ( null == subTotals[priceIndex-1] ) {
-					subTotals[priceIndex-1] = parseFloat(form.elements[i].value);
-				} else {
-					subTotals[priceIndex-1] += parseFloat(form.elements[i].value);
-				} // end if
-			} // end if
-		} // end for
-		for ( var i = 0; i < subTotals.length; i += 1 ) {
-			form.elements['subTotal'+(i+1)].value = do_decimals( subTotals[i],2 );
-		} // end for
-	} // end function recalculate_quote(form)
--->
 </script>
 <? if ( ! $$variable{'Quote'}->id() ) ?>
 	There is no current quote.
-	<? echo ( ssi::writeButton( $log, $dbh, 'create', 'create.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New Quote' ); ) ?>
+	<? echo ( ssi::button( 'create', { href=>'/main/quote/information.html?btnFunction=New', text=>'Create New Quote' } ); ) ?>
 <? else ( ! $$variable{'Quote'}->id() ) ?>
 
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 	If you would like to send a copy of this quotation to someone on your behalf 
 	please fill in the necessary information below. This quote will be stored in 
-	quote history. If it is for your own personal reference leave the &quot;Prepared 
-	For&quot; fields blank.<br/>
+	quote history. If it is for your own personal reference leave the &quot;Prepared For&quot; fields blank.<br/>
 	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <br/>
 <div class="Quote">
@@ -175,7 +129,10 @@
 				<input type="text" onkeyup="if ( filterDDM(this, this.form.company_id) ) company_onchange($('company_id'));" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" />
 				<select id="company_id" name="company_id" onchange="company_onchange(this);">
 					<option value="">select</option>
-					<? echo ( openprint::Company::get_dropdown($session{'company_id'}) ) ?>
+					<? echo ( 
+	my $Selected = openprint::Company->find_one('name'=>$$variable{'Quote'}->for_companyname() ) if $$variable{'Quote'}->for_companyname();
+	return openprint::Company::get_dropdown($Selected ? $Selected->id() : $session{'company_id'});
+ ) ?>
 				</select>	
 			</li>
 			<li class="contact"> 
@@ -315,15 +272,15 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td class="markup"> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);` ); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
-					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+					<input type="hidden" name="cost-<?index?>_<?project_index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->format( $$variable{'stdprice'} ); ) ?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>($$variable{'newprice'} ? $$variable{'newprice'} : $$variable{'stdprice'}), 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
 			</tr>
@@ -331,15 +288,15 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
 				<td class="markup"> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);` ); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('markup-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'markup'}, 'onkeyup'=>q`calc_from_markup(this,2);` ); ) ?> 
 				</td>
 				<td class="quantity"><?qty?></td>
 				<td class="price"> 
-					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
+					<input type="hidden" name="cost-<?index?>_<?project_index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
 				</td>
 				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
-					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('txtNewPrice%d%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_price(f1, this);` ); ) ?> 
+					<? echo ( ssi::input( 'type'=>'number', 'name'=>sprintf('price-%d_%d', @$variable{'index','project_index'} ), 'value'=>$$variable{'newprice'}, 'onkeyup'=>q`calc_from_price(this,2);` ); ) ?> 
 				</td>
 				<td class="changes"></td>
 			</tr>
@@ -411,16 +368,18 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<? endif ( openprint::ProjectType->find_one() ) ?>
 
 		<? if ( openprint::Product->find_one() ) ?>
+		<div class="Products">
 		<fieldset><legend>Products</legend>
 			<div id="Products"><!--#include virtual="_products.html"--></div>
 		</fieldset>
+		</div>
 		<? endif ( openprint::Product->find_one() ) ?>
 		<p class="buttons">
 				<? echo ( 
 					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'AddFromHistory','add_project_from_history.gif','','/main/project/history.html','Add Project From History' ) if $session{'user_id'};
-					$html .= ssi::writeButton( $log, $dbh, 'CreateNewProject','add_new_project.gif','','/main/project/create_edit.html','Add New Project' );
-					$html .= ssi::writeButton( $log, $dbh, 'Continue','continue.gif',"f1.btnFunction.value='Continue';f1.submit();",'','Continue' );
+					$html .= ssi::button( 'AddFromHistory', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $session{'user_id'};
+					$html .= ssi::button( 'CreateNewProject', { onclick=>'', href=>'/main/project/create_edit.html', text=>'Add New Project' } );
+					$html .= ssi::button( 'Continue', { onclick=>"f1.btnFunction.value='Continue';f1.submit();", href=>'', text=>'Continue' } );
 					) ?>
 		</p>
 		<input type="hidden" name="btnFunction"/>

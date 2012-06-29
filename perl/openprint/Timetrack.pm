@@ -7,9 +7,9 @@ use openprint ();
 require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
+require openprint::Paycheque_Timetrack;
 
-
-use vars qw( $debug $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 $debug = 0;
 
 $table = 'timetracks';
@@ -26,7 +26,6 @@ $serial = 'timetracks_id_seq';
 	'owner_id'			=>	'owner_id',
 	'time_associated'	=>	'time_associated',
 	'user_id'			=>	'user_id',
-	'paycheque_id'		=>	'paycheque_id',
 	'rate'				=>	'rate',
 	'created_on'		=> 'created_on',
 	'updated_on'		=> 'updated_on',
@@ -35,6 +34,9 @@ $serial = 'timetracks_id_seq';
 	'travel_associated'	=>	'travel_associated',
 	'distance'			=>	'distance',
 	'billable'			=>	'billable',
+);
+%find_fields = (
+	'paycheque_id'		=>	'(SELECT paycheque_id FROM Paycheques_Timetracks WHERE timetrack_id=timetracks.id)',
 );
 
 %transforms = (
@@ -46,7 +48,6 @@ $serial = 'timetracks_id_seq';
 	'updated_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 	'rate'			=>	undef,
-	'paycheque_id'	=>	undef,
 	'currency_id'	=>	undef,
 	'owner_id'		=>	undef,
 	'invoice_id'	=>	undef,
@@ -124,8 +125,19 @@ sub Employee {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub Employee
 
+sub Paycheques {
+	if ( ! exists $_[0]{'Paycheques'} ) {
+		$_[0]{'Paycheques'} = [ map { $_->Paycheque() } openprint::Paycheque_Timetrack->find('timetrack_id'=>$_[0]{'id'}) ];
+	} # end if
+	return @{$_[0]{'Paycheques'}};
+} # end sub Paycheques
+sub paycheque_id {
+	my $PT = openprint::Paycheque_Timetrack->find_one('timetrack_id'=>$_[0]{'id'});
+	return $$PT{'paycheque_id'} if $PT;
+	return undef;
+} # end sub paycheque_id
 sub paid {
-	return $_[0]->paycheque_id() ? 1 : 0;
+	return $_[0]->Paycheques() ? 1 : 0;
 } # end sub paid
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
@@ -134,7 +146,6 @@ sub invoiced {
 sub copy {
 	my $New = $_[0]->SUPER::copy();
 	delete $$New{'invoice_id'};
-	delete $$New{'paycheque_id'};
 	return $New;
 } # end sub copy
 

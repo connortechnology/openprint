@@ -19,13 +19,16 @@ require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
 require openprint::Location;
+require Email::Valid;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->delete();
 		%param = ();
@@ -89,9 +92,6 @@ sub edit {
 sub _locations {
 } # end sub _locations
 
-sub list {
-} # end sub list
-
 sub category {
 	my $Category = $variable{'Category'} = new openprint::Event_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
@@ -120,6 +120,7 @@ sub category {
 } # end sub category
 
 sub view {
+	$param{'event_id'} =~ s/\D//g;
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	if ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $Event->delete();
@@ -161,7 +162,9 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
-	} # end if
+	} elsif ( $param{function} eq 'Send' ) {
+		$variable{'error'} .= $Event->send_invitations();
+	} # end if function
 } # end sub view
 
 sub _view {
@@ -181,6 +184,65 @@ $log->debug("Got: " . $Attending->to_string() );
 		});
 	} # end if
 } # end sub _attendance
+
+sub _invitation_popup {
+	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
+} # end sub _invitation_popup
+
+sub _invitation_users {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( $param{'action'} eq 'set' ) {
+		my %old = map { $_->user_id(), $_ } $Event->Invitations();
+		foreach my $user_id ( sets::exclude( ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ], [ keys %old ] ) ) {
+			$old{$user_id}->delete();
+		} # end foreach
+		if ( $param{user_id} ) {
+			foreach my $user_id ( sets::exclude( [ keys %old ], ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ] ) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
+			} # end foreach
+		} # end if
+	} elsif ( $param{'action'} eq 'add' ) {
+		if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$param{user_id}) ) {
+			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});
+			#$Event->invited_user_ids(undef);
+		} # end if
+	} elsif ( $param{action} eq 'add by relationship' ) {
+		if ( $param{relationship_id} ) {
+			my %old = map { $_->user_id(), $_ } $Event->Invitations();
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id1=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id2}});
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id2=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id1}});
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+		} # end if
+	} elsif ( $param{'email'} ) {
+		foreach my $address ( misc::trim(split(',',$param{email})) ) {
+			if ( ! Email::Valid->address( $address ) ) {
+				$variable{'error'} .= $address . ' is not a valid email address.<br/>';
+				next;
+			} # end if
+			my $User = openprint::User->find_one('email lc'=>lc $address);
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$User->save({email=>$address});
+			} # end if
+			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$$User{id}) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$$User{id}});
+#$Event->invited_user_ids(undef);
+			} # end if
+		} # end foreach address
+	} # end if
+} # end sub _invitation_users
+
+sub _user_name {
+} # end sub _user_name
 
 1;
 __END__

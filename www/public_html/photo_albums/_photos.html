@@ -6,30 +6,30 @@
 		'created_by not in'=> [ map { $_->id() } openprint::User->find('company_id'=> new openprint::User($session{'user_id'})->company_id() ) ],
 		);
 	if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) {
-		$params{'user_id'} = $session{'/photo_albums/photos.html?user_id'} if exists $session{'/photo_albums/photos.html?user_id'};
-		$params{'company_id'} = $session{'/photo_albums/photos.html?company_id'} if exists $session{'/photo_albums/photos.html?company_id'};
+		$params{'created_by'} = $session{'/photo_albums/photos.html?user_id'} if $session{'/photo_albums/photos.html?user_id'};
+		$params{'company_id'} = $session{'/photo_albums/photos.html?company_id'} if $session{'/photo_albums/photos.html?company_id'};
 	} # end if
 	my @Assets = openprint::Asset->find( %params );
 	my @Final_Assets;
 	my %Albums = map { $$_{'asset_id'}, $_ } openprint::Photo_in_Album->find( 'asset_id'=>[ map { $$_{'id'} } @Assets ] );
-	foreach my $Asset ( openprint::Asset->find( %params ) ) {
-		next if $Albums{$$Asset{'id'}};
+	foreach my $Asset ( @Assets ) {
+		next if ! $Albums{$$Asset{'id'}};
 		next if ! $Asset->can_view();
 		push @Final_Assets, $Asset;
 	} # end foreach Asset
 
 	my $html;
 	if ( @Final_Assets ) {
-		$html .= '<div id="BigImage"><img id="Image" src="'.$Final_Assets[0]->url().'"/>';
-		$html .= $Final_Assets[0]->asset_html();
+		$html .= '<div id="BigImage">';
+		$html .= $Final_Assets[0]->medium_html( { id=>'Image' } );
 		$html .= '<p class="buttons">';
 		#$html .= ssi::button('Prev', { onclick=>'$(
-		$html .= '<p></div>';
+		$html .= '</p></div>';
 	} # end if
 	$html .= '<div class="thumbnails">';
 
 	foreach my $Asset ( @Final_Assets ) {
-		$html .= q`<span onclick="$('Image').src='`.$Asset->url().q`';">`;
+		$html .= q`<span onclick="$('Image').src='`.$Asset->sized_url('medium').q`';">`;
 		$html .= $Asset->thumbnail_html();
 		$html .= '</span>';
 	} # end foreach Asset;

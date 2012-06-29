@@ -4,6 +4,7 @@ require Date::Format;
 require openprint::Event_Category;
 require openprint::Comment;
 require openprint::Event_Attendance;
+require openprint::Event_Invitation;
 
 package openprint::Event;
 our @ISA = qw( openprint::Object );
@@ -90,10 +91,15 @@ sub where {
 sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
-		if ( $$Album{'thumbnail_id'} ) {
-			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
-		} elsif ( my @Photos = $Album->Photos() ) {
-			$_[0]{'Asset'} = $Photos[0]->Asset();;
+		if ( $Album->id() ) {
+$openprint::log->debug("Album? " . $Album->to_string() );
+			if ( $$Album{'thumbnail_id'} ) {
+				$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+			} elsif ( my @Photos = $Album->Photos() ) {
+				$_[0]{'Asset'} = $Photos[0]->Asset();;
+			} else {
+				$_[0]{'Asset'} = new openprint::Asset();
+			} # end if
 		} else {
 			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
@@ -122,6 +128,7 @@ sub Photos {
 } # end sub Photos
 
 sub Album {
+$openprint::log->debug("Loading album: $_[0]{'album_id'}");
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 
@@ -160,14 +167,16 @@ sub html {
 	my $Event = $_[0];
 	my $html = sprintf(q`
 			<div class="Event">
-			<a class="thumbnail" href="/event/view.html?event_id=%1$d"><img alt="" src="%2$s"/></a>
-			<span class="name"><a href="/event/view.html?event_id=%1$d">%3$s</a></span>
-			<span class="when">%4$s</span>
-			`, $Event->id(),
-			$Event->Asset()->thumbnail_url(),
-			ssi::htmlize($Event->name()),
-			( $Event->starting_on() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ) : '' ),
-
+			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
+			<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
+			<div class="When">%4$s</div>
+			<div class="Where">%5$s</div>
+			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
+                    $Event->time_string(),
+                    $Event->where(),
+			$Event->Asset()->layout(),
+			$Event->Asset()->medium_url(),
 			);
 	my @Comments = $Event->Comments();
 	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
@@ -217,6 +226,10 @@ sub time_string {
 	return $_[0]{'time_string'};
 } # end sub time_string
 
+sub thumbnail_id {
+	return undef;
+} # end sub thumbnail_id
+
 sub thumbnail_html {
 	if ( ! $_[0]{'thumbnail_html'} ) {
 		my $Asset = $_[0]->Asset();
@@ -250,6 +263,44 @@ sub upload {
 	} # end if
 	return $Album->upload( @_ );
 } # end sub upload
+
+sub view_url {
+	return '/event/view.html?event_id='.$_[0]{'id'};
+} # end sub view_url
+
+sub invited_user_ids {
+	return map { $_->user_id() } openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub invited_user_ids
+
+sub Invitations {
+	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub Invitations
+
+sub send_invitations {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{'Event'} = $self;
+	$data{'uri'} = 'event';
+	$data{'User'} = new openprint::User($openprint::session{user_id});
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+
+	my $Email = new openprint::Email();
+	my $results = $Email->send(
+		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#'TO'			=>	[map { $_->$self->Invitations()],
+		'FROM'			=>	$self->Created_By(),
+		'ATTACHMENTS'	=>	\@attachments,
+		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
+	);
+	$self->add_to_log( $results );
+	return $results;
+} # end sub send_invitations
 
 1;
 __END__

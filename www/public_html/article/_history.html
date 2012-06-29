@@ -51,7 +51,7 @@
 				$Article->Category()->name(),
 				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->created_on() ) ),
 				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
-				ssi::htmlize($Article->title()),
+				ssi::escape_quotes($Article->title()),
 				$rowclass,
 				);
 				$rowclass = $rowclass ? '' : ' class="colRow"';

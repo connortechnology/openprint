@@ -27,11 +27,11 @@
 				foreach my $qty_index ( $QP->Project()->quantity_indexes() ) {
 					my $weight;
 
-					if ( $services{'BulkSkids'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
+					if ( $$services{'BulkSkids'} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
 						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-					} elsif ( $services{'PlainCartons'} ) {
-						my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
+					} elsif ( $$services{'PlainCartons'} ) {
+						my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 						$weight = $$specs{'totalWeight'.$$variable{qty_index}};
 					} else {
 						$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
@@ -53,41 +53,8 @@
 			return $html;
 		) ?>
 	</table>
-<? endif ( $$variable{'Quote'}->Projects() ) ?>
-<? if ( $$variable{'Quote'}->Products() ) ?>
-<table>
-	<thead>
-		<tr>
-			<th class="description">Product</th>
-			<th class="quantity">Quantity</th>
-			<th class="price">Price</th>
-		</tr>
-	</thead>
-	<tbody>
-		<? echo (
-			my $html;
-			my $rowclass;
-			my $subtotal = 0;
-			foreach my $Product ( $$variable{'Quote'}->Products() ) {
-				$html .= sprintf('<tr%1$s>
-									<td class="description">%3$s</td>
-									<td class="quantity">%4$s</td>
-									<td class="newprice">%5$s</td>
-									</tr>', $rowclass, $Product->id(), $Product->description(), 
-									Number::Format::format_number($Product->quantity()), 
-									openprint::Currency::format( $Product->price() ) );
-				$subtotal += $Product->price();
-				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end foreach Product
-		$html .= '<tr class="totals">';
-		$html .= '<td colspan="2" style="text-align: right;">Subtotal</td><td class="newprice">';
-		$html .= openprint::Currency::format( $subtotal );
-		$html .= '</td></tr>';
-			return $html;
-		) ?>
-	</tbody>
-</table>
-<? endif ( $$variable{'Quote'}->Products() ) ?>
+<? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
+	<!--#include virtual="/email_content/_quote_products_for.html" -->
 	<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
 	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
 </div>

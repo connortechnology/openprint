@@ -49,11 +49,23 @@
 		next if $updated_start and $updated_start > $s{'lastupdated'};
 		next if $updated_end and $updated_end < $s{'lastupdated'};
 
+		my $Host = openprint::Host->find_one(ip=>$s{'ip'});
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->set({ip=>$s{'ip'}});
+			$Host->hostname($Host->resolve()) if ! $Host->hostname();
+			$Host->save();
+		} # end if
+		if ( ! $Host->hostname() ) {
+			$_ = $Host->resolve();
+			$Host->save({hostname=>$_}) if $_;
+		} # end if
+
 		$html .= sprintf('
 			<tr%9$s>
 				<td class="checkbox"><input type="checkbox" name="session_id" value="%1$s"/></td>
 				<td class="session_id"><a href="/employee/it/session.html?session_id=%1$s">%2$s</a></td>
-				<td class="ip"><a href="/employee/it/session.html?session_id=%1$s">%3$s</a></td>
+				<td class="ip" title="%10$s"><a href="/employee/it/session.html?session_id=%1$s">%3$s</a></td>
 				<td class="Company"><a href="/employee/it/session.html?session_id=%1$s">%4$s</a></td>
 				<td class="UserType"><a href="/employee/it/session.html?session_id=%1$s">%5$s</a></td>
 				<td class="User"><a href="/employee/it/session.html?session_id=%1$s">%6$s</a></td>
@@ -64,7 +76,8 @@
 			$s{'user_type'}, new openprint::User( $s{'user_id'} )->name(), 
 			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Session->created_on() ) ),
 			misc::seconds_to_pretty_interval( time - $s{'lastupdated'} ),
-			$rowclass,
+			$rowclass,$Host->hostname(),
+			
 			);
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 	} # end foreach Session

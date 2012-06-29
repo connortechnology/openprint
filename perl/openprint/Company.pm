@@ -15,7 +15,7 @@ require openprint::address;
 require openprint::Company_Profile;
 require openprint::Company_Credit;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -67,6 +67,7 @@ $serial = 'companies_id_seq';
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %find_fields = (
 	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -90,6 +91,7 @@ $serial = 'companies_id_seq';
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 sub Currency {

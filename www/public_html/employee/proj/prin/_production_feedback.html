@@ -32,7 +32,7 @@
 			<td class="User" id="user-<?service_id?>"><? echo ( new openprint::User( $session{'user_id'} )->name(); ) ?></td>
 			<td><textarea id="comment-<?service_id?>" name="comment-<?service_id?>" onkeyup="textarea_resize(this,{min_rows: 1});" rows="1" cols=""></textarea></td>
 			<td>
-				<? echo ( ssi::writeButton( $log, $dbh, 'stop', 'stop.gif', qq`stop_onclick('$$variable{service_id}');`, '', 'Start' ); ) ?>
+				<? echo ( ssi::button( 'Start', { onclick=>qq`stop_onclick('$$variable{service_id}');` } ); ) ?>
 			</td>
 		</tr>
 	</table>

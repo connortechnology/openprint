@@ -46,7 +46,9 @@ $serial = 'locations_id_seq';
 %transforms = (
 	'parent_id'		=>	[ 's/\D//g' ],
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
-	'name'			=>	[ 's/^\s+//', 's/\s+$//' ],
+    'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'postalcode'	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
 	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );
@@ -401,18 +403,29 @@ sub save_location {
 
 	if ( $$param{'location'} ) {
 		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+			( $$param{'address'} ? ( 'address lc'=>lc openprint::Location->transform('address',$$param{'address'}) ) : () ),
 			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
 			);
+		if ( ( ! $Location ) and $$param{'address'} ) {
+		$Location = openprint::Location->find_one('name_lc'=> lc openprint::Location->transform('name',$$param{'location'}),
+			( $parent_id ? ( 'parent_id'=>$parent_id ) : () ),
+			);
+		} # end if
 		if ( ( ! $Location ) or 
 				( $Location->address() and $$param{'address'} and ( $Location->address() ne openprint::Location->transform('address',$$param{'address'}) ) ) or
-				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('address',$$param{'postalcode'}) ) ) or
+				( $Location->postalcode() and $$param{'postalcode'} and ( $Location->postalcode() ne openprint::Location->transform('postalcode',$$param{'postalcode'}) ) ) or
 				( $Location->parent_id() != $parent_id )
 		   ) {
+#$openprint::log->debug("Blah");
+#$openprint::log->debug('No location') if ! $Location;
+#$openprint::log->debug("Address: $$Location{address} $$param{address} " . openprint::Location->transform('address',$$param{'address'}) );
+#$openprint::log->debug("PostalCode: $$Location{postalcode} $$param{postalcode} " . openprint::Location->transform('postalcode',$$param{'postalcode'}) );
+			# Different from what we have in db, add new
 			$Location = new openprint::Location();
 			$error .= $Location->save({
 					'name'			=>	$$param{'location'}, 
 					'parent_id'		=>	$parent_id, 
-					'type'			=>	'place', 
+					($$param{'type_id'}?('type_id'=>$$param{'type_id'}):('type'			=>	'place')), 
 					'address'		=>	$$param{'address'},
 					'postalcode'	=>	$$param{'postalcode'},
 					});
@@ -422,6 +435,7 @@ sub save_location {
 			$change{'address'} = $$param{'address'} if $$param{'address'} and ! $Location->address();
 			$change{'postalcode'} = $$param{'postalcode'} if $$param{'postalcode'} and ! $Location->postalcode();
 			if ( %change ) {
+$openprint::log->debug("Change:");
 				$error .= $Location->save( \%change );
 			} # end if
 		} # end if
@@ -447,6 +461,8 @@ sub from_ip {
 	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
 	return if ! $record;
 
+	my $ac = sql::start_transaction( $openprint::dbh );
+	$openprint::dbh->do( 'LOCK TABLE Orders IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( $openprint::dbi->errstr() );
 	my $Country = openprint::Location->find_one('type'=>'country','name lc'=>lc $record->country_name());
 	if ( ! $Country ) {
 		$Country = new openprint::Location();
@@ -464,6 +480,7 @@ sub from_ip {
 		$City = new openprint::Location();
 		$City->save({'name'=>$record->city(),'type'=>'city','parent_id'=>$State->id()});
 	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 	return $City;
 } # end sub from_ip
 

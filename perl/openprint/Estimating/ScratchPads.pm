@@ -111,7 +111,7 @@ $log->debug("ScratchPads::calc");
 #$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
         if ( ! exists $override_pages{$group_id} ) {
             $override_pages{$group_id} = $remaining_pages;
             $remaining_pages = 0;

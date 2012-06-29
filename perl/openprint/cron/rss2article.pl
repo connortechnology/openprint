@@ -52,26 +52,27 @@ if ($opts->{help}) {
 }
 
 $log = new logger( {'level'=>'debug'});
-# Get our configuration information
-if (my $err = ReadCfg('/etc/rss2article.conf')) {
-    die $err;
-}
+configuration::from_file('/etc/rss2article.conf');
+configuration::merge( $opts );
+$log->level($config{'log_level'}) if $config{'log_level'};
+
 # Declare variables
 foreach my $param ( 'db_name','db_user','db_pass' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $CFG::Config{'db_host'},
-	'database'	=> $CFG::Config{'db_name'},
+	'host'		=> $config{'db_host'},
+	'database'	=> $config{'db_name'},
 	'driver'	=> 'Pg',
-	'login'		=> $CFG::Config{'db_user'},
-	'password'	=> $CFG::Config{'db_pass'},
+	'login'		=> $config{'db_user'},
+	'password'	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
 configuration::init( $log, $dbh, \%CFG::Config );
+configuration::from_file('/etc/rss2article.conf');
+configuration::merge( $opts );
 
 # create new instance of XML::RSS
 my $rss = new XML::RSS;
@@ -79,7 +80,7 @@ my $rss = new XML::RSS;
 #my @Feeds = split(',', ( $CFG::Config{'RSS_Feeds'} ? $CFG::Config{'RSS_Feeds'} : $config{'RSS_Feeds'} ) );
 #@Feeds = openprint::Feed->find() if ! @Feeds;
 
-foreach my $Feed ( openprint::Feed->find() ) {
+foreach my $Feed ( openprint::Feed->find('active'=>1) ) {
 	my $content;
 	my $file;
 	my $arg = $Feed->url();
@@ -148,34 +149,6 @@ $log->debug( "Already have article for $$item{title}" );
 		} # end if
     } # en dforeach
 } # end foreach Feed
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 1;
 __END__

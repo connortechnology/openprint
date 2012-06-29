@@ -27,6 +27,9 @@ sub _action {
 sub edit {
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
 	if ( $param{'action'} eq 'Save' ) {
+		foreach ( 'country','state','city','location' ) {
+			$param{$_} = openprint::Location->transform('name',$param{$_});
+		}	
 		my $parent_id;
 		if ( $param{'country'} ) {
 			my $Country = openprint::Location->find_one('name lc'=> lc $param{'country'}, 'type'=>'country' );
@@ -35,18 +38,34 @@ sub edit {
 				$variable{'error'} .= $Country->save({'name'=>$param{'country'}, 'type'=>'country'});
 			} # end if
 			$parent_id = $param{'country_id'} = $Country->id();
-		} elsif ( $param{'country_id'} ) {
-			$parent_id = $param{'country_id'};
 		} # end if
+		if ( $param{'country_id'} ) {
+			my $Country = new openprint::Location($param{'country_id'});
+			if ( $Country->id() ) {
+				$parent_id = $param{'country_id'};
+			} else {
+				$log->error('Country specified, but not found!?');
+			} # end if
+		} # end if
+
 		if ( $param{'state'} ) {
 			my $State = openprint::Location->find_one('name lc'=> lc $param{'state'}, 'type'=>['state','province']);
 			if ( ! $State ) {
 				$State = new openprint::Location();
 				$variable{'error'} .= $State->save({'name'=>$param{'state'}, 'type'=>'state', 'parent_id'=>$param{'country_id'}});
 			} # end if
-			$parent_id = $param{'state_id'} = $State->id();
-		} elsif ( $param{'state_id'} ) {
-			$parent_id = $param{'state_id'};
+			$param{'state_id'} = $State->id();
+		} # end if
+		if ( $param{'state_id'} ) {
+			my $State = new openprint::Location($param{'state_id'});
+			if ( $State->id() ) {
+				if ( $parent_id and ! $State->parent_id() ) {
+					$State->save({'parent_id'=>$parent_id});
+				} # end if
+				$parent_id = $param{'state_id'};
+			} else {
+				$log->error('State specified, but not found!?');
+			} # end if
 		} # end if
 		if ( $param{'city'} ) {
 			my $City = openprint::Location->find_one('name lc'=> lc $param{'city'}, 'type'=>'city');
@@ -54,9 +73,18 @@ sub edit {
 				$City = new openprint::Location();
 				$variable{'error'} .= $City->save({'name'=>$param{'city'}, 'type'=>'city', 'parent_id'=>$param{'state_id'}});
 			} # end if
-			$parent_id = $param{'city_id'} = $City->id();
-		} elsif ( $param{'city_id'} ) {
-			$parent_id = $param{'city_id'};
+			$param{'city_id'} = $City->id();
+		} # end if
+		if ( $param{'city_id'} ) {
+			my $City = new openprint::Location($param{'city_id'});
+			if ( $City->id() ) {
+				if ( $parent_id and ! $City->parent_id() ) {
+					$City->save({'parent_id'=>$parent_id});
+				} # end if
+				$parent_id = $param{'city_id'};
+			} else {
+				$log->error('City specified, but not found!?');
+			} # end if
 		} # end if
 			
 		if ( ( $_ = openprint::Location->find_one(

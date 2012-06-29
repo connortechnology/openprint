@@ -40,6 +40,7 @@ if ($opts->{help}) {
 $log = new logger( {'level'=>'debug'});
 configuration::init( );
 configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::merge( $opts );
 
 # Declare variables
 foreach my $param ( 'db_name','db_user','db_pass' ) {
@@ -61,6 +62,7 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 configuration::from_db( );
 configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::merge( $opts );
 
 $session{'company_id'} = $config{'owner_id'};
 $ENV{'DOCUMENT_ROOT'} = $config{'DOCUMENT_ROOT'};

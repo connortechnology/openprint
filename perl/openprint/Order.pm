@@ -60,6 +60,7 @@ $serial = 'orders_id_seq';
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
 	'terms_accepted'			=>	'terms_accepted',
+	'supplier_id'				=>	'supplier_id',
 	);
 
 sub save {
@@ -340,24 +341,21 @@ sub Currency {
 
 sub pay {
 	my $self = shift;
-
-	my ( $company_index, $currency_id, $amount, $paid ) = $self->get('company_id','currency_id','total','paid');
-	if ( $amount - $paid <= 0 ) {
+	if ( $self->owing() <= 0 ) {
 		$self->update_status();
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
-	my $Payment = new openprint::Payment();
-	my $error = $Payment->save( {
-			'order_id'		=> $$self{id},
-			'recipient_id'	=>	new openprint::User( $openrpint::session{'user_id'} )->company_id(),
-			'payor_id'		=> $$self{company_id},
-			'amount'		=> $amount - $paid,
-			'method'		=> 'Manual',
-			'currency_id',	=> $$self{currency_id},
-			'memo'			=> 'Order marked paid',
-			'completed'		=> 1,
-			} );
+	my $error = (new openprint::Payment())->save({
+			'order_id'		=>	$$self{id},
+			'payor_id'		=>	$$self{company_id},
+			'recipient_id'	=>	$self->supplier_id(),
+			'amount'		=>	$self->owing(),
+			'method'		=>	'Manual',
+			'currency_id'	=>	$$self{currency_id},
+			'memo'			=>	'Order marked paid',
+			'received_on'	=>	'NOW()',
+			});
 	if ( ! $error ) {
 		$self->update_status();
 	} # end if
@@ -512,7 +510,7 @@ sub send_sales_order {
 		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
-		ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries ],
+		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
@@ -668,9 +666,21 @@ sub cod_owing {
 } # end sub cod_owing
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
-	return int($_[0]->paid()/$cod_total) * 100 if $cod_total;
+	return 100-int($_[0]->paid()*100/$cod_total) if $cod_total;
 	return 0;
 } # end sub cod_owing_percent
+sub supplier_id {
+	if ( @_ > 1 ) {
+		$_[0]{supplier_id} = $_[1];
+	} 
+	if ( ! $_[0]{supplier_id} ) {
+		$_[0]{supplier_id} = $openprint::config{'Owner'};
+	} # end if
+	return $_[0]{supplier_id};
+} # end sub supplier_id
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
 
 1;
 __END__

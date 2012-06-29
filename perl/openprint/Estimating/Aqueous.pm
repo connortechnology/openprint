@@ -130,7 +130,7 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
-				$$specs{'alert'} .= 'No imposition was found for printing. Please complete the printing estimation first.<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= 'No imposition was found for printing.<br/>';
 				next;
 			} # end if
 			my $Imposition = new openprint::Imposition();
@@ -221,7 +221,7 @@ sub signature_calc {
 			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $Project, $sig_specs );
 
 	my @different_types = sets::union( @front_aq, @back_aq );
 

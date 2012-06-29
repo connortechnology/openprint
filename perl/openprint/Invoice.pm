@@ -1,5 +1,5 @@
 use strict;
-use Math::Round;
+require Math::Round;
 package openprint::Invoice;
 our @ISA = qw(openprint::Object);
 #use Carp qw(cluck);
@@ -22,7 +22,7 @@ require openprint::Timetrack;
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
@@ -266,6 +266,7 @@ sub Taxes {
 		@{$$self{'Taxes'}} = openprint::Invoice_Tax->find('invoice_id'=>$$self{'id'});
 	} # end if
 	if ( ! ( $$self{'Taxes'} and @{$$self{'Taxes'}} ) ) {
+		$$self{'Taxes'} = [];
 		foreach my $Tax ( openprint::Tax->find(
 					'period_start_null_or_<='	=>	$$self{'created_on'},
 					'period_end_null_or_>='		=>	$$self{'created_on'},

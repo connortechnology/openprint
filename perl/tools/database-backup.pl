@@ -80,9 +80,9 @@ foreach my $db ( @dbs ) {
 			} # end if
 		} # end if
 		if ( $$opts{host} and $$opts{host} ne 'local' ) {
-			system("pg_dump -b -h $$opts{host} $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
+			system("pg_dump -b -Fc -h $$opts{host} $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
 		} else {
-			system("pg_dump -b $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
+			system("pg_dump -b -Fc $db | bzip2 > $path/$db/$year-$mon-$mday.sql.new.bz2");
 		} # end if
 		die "Can't dump $db" if $?;
 		if ( ! rename( "$path/$db/$year-$mon-$mday.sql.new.bz2", "$path/$db/$year-$mon-$mday.sql.bz2" ) ) {

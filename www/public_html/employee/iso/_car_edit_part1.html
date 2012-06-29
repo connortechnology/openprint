@@ -225,7 +225,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 </form>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','_car_view_part1.html',
+		ssi::button( 'Save', { onclick=>"if(check_part1(\$('part1form'))){new Ajax.Updater('Part1','/employee/iso/_car_view_part1.html',
 		{
 			parameters: \$('part1form').serialize(),
 			evalScripts: true,

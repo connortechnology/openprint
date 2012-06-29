@@ -43,8 +43,7 @@ sub edit {
 		my $NewProduct = $Product->copy();
 		$NewProduct->save();
 
-# Add record to audit log - action "Copy Product".
-		openprint::logs::insertLogRecord('60', "Original Product ID: " . $param{'product_id'} . " Name: " . $NewProduct->name(),);
+		(new openprint::Log())->save({'action'=>'Copy Product', 'note'=>'Original Product ID: ' . $param{'product_id'} . ' Name: ' . $NewProduct->name(), 'Object'=>$NewProduct });
 
 		foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $param{'product_id'} ) ) {
 			$$Price{'product_id'} = $NewProduct->id();
@@ -54,7 +53,10 @@ sub edit {
 		$Product = $NewProduct;
 
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$Product->delete();
+		if ( ! ( $variable{'error'} .= $Product->delete() ) ) {
+			$variable{'information'} .= 'Product deleted successfully.';
+			$Product = $Product->next();
+		} # end if
 	} elsif ( $param{'btnFunction'} eq '>>' ) {
 		$Product = $Product->next();
 	} elsif ( $param{'btnFunction'} eq '<<' ) {

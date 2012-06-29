@@ -12,6 +12,7 @@ $serial = 'materialspecification_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'material_id'	=>	'material_id',
+	'equipment_id'	=>	'equipment_id',
 	'min'			=>	'min',
 	'max'			=>	'max',
 	'units'			=>	'units',
@@ -23,6 +24,8 @@ $serial = 'materialspecification_id_seq';
 %transforms = (
 );
 %defaults = (
+	'equipment_id'	=>	undef,
+	'interpolate'	=>	1,
 );
 
 1;

@@ -47,6 +47,10 @@
 				<label>Auto Publish</label>
 				<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No' ], $$variable{'Feed'}->published() ); ) ?>
 			</li>
+			<li>
+				<label>Active</label>
+				<? echo ( ssi::radio( 'active', [ '1', 'Yes', '0', 'No' ], $$variable{'Feed'}->active() ); ) ?>
+			</li>
 		</ul>
 	</fieldset>
 	<input type="hidden" name="action"/>

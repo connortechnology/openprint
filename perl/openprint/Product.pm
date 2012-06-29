@@ -28,6 +28,7 @@ $serial = 'products_id_seq';
 	'deleted'		=>	'deleted',
 	'owner_id'		=>	'owner_id',
 	'created_on'	=>	'created_on',
+	'album_id'		=>	'album_id',
 );
 
 %transforms = (
@@ -44,6 +45,7 @@ $serial = 'products_id_seq';
 	'owner_id'		=>	q`$session{'company_id'}`,
 	'deleted'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
+	'album_id'		=>	undef,
 );
 
 sub destroy {
@@ -68,6 +70,7 @@ sub copy {
 	@$Product{keys %fields} = @$self{keys %fields};
 	$$Product{'name'} = 'Copy of '.$$Product{'name'};
 	delete $$Product{'id'};
+	delete $$Product{'album_id'};
 	$self->specifications();
 	%{$$Product{'Specifications'}} = %{$$self{'Specifications'}};
 	return $Product;
@@ -170,7 +173,7 @@ sub del_specification {
 
 sub next {
 	my $self = shift;
-	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name > (SELECT name FROM Products WHERE Id=?) ORDER BY name LIMIT 1}, $$self{'id'} );
+	my ( $id ) = sql::execute( undef, undef, q{SELECT id FROM Products WHERE name >= (SELECT name FROM Products WHERE id=?) ORDER BY lower(name) LIMIT 1}, $$self{'id'} );
 	$id = $$self{'id'} if ! $id;
 	
 	return new openprint::Product( $id );
@@ -183,6 +186,58 @@ sub previous {
 	return new openprint::Product( $id );
 } # end sub previous
 
+sub Photos {
+    if ( ! $_[0]{'album_id'} ) {
+        return ();
+    } # end if
+    return $_[0]->Album()->Photos( );
+} # end sub Photos
+
+sub Album {
+	my $Album = new openprint::Photo_Album( $_[0]{'album_id'} );
+	if ( ! $Album->id() ) {
+	$Album->name('Photos for product '.$_[0]{'name'});
+	} # end if
+    return $Album;
+} # end sub Album
+
+sub thumbnail_html {
+	my $self = shift;
+    if ( ! $$self{'thumbnail_html'} ) {
+        my $Album = new openprint::Photo_Album( $$self{'album_id'} );
+        my $Asset;
+		if ( $Album and $$Album{'id'} ) {
+			$Asset = $Album->Thumbnail();
+		} else {
+			$openprint::log->debug("No Album for Product $$self{id} $$self{name}");
+		} # end if
+		if ( $Asset and $$Asset{'id'} ) {
+			$$self{'thumbnail_html'} = sprintf('<a href="/product/view.html?product_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
+					$$self{'id'}, $Asset->thumbnail_url(), $$self{'name'} );
+		} else {
+			$openprint::log->debug("No Asset for Product $$self{id} $$self{name}");
+		} # end if
+    } # end if
+    return $$self{'thumbnail_html'};
+} # end sub thumbnail_html
+
+sub upload {
+    my $self = shift;
+    my $Album = $self->Album();
+    if ( ! $Album->id() ) {
+        $Album->save({ 'Images for product: ' . $$self{'name'} });
+        $self->save({'album_id'=>$Album->id()});
+    } # end if
+    return $Album->upload( @_ );
+} # end sub upload
+
+
+sub can_edit {
+    if ( $_[0]{'id'} and $openprint::session{'user_type'} eq 'A' ) {
+        return 1;
+    } # end if
+    return 0;
+} # end sub can_edit
 
 1;
 __END__

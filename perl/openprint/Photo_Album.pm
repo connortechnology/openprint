@@ -7,7 +7,7 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
@@ -38,11 +38,11 @@ sub created_by {
 sub Thumbnail {
 	if ( ! $_[0]{'Thumbnail'} ) {
 		if ( ! $_[0]{'thumbnail_id'} ) {
-	$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
+	#$openprint::log->debug("Album $_[0]{id} No thumbnail assigned, showing first.");
 			my @Photos = $_[0]->Photos();
-	$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned");
+	#$openprint::log->debug("Album $_[0]{id} $_[0]{name} No thumbnail assigned");
 			if ( @Photos ) {
-$openprint::log->debug(", showing first. $Photos[0]{asset_id}");
+#$openprint::log->debug(", showing first. $Photos[0]{asset_id}");
 			$_[0]{'Thumbnail'} = $Photos[0];
 			} # end if
 		} else {
@@ -65,10 +65,10 @@ sub thumbnail_url {
 sub thumbnail_html {
 	my $Photo = $_[0]->Thumbnail();
 	if ( $Photo->asset_id() ) {
-$openprint::log->debug("Photo has asset" . $Photo->to_string() );
+#$openprint::log->debug("Photo has asset" . $Photo->to_string() );
 		return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%1$d" title="%3$s"><img src="%2$s" alt="%3$s" /></a>', $_[0]{id}, $Photo->thumbnail_url(), $_[0]->name() );
 	} # end if
-$openprint::log->debug("Photo no asset"  );
+#$openprint::log->debug("Photo no asset"  );
 	return sprintf('<a class="thumbnail" href="/photo_albums/view.html?album_id=%d" title="%s">Empty</a>', $_[0]{id}, $_[0]{'name'} );
 } # end sub thumbnail_html
 sub asset_html {

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use Date::Calc;
 use strict;
 require sql;
@@ -54,7 +54,7 @@ if ( $year ) {
 } # end if
 
 print "upgrading db ...";
-`/etc/apache2/lib/perl/tools/db_update3.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
+`/var/www/testing/perl/tools/db_update3.pl $dst_db pleasurablethings pleasurablethings` or $log->error($!);
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'pleasurablethings', 'password'=>'pleasurablethings') );
 configuration::init( $log, $dbh );

@@ -40,19 +40,19 @@
 			<li><label>Start</label>
 			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
 						{
-						'onchange'	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
-						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) 
+						onchange	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
+						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						with_today	=>	1,
 						} ); ) ?>
-			<? echo ( ssi::button( 'Today_start', { onclick=>'set_today( f1.starting_year, f1.starting_month, f1.starting_day, f1.starting_hour, f1.starting_minute );', href=>'', text=>'T' } ); ) ?>
 </span>
 			</li>
 			<li><label>End</label>
 			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
 						{
-						'onchange'	=>	q`update_duration(this.form,'starting','ending');`,
-						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						onchange	=>	q`update_duration(this.form,'starting','ending');`,
+						showtime	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						with_today	=>	1,
 						} ); ) ?>
-			<? echo ( ssi::button( 'Today_end', { onclick=>'set_today( f1.ending_year, f1.ending_month, f1.ending_day, f1.ending_hour, f1.ending_minute );', href=>'', text=>'T' } ); ) ?>
 </span>
 			</li>
 			<li><label>Duration</label>
@@ -91,12 +91,12 @@
 					<a href="/invoice/view.html?invoice_id=<? echo ( $$variable{'Timetrack'}->invoice_id() ) ?>"><? echo ( $$variable{'Timetrack'}->invoice_id() ) ?></a>
 				</li>
 				<? endif ( $$variable{'Timetrack'}->invoice_id() ) ?>
-				<? if ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+				<? if ( $$variable{'Timetrack'}->Paycheques() ) ?>
 				<li>
 					<label>Paycheque</label>
-					<a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?>"><? echo ( $$variable{'Timetrack'}->paycheque_id() ) ?></a>
+					<? echo ( join('<br/>', map { sprintf('<a href="/paycheque/edit.html?paycheque_id=%1$d">%1$d</a>', $_ ); } $$variable{'Timetrack'}->Paycheques() ); ) ?>
 				</li>
-				<? endif ( $$variable{'Timetrack'}->paycheque_id() ) ?>
+				<? endif ( $$variable{'Timetrack'}->Paycheques() ) ?>
 			</ul>
 		</div>
 		</div>

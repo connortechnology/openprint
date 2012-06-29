@@ -585,7 +585,7 @@ sub signature_calc {
 					push @Set_Of_Impositions, $I;
 				} # end if
 			} # end foreach I in the set of impositons
-		} # end if
+		} # end if finalwidth and height
 		# Now we have a base set of Maximal Impositions.  Now some of the I's in this set may have an imposition > 1.  
 		# Problem is that we apparently also need to price the situation of doing them 1 out, and everything in between.  
 		if ( DEBUG and 1 ) {
@@ -1256,17 +1256,15 @@ sub calc {
 
 		my $previous_imposition;
 
+		my @signatures = sort $Project->signatures();
 		my @Signature_Impositions;
-		foreach ( $Project->signatures() ) {
-			my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
-			next if ! $$s_specs{'txtImposition'.$qty_index};
+		foreach ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $i = new openprint::Imposition();
-			$i->load( $s_specs, $qty_index );
+			$i->load( $sig_specs, $qty_index );
 			push @Signature_Impositions, $i;
-		} # end foreach ss_id
-		# Clear them all first
-		foreach my $signature_service_index ( sort $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+
 			if ( $$specs{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {
 				foreach my $index ( 1 .. 4 ) {
 					$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = '';
@@ -1282,13 +1280,11 @@ sub calc {
 		} # end foreach signature
 
 		my $calc_hash = {};
-
-		foreach my $signature_service_index ( sort $Project->signatures() ) {
+		foreach my $signature_service_index ( @signatures ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			$$specs{'hdnBreakdown'.$qty_index} .= "<fieldset><legend>Signature: $$sig_specs{SignatureIndex} $$sig_specs{'txtSignatureType'} Ref: $$sig_specs{'txtServiceDescription'}:</legend>";
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index ) . '<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= openprint::service::summary( $Project, $signature_service_index, $qty_index ) . '<br/>';
-
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
 
@@ -1349,7 +1345,7 @@ sub calc {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 					} # end if
 					$status = 'uncalculated';
-$openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
+					$$specs{'alert'} .= "Unable to fold form $$sig_specs{SignatureIndex} qty $qty_index<br/>";
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';

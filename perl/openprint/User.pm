@@ -255,10 +255,12 @@ sub alias {
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
+	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) ) {
 		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
-	} else {
+	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
+	} else {
+		return $_[0]->email();
 	} # end if
 } # end sub name
 
@@ -469,7 +471,7 @@ sub last_logged_in {
 	if ( ! $_[0]{'last_logged_on'} ) {
 		# Almost any entry means we were logged in.  
 		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs == 1 ) {
+		if ( @Logs >= 1 ) {
 			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
 		} else {
 			$openprint::log->debug("@ of logs returned " . @Logs );

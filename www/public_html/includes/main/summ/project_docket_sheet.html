@@ -270,7 +270,7 @@
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';
-				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $$variable{Project}, $sig_specs );
 				my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 				my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()};
