@@ -26,9 +26,10 @@
 		</li>
 	</ul>
 	<p class="buttons">
-			<? echo ( 
-					ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
-			) ?>
+			<? echo ( join('',
+					ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } ),
+					ssi::button( 'Close', { href=>'view.html?event_id='.$$variable{Event}->id() } ),
+					); ) ?>
 	</p>
 </fieldset>
 </form>
