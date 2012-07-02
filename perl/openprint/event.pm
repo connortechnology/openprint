@@ -212,13 +212,23 @@ sub _invitation_users {
 	my $privacy_users = $Privacy->user_id();
 	if ( $param{'action'} eq 'set' ) {
 		my %old = map { $_->user_id(), $_ } $Event->Invitations();
-		my @remove_users = sets::exclude( ref $param{'user_id'} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ], [ keys %old ] );
+		my @user_ids;
+		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
+			my ( $company_id, $user_id ) = $id =~ /^(\d+)_(\d*)$/;
+			if ( $company_id and ! $user_id ) {
+				push @user_ids, map { $_->id() } ( new openprint::Company( $company_id )->Users() );
+			} else {
+				push @user_ids, $user_id;
+			} # end if
+		} # end foreach
+		
+		my @remove_users = sets::exclude( \@user_ids, [ keys %old ] );
 		foreach my $user_id ( @remove_users ) {
 			$old{$user_id}->delete();
 		} # end foreach
 		@{$privacy_users} = sets::exclude( \@remove_users, $privacy_users );
 		if ( $param{user_id} ) {
-			my @new_users = sets::exclude( [ keys %old ], ref $param{user_id} eq 'ARRAY' ? $param{user_id} : [ $param{user_id} ] );
+			my @new_users = sets::exclude( [ keys %old ], \@user_ids );
 			foreach my $user_id ( @new_users ) {
 				$variable{'error'} .= (new openprint::Event_Invitation())->save({event_id=>$param{event_id}, user_id=>$user_id});
 			} # end foreach
@@ -226,11 +236,20 @@ sub _invitation_users {
 		} # end if
 		$variable{'error'} .= $Privacy->save({user_id=>$privacy_users});
 	} elsif ( $param{'action'} eq 'add' ) {
-		if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$param{user_id}) ) {
-			new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$param{user_id}});
-			$variable{'error'} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, $param{user_id} ) ] });
-			#$Event->invited_user_ids(undef);
+		my @user_ids;
+		my ( $company_id, $user_id ) = $param{user_id} =~ /^(\d+)_(\d*)$/;
+		if ( $company_id and ! $user_id ) {
+			@user_ids = map { $_->id() } ( new openprint::Company( $company_id )->Users() );
+		} else {
+			@user_ids = ( $user_id );
 		} # end if
+		foreach my $user_id ( @user_ids ) {
+			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$user_id) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
+				$variable{'error'} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, $user_id ) ] });
+				#$Event->invited_user_ids(undef);
+			} # end if
+		} # end foreach user_id
 	} elsif ( $param{action} eq 'add by relationship' ) {
 		if ( $param{relationship_id} ) {
 			my %old = map { $_->user_id(), $_ } $Event->Invitations();
@@ -270,9 +289,6 @@ sub _invitation_users {
 		} # end foreach address
 	} # end if
 } # end sub _invitation_users
-
-sub _user_name {
-} # end sub _user_name
 
 1;
 __END__

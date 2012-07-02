@@ -487,7 +487,7 @@ $openprint::log->debug("last_Logged_in: " . $Logs[0]->to_string() );
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
-$openprint::log->debug("AUTOLOAD $name");
+#$openprint::log->debug("AUTOLOAD $name");
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");

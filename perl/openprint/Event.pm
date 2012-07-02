@@ -140,7 +140,7 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	my $user_id = $_[1] ? $_[1] : $openprint::session{user_id};
+	my $user_id = @_ > 1 ? $_[1] : $openprint::session{user_id};
 	return 1 if ! $_[0]{'id'};
 	return 1 if $openprint::session{user_type} eq 'A';
 	return 1 if $_[0]{created_by} == $user_id;
