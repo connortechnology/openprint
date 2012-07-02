@@ -14,6 +14,18 @@
 <hr/>
 <? endif ( $$variable{'Results'} ) ?>
 <form name="f1" action="email_campaigns.html" method="post">
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
+				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
+				ssi::writeButton( $log, $dbh, 'CopyTop', 'copy.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
+				ssi::writeButton( $log, $dbh, 'ResetTop', 'reset.gif', 'f1.reset();','','Reset'),
+				ssi::writeButton( $log, $dbh, 'RunTop', 'run.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();",'','Run'),
+				ssi::button( 'TestTop', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
+				ssi::button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
+				ssi::button( 'DownloadRecipientsTop', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();",text=>'Download Recipients' } ),
+			); ) ?>
+		</p>
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="campaign_id" value="<? echo ( $$variable{'Campaign'}->id(); ) ?>"/>
 	<fieldset>
