@@ -83,7 +83,7 @@ sub find {
 		$sql .= ' AND invoice_id=?';
 		push @values, $params{'invoice_id'};
 	} # end if
-	if ( exists $params{'company_id'} ) {
+	if ( $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
