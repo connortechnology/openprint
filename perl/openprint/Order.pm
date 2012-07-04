@@ -66,9 +66,7 @@ sub find_one {
 	return $Results[0] if @Results;
 } # end sub find_one
 sub find {
-	if ( $_[0] eq 'openprint::Order' ) {
-		shift;
-	} # end if
+	shift @_ if $_[0] eq 'openprint::Order';
 #$openprint::log->debug("Order::find @_");
 	my %params = @_;
 	my @values;
@@ -85,7 +83,7 @@ sub find {
 		$sql .= ' AND invoice_id=?';
 		push @values, $params{'invoice_id'};
 	} # end if
-	if ( $params{'company_id'} ) {
+	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
 				$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
@@ -152,7 +150,7 @@ sub find {
 		$sql .= ' AND currencyindex=?';
 		push @values, $params{'currency_id'};
 	} # end if
-	if ( $params{'supplier_id'} ) {
+	if ( exists $params{'supplier_id'} ) {
 		$sql .= ' AND supplier_id=?';
 		push @values, $params{'supplier_id'};
 	} # end if
