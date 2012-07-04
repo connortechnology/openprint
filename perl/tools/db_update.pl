@@ -877,6 +877,14 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 		$dbh->do(q`alter table folds add folds integer`) if ( ! exists $$data{'folds'} );
 		$dbh->do(q`alter table folds add angles integer`) if ( ! exists $$data{'angles'} );
 	} # end if
+	if ( sets::isin( 'fold_id_seq', \@sequences ) ) {
+		if ( ! sets::isin( 'folds_id_seq', \@sequences ) ) {
+			$dbh->do('ALTER SEQUENCE fold_id_seq RENAME TO folds_id_seq');
+			$dbh->do(q`ALTER TABLE folds ALTER id SET DEFAULT nextval('folds_id_seq')`);
+		} else {
+			$dbh->do('DROP SEQUENCE fold_id_seq');
+		} # end if
+	} # end if
 } # end if
 
 
