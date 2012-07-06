@@ -872,7 +872,7 @@ if ( ! sets::isin( 'conversations', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='conversations'", 'column_name');
 	if ( ! $$data{deleted} ) {
-		$dbh->do('ALTER TABLE conversation add deleted boolean not null default false');
+		$dbh->do('ALTER TABLE conversations add deleted boolean not null default false');
 	} # end if
 }
 
