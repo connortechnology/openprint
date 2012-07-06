@@ -120,8 +120,14 @@ sub category {
 } # end sub category
 
 sub view {
+	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
+		$param{event_id}=$1;
+		$param{user_id} = $2;
+	} else {
+	
 	$param{event_id} =~ s/\D//g;
 	$param{user_id} =~ s/\D//g;
+	} # end if
 	if ( $param{user_id} ) {
 		$variable{User} = new openprint::User( $param{user_id} );
 	} else {
