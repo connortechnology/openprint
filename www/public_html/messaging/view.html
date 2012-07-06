@@ -62,8 +62,8 @@
 				<div id="To"><!--#include virtual="_to.html"--></div>
 				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
 <? if ( ! $$variable{'Conversation'}->id() ) ?>
-				<div id="Subject"><label>Subject</label>
-					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" />
+				<div id="Subject">
+					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" placeholder="Subject" />
 				</div>
 <? endif ( ! $$variable{'Conversation'}->id() ) ?>
 				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>

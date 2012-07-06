@@ -5,7 +5,7 @@
 			<input type="text" name="user_name" id="user_name"/><br/>
 			<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
 			<script type="text/javascript">
-			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/event/_user_name.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: ',', callback: invitation_add_user_ids } );
+			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: ',', callback: invitation_add_user_ids } );
 			</script>
 		</li>
 		<li><label>By Relationship</label>
@@ -26,9 +26,10 @@
 		</li>
 	</ul>
 	<p class="buttons">
-			<? echo ( 
-					ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
-			) ?>
+			<? echo ( join('',
+					ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } ),
+					ssi::button( 'Close', { href=>'view.html?event_id='.$$variable{Event}->id() } ),
+					); ) ?>
 	</p>
 </fieldset>
 </form>

@@ -101,5 +101,8 @@ sub _comments {
 		} # end if
 	} # end if
 } # end sub _comments
+sub _user_autocomplete {
+} # end sub _user_autocomplete
+
 1;
 __END__

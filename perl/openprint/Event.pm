@@ -140,12 +140,13 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
+	my $user_id = @_ > 1 ? $_[1] : $openprint::session{user_id};
 	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{created_by} == $user_id;
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{'id'};
-	return $Privacy->can_view();
+	return $Privacy->can_view($user_id);
 } # end sub can_view
 
 sub Comments {
@@ -280,9 +281,9 @@ sub send_invitations {
 	my ( $self ) = @_;
 
 	my %data;
-	$data{'Event'} = $self;
-	$data{'uri'} = 'event';
-	$data{'User'} = new openprint::User($openprint::session{user_id});
+	$data{Event} = $self;
+	$data{uri} = 'event';
+	$data{User} = new openprint::User($openprint::session{user_id});
 	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
 	my @attachments;
 	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
@@ -292,8 +293,8 @@ sub send_invitations {
 	my $Email = new openprint::Email();
 	my $results = $Email->send(
 		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
-		'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
-		#'TO'			=>	[map { $_->$self->Invitations()],
+		#'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		'TO'			=>	[map { $_->User() } $self->Invitations()],
 		'FROM'			=>	$self->Created_By(),
 		'ATTACHMENTS'	=>	\@attachments,
 		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},

@@ -17,10 +17,10 @@
 <!--
 <input type="text" id="to_filter" name="to_filter"/>
 -->
-	<input type="text" id="new_to" name="new_to" placeholder="enter name of new person to add (min 3 characterss)"/>
+	<input type="text" id="user_name" name="user_name" placeholder="enter name of new person to add (min 3 characterss)"/>
 		<div id="new_to_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
-		new Ajax.Autocompleter('new_to','new_to_autocomplete', '/messaging/_users.html', { minChars: 3,afterUpdateElement : add_to, callback: add_to_id } );
+		new Ajax.Autocompleter('user_name','new_to_autocomplete', '/includes/_user_autocomplete.html', { minChars: 3,afterUpdateElement : add_to, callback: add_to_id } );
 		</script>
 <!--
 <select name="new_to_id" id="new_to_id" onchange="add_to(this.getValue());">

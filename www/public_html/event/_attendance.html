@@ -16,7 +16,7 @@
 	if ( @yes == 0 ) {
 		$html .= 'No one is attending (yet). ';
 	} elsif ( @yes == 1 ) {
-		if ( $yes[0]{'user_id'} == $session{user_id} ) {
+		if ( $yes[0]{'user_id'} == $variable{User}->id() ) {
 			$html .= 'You are the only person attending.(so far). ';
 		} else {
 			$html .= '1 person is attending.(so far). ';
@@ -25,7 +25,7 @@
 		$html = @yes . ' people are attending. ';
 	} # end if
 	if ( @maybe == 1 ) {
-		if ( $maybe[0]{'user_id'} == $session{user_id} ) {
+		if ( $maybe[0]{user_id} == $variable{User}->id() ) {
 			$html .= 'you might attend.';
 		} else {
 			$html .= '1 person might attend.';
@@ -33,7 +33,7 @@
 	} elsif ( @maybe ) {
 		$html .= @maybe. ' people might attend';
 	} # end if
-	my $myAttendance = new openprint::Event_Attendance( { event_id=>$$variable{Event}{id}, user_id=>$session{user_id} } );
+	my $myAttendance = new openprint::Event_Attendance( { event_id=>$$variable{Event}{id}, user_id=>$variable{User}->id() } );
 	if ( $$myAttendance{'attending'} eq '1' ) {
 		$html .= 'You are attending.';
 	} elsif ( $$myAttendance{'attending'} eq '0' ) {
@@ -45,6 +45,6 @@
 	} # end if
 	
 	$html .= ssi::radio( 'attending', [ '1', 'Yes', '', 'Maybe', '0', 'No' ], $$myAttendance{'attending'}, 
-			{ 'onclick'=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ) } } );` } );
+			{ onclick=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ), user_id: $variable{User}{id} } } );` } );
 	return $html;
 ) ?>

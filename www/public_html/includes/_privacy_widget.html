@@ -15,7 +15,7 @@
 	// adds the currently selected users, so that we can filter them out of returned results
 	function privacy_add_user_ids( input, query ) {
 		var user_ids = get_form_element_array( input.form, 'privacy_user_id' );
-		query += '&user_id=' + user_id.join('&user_id=');
+		query += '&user_id=' + user_ids.join('&user_id=');
 		return query;
 	}
 	function mode_change( e ) {
@@ -43,20 +43,22 @@
 		<input type="radio" name="privacy_mode" id="privacy_modespecific" value="specific" <? echo ( ssi::checked( $$variable{'Privacy'}->mode() eq 'specific' ) ) ?> onclick="mode_change(this);"/>
 		<label class="radio" for="privacy_modespecific">Specific: Users in these groups can view this.</label><br/>
 		<div id="specific_options"<? echo ( $$variable{'Privacy'}->mode() eq 'specific' ? '' : ' style="display: none;"' ) ?>>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<? if ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
 			<div id="UserGroups">
 				<label class="radio">Usergroups: Users in these groups can view this.</label>
 				<ul class="UserGroups">
 				<? echo ( my $html;
 					foreach my $U ( @{$$variable{'UserGroups'}} ) {
-						$html .= sprintf('<li><input type="checkbox" name="privacy_usergroup_id" value="%d" %s/>%s</li>',$U->id(), $U->name(), 
-							ssi::checked( sets::isin( $U->id(), $$variable{'Privacy'}->usergroup_id() ) ) );
+						$html .= sprintf('<li><input type="checkbox" name="privacy_usergroup_id" value="%1$d" %3$s/>%2$s</li>',$U->id(), $U->name(), 
+							ssi::checked( sets::isin( $U->id(), $$variable{Privacy}->usergroup_id() ) ) );
 					} # 
 					return $html;
 				) ?>
 				</ul>
 			</div>
 			<? endif ( @{$$variable{'UserGroups'}} = openprint::UserGroup->find( 'order' => 'lower(name)' ); ) ?>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 			<div id="Relationships">
 				<label class="radio">Relationships: Users in these relationships can view this.</label>
 				<ul class="Relationships">
