@@ -195,6 +195,7 @@ sub edit {
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
 			%param = ();
+			$param{'article_id'} = $Article->id();
 			$variable{'ExternalRedirect'} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
 		} # end if
 	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
