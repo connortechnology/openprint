@@ -886,7 +886,18 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 		} # end if
 	} # end if
 } # end if
-
+if ( ! sets::isin( 'foldspecifications', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/FoldSpecifications.sql}) );
+} else {
+    if ( sets::isin( 'foldspecification_id_seq', \@sequences ) ) {
+        if ( ! sets::isin( 'foldspecifications_id_seq', \@sequences ) ) {
+            $dbh->do('ALTER SEQUENCE foldspecification_id_seq RENAME TO foldspecifications_id_seq');
+            $dbh->do(q`ALTER TABLE foldspecifications ALTER id SET DEFAULT nextval('foldspecifications_id_seq')`);
+        } else {
+            $dbh->do('DROP SEQUENCE foldspecification_id_seq');
+        } # end if
+    } # end if
+} # end if
 
 foreach my $E ( openprint::Equipment->find('Specifications'=>{'Cutting Capable'=>'Y','Stitching Capable'=>'Y'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
