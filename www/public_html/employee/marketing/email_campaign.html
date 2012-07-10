@@ -16,11 +16,11 @@
 <form name="f1" action="email_campaigns.html" method="post">
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyTop', 'copy.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
+				ssi::button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+				ssi::button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+				ssi::button( 'CopyTop', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } ),
 				ssi::writeButton( $log, $dbh, 'ResetTop', 'reset.gif', 'f1.reset();','','Reset'),
-				ssi::writeButton( $log, $dbh, 'RunTop', 'run.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();",'','Run'),
+				ssi::button( 'RunTop', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();", href=>'', text=>'Run' } ),
 				ssi::button( 'TestTop', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
 				ssi::button( 'ViewRecipientsTop', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
 				ssi::button( 'DownloadRecipientsTop', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();",text=>'Download Recipients' } ),
@@ -33,9 +33,11 @@
 		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{'Campaign'}->name() ) ?>" /></p>
 		<p><label>Query</label><textarea name="query" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->query() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->query() ) ?></textarea></p>
 		<p><label>Email From</label><input type="text" name="email_from" value="<? hecho ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
+		<p><label>Override To</label><input type="text" name="email_to" value="<? hecho ( $$variable{'Campaign'}->email_to() ) ?>"  /></p>
 		<p><label>Email Subject</label><input type="text" name="email_subject" value="<? echo ( $$variable{'Campaign'}->email_subject() ) ?>"  /></p>
 		<p><label>Template</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
-		<p><label>Email Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( ssi::count_lines( $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{'Campaign'}->email_text() ); ) ?></textarea></p>
+		<p><label>Email TEXT Body</label><textarea wrap="physical" name="email_text" rows="<? echo ( ssi::count_lines( $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{'Campaign'}->email_text() ); ) ?></textarea></p>
+		<p><label>Email HTML Body</label><textarea wrap="physical" name="email_html" rows="<? echo ( ssi::count_lines( $$variable{'Campaign'}->email_html() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( ssi::html_escape( $$variable{'Campaign'}->email_html() ); ) ?></textarea></p>
 		<p><label>Attachments</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->attachments() ) ?></textarea></p>
 		<p><label>Times to send</label><input type="text" name="timestosend" value="<? echo ( $$variable{'Campaign'}->timestosend() ) ?>"  /></p>
 		<p><label>Time of day to send</label><input type="text" name="timeofday" value="<? echo ( $$variable{'Campaign'}->timeofday() ) ?>"  /></p>
@@ -54,14 +56,14 @@ return $html;
 ) ?></span></p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveBottom', 'save.gif', "f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyBottom', 'copy.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
+				ssi::button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+				ssi::button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+				ssi::button( 'CopyBottom', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Copy';fmCheck(f1);", href=>'', text=>'Copy' } ),
 				ssi::writeButton( $log, $dbh, 'ResetBottom', 'reset.gif', 'f1.reset();','','Reset'),
-				ssi::writeButton( $log, $dbh, 'Run', 'run.gif', "f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();",'','Run'),
+				ssi::button( 'Run', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Run';f1.submit();", href=>'', text=>'Run' } ),
 				ssi::button( 'Test', { onclick=>"f1.action='email_campaign.html';f1.btnFunction.value='Test';f1.submit();",text=>'Test' } ),
 				ssi::button( 'ViewRecipients', { onclick=>"f1.btnFunction.value='View Recipients';f1.submit();",text=>'View Recipients' } ),
-				ssi::writeButton( $log, $dbh, 'DownloadRecipients', 'run.gif', "f1.btnFunction.value='Download Recipients';f1.submit();",'','Download Recipients'),
+				ssi::button( 'DownloadRecipients', { onclick=>"f1.btnFunction.value='Download Recipients';f1.submit();", href=>'', text=>'Download Recipients' } ),
 			); ) ?>
 		</p>
 	</fieldset>

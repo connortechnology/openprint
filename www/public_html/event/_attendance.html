@@ -1,38 +1,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
-	my @Attending = $$variable{'Event'}->Attendance();
-	my ( @yes, @no, @maybe );
-	foreach my $A ( @Attending ) {
-		next if ! defined $$A{'attending'};
-		if ( $$A{'attending'} ) {
-			push @yes, $A;
-		} elsif ( ! defined $$A{'attending'} ) {
-			push @maybe, $A;
-		} else {
-			push @no, $A;
-		} # end if
-	} # end foreach
-	my $html = '';
-	if ( @yes == 0 ) {
-		$html .= 'No one is attending (yet). ';
-	} elsif ( @yes == 1 ) {
-		if ( $yes[0]{'user_id'} == $variable{User}->id() ) {
-			$html .= 'You are the only person attending.(so far). ';
-		} else {
-			$html .= '1 person is attending.(so far). ';
-		} # end if
-	} else {
-		$html = @yes . ' people are attending. ';
-	} # end if
-	if ( @maybe == 1 ) {
-		if ( $maybe[0]{user_id} == $variable{User}->id() ) {
-			$html .= 'you might attend.';
-		} else {
-			$html .= '1 person might attend.';
-		} # end if
-	} elsif ( @maybe ) {
-		$html .= @maybe. ' people might attend';
-	} # end if
+	my $html .= $$variable{Event}->attendance( $variable{User} );
 	my $myAttendance = new openprint::Event_Attendance( { event_id=>$$variable{Event}{id}, user_id=>$variable{User}->id() } );
 	if ( $$myAttendance{'attending'} eq '1' ) {
 		$html .= 'You are attending.';
