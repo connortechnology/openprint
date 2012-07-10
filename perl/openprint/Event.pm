@@ -173,11 +173,13 @@ sub html {
 			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 			<div class="When">%4$s</div>
 			<div class="Where">%5$s</div>
+			<div class="Attending">%8$s</div>
 			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
                     $Event->time_string(),
                     $Event->where(),
 			$Event->Asset()->layout(),
 			$Event->Asset()->medium_url(),
+			$Event->attendance( new openprint::User($openprint::session{user_id}) ),
 			);
 	my @Comments = $Event->Comments();
 	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
@@ -288,20 +290,62 @@ sub send_invitations {
 	my @attachments;
 	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 
 	my $Email = new openprint::Email();
+	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
 		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
 		#'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
 		'TO'			=>	[map { $_->User() } $self->Invitations()],
 		'FROM'			=>	$self->Created_By(),
-		'ATTACHMENTS'	=>	\@attachments,
+		#'ATTACHMENTS'	=>	\@attachments,
 		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
 	);
 	$self->add_to_log( $results );
 	return $results;
 } # end sub send_invitations
+
+sub attendance {
+	my ( $self, $User ) = @_;
+
+	if ( ! $_[0]{'attendance'} ) {
+	    my @Attending = $self->Attendance();
+		my ( @yes, @no, @maybe );
+		foreach my $A ( @Attending ) {
+			next if ! defined $$A{'attending'};
+			if ( $$A{'attending'} ) {
+				push @yes, $A;
+			} elsif ( ! defined $$A{'attending'} ) {
+				push @maybe, $A;
+			} else {
+				push @no, $A;
+			} # end if
+		} # end foreach
+		my $html = '';
+		if ( @yes == 0 ) {
+			$html .= 'No one is attending (yet). ';
+		} elsif ( @yes == 1 ) {
+			if ( $yes[0]{'user_id'} == $User->id() ) {
+				$html .= 'You are the only person attending.(so far). ';
+			} else {
+				$html .= '1 person is attending.(so far). ';
+			} # end if
+		} else {
+			$html = @yes . ' people are attending. ';
+		} # end if
+		if ( @maybe == 1 ) {
+			if ( $maybe[0]{user_id} == $User->id() ) {
+				$html .= 'you might attend.';
+			} else {
+				$html .= '1 person might attend.';
+			} # end if
+		} elsif ( @maybe ) {
+			$html .= @maybe. ' people might attend';
+		} # end if
+		$$self{'attendance'} = $html;
+	} # end if
+	return $$self{'attendance'};
+} # end sub attendance
 
 1;
 __END__

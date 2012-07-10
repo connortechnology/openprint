@@ -79,11 +79,6 @@ function update_total( form ) {
 	<fieldset><legend>Editing Expense</legend>
 		<div class="leftColumn">
 			<ul>
-<!--
-				<li><label>Paid On</label>
-				<span class="DateSelector"><? echo ( ssi::date_select( 'occurred_on', $$variable{'Expense'}->occurred_on() ); ) ?></span>
-				</li>
--->
 				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient</label>
 					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
 					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';">
