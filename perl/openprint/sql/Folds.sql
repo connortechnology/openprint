@@ -1,12 +1,3 @@
-/*
-DROP TABLE IF EXISTS Fold_Specifications;
-DROP SEQUENCE IF EXISTS FoldSpecification_id_seq;
-CREATE SEQUENCE FoldSpecification_id_seq;
-
-DROP TABLE IF EXISTS Folds;
-DROP SEQUENCE IF EXISTS Fold_id_seq;
-CREATE SEQUENCE Fold_id_seq;
-*/
 
 CREATE TABLE Folds (
 	id SERIAL,
@@ -40,15 +31,4 @@ CREATE TABLE Folds (
 	run_overs_units	TEXT,
 	printing_type	TEXT,
 	PRIMARY KEY (id)
-);
-
-CREATE TABLE Fold_Specifications (
-	id	SERIAL,
-	fold_id			INTEGER NOT NULL, FOREIGN KEY (fold_id) REFERENCES Folds (id),
-	min_weight		float,
-	max_weight		float,
-	weight_units	TEXT,
-	runspeed		INTEGER,
-	interpolate		BOOLEAN,
-	PRIMARY KEY (fold_id, id)
 );
