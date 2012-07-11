@@ -103,6 +103,8 @@ sub _comments {
 } # end sub _comments
 sub _user_autocomplete {
 } # end sub _user_autocomplete
+sub _equipment {
+} # end sub _equipment
 
 1;
 __END__

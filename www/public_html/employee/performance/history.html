@@ -11,21 +11,21 @@
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>
 			<li><label>Docket</label>
-				<input type="number" name="docket" id="docket" onkeyup="load('Results',$('f1'));" />
+				<? echo ( ssi::input( type=>'cardinal', name=>'docket', id=>'docket', onkeyup=>q`load('Results',$('f1'));` ); ) ?>
 			</li>
 			<li>
                 <label>Category</label>
-                <select name="category" id="category" onchange="f1.submit();">
+                <select name="category_id" id="category_id" onchange="f1.submit();">
                     <option value="">All</option>
                 <? echo (
-						return ssi::make_drop_down( [ map { $_, $_ } sort( sets::union( map { $_->category() } openprint::Equipment->find( 'useinscheduling'=>1 ) ) ) ], $session{'/employee/performance/history.html?category'} );
+						ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/performance/history.html?category_id'} );
 						) ?>
                 </select>
             </li>
 			<li><label>Equipment</label>
 			<? echo ( 
 				@{$$variable{'Equipment'}} = ();
-				my @presses = openprint::Equipment->find('category'=>$session{'/employee/performance/history.html?category'},'useinscheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+				my @presses = openprint::Equipment->find('category_id'=>$session{'/employee/performance/history.html?category_id'},'useinscheduling'=>1,'order'=>'sorting,lower(strname)');
 
 				my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/performance/history.html?equipment_id'} ) );
 				@selected_equipment = map { $_->id() } @presses if ( ! @selected_equipment );

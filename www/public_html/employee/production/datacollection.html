@@ -7,6 +7,10 @@ function return_str_to_html(str){
 }
 function form_submit() {
 	var form = $('f1');
+	if ( ! form.docket.value ) {
+		alert('Please enter a docket #');
+		return false;
+	} // end if
 	form.signature.value = escape(top.getSignature());
 	form.elements['action'].value = 'Submit';
 	form.submit();
@@ -19,17 +23,22 @@ function switch_inputs(e) {
 	current_input.addClassName('Focused');
 } 
 
+function category_onchange(ddm) {
+	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { category_id: ddm.value, selected_id: $('equipment_id').value } } );
+	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { usergroup: ddm.options[ddm.selectedIndex].text, type: [ 'E','A' ], selected_id: $('user_id').value } } );
+} // end function category_onchange
+
 	var current_input;
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html">
+<form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html" method="post">
 	<input type="hidden" name="action"/>
 
 <fieldset><legend>Data Collection</legend>
 	<div class="leftColumn">
 		<ul>
 			<li><label>Docket</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onblur=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
+				<? echo ( ssi::input(type=>'cardinal', name=>'docket', id=>'docket', onfocus=>'switch_inputs(this);', onkeyup=>q`if(this.value.length>=2){new Ajax.Request('_datacollection.json', { parameters: { docket: this.value } } );}`, value=>$param{docket} ); ) ?>
 				<span class="error" id="docket_alert"></span>
 			</li>
 			<li><label>Company</label><span id="company_name"><? echo ( 
@@ -39,19 +48,28 @@ function switch_inputs(e) {
 				} # end if
 				return '';
 			) ?></span></li>
+			<li><label>Category</label>
+			<select name="category_id" id="category_id" onchange="category_onchange(this);">
+				<option value="">All</option>
+<? echo (
+	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
+) ?>
+			</select>
+			</li>		
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), $param{user_id} ? $param{user_id} : $session{user_id} ); ) ?>
+				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), 
+$session{'/employee/production/datacollection.html?user_id'} ? $session{'/employee/production/datacollection.html?user_id'} : $session{user_id} ); ) ?>
 				</select>
 			</li>
 			<li><label>Form</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onblur=>'switch_inputs(this);', value=>$param{form} ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?></li>
 			<li><label>Version</label>
-				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onblur=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
+				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
 			<li><label>Quantity</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onblur=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'quantity', id=>'quantity', onfocus=>'switch_inputs(this);', value=>$param{quantity} ); ) ?></li>
 			<li><label>Equipment</label>
 				<select name="equipment_id" id="equipment_id">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $param{'equipment_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ' : '.$_->name() } openprint::Equipment->find('order'=>'lower(strid)') ], $session{'/employee/production/datacollection.html?equipment_id'} ); ) ?>
 				</select>
 			</li>
 			<li><label>Comment</label><textarea name="comment" id="comment"></textarea></li>
@@ -99,43 +117,47 @@ $ipoo = 0;
 <fieldset><legend>Log</legend>
 	<table class="List">
 		<tr>
-			<th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th><th class="Signature">Signature</th></tr>
+			<th class="DateTime">When</th><th class="Docket">Docket</th><th class="Company">Company</th><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="Equipment">Equipment</th><th class="Signature">Signature</th></tr>
 			<? echo (
 				my $html;
+				my $rowclass;
+				#my $quantity = 0;
 				foreach my $PF ( openprint::ProductionFeedback->find('order'=>'id desc', 'limit'=>100) ) {
 					my $Project = $PF->Project();
 					my $Service = $Project->Service($PF->service_id()) if $PF->service_id();;
 					my $specs = $Service->specs() if $Service;
 
-					my $rowclass;
 					$html .= sprintf(q`
-<tr%s>
-	<td class="Docket">%d</td>
-	<td class="Company">%s</td>
-	<td class="form">%d</td>
-	<td class="quantity">%d</td>
-	<td class="Equipment">%s</td>
-	<td class="Signature">%s %d</td>
+<tr%1$s>
+	<td class="DateTime">%2$s</td>
+	<td class="Docket"><a href="/employee/project/view.html?project_id=%3$d">%4$d</a></td>
+	<td class="Company">%5$s</td>
+	<td class="form">%6$d</td>
+	<td class="version">%7$s</td>
+	<td class="quantity">%8$s</td>
+	<td class="Equipment">%9$s</td>
+	<td%11$s class="Signature">%10$s</td>
 </tr>
-`, $rowclass, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->quantity(), $PF->Equipment()->strid(),
-( $PF->signature_id() ? $PF->Signature()->html() : '' ), $PF->signature_id()
+`, $rowclass, 
+Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($PF->starting_on())),
+$$Project{id}, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->version(), 
+Number::Format::format_number(1*$PF->quantity()), $PF->Equipment()->strid(),
+( $PF->signature_id() ? $PF->Signature()->html({width=>100}) : '' ), 
+( $PF->comment() ? ' rowspan="2"' : '' ),
+
  );
 					if ( $PF->comment() ) {
-						$html .= '<tr'.$rowclass.'><td colspan="5">'.$PF->comment().'</td></tr>';
+						$html .= '<tr'.$rowclass.'><td colspan="7">'.$PF->comment().'</td></tr>';
 					} # end if
 					$rowclass = $rowclass ? '' : ' class="colRow"';
+					#$quantity += $PF->quantity();
 				} # end foreach PF
-			
+
 				return $html;
 			) ?>
 	</table>
 </fieldset>
 <script type="text/javascript"> document.f1.docket.focus(); 
-	//$('body').bind('touchmove', 
-	Event.observe($('body'),'touchmove', function(event) { event.preventDefault() }); // turns off
-
-//$('body').unbind('touchmove'); // turns on
-
-
+	Event.observe($('signature'),'touchmove', function(event) { event.preventDefault() }); // turns off
 </script>
 

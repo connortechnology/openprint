@@ -14,7 +14,7 @@
 	<input type="hidden" name="order_id" value="<?OrderID?>"/>
 	<input type="hidden" name="btnFunction" value=""/>
 	<? eval ( 
-		@{$$variable{'Presses'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strCategory='Printing' ORDER BY lower(strName)} );
+		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing', order=>'lower(strid)' );
 		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
 		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();

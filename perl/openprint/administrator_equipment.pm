@@ -4,6 +4,8 @@ package openprint::administrator_equipment;
 require Text::CSV_XS;
 require sql;
 require misc;
+
+require openprint::Equipment_Category;
 require openprint::Equipment;
 require openprint::EquipmentSpecification;
 require openprint::Fold;
@@ -95,6 +97,7 @@ sub edit {
 		$Equipment = $Equipment->copy();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'servicetype_id'} = [ $param{'servicetype_id'} ] if ref $param{'servicetype_id'} ne 'ARRAY';
+		$param{'category_id'} = [ $param{'category_id'} ] if ref $param{'category_id'} ne 'ARRAY';
 		$Equipment->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Equipment->delete();

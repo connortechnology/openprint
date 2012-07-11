@@ -102,7 +102,6 @@ sub endtime {
 	if ( ! $_[0]{'endtime'} ) {
 		$_[0]{'endtime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
 	} # end if
-$log->debug("ENdtime: " . $_[0]{'endtime'} );
 	return $_[0]{'endtime'};
 } # end sub endtime_seconds
 sub endtime_seconds {
