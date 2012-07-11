@@ -59,6 +59,7 @@ $debug = 1;
 	'notes'				=>	'notes',
 	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
+	last_Logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
 	'name'	=>	q`firstname || ' ' || lastname`,
@@ -468,10 +469,13 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
+$openprint::log->debug("last_Logged_in");
 	if ( ! $_[0]{'last_logged_on'} ) {
+$openprint::log->debug("last_Logged_in");
 		# Almost any entry means we were logged in.  
-		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs >= 1 ) {
+		my @Logs = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( @Logs ) {
+$openprint::log->debug("last_Logged_in: " . $Logs[0]->to_string() );
 			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
 		} else {
 			$openprint::log->debug("@ of logs returned " . @Logs );
@@ -483,6 +487,7 @@ sub last_logged_in {
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+#$openprint::log->debug("AUTOLOAD $name");
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");

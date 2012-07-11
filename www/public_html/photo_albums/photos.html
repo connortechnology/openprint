@@ -7,7 +7,7 @@
 					<ul>
 					<? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) ?>
 					<li><label>Company</label>
-						<select name="company_id" id="company_id" onchange="new Ajax.Updater('Results','_photos.html', { parameters: this.form.serialize() } );">
+						<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id','/includes/_users.html', { parameters: { company_id: this.value }, onSuccess: function(){new Ajax.Updater('Results','_photos.html', { parameters: $('f1').serialize() } );} } );">
 							<option value=""> all </option>
 							<? echo ( 
 								ssi::make_drop_down( openprint::Company->dropdown(), $session{'/photo_albums/photos.html?company_id'} );

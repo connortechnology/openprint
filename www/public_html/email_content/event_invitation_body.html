@@ -46,7 +46,7 @@ $$variable{'Event'}->id(),$$variable{'Event'}->name() ); ) ?>.<br/>
 </fieldset>
 <br/>
 <? if ( $$variable{'User'}->id() ) ?>
-<a href="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>">View the event page and rsvp now</a>
+<a href="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>&user_id=<? echo ( $variable{User}->id() ) ?>">View the event page and rsvp now</a>
 <? else ( $$variable{'User'}->id() ) ?>
 If you're not already a <a href="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>">Pleasurable Things</a> member, view the event page and register now, then remember to create an account so you stay in the loop on events, conversations, and other good things!
 

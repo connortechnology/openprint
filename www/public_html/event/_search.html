@@ -43,6 +43,7 @@
 <? else ( @{$$variable{'Events'}} == 0 ) ?>
 		<? echo ( 
 			my $html;
+			my $Me = new openprint::User( $session{user_id} );
 			foreach my $Event ( @{$$variable{'Events'}} ) {
 				$html .= $Event->html();
 
@@ -53,13 +54,14 @@ if ( 0 ) {
 						<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
 						<div class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></div>
 						<div class="Where">%5$s</div>
-						<div class="Attending"></div>
+						<div class="Attending">%7$s</div>
 					</div>
 					`, $Event->id(), ssi::html_escape($Event->name()),
 					$Event->Category()->name(),
 					$Event->time_string(),
 					$Event->where(),
 					$Event->asset_html(),
+					$Event->attendance( $Me ),
 				);
 }
 			} # end foreach Events

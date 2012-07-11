@@ -27,7 +27,9 @@ $serial = 'emailcampaigns_id_seq';
 	'timeofday'		=>	'timeofday',
 	'email_subject'	=>	'email_subject',
 	'email_from'	=>	'email_from',
+	'email_to'		=>	'email_to',
 	'email_text'	=>	'email_text',
+	'email_html'	=>	'email_html',
 	'attachments'	=>	'attachments',
 	'lastrun'		=>	'lastrun',
 	'nextrun'		=>	'nextrun',
@@ -119,7 +121,7 @@ sub send_email {
 	my $Email = new openprint::Email();
 	my $rc = $Email->send(
 			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO		=> $$replacements{'User'},
+			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{'User'} ),
 			SUBJECT => $$self{'email_subject'},
 			ATTACHMENTS =>	[ @body, @attachments ],
 		);

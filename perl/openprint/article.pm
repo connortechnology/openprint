@@ -195,6 +195,7 @@ sub edit {
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
 			%param = ();
+			$param{'article_id'} = $Article->id();
 			$variable{'ExternalRedirect'} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
 		} # end if
 	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
@@ -229,6 +230,8 @@ sub edit {
 } # end sub edit
 
 sub list {
+	$param{'category_id'} = openprint::Article_Category->transform('id',$param{'category_id'});
+
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	_list();
 	$session{'/article/list.html?paging_per_page'} = 5;

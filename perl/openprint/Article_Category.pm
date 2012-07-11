@@ -22,6 +22,12 @@ $serial = 'article_categories_id_seq';
 );
 
 %transforms = (
+	id			=>	[ 's/\D//g' ],
+	album_id	=>	[ 's/\D//g' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    description =>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    summary		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    permalink	=>	[ 's/\s//', ],
 );
 %defaults = (
 	'album_id'		=>	undef,

@@ -27,7 +27,7 @@ $dst_db = 'point-one' if ! $dst_db;
 
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
-	$path = "/media/Storage/Backups/database/$src_db/$year-$month-$day.sql.bz2";
+	$path = "/media/ARCHIVE/Backups/database/$src_db/$year-$month-$day.sql.bz2";
 
 	if ( ! -e $path ) {
 		die "No db dump $path";
