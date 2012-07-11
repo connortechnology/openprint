@@ -268,6 +268,15 @@ if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+
+if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Categories.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+	foreach my $category ( sql::execute( undef,undef, 'SELECT DISTINCT strcategory FROM tbl_equipment' ) ) {
+		sql::insert( undef, undef, 'equipment_categories', 'name', $category );
+	} # end foreach category
+} # end if
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 if ( ! exists $$data{'updated_on'} ) {
 	$dbh->do('ALTER TABLE shifts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default nOW()');
@@ -285,6 +294,11 @@ if ( ! exists $$data{'message'} ) {
 if ( ! exists $$data{'servicetype_id'} ) {
 	$dbh->do('ALTER TABLE tbl_equipment ADD servicetype_id INTEGER[]');
 } # end if
+if ( ! exists $$data{'category_id'} ) {
+	$dbh->do('ALTER TABLE tbl_equipment ADD category_id INTEGER[]');
+	$dbh->do('UPDATE tbl_equipment SET category_id = category_id || (SELECT id FROM equipment_categories WHERE name=strcategory)');	
+} # end if
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
 if ( ! exists $$data{'operator_id'} ) {
 	$dbh->do('ALTER TABLE equipment_shifts ADD operator_id INTEGER');
