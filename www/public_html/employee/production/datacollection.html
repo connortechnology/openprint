@@ -24,8 +24,8 @@ function switch_inputs(e) {
 } 
 
 function category_onchange(ddm) {
-	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { category: ddm.value, selected_id: $('equipment_id').value } } );
-	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { usergroup: ddm.value, type: [ 'E','A' ], selected_id: $('user_id').value } } );
+	new Ajax.Updater( 'equipment_id', '/includes/_equipment.html', { parameters: { category_id: ddm.value, selected_id: $('equipment_id').value } } );
+	new Ajax.Updater( 'user_id', '/includes/_users.html', { parameters: { usergroup: ddm.options[ddm.selectedIndex].text, type: [ 'E','A' ], selected_id: $('user_id').value } } );
 } // end function category_onchange
 
 	var current_input;
@@ -49,10 +49,10 @@ function category_onchange(ddm) {
 				return '';
 			) ?></span></li>
 			<li><label>Category</label>
-			<select name="category" id="category" onchange="category_onchange(this);">
+			<select name="category_id" id="category_id" onchange="category_onchange(this);">
 				<option value="">All</option>
 <? echo (
-	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/datacollection.html?category'} );
+	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
 ) ?>
 			</select>
 			</li>		

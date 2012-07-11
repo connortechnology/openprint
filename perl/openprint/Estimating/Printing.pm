@@ -2818,7 +2818,7 @@ sub select_presses {
 	my ($project_type) = openprint::project::get_project_type( $openprint::log, $openprint::dbh, $project_index );
 #$log->debug(" ** Current Project Types is: $project_type ** ");
 
-	my @presses = openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y', 'order'=>'strid' );
+	my @presses = openprint::Equipment::find( 'category'=>'Printing', 'useinestimating'=>1, 'order'=>'lower(strid)' );
 	foreach my $Press ( @presses ) {
 		my $press_id = $Press->strid();
 

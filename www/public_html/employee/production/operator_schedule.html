@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	var dropfunction = function(el){
 		new Ajax.Request( '_operator_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
@@ -11,7 +10,6 @@
             } // end if
         } // end foreach id in drops
     } // end function setup_drops
--->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="operator_schedule.html">
@@ -20,10 +18,10 @@
 		<div class="leftColumn">
 		<p>
 			<label>Equipment Category</label>
-			<select name="category" id="category" onchange="f1.submit();">
+			<select name="category_id" id="category_id" onchange="f1.submit();">
 				<option value="">All</option>
 			<? echo (
-return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() } openprint::Equipment->find('useinscheduling'=>1) ) ], $session{'/employee/production/operator_schedule.html?category'} );
+return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/operator_schedule.html?category_id'} );
 ) ?>
 			</select>
 		</p>
@@ -32,7 +30,7 @@ return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() }
 			<select name="equipment_id" id="equipment_id" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/operator_schedule.html?category'},'useinscheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category_id'=>$session{'/employee/production/operator_schedule.html?category_id'},'useinscheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?equipment_id'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/operator_schedule.html?equipment_id'} ) ] );
 	} # end foreach press
