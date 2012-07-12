@@ -299,6 +299,14 @@ sub signature_calc {
 				} # end if
 				next;
 			} # end if
+		} elsif ( ( $Equipment->specification('Cross Perforating / Scoring') eq 'N' ) and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} and $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
+				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
+					$$specs{'alert'} = 'Doesnt support cross Perfing<br/>';
+					$Results{'Equipment'} = $Equipment;
+					$Results{'Status'} = 'uncalculated';
+					return %Results;	
+				} # end if
+			next;
 		} else {
 			@impositions = @cut_impositions;
 		} # end if
