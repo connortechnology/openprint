@@ -27,7 +27,7 @@ function calc( formName, force ) {
 				<p>
 					<label>Spread dimensions:</label>
 						<input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x 
-						<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> ->
+						<input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
 						<input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
 						<input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

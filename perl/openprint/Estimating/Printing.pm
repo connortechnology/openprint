@@ -2298,6 +2298,21 @@ $imp->display("Grain override next");
 				} # end foreach I
 			} # end if
 			@results = @results2;
+		} else {
+			my $needs_smaller = 1;
+			foreach my $I ( @results ) {
+				if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
+					$needs_smaller = 0;
+					last;
+				} # end if
+			} # end foreach I
+			if ( $needs_smaller ) {
+				foreach my $I ( openprint::imposition::get_all_impositions( @results ) ) {
+					if ( $I->imposition() <= $$sig_specs{'txtQuantity'.$qty_index} ) {
+						push @results, $I;
+					} # end if
+				} # end foreach I
+			} # end if
 		} # end if
 
 		my %imps;
@@ -2896,7 +2911,8 @@ $openprint::log->debug("Using Stitching cache for " . scalar @all_impositions . 
 #$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			} # end if PerfectBound
 
-			if ( 1 and $$service_specs{'Group'} == 1 and $imp->Press()->specification('Printing Type') eq 'Digital' ) {
+			if ( $$service_specs{'Group'} == 1 ) {
+# When doing the cover, need to calc additional sigs as well.
 				# Add calculations for other Groups
 $openprint::log->debug("Calculating Additional Signatures for other group");
 				my @sigs = sort $Project->signatures({'Group'=>2});

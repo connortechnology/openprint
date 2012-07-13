@@ -1,7 +1,6 @@
 package openprint::Imposition;
 use vars qw( $AUTOLOAD );
 
-
 my @fields = (
 	'start_imposition','start_columns','start_rows',
 	'imposition','rows','columns',
@@ -186,8 +185,6 @@ sub load_used {
         } # end 
     } # end if
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
-
-
 } # edn sub load_used
 
 sub load {
@@ -204,6 +201,7 @@ sub load {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
 			} # end if
 		} # end if
+		$$self{'Press'} = new openprint::Equipment() if ! $$self{'Press'};
 	} # end if
 
 	$$self{'object_width'} = $$specs{'txtWidth'};
