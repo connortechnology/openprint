@@ -61,9 +61,12 @@ sub calc {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
 
-	if ( ! 
-			( $$specs{'LaminationType'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} )
-	   ) {
+	$$specs{alert} = '';
+	$$specs{alert} .= 'Please select lamination type.<br/>' if ! $$specs{'LaminationType'};
+	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{'txtFinalWidth'};
+	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{'txtFinalHeight'};
+
+	if (  $$specs{alert} ) {
 		$$specs{'txtPrice1'} = '';
 		$$specs{'txtPrice2'} = '';
 		$$specs{'txtPrice3'} = '';
