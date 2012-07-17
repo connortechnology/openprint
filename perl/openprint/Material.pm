@@ -121,6 +121,8 @@ sub Specifications {
 } # end sub Specifications
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Material';
+	shift @_ if ref $_[0] eq 'openprint::Material';
 	my @results = find( @_, 'limit', 1 );
 	if ( @results > 1 ) {
 		$openprint::log->error('Material::find_one more than 1 result!');
@@ -131,6 +133,8 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Material';
+	shift @_ if ref $_[0] eq 'openprint::Material';
 	my %params = @_;
 	my $sql = 'SELECT * FROM Materials WHERE 1>0';
 	my @values;
