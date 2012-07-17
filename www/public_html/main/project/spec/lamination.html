@@ -24,14 +24,14 @@
 			<label>Type for front:</label>
 			<select name="TypeFront" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
+				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeFront'}); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Type for back:</label>
 			<select name="TypeBack" size="1" onchange="calc(this.form.name);">
 				<option value="">Please select one</option>
-				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'LaminationType'}); ) ?>
+				<? echo ( ssi::make_drop_down( [ 'None', 'None', map { $_->name(), $_->description() } openprint::Material->find('category'=>'Lamination Types', 'order'=>'lower(name)') ], $$variable{'TypeBack'}); ) ?>
 			</select>
 		</p>
 <? endif ( 0 ) ?>
