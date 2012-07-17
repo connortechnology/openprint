@@ -497,7 +497,7 @@ $openprint::log->warn('bind');
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
 						require openprint::Estimating::Lamination;
-						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
+						openprint::Estimating::Lamination::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} elsif ( $filename =~ /^(\w*).html$/ ) {
 $openprint::log->debug("$1");
 						eval sprintf('require openprint::Estimating::%1$s;

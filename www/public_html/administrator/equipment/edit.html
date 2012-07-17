@@ -301,7 +301,7 @@ function filter_onChange( element, id, selected ) {
 	<fieldset><legend>Specific Stock Settings</legend>
 		<div id="StockSettings"><!--#include virtual="_stock_settings.html"--></div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '600px' } );", '', 'Add' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", '', 'Add' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'savestocksetting','save.gif', "new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", '', 'Save' ); ) ?>
 		</p>
 	</fieldset>
