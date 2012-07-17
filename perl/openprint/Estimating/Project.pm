@@ -747,11 +747,18 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} # end if
 
-	if ( $$specs{'LaminationType'} ) {
+	if ( $$specs{'LaminationType'} or $$specs{LaminationTypeFront} or $$specs{LaminationTypeBack} ) {
 		if ( ! $$services{'Lamination'} ) {
 			push @{$$services{'Lamination'}}, $Project->add_service( 'Lamination' );
 		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'LaminationType', $$specs{'LaminationType'} );
+		if ( $$specs{LaminationType} ) {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeFront', $$specs{'LaminationType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeBack', $$specs{'LaminationType'} );
+		} else {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeFront', $$specs{'LaminationTypeFront'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeBack', $$specs{'LaminationTypeBack'} );
+		} # end if
+		
 	} else {
 		foreach ( @{$$services{'Lamination'}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
