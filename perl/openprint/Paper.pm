@@ -33,7 +33,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -93,6 +93,10 @@ sub find {
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
+	} # end if
+	if ( exists $params{digital} ) {
+		$sql .= ' AND digital=?';
+		push @values, $params{digital};
 	} # end if
 	if ( $params{'owner_id !='} ) {
 		$sql .= ' AND owner_id != ?';
@@ -1312,6 +1316,7 @@ $openprint::log->warn("Unable to Loading by paper id" . $$specs{'paper_id'.$qty_
 					'colour'    => $$specs{'ddmStockColour'},
 					'weight'    => $$specs{'ddmStockWeight'},
 					'project_type_id'=> $Project ? $Project->type_id() : undef,
+					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
 					'order'		=>	'minimum_order',
 					);
 			if ( $qty_index ) {

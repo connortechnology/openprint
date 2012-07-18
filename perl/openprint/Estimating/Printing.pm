@@ -1200,8 +1200,8 @@ sub get_impositions {
 					#next;
 				} # end if
 				my $add = 1;
-				my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
 				my $P = $imp->Paper();
+				my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'},$$P{digital} );
 				
 				if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->type() eq 'Sheet' )
 						and ( $P->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
