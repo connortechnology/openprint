@@ -28,9 +28,11 @@ my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
-	'TypeSideOne','TypeSideTwo',
+	'TypeFront','TypeBack',
 );
 
 sub variables {
@@ -40,6 +42,7 @@ sub variables {
 my @outputs = (
 	'txtFinalWidth','txtFinalHeight',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'alert', 'Status',

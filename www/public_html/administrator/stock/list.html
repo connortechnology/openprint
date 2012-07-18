@@ -214,6 +214,10 @@
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
 		</p>
+		<p>
+			<label>Digital:</label>
+			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
+		</p>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
