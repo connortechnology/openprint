@@ -1361,7 +1361,7 @@ $imp->display("Foudn non-dutch");
 			} # end if
 			next if ! $add;
 			
-			my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
+			my $str = sprintf('%dx%d+%dx%d-%s-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'}, $$SmallerPaper{digital} );
 
 			if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $SmallerPaper->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
 					and ( ( $$SmallerPaper{'type'} eq 'Roll' ) or  ( $SmallerPaper->height() == $$specs{"OverrideStockHeight$qty_index"} ) ) 
@@ -1376,14 +1376,14 @@ $imp->display("Foudn non-dutch");
 $imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 10;
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
+					my $BiggerPaper = $I->Paper();
 
-					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"}) and ( $I->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
+					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $$BiggerPaper{width} == $$specs{"OverrideStockWidth$qty_index"}) and ( $$BiggerPaper{height} == $$specs{"OverrideStockHeight$qty_index"} )) {
 						last;
-					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
+					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$BiggerPaper{height} == $$specs{"CutOff$qty_index"} ) ) {
 						last;
 					} # end if
 
-					my $BiggerPaper = $I->Paper();
 					my $BiggerPrice = $$I{'PaperPrice'} ? $$I{'PaperPrice'} : $BiggerPaper->get_price('weight'=>$$I{'stock_weight'},'service'=>'Material');
 					$$I{'PaperPrice'} = $BiggerPrice;
 $I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 10;
@@ -1395,42 +1395,42 @@ $I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice
 							and
 							( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
 							and
-							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
+							( ! ( ! $BiggerPaper->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
 $openprint::log->debug('removing B larger') if $$imp{'imposition'} == 10;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} elsif (
-							( $I->Paper()->area() >= $SmallerPaper->area() )
+							( $BiggerPaper->area() >= $SmallerPaper->area() )
 							and
-							( $I->Paper()->minimum_order() <= $SmallerPaper->minimum_order() )
+							( $BiggerPaper->minimum_order() <= $SmallerPaper->minimum_order() )
 							and
 							( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
 							and
-							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
+							( ! ( ! $BiggerPaper->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
 						$add = 0;
 $openprint::log->debug('removing A larger') if $$imp{'imposition'} == 10;
 					} elsif (
-							( $I->Paper()->area() < $SmallerPaper->area() )
+							( $BiggerPaper->area() < $SmallerPaper->area() )
 							and
-							( $I->Paper()->minimum_order() <= $SmallerPaper->minimum_order() )
+							( $BiggerPaper->minimum_order() <= $SmallerPaper->minimum_order() )
 							and
 							( (1*$$BiggerPrice{'100lb'}) <= (1*$$SmallerPrice{'100lb'}) )
 							and
-							( ( ! $I->Paper()->is_cut() ) or ( $SmallerPaper->is_cut() ) )
+							( ( ! $BiggerPaper->is_cut() ) or ( $SmallerPaper->is_cut() ) )
 							) {
 # Already have a much better sheet
 						$add = 0;
 $openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 10;
 					} elsif (
-							( $I->Paper()->area() < $SmallerPaper->area() )
+							( $BiggerPaper->area() < $SmallerPaper->area() )
 							and
-							( $I->Paper()->minimum_order() >= $SmallerPaper->minimum_order() )
+							( $BiggerPaper->minimum_order() >= $SmallerPaper->minimum_order() )
 							and
 							( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
 							and
-							( ( ! $I->Paper()->is_cut() ) or ( $SmallerPaper->is_cut() ) )
+							( ( ! $BiggerPaper->is_cut() ) or ( $SmallerPaper->is_cut() ) )
 							) {
 # Already have a much better sheet
 $openprint::log->debug('removing B smaller') if $$imp{'imposition'} == 10;

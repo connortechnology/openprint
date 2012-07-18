@@ -108,6 +108,7 @@ foreach my $log_file ( @log_files ) {
 							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
+					
 					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
 						print "$ip is whitelisted\n" if $opts->{debug};
 					} # end if
