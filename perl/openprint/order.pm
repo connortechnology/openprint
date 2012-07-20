@@ -334,6 +334,8 @@ sub make_order {
 } # end sub make_order
 
 # Now takes an OrderedProject or Product object
+# Need to document what exactly this should be saving.
+# For projects with multiple quantities, it should save the quantity selection
 sub save_project_information {
 	my ( $order_id, $OP ) = @_;
 
@@ -342,7 +344,8 @@ sub save_project_information {
 	if ( $param{"rdbQuantity$project_index"} ) {
 $openprint::log->error("Quantity index for $project_index " . $param{"rdbQuantity$project_index"} );
 		$OP->quantity_index( $param{"rdbQuantity$project_index"} );
-	} elsif ( ! $Project->ordered_quantity_index() ) {
+	} elsif ( ! $OP->quantity_index() ) {
+		# Ordered Products don't have quantity_index field, so this is a NOP
 		my @qtys = $Project->quantity_indexes();
 		if ( 1 == scalar @qtys ) {
 			$OP->quantity_index( $qtys[0] );
@@ -357,10 +360,11 @@ $openprint::log->error("Quantity index for $project_index " . $param{"rdbQuantit
 		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
-	my $services = $Project->services();
 
+	my $shipping_cost = 0;
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
+		my $services = $Project->services();
 		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
@@ -402,15 +406,25 @@ $openprint::log->error("Quantity index for $project_index " . $param{"rdbQuantit
 					} # end foreach field
 					my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
 $log->warn($$specs{'alert'}) if $$specs{'alert'};
+					$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
 				} # end foreach service_id
 			} # end if exists service
 		} # end foreach ShippingType
 		$OP->shipping_type( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
-	} # end if
+	} # end if has shipping
 
 	$Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+
+	# Need to 
+	if ( ref $OP eq 'openprint::OrderedProject' ) {
 	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
 	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
+	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+	#$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} else {
+		$log->error('Unknown type of Ordered item!');
+	} # end if
 	$OP->save();
 
 } # end foreach save_project_information
