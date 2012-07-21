@@ -352,7 +352,7 @@ sub stock {
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
 		my $Stock;
-		my @PA = openprint::PaperAllocation::find('project_id'=>$$self{'project_id'});
+		my @PA = openprint::PaperAllocation->find('project_id'=>$$self{'project_id'});
 		if ( @PA ) {
 			$Stock = $PA[0]->Paper();
 		} else {

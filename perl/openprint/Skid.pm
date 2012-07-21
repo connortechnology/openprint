@@ -201,7 +201,7 @@ sub copy {
 		$C = $C->copy();
 		$C->save({'skid_id'=>$$new{id}});
 		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
-		foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
 			$C->Paper()->allocate( $new, $PA->project_id(), $PA->quantity(), $PA->units(), $PA->reason() );
 		} # end while
 	} # end foreach Content
@@ -387,7 +387,7 @@ sub Contents {
 sub allocation {
 	my ( $self, %options ) = @_;
 	if ( $options{'Paper'} ) {
-		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation::find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
+		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
 		return $allocated;
 	} # end if
 } # end sub allocatiosn

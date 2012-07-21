@@ -16,6 +16,10 @@ text-align: right;
 	width: 75px;
 	text-align: left;
 }
+#ProductionLog .quantity {
+	text-align: right;
+	padding-right: 5px;
+}
 .subtotal .service,
 .tax .service,
 .total .service,

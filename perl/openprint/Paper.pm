@@ -709,7 +709,7 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-    my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
+    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -720,15 +720,15 @@ sub allocate {
 		$skids = $skid_id;
 	} # end if
 
-	my $PA;
-	$PA = new openprint::PaperAllocation();
+	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_ids'		=>	$skids,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units ? $units : $self->units(),
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
+			paper_id		=>	$$self{'id'},
+			skid_ids		=>	$skids,
+			quantity		=>	$quantity,
+			units			=>	$units ? $units : $self->units(),
+			project_id		=>	$project_id,
+			operator_id		=>	$openprint::session{'user_id'},
+			condition_id	=>	$condition_id,
 			} );
 	if ( $project_id ) {
 		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 

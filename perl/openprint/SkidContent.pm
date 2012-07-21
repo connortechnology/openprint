@@ -59,6 +59,10 @@ sub find {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'paper_id'};
 	} # end if
+	if ( $params{'condition_id'} ) {
+		$sql .= ' AND condition_id=?';
+		push @values, $params{'condition_id'};
+	} # end if
 	if ( $params{'Paper'} ) {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'Paper'}->id();
@@ -125,11 +129,14 @@ sub delete {
 	} # end if
 } # end sub delete
 sub allocateable {
-    my ( $self ) = @_;
-    return $self->quantity() - $self->allocation();
+	if ( ! exists $_[0]{'allocateable'} ) {
+		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
+		$_[0]{'allocateable'} = 0 if $_[0]{'allocateable'} < 0;
+	} # end if
+	return $_[0]{'allocateable'};
 } # end sub allocateable
 sub allocated {
-	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_id'=>$_[0]{'skid_id'});
+	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_ids any'=>$_[0]{'skid_id'});
 	return $PA->quantity() if $PA;
 	return 0;
 } # end sub allocated

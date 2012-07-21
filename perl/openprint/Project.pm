@@ -1182,7 +1182,7 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
@@ -1200,7 +1200,7 @@ sub status_change {
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 
@@ -1212,7 +1212,7 @@ sub status_change {
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 	} # end if

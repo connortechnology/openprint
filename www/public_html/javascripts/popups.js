@@ -71,12 +71,13 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 
 
 	if ( div.style.display == 'none' ) {
+		div.innerHTML = 'Loading....';
 		div.show();
-		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+		new Ajax.Updater( divID, show_url, { parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
 		if ( hide_url )
-			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+			new Ajax.Updater( divID, hide_url, { parameters: params.join('&'), evalScripts: true } );
 	} // end if
 } // end function AjaxToggleContent
 

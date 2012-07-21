@@ -59,7 +59,10 @@
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="50%" class="headerText" valign="top"><b>COD?:</b></td>
-					<td width="50%" class="docketText">&nbsp;</td>
+					<td width="50%" class="docketText"><? echo ( 
+					my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
+					return $cod ? $cod . '%' : 'NO';
+					) ?></td>
 				</tr>
 			</table></td>
 	</tr>

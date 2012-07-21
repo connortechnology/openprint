@@ -125,8 +125,8 @@ sub skids {
 				return;
 			} # end if
 		} # end if
-		if ( $param{'skid_id'} ) {
-			$param{'skid_id'} =~ s/[^\d\,]//g;
+		if ( $param{skid_id} ) {
+			$param{skid_id} =~ s/[^\d\,]//g;
 			$param{Project} =~ s/\D//g;
 			$param{Docket} =~ s/\D//g;
 			my $Project = openprint::Project->find_one( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
@@ -352,9 +352,10 @@ sub _paper_results {
 	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type',
 		( map { 'added_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'added_on_end_'.$_ } ( 'year','month','day' ) ),
-		'Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude', 'allocated' )
+		'Docket','fsc_code','width','height','instock','Owner','owner_id_exclude', 'allocated' )
 			);
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	$session{'/employee/inventory/paper.html?OrLarger'} = $param{'OrLarger'};
 } # end sub _paper_results
 
 sub paper_details {
@@ -433,6 +434,7 @@ sub paper_details {
 				return;
 			} # end if
 		} # end if
+		
 		allocate( undef, @param{'paper_id','Quantity','Project','Docket','specific'} );
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
@@ -1007,7 +1009,7 @@ sub check_in {
 # allocate
 # skid_ids is plural because it may be a comma delimited string of skid_ids
 sub allocate {
-	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific ) = @_;
+	my ( $skid_ids, $paper_id, $quantity, $project_id, $docket, $specific, $reason, $condition_id ) = @_;
 	if ( ! $paper_id ) {
 		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
@@ -1017,7 +1019,7 @@ sub allocate {
 		$variable{'error'} .= 'Invalid stock specified. No stock allocated.<br/>';
 		return;
 	} # end if
-	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
+	my $units = $Paper->units();
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
 	$quantity =~ s/[^\d\.]//g;
@@ -1037,9 +1039,9 @@ sub allocate {
 	my @skid_ids = split(',', $skid_ids );
 	if ( $specific and ! @skid_ids ) {
 		if ( $quantity < 0 ) {
-			@skid_ids = sql::execute( undef, undef, q{SELECT skid_id FROM paper_allocations WHERE paper_id=? AND quantity > 0 AND project_id=? ORDER BY skid_id}, $paper_id, $Projects[0]->id() );
+			@skid_ids = map { $_->skid_id() } openprint::PaperAllocation->find(paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} else {
-			@skid_ids = sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? AND quantity > 0 ORDER BY skid_id}, $paper_id );
+			@skid_ids = map { $_->skid_id() } openprint::SkidContent->find(paper_id=>$paper_id, project_id=>$Projects[0]->id(), ( $condition_id ? ( condition_id=>$condition_id ) : () ) );
 		} # end if
 	} # end if
 
@@ -1075,7 +1077,7 @@ sub allocate {
 			} # end foreach
 		} # end if
 	} # end if
-	my $PA = $Paper->allocate( \@allocated_skids, $Projects[0]->id(), $quantity, $units );
+	my $PA = $Paper->allocate( \@allocated_skids, $Projects[0]->id(), $quantity, $units, $condition_id );
 	
 	$PA->send_notification();
 	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
@@ -1094,7 +1096,7 @@ sub send_paper_arrival_notification {
 		my $C = $Skid->Content( $Paper );
 		$info{'Quantity'} = $C ? $C->quantity() : 0;
 		
-		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
+		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
 
 		if ( @To ) {
 # Send notification to maybe CSR's
@@ -1292,7 +1294,7 @@ sub manifest {
 										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								# Change the type to the new type
 								$SkidContent->save({'paper_id'=>$Paper->id()});
-								foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
+								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
@@ -1372,7 +1374,7 @@ sub manifest {
 					$total_qty += $C->quantity();
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project and ! $checked_out ) {
-						my $PA = openprint::PaperAllocation::find_one('skid_id'=>$C->skid_id());
+						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$C->skid_id());
 						if ( ! $PA ) {
 							$Paper->allocate( $C->Skid(), $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
@@ -1521,7 +1523,7 @@ sub inventory_log {
                 $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
-                join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
+                join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
                 $instock,
                 $Skid->Location()->name(),
                 $comment,
@@ -1589,9 +1591,6 @@ sub _skid_allocations {
 
 
 sub available_paper {
-	_available_paper();
-	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
-	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
 		if ( exists $param{'Captcha'} ) {
 	# Remove spaces, because some people want to put spaces between the characters, etc.
@@ -1602,12 +1601,21 @@ sub available_paper {
 				return;
 			} # end if
 		} # end if
-		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
+		foreach my $condition_id ( sets::union( map { $_->condition_id() } openprint::SkidContent->find(paper_id=>$param{paper_id},skid_id=>$param{skid_id},'quantity >' =>0 ) ) ) {
+			next if ! $param{'quantity-'.$condition_id};
+			allocate( @param{'skid_id','paper_id','quantity-'.$condition_id,'Project','Docket','specific','reason'}, $condition_id );
+		} # end foreach condition
+		%param = ();
 	} # end if
+	_available_paper();
+	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
+	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 } # end sub available_paper
 sub _available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner','condition_id' ) );
+	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality','width','height',
+				'fsc_code','unmatched','location_id','Type','last_seen','Owner','condition_id' ) );
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	$session{'/employee/inventory/available_paper.html?OrLarger'} = $param{'OrLarger'};
 } # end sub _available_paper
 
 sub _allocate_popup {

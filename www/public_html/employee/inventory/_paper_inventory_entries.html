@@ -32,7 +32,7 @@
 						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
 ( defined $C->quantity() ? Number::Format::format_number( $C->quantity() ) : 0 ), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
-						$C->quality(),
+						$C->Condition()->name(),
 						);
 					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 					$html .= '<td class="Price">'.openprint::Currency::format( defined $C->cost() ? $C->cost() : 0 ) . '/100lb</td>';
