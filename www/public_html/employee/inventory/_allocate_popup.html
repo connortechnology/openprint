@@ -27,7 +27,11 @@
 							ssi::input( type=>'cardinal', name=>'Project', onkeypress=>'return input_handler(this,event);' ),
 							ssi::button( 'clearAllocateProject', { onclick=>"allocateform.Project.value='';", text=>'C', title=>'Clear' } ), 
 							);
-			$html .= '</li></ul>';
+			$html .= '</li><li>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
+				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
+			</li>
+			</ul>';
 			my @Conditions = openprint::InventoryCondition->find(order=>'lower(name)');
 			foreach my $Condition ( @Conditions ) {
 				next if $Condition->message();
@@ -58,7 +62,7 @@
 						);
 				} # end if
 					
-				$html .= 'Stock in ' . $Condition->name() . ' condition.';
+				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition.';
 
 				$html .= sprintf(q` 
 			<ul><li>
@@ -101,7 +105,7 @@
 						);
 				} # end if
 				$html .= '<div class="warning">';
-				$html .= 'Stock in ' . $Condition->name() . ' condition.<br/>' . $Condition->message();
+				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition.<br/>' . $Condition->message();
 				$html .= sprintf(q` 
 					<ul><li>
 						<label>Quantity:</label>
@@ -122,11 +126,6 @@
 				Do you still wish to allocate this stock?
 				<div id="Captcha"><? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ); ) ?></div>
 			<? endif ( $variable{captcha} ) ?>
-			<ul><li>
-				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
-				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
-			</li>
-			</ul>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 

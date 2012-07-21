@@ -803,8 +803,7 @@ sub available {
 		$$self{available} = 0;
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			next if $SkidContent->quality() eq 'Damaged';
-			next if $SkidContent->quality() eq 'Used';
+			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 		$$self{'available'} -= $self->allocated();

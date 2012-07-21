@@ -21,6 +21,7 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 require openprint::Email;
+require openprint::InventoryCondition;
 
 $debug = 1;
 
@@ -66,6 +67,10 @@ sub delete {
 		return 'already deleted.';
 	} # end if
 } # end sub delete
+
+sub Condition {
+	return new openprint::InventoryCondition( $_[0]{condition_id} );
+} # end sub Condition
 
 sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
