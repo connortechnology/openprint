@@ -49,7 +49,7 @@
 						} # end if
 						$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
-						$html .= ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
+						$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
