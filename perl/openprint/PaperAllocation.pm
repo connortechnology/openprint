@@ -40,6 +40,9 @@ $serial = 'paper_allocation_id_seq';
 	'skid_ids'		=>	'skid_ids',
 	'condition_id'	=>	'condition_id',
 );
+%find_fields = (
+	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
+);
 
 %transforms = (
 );
