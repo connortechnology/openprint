@@ -73,11 +73,12 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user \w+ from ([0-9.]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Connection closed by ([0-9.]+) \[preauth\]$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) i11: Bye Bye \[preauth\]$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 11: Bye Bye \[preauth\]$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because not listed in AllowUsers$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because account is locked$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([\.0-9]+): 11: Bye Bye \[preauth\]$',
 );
 
 my $ac = sql::start_transaction( $dbh );
@@ -107,6 +108,7 @@ foreach my $log_file ( @log_files ) {
 							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
+					
 					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
 						print "$ip is whitelisted\n" if $opts->{debug};
 					} # end if

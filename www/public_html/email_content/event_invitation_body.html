@@ -4,10 +4,10 @@ $$variable{'Event'}->id(),$$variable{'Event'}->name() ); ) ?>.<br/>
 
         <? echo (
             my $html;
-            my $Asset = $$variable{'Event'}->Asset();
+            my $Asset = $$variable{Event}->Asset();
 
             if ( $Asset->id() ) {
-                my $Album = $$variable{'Event'}->Album();
+                my $Album = $$variable{Event}->Album();
                 $html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`, $Asset->id(), $Album->id(), $Asset->html() );
             } # end if
 			return $html;

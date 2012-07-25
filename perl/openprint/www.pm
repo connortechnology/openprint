@@ -495,11 +495,7 @@ $openprint::log->warn('bind');
 					
 					} # end if
 				} elsif ($third eq 'spec') {
-					if ( $filename eq 'lamination.html' ) {
-						require openprint::Estimating::Lamination;
-						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+					if ( $filename =~ /^(\w*).html$/ ) {
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;

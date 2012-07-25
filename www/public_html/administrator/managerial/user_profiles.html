@@ -23,7 +23,7 @@ Please select a company or user to obtain login information.<br/>
 			<div class="content">
 				<ul>
 					<li><label>Email</label>
-						<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
+						<input type="email" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" onkeydown="if(event.keyCode == 13){new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}"/><br/>
 						<span id="search_email_results"></span>
 					</li>	
 					<li>
@@ -70,17 +70,17 @@ Please select a company or user to obtain login information.<br/>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 				<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<? echo ( my $html = '';
-					$html .= ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
-					$html .= ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
-					$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
+					$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+					$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+					$html .= ssi::button( 'New1', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 					if ( $$variable{'User'}->deleted() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'UnDelete1','undelete.gif',"f1.btnFunction.value='Undelete';f1.submit();",'','Undelete');
-					$html .= ssi::writeButton( $log, $dbh, 'Destroy1','destroy.gif',"f1.btnFunction.value='Destroy';f1.submit();",'','Destroy');
+					$html .= ssi::button( 'UnDelete1', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					$html .= ssi::button( 'Destroy1', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 					} else {
-					$html .= ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
-					$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+					$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+					$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html; ) ?>
 			</p>
 		</fieldset>
@@ -384,17 +384,17 @@ Please select a company or user to obtain login information.<br/>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 			<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<? echo ( my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
-				$html .= ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
-				$html .= ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
+				$html .= ssi::button( 'Prev2', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'&lt;&lt;' } );
+				$html .= ssi::button( 'Next2', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'&gt;&gt;' } );
+				$html .= ssi::button( 'New2', { onclick=>"\$('Log').hide();keepCompany(f1);", text=>'New' } );
 				if ( $$variable{'User'}->deleted() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Undelete2','undelete.gif',"f1.btnFunction.value='Undelete';f1.submit();",'','Undelete');
-					$html .= ssi::writeButton( $log, $dbh, 'Destroy2','destroy.gif',"f1.btnFunction.value='Destroy';f1.submit();",'','Destroy');
+					$html .= ssi::button( 'Undelete2', { onclick=>"f1.btnFunction.value='Undelete';f1.submit();", text=>'Undelete' } );
+					$html .= ssi::button( 'Destroy2', { onclick=>"f1.btnFunction.value='Destroy';f1.submit();", text=>'Destroy' } );
 				} else {
-					$html .= ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+					$html .= ssi::button( 'Delete2', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
-				$html .= ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset');
+				$html .= ssi::button( 'Save2', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				$html .= ssi::button( 'Reset2', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html; ) ?>
 		</p>
 		</fieldset>

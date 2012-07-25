@@ -541,50 +541,16 @@ $log->debug("Have no job: $Job");
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend>Modification History</legend>
-	<table class="List">
-	<tr>
-	<th align="left" width="200">User</th>
-	<th align="left" width="150">When</th>
-	<th align="left">Description</th>
-	</tr>
-	<? echo ( 
-		my $html;
-		my $ordered;
-		my $prepress_start;
-		my $scheduled_end;
-		my $scheduled_start;
-
-		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
-		@{$$variable{'ProjectLog'}} = sql::execute( $log, $dbh, $_, $$variable{'ProjectIndex'} );
-		my $rowclass;
-		while ( my ( $company_id, $user_id, $when, $description ) = splice @{$$variable{'ProjectLog'}},0,4 ) {
-			if ( $description =~ /^Scheduled/ ) {
-				if ( ! $scheduled_end ) {
-					$scheduled_end = Date::Parse::str2time( $when );
-				} else {
-					$scheduled_start = Date::Parse::str2time( $when );
-				} # end if
-			} # end if
-			if ( ( ! $ordered ) and ( $description =~ /^Add to Order/ ) ) {
-				$ordered = Date::Parse::str2time( $when );
-			} # end if
-			if ( ( $description =~ /^Taken Over/ ) or ( $description =~ /^Marked Proofs/ ) ) {
-				$prepress_start = Date::Parse::str2time( $when );
-			} # end if
-			if ( $description =~ /^Reused from project (\d+)$/ ) {
-				$description = 'Reused from project <a href="/employee/project/view.html?project_id='.$1.'">'.$1.'</a>';
-			} # end if
-			$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', 
-				$rowclass, new openprint::User( $user_id )->name(), $when, $description );
-			$rowclass = $rowclass ? '' : ' class="colRow"';
-		} # end while
-		$html .= '<tr class="totals"><td colspan="2">Time spent before prepress action</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
-		$html .= '<tr><td colspan="2">Time spent before first scheduled</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
-		$html .= '<tr><td colspan="2">Time spent before last scheduled</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
-		return $html;
-	) ?>
-	</table>
+<fieldset><legend onclick="AjaxToggleContent( 'ProductionLog', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, '/employee/project/_production_log.html' );">Production Log (click to hide/show)</legend>
+<div id="ProductionLog">
+<? if ( $session{'/employee/project/view.html?production_log'} ) ?>
+<!--#include virtual="_production_log.html"-->
+<? endif ( $session{'/employee/project/view.html?production_log'} ) ?>
+</div>
+</fieldset>
+<br class="spacer"/>
+<fieldset><legend onclick="AjaxToggleContent( 'ModificationHistory', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
+<div id="ModificationHistory"></div>
 </fieldset>
 </div></div>
 <? else ( $$variable{'Project'}->id() ) ?>

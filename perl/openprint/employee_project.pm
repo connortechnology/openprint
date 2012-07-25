@@ -961,5 +961,14 @@ sub _status_dropdown {
 	my $Service = $variable{'Service'} = $Project->Service( $param{'service_id'} );
 } # end sub _status_dropdown
 
+sub _modification_history {
+	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+} # end sub _modification_history
+
+sub _production_log {
+	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	ssi::save_params('/employee/project/view.html?production_log', 'project_id');
+} # end sub _production_log
+
 1;
 __END__

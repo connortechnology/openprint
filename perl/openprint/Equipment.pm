@@ -27,9 +27,9 @@ $debug = 1;
 	'id'	=>	'id',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
-	'description'	=>	'strdescription',
-	'category'	=>	'strcategory',
-	'supplier'	=>	'strsupplier',
+	'description'		=>	'strdescription',
+	'category_id'		=>	'category_id',
+	'supplier'			=>	'strsupplier',
 	'useinestimating'	=>	'useinestimating',
 	'useinscheduling'	=>	'useinscheduling',
 	'image'				=>	'image',
@@ -51,13 +51,15 @@ $debug = 1;
 );
 %find_fields = (
 	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
 );
 %transforms = (
 );
 %defaults = (
-	'location_id'		=>	undef,
-	'servicetype_id'	=>	undef,
-	'sorting'			=>	undef,
+	location_id		=>	undef,
+	servicetype_id	=>	undef,
+	sorting			=>	undef,
+	category_id		=>	undef,
 );
 
 sub cache_field {
@@ -445,5 +447,9 @@ sub Operator_Shifts {
 	$Last_ES->Next( $Equipment_Shifts[0] );
 	return @Equipment_Shifts;
 } # end sub Operator_Shifts
+
+sub categories {
+	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );
+} # end sub categories
 1;
 __END__

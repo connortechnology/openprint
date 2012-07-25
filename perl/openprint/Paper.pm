@@ -1176,6 +1176,7 @@ $openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 					'colour'	=> $$specs{'ddmStockColour'},
 					'weight'	=> $$specs{'ddmStockWeight'},
 					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
+					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
 					'order'		=>	'minimum_order',
 					);
 			if ( $qty_index ) {

@@ -29,7 +29,7 @@ div.ProjectSummary p span.value {
 There is no current project. 
 <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
 <p class="buttons">
-	<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ); ) ?>
+	<? echo ( ssi::button( 'Print', { onclick=>'window.print();' } ); ) ?>
 </p>
 <div class="Project">
 <!--#include virtual="/includes/project_header.html" -->
@@ -60,5 +60,5 @@ There is no current project.
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
 <br/>
 <p class="buttons">
-<? echo ( ssi::writeButton($log, $dbh, 'ReturnToProjectView', 'back.gif', '', 'view.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Return to Project View' ); ) ?>
+<? echo ( ssi::button( 'ReturnToProjectView', { href=>'view.html?ProjectIndex='.$$variable{'ProjectIndex'}, text=>'Return to Project View' } ); ) ?>
 </p>

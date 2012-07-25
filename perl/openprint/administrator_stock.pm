@@ -27,7 +27,7 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 
 sub _stocks {
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'Group','owner_id','Manufacturer','Brand','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
+		ssi::save_params('/administrator/stock/list.html', 'Group','owner_id','Manufacturer','Brand','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'digital' );
 	} # end if
 } # end sub _stocks
 
