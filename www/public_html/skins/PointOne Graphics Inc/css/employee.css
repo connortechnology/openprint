@@ -15,6 +15,14 @@ fieldset p label, fieldset ul li label {
 	margin-left: -140px;
 }
 
+.dialog fieldset p {
+	padding-left: 100px;
+}
+.dialog fieldset p label, .dialog fieldset li label {
+	width: 95px;
+	margin-left: -100px;
+}
+
 div.PopupWindow fieldset p {
 	padding-left: 0px;
 }
@@ -65,11 +73,11 @@ div.PopupWindow fieldset p label {
 .Signature .Previews img {
 	width: 100%;
 }
-td p {
+table.List td p {
 	margin: 0px;
 	padding: 0px;
 }
-td p label {
+table.List td p label {
     width: auto;
     margin-left: 0px;
 }
