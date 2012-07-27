@@ -408,10 +408,10 @@ table input[type="text"], table input[type="number"] {
 	margin-left: -135px;
 }
 .filters p label.radio {
-	margin: 0px;
+	margin: 0;
 	width: auto;
 }
-fieldset.filters p input, fieldset.filters ul li input {
+.filters p input, .filters ul li input {
 	width: auto;
 }
 .filters p select {
