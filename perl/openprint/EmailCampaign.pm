@@ -140,7 +140,6 @@ sub send {
 	my $results = '';
 
 	my %replacements;
-	my $body = $self->{'email_text'};
 
 	# Find the email and company name for all accounts that match
 	# this campaign
@@ -177,6 +176,7 @@ sub send {
 	# If an email is sent, update the row in emailcampaigsent for this
 	# campaign/user, or add one as necessary
 	#
+	my $body = $self->{email_text} ? $$self{email_text} : $$self{email_html};
 	foreach my $user_index ( @mail_user_ids ) {
 		# de we need to send this email?
 
