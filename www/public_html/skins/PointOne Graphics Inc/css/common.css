@@ -411,7 +411,7 @@ table input[type="text"], table input[type="number"] {
 	margin: 0;
 	width: auto;
 }
-.filters p input, .filters ul li input {
+.filters input[type="text"], .filters input[type="text"] {
 	width: auto;
 }
 .filters p select {
