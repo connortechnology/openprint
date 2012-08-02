@@ -13,7 +13,7 @@ use Apache::Session::Postgres;
 use Date::Calc qw(Add_Delta_Days);
 use MIME::QuotedPrint;
 use MIME::Base64;
-require Encode::encode;
+require Encode;
 
 use strict;
 
