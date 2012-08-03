@@ -6,7 +6,7 @@ CREATE TABLE Article_Categories (
 	permalink	text,
 	description		TEXT,
 	deleted			BOOLEAN NOT NULL default false,
-	album_id		INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
+	album_id		INTEGER,
 	PRIMARY KEY (id)
 );
 
