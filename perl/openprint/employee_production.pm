@@ -1912,5 +1912,11 @@ sub datacollection {
 sub _datacollection {
 } # end sub _datacollection
 
+sub _datacollection_log {
+	ssi::save_params( '/employee/production/datacollection.html', ( 
+				( map { 'when_start_'.$_ } ('year','month','day') ),
+				) );
+} # end sub _datacollection_log
+
 1;
 __END__
