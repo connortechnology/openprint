@@ -1,4 +1,15 @@
 @media only screen and (max-device-width: 480px) {
+	body {
+		font-size:medium;
+	}
+}
+@media only screen and (max-device-width: 768px) {
+	body {
+		font-size:medium;
+	}
+	#menubar li a {
+		font-size:medium;
+	}
 }
 @media screen and (min-device-width: 481px) {
        body {
@@ -51,7 +62,7 @@ div.PopupWindow fieldset p label {
 	margin-left: -95px;
 }
 
-#JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio {
+#JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio, .dialog fieldset li label.radio {
 	width: auto;
 	margin-left: 0px;
 	vertical-align: middle;
