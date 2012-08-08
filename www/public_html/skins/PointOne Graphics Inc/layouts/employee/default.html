@@ -27,7 +27,7 @@
 	$css = join('_', @parts ) . '.css';
 		$log->debug("URI: $$variable{uri} $css");
 		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'?version='.time.'"/>';
+			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
 		}
 		pop @parts;
 	} # end while

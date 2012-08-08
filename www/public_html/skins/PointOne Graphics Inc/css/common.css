@@ -358,7 +358,8 @@ fieldset ul li input[type="text"] {
 	margin-left: -80px;
 	width: 75px;
 }
-.dialog input,
+.dialog input[type="text"],
+.dialog input[type="number"],
 .dialog textarea {
 	width: 100%;
 	box-sizing: border-box;
