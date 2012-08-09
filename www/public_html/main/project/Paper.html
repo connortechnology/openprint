@@ -23,6 +23,7 @@
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
+			next if ! ( $Paper->id() or $$Paper{custom} );
 			my $paper_string = $Paper->to_string();
 			$papers{$paper_string} = $Paper;
 		} # end foreach
@@ -41,6 +42,7 @@
 		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			next if ! ( $Paper->id() or $$Paper{custom} );
 			my $paper_string = $Paper->to_string();
 			$sig_papers{$paper_string} = $Paper;
 		} # end foreach

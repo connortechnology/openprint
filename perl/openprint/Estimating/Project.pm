@@ -189,7 +189,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
 		} # end if
-	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
+	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( exists $$specs{'ddmStockSheetSize'} ) ) {
 		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} else {
