@@ -1296,14 +1296,16 @@ sub load_from_signature {
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
+		my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index;
+
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 			$Paper = $Paper->id() ? $Paper : undef;
-if ( $Paper ) {
-$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
-} else {
-$openprint::log->warn("Unable to Loading by paper id" . $$specs{'paper_id'.$qty_index} );
-}
+			if ( $Paper ) {
+				$openprint::log->debug("Loading by paper id" . $Paper->to_string() );
+			} else {
+				$openprint::log->warn("Unable to Loading by paper id" . $$specs{'paper_id'.$qty_index} );
+			}
 		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
@@ -1332,8 +1334,8 @@ $log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
 				@Papers = openprint::Paper::find( %params );
-			} elsif ( @Papers > 1 ) {
-				Carp::cluck("More than 1 paper found in load_from_signature");
+			#} elsif ( @Papers > 1 ) {
+				#Carp::cluck("More than 1 paper found in load_from_signature");
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
@@ -1362,16 +1364,19 @@ $log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				$Paper->score_required( $Paper->calliper() > 0.008 );
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
+			} else {
+				foreach my $P ( @Papers ) {
+					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
+						next if $Stock_Setting->grain() eq 'Dont Use';
+					} # end if
+					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+						$openprint::log->debug("Paper no good due to minimum order");
+						next;
+					} # end if
+					$Paper = $P;
+					last;
+				} # end foreach
 			} # end if
-
-			foreach my $P ( @Papers ) {
-				if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
-					$openprint::log->debug("Paper no good due to minimum order");
-					next;
-				} # end if
-				$Paper = $P;
-				last;
-			} # end foreach
 			if ( ( ! $Paper ) and @Papers ) {
 $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
 				$Paper = shift @Papers;
