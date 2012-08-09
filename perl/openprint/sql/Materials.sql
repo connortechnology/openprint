@@ -1,7 +1,5 @@
-DROP TABLE IF EXISTS materials;
-DROP SEQUENCE IF EXISTS materials_id_seq;
 
-CREATE TABLE Materials (
+CREATE TABLE materials (
 	id				SERIAL,
 	category_id		INTEGER, FOREIGN KEY (category_id) REFERENCES Material_Categories (id),
 	name			TEXT,
@@ -12,4 +10,4 @@ CREATE TABLE Materials (
 	PRIMARY KEY (id)
 );
  
-CREATE INDEX materialis_name_idx ON materials (name);
+CREATE INDEX materials_name_idx ON materials (name);

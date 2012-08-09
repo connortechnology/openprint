@@ -28,6 +28,9 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
+	} elsif ( $param{'btnFunction'} eq 'Send Receipt' ) {
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$variable{'error'} .= $Payment->send_receipt();
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );

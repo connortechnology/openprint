@@ -12,4 +12,4 @@ CREATE TABLE Photo_Albums (
 	deleted		BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
-
+ ALTER TABLE Article_Categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id);
