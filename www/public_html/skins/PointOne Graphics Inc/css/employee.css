@@ -35,7 +35,7 @@ fieldset p label, fieldset li label {
 }
 .dialog fieldset p label.radio, .dialog fieldset li label.radio {
 	width: auto;
-	margin: none;
+	margin: 0;
 }
 
 div.PopupWindow fieldset p {
@@ -43,7 +43,7 @@ div.PopupWindow fieldset p {
 }
 div.PopupWindow fieldset p label {
 	width: 100%;
-	margin: 0px;
+	margin: 0;
 	text-align: left;
 }
 
@@ -68,7 +68,7 @@ div.PopupWindow fieldset p label {
 
 #JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio, .dialog fieldset li label.radio {
 	width: auto;
-	margin-left: 0px;
+	margin-left: 0;
 	vertical-align: middle;
 }
 #JobForm textarea {
@@ -78,7 +78,7 @@ div.PopupWindow fieldset p label {
 .Manifest #PurchaseOrders ul {
 	list-style: none;
 	padding: 0px;
-	margin: 0px;
+	margin: 0;
 }
 .Manifest table .InStock, .Manifest table .LastSeen {
 	text-align: right;
@@ -89,12 +89,12 @@ div.PopupWindow fieldset p label {
 	width: 100%;
 }
 table.List td p {
-	margin: 0px;
+	margin: 0;
 	padding: 0px;
 }
 table.List td p label {
     width: auto;
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 table tr .name {

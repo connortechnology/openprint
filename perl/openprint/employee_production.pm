@@ -33,6 +33,7 @@ require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
+require openprint::SignatureCapture;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1915,8 +1916,14 @@ sub _datacollection {
 sub _datacollection_log {
 	ssi::save_params( '/employee/production/datacollection.html', ( 
 				( map { 'when_start_'.$_ } ('year','month','day') ),
+				'equipment_id', 'employee_id', 'company_id', 'quantity_start', 'quantity_end', 'limit',
 				) );
+	$session{'/employee/production/datacollection.html?limit'} = 100 if ! exists $session{'/employee/production/datacollection.html?limit'};
 } # end sub _datacollection_log
+
+sub _signature_popup {
+	$variable{Signature} = new openprint::SignatureCapture( $param{signature_id} );
+} # end sub _signature_popup
 
 1;
 __END__

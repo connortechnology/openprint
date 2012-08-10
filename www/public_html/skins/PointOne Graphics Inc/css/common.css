@@ -678,7 +678,7 @@ form.inplaceeditor-form a { /* The cancel link */
     background-color: yellow;
 }
 
-input.filter, fieldset p input.filter, fieldset li input.filter {
+input[type="text"].filter, fieldset p input.filter, fieldset li input.filter {
 	width: 40px;
 }
 

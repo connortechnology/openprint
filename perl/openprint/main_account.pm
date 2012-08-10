@@ -130,18 +130,21 @@ sub registration {
 			return;
 		} # end if
 
-		# Setup default Credit
-		my $Credit = new openprint::Company_Credit();
-		$Credit->save({
-				'company_id'	=>	$Company->id(),
-				'supplier_id'	=>	$openprint::config{'Owner'},
-				'warndays'		=>	$openprint::config{'DefaultWarnDays'},
-				'denydays'		=>	$openprint::config{'DefaultDenyDays'},
-				'limit'			=>	$openprint::config{'DefaultCreditLimit'},
-				'hold'			=>	$openprint::config{'DefaultCreditHold'},
-				'downpayment'	=>	$openprint::config{'DefaultDownpayment'},
-				'cod'			=>	$openprint::config{'DefaultCOD'},
-				});
+		my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'index');
+		foreach my $Supplier ( @Suppliers ) {
+			# Setup default Credit
+			my $Credit = new openprint::Company_Credit();
+			$Credit->save({
+					'company_id'	=>	$Company->id(),
+					'supplier_id'	=>	$Supplier->id(),
+					'warndays'		=>	$openprint::config{'DefaultWarnDays'},
+					'denydays'		=>	$openprint::config{'DefaultDenyDays'},
+					'limit'			=>	$openprint::config{'DefaultCreditLimit'},
+					'hold'			=>	$openprint::config{'DefaultCreditHold'},
+					'downpayment'	=>	$openprint::config{'DefaultDownpayment'},
+					'cod'			=>	$openprint::config{'DefaultCOD'},
+					});
+		} # end foreach Supplier
 
 		my $User = new openprint::User();
 		$User->set( \%openprint::param );
