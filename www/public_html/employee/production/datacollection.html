@@ -7,8 +7,12 @@ function return_str_to_html(str){
 }
 function form_submit() {
 	var form = $('f1');
+
 	if ( ! form.docket.value ) {
 		alert('Please enter a docket #');
+		return false;
+	} else if ( ! form.form.value ) {
+		alert('Please enter form or click entire project.');
 		return false;
 	} // end if
 	form.signature.value = escape(top.getSignature());
@@ -70,7 +74,9 @@ $session{'/employee/production/datacollection.html?user_id'} ? $session{'/employ
 				</select>
 			</li>
 			<li><label>Form</label>
-				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?></li>
+				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?>
+				<? echo ( ssi::button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'Entire Project' } ); ) ?>
+			</li>
 			<li><label>Version</label>
 				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
 			<li><label>Quantity</label>
