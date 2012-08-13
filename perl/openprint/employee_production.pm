@@ -16,10 +16,10 @@ require openprint::order;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_project;
+require openprint::Equipment_Category;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
-require openprint::employee_project;
 
 require sql;
 require openprint::LabelType;
@@ -45,11 +45,11 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id' ) );
 		} # end if
 		if ( $param{'action'} eq 'Today' ) {
 			@session{'/employee/production/print_overview.html?schedule_start_year',
@@ -81,7 +81,7 @@ sub print_overview {
 '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
-		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -1004,7 +1004,7 @@ sub _drop {
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
 				next if ! $Job->project_id(); # Maintenance work, etc
-				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+				if ( sets::isin( 'Bindery', [$Equipment->categories()] ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
 #$log->debug("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
@@ -1037,7 +1037,7 @@ sub _drop {
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( $Job->project_id() and ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+			if ( $Job->project_id() and sets::isin( 'Bindery', [$Equipment->categories()] ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 				my @Jobs;
 				my $Project = $Job->Project();
 				if ( $param{'action'} eq 'add_services' ) {
@@ -1712,7 +1712,7 @@ sub _shift_change {
 
 sub operator_schedule {
 	if ( $param{'func'} eq 'Reset' ) {
-		foreach my $param ( 'category', 'equipment_id' ) {
+		foreach my $param ( 'category_id', 'equipment_id' ) {
 			delete $session{$r->uri().'?'.$param};
 		} # end if
 	} elsif ( $param{'func'} eq 'save' ) {
@@ -1743,7 +1743,7 @@ sub operator_schedule {
 			$variable{'error'} .= $NewShift->save();
 		} # end foreach Equipment
 	} else {
-		ssi::save_params( $r->uri(), ( 'category', 'equipment_id' ) );
+		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id' ) );
 	} # end if
 
 } # end sub operator_schedule
@@ -1874,12 +1874,15 @@ sub datacollection {
 						last;
 					} # end if
 				} # end foreach signature
+				if ( ! $param{service_id} ) {
+					$param{service_id} = $Project->add_signature( $param{form}, 'Ordered' );
+				} # end if
 			} # end if
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {
 				$Signature->save({
-					'image_data'	=>	$param{'signature'},
-					'type'			=>	'svg',
+					'image_data'	=>	URI::Escape::uri_unescape($param{'signature'}),
+					'type'			=>	'path',
 					'project_id'	=>	$Project->id(),
 					'service_id'	=>	$param{'service_id'},
 				});
@@ -1893,6 +1896,7 @@ sub datacollection {
 					starting_on	=>	$param{starting_on},
 					ending_on		=>	$param{ending_on},
 					comment		=>	$param{comment},
+					version		=>	$param{version},
 					signature_id	=>	($Signature ? $Signature->id() : ()),
 					equipment_id	=>	$param{equipment_id},
 					quantity		=>	$param{quantity},
@@ -1900,6 +1904,8 @@ sub datacollection {
 			
 		} # end foreach Project
 		$variable{'ExternalRedirect'} = '/employee/production/datacollection.html';
+
+		ssi::save_params( '/employee/production/datacollection.html', ( 'user_id', 'equipment_id', 'category_id' ) );
 		
 	} # end if Submit
 } # end sub datacollection

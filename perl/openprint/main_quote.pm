@@ -470,6 +470,9 @@ sub _quote_list {
 sub _products_dropdown {
 } # end sub _products_dropdown
 
+sub _view_log {
+} # end sub _view_log
+
 1;
 
 __END__

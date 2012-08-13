@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS Configuration;
+/*DROP TABLE IF EXISTS Configuration;*/
 
 CREATE TABLE Configuration (
     Name		TEXT NOT NULL,

@@ -134,5 +134,9 @@ sub requested_for {
 	return $_[0]{'requested_for'};
 } # end sub erquested_for
 
+sub quantity_index {
+return 1;
+}
+
 1;
 __END__
