@@ -9,5 +9,6 @@ CREATE TABLE Company_Profile_Fields (
 	sort		INTEGER,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	searchable	BOOLEAN NOT NULL DEFAULT FALSE,
+	defaults	TEXT[],
 	PRIMARY KEY (id)
 );

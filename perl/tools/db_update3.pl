@@ -276,6 +276,9 @@ if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
 	if ( ! $$data{'search_default'} ) {
 		$dbh->do('ALTER TABLE company_profile_fields add search_default TEXT');
 	} # end if
+	if ( ! $$data{'defaults'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields ADD defaults TEXT[]');
+	} # end if
 } # end if
 if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
