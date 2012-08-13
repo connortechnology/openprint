@@ -2,8 +2,9 @@ use strict;
 package openprint::SignatureCapture;
 our @ISA = qw( openprint::Object );
 use openprint ();
-use Image::Magick;
-use URI::Escape ();
+require Image::Magick;
+require URI::Escape;
+require MIME::Base64;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -43,23 +44,20 @@ sub file_path {
 
 		misc::save_file( $openprint::log, $tmp_filename.'.bmp', $$self{'image_data'} );
 		# Convert to gif
-		my $Image = Image::Magick->new('format'=>'bmp');
-		$_ = $Image->Read($tmp_filename.'.bmp');
-		if ( $_ ) {
-			$openprint::log->error("Read: " . $_);
-			return '';
-		} # end if
-		unlink $tmp_filename.'.bmp';
-		#$Image->Write('gif:'.$tmp_filename.'.gif');
-		$Image->magick('gif');
-		my @blobs = $Image->ImageToBlob();
-        if ( ! @blobs ) {
-            $openprint::log->error("No blobs");
-        } # end if
-
-		$_ = $self->save({'image_data'=>$blobs[0],'type'=>'gif'});
-		$openprint::log->error($_) if $_;
-		misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type}, $$self{'image_data'} );
+		eval {
+			my $Image = Image::Magick->new(magick=>'bmp');
+			$Image->BlobToImage( $$self{image_data} );
+			$Image->set(magick=>'gif');
+			my @blobs = $Image->ImageToBlob();
+			if ( ! @blobs ) {
+				$openprint::log->error("No blobs");
+			} elsif ( @blobs > 1 ) {
+				$openprint::log->warn("# of blobs: " . @blobs);
+			} # end if
+			$_ = $self->save({'image_data'=>MIME::Base64::encode_base64($blobs[0]),'type'=>'gif'});
+		}; # end eval
+		$openprint::log->error( "Eval error of SignatureCapture::file_path bmp conversion Reason: " . $@ ) if $@;
+		misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type}, MIME::Base64::decode_base64($$self{'image_data'}) );
 		return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type};
 	} elsif ( $self->type() eq 'path' ) {
 		my $filename = '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.
@@ -68,7 +66,7 @@ sub file_path {
     xmlns:xlink="http://www.w3.org/1999/xlink"><path d="'.$$self{'image_data'}.'" style="stroke:#000066; fill:none;"/></svg>' );
 		return $filename;
 	} else {
-		misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type}, $$self{'image_data'} );
+		misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type}, MIME::Base64::decode_base64($$self{'image_data'}) );
 		return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.'.$$self{type};
 	} # end if
 } # end sub file_path
@@ -134,30 +132,23 @@ sub additional_file_path {
 		mkdir $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'};
 	} # end if
 	if ( $self->type() eq 'bmp' ) {
-		my $tmp_filename = '/tmp/'.$$self{'project_id'}.'_'.$$self{'service_id'}.'_'.$$self{'id'}.'_additional';
 
-		misc::save_file( $openprint::log, $tmp_filename.'.bmp', $$self{'additional_image_data'} );
-		# Convert to gif
-		my $Image = Image::Magick->new('format'=>'bmp');
-		$_ = $Image->Read($tmp_filename.'.bmp');
-		if ( $_ ) {
-			$openprint::log->error("Read: " . $_);
-			return '';
-		} # end if
-		unlink $tmp_filename.'.bmp';
-		#$Image->Write('gif:'.$tmp_filename.'.gif');
-		$Image->magick('gif');
+		my $Image = Image::Magick->new(magick=>'bmp');
+		$Image->BlobToImage( $$self{additional_image_data} );
+
+		$Image->set(magick=>'gif');
 		my @blobs = $Image->ImageToBlob();
-        if ( ! @blobs ) {
-            $openprint::log->error("No blobs");
-        } # end if
-
-		$_ = $self->save({'additional_image_data'=>$blobs[0],'additional_image_type'=>'gif'});
+		if ( ! @blobs ) {
+			$openprint::log->error("No blobs");
+		} elsif ( @blobs > 1 ) {
+			$openprint::log->warn("# of blobs: " . @blobs);
+		} # end if
+		$_ = $self->save({'additional_image_data'=>MIME::Base64::encode_base64($blobs[0]),'additional_image_type'=>'gif'});
 		$openprint::log->error($_) if $_;
 	} # end if
 	return '' if ! $$self{'additional_image_data'};
 	my $filename = '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'_additional.gif';
-	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.$filename, $$self{'additional_image_data'} );
+	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.$filename, MIME::Base64::decode_base64($$self{'additional_image_data'}) );
 	return $filename;
 } # end sub additional_file_path
 

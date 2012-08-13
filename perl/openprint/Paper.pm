@@ -713,7 +713,7 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-	my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
+    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -726,12 +726,13 @@ sub allocate {
 
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_ids'		=>	$skids,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units ? $units : $self->units(),
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
+			paper_id		=>	$$self{'id'},
+			skid_ids		=>	$skids,
+			quantity		=>	$quantity,
+			units			=>	$units ? $units : $self->units(),
+			project_id		=>	$project_id,
+			operator_id		=>	$openprint::session{'user_id'},
+			condition_id	=>	$condition_id,
 			} );
 	if ( $project_id ) {
 		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
@@ -807,7 +808,7 @@ sub available {
 		$$self{available} = 0;
 		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			next if sets::isin( $SkidContent->quality(), [ 'Damaged', 'Used', 'Trial', 'Return', 'Partial' ] );
+			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 		$$self{'available'} -= $self->allocated();

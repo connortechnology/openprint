@@ -1,12 +1,3 @@
-/*
-DROP TABLE IF EXISTS Fold_Specifications;
-DROP SEQUENCE IF EXISTS FoldSpecification_id_seq;
-CREATE SEQUENCE FoldSpecification_id_seq;
-
-DROP TABLE IF EXISTS Folds;
-DROP SEQUENCE IF EXISTS Fold_id_seq;
-CREATE SEQUENCE Fold_id_seq;
-*/
 
 CREATE TABLE Folds (
 	id SERIAL,
@@ -41,4 +32,3 @@ CREATE TABLE Folds (
 	printing_type	TEXT,
 	PRIMARY KEY (id)
 );
-
