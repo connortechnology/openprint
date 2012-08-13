@@ -125,7 +125,7 @@ function howdidyouhearaboutus_onchange(e) {
 						</li>
                 <? echo (
                     my $html;
-                    foreach my $Field ( openprint::User_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
+                    foreach my $Field ( openprint::Company_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
                         if ( $Field->type() eq 'date' ) {
                             $html .= $Field->html( [ @param{'field-'.$Field->id().'_year','field-'.$Field->id().'_month','field-'.$Field->id().'_day'} ] );
                         } else {
@@ -213,6 +213,17 @@ function howdidyouhearaboutus_onchange(e) {
 					<label>E-mail</label>
 					<input type="email" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</li>
+                <? echo (
+                    my $html;
+                    foreach my $Field ( openprint::User_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
+                        if ( $Field->type() eq 'date' ) {
+                            $html .= $Field->html( [ @param{'field-'.$Field->id().'_year','field-'.$Field->id().'_month','field-'.$Field->id().'_day'} ] );
+                        } else {
+                            $html .= $Field->html( $param{'field-'.$Field->id()} );
+                        } # end if
+                    } # end foreach Field
+                    return $html;
+                ) ?>
 				<li><!--#include virtual="/includes/password_requirements.html"--></li>
 				<li class="password<? echo ( $$variable{'RequiredFields'}{'password'} ? ' required' : '' ) ?>">
 					<label for="password">Password</label>

@@ -2,7 +2,8 @@ use strict;
 package openprint::Company_Profile_Field;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'company_profile_fields';
 $serial = 'company_profile_fields_id_seq';
 %fields = (
@@ -15,7 +16,6 @@ $serial = 'company_profile_fields_id_seq';
 	'values'		=>	'values',
 	'deleted'		=>	'deleted',
 	'searchable'	=>	'searchable',
-	'deleted'		=>	'deleted',
 	'search_default'	=>	'search_default',
 	'match'			=>	'match',
 	'on_registration'	=>	'on_registration',
