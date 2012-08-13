@@ -264,6 +264,18 @@ if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
 	if ( ! $$data{'searchable'} ) {
 		$dbh->do('ALTER TABLE company_profile_fields add searchable BOOLEAN not null default false');
 	} # end if
+	if ( ! $$data{'match'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add match TEXT');
+	} # end if
+	if ( ! $$data{'viewable'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add viewable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! $$data{'on_registration'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add on_registration BOOLEAN NOT NULL default false');
+	} # end if
+	if ( ! $$data{'search_default'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add search_default TEXT');
+	} # end if
 } # end if
 if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );

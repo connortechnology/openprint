@@ -73,6 +73,12 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 		$dbh->do('ALTER TABLE Currencies ADD short TEXT');
 	} # end if
 } # end if
+if ( ! sets::isin( 'annualsales', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/AnnualSales.sql}) );
+} # end if
+if ( ! sets::isin( 'addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+} # end if
 
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
@@ -954,7 +960,7 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 	} # end if
 } # end if
 if ( ! sets::isin( 'fold_specifications', \@tables ) ) {
-	if ( ! sets::isin( 'foldspecifications', \@tables ) ) {
+	if ( sets::isin( 'foldspecifications', \@tables ) ) {
 		$dbh->do('ALTER TABLE foldspecifications RENAME TO fold_specifications');
 	} else {
 		$dbh->do( misc::load_file( $log, q{../openprint/sql/Fold_Specifications.sql}) );
@@ -2405,6 +2411,7 @@ if ( ! sets::isin('shifts',\@tables ) ) {
 
 if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
@@ -2650,6 +2657,10 @@ if ( ! sets::isin( 'car', \@tables ) ) {
 	}
 } # en dif
 
+if ( ! sets::isin( 'users_in_usergroups', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users_in_Usergroups.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;

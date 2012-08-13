@@ -123,6 +123,17 @@ function howdidyouhearaboutus_onchange(e) {
 							<label for="url">Web Site URL</label>
 							<input type="text" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
 						</li>
+                <? echo (
+                    my $html;
+                    foreach my $Field ( openprint::User_Profile_Field->find('on_registration'=>1,order=>'sort') ) {
+                        if ( $Field->type() eq 'date' ) {
+                            $html .= $Field->html( [ @param{'field-'.$Field->id().'_year','field-'.$Field->id().'_month','field-'.$Field->id().'_day'} ] );
+                        } else {
+                            $html .= $Field->html( $param{'field-'.$Field->id()} );
+                        } # end if
+                    } # end foreach Field
+                    return $html;
+                ) ?>
 					</ul>
 				</div>
 			</fieldset>
