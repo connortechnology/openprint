@@ -1,14 +1,14 @@
 use strict;
 require openprint::Object;
 require openprint::Object_Asset;
-use Net::ARP;
-use Net::Ping;
-use IO::Interface::Simple;
+use Net::ARP ();
+use Net::Ping ();
+use IO::Interface::Simple ();
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'host_notifications';
 @identified_by = ( 'host_id','user_id' );
 
@@ -20,7 +20,7 @@ $table = 'host_notifications';
 package openprint::Host_Type;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table $serial %fields %transforms %defaults %types );
-$debug = 1;
+$debug = 0;
 $table = 'host_types';
 $serial = 'host_types_id_seq';
 %fields = (
@@ -34,7 +34,7 @@ $serial = 'host_types_id_seq';
 package openprint::Host;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults %types );
 $debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
@@ -55,6 +55,12 @@ $serial = 'hosts_id_seq';
 	'online'		=>	'online',
 	'type_id'		=>	'type_id',
 	'type'			=>	undef,
+	'offline_seconds'	=>	'offline_seconds',
+	'state_changed_on'	=>	'state_changed_on',
+	'notified'			=>	'notified',
+);
+%find_fields = (
+	'type'	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
 );
 %transforms = (
 );
@@ -72,6 +78,9 @@ $serial = 'hosts_id_seq';
 	'deleted'	=>	0,
 	'online'	=>	undef,
 	'type_id'	=>	undef,
+	'state_changed_on'	=>	undef,
+	'offline_seconds'	=>	undef,
+	'notified'=>	0,
 );
 sub resolve {
 	my ( $self ) = @_;
@@ -129,7 +138,6 @@ sub Type {
 } # end sub Type
 
 sub type {
-$openprint::log->debug("type: @_");
 	if ( @_ > 1 ) {
 		my $Type = openprint::Host_Type->find_one('name lc'=> lc $_[1] );
 		if ( ! $Type ) {
@@ -139,7 +147,7 @@ $openprint::log->debug("type: @_");
 		$_[0]{'type_id'} = $Type->id();
 		$_[0]{'type'} = $Type->name();
 	}
-	if ( ! exists $_[0]{'type'} ) {
+	if ( ! $_[0]{'type'} ) {
 		$_[0]{'type'} = new openprint::Host_Type( $_[0]{'type_id'} )->name();
 	} # end if
 	return $_[0]{'type'};

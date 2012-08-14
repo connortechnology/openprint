@@ -2,9 +2,9 @@ use strict;
 package openprint::Paper;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use Carp qw( cluck );
-use Math::Round ();
+require Math::Round;
 
 use openprint ();
 use vars qw( $log %variable %config );
@@ -713,7 +713,7 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-	my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
+    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -726,12 +726,13 @@ sub allocate {
 
 	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_ids'		=>	$skids,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units ? $units : $self->units(),
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
+			paper_id		=>	$$self{'id'},
+			skid_ids		=>	$skids,
+			quantity		=>	$quantity,
+			units			=>	$units ? $units : $self->units(),
+			project_id		=>	$project_id,
+			operator_id		=>	$openprint::session{'user_id'},
+			condition_id	=>	$condition_id,
 			} );
 	if ( $project_id ) {
 		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
@@ -807,7 +808,7 @@ sub available {
 		$$self{available} = 0;
 		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			next if sets::isin( $SkidContent->quality(), [ 'Damaged', 'Used', 'Trial', 'Return', 'Partial' ] );
+			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 		$$self{'available'} -= $self->allocated();
@@ -859,6 +860,7 @@ sub get_price {
 	
 	my $price;
 	my $qty = $params{'weight'};
+	my $lookup_qty = $params{'lookup_weight'} ? $params{'lookup_weight'} : $params{'weight'};
 
 	if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
@@ -877,8 +879,8 @@ sub get_price {
 			next if $$Price{'service'} ne $params{'service'};
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
-					( (!(1*$Price->min())) or $Price->min() <= $qty ) and
-					( (!(1*$Price->max())) or $Price->max() >= $qty )
+					( (!(1*$Price->min())) or $Price->min() <= $lookup_qty ) and
+					( (!(1*$Price->max())) or $Price->max() >= $lookup_qty )
 				) {
 				$price = $Price->clone();
 				last;
@@ -886,14 +888,14 @@ sub get_price {
 		} # end foreach Price
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
-				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty");
+				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty $lookup_qty");
 			} # end if
 			return;
 		} # end if
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
-			$pricingpercent =~ s/[^\d\.\-]//g;
+			#$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
 			$$price{'price'} *= ( 1 + $pricingpercent );
 		} # end if
@@ -1159,10 +1161,12 @@ sub load_from_signature {
 		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
+		my $Press = openprint::Equipment->find_one(strid=>$$specs{"ddmPress$qty_index"}) if $qty_index;
+
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 			$Paper = $Paper->id() ? $Paper : undef;
-$openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
+			$openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
 		} # end if
@@ -1175,6 +1179,7 @@ $openprint::log->debug("Loading by paper id" . $Paper->to_string() ) if $debug;
 					'colour'	=> $$specs{'ddmStockColour'},
 					'weight'	=> $$specs{'ddmStockWeight'},
 					( $Project ? ( 'project_type_id any'=> $Project->type_id() ) : () ),
+					( $$specs{'PrintingType'.$qty_index} eq 'Digital' ? ( 'digital'=>1 ) : () ),
 					'order'		=>	'minimum_order',
 					);
 			if ( $qty_index ) {
@@ -1190,10 +1195,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
 				@Papers = openprint::Paper->find( %params );
-			#} elsif ( $qty_index and ( @Papers > 1 ) ) {
-				#Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if
-#$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
 				$openprint::log->warn("No papers found");
 				$Paper = new openprint::Paper();
@@ -1220,16 +1222,19 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				$Paper->score_required( $Paper->calliper() > 0.008 );
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
 				@Papers = ( $Paper );
+			} else {
+				foreach my $P ( @Papers ) {
+					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
+						next if $Stock_Setting->grain() eq 'Dont Use';
+					} # end if
+					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
+						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() );
+						next;
+					} # end if
+					$Paper = $P;
+					last;
+				} # end foreach
 			} # end if
-
-			foreach my $P ( @Papers ) {
-				if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
-					$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() );
-					next;
-				} # end if
-				$Paper = $P;
-				last;
-			} # end foreach
 			if ( ( ! $Paper ) and @Papers ) {
 $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
 				$Paper = shift @Papers;
@@ -1430,5 +1435,17 @@ sub short {
 	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
 }
 
+sub start_width {
+	if ( @_ > 1 ) {
+		$_[0]{'start_width'} = $_[1];
+	} 
+	return $_[0]{'start_width'};
+} # end sub start_width
+sub start_height {
+	if ( @_ > 1 ) {
+		$_[0]{'start_height'} = $_[1];
+	} 
+	return $_[0]{'start_height'};
+} # end sub start_height
 1;
 __END__

@@ -1,16 +1,15 @@
-package openprint::ProductionFeedback;
-@ISA = qw(openprint::Object);
-
 use strict;
+require openprint::SignatureCapture;
+require openprint::User;
+require openprint::Project;
+require openprint::Equipment;
 
-require sql;
-require openprint::Object;
-use openprint ();
+package openprint::ProductionFeedback;
+our @ISA = qw(openprint::Object);
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+$debug = 1;
 $table = 'ProductionFeedback';
 $serial = 'ProductionFeedback_id_seq';
 %fields = (
@@ -21,21 +20,44 @@ $serial = 'ProductionFeedback_id_seq';
 	'ending_on'		=>	'ending_on',
 	'user_id'		=>	'user_id',
 	'comment'		=>	'comment',
+	'version'		=>	'version',
+	'signature_id'	=>	'signature_id',
+	'equipment_id'	=>	'equipment_id',
+	'quantity'		=>	'quantity',
 );
 %defaults = (
 	'user_id'		=>	undef,
+	'service_id'	=>	undef,
+	'signature_id'	=>	undef,
+	'equipment_id'	=>	undef,
+	'starting_on'	=>	'NOW()',
+	'ending_on'		=>	'NOW()',
+	'quantity'		=>	undef,
 );
 %transforms = (
-	'project_id'	=> [ 's/\D//g' ],
-	'service_id'	=> [ 's/\D//g' ],
-	'user_id'		=> [ 's/\D//g' ],
+	'equipment_id'	=>	[ 's/\D//g' ],
+	'project_id'	=>	[ 's/\D//g' ],
+	'service_id'	=>	[ 's/\D//g' ],
+	'user_id'		=>	[ 's/\D//g' ],
+	'signature_id'	=>	[ 's/\D//g' ],
+	'quantity'		=>	[ 's/[^\-\.\d]//g' ],
 );
 
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
 
-1;
+sub Signature {
+	return new openprint::SignatureCapture( $_[0]{signature_id} );
+} # end sub Signature
 
+sub Project {
+	return new openprint::Project( $_[0]{project_id} );
+} # end sub Project
+
+sub Equipment {
+	return new openprint::Equipment( $_[0]{equipment_id} );
+} # end sub Equipment
+
+1;
 __END__
-~       

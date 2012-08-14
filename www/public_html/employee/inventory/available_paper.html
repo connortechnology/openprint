@@ -4,7 +4,7 @@
 	var allocateWin;
 	function allocate_window( paper_id ) {
 		if ( allocateWin == null ) {
-			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
+			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:400,height:400} );
 			allocateWin.setHTMLContent('Loading... please wait');
 			allocateWin.showCenter();
 			// Set up a windows observer, check ou debug window to get messages

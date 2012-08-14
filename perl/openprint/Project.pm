@@ -63,6 +63,10 @@ $serial = 'lngProjectIndex_seq';
 	'rush'				=>	'rush',
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
+	'markup'			=>	'markup',
+);
+%transforms = (
+	'markup'	=> [ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -76,6 +80,7 @@ $serial = 'lngProjectIndex_seq';
 	'price3'		=>	undef,
 	'order_id'		=>	undef,
 	'due_date'		=>	undef,
+	'markup'		=>	undef,
 );
 
 %find_fields = (
@@ -1362,7 +1367,6 @@ sub delivery_cost {
 	my ( $self ) = @_;
 
 	my $qty_index = $self->ordered_quantity_index();
-$openprint::log->error("Delivery Cost for $qty_index");
 
 	if ( ! exists $$self{'delivery_cost'} ) {
 		my $services = $self->services();
@@ -1374,7 +1378,6 @@ $openprint::log->error("Delivery Cost for $qty_index");
 			} # end foreach
 		} # end foreach
 	} # end if
-$openprint::log->error("Delivery Cost for $qty_index $$self{delivery_cost}");
 	return $$self{'delivery_cost'};
 } # end sub delivery_cost
 

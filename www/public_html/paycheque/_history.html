@@ -24,33 +24,42 @@
 	</div>
 	<table class="List">
 		<tr> 
-			<th width="50">ID</th>
+			<th class="paycheque_id">ID</th>
 			<th class="Date">When</th>
-			<th>Employer</th>
-			<th>Employee</th>
-			<th width="75" style="text-align:right;">Amount</th>
+			<th class="CompanyName">Employer</th>
+			<th class="User">Employee</th>
+			<th class="Price">Amount</th>
 		</tr>
-		<? while ( $$variable{'Paycheque'} = shift @{$$variable{'Paycheques'}}; ) ?>
-		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Paycheque'}->Currency()->conversions( $session{'Currency_id'} );
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Paycheque ( @{$$variable{'Paycheques'}} ) {
+				my $conversion_rate = $Paycheque->Currency()->conversions( $session{'Currency_id'} );
+				$html .= sprintf(q`
+<tr title="%3$s"%1$s>
+	<td class="paycheque_id"><a href="/paycheque/edit.html?paycheque_id=%2$d">%2$d</a></td>
+	<td class="Date"><a href="/paycheque/edit.html?paycheque_id=%2$d">%4$s</a></td>
+	<td class="CompanyName"><a href="/paycheque/edit.html?paycheque_id=%2$d">%5$s</a></td>
+			<td class="User"><a href="/paycheque/edit.html?paycheque_id=%2$d">%6$s</a></td>
+			<td class="Price">%7$s</td>
+</tr>`,
+			$rowclass, $Paycheque->id(), ssi::html_escape( $Paycheque->external_notes() ), 
+			Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Paycheque->paid_on() ) ),
+			ssi::html_escape( $Paycheque->Employer()->name() ), ssi::html_escape( $Paycheque->Employee()->name() ),
+			openprint::Currency::format( 1*$Paycheque->total() ),
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Paycheque
+			return $html;
 		) ?>
-		<tr title="<? echo ( $$variable{'Paycheque'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? echo ( $$variable{'Paycheque'}->id(); ) ?></a></td>
-			<td class="Date"><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paycheque'}->paid_on() ) ); ) ?></a></td>
-			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? hecho ( $$variable{'Paycheque'}->Employer()->name(); ) ?></a></td>
-			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? hecho ( $$variable{'Paycheque'}->Employee()->name(); ) ?></a></td>
-			<td align="right"><? echo ( openprint::Currency::format($$variable{'Paycheque'}->total() ); ) ?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
-		<? endwhile ( $$variable{'Paycheque'} = shift @{$$variable{'Paycheques'}}; ) ?>
 		<tr class="totals">
 			<td colspan="4">Totals</td>
-			<td align="right"><? echo ( openprint::Currency::format($$variable{'Total'}); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format($$variable{'Total'}); ) ?></td>
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
-<span class="unprintable" style="float: right;">
-<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
-</span>
+<p class="buttons>
+<? echo ( ssi::button( 'Delete', { onclick=>"delete_confirm(document.f1);", href=>'', text=>'Delete' } ); ) ?>
+</p>
 <? endif ( @{$$variable{'Paycheques'}} == 0 ) ?>

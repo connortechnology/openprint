@@ -8,6 +8,7 @@
 		<!--#include virtual="/includes/quote_prepared_for.html" -->
 	</div>
 	<!--#include virtual="/email_content/quote_header.html" -->
+<? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
 	<table class="List"> 
 		<tr> 
 			<th class="id">ID</th>
@@ -66,6 +67,8 @@
     ) ?>
 
 	</table>
+<? endif ( $$variable{'Quote'}->Quoted_Projects() ) ?>
+	<!--#include virtual="/email_content/_quote_products_for.html" -->
 	<br/>
 	<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency()->name() ) ?></b> and are subject to applicable taxes.</span><br/>
 	<br/>

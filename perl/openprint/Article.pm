@@ -46,6 +46,7 @@ $serial = 'articles_id_seq';
 	'source_content'	=>	'source_content',
 	'summary'			=>	'summary',
 	'user_type'			=>	'user_type',
+	'keywords'			=>	'keywords',
 );
 
 %transforms = (
@@ -179,17 +180,17 @@ sub html {
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
+			<div class="Assets">%8$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
 			Posted on %7$s by <a href="/account/view.html?user_id=%5$d">%6$s</a><br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
-			<div class="Assets">%8$s</div>
 			`, $Article->id(),
-			ssi::htmlize($Article->title()),
+			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
 			$Article->created_by(),
-			ssi::htmlize( $Article->Author()->name() ),
+			ssi::escape_quotes( $Article->Author()->alias() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
@@ -212,15 +213,58 @@ sub view_url {
 	return '/article/view.html?article_id='.$_[0]{'id'};	
 } # end sub view_url
 
+sub link_to {
+	return '<a href="'.$_[0]->view_url().'">'.ssi::html_escape($_[0]->name()).'</a>';
+} # end sub link_to
+
 sub Assets {
 	return openprint::Article_Asset->find( 'article_id' => $_[0]{'id'} );
 } # end sub Assets
+
 sub published_on_string {
 	if ( ! $_[0]{'published_on_string'} ) {
 		$_[0]{'published_on_string'} = misc::smart_time( Date::Parse::str2time( $_[0]{'published_on'} ) );
 	} # end if
 	return $_[0]{'published_on_string'};
 } # end sub published_on_string
+
+sub upload {
+	my $error;
+	my $Asset = openprint::Asset::upload( $_[1] );
+	if ( ref $Asset ne 'openprint::Asset' ) {
+		return $Asset;
+	} # end if
+	my $Article_Asset = new openprint::Article_Asset({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	if ( $Article_Asset->asset_id() ) {
+		return 'Asset already in article.';
+	} else {
+		return $Article_Asset->save({'asset_id'=>$Asset->id(), 'article_id'=>$_[0]->id()});
+	} # end if
+} # end sub upload
+
+sub destroy {
+	my $error = '';
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach ( $_[0]->Assets() ) {
+		$error .= $_->destroy();
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::destroy() if ! $error;
+	$openprint::dbh->rollback() if $error;
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub destroy
+	
+sub Photos {
+    #if ( ! $_[0]{'album_id'} ) {
+        #return ();
+    #} # end if
+    return openprint::Article_Asset->find('article_id'=>$_[0]{'id'});
+} # end sub Photos
+
+sub Album {
+    #return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
 
 1;
 __END__

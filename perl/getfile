@@ -53,7 +53,7 @@ $dbh = sql::open_sql( $log,
 		);
 
 my $r = Apache2::Request->new( $request );
-configuration::init_cache( $log, $dbh, $r->dir_config() );
+configuration::init( $log, $dbh, $r->dir_config() );
 my $cookie = misc::get_cookie( $request, $log, '_session_id' );
 
 tie %session, 'Apache::Session::Postgres', $cookie, {

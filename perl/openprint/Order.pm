@@ -19,7 +19,7 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -32,6 +32,8 @@ $serial = 'orders_id_seq';
 	'status'					=> 'strstatus',
 	'total'						=> 'curtotalsale',
 	'downpayment'				=> 'curdownpayment',
+	'cod_percent'				=>	'cod_percent',
+	'downpayment_percent'		=>	'downpayment_percent',
 	'created_on'				=> 'dtmorderdate',
 	'company_name'				=> 'strcompanyname',
 	'salutation'				=> 'strsalutation',
@@ -58,6 +60,7 @@ $serial = 'orders_id_seq';
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
 	'terms_accepted'			=>	'terms_accepted',
+	'supplier_id'				=>	'supplier_id',
 	);
 
 sub save {
@@ -300,7 +303,7 @@ sub Projects {
 	my $self = shift;
 	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	@{$$self{'Projects'}} = map { $_->Project() } openprint::OrderedProject->find( 'order_id'=>$$self{id} );
 	return @{$$self{'Projects'}};
 } # end sub Projects
 
@@ -338,24 +341,21 @@ sub Currency {
 
 sub pay {
 	my $self = shift;
-
-	my ( $company_index, $currency_id, $amount, $paid ) = $self->get('company_id','currency_id','total','paid');
-	if ( $amount - $paid <= 0 ) {
+	if ( $self->owing() <= 0 ) {
 		$self->update_status();
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
-	my $Payment = new openprint::Payment();
-	my $error = $Payment->save( {
-			'order_id'		=> $$self{id},
-			'recipient_id'	=>	new openprint::User( $openrpint::session{'user_id'} )->company_id(),
-			'payor_id'		=> $$self{company_id},
-			'amount'		=> $amount - $paid,
-			'method'		=> 'Manual',
-			'currency_id',	=> $$self{currency_id},
-			'memo'			=> 'Order marked paid',
-			'completed'		=> 1,
-			} );
+	my $error = (new openprint::Payment())->save({
+			'order_id'		=>	$$self{id},
+			'payor_id'		=>	$$self{company_id},
+			'recipient_id'	=>	$self->supplier_id(),
+			'amount'		=>	$self->owing(),
+			'method'		=>	'Manual',
+			'currency_id'	=>	$$self{currency_id},
+			'memo'			=>	'Order marked paid',
+			'received_on'	=>	'NOW()',
+			});
 	if ( ! $error ) {
 		$self->update_status();
 	} # end if
@@ -510,7 +510,7 @@ sub send_sales_order {
 		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
-		ATTACHMENTS	=>	[ @body, @sales_order, @project_summaries ],
+		ATTACHMENTS	=>	[ @body, @sales_order ],
 		);
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
@@ -633,6 +633,60 @@ sub paid_on {
 	} # end if
 	return $Last_Payment->received_on();
 } # end sub paid_on
+
+sub downpayment_owing {
+	if ( ! exists $_[0]{'downpayment_owing'} ) {
+		$_[0]{'downpayment_owing'} = $_[0]->downpayment() - $_[0]->paid();
+		$_[0]{'downpayment_owing'} = 0 if $_[0]{'downpayment_owing'} < 0;
+	} # end if
+	return $_[0]{'downpayment_owing'};
+} # end sub downpayment_owing
+sub downpayment_percent {
+	if ( ! defined $_[0]{'downpayment_percent'} ) {
+		my $Credit = $_[0]->Company()->Credit();
+		$_[0]{'downpayment_percent'} = $Credit->downpayment();
+	} # end if
+	return $_[0]{'downpayment_percent'};
+} # end sub downpayment_percent
+sub cod_percent {
+	my $Credit = $_[0]->Company()->Credit();
+	return $Credit->cod();
+} # end sub cod_percent
+
+sub cod { 
+	return Math::Round::nearest( .01,$_[0]{'total'} * ($_[0]->cod_percent/100));
+} # end sub cod
+# Returns the remmaining amount to pay on delivery
+sub cod_owing {
+	if ( ! exists $_[0]{'cod_owing'} ) {
+		$_[0]{'cod_owing'} = $_[0]->cod() - $_[0]->paid();
+		$_[0]{'cod_owing'} = 0 if $_[0]{'cod_owing'} < 0;
+	} # end if
+	return $_[0]{'cod_owing'};
+} # end sub cod_owing
+sub cod_owing_percent {
+	my $cod_total = $_[0]->cod();
+	return 0 if (1*$_[0]->paid()) == (1*$cod_total);
+	return 0 if (1*$_[0]->paid()) eq (1*$cod_total);
+
+	my $owing = int($_[0]->paid()*100/$cod_total) if $cod_total;
+
+	return 0 if $owing == 100;
+	return 100-$owing;
+	return 0;
+} # end sub cod_owing_percent
+sub supplier_id {
+	if ( @_ > 1 ) {
+		$_[0]{supplier_id} = $_[1];
+	} 
+	if ( ! $_[0]{supplier_id} ) {
+		$_[0]{supplier_id} = $openprint::config{'Owner'};
+	} # end if
+	return $_[0]{supplier_id};
+} # end sub supplier_id
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
 
 1;
 __END__

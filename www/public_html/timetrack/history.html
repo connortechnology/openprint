@@ -72,6 +72,9 @@
 					<li><label>Paid?</label>
 					<? echo ( ssi::radio( 'paid', [ 1, 'Yes', 0, 'No', '0,1', 'Both' ], $session{'/timetrack/history.html?paid'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
 			</li>
+					<li><label>Travel Associated</label>
+					<? echo ( ssi::radio( 'travel_associated', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/timetrack/history.html?travel_associated'}, { onclick=>'load_timetracks(this.form);' } ); ) ?>
+			</li>
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			<li>
 				<label>Employee</label>

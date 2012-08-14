@@ -85,7 +85,7 @@
 		<? echo (
 			my $html;
 			foreach my $Invoice ( @{$$variable{'Invoices'}} ) {
-				$html .= sprintf(q`<tr title="%2$s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+				$html .= sprintf(q`<tr title="%2$s"> 
 					<td class="invoice_id"><a href="/invoice/%3$s.html?invoice_id=%1$d">%1$d</a></td>
 					<td class="Date"><a href="/invoice/%3$s.html?invoice_id=%1$d">%4$s</a></td>
 					<td class="Company"><a href="/invoice/%3$s.html?invoice_id=%1$d">%5$s</a></td>
@@ -94,7 +94,7 @@
 					<td class="Price">%8$s</td>
 					<td class="Interest Price">%9$s</td>
 					<td class="Owing Price">%10$s</td>
-				</tr>`, $Invoice->id(), $Invoice->description(), ( $Invoice->posted() ? 'view' : 'edit' ), 
+				</tr>`, $Invoice->id(), $Invoice->internal_notes().$Invoice->external_notes(), ( $Invoice->posted() ? 'view' : 'edit' ), 
 				$Invoice->due_on(),
 				ssi::htmlize( $Invoice->Invoicee()->name() ),
 				openprint::Currency::format( $Invoice->subtotal() ),

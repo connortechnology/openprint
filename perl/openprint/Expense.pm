@@ -14,6 +14,7 @@ $serial = 'expense_categories_id_seq';
 	'name'	=>	'name',
 );
 %transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
@@ -29,6 +30,7 @@ $serial = 'expense_accounts_id_seq';
 	'name'	=>	'name',
 );
 %transforms = (
+    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
@@ -62,6 +64,7 @@ $serial = 'expenses_id_seq';
 	'currency_id'		=>	'currency_id',
 	'business_use'		=>	'business_use',
 	'business_use_amount'		=>	'business_use_amount',
+	'attention'			=>	'attention',
 );
 
 %transforms = (
@@ -72,6 +75,7 @@ $serial = 'expenses_id_seq';
 	'amount'			=>	[ 's/[^\d\.\-]//g' ],
 	'total'				=>	[ 's/[^\d\.\-]//g' ],
 	'business_use'		=>	[ 's/[^\d\.\-]//g' ],
+    'description'		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -85,6 +89,7 @@ $serial = 'expenses_id_seq';
 	'total_locked'	=>	0,
 	'account_id'	=>	undef,
 	'category_id'	=>	undef,
+	'attention'		=>	0,
 );
 
 

@@ -5,6 +5,8 @@ require Email::Valid;
 require sql;
 require ssi;
 require misc;
+require MIME::QuotedPrint;
+require Encode;
 
 require openprint::usergroup;
 require openprint::logs;
@@ -106,7 +108,7 @@ $log->warn("registration errors $error");
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User->find_one('email lc'=>$param{email} ) ) {
+	if ( openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>0 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
@@ -114,6 +116,7 @@ $log->warn("registration errors $error");
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
+	my $User = openprint::User->find_one('email lc'=>$param{email},'company_id is null'=>1 );
 
 	my @agents = split(',', $config{'UserRegistrationEmail'} );
 	my $agent = $agents[0] if @agents;
@@ -154,6 +157,22 @@ $log->warn("registration errors $error");
 				$variable{'error'} .= $error;
 				return;
 			} # end if
+			my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'id');
+			foreach my $Supplier ( @Suppliers ) {
+# Setup default Credit
+				my $Credit = new openprint::Company_Credit();
+				$Credit->save({
+						'company_id'    =>  $Company->id(),
+						'supplier_id'   =>  $Supplier->id(),
+						'warndays'      =>  $openprint::config{'DefaultWarnDays'},
+						'denydays'      =>  $openprint::config{'DefaultDenyDays'},
+						'limit'         =>  $openprint::config{'DefaultCreditLimit'},
+						'hold'          =>  $openprint::config{'DefaultCreditHold'},
+						'downpayment'   =>  $openprint::config{'DefaultDownpayment'},
+						'cod'           =>  $openprint::config{'DefaultCOD'},
+						});
+			} # end foreach Supplier
+
 		} else {
 			if ( $config{'Require Unique Company'} eq 'Y' ) {
 				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
@@ -175,9 +194,10 @@ $log->warn("registration errors $error");
 			$variable{'error'} .= $error;
 			return;
 		} # end if
+		
 	} # end if
 
-	my $User = new openprint::User();
+	$User = new openprint::User() if ! $User;;
 	$User->set( \%param );
 	$User->company_id( $Company->id() );
 	$User->ftp_active( 'Y' );
@@ -212,7 +232,11 @@ $log->warn("registration errors $error");
 		} # end if
 
 		# Send confirmation
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
+		if ( -e $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' ) {
+			$info{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/first_user_login_app_confirmation.html' );
+		} else {
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/first_user_login_app_confirmation.html' );
+		} # end if
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		new openprint::Email()->send(
 				FROM	=> $agent,
@@ -481,36 +505,7 @@ sub change_password_confirmation {
 
 sub login {
 	if ( $param{'btnFunction'} eq 'Forgotten Password' ) {
-		if ( ! $param{'email'} ) {
-			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
-			return;
-		} # end if
-
-		my $User = openprint::User->find_one('email lc'=> lc $param{'email'} );
-		if ( ! $User ) {
-			$variable{'error'} = 'The account you entered does not exist.';
-			return;
-		} # end if
-
-		if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
-			my %info = ( 'User' => $User );
-
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			my $results = (new openprint::Email())->send(
-					FROM 	=> $config{'AdministratorEmail'},
-					TO		=> $User,
-					SUBJECT	=> 'Forgotten Password',
-					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) ), 'text/html', 'quoted-printable'],
-					);
-			if ( $results ) {
-				$variable{'information'} = 'Your password has been mailed to you.';
-			} else {
-				$variable{'error'} .= 'Your password was not email for some reason. Please contact support.';
-			} # end if
-		} else {
-			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
-		} # end if
+		openprint::login::forgotten_password();
 	} elsif ( $param{'btnFunction'} eq 'Login' ) {
 		if ( ! $param{'email'} ) {
 			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
@@ -627,41 +622,41 @@ sub credit_application {
 		$variable{'error'} .= $Company->save( \%param );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
 
-		my $creditlimit = $param{'DesiredCreditLimit'};
-		$creditlimit =~ s/[^\d\.]//g;
-		sql::insert( $log, $dbh, 'CreditApplications',
-				'User_Id',	 $session{'user_id'},
-				'company_id', $session{'company_id'},
-				( defined $param{'Signature'} ? ( 'strSignature',	 $param{'Signature'} ) : () ),
-				( defined $param{'FinancialStatementAvailable'} ? ( 'ysnFinancialStatementAvailable', $param{'FinancialStatementAvailable'} ) : () ),
-				( defined $param{'FirstOrderValue'} ? ( 'strFirstOrderValue', $param{'FirstOrderValue'} ) : () ),
-				( defined $param{'AnnualPurchases'} ? ( 'strAnnualPurchases', $param{'AnnualPurchases'} ) : () ),
-				( $creditlimit ne '' ? ( 'dblCreditLimit',	$creditlimit ) : () ),
-				'lngTerms',						$param{'DesiredTerms'},
-				'strAccountsPayableContact',	$param{'AccountsPayableContact'},
-				'strStatus',		'Non-Reviewed',
-				'dtmCreationDate',	'NOW()',
-				);
+		my $App = new openprint::Credit_Application();
+		$variable{'error'} .= $App->save({
+				'desired_limit'         =>  $param{'DesiredCreditLimit'},
+				'user_id'               =>  $session{'user_id'},
+				'company_id'            =>  $session{'company_id'},
+				'signature'             =>  $param{'Signature'},
+				'financialstatementavailable'   =>  $param{'FinancialStatementAvailable'},
+				'firstordervalue'       =>  $param{'FirstOrderValue'},
+				'annualpurchases'       =>  $param{'AnnualPurchases'},
+				'desired_limit'         =>  $param{'DesiredCreditLimit'},
+				'desired_terms'         =>  $param{'DesiredTerms'},
+				'accountspayablecontact'    =>  $param{'AccountsPayableContact'},
+				'status'                =>  'Non-Reviewed',
+				});
 
+		if ( ! $variable{'error'} ) {
 # Now send email notifications
-		my %info;
-		$info{'Company'} = $Company;
-		$info{'User'} = new openprint::User( $session{user_id} );
+			my %info;
+			$info{'Company'} = $Company;
+			$info{'User'} = new openprint::User( $session{user_id} );
 
-		$_ = 'SELECT MAX(Id) FROM CreditApplications WHERE user_id=? AND company_id=?';
-		($info{'CreditAppIndex'}) = sql::execute( $log, $dbh, $_, @session{'user_id','company_id'} );
+			$info{'CreditAppIndex'} = $App->id();
 
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		my $template = ssi::variable_substitution( \$email_template, \%info );
+			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_application_notification.html' );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+			my $template = ssi::variable_substitution( \$email_template, \%info );
 
-		new openprint::Email()->send(
-				FROM	=> $config{'CreditApplicationEmail'},
-				TO	=> $config{'CreditApplicationEmail'},
-				SUBJECT => 'New Credit Application',
-				ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
-				);
+			new openprint::Email()->send(
+					FROM	=> $config{'CreditApplicationEmail'},
+					TO	=> $config{'CreditApplicationEmail'},
+					SUBJECT => 'New Credit Application',
+					ATTACHMENTS	=> [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$template)), 'text/html', 'quoted-printable' ],
+					);
+		} # end if
 	} # end if Apply
 
 } # sub credit_application
@@ -692,7 +687,7 @@ sub couple_search {
 	_couple_search();
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
 } # end sub search
 
@@ -706,12 +701,20 @@ sub _couple_search {
 				) );
 } # end sub _search
 sub search {
+	if ( $param{'action'} eq 'Delete' ) {
+		my $User = new openprint::User( $param{'user_id'} );
+		if ( $User->can_edit() ) {
+			$variable{'error'} .= $User->delete();
+		} else {
+			$variable{'error'} .= 'You do not have rights to delete this profile.';
+		} # end if
+	} # end if
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
-	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/search.html', 'last_online_start', -365 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
-	$session{'/account/search.html?paging_per_page'} = 5;
+	$session{'/account/search.html?paging_per_page'} = 20;
 } # end sub search
 
 sub _search {
@@ -720,6 +723,7 @@ sub _search {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
+				'photos',
 				( map { 'field-'.$_->id() } openprint::User_Profile_Field->find( ) ),
 				) );
 	# Special case for checkboxes because they don't get passed if nothing is checked
@@ -761,8 +765,6 @@ sub _wall_reply {
 sub forgotten_password {
 } # end sub forgotten_password
 
-sub _location_ddm {
-} # end sub _location_ddm
 
 sub _relationships {
 	if ( $param{'action'} eq 'delete' ) {

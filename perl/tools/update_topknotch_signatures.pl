@@ -171,11 +171,11 @@ if ( 1 ) {
 	# Only Multipage and Scratch pads have a spceific page, everything else, uses the Signature ServiceType
 	$dbh->do(q`UPDATE project_types set url=NULL WHERE url='prin/prin_broc.html'`);
 }
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideOne'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideTwo'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripHeight'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripWidth'`);
-$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbWaxFree'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where name='rdbWaxFree'`);
 require openprint::ProjectType_Default;
 require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');

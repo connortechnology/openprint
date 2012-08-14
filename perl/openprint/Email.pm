@@ -8,16 +8,32 @@ require openprint::User;
 require email;
 require misc;
 require ssi;
+require MIME::QuotedPrint;
+require Encode;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 
+sub html_body {
+	my ( $self, $html ) = @_;
+	#$$self{boundary} = "====" . time() . "====" if ! $$self{boundary};
+	$$self{'content-type'} = 'text/html; charset="utf-8"';
+	#$$self{BODY} .= "$$self{boundary}\nContent-Type: text/html;\n";
+	#$$self{BODY} .= "Content-Transfer-Encoding: quoted-printable\n";
+	$$self{body} = Encode::encode('utf-8', $html );
+if ( $debug ) {
+$openprint::log->debug("Setting HTML body to $$self{body}");
+}
+} # end sub html_body
+
 sub send {
 	my ( $self, %params ) = @_;
-#$openprint::log->debug("Sending an email");
-#foreach my $k ( keys %params ) {
-#$openprint::log->debug("Params: $k => $params{$k}");
-#} # end 
+	if ( $debug ) {
+		$openprint::log->debug("Sending an email");
+		foreach my $k ( keys %params ) {
+			$openprint::log->debug("Params: $k => $params{$k}");
+		} # end 
+	} # end if
 
 	my $results;
 	if ( $params{'FROM'} ) {
@@ -30,6 +46,8 @@ sub send {
 	} # end if
 
     my %mail = (
+			'content-type'	=>	$$self{'content-type'},
+			BOUNDARY =>	$$self{boundary},
 			CC		=>	$params{'CC'},
 			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},

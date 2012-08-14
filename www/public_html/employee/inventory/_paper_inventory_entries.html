@@ -1,4 +1,6 @@
+<? if ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
+<? endif ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
 <form id="f2" name="f2" action="_paper_inventory_entries.html">
 	<table class="List">
 		<tr>
@@ -49,9 +51,8 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td><b>Totals</b></td>
-			<td><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
-			<td colspan="2">&nbsp;</td>
+			<td colspan="3"><b>Totals:</b></td>
+			<td class="last_seen"><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
 			<td class="Quantity"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
 			<td>&nbsp;</td>
 			<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>

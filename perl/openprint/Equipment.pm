@@ -12,20 +12,24 @@ require sql;
 use Memoize;
 memoize('fits');
 
-use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults $cache_field );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
+$cache_field = 'strid';
+sub cache_field {
+    return $cache_field;
+}
 
-$debug = 0;
+$debug = 1;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
-	'description'	=>	'strdescription',
-	'category'	=>	'strcategory',
-	'supplier'	=>	'strsupplier',
+	'description'		=>	'strdescription',
+	'category_id'		=>	'category_id',
+	'supplier'			=>	'strsupplier',
 	'useinestimating'	=>	'useinestimating',
 	'useinscheduling'	=>	'useinscheduling',
 	'image'				=>	'image',
@@ -47,13 +51,15 @@ $debug = 0;
 );
 %find_fields = (
 	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
 );
 %transforms = (
 );
 %defaults = (
-	'location_id'		=>	undef,
-	'servicetype_id'	=>	undef,
-	'sorting'			=>	undef,
+	location_id		=>	undef,
+	servicetype_id	=>	undef,
+	sorting			=>	undef,
+	category_id		=>	undef,
 );
 
 sub cache_field {
@@ -139,10 +145,6 @@ sub Fold {
 #}
 
 	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
-		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
-			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
-			next;
-		} # end if
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
 			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;
@@ -445,5 +447,9 @@ sub Operator_Shifts {
 	$Last_ES->Next( $Equipment_Shifts[0] );
 	return @Equipment_Shifts;
 } # end sub Operator_Shifts
+
+sub categories {
+	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );
+} # end sub categories
 1;
 __END__

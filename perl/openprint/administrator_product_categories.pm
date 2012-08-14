@@ -1,15 +1,16 @@
-package openprint::administrator_product_categories;
 use strict;
-use openprint;
+require openprint::Product_Category;
+package openprint::administrator_product_categories;
+require openprint;
 use vars qw( %variable %session %param %config $log $dbh $r );
+*session = \%openprint::session;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
 sub list {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $ProductCategory = new openprint::ProductCategory( $param{'category_id'} );
+	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$ProductCategory->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
@@ -22,14 +23,13 @@ sub list {
 } # end sub list
 
 sub edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $ProductCategory = new openprint::ProductCategory( $param{'category_id'} );
+	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$ProductCategory = $ProductCategory->copy();
 		$ProductCategory->save();
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Name', 'Description' );
-	    my @data = sql::execute( $log, $dbh, 'SELECT name, description FROM Product_Categories' );
+	    my @data = map { @$_{'name','description'} } openprint::Product_Category->find();
     	misc::export_csv( $r, $log, \%variable, 'Product_Categories.csv', \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Import' ) {
 		my $error = '';
@@ -39,7 +39,7 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my %categories = map { $_->name(), $_ } openprint::ProductCategory->find();
+			my %categories = map { $_->name(), $_ } openprint::Product_Category->find();
 
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
@@ -47,7 +47,7 @@ sub edit {
 				my ( $name, $description ) = misc::trim( $csv->fields() );
 				next if ! $name;
 				if ( ! $categories{$name} ) {
-					$categories{$name} = new openprint::ProductCategory();
+					$categories{$name} = new openprint::Product_Category();
 				} # end if
 				$categories{$name}->name( $name );
 				$categories{$name}->description( $description );
@@ -66,5 +66,3 @@ sub edit {
 
 1;
 __END__
-
-

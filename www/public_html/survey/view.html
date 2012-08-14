@@ -1,7 +1,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Survey"><div class="View">
-	<div class="CreatedBy"><? echo ( my $User = new openprint::User( $$variable{'Survey'}->created_by() );
+	<? if ( $$variable{'Survey'}->created_by() ) ?>
+	<div class="CreatedBy"><? echo ( new openprint::User( $$variable{'Survey'}->created_by() );
 		return sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s"/>%3$s</a>', $User->id(), $User->Asset()->thumbnail_url(), $User->name() ); ) ?></div>
+	<? endif ( $$variable{'Survey'}->created_by() ) ?>
 	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
 	<? echo ( $$variable{'Survey'}->description() ) ?>
 

@@ -41,13 +41,13 @@ $dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 $openprint::Object::no_cache = 1;
 
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 
 # Clear out old sessions
-my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @session_ids . " sessionsn in system");
+my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
+$log->warn("Cleaning out sessions: " . @$session_ids . " sessionsn in system");
 my $deleted_session_count = 0;
-foreach my $session ( @session_ids ) {
+foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
     my %session;
     if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
@@ -68,7 +68,7 @@ foreach my $session ( @session_ids ) {
 		undef %session;
 	} # end if
 } # end foreach
-@session_ids = ();
+@$session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
 if ( 1 ) {
@@ -284,7 +284,7 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 } # end if
 }
 
-if ( 0 ) {
+if ( 1 ) {
 # Resolve any unresolved IP's
 foreach my $Host ( openprint::Host->find('hostname is null'=>1) ) {
 	$Host->resolve() if $Host->ip();
@@ -313,15 +313,20 @@ foreach my $Log ( openprint::Log->find('date_time <='=>sprintf('%.4d-%.2d-%.2d',
 $log->warn("Deleted $log_count log entries");
 }
 
-if ( $config{'AssetPath'} ) {
+#if ( $config{'AssetPath'} ) {
 	foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 		my $data = misc::load_file( $log, $Asset->on_disk_path() );
 		if ( $data ) {
 			$_ = $Asset->save({'md5'=>Digest::MD5::md5_base64( $data ) });
-			last if $_;
+			die if $_;
 		} # end if
 	} # end foreach Asset
-} 
+	foreach my $Asset ( openprint::Asset->find('width is null'=>1) ) {
+		$Asset->layout();
+		$_ = $Asset->save() if $Asset->width();
+		die if $_;
+	} # end foreach
+#} 
 
 foreach my $Photo_Album ( openprint::Photo_Album->find( 'thumbnail_id is null'=>0) ) {
 	if ( ! sets::isin( $$Photo_Album{'thumbnail_id'}, ( map { $_->asset_id() } $Photo_Album->Photos() ) ) ) {

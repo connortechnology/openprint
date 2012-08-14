@@ -45,7 +45,17 @@ function filter_onChange( element, id, selected ) {
 </script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
-		<p>
+		<ul>
+		<li>
+			<label>Category</label>
+			<select name="search_category_id" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);};">
+				<option value="">All</option>
+<? echo (
+    ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $param{search_category_id} );
+) ?>
+			</select>
+		</li>
+		<li>
 			<label>Equipment ID</label>
 			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
@@ -53,7 +63,8 @@ function filter_onChange( element, id, selected ) {
     ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment->find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
 ) ?>
 			</select>
-		</p>
+		</li>
+		</ul>
 		<p class="buttons">
 		<? echo ( join( '',
 				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='Previous';fmCheck(f1);",'','Previous'),
@@ -91,9 +102,8 @@ function filter_onChange( element, id, selected ) {
 			</p>
 			<p>
 				<label>Category</label>
-				<select name="category">
-					<option value="">Select a category</option>
-		<? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
+				<select name="category_id" multiple="multiple" size="4">
+				<? echo ( ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $$variable{Equipment}->category_id() );) ?>
 				</select>
 			</p>
 			<p> 
@@ -291,7 +301,7 @@ function filter_onChange( element, id, selected ) {
 	<fieldset><legend>Specific Stock Settings</legend>
 		<div id="StockSettings"><!--#include virtual="_stock_settings.html"--></div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '600px' } );", '', 'Add' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", '', 'Add' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'savestocksetting','save.gif', "new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", '', 'Save' ); ) ?>
 		</p>
 	</fieldset>

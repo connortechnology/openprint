@@ -7,7 +7,10 @@
 	if ( ! ( $param{'asset_name'} =~ /%/ ) ) {
 		$param{'asset_name'} = '%'.$param{'asset_name'}.'%';
 	}
-	foreach my $Asset ( openprint::Asset->find('name ilike'=>$param{'asset_name'},'limit'=>100) ) {
+	foreach my $Asset ( sets::object_union(
+		openprint::Asset->find('name ilike'=>$param{'asset_name'},'limit'=>100),
+		openprint::Asset->find('filename ilike'=>$param{'asset_name'},'limit'=>100),
+		) ) {
 		$html .= sprintf(q`<li><img src="%s">%s</li>`, $Asset->url(), $Asset->name() );
 	} # end foreach
 	$html .= 'No results found.' if ! $html;

@@ -15,10 +15,10 @@
 	@{$$variable{'Orders'}} = openprint::Order->find(
 		ssi::date_filter( '/employee/accounting/search.html?ordered_on_start', 'created_on_start' ),
 		ssi::date_filter( '/employee/accounting/search.html?ordered_on_end', 'created_on_end' ),
+		'status not in'	=> [ sets::exclude( [ $session{'/employee/accounting/search.html?ddmStatus'} ], [ 'Incomplete','Cancelled','Deleted' ] ) ],
 		( $session{'/employee/accounting/search.html?ddmStatus'} ? ( 'status'		=> $session{'/employee/accounting/search.html?ddmStatus'} ) : () ),
 		( $session{'/employee/accounting/search.html?ddmCustomer'} ? ( 'company_id'	=> $session{'/employee/accounting/search.html?ddmCustomer'} ) : () ),
 		( $session{'/employee/accounting/search.html?ddmEmployee'} ? ( 'salesrep_id' => $session{'/employee/accounting/search.html?ddmEmployee'} ) : () ),
-
 		( $session{'/employee/accounting/search.html?dblTotal1'} ? ( 'value_start'	=> $session{'/employee/accounting/search.html?dblTotal1'} ) : () ),
 		( $session{'/employee/accounting/search.html?dblTotal2'} ? ( 'value_end'	=> $session{'/employee/accounting/search.html?dblTotal2'} ) : () ),
 		'owing >'	=>	0,
@@ -49,8 +49,8 @@
 		foreach my $Order ( @{$$variable{'Orders'}} ) {
 			$html .= sprintf(q`
 <tr%1$s> 
-	<td class="order_id"><a href="details.html?order_id=%2$d">%2$d</a></td>
-	<td class="Docket"><a href="details.html?order_id=%2$d">%3$d</a></td>
+	<td class="order_id"><a href="/main/order/history_details.html?order_id=%2$d">%2$d</a></td>
+	<td class="Docket"><a href="/main/order/history_details.html?order_id=%2$d">%3$d</a></td>
 	<td class="Date">%4$s</td>
 	<td class="Company">%5$s</td>
 	<td class="status">%6$s</td>
@@ -76,7 +76,7 @@
 		return $html;
 	) ?>
 	<tr class="totals"> 
-		<td colspan="7" align="right"><b>Report Total:</b></td>
+		<td colspan="7">Report Total</td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 	</tr>

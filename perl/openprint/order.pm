@@ -248,30 +248,30 @@ sub make_order_from_quote {
 
 sub check_credit {
 	my ( $amount ) = @_;
-	my $credit = new openprint::customer_credit( $session{'company_id'} );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'owner_id'} } );
 
-	if ( $credit->value('Hold') eq 'Y' ) {
+	if ( $Credit->hold() eq 'Y' ) {
 		return misc::error( $log, $dbh, \%variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
 	if ( $config{'EnforceCredit'} eq 'Y' ) {
-		if ( ! $credit->value('DenyDays') ) {
-			if ( $credit->debt() > 0 ) {
+		if ( ! $Credit->denydays() ) {
+			if ( $Credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/account/credit_application.html">here</a> to apply for a credit account now.';
-				$error .= list_orders( $log, $dbh, $credit->denied_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->denied_orders() );
 				return misc::error( $log, $dbh, \%variable, 'No Credit', $error );
 			} # end if
 		} else {
-			if ( my @orders = $credit->denied_orders() ) {
-				my $error = 'You have orders that are more than ' . $credit->value('DenyDays') . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
+			if ( my @orders = $Credit->denied_orders() ) {
+				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
 				$error .=	list_orders( $log, $dbh, @orders );
 				return misc::error( $log, $dbh, \%variable, 'Overdue Orders', $error );
 			} # end if
 
 # check if the price fits in their credit limit
-			if ( $credit->debt() + $amount > $credit->value('Limit') ) {
+			if ( $Credit->debt() + $amount > $Credit->limit() ) {
 				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
-				$error .= list_orders( $log, $dbh, $credit->outstanding_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->outstanding_orders() );
 				return misc::error( $log, $dbh, \%variable, 'Credit Exceeded', $error );
 			} # end if
 		} # end if
@@ -332,37 +332,41 @@ sub make_order {
 	return $order_id;
 } # end sub make_order
 
+# Now takes an OrderedProject or Product object
+# Need to document what exactly this should be saving.
+# For projects with multiple quantities, it should save the quantity selection
 sub save_project_information {
-	my ( $order_id, $project_index ) = @_;
+	my ( $order_id, $OP ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $error;
+	my $Project = $OP->Project();
+	my $project_index = $OP->project_id();
 
 	if ( $param{"rdbQuantity$project_index"} ) {
-		$Project->ordered_quantity_index( $param{"rdbQuantity$project_index"} );
-	} elsif ( ! $Project->ordered_quantity_index() ) {
+		$OP->quantity_index( $param{"rdbQuantity$project_index"} );
+	} elsif ( ! $OP->quantity_index() ) {
+		# Ordered Products don't have quantity_index field, so this is a NOP
 		my @qtys = $Project->quantity_indexes();
 		if ( 1 == scalar @qtys ) {
-			$Project->ordered_quantity_index( $qtys[0] );
+			$OP->quantity_index( $qtys[0] );
 		} # end if
 	} # end if
-$openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 
 	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
 
 		if ( ! check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
 			return q{Date is not valid. Please select a correct date.};
 		} # end if
-		$Project->requested_date( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
+		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
-	my $services = $Project->services();
 
+	my $shipping_cost = 0;
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $quantity_shipped = $Project->ordered_quantity();
-
 		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
+		my $services = $Project->services();
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
@@ -413,10 +417,11 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 
 				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
 				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
+				$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
 				$log->warn($$specs{'alert'}) if $$specs{'alert'};
 			} # end foreach service_id
 		} # end foreach ShippingType
-		$Project->shippingtype( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
+		$OP->shipping_type( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
 
 		if ( $quantity_shipped > 0 ) {
 			$error .= $quantity_shipped . ' more items need to be shipped or picked up.';	
@@ -425,11 +430,18 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 		} # end if
 	} # end if
 
-	$Project->reference( $param{"Reference$project_index"} ) if $param{"Reference$project_index"};
-	$Project->price( $Project->ordered_quantity_index(), undef );
-	$error .= $Project->save();
+	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+	if ( ref $OP eq 'openprint::OrderedProject' ) {
+	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
+	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+	#$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} else {
+		$log->error('Unknown type of Ordered item!');
+	} # end if
+	$error .= $OP->save();
 	return $error;
-
 } # end foreach save_project_information
 
 # comes here on the transition from orde_info to orde_info_cred_card or order_info_digi_cheq

@@ -8,7 +8,7 @@ require openprint::Order;
 
 use vars qw( $debug $serial $table $log $dbh %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $serial = 'ordered_product_id_seq';
 $table = 'ordered_products';
 
@@ -133,6 +133,10 @@ sub requested_for {
 	} # end if
 	return $_[0]{'requested_for'};
 } # end sub erquested_for
+
+sub quantity_index {
+return 1;
+}
 
 1;
 __END__

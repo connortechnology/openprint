@@ -59,6 +59,7 @@ $debug = 1;
 	'notes'				=>	'notes',
 	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
+	last_Logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
 	'name'	=>	q`firstname || ' ' || lastname`,
@@ -97,6 +98,7 @@ $debug = 1;
 	'email_quotes_to_myself'	=>	0,
 	'asset_id'			=>	undef,
 	'password_changed_on'		=>	undef,
+	'password'			=>	'',
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -254,10 +256,12 @@ sub alias {
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
+	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) ) {
 		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
-	} else {
+	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
+	} else {
+		return $_[0]->email();
 	} # end if
 } # end sub name
 
@@ -399,15 +403,20 @@ sub Profile {
 } # end sub Profile
 
 sub icon {
-	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s" /></a>',
-			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
-	} # end if
-	return $_[0]{'icon'};
+	return $_[0]->thumbnail_html();
 } # end sub icon
 
 sub thumbnail_html {
-	return $_[0]->icon();
+if ( 0 ) {
+	if ( ! $openprint::session{'user_id'} ) {
+		return '';
+	} # end if
+} # end if
+	if ( ! $_[0]{'icon'} ) {
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
+	} # end if
+	return $_[0]{'icon'};
 }
 
 sub html {
@@ -460,10 +469,13 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
+$openprint::log->debug("last_Logged_in");
 	if ( ! $_[0]{'last_logged_on'} ) {
+$openprint::log->debug("last_Logged_in");
 		# Almost any entry means we were logged in.  
-		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs == 1 ) {
+		my @Logs = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( @Logs ) {
+$openprint::log->debug("last_Logged_in: " . $Logs[0]->to_string() );
 			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
 		} else {
 			$openprint::log->debug("@ of logs returned " . @Logs );
@@ -475,6 +487,7 @@ sub last_logged_in {
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+#$openprint::log->debug("AUTOLOAD $name");
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
@@ -504,21 +517,24 @@ sub can_edit {
 } # end sub can_edit
 
 sub Location {
-	my $Profile = $_[0]->Profile();
-	my $Location;
-	if ( $Profile->postalcode() ) {
-		$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+	if ( ! $_[0]{'Location'} ) {
+		my $Profile = $_[0]->Profile();
+		my $Location;
+		if ( $Profile->postalcode() ) {
+			$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+		} # end if
+		if ( ! $Location and $Profile->city() ) {
+			my $City = new openprint::Location( $Profile->city() );
+			$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
+		} # end if
+		if ( ! $Location ) {
+			$log->error("Still no location");
+			return new openprint::Location();
+		} # endif
+		$_[0]{'Location'} = $Location;
 	} # end if
-	if ( ! $Location and $Profile->city() ) {
-		my $City = new openprint::Location( $Profile->city() );
-		$Location = openprint::Location->find_one( 'type'=>'city', 'name'=>$City->name() );
-	} # end if
-if ( ! $Location ) {
-	$log->error("Still no location");
-	return;
-}
 		
-	return $Location;
+	return $_[0]{'Location'};
 } # end sub Location
 
 1;

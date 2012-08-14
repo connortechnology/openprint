@@ -49,13 +49,16 @@
 
 		my ( $my_lat, $my_long );
 
+		# distance calcs need our lat & long.. so I think this is supposed to get it.. I think this is unneccessary
 		if ( $session{'/account/search.html?distance'} ) {
+			my $Field = openprint::User_Profile_Field->find_one('name'=>'postalcode');
 
-			if ( $session{'/account/search.html?postalcode'} ) {
-				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?postalcode'});
+			if ( $session{'/account/search.html?field-'.$Field->id()} ) {
+				my $Location = openprint::Location->find_one('postalcode'=>$session{'/account/search.html?field-'.$Field->id()});
 				if ( ! $Location ) {
 					$Location = new openprint::Location();
 					# Set country?
+					$Location->postalcode( $session{'/account/search.html?field-'.$Field->id()} );
 				} # end if
 				if ( ! ( $Location->longitude() and $Location->latitude() ) ) {
 					if ( $Location->get_latitude_and_longitude() ) {
@@ -69,11 +72,10 @@
 			if ( ! ( $my_lat and $my_long ) ) {
 				$variable{'error'} .= 'Unable to determine where you are/want to be.';
 			} # end if
-		} # end if
+		} # end if distance
 		
-		if ( $my_lat and $my_long ) {
-$log->debug("Searching by distance");
-			foreach my $U ( openprint::User->find( %param ) ) {
+		foreach my $U ( openprint::User->find( %param ) ) {
+			if ( $session{'/account/search.html?distance'} and $my_lat and $my_long ) {
 				my $Location = $U->Location();
 				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
 					if ( $Location->get_latitude_and_longitude() ) {
@@ -81,14 +83,24 @@ $log->debug("Searching by distance");
 					} # end if
 				} # end if
 				next if ! ( $Location->latitude() and $Location->longitude() );
-my $distance = $Location->distance( $my_lat, $my_long, $Location->latitude(), $Location->longitude(), 'K' ) ;
-$log->debug("Distance between me and " . $U->name() . " is $distance" );
+				my $distance = $Location->distance( $my_lat, $my_long, $Location->latitude(), $Location->longitude(), 'K' ) ;
+				$log->debug("Distance between me and " . $U->name() . " is $distance" );
 				next if ( $distance > $session{'/account/search.html?distance'} );
-				push @Users, $U;
-			} # end foreach User
-		} else {
-			@Users = openprint::User->find( %param );
-		} # end if
+			} # end if
+			if ( $session{'/account/search.html?photos'} ne '' ) {
+				my $photos = 0;
+				foreach my $Album ( openprint::Photo_Album->find('user_id' => $U->id() ) ) {
+					if ( $Album->Photos() ) {
+						$photos = 1;
+						last;
+					} # end if
+				} # end foreach Album
+				next if $photos and $session{'/account/search.html?photos'} eq '0';
+				next if (!$photos) and $session{'/account/search.html?photos'} eq '1';
+			} # end if
+			push @Users, $U;
+		} # end foreach User
+
 	} # end if
 
 	my $html;

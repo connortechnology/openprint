@@ -25,7 +25,7 @@ require openprint::quote;
 sub try_to_delete {
 	my $quote_id = shift;
 	my $Quote = new openprint::Quote( $quote_id );
-	if ( $session{'company_id'} == $Quote->company_id() ) {
+	if ( ( $session{'user_type'} eq 'A' ) or ( $session{'company_id'} == $Quote->company_id() ) ) {
 		$Quote->delete();
 	} else {
 		return "Quote $quote_id does not belong to you.  Not deleted.<br>";
@@ -47,21 +47,34 @@ sub history {
 	} # end if
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_start', -30 );
     ssi::setup_date_select( '/main/quote/history.html', 'created_on_end', 0 );
-    ssi::save_params( '/main/quote/history.html',
-            'created_on_start_year', 'created_on_start_month','created_on_start_day',
-            'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor',
-            );
+	_history();
 } # end sub history
 sub _history {
     ssi::save_params( '/main/quote/history.html',
             'created_on_start_year', 'created_on_start_month','created_on_start_day',
             'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'QuotedFor',
+			'QuotedFor', 'company_id',
             );
 } # end sub _history
 
 sub history_details {
+	if ( $param{'btnFunction'} eq 'Move To' ) {
+		my $Quote = new openprint::Quote( $param{'quote_id'} );
+		if ( ! $Quote->id() ) {
+			$variable{'error'} .= 'Empty or invalid quote id.<br/>';
+		} elsif ( ! $param{'company_id'} ) {
+			$variable{'error'} = 'You must select a company first.<br/>';
+		} elsif ( $Quote->company_id() == $param{'company_id'} ) {
+			$variable{'error'} = $Quote->Company()->name() .' already owns that quote.  No change made.<br/>';
+		} else {
+			$variable{'error'} .= $Quote->save({'company_id'=>$param{'company_id'}});
+		} # end if
+		if ( ! $variable{'error'} ) {
+			%param = ();
+			$variable{'ExternalRedirect'} = '/main/quote/history.html';
+			return;
+		} # end if
+	} # end if
 	my $quote_id = $param{'quote_id'};
 	$quote_id =~ s/\D//g;
 	$quote_id = $session{'quote_id'} if ! $quote_id;
@@ -69,9 +82,9 @@ sub history_details {
 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) or ( $variable{'Quote'}->company_id() == $session{'company_id'} ) ) {
 		openprint::quote::get_finished_quote_contents( $log, $dbh, \%variable, $quote_id );
 		if ( $param{'btnFunction'} eq 'Resend' ) {
-			$variable{'Quote'}->send();
-			$variable{'Quote'}->add_log('Resent');
-			$variable{'information'} .= 'Quote resent.';
+			my $results = $variable{'Quote'}->send();
+			$variable{'Quote'}->add_log('Resent. Results: ' . $results);
+			$variable{'information'} .= 'Quote resent. Results: '. $results;
 		} # end if
 	} # end if
 } # end sub history_details
@@ -179,6 +192,10 @@ sub information {
 					'quote_id'		=> $NewQuote->id(),
 					'project_id'	=> $NewProject->id(),
 					});
+		} # end foreach QP
+		foreach my $QP ( $Quote->Products() ) {
+			my $NewQP = $QP->copy();
+			$variable{'error'} .= $NewQP->save({'quote_id'=>$NewQuote->id()});
 		} # end foreach QP
 
 		my %by;
@@ -331,14 +348,15 @@ sub submit {
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( $QP->Project()->quantity_indexes() ) {
-				$QP->markup( $qty_index, $param{'markup'.$qty_index.'_'.$QP->project_id()} );
+				$QP->markup( $qty_index, $param{'markup-'.$qty_index.'_'.$QP->project_id()} );
 			} # end foreach
 			$QP->save();
 		} # end foreach
 		foreach my $QP ( $Quote->Products() ) {
-				$QP->save({
-						'markup'	=> $param{'markup_'.$QP->id()},
-						'quantity'	=> $param{'quantity_'.$QP->id()},
+				$variable{'error'} .= $QP->save({
+						'cost'		=> $param{'cost-'.$QP->id()},
+						'markup'	=> $param{'markup-'.$QP->id()},
+						'quantity'	=> $param{'quantity-'.$QP->id()},
 				});
 		} # end foreach
     } # end if btnFunction eq Continue
@@ -374,6 +392,9 @@ sub confirmation {
 		} # end foreach QP
 		foreach my $Product ( $Quote->Products() ) {
 			$Product->save({'cost'=>$Product->cost()});
+			$subtotals[1] += $Product->price();
+			$subtotals[2] += $Product->price();
+			$subtotals[3] += $Product->price();
 		} # end foreach Product
 		foreach my $qty_index ( 1 .. 3 ) {
 			$Quote->total( $qty_index, $subtotals[$qty_index] );
@@ -445,6 +466,12 @@ sub overview {
 
 sub _quote_list {
 } # end sub _quote_list
+
+sub _products_dropdown {
+} # end sub _products_dropdown
+
+sub _view_log {
+} # end sub _view_log
 
 1;
 

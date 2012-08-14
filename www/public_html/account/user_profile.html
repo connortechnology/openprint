@@ -31,13 +31,13 @@
 				</ul>
 				<p class="buttons">
 			<? if ( $$variable{'User'}->Company()->can_edit() ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Previous','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);", '', '<<' ); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Next','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);", '', '>>' ); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'New','new.gif',"addCheck(f1);", '', 'New' ); ) ?>
+					<? echo ( ssi::button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } ); ) ?>
+					<? echo ( ssi::button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ); ) ?>
+					<? echo ( ssi::button( 'New', { onclick=>"addCheck(f1);", text=>'New' } ); ) ?>
 			<? endif ( $$variable{'User'}->Company()->can_edit() ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' ); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", '', 'Save' ); ) ?>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
+					<? echo ( ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ); ) ?>
+					<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
+					<? echo ( ssi::button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ); ) ?>
 				</p>
 			</fieldset>
 <? if ( $$variable{'User'}->can_edit() ) ?>
@@ -67,11 +67,11 @@
 					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Miss' ); ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
-   				<li class="required"> 
+   				<li class="required" class="firstname">
    					<label for="firstname">First Name</label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
    				</li>
-   				<li class="required"> 
+   				<li class="required" class="lastname"> 
    					<label for="lastname">Last Name</label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
    				</li>

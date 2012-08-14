@@ -1,10 +1,10 @@
-package openprint::Paycheque;
-@ISA = qw(openprint::Object);
-
 use strict;
+require openprint::Paycheque_Timetrack;
+package openprint::Paycheque;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
 $debug = 1;
 
 $table = 'paycheques';
@@ -44,15 +44,29 @@ sub Employee {
 } # end sub Recipient
 
 sub add_Timetrack {
-	my ( $self, $Timetrack ) = @_;
-	sql::insert( undef, undef, 'paycheques_timetracks', 'timetrack_id', $Timetrack->id(), 'paycheque_id', $$self{id} );
+	return (new openprint::Paycheque_Timetrack())->save({'paycheque_id'=>$_[0]{'id'}, 'timetrack_id'=>$_[1]{'id'}});
 } # end sub add_Timetrack
 
 sub del_Timetrack {
-	my ( $self, $Timetrack ) = @_;
-
-	sql::execute( undef, undef, 'DELETE FROM paycheques_timetracks WHERE paycheque_id=? AND timetrack_id=?', $$self{id}, $$Timetrack{'id'} );
+	return (new openprint::Paycheque_Timetrack({'paycheque_id'=>$_[0]{'id'}, 'timetrack_id'=>$_[1]{'id'}}))->delete();
 } # end sub del_Timetrack
+
+sub destroy {
+	if ( ! $_[0]{id} ) {
+		$openprint::log->error("Paycheque::destroy with no id!");
+		return;
+	} # end if
+	my $error;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	foreach ( openprint::Paycheque_Timetrack->find('paycheque_id'=>$_[0]{'id'}) ) {
+		$error .= $_->destroy();
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::destroy() if ! $error;
+	$openprint::dbh->rollback() if $error;
+	sql::end_transaction( $openprint::dbh, $ac );
+	return $error;
+} # end sub destroy
 
 1;
 __END__

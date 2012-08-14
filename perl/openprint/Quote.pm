@@ -2,7 +2,7 @@ use strict;
 package openprint::Quote;
 our @ISA=qw(openprint::Object);
 
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use openprint ();
 use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
@@ -18,7 +18,7 @@ require openprint::QuotedProject;
 require openprint::QuotedProduct;
 require openprint::Currency;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'quotes';
 $serial = 'quotes_id_seq';
@@ -44,6 +44,36 @@ $serial = 'quotes_id_seq';
 	'reference'		=>	'reference',
 	'comments'		=>	'comments',
 	'deleted'		=>	'deleted',
+	'by_companyname'	=>	undef,
+	'by_firstname'		=>	undef,
+	'by_lastname'		=>	undef,
+	'by_title'			=>	undef,
+	'by_salutation'		=>	undef,
+	'by_address1'		=>	undef,
+	'by_address2'		=>	undef,
+	'by_city'			=>	undef,
+	'by_state'			=>	undef,
+	'by_country'		=>	undef,
+	'by_postalcode'		=>	undef,
+	'by_phone'			=>	undef,
+	'by_extension'		=>	undef,
+	'by_fax'			=>	undef,
+	'by_email'			=> undef,
+	'for_companyname'	=>	undef,
+	'for_firstname'		=>	undef,
+	'for_lastname'		=>	undef,
+	'for_title'			=>	undef,
+	'for_salutation'		=>	undef,
+	'for_address1'		=>	undef,
+	'for_address2'		=>	undef,
+	'for_city'			=>	undef,
+	'for_state'			=>	undef,
+	'for_country'		=>	undef,
+	'for_postalcode'		=>	undef,
+	'for_phone'			=>	undef,
+	'for_extension'		=>	undef,
+	'for_fax'			=>	undef,
+	'for_email'			=> undef,
 	);
 
 %find_fields = (
@@ -132,11 +162,6 @@ sub destroy {
 	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
 } # end sub delete
 
-sub to_string {
-	my $self = shift;
-	return '';
-} # end sub
-
 sub status {
 	my ( $self, $new_status ) = @_;
 	if ( defined $new_status and $$self{'status'} ne $new_status ) {
@@ -175,7 +200,7 @@ sub Products {
 		@{$$self{'Products'}} = openprint::QuotedProduct->find('quote_id'=>$$self{'id'});
 	} # end if
 	return @{$$self{'Products'}};
-} # end sub projects
+} # end sub Products
 
 sub for_name {
 	my $self = shift;
@@ -262,11 +287,17 @@ sub store_user_for_info {
 } # end sub store_for_info
 
 sub description {
+	if ( ! $_[0]{'reference'} ) {
 	return join('<br/>', map { $_->reference() } $_[0]->Projects() );
+	} else {
+		return $_[0]{'reference'};
+	} # end if
 }
 
 sub send {
 	my $self = shift;
+
+	my $results;
 
     my %quote;
     $quote{'Quote'} = $self;
@@ -282,9 +313,9 @@ sub send {
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
 		my %var;
-			$var{'Quote'} = $self;
-			$var{'Project'} = $Project->Project();
-			$var{'QuotedProject'} = $Project;
+		$var{'Quote'} = $self;
+		$var{'Project'} = $Project->Project();
+		$var{'QuotedProject'} = $Project;
 		if ( $Project->template_id() ) {
 			$var{'ReplacementText'} = '<style type="text/css">'.misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ).'</style>'.
 			misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html' );
@@ -312,9 +343,9 @@ sub send {
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 			push @attachments, "Quote$$self{id}.html", MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
 
-			(new openprint::Email())->send(
-					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+			$results .= (new openprint::Email())->send(
+					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					TO      => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
@@ -349,9 +380,10 @@ sub send {
 			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 			push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
 
-			(new openprint::Email())->send(
-					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+			$results .= (new openprint::Email())->send(
+					FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+					TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					ATTACHMENTS	=>	[ @attachments, @project_summaries ],
 					);
@@ -373,15 +405,17 @@ sub send {
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		push @attachments, "Quote$$self{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
-		new openprint::Email()->send(
-				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
-				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
+		$results .= (new openprint::Email())->send(
+				FROM    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				#TO    => sprintf('"%s %s" <%s>', @$self{'by_firstname','by_lastname','by_email'}),
+				TO      => sprintf('"%s %s" <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				ATTACHMENTS	=>	[ @attachments ],
 				);
 	} # end if reseller or admin
 
 	if ( $openprint::config{'SendQuoteToAdmin'} eq 'Y' ) {
+$log->debug("Sending quote to admin");
 # Send one to the admin
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
@@ -402,7 +436,8 @@ sub send {
 					);
 		} # end if
 	} # end if
-
+	$self->add_log( $results );
+	return $results;
 } # end sub send
 
 sub total {
@@ -412,6 +447,9 @@ sub total {
 	} # end if
 	return $$self{'total'.$qty_index};
 } # end sub total
+sub Currency {
+	return new openprint::Currency( $_[0]{'currency_id'} );
+} # end sub Currency
 
 1;
 __END__

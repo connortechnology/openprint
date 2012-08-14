@@ -94,6 +94,7 @@ $log->debug("Enable mac search for $mac_search");
 		<tr>
 			<th class="checkbox">&nbsp;</th>
 			<th class="name">Name</th>
+			<th class="type">Type</th>
 			<th class="ip" onclick="load_host(f1, {order:'ip'});">IP</th>
 			<th class="mac" onclick="load_host(f1, {order:'mac'});">Mac</th>
 			<th class="options">Options</th>
@@ -107,14 +108,15 @@ $log->debug("Enable mac search for $mac_search");
 			foreach my $Host ( @{$$variable{'Hosts'}} ) {
 				$html .= sprintf('
 					<tr%7$s>
-						<td><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
-						<td><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
-						<td><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
-						<td><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
-						<td><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
-						<td><a href="/employee/it/host.html?host_id=%1$d">%6$s</a></td>
+						<td class="checkbox"><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
+						<td class="name"><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
+						<td class="type"><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
+						<td class="ip"><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
+						<td class="mac"><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
+						<td class="options"><a href="/employee/it/host.html?host_id=%1$d">%6$s</a></td>
+						<td class="description"><a href="/employee/it/host.html?host_id=%1$d">%7$s</a></td>
 					</tr>
-					', $Host->id(), $Host->hostname(), $Host->ip(), 
+					', $Host->id(), $Host->hostname(), $Host->type(), $Host->ip(), 
 					($Host->mac() ? join('<br/>', @{$Host->mac()} ) : ''), 
 					join(', ', (
 						( $Host->dhcp() ? 'dhcp' : () ),

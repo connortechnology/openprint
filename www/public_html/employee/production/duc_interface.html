@@ -166,8 +166,9 @@
 
 <? echo ( 
 	my $html;
-	%{$$variable{'EquipmentIDs'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID FROM tbl_Equipment WHERE strCategory='Printing'} );
-	%{$$variable{'EquipmentNames'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strName FROM tbl_Equipment WHERE strCategory='Printing'} );
+	my @Equipment = openprint::Equipment->find('category'=>'Printing');
+	%{$$variable{'EquipmentIDs'}} = map { $_->id(), $_->strid() } @Equipment;
+	%{$$variable{'EquipmentNames'}} = map { $_->id(), $_->name() } @Equipment;
 	foreach my $id ( keys %{$$variable{'EquipmentIDs'}} ) {
 		$html .= qq{Equipment[$id] = "$$variable{'EquipmentNames'}{$id} ($$variable{'EquipmentIDs'}{$id})";\n};
 	} # end foreach

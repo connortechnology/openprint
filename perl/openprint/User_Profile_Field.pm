@@ -14,10 +14,13 @@ $serial = 'user_profile_fields_id_seq';
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
 	'values'		=>	'values',
+	'defaults'		=>	'defaults',
 	'searchable'	=>	'searchable',
 	'deleted'		=>	'deleted',
 	'search_default'	=>	'search_default',
 	'match'			=>	'match',
+	'on_registration'	=>	'on_registration',
+	'viewable'			=>	'viewable',
 );
 %transforms = (
 	'sort'	=> [ 's/\D//g' ],
@@ -27,6 +30,8 @@ $serial = 'user_profile_fields_id_seq';
 	'searchable'	=>	0,
 	'sort'		=>	'undef',
 	'deleted'	=>	0,
+	'on_registration'	=>	0,
+	'viewable'	=>	1,
 );
 
 sub destroy {
@@ -50,7 +55,7 @@ sub html {
 	my $Field = $_[0];
 
 	$html .= '<li class="'.$Field->type().'"><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
-	my $value = $_[1] ? $_[1] : $_[0]->default();
+	my $value = $_[1] ? $_[1] : ( $_[0]->defaults() ? join(',',@{$_[0]->defaults()}) : '' );
 
 	if ( $Field->type() eq 'checkbox' ) {
 		foreach my $v ( ref $Field->values() eq 'ARRAY' ? @{$Field->values()} : () ) {

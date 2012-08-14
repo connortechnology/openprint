@@ -1,8 +1,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Quote'}->Products() ) ?>
-<table>
+<table class="List">
 	<thead>
 		<tr>
+			<th class="thumbnail">&nbsp;</th>
 			<th class="description">Product</th>
 			<th class="quantity">Quantity</th>
 			<th class="cost">Cost</th>
@@ -17,6 +18,7 @@
 			my $subtotal = 0;
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
 				$html .= sprintf('<tr%1$s>
+									<td class="thumbnail">%8$s</td>
 									<td class="description">%3$s</td>
 									<td class="quantity">%4$s</td>
 									<td class="price">%5$s</td>
@@ -26,12 +28,14 @@
 									Number::Format::format_number($Product->quantity()), 
 									openprint::Currency::format( $Product->cost() ), 
 									1*$Product->markup().'%', 
-									openprint::Currency::format( $Product->price() ) );
+									openprint::Currency::format( $Product->price() ),
+						$Product->Product()->thumbnail_html(),
+					);
 				$subtotal += $Product->price();
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 		$html .= '<tr class="totals">';
-		$html .= '<td colspan="4" style="text-align: right;">Subtotal</td><td class="newprice">';
+		$html .= '<td colspan="5">Subtotal</td><td class="newprice">';
 		$html .= openprint::Currency::format( $subtotal );
 		$html .= '</td></tr>';
 			return $html;

@@ -147,8 +147,8 @@
 		</li>
 		<li>
 			<label>Size</label>
-			<input type="number" name="width" id="width" value="<? echo ( $session{'/administrator/stock/list.html?width'} ) ?>" onclick="calc(this.form.name);" />x
-			<input type="number" name="height" id="height" value="<? echo ( $session{'/administrator/stock/list.html?height'} ) ?>" onclick="calc(this.form.name);" />
+			<? echo ( ssi::input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
+			<? echo ( ssi::input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
 		</li>
 		<li>
 			<label>Recommendations</label>
@@ -167,6 +167,10 @@
 			<label>Inventory Code</label>
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+		</li>
+		<li>
+			<label>Digital</label>
+			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		</ul>
 		</div><br class="spacer"/>

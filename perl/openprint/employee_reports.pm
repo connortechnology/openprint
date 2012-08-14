@@ -58,7 +58,10 @@ sub _project_history_results {
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
 		foreach my $Project ( openprint::Project::find( %filters ) ) {
-			if ( $param{'previous_status'} ) {
+			if ( $param{'previous_status'} and (
+						Date::Calc::check_date( @param{'status_on_start_year','status_on_start_month','status_on_start_day'} ) or 
+						Date::Calc::check_date( @param{'status_on_end_year','status_on_end_month','status_on_end_day'} )
+						) ) {
 				my @statuses = split(',', $param{'previous_status'} );
 				my $keep = 0;
 				if ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
@@ -503,5 +506,7 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+sub prepress_productivity {
+} # end sub prepress_productivity
 1;
 __END__

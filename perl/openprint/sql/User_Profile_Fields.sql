@@ -6,10 +6,13 @@ CREATE TABLE User_Profile_Fields (
 	description	TEXT,
 	type		TEXT,
 	values		TEXT[],
+	defaults	TEXT[],
 	sort		INTEGER,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	searchable	BOOLEAN NOT NULL DEFAULT FALSE,
 	search_default	TEXT,	
 	match		TEXT,
+	on_registration	BOOLEAN,
+	viewable	BOOLEAN,
 	PRIMARY KEY (id)
 );

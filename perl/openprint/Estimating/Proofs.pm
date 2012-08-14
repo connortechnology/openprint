@@ -137,11 +137,9 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				# Remove it so we don't have to test for it later
-				@signature_service_indices = sets::exclude( [ $signature_service_index ], \@signature_service_indices );
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
 				next;
 			} # end if
-$openprint::log->debug("Loading imposition");
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
 
@@ -185,6 +183,11 @@ $openprint::log->debug("Loading imposition");
 
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				# Remove it so we don't have to test for it later
+				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
+				next;
+			} # end if
 			my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index});
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
@@ -209,6 +212,7 @@ sub signature_calc {
 	my ( $Project, $specs, $sig_service_index, $sig_specs, $qty_index, $indexes, $totals, $Equipment, $Imposition ) = @_;
 
 	my %Results;
+	return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
 
 	my $signature_index = $$sig_specs{'SignatureIndex'};
 	if ( ! $Equipment ) {

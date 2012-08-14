@@ -27,7 +27,9 @@ $serial = 'emailcampaigns_id_seq';
 	'timeofday'		=>	'timeofday',
 	'email_subject'	=>	'email_subject',
 	'email_from'	=>	'email_from',
+	'email_to'		=>	'email_to',
 	'email_text'	=>	'email_text',
+	'email_html'	=>	'email_html',
 	'attachments'	=>	'attachments',
 	'lastrun'		=>	'lastrun',
 	'nextrun'		=>	'nextrun',
@@ -119,7 +121,7 @@ sub send_email {
 	my $Email = new openprint::Email();
 	my $rc = $Email->send(
 			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO		=> $$replacements{'User'},
+			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{'User'} ),
 			SUBJECT => $$self{'email_subject'},
 			ATTACHMENTS =>	[ @body, @attachments ],
 		);
@@ -138,7 +140,6 @@ sub send {
 	my $results = '';
 
 	my %replacements;
-	my $body = $self->{'email_text'};
 
 	# Find the email and company name for all accounts that match
 	# this campaign
@@ -175,6 +176,7 @@ sub send {
 	# If an email is sent, update the row in emailcampaigsent for this
 	# campaign/user, or add one as necessary
 	#
+	my $body = $self->{email_text} ? $$self{email_text} : $$self{email_html};
 	foreach my $user_index ( @mail_user_ids ) {
 		# de we need to send this email?
 

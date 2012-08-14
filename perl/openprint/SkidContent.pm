@@ -2,7 +2,7 @@ use strict;
 package openprint::SkidContent;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug %fields %transforms %defaults $table $serial );
+use vars qw( $debug %fields %find_fields %transforms %defaults $table $serial );
 use Carp qw( cluck );
 
 require sql;
@@ -21,6 +21,9 @@ $debug = 0;
 	'units'			=>	'units',
 	'condition_id'	=>	'condition_id',
 	'manifestcontent_id'	=>	'manifestcontent_id',
+);
+%find_fields = (
+	'allocated'	=>	'(SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id)',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
@@ -60,12 +63,15 @@ sub delete {
 	} # end if
 } # end sub delete
 sub allocateable {
-    my ( $self ) = @_;
-    return $self->quantity() - $self->allocation();
+	if ( ! exists $_[0]{'allocateable'} ) {
+		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
+		$_[0]{'allocateable'} = 0 if $_[0]{'allocateable'} < 0;
+	} # end if
+	return $_[0]{'allocateable'};
 } # end sub allocateable
 
 sub allocated {
-	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_id'=>$_[0]{'skid_id'});
+	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_ids any'=>$_[0]{'skid_id'});
 	return $PA->quantity() if $PA;
 	return 0;
 } # end sub allocated

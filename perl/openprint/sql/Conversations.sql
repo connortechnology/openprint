@@ -5,5 +5,6 @@ CREATE TABLE Conversations (
 	subject	TEXT,
 	created_by	INTEGER,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	deleted	BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );

@@ -38,7 +38,7 @@
 				$summary = $function->($Project, $$services{''}[0], $printing_specs );
 			} # end if
 
-			my $Service = $Project->Service( $service_ids[0] );
+			my $Service = $Project->Service( $$services{''}[0] );
 			if ( $Service->overrides() ) {
 				$summary .= '<br/><b>With Overrides</b>';
 			} # end if

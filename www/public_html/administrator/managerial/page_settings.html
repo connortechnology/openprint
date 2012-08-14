@@ -1,3 +1,4 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <div class="PageSettings">
 	<form id="f1" name="f1" action="page_settings.html" method="post">
 		<table>
@@ -8,18 +9,27 @@
 			</tr>
 		<? echo ( 
 			my $html;
+			my $rowclass;
 			my @user_types = ( '', 'all', map { $_->id(), $_->name() } openprint::User_Type->find() );
 			foreach my $PS ( openprint::Page_Setting->find('order'=>'url') ) {
 				$html .= sprintf(q`
-					<tr>	
-						<td class="url"><input type="text" name="url-%1$d" value="%2$s"/></td>
-						<td class="cacheable"><select name="cacheable-%1$d">%3$s</select></td>
-						<td class="user_level"><select name="user_level-%1$d">%4$s</select></td>
+					<tr%1$s>	
+						<td class="url"><input type="text" name="url-%2$d" value="%3$s"/></td>
+						<td class="cacheable"><select name="cacheable-%2$d">%4$s</select></td>
+						<td class="user_level"><select name="user_level-%2$d">%5$s</select></td>
+					</tr><tr%1$s>
+						<td colspan="3" class="keywords">Keywords:<input type="text" name="keywords-%2$d" value="%6$s"/></td>
+					</tr><tr%1$s>
+						<td colspan="3" class="description">Description:<input type="text" name="description-%2$d" value="%7$s"/></td>
 					</tr>`,
+					$rowclass,
 					$PS->id(), $PS->url(), 
 					ssi::make_drop_down( [ '', 'no', 'for all', 'for all', 'per user', 'per user' ], $PS->cacheable() ),
 					ssi::make_drop_down( \@user_types, $PS->user_level() ),
+					ssi::html_escape( $PS->keywords() ),
+					ssi::html_escape( $PS->description() ),
 				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach
 			return $html;
 		) ?>

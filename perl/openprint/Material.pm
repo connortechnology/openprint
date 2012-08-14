@@ -18,7 +18,6 @@ $debug = 1;
 $table = 'materials';
 $serial = 'materialindex_seq';
 
-
 %fields = (
 		'id'				=>	'id',
 		'name'				=>	'name',
@@ -68,11 +67,29 @@ sub prices {
 	return openprint::MaterialPrice->find('material_id'=>$$self{id});
 } # end sub prices
 
+sub New_Specification {
+	my ( $self, $name, $options ) = @_;
+
+	if ( ! $$self{'NewSpecifications'} ) {
+		foreach my $Spec ( openprint::MaterialSpecification::find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
+			push @{$$self{'NewSpecifications'}{$$Spec{equipment_id}}{$name}}, $Spec;
+		} # end foreach
+	} # end if
+	if ( ! ( $$self{'NewSpecifications'} and $$self{'NewSpecifications'}{$$options{equipment_id}} and $$self{NewSpecifications}{$$options{equipment_id}}{$name}) ) {
+		#$openprint::log->warn("No specfications for " . $self->name() );
+		return;
+	} # end if
+
+	return $$self{'NewSpecifications'}{$$options{equipment_id}}{$name}[0] if ! defined $$options{range};
+	return misc::find_entry( $$options{range}, $$self{'NewSpecifications'}{$$options{equipment_id}}{$name} );
+
+} # end sub New_Specification
+
 sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if

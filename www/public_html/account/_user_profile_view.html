@@ -6,7 +6,7 @@
 	my $html;
 	my $Profile = $$variable{'User'}->Profile();
 	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name','viewable'=>1) ) {
 		$html .= '<li><label>'.$Field->description().'</label><span id="field-'.$Field->id().'_container">';
 		my $value = $Profile->value( $Field->name() );
 		if ( sets::isin( $Field->type(), ['country','state','city'] ) ) {
@@ -16,12 +16,17 @@
 			if ( $value ) {
 			$html .= qq`<a href="https://plus.google.com/$value/posts" target="_blank">Go to Google</a>`;
 			} # end if
+		} elsif ( $Field->name() eq 'Twitter ID' ) {
+			if ( $value ) {
+			$html .= qq`<a href="https://twitter.com/#!/$value" target="_blank">\@$value</a>`;
+			} # end if
 		} else {
 			$html .= $value;
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field
 	if ( $$variable{'User'}->id() != $session{'user_id'} and my $Location = $$variable{'User'}->Location() ) {
+$log->debug("Location: " . $Location->to_string() );
 		my $MY_Location = new openprint::User( $session{'user_id'} )->Location();
 		my $distance = openprint::Location::distance( $Location->get('latitude','longitude'), $MY_Location->get('latitude','longitude'), 'K' );
 		$html .= '<li><label>Distance</label>'.$distance.'km</li>';

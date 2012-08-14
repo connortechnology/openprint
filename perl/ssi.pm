@@ -78,13 +78,14 @@ sub do_new_substitution {
 		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval($1);
+#$log->warn("eval of $1: $! $@");
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result = htmlize($result);
+		$result = html_escape($result);
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
@@ -150,7 +151,7 @@ my %html_replacements = (
 my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
 	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
-    return $_[0];
+	return $_[0];
 }
 
 sub escape_quotes {
@@ -448,6 +449,10 @@ sub button {
 		$html .= 'onclick="';
 		$html .= $$options{'onclick'}."return false;\" ";
 	} # end if
+	if ( $$options{'ontouch'} ) {
+		$html .= 'ontouch="'.$$options{'ontouch'}.'" ';
+	} # end if
+	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
 		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
@@ -646,7 +651,7 @@ $openprint::log->error("No date from $value");
 		$html .= button( $prefix.'_clear', { 'onclick'=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, 'text'=>'C' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $F('%1$s_year'), $F('%1$s_month'), $F('%1$s_day') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
+		$html .= button( $prefix.'_today', { 'onclick'=>sprintf(q`set_today( $('%1$s_year'), $('%1$s_month'), $('%1$s_day'), $('%1$s_hour'), $('%1$s_minute') );`, $prefix ).$$options{'onchange'}, 'text'=>'T' } );
 	} # end if
 	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
@@ -700,18 +705,21 @@ sub count_lines {
 } # end sub count_lines
 
 sub radio {
-    my ( $name, $values, $selected, $options ) = @_;
+	my ( $name, $values, $selected, $options ) = @_;
 
-    my $onclick = $$options{'onclick'} if $options;
-    my $html;
+	my $onclick = $$options{'onclick'} if $options;
+	my $html;
 
 	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
-        $html .= sprintf(q`
-                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
-                <label class="radio" for="%1$s%2$s">%3$s</label>
-                `, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
-    } # end foreach value
-    return $html;
+		$html .= sprintf(q`
+				<input type="radio" name="%1$s" value="%2$s" id="%1$s%6$s%2$s" %4$s%5$s />
+				<label class="radio" for="%1$s%2$s">%3$s</label>
+				`, $name, $value, $label, checked( $value eq $selected ), 
+				( $onclick ? ' onclick="'.$onclick.'"' : '' ),
+				$$options{id},
+				);
+	} # end foreach value
+	return $html;
 } # end sub radio
 sub checkboxes {
 	my ( $name, $values, $selected, $options ) = @_;
@@ -746,12 +754,12 @@ sub date_filter {
 		#} # end foreach
 	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
-        return ();
-    } # end if
-    my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+		return ();
+	} # end if
+	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-    $month = 1 if ! $month;
-    $day = 1 if ! $day;
+	$month = 1 if ! $month;
+	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
@@ -763,20 +771,44 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
+
+my @button_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max' );
 
 sub input {
 	my %options = @_;
 	my $html = '<input';
-	$html .= ' type="'.$options{type}.'"' if $options{type};
-	$html .= ' value="'.$options{value}.'"' if $options{value};
-	$html .= ' name="'.$options{name}.'"' if $options{name};
-	$html .= ' id="'.$options{id}.'"' if $options{id};
-	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
-	$html .= ' onkeydown="'.$options{onkeydown}.'"' if $options{onkeydown};
-	$html .= ' onchange="'.$options{onchange}.'"' if $options{onchange};
-	$html .= ' class="'.$options{class}.'"' if $options{class};
+	if ( $options{type} eq 'cardinal' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'integer' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'float' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+	} # end if
+	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
+
+	foreach (@button_options) {
+		$html .= qq` $_="$options{$_}"` if $options{$_};
+	} # end foreach
 	$html .= ' required' if $options{required};
 	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';

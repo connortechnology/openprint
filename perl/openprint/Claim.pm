@@ -3,10 +3,6 @@ package openprint::Claim;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use MIME::Base64;
-use MIME::QuotedPrint;
-use MIME::Types;
-use MIME::Type;
 
 use openprint ();
 use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
@@ -190,6 +186,8 @@ sub Contact {
 } # end sub Contact
 
 sub send {
+require MIME::Base64;
+require MIME::QuotedPrint;
 	my ( $self, @To ) = @_;
 
 	my $From = new openprint::User( $session{'user_id'} );
@@ -209,7 +207,8 @@ sub send {
 	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	if ( $self->include_attachments() ) {
-		my MIME::Types $types = MIME::Types->new;
+		require MIME::Types;
+		my $types = MIME::Types->new;
 		foreach my $Claim_Asset ( $self->Assets() ) {
 			my $Asset = $Claim_Asset->Asset();
 			push @attachments, $Asset->filename(), 

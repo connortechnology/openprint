@@ -1,7 +1,7 @@
 use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
-use Text::Unaccent ();
+require Text::Unaccent;
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
 use openprint ();
@@ -11,11 +11,11 @@ use openprint ();
 require sql;
 require openprint::Object;
 require openprint::User;
-require openprint::customer_credit;
 require openprint::address;
 require openprint::Company_Profile;
+require openprint::Company_Credit;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -67,6 +67,7 @@ $serial = 'companies_id_seq';
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %find_fields = (
 	'last_online'	=>	'(SELECT MAX(date_time) FROM Logs WHERE company_id=companies.id)',
@@ -90,6 +91,7 @@ $serial = 'companies_id_seq';
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 sub Currency {
@@ -236,9 +238,9 @@ sub save_tradereferences {
 
 
 sub Credit {
-	my ( $self, $supplier ) = @_;
-	
-	return new openprint::customer_credit( $$self{id}, $supplier );
+	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
+
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
 sub dropdown {

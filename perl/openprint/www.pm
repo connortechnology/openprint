@@ -48,6 +48,7 @@ sub handler {
 	my $page = $r->uri();
 	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
+	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
 	#foreach my $key ( sets::union( $r->param ) ) {
@@ -77,21 +78,11 @@ sub handler {
 			'password'	=> $r->dir_config('db_password'),
 			);
 
-	my $lastpage = '';
 	my $page = $r->uri();
-	if ( $page =~ /\.html/ ) {
-		$r->content_type(q{text/html; charset=utf-8});
-	} elsif ( $page =~ /\.json/ ) {
-		$r->content_type(q{text/javascript; charset=utf-8});
-	} elsif ( $page =~ /\.xml/ ) {
-		$r->content_type(q{text/xml; charset=utf-8});
-	} elsif ( $page =~ /\.rss/ ) {
-		$r->content_type(q{application/rss+xml; charset=utf-8});
-		#$r->content_type(q{text/html; charset=utf-8});
-	} # end if
+	my $lastpage = '';
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $r->dir_config() );
+	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
@@ -152,6 +143,7 @@ $log->debug("Sending js redirect");
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
 		} # end if
+		$variable{'PageSetting'} = $page_settings{$page} ? $page_settings{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();
@@ -176,11 +168,21 @@ $log->debug("Sending js redirect");
 		} # end while
 	} # end if
 
-	if ( $variable{'ExternalRedirect'} ) {
-		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
-		$r->status(Apache2::Const::REDIRECT);
-		#$r->send_http_header;
-$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
+    if ( $lastpage =~ /\.html/ ) {
+        $r->content_type(q{text/html; charset=utf-8});
+    } elsif ( $lastpage =~ /\.json/ ) {
+        $r->content_type(q{text/javascript; charset=utf-8});
+    } elsif ( $lastpage =~ /\.xml/ ) {
+        $r->content_type(q{text/xml; charset=utf-8});
+    } elsif ( $lastpage =~ /\.rss/ ) {
+        $r->content_type(q{application/rss+xml; charset=utf-8});
+    } # end if
+
+    if ( $variable{'ExternalRedirect'} ) {
+        $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+        $r->status(Apache2::Const::REDIRECT);
+        #$r->send_http_header;
+		$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		if ( $variable{'File_Data'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
@@ -239,7 +241,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -265,7 +267,7 @@ sub parse_page {
 
 	# This deals with things like /account/login.html//balhblahblah.php
 	my ($real_uri) = $uri =~ /^([^\.]+\.[^\.]+)/i;
-$openprint::log->debug("URI: $real_uri");
+#$openprint::log->debug("URI: $real_uri");
 	my @thing = split( '/', $real_uri );
 	my $filename = pop @thing;
 	shift @thing; # get rid of element before leading slash
@@ -310,11 +312,6 @@ $openprint::log->debug("Getfile");
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
-		if ( $filename eq 'login_confirmation.html' ) {
-			$status = openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
-			return $status if $variable{'Redirect'};	
-		} # end if
-
 		if ( $second eq 'proj' ) {
 			require openprint::print;
 			require openprint::print_project;
@@ -381,11 +378,6 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 					} # end if
 				} # end if
 			} # end if
-		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-			$variable{'error'} = 'Unauthorized';
-			$variable{'details'} = 'You are not authorized to view this page.';
-			$variable{'Redirect'} = $config{'errorpage'};
-			return;
 		} else {
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			if ( $proc ) {
@@ -503,11 +495,7 @@ $openprint::log->warn('bind');
 					
 					} # end if
 				} elsif ($third eq 'spec') {
-					if ( $filename eq 'lamination.html' ) {
-						require openprint::Estimating::Lamination;
-						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+					if ( $filename =~ /^(\w*).html$/ ) {
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;

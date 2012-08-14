@@ -38,7 +38,7 @@ $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
-configuration::init_cache( $log, $dbh );
+configuration::init( $log, $dbh );
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -136,6 +136,8 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 			$dbh->do('ALTER TABLE taxes DROP column harmonizedtax');
 		}
 	} # end if data
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Taxes.sql' ) ) or die $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'invoice_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Invoice_Taxes.sql});
@@ -198,6 +200,12 @@ if ( $data ) {
 	if ( ! exists $$data{terms_accepted} ) {
 		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
 	} # end if
+	if ( ! exists $$data{'cod_percent'} ) {
+		$dbh->do('ALTER TABLE orders add cod_percent float');
+	} # end if
+	if ( ! exists $$data{'downpayment_percent'} ) {
+		$dbh->do('ALTER TABLE orders add downpayment_percent float');
+	} # end if
 }
 if ( ! sets::isin('order_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
@@ -228,7 +236,7 @@ if ( ! openprint::Order_Tax->find_one() ) {
 				$new_amount = $$data{'curprovtax'};
 				} # end if
 			} else {
-				$new_amount = sprintf('%.2f', $Order->subtotal() * ( $Tax->rate()/100 ) );
+				$new_amount = Math::Round::nearest(0.01, $Order->subtotal() * ( $Tax->rate()/100 ) );
 			} # end if
 				
 			my $Order_Tax = new openprint::Order_Tax();
@@ -272,10 +280,8 @@ if ( sets::isin('purchaseorders', \@tables ) ) {
 	} # end foreach
 } # end if
 if ( sets::isin('purchaseorder_contents', \@tables ) ) {
-$log->debug("contents");
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_contents'", 'column_name');
 	if ( ! exists $$data{'item_id'} ) {
-$log->debug('!item_id');
 		$dbh->do('ALTER TABLE purchaseorder_Contents ADD item_id INTEGER');
 		if ( exists $$data{'item'} ) {
 			require openprint::PurchaseOrder_Item;
@@ -289,8 +295,6 @@ $log->debug('!item_id');
 			} # end if
 		} # end if
 		#$dbh->do('alter table purchaseorder_contents drop column item');
-	} else {
-		$log->debug("has item_id");
 	} # end if
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('ALTER TABLE PurchaseOrder_Contents ADD created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
@@ -325,6 +329,7 @@ if ( 0 ) {
 		$PO_CT->save({'name'=>'Sheet Stock'});
 	} # end if
 } # end if
+
 if ( $config{'Default State Tax'} ) {
 	$dbh->do("DELETE FROM Configuration WHERE name='Default State Tax'");
 }
@@ -366,11 +371,22 @@ if ( ! sets::isin('equipment_stock_settings', \@tables ) ) {
 if ( ! sets::isin('signaturecapture', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
-if ( sets::isin( 'email_campaigns', \@tables ) ) {
-	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='email_campaigns'", 'column_name');
+if ( sets::isin( 'emailcampaigns', \@tables ) ) {
+$log->debug("has email_campaigns");
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='emailcampaigns'", 'column_name');
 	if ( ! $$data{'nextrun'} ) {
-		$dbh->do( 'ALTER TABLE email_campaigns add nextrun timestamp with time zone' );
+		$dbh->do( 'ALTER TABLE emailcampaigns add nextrun timestamp with time zone' );
 	} # end if
+	if ( ! exists $$data{email_to} ) {
+$log->debug("Add email_to");
+		$dbh->do('ALTER TABLE emailcampaigns add email_to text');
+	} # end if
+	if ( ! exists $$data{email_html} ) {
+$log->debug("Add email_html");
+		$dbh->do('ALTER TABLE emailcampaigns add email_html text');
+	} # end if
+} else {
+$log->debug("no has email_campaigns");
 } # end if
 if ( ! sets::isin( 'paycheques', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques.sql}) );

@@ -1,5 +1,4 @@
 use strict;
-require openprint::Object;
 package openprint::Tax;
 our @ISA = qw(openprint::Object);
 

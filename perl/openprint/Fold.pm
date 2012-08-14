@@ -13,7 +13,7 @@ use vars qw( $table $serial $log $dbh %fields %transforms %defaults );
 *dbh = \$openprint::dbh;
 
 $table = 'folds';
-$serial= 'fold_id_seq';
+$serial= 'folds_id_seq';
 
 %fields = (
 	'id'					=>	'id',
@@ -221,6 +221,17 @@ sub runspeed {
 	my $RunSpeed = $_[0]->RunSpeed($_[1]);
 	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
 } # end sub runspeed
-
+sub Imposition {
+	if ( @_ > 1 ) {
+		$_[0]{'Imposition'} = $_[1];
+	} # end if
+	return $_[0]{'Imposition'};
+} # end sub Imposition
+sub imposition {
+	if ( @_ > 1 ) {
+		$_[0]{'imposition'} = $_[1];
+	} # end if
+	return $_[0]{'imposition'};
+} # end sub imposition
 1;
 __END__

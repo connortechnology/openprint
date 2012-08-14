@@ -3,11 +3,9 @@ use strict;
 #use warnings;
 use lib '/var/www/testing/perl';
 
-use Getopt::Long;
+use Getopt::Long qw(GetOptions);
 use File::Basename qw(basename);
-use openprint;
-
-require misc;
+require openprint;
 require logger;
 require sql;
 require openprint::Host;
@@ -73,26 +71,35 @@ if ( $ENV{'CALLING_STATION_ID'} ) {
 	} # end if
 	my $Host = openprint::Host->find_one('mac any'=>$ENV{'CALLING_STATION_ID'});
 	if ( $Host ) {
-		if ( $Host->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
-			$_ = $Host->save({'ip'=>$ENV{'FRAMED_IP_ADDRESS'}});
-			$log->error($_) if $_;
+		if ( $Host->dhcp() ) {
+			if ( $Host->ip() ne $ENV{'FRAMED_IP_ADDRESS'} ) {
+				$_ = $Host->save({'ip'=>$ENV{'FRAMED_IP_ADDRESS'}});
+				$log->error($_) if $_;
+
+				my $hostname = $Host->hostname();
+				if ( $hostname !~ /.internal.point-one.com$/ ) {
+					$log->debug("TRanforming $hostname into $hostname.internal.point-one.com");
+					$hostname .= '.internal.point-one.com';
+				}
+
+				if ( open NSUPDATE, "| nsupdate" ) {
+					$log->debug("Updating $hostname to $ENV{'FRAMED_IP_ADDRESS'}");
+					print NSUPDATE "server localhost\n";
+					print NSUPDATE "update delete $hostname. IN A\n";
+					print NSUPDATE "update add $hostname. 86400 IN A $ENV{'FRAMED_IP_ADDRESS'}\n";
+					print NSUPDATE "send\n";
+					close NSUPDATE;
+				} else {
+					$log->error("Unable to open NSUPDATE $!");
+				} # end if 
+			} else {
+				$log->debug("IP unchanged");
+			} # end if
 		} else {
-			$log->debug("Not changing IP");
+			$log->debug("IP not changed because dhcp not setf or mac $ENV{'CALLING_STATION_ID'} $$Host{hostname}");
 		} # end if
-
-		my $hostname = $Host->hostname();
-		$hostname .= '.internal.point-one.com' if $hostname !~ /.internal.point-one.com$/;
-
-		if ( open NSUPDATE, "| nsupdate" ) {
-			$log->debug("Updating $hostname to $ENV{'FRAMED_IP_ADDRESS'}");
-			print NSUPDATE "server localhost\n";
-			print NSUPDATE "update delete $hostname. IN A\n";
-			print NSUPDATE "update add $hostname. 86400 IN A $ENV{'FRAMED_IP_ADDRESS'}\n";
-			print NSUPDATE "send\n";
-			close NSUPDATE;
-		} else {
-			$log->error("Unable to open NSUPDATE $!");
-		} # end if 
+	} else {
+		$log->debug("Host not found for mac $ENV{'CALLING_STATION_ID'}");
 
 	} # end if Hosts
 	$dbh->disconnect();

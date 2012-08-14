@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS Invoices;
 
 CREATE TABLE Invoices (
-    id integer DEFAULT nextval(('Invoices_id_seq'::text)::regclass) NOT NULL,
+    id integer DEFAULT nextval(('invoices_id_seq'::text)::regclass) NOT NULL,
     invoicer_id integer NOT NULL,
     invoicee_id integer NOT NULL,
     posted_on date,

@@ -87,29 +87,30 @@ sub relationship_type_id {
 
 sub can_view {
 	return 1 if $openprint::session{'user_type'} eq 'A';
+	my $user_id = $_[1] ? $_[1] : $openprint::session{user_id};
 	if ( $_[0]{'mode'} eq 'public' ) {
 		return 1;
 	} elsif ( $_[0]{'mode'} eq 'logged_in' ) {
-		return 1 if $openprint::session{'user_id'};
+		return 1 if $user_id;
 	} elsif ( $_[0]{'mode'} eq 'specific' ) {
 		if ( @{$_[0]->usergroup_id()} ) {
-			my @Groups = openprint::UserGroup->find('user_id any'=>$openprint::session{'user_id'} );
+			my @Groups = openprint::UserGroup->find('user_id any'=>$user_id );
 			return 1 if sets::intersection( ( map { $_->id() } @Groups ), @{$_[0]->usergroup_id()} );
 		} # end if
 		if ( @{$_[0]->relationship_type_id()} ) {
 			my @Relationships = (
-					openprint::User_Relationship->find('user_id1'=>$openprint::session{'user_id'},'user_id2'=>$_[0]->Object()->created_by()),
-					openprint::User_Relationship->find('user_id2'=>$openprint::session{'user_id'},'user_id1'=>$_[0]->Object()->created_by()),
+					openprint::User_Relationship->find('user_id1'=>$user_id,'user_id2'=>$_[0]->Object()->created_by()),
+					openprint::User_Relationship->find('user_id2'=>$user_id,'user_id1'=>$_[0]->Object()->created_by()),
 					);
 			my @type_ids = map { $_->type_id() } @Relationships;
 
 			return 1 if sets::intersection( @{$_[0]->relationship_type_id()}, @type_ids );
 		} # end if
-		if ( $_[0]->user_id() and sets::isin( $openprint::session{'user_id'}, $_[0]->user_id() ) ) {
+		if ( $_[0]->user_id() and sets::isin( $user_id, $_[0]->user_id() ) ) {
 			return 1;
 		} # end if
 	} elsif ( $_[0]{'mode'} eq 'onlyyou' ) {
-		return 1 if $_[0]->Object()->created_by() == $openprint::session{'user_id'};
+		return 1 if $_[0]->Object()->created_by() == $user_id;
 	} else {
 		$openprint::log->warn("Unknown value for privacy mode: ".$_[0]{'mode'} );
 	} # end if

@@ -15,6 +15,7 @@ $serial = 'conversations_id_seq';
 	'subject'		=>	'subject',
 	'created_on'	=>	'created_on',
 	'created_by'	=>	'created_by',
+	deleted			=>	'deleted',
 );
 %find_fields = (
 );
@@ -22,6 +23,7 @@ $serial = 'conversations_id_seq';
     'subject' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
+	deleted			=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'created_by'	=>	q`$session{'user_id'}`,
 );

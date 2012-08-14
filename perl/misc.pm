@@ -34,41 +34,41 @@ sub send_email_with_attached_files {
 sub send_email_with_attachment {
 	my ( $log, $mail, @attachments ) = @_; 
 
-	my $message = $$mail{BODY};
+	if ( @attachments ) {
+		my $message = $$mail{BODY};
+		my $boundary = $$mail{BOUNDARY} ? $$mail{BOUNDARY} : ( "====" . time() . "====" );
+		$$mail{'content-type'} = "multipart/mixed;\r\n	boundary=\"$boundary\"\r\n";
 
-	my $boundary = "====" . time() . "====";
-	$$mail{'content-type'} = "multipart/mixed;\r\n	boundary=\"$boundary\"\r\n";
-	$boundary = '--'.$boundary;
+# start with the current body
+		$$mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
+		if ( $message ) {
+			$$mail{BODY} .= "--$boundary\n";
+			$$mail{BODY} .= ($$mail{'content-type'} ? $$mail{'content-type'} : 'Content-Type: text/plain; charset="utf-8"')."\n";
+			$$mail{BODY} .= "Content-Transfer-Encoding: 8-bit\n";
+			$$mail{BODY} .= "\n$message\n";
+		} else {
+			my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
+			$$mail{BODY} .= "--$boundary\nContent-Type: $type;\n";
+			$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$$mail{BODY} .= "\n$text\n";
+		} # end if
 
-	# start with the current body
-	$$mail{'BODY'} .= "This is a multi-part message in MIME format.\n\n";
-	if ( $message ) {
-		$$mail{'BODY'} .= "$boundary\n";
-		$$mail{'BODY'} .= "Content-Type: text/plain;\n\tcharset=\"iso-8859-1\"\n";
-		$$mail{'BODY'} .= "Content-Transfer-Encoding: 8-bit\n";
-		$$mail{'BODY'} .= "\n$message\n";
-	} else {
-		my ( $name, $text, $type, $encoding ) = splice @attachments,0,4;
-		$$mail{BODY} .= "$boundary\nContent-Type: $type;\n";
-		$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-		$$mail{BODY} .= "\n$text\n";
+		while ( @attachments ) {
+			my $name = shift @attachments;
+			my $text = shift @attachments;
+			my $type = shift @attachments;
+			my $encoding = shift @attachments;
+			$$mail{BODY} .= "--$boundary\nContent-Type: $type;\n";
+			$$mail{BODY} .= "\tname=\"$name\"\n" if $name;
+			$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
+			$$mail{BODY} .= "Content-Disposition: attachment;\n";
+			$$mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
+			$$mail{BODY} .= "\n$text\n";
+		} # end while
+
+# Signal end of attachments
+		$$mail{BODY} .= "--$boundary--\n\n";
 	} # end if
-
-	while ( @attachments ) {
-		my $name = shift @attachments;
-		my $text = shift @attachments;
-		my $type = shift @attachments;
-		my $encoding = shift @attachments;
-		$$mail{BODY} .= "$boundary\nContent-Type: $type;\n";
-		$$mail{BODY} .= "\tname=\"$name\"\n" if $name;
-		$$mail{BODY} .= "Content-Transfer-Encoding: $encoding\n";
-		$$mail{BODY} .= "Content-Disposition: attachment;\n";
-		$$mail{BODY} .= "\tfilename=\"$name\"\n" if $name;
-		$$mail{BODY} .= "\n$text\n";
-	} # end while
-
-	# Signal end of attachments
-	$$mail{BODY} .= "$boundary--\n\n";
 	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
 } # end sub send_email_with_attachment
 
@@ -165,15 +165,13 @@ sub export {
 sub get_destination {
 	my ( $r, $uri ) = @_;
 	my $dest = $uri ? $uri : $r->uri();
-	my @keys = $r->param();
-	if ( @keys ) {
-		$dest .= '?';
-		my @params;
-		foreach my $key ( @keys ) {
-			next if $key eq 'password';
-			push @params, join( '=', ($key, $r->param($key)));
-		} # end foreach
-		$dest .=	join( '&', @params );
+	my @values;
+	foreach my $key ( $r->param() ) {
+		next if $key eq 'password';
+		push @values, map { $key.'='.$_ } ( ref $r->param($key) eq 'ARRAY' ? @{$r->param($key)} : $r->param($key) );
+	} # end ofreach     
+	if ( @values ) {
+		$dest .= '?' . join('&', @values );
 	} # end if
 	return $dest;
 } # end sub get_destination
@@ -373,7 +371,7 @@ sub format_bytes {
 	if ( $_[0] > 1048576 ) {
 		return sprintf( "%$_[1]f MB", $_[0] / 1048576 );
 	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%$_[1]f KB', $_[0] / 1024 );
+		return sprintf( "%$_[1]f KB", $_[0] / 1024 );
 	} else {
 		return $_[0].' B';
 	} # end if
@@ -473,34 +471,6 @@ sub add_delta_business_days {
 
 	return ( $year, $month, $day );
 } # end sub add_delta_business_days
-
-# Read a configuration file
-#   The arg can be a relative or full path, or
-#   it can be a file located somewhere in @INC.
-sub ReadCfg {
-    my $file = $_[0];
-
-    our $err;
-
-    {   # Put config data into a separate namespace
-        package CFG;
-		use vars qw( %Config );
-
-        # Process the contents of the config file
-        my $rc = do($file);
-
-        # Check for errors
-        if ($@) {
-            $::err = "ERROR: Failure compiling '$file' - $@";
-        } elsif (! defined($rc)) {
-            $::err = "ERROR: Failure reading '$file' - $!";
-        } elsif (! $rc) {
-            $::err = "ERROR: Failure processing '$file'";
-        }
-    }
-
-    return ($err);
-}
 
 sub smart_time {
 	my $difference = time - $_[0];

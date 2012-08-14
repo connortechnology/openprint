@@ -23,9 +23,7 @@ use File::Basename qw(basename);
 my $program = basename($0);
 
 my $opts = {};
-GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'file=s','log_level=s',
- );
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s', 'file=s','log_level=s' );
 
 if ($opts->{help}) {
     usage();
@@ -70,7 +68,7 @@ my @re = (
 );
 
 my $ac = sql::start_transaction( $dbh );
-$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+#$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM HOSTS where whitelist=?', 1 );
 
@@ -137,6 +135,9 @@ foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
 	if ( $host_counts{$ip}{'count'} > 5 ) { 
 		$host_counts{$ip}{'blacklist'}=1;
+	} # end if
+	if ( ! $host_counts{$ip}->id() ) {
+		next if openprint::Host->find_one('ip'=>$ip);
 	} # end if
 	$_ = $host_counts{$ip}->save();
 	if ( $_ ) {

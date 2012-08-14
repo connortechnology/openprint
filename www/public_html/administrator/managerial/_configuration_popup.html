@@ -18,7 +18,7 @@
 					<input type="text" id="new_category" name="new_category" onkeyup="ddm_select_by_index( $('category'), 0 );"/>
 					<select name="category" id="category" onchange="$('new_category').value='';">
 						<option value="">create new</option>
-						<? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration' ) ], $$variable{'Entry'}{'category'} ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_, $_ } sql::execute( $log, $dbh, 'SELECT DISTINCT category FROM configuration ORDER BY category' ) ], $$variable{'Entry'}{'category'} ); ) ?>
 					</select>
 				</li>
 			</ul>

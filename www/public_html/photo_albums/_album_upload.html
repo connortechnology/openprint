@@ -1,0 +1,65 @@
+<fieldset><legend>Photos</legend>
+<? if ( $$variable{'Album'}->can_edit() ) ?>
+	<div id="assets" class="droparea qq-upload-drop-area">
+		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+		<div id="uploadinstructions">
+			To upload files to this album,
+			<span id="dragndropuploadmessage" style="display:none;">
+			simply drag and drop them here. Or </span>
+			<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
+		</div>
+		<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+		<ul id="upload_list" class="preview qq-upload-list"></ul>
+	</div>
+	<fieldset><legend>Search for Assets</legend>
+		<ul id="asset_search">
+			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '/article/_asset_search_results.html', { parameters: { asset_name: this.value } } ); return false;};return true;"/></li>
+		</ul>
+		<ul id="asset_search_results"><!--#include virtual="/article/_asset_search_results.html"--></ul>
+	</fieldset>
+	<div class="disclaimer"><? echo ( sets::isin( $session{'user_type'}, ['E','A'] ) ? 'Disclaimer hidden.' : $config{'PhotoUploadDisclaimer'} ) ?></div>
+<? else ( $$variable{'Album'}->can_edit() ) ?>
+	<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+<? endif ( $$variable{'Album'}->can_edit() ) ?>
+</fieldset>
+<? if ( $$variable{'Album'}->can_edit() ) ?>
+<script type="text/javascript">
+    if ( window.FileReader ) {
+        $('dragndropuploadmessage').show();
+    } else {
+        $('dragndropuploadmessage').show();
+        $('formuploadmessage').hide();
+    }
+
+	var uploader = new qq.FileUploader({
+		debug: true,
+		element: $('assets'),
+		template: null,
+		droparea: $('assets'),
+		action: '/upload.htm',
+		limit: 5,
+		allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
+		sizeLimit: 1024*1024*1024,
+		params: {
+			id: '<? echo ( $$variable{'Album'}->id() ) ?>',
+			UploadType: '<? echo ( my $type = ref $$variable{'Album'}; $type =~ s/^openprint:://; return $type; ) ?>'
+		},
+		other_types: [ {
+			type: 'application/x-moz-file-promise-dest-filename',
+			onComplete: function(e,item) {
+				 new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { 
+					parameters: { 
+						album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', 
+						album_type: '<? echo ( ref $$variable{'Album'} ) ?>',
+						filename: e.dataTransfer.getData(item),
+						action: 'add',
+						} } );
+			}
+		} ],
+		onComplete: function(id, fileName){
+			new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '<? echo ( $$variable{'Album'}->id() ) ?>', album_type: '<? echo ( ref $$variable{'Album'} ) ?>' } } );
+		}
+
+	});
+</script>
+<? endif ( $$variable{'Album'}->can_edit() ) ?>

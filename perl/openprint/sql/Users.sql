@@ -3,11 +3,11 @@ DROP TABLE iF EXISTS Users;
 CREATE TABLE Users (
 /* tablename, etc too long.	So we had to truncate it in here... it all works automatically elsewhere */
 	id		SERIAL,
-	company_id	INTEGER NOT NULL,
+	company_id	INTEGER,
 	email		TEXT NOT NULL, UNIQUE(email), 
-	password		TEXT NOT NULL,
+	password		TEXT,
 	title		TEXT,
-	firstName	TEXT NOT NULL,
+	firstName	TEXT,
 	lastName		TEXT,
 	salutation	varchar(4),
 	phone		TEXT,
@@ -38,5 +38,4 @@ CREATE TABLE Users (
 );
 CREATE INDEX users_email_idx ON Users (email);
 alter table Users add foreign key (Company_Id) REFERENCES Companies (Id);
-alter table Users add foreign key (asset_Id) REFERENCES assets (Id);
 ALTER TABLE Companies add FOREIGN KEY (Salesrep_id) REFERENCES Users (id);

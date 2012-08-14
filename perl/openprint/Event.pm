@@ -4,6 +4,7 @@ require Date::Format;
 require openprint::Event_Category;
 require openprint::Comment;
 require openprint::Event_Attendance;
+require openprint::Event_Invitation;
 
 package openprint::Event;
 our @ISA = qw( openprint::Object );
@@ -34,6 +35,7 @@ $serial = 'events_id_seq';
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
+	'name+info'	=>	q`name || info`,
 );
 
 %defaults = (
@@ -89,10 +91,15 @@ sub where {
 sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
-		if ( $$Album{'thumbnail_id'} ) {
-			$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
-		} elsif ( my @Photos = $Album->Photos() ) {
-			$_[0]{'Asset'} = $Photos[0];
+		if ( $Album->id() ) {
+$openprint::log->debug("Album? " . $Album->to_string() );
+			if ( $$Album{'thumbnail_id'} ) {
+				$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
+			} elsif ( my @Photos = $Album->Photos() ) {
+				$_[0]{'Asset'} = $Photos[0]->Asset();;
+			} else {
+				$_[0]{'Asset'} = new openprint::Asset();
+			} # end if
 		} else {
 			$_[0]{'Asset'} = new openprint::Asset();
 		} # end if
@@ -121,6 +128,7 @@ sub Photos {
 } # end sub Photos
 
 sub Album {
+$openprint::log->debug("Loading album: $_[0]{'album_id'}");
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 
@@ -132,12 +140,13 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
+	my $user_id = @_ > 1 ? $_[1] : $openprint::session{user_id};
 	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if $_[0]{'user_id'} == $openprint::session{'user_id'};
+	return 1 if $openprint::session{user_type} eq 'A';
+	return 1 if $_[0]{created_by} == $user_id;
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{'id'};
-	return $Privacy->can_view();
+	return $Privacy->can_view($user_id);
 } # end sub can_view
 
 sub Comments {
@@ -159,14 +168,18 @@ sub html {
 	my $Event = $_[0];
 	my $html = sprintf(q`
 			<div class="Event">
-			<a class="thumbnail" href="/event/view.html?event_id=%1$d"><img alt="" src="%2$s"/></a>
-			<span class="name"><a href="/event/view.html?event_id=%1$d">%3$s</a></span>
-			<span class="when">%4$s</span>
-			`, $Event->id(),
-			$Event->Asset()->thumbnail_url(),
-			ssi::htmlize($Event->name()),
-			( $Event->starting() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Event->published_on() ) ) : '' ),
-
+			<div class="Assets"><a class="medium %6$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%7$s"/></a></div>
+			<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+			<div class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></div>
+			<div class="When">%4$s</div>
+			<div class="Where">%5$s</div>
+			<div class="Attending">%8$s</div>
+			`, $Event->id(), ssi::html_escape($Event->name()), $Event->Category()->name(),
+                    $Event->time_string(),
+                    $Event->where(),
+			$Event->Asset()->layout(),
+			$Event->Asset()->medium_url(),
+			$Event->attendance( new openprint::User($openprint::session{user_id}) ),
 			);
 	my @Comments = $Event->Comments();
 	$html .= sprintf(q`<div class="comments">This event has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
@@ -216,6 +229,10 @@ sub time_string {
 	return $_[0]{'time_string'};
 } # end sub time_string
 
+sub thumbnail_id {
+	return undef;
+} # end sub thumbnail_id
+
 sub thumbnail_html {
 	if ( ! $_[0]{'thumbnail_html'} ) {
 		my $Asset = $_[0]->Asset();
@@ -239,6 +256,96 @@ sub asset_html {
 	} # end if
 	return $_[0]{'asset_html'};
 } # end sub asset_html
+
+sub upload {
+	my $self = shift;
+	my $Album = $self->Album();
+	if ( ! $Album->id() ) {
+		$Album->save({ 'Photos for event: ' . $$self{'name'} });
+		$self->save({'album_id'=>$Album->id()});
+	} # end if
+	return $Album->upload( @_ );
+} # end sub upload
+
+sub view_url {
+	return '/event/view.html?event_id='.$_[0]{'id'};
+} # end sub view_url
+
+sub invited_user_ids {
+	return map { $_->user_id() } openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub invited_user_ids
+
+sub Invitations {
+	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
+} # end sub Invitations
+
+sub send_invitations {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{Event} = $self;
+	$data{uri} = 'event';
+	$data{User} = new openprint::User($openprint::session{user_id});
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+
+	my $Email = new openprint::Email();
+	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+	my $results = $Email->send(
+		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		'TO'			=>	[map { $_->User() } $self->Invitations()],
+		'FROM'			=>	$self->Created_By(),
+		#'ATTACHMENTS'	=>	\@attachments,
+		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
+	);
+	$self->add_to_log( $results );
+	return $results;
+} # end sub send_invitations
+
+sub attendance {
+	my ( $self, $User ) = @_;
+
+	if ( ! $_[0]{'attendance'} ) {
+	    my @Attending = $self->Attendance();
+		my ( @yes, @no, @maybe );
+		foreach my $A ( @Attending ) {
+			next if ! defined $$A{'attending'};
+			if ( $$A{'attending'} ) {
+				push @yes, $A;
+			} elsif ( ! defined $$A{'attending'} ) {
+				push @maybe, $A;
+			} else {
+				push @no, $A;
+			} # end if
+		} # end foreach
+		my $html = '';
+		if ( @yes == 0 ) {
+			$html .= 'No one is attending (yet). ';
+		} elsif ( @yes == 1 ) {
+			if ( $yes[0]{'user_id'} == $User->id() ) {
+				$html .= 'You are the only person attending.(so far). ';
+			} else {
+				$html .= '1 person is attending.(so far). ';
+			} # end if
+		} else {
+			$html = @yes . ' people are attending. ';
+		} # end if
+		if ( @maybe == 1 ) {
+			if ( $maybe[0]{user_id} == $User->id() ) {
+				$html .= 'you might attend.';
+			} else {
+				$html .= '1 person might attend.';
+			} # end if
+		} elsif ( @maybe ) {
+			$html .= @maybe. ' people might attend';
+		} # end if
+		$$self{'attendance'} = $html;
+	} # end if
+	return $$self{'attendance'};
+} # end sub attendance
 
 1;
 __END__

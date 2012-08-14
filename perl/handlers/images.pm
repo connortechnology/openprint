@@ -28,7 +28,7 @@ sub handler {
 	my $request = $_[0];
 	$r = Apache2::Request->new( $request );
 	my $starttime = gettimeofday() if DEBUG;
-	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
+	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
 
@@ -42,7 +42,7 @@ sub handler {
 
 	my $return_code = Apache2::Const::OK;
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $r->dir_config() );
+	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
 		openprint::session_init();
@@ -53,6 +53,7 @@ sub handler {
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id ) = $r->uri() =~ /^\/(.*)\/(\d+)_.+$/;
+		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
 			if ( $Asset->id() ) {
@@ -65,8 +66,15 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
+						} elsif ( $path eq 'medium' ) {
+							$r->sendfile( $Asset->medium_path() );
+						} elsif ( $path eq 'large' ) {
+							$r->sendfile( $Asset->large_path() );
+						} elsif ( $path eq 'small' ) {
+							$r->sendfile( $Asset->small_path() );
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
@@ -75,8 +83,11 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
+						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
+						} elsif ( $path eq 'medium' ) {
+							$r->sendfile( $Asset->medium_path() );
 						} else {
 # No album means has to be an article image, or a generic site image.
 							$r->sendfile( $Asset->on_disk_path() );

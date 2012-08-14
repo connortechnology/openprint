@@ -146,21 +146,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 			) ?>
 			<hr/>
 			<ul>
-			<li>
-				<label>Quantity</label>
-<? echo ( my $html;
-foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{Columns}.'Columns">';
-				$html .= ssi::input( name=>"txtQuantity$qty_index",
-					value=>$$variable{'txtQuantity'.$qty_index},
-					type=>'number',
-					onkeyup=>q`calc(this.form.name);`,
-				);
-				$html .= '</span>';
-			} # end foreach qty_index
-return $html;
-) ?>
-			</li>
+<!--#include virtual="/includes/main/proj/_quantities.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
 <!--#include virtual="/includes/main/proj/_additional_service.html"-->
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
@@ -169,7 +155,7 @@ return $html;
 	my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= sprintf('<span class="%sColumns">', $$variable{'Columns'} );
-		$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown($qty_index);", '', 'Breakdown' );
+		$html .= ssi::button( 'Breakdown'.$qty_index, { onclick=>"show_breakdown($qty_index);", text=>'Breakdown' } );
 		$html .= '</span>';
 	} # end foreach qty_index
 	return $html;

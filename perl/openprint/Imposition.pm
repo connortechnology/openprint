@@ -204,6 +204,7 @@ sub load {
 				$openprint::log->error("No Press found for $qty_index " . $$specs{'ddmPress'.$qty_index} );
 			} # end if
 		} # end if
+		$$self{'Press'} = new openprint::Equipment() if ! $$self{'Press'};
 	} # end if
 
 	$$self{'object_width'} = $$specs{'txtWidth'};

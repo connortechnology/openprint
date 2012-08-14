@@ -19,13 +19,16 @@ require openprint::Asset;
 require openprint::Photo_Album;
 require openprint::Photo_in_Album;
 require openprint::Location;
+require Email::Valid;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Destroy' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$param{'event_id'} =~ s/\D//g;
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->delete();
 		%param = ();
@@ -57,6 +60,17 @@ sub search {
 		ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
 		ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
 	} # end if
+	my $Location = new openprint::User($session{'user_id'})->Location() if $session{user_id};
+	if ( ! ( $Location and $Location->id() ) ) {
+		$Location = openprint::Location::from_ip( $ENV{'REMOTE_ADDR'} );
+	} # end if
+	if ( $Location and $Location->id() ) {
+		my $Country = $Location->ancestor('type'=>'country');
+		my $State = $Location->ancestor('type'=>'state');
+
+		$session{'/event/search.html?country_id'} = $Country->id() if $Country and ! exists $session{'/event/search.html?country_id'};
+		$session{'/event/search.html?state_id'} = $State->id() if $State and ! exists $session{'/event/search.html?state_id'};
+	} # end if
 } # end sub search
 sub _search {
 	if ( ! $param{'btnFunction'} ) {
@@ -77,9 +91,6 @@ sub edit {
 
 sub _locations {
 } # end sub _locations
-
-sub list {
-} # end sub list
 
 sub category {
 	my $Category = $variable{'Category'} = new openprint::Event_Category( $param{'category_id'} );
@@ -109,7 +120,25 @@ sub category {
 } # end sub category
 
 sub view {
+	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
+		$param{event_id}=$1;
+		$param{user_id} = $2;
+	} else {
+	
+	$param{event_id} =~ s/\D//g;
+	$param{user_id} =~ s/\D//g;
+	} # end if
+	if ( $param{user_id} ) {
+		$variable{User} = new openprint::User( $param{user_id} );
+	} else {
+		$variable{User} = new openprint::User( $session{user_id} );
+	} # end if
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( ! $Event->can_view( $param{user_id} ? $param{user_id} : $session{user_id} ) ) {
+		return misc::error( $log, $dbh, \%variable, 'Access Denied', 'You are not authorized to view this event.' );
+	} else {
+		$log->debug("Can view it.");
+	} # end if
 	if ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $Event->delete();
 	} elsif ( $param{'action'} eq 'Undelete' ) {
@@ -150,18 +179,9 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
-	} elsif ( $param{'filename'} ) {
-		my $Album = $Event->Album();
-		if ( ! $Album->id() ) {
-			$variable{'error'} .= $Album->save({'name'=>'Photos for ' . $Event->name()});
-			$variable{'error'} .= $Event->save({'album_id'=>$Album->id()});
-		} # end if
-		$variable{'error'} = $Album->upload( 'filename' );
-		if ( ! $variable{'error'} ) {
-			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
-			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
-		} # end if
-	} # end if
+	} elsif ( $param{function} eq 'Send' ) {
+		$variable{'error'} .= $Event->send_invitations();
+	} # end if function
 } # end sub view
 
 sub _view {
@@ -169,26 +189,116 @@ sub _view {
 	$Event->set( \%param );
 } # end sub _view
 
-sub _photos {
-	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'action'} eq 'delete' ) {
-		my $Photo = openprint::Photo_in_Album->find_one( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
-		$variable{'error'} .= $Photo->delete() if $Photo->id();
-	} # end if
-} # end sub _photos
-
 sub _attendance {
-	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	my $Event = $variable{Event} = new openprint::Event( $param{'event_id'} );
+	$param{user_id} =~ s/\D//g;
+	if ( $param{user_id} ) {
+		$variable{User} = new openprint::User( $param{user_id} );
+	} else {
+		$variable{User} = new openprint::User( $session{user_id} );
+	} # end if
 	if ( exists $param{'attending'} ) {
-		my $Attending = new openprint::Event_Attendance( {'event_id'=>$param{'event_id'}, 'user_id'=>$session{'user_id'} } );
+		my $Attending = new openprint::Event_Attendance( {'event_id'=>$param{event_id}, 'user_id'=>$param{user_id} } );
 $log->debug("Got: " . $Attending->to_string() );
 		$variable{'error'} .= $Attending->save({
-			'event_id'	=>	$param{'event_id'},
-			'user_id'	=>	$session{'user_id'},
-			'attending'	=>	$param{'attending'},
+			'event_id'	=>	$param{event_id},
+			'user_id'	=>	$param{user_id},
+			'attending'	=>	$param{attending},
 		});
 	} # end if
 } # end sub _attendance
+
+sub _invitation_popup {
+	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
+} # end sub _invitation_popup
+
+sub _invitation_users {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	my $Privacy = $Event->Privacy();
+	my $privacy_users = $Privacy->user_id();
+	if ( $param{'action'} eq 'set' ) {
+		my %old = map { $_->user_id(), $_ } $Event->Invitations();
+		my @user_ids;
+		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
+			my ( $company_id, $user_id ) = $id =~ /^(\d+)_(\d*)$/;
+			if ( $company_id and ! $user_id ) {
+				push @user_ids, map { $_->id() } ( new openprint::Company( $company_id )->Users() );
+			} else {
+				push @user_ids, $user_id;
+			} # end if
+		} # end foreach
+		
+		my @remove_users = sets::exclude( \@user_ids, [ keys %old ] );
+		foreach my $user_id ( @remove_users ) {
+			$old{$user_id}->delete();
+		} # end foreach
+		@{$privacy_users} = sets::exclude( \@remove_users, $privacy_users );
+		if ( $param{user_id} ) {
+			my @new_users = sets::exclude( [ keys %old ], \@user_ids );
+			foreach my $user_id ( @new_users ) {
+				$variable{'error'} .= (new openprint::Event_Invitation())->save({event_id=>$param{event_id}, user_id=>$user_id});
+			} # end foreach
+			@{$privacy_users} = sets::union( @$privacy_users, @new_users );
+		} # end if
+		$variable{'error'} .= $Privacy->save({user_id=>$privacy_users});
+	} elsif ( $param{'action'} eq 'add' ) {
+		my @user_ids;
+		my ( $company_id, $user_id ) = $param{user_id} =~ /^(\d+)_(\d*)$/;
+		if ( $company_id and ! $user_id ) {
+			@user_ids = map { $_->id() } ( new openprint::Company( $company_id )->Users() );
+		} else {
+			@user_ids = ( $user_id );
+		} # end if
+		foreach my $user_id ( @user_ids ) {
+			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$user_id) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$user_id});
+				$variable{'error'} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, $user_id ) ] });
+				#$Event->invited_user_ids(undef);
+			} # end if
+		} # end foreach user_id
+	} elsif ( $param{action} eq 'add by relationship' ) {
+		if ( $param{relationship_id} ) {
+			my %old = map { $_->user_id(), $_ } $Event->Invitations();
+			my @new_users;
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id1=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id2}});
+				push @new_users, $$R{user_id2};
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+			foreach my $R ( openprint::User_Relationship->find( type_id=>$param{relationship_id}, user_id2=>$session{user_id} ) ) {
+				next if $old{$$R{user_id1}} or $old{$$R{user_id2}};
+				my $Invite = new openprint::Event_Invitation();
+				$Invite->save({event_id=>$param{event_id}, user_id=>$$R{user_id1}});
+				push @new_users, $$R{user_id1};
+				$openprint::log->debug("Adding user " . $Invite->User()->name() );
+			} # end foreach R
+			$variable{'error'} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, @new_users ) ] });
+		} # end if
+	} elsif ( $param{'email'} ) {
+		foreach my $address ( misc::trim(split(',',$param{email})) ) {
+			if ( ! Email::Valid->address( $address ) ) {
+				$variable{'error'} .= $address . ' is not a valid email address.<br/>';
+				next;
+			} # end if
+			my $User = openprint::User->find_one('email lc'=>lc $address);
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$User->save({email=>$address});
+			} # end if
+			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$$User{id}) ) {
+				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$$User{id}});
+				$variable{'error'} .= $Privacy->save({user_id=>[ @$privacy_users, $$User{id} ] });
+#$Event->invited_user_ids(undef);
+			} # end if
+		} # end foreach address
+	} # end if
+} # end sub _invitation_users
+
+sub _email_popup {
+	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
+} # end sub _email_popup
 
 1;
 __END__

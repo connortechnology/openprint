@@ -14,6 +14,9 @@ CREATE TABLE hosts (
 	count		INTEGER,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	online		BOOLEAN,
+	state_changed_on	INTEGER,
+	offline_seconds		INTEGER,
+	notified			BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 CREATE INDEX hosts_ip_idx on Hosts (ip);

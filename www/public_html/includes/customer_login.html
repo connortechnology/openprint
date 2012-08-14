@@ -12,7 +12,7 @@ Why register?  We require you to have an account to keep an order history, and t
 </div>
 			</div>
 			<p class="buttons">
-				<? echo ( ssi::writeButton( $log, $dbh, 'Register','register.gif','','/account/registration.html','Register Now'); ) ?>
+				<? echo ( ssi::button( 'Register', { href=>'/account/registration.html', text=>'Register Now' } ); ) ?>
 			</p>
 		</fieldset>
 	</div>
@@ -24,12 +24,12 @@ Why register?  We require you to have an account to keep an order history, and t
 					<li>
 						<label for="email">E-mail</label>
 						<input type="email" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
-						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
 					</li>
 					<li>
 						<label for="password">Password</label>
 						<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
 					</li>
 					<li>
 						<label>Remember me</label>
@@ -41,8 +41,8 @@ Why register?  We require you to have an account to keep an order history, and t
 				</ul>
 			</div>
 			<p class="buttons">
-				<? echo ( ssi::writeButton( $log, $dbh, 'Login','login.gif',"LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);",'','Login'); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Forgot','forgot.gif',"LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);",'','Forgotten Password'); ) ?>
+				<? echo ( ssi::button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);", text=>'Login' } ); ) ?>
+				<? echo ( ssi::button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);", text=>'Forgotten Password' } ); ) ?>
 			</p>
 		</fieldset>
 		</div>

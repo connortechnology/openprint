@@ -47,19 +47,9 @@ sub get_price {
 
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
-
 	my $Service = openprint::Service->find_one('name'=>$service);
 	return if ! $Service;
-
-	my $list_id = openprint::pricing::get_pricelist_id( );
-	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $Service->id(), $list_id, 'openprint::service_priceset', $range, $$Equipment{'id'} );
-	return if ! %price;
-
-	my $Pricelist = new openprint::Pricelist( $list_id );
-	$price{'currency_id'} = $$Pricelist{'currency_id'};
-	$price{'ServiceName'} = $service;
-	openprint::Currency::convert( \%price );
-	return %price;
+	return $Service->get_price( $range, $Equipment );
 } # end sub get_price_object
 
 sub save_service {

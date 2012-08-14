@@ -66,7 +66,10 @@
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="50%" class="headerText" valign="top"><b>COD?</b></td>
-					<td width="50%" class="docketText">&nbsp;</td>
+					<td width="50%" class="docketText"><? echo ( 
+					my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
+					return $cod ? $cod . '%' : 'NO';
+					) ?></td>
 				</tr>
 			</table></td>
 	</tr>
@@ -216,7 +219,7 @@
 				} elsif ( sets::isin( lc $$sig_specs{txtSpecificStockFinish}, ['c1s','ccnb','litho label'] ) ) {
 					$type = 'COATED 1 SIDE';
 				} # end if
-				$html .= sprintf('%s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
+				$html .= sprintf('Custom: %s, <b>%s</b>, %s', $$sig_specs{txtSpecificStockBrand}, uc $$sig_specs{txtSpecificStockFinish}, $$sig_specs{txtSpecificStockWeight} );
 			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$html .= sprintf('&nbsp;%s&quot; Roll', $$sig_specs{'StockWidth'.$qty_index} );
@@ -261,11 +264,16 @@
 			} # end if
 			$html .= '</td><td class="docketText"> ';
 
-			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
+			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs ) . '<br/>';
+			foreach my $edge ( 'Top','Bottom','Left','Right' ) {
+				if ( $$sig_specs{'chkBleed'.$edge} ne $edge ) {
+					$html .= 'No ' . $edge . ' bleed<br/>';
+				} # end if
+			} # end foreach edge
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';
-				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $$variable{Project}, $sig_specs );
 				my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 				my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()};

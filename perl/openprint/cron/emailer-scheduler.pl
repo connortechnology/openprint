@@ -1,7 +1,10 @@
 #!/usr/bin/perl
 use lib "/etc/apache2/lib/perl";
 use strict;
+use utf8;
 
+use File::Basename qw(basename);
+use Getopt::Long;
 
 require sql;
 require logger;
@@ -9,54 +12,64 @@ require misc;
 require ssi;
 require openprint::Object;
 require openprint::EmailCampaign;
+require configuration;
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
-use Encode;
 use openprint;
-use vars qw( %variable $log $dbh %config %session);
+use vars qw( %variable $log $dbh %config %session );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *session = \%openprint::session;
 
+my $program = basename($0);
 
-$log = logger->new();
-$log->{level} = "warn";
-my %sql_server;
+my @args = @ARGV;
 
-$openprint::Object::no_cache = 1;
+my $opts = {};
+GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'config=s',
+ );
 
-# This is a bit of a hack, but it allows us to use similar styled code
-# as is found in the apache modules
-$ENV{'DOCUMENT_ROOT'} = '/var/www/point-one/www/public_html/';
+if ($opts->{help}) {
+    usage();
+    exit 0;
+}
+
+$log = new logger( {'level'=>'debug'});
+configuration::init( );
+configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::merge( $opts );
+
+# Declare variables
+foreach my $param ( 'db_name','db_user','db_pass' ) {
+    $config{$param} = $$opts{$param} if $$opts{$param};
+    if ( ! $config{$param} ) {
+        die "$program: missing required --$param parameter";
+    }
+} # end foreach required-param
 
 
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log, 
-	'host'		=> $ARGV[0],
-	'database'	=> $ARGV[1],
+	'host'		=> $config{'db_host'},
+	'database'	=> $config{'db_name'},
 	'driver'	=> 'Pg',
-	'login'		=> $ARGV[2],
-	'password'	=> $ARGV[3],
+	'login'		=> $config{'db_user'},
+	'password'	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
+configuration::from_db( );
+configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::merge( $opts );
 
-configuration::init_cache( $log, $dbh, {
-		'siteURL' => 'http://www.point-one.com',
-		'SecureSiteURL'	=> 'https://www.point-one.com',
-		'ExternalSiteURL'	=> 'http://www.point-one.com',
-		'ExternalSecureSiteURL'	=> 'https://www.point-one.com',
-		'SiteTitle'	=>'PointOne Graphics Inc',
-		}
-		);
-my $site_admin_email = 'iconnor@point-one.com';
-$session{'company_id'} = 6;
+$session{'company_id'} = $config{'owner_id'};
+$ENV{'DOCUMENT_ROOT'} = $config{'DOCUMENT_ROOT'};
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign->find( 'active' => 'Y', 'misc' => '(nextrun < now()) AND ( timeofday IS NULL or timeofday <= NOW()::time)' );
+my @campaign_ids = openprint::EmailCampaign->find( 'active' => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 
@@ -68,7 +81,6 @@ foreach my $Campaign (@campaign_ids) {
 } # foreach campaign_id
 
 $dbh->disconnect();
-
 
 1;
 __END__

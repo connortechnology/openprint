@@ -28,15 +28,25 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
+	} elsif ( $param{'btnFunction'} eq 'Send Receipt' ) {
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$variable{'error'} .= $Payment->send_receipt();
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
 		ssi::setup_date_select( '/payment/history.html', 'received_on_end', '' );
+		ssi::setup_date_select( '/payment/history.html', 'entered_on_start', -31 );
+		ssi::setup_date_select( '/payment/history.html', 'entered_on_end', '' );
 	} # end if
 } # end sub history
 
 sub _history {
-	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
+	ssi::save_params('/payment/history.html',  
+		( map { 'received_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'received_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'entered_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'entered_on_end_'.$_ } ( 'year','month','day' ) ),
+		'payor_id', 'recipient_id' );
 } # end sub _history
 
 sub edit {

@@ -144,10 +144,7 @@ sub calc {
 	my %override_pages;
 $openprint::log->debug("Groups: @Groups");
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
-		if ( $override_pages{$group_id} ) {
-# DO nothing
-		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
+		if ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
 			$override_pages{$group_id} = $$specs{'GroupPageQuantity'.$group_id} if $$specs{'OverrideGroupPageQuantity'.$group_id} eq 'Y';
 		} elsif ( $$specs{'txtSignatureType'.$group_id} eq 'PerfReplyCard' ) {
 			$override_pages{$group_id} = 2;
@@ -184,10 +181,10 @@ $log->warn("NO GROUP ID $group_id");
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
-$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, override: $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
+		openprint::Estimating::Printing::get_inkcoverage( $Project, $specs, \%variables, $group_id );
 		if ( ! exists $override_pages{$group_id} ) {
 			$override_pages{$group_id} = $remaining_pages;
 			$remaining_pages = 0;
@@ -410,7 +407,7 @@ sub status {
 	} # end if
 	if ( ! $printing_specs ) {
 		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		$openprint::log->debug("Estimating::Multopage::status : No printing_specs");
+		$openprint::log->debug("Estimating::Multipage::status : No printing_specs");
 		return if ! $printing_specs;
 	} # end if
 
@@ -432,6 +429,23 @@ sub status {
 } # end sub status
         
 sub save {
+$openprint::log->debug("Starting Multipage::save");
+	my ( $project_index, $service_index, $param ) = @_;
+	my $Project = new openprint::Project( $project_index );	
+	my $Service = $Project->Service($service_index);
+	foreach my $ssid ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
+		my %new_specs = %$sig_specs;
+$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
+		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $Service->specs() );
+$openprint::log->debug("Spreadsize for sig $$sig_specs{SignatureIndex} orig: $new_specs{txtSpreadSize} new: $$sig_specs{txtSpreadSize}");
+		foreach my $v ( openprint::Estimating::Printing::variables() ) {
+			if ( $new_specs{$v} ne $$sig_specs{$v} ) {
+$openprint::log->debug("Saving $v");
+				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $ssid, $v, $new_specs{$v} );
+			} # end if
+		} # end foreach v
+	}  # end foreach signature
 } # end sub save
 
 1;
