@@ -930,6 +930,10 @@ if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 	$dbh->do('ALTER TABLE Skid_Contents add FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id)');
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventoryconditions'", 'column_name');
+	if ( ! exists $$data{condition_id} ) {
+		$dbh->do('ALTER TABLE paper_allocations ADD condition_id INTEGER');
+		$dbh->do('ALTER TABLE paper_allocations ADD FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id)');
+	} # end if
 }
 if ( ! sets::isin( 'wall', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Wall.sql}) );
