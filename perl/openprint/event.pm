@@ -296,5 +296,9 @@ sub _invitation_users {
 	} # end if
 } # end sub _invitation_users
 
+sub _email_popup {
+	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
+} # end sub _email_popup
+
 1;
 __END__

@@ -82,5 +82,32 @@ sub remaining {
 sub Type {
 	return new openprint::PaymentType( $_[0]{'type_id'} );
 } # end sub Type
+
+sub send_receipt {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{Payment} = $self;
+	$data{uri} = 'payment';
+	$data{User} = new openprint::User($openprint::session{user_id});
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/payment_receipt.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+
+	my $Email = new openprint::Email();
+	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+	my $results = $Email->send(
+		#BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
+		TO			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
+		FROM			=>	$data{User},
+		#'ATTACHMENTS'	=>	\@attachments,
+		SUBJECT		=>	'Thank you for your payment!',
+	);
+	$self->add_to_log( $results );
+	return $results;
+	
+} # end sub send_receipt
 1;
 __END__

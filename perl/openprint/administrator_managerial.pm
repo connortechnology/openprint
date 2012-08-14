@@ -659,7 +659,7 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-	if ( $param{'action'} eq 'Save' ) {
+	if ( $param{action} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
 				'name'	=>	$param{'name-'.$Field->id()},
@@ -668,13 +668,17 @@ sub company_profile_fields {
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				search_default	=>	$param{'search_default-'.$Field->id()},
+				match			=>	$param{'match-'.$Field->id()},
+				on_registration	=>	$param{'on_registration-'.$Field->id()},
+				viewable		=>	$param{'viewable-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if
 } # end sub company_profile_fields
 
 sub _company_fields_tbody {
-	if ( $param{'action'} eq 'up' ) {
+	if ( $param{action} eq 'up' ) {
 		my @Fields = openprint::Company_Profile_Field->find('order'=>'sort');
 		my $i = 0;
 		while ( $i < @Fields ) {
@@ -691,12 +695,12 @@ sub _company_fields_tbody {
 				$i += 1;
 			} # end foreach Field
 		} # end if
-	} elsif ( $param{'update'} ) {
-		$param{'update'} =~ s/fields\[\]=//g;
+	} elsif ( $param{update} ) {
+		$param{update} =~ s/fields\[\]=//g;
 		my $i = 0;
-		foreach my $field_id ( split('&', $param{'update'} ) ) {
+		foreach my $field_id ( split('&', $param{update} ) ) {
 			my $Field = new openprint::Company_Profile_Field( $field_id );
-			$Field->save({'sort'=>$i});
+			$Field->save({sort=>$i});
 			$i += 1;
 		} # end foreach $feild_id
 	} # end if

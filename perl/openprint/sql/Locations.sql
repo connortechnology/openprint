@@ -23,7 +23,7 @@ CREATE TABLE Locations (
 	latitude	float,
 	longitude	float,
 	url			text,
-	asset_id				INTEGER, FOREIGN KEY (asset_id) REFERENCES Assets (id),
+	asset_id				INTEGER,
 	description	text,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)

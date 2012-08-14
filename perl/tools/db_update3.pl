@@ -50,15 +50,6 @@ if ( ! exists $$data{'user_type'} ) {
 	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
 	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
 } # end if
-if ( ! sets::isin( 'photo_albums', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
-	} # end if
-} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -117,6 +108,16 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'layout'} ) {
 		$dbh->do('ALTER TABLE Assets ADD layout text');
+	} # end if
+} # end if
+
+if ( ! sets::isin( 'photo_albums', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
 	} # end if
 } # end if
 
@@ -263,19 +264,27 @@ if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
 	if ( ! $$data{'searchable'} ) {
 		$dbh->do('ALTER TABLE company_profile_fields add searchable BOOLEAN not null default false');
 	} # end if
+	if ( ! $$data{'match'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add match TEXT');
+	} # end if
+	if ( ! $$data{'viewable'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add viewable BOOLEAN NOT NULL default true');
+	} # end if
+	if ( ! $$data{'on_registration'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add on_registration BOOLEAN NOT NULL default false');
+	} # end if
+	if ( ! $$data{'search_default'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields add search_default TEXT');
+	} # end if
+	if ( ! $$data{'defaults'} ) {
+		$dbh->do('ALTER TABLE company_profile_fields ADD defaults TEXT[]');
+	} # end if
 } # end if
 if ( ! sets::isin( 'company_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Categories.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-	foreach my $category ( sql::execute( undef,undef, 'SELECT DISTINCT strcategory FROM tbl_equipment' ) ) {
-		sql::insert( undef, undef, 'equipment_categories', 'name', $category );
-	} # end foreach category
-} # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 if ( ! exists $$data{'updated_on'} ) {
@@ -426,13 +435,6 @@ if ( ! sets::isin( 'messages', \@tables ) ) {
 		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
 	} # end if
 } # end if
-if ( ! sets::isin( 'object_types', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Object_Types.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Comment', 'comment')`);
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Like', 'like')`);
-	$dbh->do(q`INSERT INTO object_types (name,human) values ('openprint::Host', 'host')`);
-}
 if ( sets::isin( 'log', \@tables ) ) {
 	$dbh->do('ALTER TABLE log RENAME TO logs');
 	$dbh->do('ALTER sequence log_id_seq RENAME TO logs_id_seq');
@@ -970,7 +972,7 @@ if ( ! sets::isin( 'purchaseorder_departments', \@tables ) ) {
 	die if $dbh->errstr();
 } # en dif
 if ( ! sets::isin( 'usergroups', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/UserGroups.sql}) );
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Usergroups.sql}) );
 	die if $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='usergroups'", 'column_name');

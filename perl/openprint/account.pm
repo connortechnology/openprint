@@ -157,6 +157,22 @@ $log->warn("registration errors $error");
 				$variable{'error'} .= $error;
 				return;
 			} # end if
+			my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'id');
+			foreach my $Supplier ( @Suppliers ) {
+# Setup default Credit
+				my $Credit = new openprint::Company_Credit();
+				$Credit->save({
+						'company_id'    =>  $Company->id(),
+						'supplier_id'   =>  $Supplier->id(),
+						'warndays'      =>  $openprint::config{'DefaultWarnDays'},
+						'denydays'      =>  $openprint::config{'DefaultDenyDays'},
+						'limit'         =>  $openprint::config{'DefaultCreditLimit'},
+						'hold'          =>  $openprint::config{'DefaultCreditHold'},
+						'downpayment'   =>  $openprint::config{'DefaultDownpayment'},
+						'cod'           =>  $openprint::config{'DefaultCOD'},
+						});
+			} # end foreach Supplier
+
 		} else {
 			if ( $config{'Require Unique Company'} eq 'Y' ) {
 				$variable{'error'} .= $param{'company_name'} . ' is already taken.';
@@ -178,6 +194,7 @@ $log->warn("registration errors $error");
 			$variable{'error'} .= $error;
 			return;
 		} # end if
+		
 	} # end if
 
 	$User = new openprint::User() if ! $User;;

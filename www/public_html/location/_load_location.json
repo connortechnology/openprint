@@ -1,8 +1,11 @@
 <? echo (
-	my $Location = new openprint::Location( $param{'location_id'} );
-	my $City = $Location->ancestor('type'=>'city');
-	my $State = $Location->ancestor('type'=>['state','province']);
-	my $Country = $Location->ancestor('type'=>'country');
+	my $Location = new openprint::Location( $param{location_id} );
+	my $City = $Location->ancestor(type=>'city');
+	$City = new openprint::Location() if ! $City;
+	my $State = $Location->ancestor(type=>['state','province']);
+	$State = new openprint::Location() if ! $State;
+	my $Country = $Location->ancestor(type=>'country');
+	$Country = new openprint::LOcation() if ! $Country;
 
 	return sprintf(q`
 var address_e = $('address');
@@ -44,8 +47,8 @@ if ( country_e ) {
 	} // end if
 } // end if	
 `, map { $_ =~ s/'/\\'/g; $_;} ( $Location->address(), $Location->postalcode(), 
-( $City ? ( $City->id(), $City->name() ) : ( '', '' ) ),
-( $State ? ( $State->id(), $State->name() ) : ( '', '' ) ),
-( $Country ? ( $Country->id(), $Country->name() ) : ( '', '' ) ),
+ $City->id(), $City->name(),
+ $State->id(), $State->name(),
+ $Country->id(), $Country->name(),
 		) );
 ) ?>

@@ -147,8 +147,8 @@
 		</li>
 		<li>
 			<label>Size</label>
-			<input type="number" name="width" id="width" value="<? echo ( $session{'/administrator/stock/list.html?width'} ) ?>" onclick="calc(this.form.name);" />x
-			<input type="number" name="height" id="height" value="<? echo ( $session{'/administrator/stock/list.html?height'} ) ?>" onclick="calc(this.form.name);" />
+			<? echo ( ssi::input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
+			<? echo ( ssi::input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
 		</li>
 		<li>
 			<label>Recommendations</label>

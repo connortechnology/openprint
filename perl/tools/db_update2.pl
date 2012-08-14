@@ -136,6 +136,8 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 			$dbh->do('ALTER TABLE taxes DROP column harmonizedtax');
 		}
 	} # end if data
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Taxes.sql' ) ) or die $dbh->errstr();
 } # end if
 if ( ! sets::isin( 'invoice_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Invoice_Taxes.sql});

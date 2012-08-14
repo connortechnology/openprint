@@ -27,68 +27,71 @@
 	<tr> 
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-				<td width="50%" class="headerText" valign="top"><b>Date</b></td>
+				<td width="50%" class="headerText" valign="top"><b>Date:</b></td>
 				<td width="50%" class="docketText">&nbsp;<?OrderedDate?></td>
 				</tr>
 			</table></td>
 		<td colspan="6" width="60%" valign="top">
 			<table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-					<td width="16%" class="headerText"><b>Company Name</b></td>
+					<td width="16%" class="headerText"><b>Company Name:</b></td>
 					<td width="55%" class="hugeText"><b><? echo ( $$variable{'Project'}->Company()->name() ) ?></b></td>
-					<td width="4%" class="headerText"><b>CSR</b></td>
+					<td width="4%" class="headerText"><b>CSR:</b></td>
 					<td width="25%" class="docketText"><? echo ( $$variable{'Project'}->CSR()->name() ) ?></td>
 				</tr>
 			</table>
 		</td>
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-					<td width="50%" class="headerText" valign="top"><b>Customer PO#</b></td>
+					<td width="50%" class="headerText" valign="top"><b>Customer PO#:</b></td>
 					<td width="50%" align="right" class="docketText">&nbsp;<?PONum?></td>
 				</tr>
 			</table></td>
 	</tr>
 	<tr>
 		<td colspan="2" width="20%" valign="top">
-			<span style="float:left;" class="headerText"><b>Docket #</b></span>
+			<span style="float:left;" class="headerText"><b>Docket #:</b></span>
 			<span style="float: right;" class="docketText"><? echo ( $$variable{'Project'}->docket() ) ?></span>
 			<br class="spacer"/>
-			<span style="float: left;" class="headerText"><b>Order #</b></span>
+			<span style="float: left;" class="headerText"><b>Order #:</b></span>
 			<span style="float: right;" class="docketText">&nbsp;<? echo ( $$variable{'Order'}->id() ) ?></span>
 		</td>
 		<td colspan="6" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
-					<td width="16%" class="headerText" valign="top"><b>Project Reference</b></td>
+					<td width="16%" class="headerText" valign="top"><b>Project Reference:</b></td>
 					<td width="84%" class="docketText"><? hecho ( $$variable{'Project'}->reference() ) ?></td>
 				</tr>
 			</table></td>
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-					<td width="50%" class="headerText" valign="top"><b>COD?</b></td>
-					<td width="50%" class="docketText">&nbsp;</td>
+					<td width="50%" class="headerText" valign="top"><b>COD?:</b></td>
+					<td width="50%" class="docketText"><? echo ( 
+                    my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
+                    return $cod ? $cod . '%' : 'NO';
+                    ) ?></td>
 				</tr>
 			</table></td>
 	</tr>
 	<tr> 
 		<td colspan="2" width="20%" valign="top">
-			<span style="float:left;" class="headerText"><b>Project #</b></span>
+			<span style="float:left;" class="headerText"><b>Project #:</b></span>
 			<span style="float:right;" class="docketText"><?ProjectIndex?></span>
 		</td>
 		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
-				<td width="33%" class="headerText"><b>Contact</b></td>
+				<td width="33%" class="headerText"><b>Contact:</b></td>
 				<td width="66%" class="docketText"><?OrderSalutation?>&nbsp;<?OrderFirstName?>&nbsp;<?OrderLastName?></td>
 				</tr>
 			</table></td>
 		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-				<td width="33%" class="headerText"><b>Phone</b></td>
+				<td width="33%" class="headerText"><b>Phone:</b></td>
 				<td width="66%" class="docketText">&nbsp;<?OrderPhone?> <? if ( $$variable{'OrderExtension'} ne '' ) ?> &nbsp;ext: <?OrderExtension?> <? endif ( $$variable{'OrderExtension'} ne '' ) ?></td>
 				</tr>
 			</table></td>
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
-					<td width="50%" class="headerText"><b>Quantity</b></td>
+					<td width="50%" class="headerText"><b>Quantity:</b></td>
 					<td width="50%" class="docketText">&nbsp;<?OrderedQuantity?></td>
 				</tr>
 			</table></td>
@@ -97,10 +100,10 @@
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
-		<td class="headerText" width="25%"><b>Flat Size</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
-		<td class="headerText" width="25%"><b>Folded To</b>&nbsp;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;</td>
-		<td class="headerText" width="25%"><b># of Pages</b>&nbsp;<?txtTotalPageQuantity?></td>
-		<td class="headerText" width="25%"><b>Cover Type</b>&nbsp;<?rdbCover?></td>
+		<td class="headerText" width="25%"><b>Flat Size:</b>&nbsp;<?txtWidth?>&quot; x <?txtHeight?>&quot;</td>
+		<td class="headerText" width="25%"><b>Folded To:</b>&nbsp;<?txtFinalWidth?>&quot; x <?txtFinalHeight?>&quot;</td>
+		<td class="headerText" width="25%"><b># of Pages:</b>&nbsp;<?txtTotalPageQuantity?></td>
+		<td class="headerText" width="25%"><b>Cover Type:</b>&nbsp;<?rdbCover?></td>
 	</tr>
 </table>
 <br/>
@@ -114,7 +117,7 @@
 			No
 		<? endif ( $$variable{'rdbPressProofYes'} eq '' ) ?>
 		</td>
-		<td width="40%" class="headerText"><b>Special Inks</b>&nbsp;</td>
+		<td width="40%" class="headerText"><b>Special Inks:</b>&nbsp;</td>
 		<td width="30%" class="docketText"><b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>&nbsp;</td>
 	</tr>
 </table>
@@ -264,23 +267,23 @@ $inkCoverage{$colour} = 100;
 					} # end if
 					my $InkMaterial;
 					if ( sets::isin( $colour, ['Cyan','Magenta','Yellow','Black'] ) ) {
-						if ( my @materials = openprint::Material->find('name'=>$colour.'Ink') ) {
+						if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Matte', 'Spot Varnish Matte' ] ) ) {
-						if ( my @materials = openprint::Material->find('name'=>'MatteVarnish') ) {
+						if ( my @materials = openprint::Material::find('name'=>'MatteVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Gloss', 'Spot Varnish Gloss' ] ) ) {
-						if ( my @materials = openprint::Material->find('name'=>'GlossVarnish') ) {
+						if ( my @materials = openprint::Material::find('name'=>'GlossVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} else {
-						if ( my @materials = openprint::Material->find('name'=>'PMSInk') ) {
+						if ( my @materials = openprint::Material::find('name'=>'PMSInk') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} # end if
@@ -341,7 +344,7 @@ $inkCoverage{$colour} = 100;
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
 	<tr> 
-         <td class="headerText"><b>Special Press Instructions</b>
+         <td class="headerText"><b>Special Press Instructions:</b>
 			<? echo ( 
 				my $services = $$variable{'Project'}->services();
 				if ( $$services{'PerfectBound'} ) {
@@ -372,7 +375,7 @@ $inkCoverage{$colour} = 100;
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">
 	<tr> 
-		<td colspan="3" class="headerText"><b>Proofs</b></td>
+		<td colspan="3" class="headerText"><b>Proofs</b>:</td>
 	</tr>
 <? eval ( 
 	openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'ProofServiceIndex'} );
@@ -382,7 +385,7 @@ $inkCoverage{$colour} = 100;
 	<tr>
 		<td class="headerText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -409,7 +412,7 @@ $inkCoverage{$colour} = 100;
 </td>
 		<td class="docketText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -436,7 +439,7 @@ $inkCoverage{$colour} = 100;
 		</td>
 		<td class="docketText">
 <? if ( @$variable{'SignatureIndex','Reference','SignatureQuantity'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?></b><br/><? endif ( $$variable{'Reference'} ) ?>
+<? if ( $$variable{'Reference'} ) ?><b>For <?Reference?>:</b><br/><? endif ( $$variable{'Reference'} ) ?>
 	<table>
 		<tr>
 			<td class="headerText"><b>Quantity</b></td>
@@ -464,7 +467,7 @@ $inkCoverage{$colour} = 100;
 	</tr>
 <? endwhile ( @{$$variable{'SignatureGroups'}} ) ?>
 		<tr>
-            <td colspan="3" class="headerText"><b>Special Prepress Instructions</b>
+            <td colspan="3" class="headerText"><b>Special Prepress Instructions:</b>
 			<b><? echo ( 'FM SCREENING' if $$variable{'ScreenType'} eq 'FM' ) ?></b>
 			<? echo (
 				my $services = $$variable{'Project'}->services();
@@ -490,7 +493,7 @@ $inkCoverage{$colour} = 100;
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
 		<td width="10%" class="docketText" ><b>Quantity</b></td>
-		<td width="60%" class="headerText" ><b>Bindery Instructions</b></td>
+		<td width="60%" class="headerText" ><b>Bindery Instructions:</b></td>
 		<td width="10%" class="headerText" align="center"><b>Box Count</b></td>
 		<td width="10%" class="headerText" align="center"><b>Qty/Box</b></td>
 		<td width="10%" class="headerText" align="center"><b>Total</b></td>
@@ -620,8 +623,8 @@ $inkCoverage{$colour} = 100;
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
-		<td width="60%" class="headerText"><b>Shipping Instructions</b></td>
-		<td width="40%" class="headerText"><b>Sample Instructions</b></td>
+		<td width="60%" class="headerText"><b>Shipping Instructions</b>:</td>
+		<td width="40%" class="headerText"><b>Sample Instructions</b>:</td>
 	</tr>
 	<tr> 
 		<td rowspan="2" class="docketText">&nbsp;
@@ -642,13 +645,13 @@ $inkCoverage{$colour} = 100;
 		<td class="headerText"><br/><br/><br/></td>
 	</tr>
 	<tr> 
-		<td class="hugeText"><br/><b>Date Due</b><?RequiredDateAlternate?><br/><br/></td>
+		<td class="hugeText"><br/><b>Date Due</b>:<?RequiredDateAlternate?><br/><br/></td>
 	</tr>
 </table>
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr>
-		<td colspan="4" class="headerText"><b>Folding mockup or sample</b></td>
+		<td colspan="4" class="headerText"><b>Folding mockup or sample:</b></td>
 	</tr>
 	<tr>
 		<td class="docketText"><input type="checkbox" /> Prepress</td>

@@ -1,6 +1,3 @@
-
-DROP TABLE IF EXISTS PurchaseOrder_Contents;
-
 CREATE TABLE PurchaseOrder_Contents (
 	id SERIAL NOT NULL,
 	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
