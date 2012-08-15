@@ -136,9 +136,9 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
-$log->debug("starting variable subst of pagecontent " . ( time - $starttime ) );
+#$log->debug("starting variable subst of pagecontent " . ( time - $starttime ) );
 			$variable{'PageContent'} = ssi::variable_substitution( $r, $log, $dbh, \$content, \%variable );
-$log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
+#$log->debug("ending variable subst of pagecontent " . ( time - $starttime ) );
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
