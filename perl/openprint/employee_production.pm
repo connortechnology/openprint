@@ -1879,6 +1879,21 @@ sub datacollection {
 				} # end if
 			} # end if
 
+			if ( openprint::ProductionFeedback->find_one(
+					project_id	=>	$Project->id(),
+					service_id	=>	$param{service_id},
+					user_id		=>	( $param{user_id} ? $param{user_id} : $session{user_id} ),
+					starting_on	=>	$param{starting_on},
+					ending_on		=>	$param{ending_on},
+					comment		=>	$param{comment},
+					version		=>	$param{version},
+					($param{signature} ? ( signature	=>	$param{signature} ) : () ),
+					equipment_id	=>	$param{equipment_id},
+					quantity		=>	$param{quantity},
+			) ) {
+				$variable{'error'} .= 'Duplicate feedback detected.';
+				return;
+			} # end if already saved
 			
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {

@@ -27,6 +27,7 @@ $serial = 'ProductionFeedback_id_seq';
 );
 %find_fields = (
 	'company_id'	=>	'(SELECT companyindex FROM tbl_Projects WHERE index=project_id)',
+	'signature'		=>	'(SELECT image_data FROM signaturecapture WHERE signaturecapture.id=signature_id)',
 );
 %defaults = (
 	'user_id'		=>	undef,
