@@ -80,11 +80,11 @@ function howdidyouhearaboutus_onchange(e) {
 						<li class="state <? echo ( $$variable{'RequiredFields'}{'state'} ? ' required' : '' ) ?>">
 							<label for="state"><? echo (
 								if ( $$variable{'country'} eq 'US' ) {
-									return 'State:';
+									return 'State';
 								} elsif ( $$variable{'country'} eq 'CA' ) {
-									return 'Province:';
+									return 'Province';
 								} else {
-									return 'State/Province:';
+									return 'State/Province';
 								} # end if
 							) ?></label>
 							<select id="state" name="state">
@@ -102,26 +102,26 @@ function howdidyouhearaboutus_onchange(e) {
 						<li class="postalcode<? echo ( $$variable{'RequiredFields'}{'postalcode'} ? ' required' : '' ) ?>"> 
 							<label for="postalcode"><? echo (
 								   if ( $$variable{'country'} eq 'US' ) {
-										   return 'Zip Code:';
+										   return 'Zip Code';
 								   } elsif ( $$variable{'country'} eq 'CA' ) {
-										   return 'Postal Code:';
+										   return 'Postal Code';
 								   } else {
-										   return 'Zip/Postal Code:';
+										   return 'Zip/Postal Code';
 								   } # end if
 								) ?></label>
 							<input type="text" id="postalcode" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
 						</li>
 						<li class="phone<? echo ( $$variable{'RequiredFields'}{'phone'} ? ' required' : '' ) ?>"> 
 							<label for="phone">Phone</label>
-							<input type="text" id="phone" name="phone" value="<? hecho ( $param{'phone'} ) ?>" />
+							<input type="tel" id="phone" name="phone" value="<? hecho ( $param{'phone'} ) ?>" />
 						</li>
 						<li class="fax<? echo ( $$variable{'RequiredFields'}{'fax'} ? ' required' : '' ) ?>"> 
 							<label for="fax">Fax</label>
-							<input type="text" id="fax" name="fax" value="<? hecho ( $param{'fax'} ) ?>" />
+							<input type="tel" id="fax" name="fax" value="<? hecho ( $param{'fax'} ) ?>" />
 						</li>
 						<li class="url<? echo ( $$variable{'RequiredFields'}{'url'} ? ' required' : '' ) ?>">
 							<label for="url">Web Site URL</label>
-							<input type="text" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
+							<input type="url" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
 						</li>
                 <? echo (
                     my $html;

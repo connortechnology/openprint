@@ -2665,6 +2665,14 @@ if ( ! sets::isin( 'marketing_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Marketing_Categories.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'users_in_marketing_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users_In_Marketing_Categories.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_In_Marketing_Categories.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;

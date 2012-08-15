@@ -20,7 +20,7 @@ insert into Configuration values ('NewFirstUserAccountActivation', 'N', 'yes/no'
 insert into Configuration values ('NewNonFirstUserAccountActivation', 'N', 'yes/no', 'Whether to automatically activate any subsequent users in a company when they register.','Miscellaneous Settings' );
 insert into Configuration values ('NewCustomerAccountActivation', 'N', 'yes/no', 'Whether to automatically activate new companies when they register.','Miscellaneous Settings' );
 insert into Configuration values ('Mail Server', 'localhost', 'text', '','Miscellaneous Settings' );
-insert into Configuration values ('startYear', '2011', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );
+insert into Configuration values ('startYear', '2012', 'text', 'The year the website went up.  Used to limit the # of years displayed in date fields','Miscellaneous Settings' );
 insert into Configuration values ('password_checks_min_length', '6', 'text', 'Minimum length a password must be.', 'Password Settings');
 insert into Configuration values ('password_checks_max_length', '0', 'text', 'Maximum length a password must be.', 'Password Settings');
 insert into Configuration values ('password_checks_uppercase', 'yes', 'yes/no', 'Password must have uppercase characters.', 'Password Settings');
@@ -28,3 +28,6 @@ insert into Configuration values ('password_checks_lowercase', 'yes', 'yes/no', 
 insert into Configuration values ('password_checks_numbers', 'yes', 'yes/no', 'Password must have numbers.', 'Password Settings');
 insert into Configuration values ('password_checks_punctuation', 'yes', 'yes/no', 'Password must have punctuation.', 'Password Settings');
 insert into Configuration values ('password_checks_min_score', '10', 'text', 'Password must have a minimum score.', 'Password Settings');
+insert into Configuration values ('Require Unique Company', 'N', 'yes/no', 'Require a unique companyname.', 'Miscellaneous Settings');
+insert into Configuration values ('SimpleButtons', 'Y', 'yes/no', 'When true, a button will just use an anchor tag, without internal left right and center pieces.', 'Miscellaneous Settings');
+
