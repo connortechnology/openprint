@@ -1851,21 +1851,21 @@ sub _stock_allocations {
 
 sub datacollection {
 	if ( $param{action} eq 'Submit' ) {
-		$param{'docket'} =~ s/\D//g;
-		$param{'form'} =~ s/\D//g;
-		if ( ! $param{'docket'} ) {
-			$variable{'error'} .= 'Please enter a docket.<br/>';
+		$param{docket} =~ s/\D//g;
+		$param{form} =~ s/\D//g;
+		if ( ! $param{docket} ) {
+			$variable{error} .= 'Please enter a docket.<br/>';
 			return;
 		} # end if
-		my @Projects = openprint::Project->find('docket'=>$param{'docket'},'limit'=>100);
+		my @Projects = openprint::Project->find(docket=>$param{docket});
 		if ( ! @Projects ) {
-			$variable{'error'} .= 'Docket not found.';
+			$variable{error} .= 'Docket not found.';
 			return;
 		} # end if
-		$param{'signature'} = URI::Escape::uri_unescape( $param{'signature'} ) if $param{'signature'};
+		$param{signature} = URI::Escape::uri_unescape( $param{signature} ) if $param{signature};
 		# In case there is more than 1 project in the docket, it will get saved to both.
 		foreach my $Project ( @Projects ) {
-			if ( $param{'form'} ) {
+			if ( $param{form} ) {
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $Service = $Project->Service($sig_id);
 					my $sig_specs = $Service->specs();
@@ -1878,6 +1878,8 @@ sub datacollection {
 					$param{service_id} = $Project->add_signature( $param{form}, 'Ordered' );
 				} # end if
 			} # end if
+
+			
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {
 				$Signature->save({

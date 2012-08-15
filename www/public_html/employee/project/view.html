@@ -336,7 +336,6 @@ if ( $$variable{'HiddenSignatures'} ) {
 				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
 					my $Job = openprint::ScheduledJob::find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id );
 					if ( ! $Job ) {
-$log->debug("Have no job: $Job");
 						$need_add = 1;
 					} elsif ( ! $Job->starttime() ) {
 						$pending = 1;
@@ -477,6 +476,15 @@ $log->debug("Have no job: $Job");
 <fieldset><legend onclick="AjaxToggleContent( 'ModificationHistory', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
 <div id="ModificationHistory" style="display: none;"></div>
 </fieldset>
+<script type="text/javascript">
+<? echo (
+	my $html;
+	if ( my $owing = $$variable{Project}->Order()->cod_owing_percent() ) {
+		$html .= qq`alert('This is a COD job.  $owing% remains to be paid.');\n`;
+	}
+	return $html;
+) ?>	
+</script>
 <? else ( $$variable{'Project'}->id() ) ?>
 <div class="error">
 <? echo ( 
@@ -488,12 +496,3 @@ $log->debug("Have no job: $Job");
 ) ?>
 </div>
 <? endif ( $$variable{'Project'}->id() ) ?>
-<script type="text/javascript">
-	<? echo (
-		my $html;
-if ( my $owing = $$variable{'Project'}->Order()->cod_owing_percent() ) {
-	$html .= qq`alert('This is a COD job.  $owing% remains to be paid.');\n`;
-}
-		return $html;
-	) ?>	
-</script>
