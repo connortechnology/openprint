@@ -36,6 +36,7 @@
 	} // end function load_paid
 </script>
 <? endif ( $$variable{'Payment'}->id() ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" id="f1" action="<? echo ( $$variable{'Payment'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="payment_id" value="<? echo ( $$variable{'Payment'}->id() ) ?>" />
@@ -112,5 +113,4 @@
 		<!--#include virtual="_unpaid.html"-->
 	</div>
 	<? endif ( $$variable{'Payment'}->id() ) ?>
-	<br class="spacer"/>
 </form>
