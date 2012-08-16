@@ -25,7 +25,7 @@ foreach my $Object_Asset ( $$variable{'Product'}->Assets() ) {
 		</tr>
 		', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
 		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
-		$Asset->thumbnail_url(),
+		$Asset->sized_url('small'),
 		ssi::button( 'd'.$Asset->id(), { onclick=>q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { object_type: 'openprint::Product', object_id: `.$$variable{'Product'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, text=>'Delete' } ),
 		);
 } # end foreach Asset
