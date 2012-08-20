@@ -925,7 +925,7 @@ if ( $version < 1901 ) {
 	push @Services, openprint::Service->find('name'=>'PressUnitMakeReadySheet Work');
 	if ( @Services ) {
 		my $Service = $Services[0];
-		foreach my $Equipment ( openprint::Equipment->find('category'=>'Printing') ) {
+		foreach my $Equipment ( openprint::Equipment->find('category any'=>'Printing') ) {
 			foreach my $Price ( openprint::ServicePrice->find('equipment_id'=>$Equipment->id(), 'service_id'=>$Service->id() )) {
 				if ( $$Price{'units'} eq 'Per Unit' ) {
 					$$Price{'cost'} = $$Price{'cost'}/$$Price{'min'};
@@ -988,7 +988,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Cutting Capable'=
 		} # end if
 	} # end foreach
 }
-foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
+foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 	foreach my $Spec ( $E->Specifications('name'=>'Envelope Ready') ) {
 		$Spec->name('Envelope Capable');
 		$Spec->save();
