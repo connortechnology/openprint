@@ -7,7 +7,7 @@ require openprint::Equipment;
 package openprint::ProductionFeedback;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 1;
 $table = 'ProductionFeedback';
@@ -24,6 +24,10 @@ $serial = 'ProductionFeedback_id_seq';
 	'signature_id'	=>	'signature_id',
 	'equipment_id'	=>	'equipment_id',
 	'quantity'		=>	'quantity',
+);
+%find_fields = (
+	'company_id'	=>	'(SELECT companyindex FROM tbl_Projects WHERE index=project_id)',
+	'signature'		=>	'(SELECT image_data FROM signaturecapture WHERE signaturecapture.id=signature_id)',
 );
 %defaults = (
 	'user_id'		=>	undef,

@@ -1852,21 +1852,21 @@ sub _stock_allocations {
 
 sub datacollection {
 	if ( $param{action} eq 'Submit' ) {
-		$param{'docket'} =~ s/\D//g;
-		$param{'form'} =~ s/\D//g;
-		if ( ! $param{'docket'} ) {
-			$variable{'error'} .= 'Please enter a docket.<br/>';
+		$param{docket} =~ s/\D//g;
+		$param{form} =~ s/\D//g;
+		if ( ! $param{docket} ) {
+			$variable{error} .= 'Please enter a docket.<br/>';
 			return;
 		} # end if
-		my @Projects = openprint::Project->find('docket'=>$param{'docket'},'limit'=>100);
+		my @Projects = openprint::Project->find(docket=>$param{docket});
 		if ( ! @Projects ) {
-			$variable{'error'} .= 'Docket not found.';
+			$variable{error} .= 'Docket not found.';
 			return;
 		} # end if
-		$param{'signature'} = URI::Escape::uri_unescape( $param{'signature'} ) if $param{'signature'};
+		$param{signature} = URI::Escape::uri_unescape( $param{signature} ) if $param{signature};
 		# In case there is more than 1 project in the docket, it will get saved to both.
 		foreach my $Project ( @Projects ) {
-			if ( $param{'form'} ) {
+			if ( $param{form} ) {
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $Service = $Project->Service($sig_id);
 					my $sig_specs = $Service->specs();
@@ -1879,6 +1879,23 @@ sub datacollection {
 					$param{service_id} = $Project->add_signature( $param{form}, 'Ordered' );
 				} # end if
 			} # end if
+
+			if ( openprint::ProductionFeedback->find_one(
+					project_id	=>	$Project->id(),
+					service_id	=>	$param{service_id},
+					user_id		=>	( $param{user_id} ? $param{user_id} : $session{user_id} ),
+					starting_on	=>	$param{starting_on},
+					ending_on		=>	$param{ending_on},
+					comment		=>	$param{comment},
+					version		=>	$param{version},
+					($param{signature} ? ( signature	=>	$param{signature} ) : () ),
+					equipment_id	=>	$param{equipment_id},
+					quantity		=>	$param{quantity},
+			) ) {
+				$variable{'error'} .= 'Duplicate feedback detected.';
+				return;
+			} # end if already saved
+			
 			my $Signature = new openprint::SignatureCapture();
 			if ( $param{'signature'} ) {
 				$Signature->save({
