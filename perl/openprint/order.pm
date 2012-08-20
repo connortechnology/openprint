@@ -614,6 +614,7 @@ sub store_order_info {
 	$Order->alsonotify( $openprint::param{'txtAlsoNotify'} );
 	$Order->po( $openprint::param{'txtPurchaseOrder'} );
 	$Order->currency_id( openprint::Currency::get_current()->id() );
+	$Order->supplier_id( $openprint::param{supplier_id} ) if $openprint::param{supplier_id};
 	return $Order->save();
 } # end sub store_order_info
 
