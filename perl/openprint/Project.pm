@@ -907,16 +907,17 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				q{SELECT *,daterequired, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
 				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
 		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+	} else {	
+	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/};
 	} # endif
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/};
 	return;
 } # end sub load
 

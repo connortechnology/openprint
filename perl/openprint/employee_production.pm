@@ -209,24 +209,20 @@ sub bindery_overview {
 		} # end if
 	} # end foreach
 
-	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, (SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex)";
-	$_ .= ", intQuantityIndex, due_date, tbl_Projects.strStatus\n";
-	$_ .=" FROM tbl_Projects, Order_Contents, Orders";
-	$_ .= " WHERE tbl_Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
-	$_ .= " AND Orders.Index=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
-	$_ .= " AND tbl_Projects.Index = Order_Contents.lngProjectIndex";
-	$_ .= " AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}'";
-	$_ .= " AND Orders.lngEmployeeID=".$r->param('ddmSalesRep') if $r->param('ddmSalesRep');
-	$_ .= " ORDER BY due_date";
-	my @projects = sql::execute( $log, $dbh, $_ );
-
 	@{$variable{'Projects'}} = ();
-	while ( my ( $project_index, $order_id, $docket, $company, $qty_index, $date_required, $status ) = splice @projects, 0, 7 ) {
+	my @Projects = openprint::Project->find(order=>'due_date',
+			'status'			=>	\@statuses,
+			'due_date_start'	=>	$variable{'StartDate'},
+			'due_date_end'		=>	$variable{'EndDate'},
+			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
+			);
+	foreach my $Project ( @Projects ) {
+		my $qty_index = $Project->ordered_qty_index();
+		
 		my %times;
 
-		my $Project = new openprint::Project( $project_index );
 		my %service_indices = $Project->get_services();
-		my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index );
+		my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$Project{id} );
 		my $complete = 1;
 		foreach my $service_type ( sets::intersection( @Services, keys %service_indices ) ) {
 			if ( sets::isin( $service_type, ['LoopStitching', 'SaddleStitching'] ) ) {
@@ -234,7 +230,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Stitch'} = 'done';
 					} else {
-						my ( $runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ( $runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Stitch'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -244,7 +240,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Fold, Perf, Score'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Fold, Perf, Score'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -254,7 +250,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Cut'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Cut'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -264,7 +260,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Drill'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Drill'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -274,10 +270,10 @@ sub bindery_overview {
         next if $complete;
 
 #my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_indices{''} );
-		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
+		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{id}, openprint::project::get_project_type_service_index( $log, $dbh, $$Project{id} ) );
 
 		my @BinderyServices = ();
-		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery') ) {
+		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$Project{id}, 'Bindery') ) {
 			$_ = 'SELECT name FROM Service_Types WHERE id IN ( ' . join(',', @bindery_services{keys %bindery_services} ) . ')';
 			@BinderyServices = sql::execute( $log, $dbh, $_ );
 		} # end if
@@ -332,7 +328,7 @@ sub bindery_overview {
 		} # end if
 
 		if ( sets::intersection( @Services, keys %service_indices ) ) {
-			push @{$variable{'Projects'}}, $project_index, $order_id, $docket, $company, $description,$date_required;
+			push @{$variable{'Projects'}}, $Project, $description;
 			foreach my $service_type ( @{$variable{'Services'}} ) {
 				if ( defined $times{$service_type} ) {
 					if ( $times{$service_type} ne 'done' ) {
@@ -347,14 +343,14 @@ sub bindery_overview {
 	} # end while
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('Docket #','Company Name', 'Description', 'Date Required');
+		my @header = ('Docket #','Company Name', 'Description', 'Due Date');
 		foreach my $service_type ( @{$variable{'Services'}} ) {
 			push @header, $service_type;
 		} # end foreach
 		my @data;
 		while ( @{$variable{'Projects'}} ) {
-			my ( $project_index, $order_id, $docket, $company, $description, $date_required ) = splice @{$variable{'Projects'}}, 0, 6;
-			push @data, $docket, $company, $description, $date_required;
+			my ( $Project, $description ) = splice @{$variable{'Projects'}}, 0, 2;
+			push @data, $Project->docket(), $Project->Company()->name(), $description, $Project->due_date();
 			foreach my $service_type ( @{$variable{'Services'}} ) {
 				push @data, shift @{$variable{'Projects'}};
 			} # end foreach
