@@ -386,7 +386,7 @@ $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'account' ) {
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-$log->debug("Account status($status) redirect($variable{'Redirect'}) error($variable{'details'}) details($variable{'error'})");
+#$log->debug("Account status($status) redirect($variable{'Redirect'}) error($variable{'details'}) details($variable{'error'})");
 		return $status if $variable{'Redirect'};	
 
 		if ( ! $session{'user_id'} ) {

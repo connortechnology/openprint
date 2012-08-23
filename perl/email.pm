@@ -1,9 +1,9 @@
+use strict;
 package email;
 
-use strict;
 use openprint ();
-use vars qw( $r %config $log );
-*r = \$openprint::r;
+use warnings;
+use vars qw( %config $log );
 *log = \$openprint::log;
 *config = \%openprint::config;
 
@@ -12,14 +12,18 @@ require sql;
 my $dbh;
 
 sub db_connect {
-	return $dbh = sql::open_sql( $log, 
-	(
-		'host'		=>	$r->dir_config('mail_db_hostname'),
-		'database'	=>	$r->dir_config('mail_db_name'),
-		'login'		=>	$r->dir_config('mail_db_username'),
-		'password'	=>	$r->dir_config('mail_db_password'),
-		'driver'	=>	$r->dir_config('mail_db_driver'),
-	) );
+	if ( $config{'mail_db_name'} ) {
+# Fairly important to us the config hash.  r->dir_config causes crashes
+		$dbh = sql::open_sql( $openprint::log, 
+				(
+				 'host'		=>	$config{'mail_db_hostname'},
+				 'database'	=>	$config{'mail_db_name'},
+				 'login'	=>	$config{'mail_db_username'},
+				 'password'	=>	$config{'mail_db_password'},
+				 'driver'	=>	$config{'mail_db_driver'},
+				) );
+	} # end if;
+	return $dbh;
 } # end sub connect
 
 sub set_password {
@@ -34,11 +38,13 @@ sub get_vacation {
 	my ( $email ) = @_;
 
 	$dbh = db_connect() if ! $dbh; 
-
-	my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
-	if ( $message or $subject ) {
-		return 1, $subject, $message;
+	if ( $dbh ) {
+		my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
+		if ( $message or $subject ) {
+			return 1, $subject, $message;
+		} # end if
 	} # end if
+	return;	
 } # end sub get_vacation
 
 sub start_vacation {
@@ -47,7 +53,7 @@ sub start_vacation {
 	$dbh = db_connect() if ! $dbh; 
 
 	$email =~ /(.*)\@.*/;
-	my $autoreply_address = $1.'@'.$r->dir_config('mail_autoreply_domain');
+	my $autoreply_address = $1.'@'.$config{'mail_autoreply_domain'};
 
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
@@ -121,6 +127,20 @@ sub aliases {
 	} # end if
 	return @aliases;
 } # end sub get_aliases
+
+sub domains {
+	$dbh = email::db_connect() if ! $dbh;
+	if ( ! $dbh ) {
+		$openprint::log->debug("No connection to mail database");
+		return ();
+	} # end if;
+	my $domains = $dbh->selectall_arrayref( 'SELECT * FROM domain', { Slice => {} } );
+	if ( $domains ) {
+		return map { $$_{'domain'} } @{$domains};
+	}  # end if
+	$openprint::log->debug("No domains found");
+	return ();
+} # end sub domains
 
 1;
 __END__

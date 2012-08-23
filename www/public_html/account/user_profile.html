@@ -138,6 +138,9 @@
    			</fieldset>
 			</div>
 		</div><!--UserProfile-->
+<? if ($variable{DoEmail}) ?> 
+	<!--#include virtual="_email_settings.html"-->
+<? endif ($variable{DoEmail}) ?> 
 		<input type="hidden" name="btnFunction"/>
 	</form>
 	<!--#include virtual="/includes/login_log.html"-->

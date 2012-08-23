@@ -326,6 +326,7 @@ sub user_profile {
 	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = new openprint::User( $session{'user_id'} );
 
+
 	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
@@ -358,7 +359,15 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = '';
-		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
+		if ( $param{'password'} ne $User->password() ) {
+			if ( ! $param{'verifypassword'} ) {
+				$variable{'warning'} .= 'Verify password left blank, password not changed.<br/>';
+				delete $param{'password'};
+			} else {
+				$error .= "Password fields do not match.<br/>" if $param{'password'} ne $param{'verifypassword'};
+			} # end if
+		} # end if
+
 		$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
 		$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
 		$error .= 'Salutation cannot be blank.<br/>' if ! $param{'salutation'};
@@ -405,6 +414,28 @@ sub user_profile {
 			} # end if
 		} # end if to send changed password notification
 
+		if ( $config{mail_db_name} ) {
+            my @domains = email::domains();
+            my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+            if ( sets::isin( $domain, \@domains ) ) {
+                if ( $param{'VacationState'} ) {
+                    email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+                } else {
+                    email::stop_vacation( $User->email() );
+                } # end if
+                if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+                    email::set_password( @param{'email','EmailPassword'} );
+                } # end if
+                my @aliases = ();
+                foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+                    next if ! $alias;
+                    push @aliases, $alias;
+                } # end foreach
+                push @aliases, $User->email() if ! @aliases;
+                email::aliases( $User->email(), @aliases );
+            } # end if
+        } # end if
+
 	} # end if
 
 	$variable{'Me'} = $Me;
@@ -412,6 +443,19 @@ sub user_profile {
 		$User = new openprint::User();
 	} # end if
 	$variable{'User'} = $User;
+    if ( $config{mail_db_name} ) {
+        my @domains = email::domains();
+$log->debug("Domains: @domains");
+        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+        if ( sets::isin( $domain, \@domains ) ) {
+$log->debug("Is in.");
+            $variable{DoEmail} = 1;
+            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+            @{$variable{Aliases}} = email::aliases( $User->email() );
+		} else {
+$log->debug("Is not in. $user domain: $domain");
+        } # end if
+    } # end if
 } # end sub user_profile
 
 sub change_password {
