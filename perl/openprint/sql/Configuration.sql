@@ -42,9 +42,7 @@ INSERT INTO configuration VALUES ('ResellerApplicationEmail', '"Isaac Connor" <i
 INSERT INTO configuration VALUES ('RMAEmail', '"Isaac Connor" <iconnor@connortechnology.com>', 'text', 'Email address to send RMA requests to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('InventoryEmail', '"Isaac Connor" <iconnor@connortechnology.com>', 'text', 'Email address to send Inventory notifications to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('DateTimeFormat', '%Y-%m-%d %H:%M', 'text', 'Format string used when displaying timstamps with both a date and a time part. Edit', 'Miscellaneous Settings');
-INSERT INTO configuration VALUES ('Require Unique Company', 'N', 'yes/no', 'Require Unique Company', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('UseCaptchaOnRegistration', 'Y', 'yes/no', 'Use a CAPTCHA on the registration to protect against automated bots.', 'Captcha Settings');
-INSERT INTO configuration VALUES ('NewNonFirstUserAccountActivation', 'N', 'yes/no', 'Whether to automatically activate any subsequent users in a company when they register.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('AcceptCreditApplications', 'N', 'yes/no', 'Whether to show links to a credit application page.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('UserProfileRequiredFields', 'firstname', 'list', 'Command separated list of fields that are required to be filled in on the User Profile page.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('RegistrationRequiredFields', 'firstname,password,verifypassword,email,agree_terms,date_of_birth', 'text', 'Fields which are required on the registration page.', 'Miscellaneous Settings');
@@ -60,7 +58,6 @@ INSERT INTO configuration VALUES ('UserProfileDisclaimer', '', 'textarea', '', '
 INSERT INTO configuration VALUES ('RegistrationTopDisclaimer', '', 'textarea', 'Text shown at top of registration', 'Disclaimers');
 INSERT INTO configuration VALUES ('AssetPath', '', 'text', 'Path to where assets are stored.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('owner_id', '1', 'Supplier', 'Site Owner', 'Miscellaneous Settings');
-INSERT INTO configuration VALUES ('SimpleButtons', 'Y', 'yes/no', 'WHen true, a button will just use an anchor tag, without internal left right and center pieces.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('WhyRegister', '', 'textarea', 'Text to display on login page (and maybe elsewhere) explaining why a person should register on the site.', 'Disclaimers');
 INSERT INTO configuration VALUES ('meta-description', NULL, 'text', 'Default content to use for description meta tag.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('meta-keywords', NULL, 'text', 'Default content for the keywords meta tag.', 'Miscellaneous Settings');

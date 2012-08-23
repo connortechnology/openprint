@@ -27,4 +27,3 @@ CREATE TABLE Assets (
 	PRIMARY KEY (id)
 );
 alter table Users add foreign key (asset_id) REFERENCES assets (id);
-alter table Locations add foreign key (asset_id) REFERENCES assets (id);
