@@ -76,7 +76,8 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Received disconnect from ([0-9.]+) 11: (Bye Bye|PECL/ssh2 \(http://pecl.php.net/packages/ssh2\)) \[preauth\]$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because not listed in AllowUsers$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because account is locked$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user fround from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 );
 
@@ -144,7 +145,7 @@ foreach my $log_file ( @log_files ) {
 
 foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
-	if ( $host_counts{$ip}{'count'} > 5 ) { 
+	if ( $host_counts{$ip}{'count'} > 20 ) { 
 		$host_counts{$ip}{'blacklist'}=1;
 	} # end if
 	$_ = $host_counts{$ip}->save();
