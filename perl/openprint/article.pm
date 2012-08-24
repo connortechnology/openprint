@@ -19,17 +19,17 @@ require openprint::Article_Asset;
 require XML::RSS;
 
 sub save_article {
-	my $Article = new openprint::Article( $param{'article_id'} );
+	my $Article = new openprint::Article( $param{article_id} );
 	if ( ! $Article->can_edit() ) {
-		$variable{'error'} .= 'You do not have rights to edit this article.';
+		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
-	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+		$param{published_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
 	} else {
-		delete $param{'published_on'};
+		delete $param{published_on};
 		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
 	} # end if
 	if ( $param{'category_id'} ) {
@@ -185,9 +185,11 @@ sub _history {
 } # end sub _history
 
 sub edit {
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
+
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	if ( ! $Article->can_edit() ) {
-		$variable{'error'} .= 'You do not have rights to edit this article.';
+		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
 	if ( $param{'func'} eq 'Save' ) {
@@ -266,12 +268,14 @@ sub category {
 } # end sub category
 
 sub view {
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	$Article->set( \%param );
 	$Article->View();
 } # end sub view
 
 sub _comments {
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'text'} ) {
 		if ( ! openprint::Comment->find_one(

@@ -64,7 +64,7 @@ sub search {
 	if ( ! ( $Location and $Location->id() ) ) {
 		$Location = openprint::Location::from_ip( $ENV{'REMOTE_ADDR'} );
 	} # end if
-	if ( $Location and $Location->id() ) {
+	if ( 0 and $Location and $Location->id() ) {
 		my $Country = $Location->ancestor('type'=>'country');
 		my $State = $Location->ancestor('type'=>'state');
 
