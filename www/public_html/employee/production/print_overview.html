@@ -13,7 +13,7 @@
 			tinymce.execCommand('mceToggleEditor',false,current_editor);
 		} // end if
 		current_editor=id;
-		tinymce.execCommand('mceAddControl', true, id );
+		tinymce.execCommand('mceToggleEditor', true, id );
 	} // end function tinymce_on
 	function job_popup( job_id ) {
 		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525} );
