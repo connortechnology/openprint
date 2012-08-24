@@ -138,7 +138,7 @@ print "Trying $re against $line\n" if $opts->{debug};
 
 foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
-	if ( $host_counts{$ip}{'count'} > 5 ) { 
+	if ( $host_counts{$ip}{'count'} > 20 ) { 
 		$host_counts{$ip}{'blacklist'}=1;
 	} # end if
 	$_ = $host_counts{$ip}->save();
