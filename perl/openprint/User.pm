@@ -324,6 +324,10 @@ sub find {
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
 
+	if ( $param{'id !='} ) {
+		$sql .= q{ AND index!=?};
+		push @values, $param{'id !='};
+	} # end if
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
 			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
@@ -433,8 +437,12 @@ sub assistant_ids {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	} # end if
+	return @{$$self{assistant_ids}};
 } # end sub
 sub csr_ids {
 	my $self = shift;
@@ -445,8 +453,12 @@ sub csr_ids {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	} # end if
+	return @{$$self{csr_ids}};
 } # end sub
 
 sub notifications {
