@@ -3,14 +3,21 @@
 	<fieldset><legend>Job Scheduling Information</legend>
 		<ul>
 		<li>
-			<label>Comment:</label>
+			<label onclick="tinymce_on('comment');">Comment:</label>
 			<div id="comment" onclick="tinymce_on('comment');"><? echo ( $$variable{Job}->comment() ) ?></div>
+<? if ( ! $$variable{Job}->comment() ) ?>
+<span id="comment_click_to_edit" onclick="tinymce_on('comment');$('comment_click_to_edit').remove();">Click to edit</span>
+<? endif ( ! $$variable{Job}->comment() ) ?>
 		</li>
 		<li>
-			<label>Stock:</label>
+			<label onclick="tinymce_on('stock');">Stock:</label>
 			<div id="stock" onclick="tinymce_on('stock');"><? echo ( $$variable{Job}->stock() ) ?></div>
+<? if ( ! $$variable{Job}->stock() ) ?>
+<span id="stock_click_to_edit" onclick="tinymce_on('stock');$('stock_click_to_edit').remove();">Click to edit</span>
+<? endif ( ! $$variable{Job}->stock() ) ?>
+
 		</li>
-<? if ( $$variable{Job}->Equipment()->smartscheduling() ) ?>
+<? if ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Locked:</label>
 			<? echo ( ssi::radio( 'locked', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{locked}, { onclick=>q`$('StartTime').toggle();` } ); ) ?>
@@ -23,7 +30,7 @@
 			) ?>
 			</span>
 		</li>
-<? endif ( $$variable{Job}->Equipment()->smartscheduling() ) ?>
+<? endif ( $$variable{Job}->Equipment()->smartscheduling() or ! $$variable{Job}->project_id() ) ?>
 		<li>
 			<label>Tentative:</label>
 			<? echo ( ssi::radio( 'tentative', [ '1', 'Yes', '0', 'No' ], $$variable{Job}{tentative} ); ) ?>
@@ -58,8 +65,8 @@
 	</fieldset>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::button( 'SaveStartTime', { 'onclick'=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.destroy();}});`, 'text'=>'Save' } ),
-				ssi::button( 'CancelStartTime', { 'onclick'=>"popupWin.destroy();", 'text'=> 'Cancel' } ) 
+				ssi::button( 'SaveStartTime', { onclick=>q`tinyMCE.triggerSave();new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Save' } ),
+				ssi::button( 'CancelStartTime', { onclick=>'popupWin.destroy();', text=> 'Cancel' } ) 
 			); ) ?>
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />
