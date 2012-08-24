@@ -37,6 +37,9 @@ fieldset p label, fieldset li label {
 	width: auto;
 	margin: 0;
 }
+.dialog li p {
+	padding-left: 0;
+}
 
 div.PopupWindow fieldset p {
 	padding-left: 0px;
