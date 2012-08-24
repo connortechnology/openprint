@@ -16,8 +16,15 @@
 		tinymce.execCommand('mceToggleEditor', true, id );
 	} // end function tinymce_on
 	function job_popup( job_id ) {
-		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525} );
+		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
 	} // end function job_popup
+	function job_popup_close() {
+		tinymce.EditorManager.execCommand('mceRemoveControl',true,'comment');
+		tinymce.EditorManager.execCommand('mceRemoveControl',true,'stock');
+		current_editor=null;
+		return true;
+	} // end function job_popup_close
+
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
