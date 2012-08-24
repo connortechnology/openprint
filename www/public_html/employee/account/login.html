@@ -34,7 +34,7 @@
 		Please enter your e-mail address and password.<br/>
 		<p>
 			<label for="UserID">UserID:</label>
-			<input type="number" id="UserID" name="UserID" emptyok="emptyok" format="5N" onkeypress="return input_handler( this, event );" onchange="select_user( this );" onkeyup="select_user( this );"/>
+			<? echo ( ssi::input( type=>'cardinal', id=>'UserID', name=>'UserID', onkeypress=>'return input_handler(this,event);', onchange=>'select_user(this);', onkeyup=>'select_user(this);' ); ) ?>
 		</p>
 		<p>
 			<label for="email">E-mail:</label>
