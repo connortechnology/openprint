@@ -19,6 +19,7 @@ MV=/bin/mv;
 CP=/bin/cp;
 TOUCH=/bin/touch;
 RSYNC=/usr/bin/rsync;
+CHMOD=/bin/chmod;
 
 USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] args"
 
@@ -56,6 +57,7 @@ fi;
 
 # step 1: delete the oldest snapshot, if it exists:
 if [ -d "$2.3" ] ; then                     \
+	$CHMOD a+wr -R "$2.3"
 	$RM -rf "$2.3" ;                            \
 else
 	echo "No $2.3 to delete"

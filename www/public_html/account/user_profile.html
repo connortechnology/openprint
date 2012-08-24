@@ -176,6 +176,9 @@ You cannot edit this user.
    			</fieldset>
 			</div>
 		</div><!--UserProfile-->
+<? if ($variable{DoEmail}) ?> 
+	<!--#include virtual="_email_settings.html"-->
+<? endif ($variable{DoEmail}) ?> 
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

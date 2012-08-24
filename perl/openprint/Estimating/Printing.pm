@@ -1866,7 +1866,7 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 		if ( ! $presses{$press_id} ) {
 			push @possible_presses, new openprint::Equipment($press_id);
 		} elsif ( DEBUG ) {
-			$openprint::log->debug("Press: $presses{$press_id}");
+			$openprint::log->debug("Press: $presses{$press_id} " . new openprint::Equipment($press_id)->strid() );
 		} # end if
 	} # end foreach
 	if ( ! @possible_presses ) {

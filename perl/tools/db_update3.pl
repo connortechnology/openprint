@@ -80,36 +80,6 @@ $dbh->do('ALTER TABLE Users ALTER company_id DROP NOT NULL');
 $dbh->do('ALTER TABLE Users ALTER password DROP NOT NULL');
 $dbh->do('ALTER TABLE Users ALTER firstname DROP NOT NULL');
 
-if ( ! sets::isin( 'assets', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='assets'", 'column_name');
-	if ( ! exists $$data{'md5'} ) {
-		$dbh->do('ALTER TABLE Assets ADD md5 char(32)');
-	} # end if
-	if ( ! exists $$data{'deleted'} ) {
-		$dbh->do('ALTER TABLE Assets ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
-	} # end if
-	if ( ! exists $$data{'license'} ) {
-		$dbh->do('ALTER TABLE Assets ADD license TEXT');
-	} # end if
-	if ( ! exists $$data{'attribution'} ) {
-		$dbh->do('ALTER TABLE Assets ADD attribution TEXT');
-	} # end if
-	if ( ! exists $$data{'optimised'} ) {
-		$dbh->do('ALTER TABLE Assets ADD optimised BOOLEAN NOT NULL DEFAULT FALSE');
-	} # end if
-	if ( ! exists $$data{'width'} ) {
-		$dbh->do('ALTER TABLE Assets ADD width integer');
-	} # end if
-	if ( ! exists $$data{'height'} ) {
-		$dbh->do('ALTER TABLE Assets ADD height integer');
-	} # end if
-	if ( ! exists $$data{'layout'} ) {
-		$dbh->do('ALTER TABLE Assets ADD layout text');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'photo_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
@@ -339,66 +309,6 @@ if ( ! sets::isin( 'photos_in_albums', \@tables ) ) {
 if ( ! sets::isin( 'video_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Video_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
-} # end if
-if ( ! sets::isin( 'locations', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='locations'", 'column_name');
-	if ( ! exists $$data{'type_id'} ) {
-if ( ! sets::isin( 'location_types', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Location_Types.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-}
-	$dbh->do('ALTER TABLE Locations add type_id INTEGER');
-	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(type_id) REFERENCES Location_types (id)');
-	} # end if
-	if ( ! exists $$data{'short'} ) {
-	$dbh->do('ALTER TABLE Locations add short text');
-	} # end if
-	if ( ! exists $$data{'description'} ) {
-	$dbh->do('ALTER TABLE Locations add description text');
-	} # end if
-	if ( ! exists $$data{'parent_id'} ) {
-	$dbh->do('ALTER TABLE Locations add parent_id integer');
-	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(parent_id) REFERENCES Locations (id)');
-	} # end if
-	if ( ! exists $$data{'created_on'} ) {
-	$dbh->do('ALTER TABLE Locations add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
-	} # end if
-	if ( ! exists $$data{'created_by'} ) {
-	$dbh->do('ALTER TABLE Locations add created_by INTEGER');
-	$dbh->do('ALTER TABLE Locations add FOREIGN KEY (created_by) REFERENCES Users (id)');
-	} # end if
-	if ( ! exists $$data{'postalcode'} ) {
-	$dbh->do('ALTER TABLE Locations add postalcode text');
-	} # end if
-	if ( ! exists $$data{'address'} ) {
-	$dbh->do('ALTER TABLE Locations add address text');
-	} # end if
-	if ( ! exists $$data{'url'} ) {
-	$dbh->do('ALTER TABLE Locations add url text');
-	} # end if
-	if ( ! exists $$data{'latitude'} ) {
-	$dbh->do('ALTER TABLE Locations add latitude float');
-	} # end if
-	if ( ! exists $$data{'longitude'} ) {
-	$dbh->do('ALTER TABLE Locations add longitude float');
-	} # end if
-	if ( ! exists $$data{'asset_id'} ) {
-		$dbh->do('ALTER TABLE Locations add asset_id INTEGER');
-		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (asset_id) REFERENCES Assets (id)');
-	} # end if
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE Locations add album_id INTEGER');
-		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
-	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
-	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
-	if ( ! exists $$data{'deleted'} ) {
-	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
-	} # end if
-		
 } # end if
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );

@@ -415,7 +415,6 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
 					my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id any'=>$sig_id );
 					if ( ! $Job ) {
-$log->debug("Have no job: $Job");
 						$need_add = 1;
 					} elsif ( ! $Job->starttime() ) {
 						$pending = 1;
@@ -555,6 +554,15 @@ $log->debug("Have no job: $Job");
 <div id="ModificationHistory" style="display: none;"></div>
 </fieldset>
 </div></div>
+<script type="text/javascript">
+<? echo (
+	my $html;
+	if ( my $owing = $$variable{Project}->Order()->cod_owing_percent() ) {
+		$html .= qq`alert('This is a COD job.  $owing% remains to be paid.');\n`;
+	}
+	return $html;
+) ?>	
+</script>
 <? else ( $$variable{'Project'}->id() ) ?>
 <div class="error">
 <? echo ( 
@@ -566,12 +574,3 @@ $log->debug("Have no job: $Job");
 ) ?>
 </div>
 <? endif ( $$variable{'Project'}->id() ) ?>
-<script type="text/javascript">
-	<? echo (
-		my $html;
-if ( my $owing = $$variable{'Project'}->Order()->cod_owing_percent() ) {
-	$html .= qq`alert('This is a COD job.  $owing% remains to be paid.');\n`;
-}
-		return $html;
-	) ?>	
-</script>
