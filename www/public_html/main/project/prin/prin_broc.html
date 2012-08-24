@@ -11,13 +11,13 @@
 </script>
 <!--#include virtual="/main/project/prin/_templates.html"-->
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js"></script>
 <script type="text/javascript">
 	function calc() {
 		calc_presentation_folder('f1');
 	}
 </script>
-<script type="text/javascript" src="/javascripts/presentation_folders.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/presentation_folders.js"></script>
 <? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <script type="text/javascript">
 	function calc( formName, force ) {
@@ -31,103 +31,75 @@
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><? echo ( $$variable{'ProjectType'}->description() ) ?></legend>
-<? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-                <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-                <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-<? if ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Decals','Banners','RackCards','Labels','NCR','InkjetOutputs'] ) ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Decals','Banners','RackCards','Labels','NCR','InkjetOutputs'] ) ) ?>
-<? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
-		<!--#include virtual="/includes/main/proj/banner_printing.html"-->
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
+<? echo ( 
+	my $html;
+	if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/envelopes.html');
+	} elsif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Brochures', 'Flyers' ] ) ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/brochures.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Custom' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions_boxes_only.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Cards' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/cards.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/newsletters.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/generic.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/business_card_names.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Packaging' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/packaging.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/press_sheet_combo.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/presentation_folders.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/presentation_folder_printing.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/generic.html');
+		$html .= q`<p id="NotepadPages">
+			<label># of pages per pad:</label>
+			<input type="text" name="PageQuantity" value="`.$$variable{PageQuantity}.q`" onkeyup="calc(this.form.name);" />
+		</p>`;
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/tags_tickets.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Maps' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/maps.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Inserts' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/inserts.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Forms' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/forms.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} elsif ( $$variable{'ProjectType'}->name() eq 'Covers' ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/project_template_select.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/covers.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	} else {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/templates/generic.html');
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/dimensions.html');
+	}  # end if
 
-<? if ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
-		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/cards.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
-<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Pamphlets/Leaflets', 'Pamphlets_Leaflets' ] ); ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Pamphlets/Leaflets', 'Pamphlets_Leaflets' ] ); ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/newsletters.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/business_card_names.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/packaging.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
-		<!--#include virtual="/includes/main/proj/press_sheet_combo.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/presentation_folders.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-		<!--#include virtual="/includes/main/proj/presentation_folder_printing.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<p id="NotepadPages">
-			<label># of pages per pad</label>
-			<input type="number" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
-		</p>
-		<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
-
-<? if ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/maps.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/inserts.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/forms.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/covers.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
+	if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) {
+		$html .= ssi::include($ENV{DOCUMENT_ROOT}.'/includes/main/proj/banner_printing.html' );
+	} # end if
+	return $html;
+) ?>
 <? if ( ! $$variable{'NoPrinting'} ) ?>
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>

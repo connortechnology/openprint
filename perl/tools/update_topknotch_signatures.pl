@@ -13,7 +13,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$log = new logger( 'debug' );
+$log = new logger( 'warn' );
 my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'database'} = 'topknotch' if ! $sql_server{'database'};
