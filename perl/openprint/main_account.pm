@@ -332,7 +332,7 @@ sub user_profile {
 	my $User = new openprint::User( $session{'user_id'} );
 	my $Me = new openprint::User( $session{'user_id'} );
 
-	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
+	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids(), $Me->assistant_ids() ]  ) ) {
 
 		# IF it's empty, then we are adding a new user! Otherwise editing one
 		if ( exists $param{'ddmUser'} ) {
@@ -341,12 +341,6 @@ sub user_profile {
 			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {
 				$User = $Users[0];
-			} # end if
-		} # end if
-		if ( $param{'ddmUser'} ) {
-# Enforce that we can only edit users from our company
-			if ( $User->company_id() != $session{'company_id'} ) {
-				#$User = new openprint::User( $session{'user_id'} );
 			} # end if
 		} # end if
 
@@ -358,6 +352,8 @@ sub user_profile {
 			$User->delete();
 			$User = $User->Next( 'company_id'=>$session{'company_id'} );
 		} # end if
+	} else {
+$log->debug("Not authorized: csr_ids: " . join(',',map { new openprint::User($_)->name} $Me->csr_ids() ) );
 	} # end if Company Admin
 
 # options available to non-company administrators

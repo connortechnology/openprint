@@ -1195,16 +1195,23 @@ function popup_window( url, parameters, options ) {
 	if ( ! options ) options = {};
 	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
 	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
-	if ( options.maximizable == undefined ) options.maximizable = false;
-	if ( options.resizable == undefined ) options.resizeable = true;
-	if ( options.hideEffect == undefined ) options.hideEffect = Element.hide;
-	if ( options.showEffect == undefined ) options.showEffect = Element.show;
-	if ( options.destroyOnClose == undefined ) options.destroyOnClose = true;
-	if ( options.className == undefined ) options.className = 'alphacube';
-	if ( options.recenterAuto == undefined ) options.recenterAuto = false;
 
 	if ( ! popupWin ) {
-		popupWin = new Window(options);
+       var defaults = {
+            maximizable: false,
+             resizable: true,
+             hideEffect:Element.hide,
+             showEffect:Element.show,
+             destroyOnClose: true,
+             className:"alphacube",
+             width:400,
+             height:400, 
+			 recenterAuto:false
+        }
+
+        Object.extend( defaults, options );
+        popupWin = new Window(defaults);
+
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
