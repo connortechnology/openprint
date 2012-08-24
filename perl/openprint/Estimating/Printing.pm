@@ -4256,7 +4256,7 @@ sub select_presses {
 	#my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	#my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 
-	foreach my $Press ( openprint::Equipment->find( 'category'=>'Printing', 'useinestimating'=>1 ) ) {
+	foreach my $Press ( openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 ) ) {
 		my $press_id = $Press->id();
 
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
