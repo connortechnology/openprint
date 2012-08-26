@@ -73,6 +73,10 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 	if ( ! exists $$data{short} ) {
 		$dbh->do('ALTER TABLE Currencies ADD short TEXT');
 	} # end if
+	$dbh->do('ALTER TABLE currencies ADD sy varchar(4)');
+	$dbh->do('UPDATE currencies set sy=symbol');
+	$dbh->do('ALTER TABLE currencies DROP COLUMN symbol');
+	$dbh->do('ALTER TABLE currencies RENAME COLUMN sy TO symbol');
 } # end if
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/AnnualSales.sql}) );
