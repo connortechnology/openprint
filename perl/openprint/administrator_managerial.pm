@@ -123,9 +123,7 @@ sub taxes {
 } # end sub taxes 
 
 sub currency {
-
 	if ( $param{'btnFunction'} eq 'Save' ) {
-
 		# Add record to audit log - action "Update Currency".
 		(new openprint::Log())->save({action=>'Update Currency'});
 
@@ -154,7 +152,42 @@ sub currency {
 sub _currency_conversions {
 	$variable{Currency} = new openprint::Currency( $param{currency_id} );
 	if ( $param{btnFunction} eq 'Add' ) {
-		$variable{Currency}->set_conversion( $param{to_id},$param{rate}/100 );
+
+		my $now = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
+		# Find current
+        my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$param{currency_id}, to_id=>$param{to_id}, period_end=>undef);
+        if ( ! $Conversion ) {
+            $Conversion = new openprint::Currency_Conversion();
+            $variable{error} .= $Conversion->save({
+					from_id	=>	$param{currency_id}, 
+					to_id	=>	$param{to_id},
+					rate	=>	$param{amount},
+					});
+        } elsif (Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, $param{amount} ) ) {
+            $variable{error} .= $Conversion->save({period_end=>$now});
+            $variable{error} .= $Conversion->save({id=>undef,
+					period_start=>$now,
+					period_end	=>	undef,
+					rate=>$param{amount}});
+        } # end if
+
+        $Conversion = openprint::Currency_Conversion->find_one(to_id=>$param{currency_id}, from_id=>$param{to_id}, period_end=>undef);
+        if ( ! $Conversion ) {
+            $Conversion = new openprint::Currency_Conversion();
+            $variable{error} .= $Conversion->save({
+					to_id	=>	$param{currency_id},
+					from_id	=>	$param{to_id},
+					rate	=>	Math::Round::nearest(0.0001,1/$param{amount}),
+					});
+        } elsif ( $Conversion->rate() != Math::Round::nearest(0.0001, 1/$param{amount}) ) {
+            $variable{error} .= $Conversion->save({period_end=>$now});
+            $variable{error} .= $Conversion->save({
+					id			=>	undef,
+					period_start=>	$now,
+					period_end	=>	undef,
+					rate		=>	Math::Round::nearest(0.0001,1/$param{amount}),
+					});
+        } # end if
 	} # end if
 } # end sub currency_conversions
 

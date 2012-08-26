@@ -1,21 +1,20 @@
 <? echo (
-	my $html;
+	my $html = ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html');;
 	my $id = $$variable{Currency}{id};
 
 	foreach my $C ( openprint::Currency_Conversion->find(from_id=>$id,'order'=>'to_id, period_end NULLS FIRST') ) {
 		my $To = new openprint::Currency( $$C{to_id} );
-		$html .= sprintf('1 %s = %s %s (%s%%) from %s until %s<br/>', $C->From()->name(), $C->amount(), $To->name(), $$C{rate}*100,
-			( $$C{period_start} ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_start} ) ) : 'forever' ),
-			( $$C{period_end} ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_end} ) ) : 'forever' ),
+		$html .= sprintf('1 %s = %s %s %s %s<br/>', $C->From()->name(), $C->amount(), $To->name(),
+			( $$C{period_start} ? 'from '.Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_start} ) ) : '' ),
+			( $$C{period_end} ? ' until ' . Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_end} ) ) : '' ),
 		); 
 	} # end foreach
 	$html .= '1 ' . $$variable{Currency}->short().' = ';
 	
 	$html .= ssi::input( type=>'float', name=>'amount-'.$id, onkeyup=>"calc_rate('$id');" );
-	$html .= ssi::select( openprint::Currency->dropdown('order'=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } ) . ' => ';
-	$html .= ssi::input( type=>'float', name=>'rate-'.$id, onkeyup=>"calc_amount('$id');" ). '%';
+	$html .= ssi::select( openprint::Currency->dropdown('order'=>'lower(name)','id !='=>$id), [], { name=>'to-'.$id } );
 	$html .= ssi::button( 'Add'.$id, {
-		onclick=>sprintf(q`new Ajax.Updater( 'Conversions%1$d','/administrator/managerial/_currency_conversions.html', { parameters: { currency_id: %1$d, to_id: get_ddm_value(f1.elements['to-%1$d']), rate: f1.elements['rate-%1$d'].value, btnFunction: 'Add' } });`, $id ), 
+		onclick=>sprintf(q`new Ajax.Updater( 'Conversions%1$d','/administrator/managerial/_currency_conversions.html', { parameters: { currency_id: %1$d, to_id: get_ddm_value(f1.elements['to-%1$d']), amount: f1.elements['amount-%1$d'].value, btnFunction: 'Add' } });`, $id ), 
 		text => 'Set Conversion' } );
 	return $html;
 ) ?>

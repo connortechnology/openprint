@@ -1,15 +1,3 @@
-<script type="text/javascript">
-	function calc_rate(id) {
-		var form = $('f1');
-		var amount = parseFloat(1*form.elements['amount-'+id].value);
-		form.elements['rate-'+id].value = do_decimals(100/amount,2);
-	} // end function calc_rate
-	function calc_amount(id) {
-		var form = $('f1');
-		var rate = parseFloat(1*form.elements['rate-'+id].value);
-		form.elements['amount-'+id].value = do_decimals(rate/100,2);
-	} // end function calc_rate
-</script>
 <form id="f1" name="f1" method="post" action="currency.html">
 	To set a currency conversion, select the destination currency and the rate, and click Set Conversion.  Existing conversions will be overwritten.
 	<table class="List">

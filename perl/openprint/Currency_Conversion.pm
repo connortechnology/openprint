@@ -5,7 +5,7 @@ require Math::Round;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'currency_conversions';
 $serial	= 'currency_conversions_id_seq';
 %fields = (
