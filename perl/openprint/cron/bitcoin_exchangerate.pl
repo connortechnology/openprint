@@ -75,6 +75,9 @@ configuration::init( $log, $dbh, \%CFG::Config );
 configuration::from_file('/etc/bitcoin_exchangerate.conf');
 configuration::merge( $opts );
 
+my $BTC = openprint::Currency->find_one(short=>'BTC');
+die "No Bitcoin currency found in system." if ! $BTC;
+
 my $url = 'http://bitcoincharts.com/t/weighted_prices.json';
 
 my $ua = LWP::UserAgent->new;
@@ -89,6 +92,30 @@ if ($res->is_success) {
 	my $content = $res->content;
 	my $rates = JSON::decode_json( $content );
 	print " CAD Rate: ".$$rates{CAD}{'30d'}."\n";
+	my %Currencies = map { $_->short(), $_ } openprint::Currency->find();
+	foreach my $cur ( keys %$rates ) {
+		next if ! $Currencies{$cur};
+		my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id}, period_end=>undef);
+		if ( ! $Conversion ) {
+			$Conversion = new openprint::Currency_Conversion();
+			$Conversion->save({from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id},rate=>Math::Round::nearest(0.01,1/$$rates{$cur}{'30d'}) });
+		} elsif ( int($Conversion->rate()) != Math::Round::nearest(0.01, 1/$$rates{$cur}{'30d'} ) ) {
+			$Conversion->save({period_end=>'NOW()'});
+			$Conversion->save({id=>undef,period_start=>'NOW()',rate=>1/$$rates{$cur}{'30d'}});
+		} # end if
+
+		my $Conversion = openprint::Currency_Conversion->find_one(to_id=>$Currencies{$cur}->id(), from_id=>$$BTC{id}, period_end=>undef);
+		if ( ! $Conversion ) {
+			$Conversion = new openprint::Currency_Conversion();
+			$Conversion->save({to_id=>$Currencies{$cur}->id(), from_id=>$$BTC{id},rate=>Math::Round::nearest(0.01,$$rates{$cur}{'30d'}) });
+		} elsif ( int($Conversion->rate()) != Math::Round::nearest(0.01, $$rates{$cur}{'30d'} ) ) {
+			$Conversion->save({period_end=>'NOW()'});
+			$Conversion->save({id=>undef,period_start=>'NOW()',rate=>$$rates{$cur}{'30d'}});
+		} # end if
+	
+		
+	} # end foreach cur	
+		
 } else {
 	$log->error("Bad status" . $res->status_line );
 	$log->error( 'Unable to grab content from source.: ' . $res->status_line );
