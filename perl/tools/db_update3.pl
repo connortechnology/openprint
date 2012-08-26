@@ -375,6 +375,7 @@ if ( my $Action = openprint::Log_Action->find_one('name'=>'Switch Company') ) {
 	$Action->save({'name'=>'Select Company','description'=>'Select Company'});
 } # end if
 my %config_actions = (
+	'Add Currency'			=>	76,
 	'Update Configuration' => 77,
 	'Login Failed'	=> 78,
 	'Switch Company'	=>	79,
@@ -840,12 +841,12 @@ if ( ! sets::isin( 'inventoryconditions', \@tables ) ) {
 		$dbh->do('ALTER TABLE skid_contents DROP quality_id');
 	} # end if
 	$dbh->do('ALTER TABLE Skid_Contents add FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id)');
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='inventoryconditions'", 'column_name');
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_allocations'", 'column_name');
 	if ( ! exists $$data{condition_id} ) {
 		$dbh->do('ALTER TABLE paper_allocations ADD condition_id INTEGER');
 		$dbh->do('ALTER TABLE paper_allocations ADD FOREIGN KEY (condition_id) REFERENCES inventoryconditions (id)');
 	} # end if
+} else {
 }
 if ( ! sets::isin( 'wall', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Wall.sql}) );
@@ -1006,6 +1007,23 @@ if ( ! sets::isin('products', \@tables ) ) {
 		$dbh->do('ALTER TABLE products ADD manufacturer_id INTEGER');
 		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
 	} # end if
+	
+} # end if
+if ( ! sets::isin('currency_conversions', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Currency_Conversions.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currency_conversions'", 'column_name');
+	if ( ! exists $$data{'period_start'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD period_start TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'period_end'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
+	$dbh->do( 'ALTER TABLE currency_conversions DROP CONSTRAINT currency_conversions_pkey');
+	$dbh->do( 'ALTER TABLE currency_conversions ADD PRIMARY KEY (id)' );
+	$dbh->do( 'DROP INDEX IF EXISTS currency_conversion_to_from_period_end_idx' );
+	$dbh->do( 'CREATE INDEX currency_conversion_to_from_period_end_idx ON currency_conversions (to_id,from_id,period_end)' );
 	
 } # end if
 $dbh->disconnect();
