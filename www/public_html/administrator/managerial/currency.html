@@ -1,39 +1,47 @@
+<script type="text/javascript">
+	function calc_rate(id) {
+		var form = $('f1');
+		var amount = parseFloat(1*form.elements['amount-'+id].value);
+		form.elements['rate-'+id].value = do_decimals(100/amount,2);
+	} // end function calc_rate
+	function calc_amount(id) {
+		var form = $('f1');
+		var rate = parseFloat(1*form.elements['rate-'+id].value);
+		form.elements['amount-'+id].value = do_decimals(rate/100,2);
+	} // end function calc_rate
+</script>
 <form id="f1" name="f1" method="post" action="currency.html">
 	To set a currency conversion, select the destination currency and the rate, and click Set Conversion.  Existing conversions will be overwritten.
 	<table class="List">
 		<tr>
-			<th width="100" align="left">Long Name</th>
-			<th width="75" align="left">Short Name</th>
-			<th width="50" align="left">Symbol</th>
-			<th align="left">Conversions</th>
+			<th class="name">Long Name</th>
+			<th class="short">Short Name</th>
+			<th class="symbol">Symbol</th>
+			<th class="conversions">Conversions</th>
 		</tr>
-		<? eval ( @{$$variable{'Currencies'}} = openprint::Currency->find('order'=>'lower(name)'); ) ?>
-		<? while ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
-		<tr<?rowclass?>> 
-			<td valign="top"> 
-				<input type="text" name="strName<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->name(); ) ?>" />
-			</td>
-			<td valign="top"> 
-				<input type="text" name="strShort<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->short(); ) ?>" />
-			</td>
-			<td valign="top"> 
-				<input type="text" name="strSymbol<? echo ( $$variable{'Currency'}->id(); ) ?>" value="<? echo ( $$variable{'Currency'}->symbol(); ) ?>" />
-			</td>
-			<td valign="top">
-				<div id="Conversions<? echo ( $$variable{'Currency'}->id(); ) ?>">
-				<!--#include virtual="_currency_conversions.html"-->
-				</div>
-			</td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Currency ( openprint::Currency->find('order'=>'lower(name)') ) {
+				$html .= sprintf(q`
+		<tr%1$s> 
+			<td class="name"><input type="text" name="name-%2$d" value="%3$s" /></td>
+			<td class="short"><input type="text" name="short-%2$d" value="%4$s" /></td>
+			<td class="symbol"><input type="text" name="symbol-%2$d" value="%5$s" /></td>
+			<td class="conversions" id="Conversions%2$d">%6$s</td>
+		</tr>`, $rowclass, @$Currency{'id','name','short','symbol'},
+				ssi::include($ENV{DOCUMENT_ROOT}.'/administrator/managerial/_currency_conversions.html', { Currency=>$Currency } ),
+				);
+			} # end foreach
+			return $html
+		) ?>	
 		<tr class="totals"> 
 			<td colspan="4"><b>Add a Currency</b></td>
 		</tr>
 		<tr> 
-			<td><input type="text" name="strName" /></td>
-			<td><input type="text" name="strShort" /></td>
-			<td><input type="text" name="strSymbol" /></td>
+			<td class="name"><input type="text" name="name"/></td>
+			<td class="short"><input type="text" name="short"/></td>
+			<td class="symbol"><input type="text" name="symbol"/></td>
 			<td>&nbsp;</td>
 		</tr>
 	</table>

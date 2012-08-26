@@ -127,27 +127,36 @@ sub currency {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		# Add record to audit log - action "Update Currency".
-		openprint::logs::insertLogRecord('76',);
+		(new openprint::Log())->save({action=>'Update Currency'});
 
-		if ( $param{'strName'} ) {
+		if ( $param{name} ) {
 			my $Currency = new openprint::Currency();
-			$Currency->name($param{'strName'});
-			$Currency->short($param{'strShort'});
-			$Currency->symbol($param{'strSymbol'});
-			$Currency->save();
+			$variable{error} .= $Currency->save({
+				name	=>	$param{name},
+				short	=>	$param{short},
+				symbol	=>	$param{symbol},
+				});
 		} # end if
 
 		foreach my $Currency ( openprint::Currency->find() ) {
-			if ( $param{'strName'.$Currency->id()} ) {
-				$Currency->name($param{'strName'.$Currency->id()});
-				$Currency->short($param{'strShort'.$Currency->id()});
-				$Currency->symbol($param{'strSymbol'.$Currency->id()});
-				$Currency->save();
+			if ( $param{'name-'.$Currency->id()} ) {
+				$variable{error} .= $Currency->save({
+						name	=>	$param{'name-'.$$Currency{id}},
+						short	=>	$param{'short-'.$$Currency{id}},
+						symbol	=>	$param{'symbol-'.$$Currency{id}},
+						});
 			} # end if
 		} # end foreach
 	} # end if
 
-} # end sub currency_edit
+} # end sub currency
+
+sub _currency_conversions {
+	$variable{Currency} = new openprint::Currency( $param{currency_id} );
+	if ( $param{btnFunction} eq 'Add' ) {
+		$variable{Currency}->set_conversion( $param{to_id},$param{rate}/100 );
+	} # end if
+} # end sub currency_conversions
 
 sub user_profiles {
 

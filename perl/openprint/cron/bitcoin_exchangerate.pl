@@ -88,10 +88,10 @@ if ($res->is_success) {
 	$log->debug("Content: " . $res->content );
 	my $content = $res->content;
 	my $rates = JSON::decode_json( $content );
-	print " CAD Rate: $$rates{CAD}{30d}\n";
+	print " CAD Rate: ".$$rates{CAD}{'30d'}."\n";
 } else {
 	$log->error("Bad status" . $res->status_line );
-	$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+	$log->error( 'Unable to grab content from source.: ' . $res->status_line );
 } # end if
 
 $dbh->disconnect();
