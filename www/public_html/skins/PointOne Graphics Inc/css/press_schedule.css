@@ -183,6 +183,9 @@ width: 196px;
 	.StartTime img {
 	height: 10px;
 	}
+	.Feedback {
+		display: none;
+	}
 }
 	.Buttons {
 		float: right;
