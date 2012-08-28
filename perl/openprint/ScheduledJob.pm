@@ -1,10 +1,10 @@
+use strict;
 package openprint::ScheduledJob;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -20,9 +20,9 @@ require openprint::PaperAllocation;
 require openprint::Shift;
 require openprint::employee_project;
 require openprint::employee_production;
+require openprint::ProductionFeedback;
 
-my $debug = 1;
-
+$debug = 1;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 
@@ -553,6 +553,22 @@ sub get_li {
 			$html .= '</span>';
 		} # end if smart
 	} # end if
+	my @Data = openprint::ProductionFeedback->find(project_id=>$$self{project_id},order=>'starting_on');
+	if ( @Data ) {
+		$html .= '<br class="spacer"/><div class="Feedback"><fieldset><legend>Production Feedback</legend>
+			<table><tr><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="comment">Comment</th><th class="DateTime">Finished On</th></tr>
+			';
+		foreach my $Feedback ( @Data ) {
+			my $specs = $Feedback->Service()->specs();
+			$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
+				$$specs{SignatureIndex},
+				$Feedback->version(), $Feedback->quantity(), $Feedback->comment(), 
+(Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
+ ) );
+		} # end foreach Feedback
+		$html .= '</table></fieldset></div>';
+	} # end if
+
 	$html .= "</li>\n";
 	return $html;
 } # end sub get_li
