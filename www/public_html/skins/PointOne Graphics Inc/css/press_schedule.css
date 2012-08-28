@@ -268,26 +268,26 @@ width: 196px;
 	}
 	}
 
-span.CSR {
+.CSR {
 	font-weight: bold;
 	text-transform: uppercase;
 }
-span.PrepressOperator {
+.PrepressOperator {
 	font-weight: normal;
 	text-transform: lowercase;
 }
 
-fieldset.filters p.buttons {
-clear:both;
+.filters .buttons {
+	clear:both;
 	padding:0;
-margin: 5px 0 5px 0;
+	margin: 5px 0 5px 0;
 }
-fieldset.filters ul {
+.filters ul {
 	list-style:none;
 	margin:0;
-	padding:0px;
+	padding:0;
 }
-fieldset.filters ul:after {
+.filters ul:after {
     content: ".";
     display: block;
     height: 0;
@@ -295,20 +295,22 @@ fieldset.filters ul:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html fieldset.filters ul {height: 1%;}
-fieldset.filters ul {display: block;}
 
-fieldset.filters ul li {
+.filters li {
 	list-style:none;
 	padding:000 85px;
 	float: left;
 }
-fieldset.filters ul li label {
+.filters li label {
 	vertical-align: top;
-	margin:000 -85px;
+	margin:0 0 0 -85px;
 	width: 80px;
 	float: left;
+}
+.filters li label.radio {
+	float: none;
+	margin: 0;
+	width: auto;
 }
 div.presses {
 	width: 215px;
