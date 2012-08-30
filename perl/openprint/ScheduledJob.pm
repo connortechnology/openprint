@@ -412,7 +412,7 @@ sub get_li {
 			$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
 				$$specs{SignatureIndex},
 				$Feedback->version(), $Feedback->quantity(), $Feedback->comment(), 
-(Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
+				(Date::Format::time2str( $openprint::config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
  ) );
 		} # end foreach Feedback
 		$html .= '</table></fieldset></div>';
