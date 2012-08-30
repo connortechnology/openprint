@@ -3,6 +3,7 @@ require openprint::SignatureCapture;
 require openprint::User;
 require openprint::Project;
 require openprint::Equipment;
+require openprint::Project_Service;
 
 package openprint::ProductionFeedback;
 our @ISA = qw(openprint::Object);
@@ -62,6 +63,14 @@ sub Project {
 sub Equipment {
 	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
+
+sub Service {
+    if ( $_[0]{project_id} and $_[0]{service_id} ) {
+    return new openprint::Project_Service( { project_id=>$_[0]{project_id}, service_id=>$_[0]{service_id} } );
+    } else {
+    return new openprint::Project_Service();
+    } # end if
+} # end sub Service
 
 1;
 __END__
