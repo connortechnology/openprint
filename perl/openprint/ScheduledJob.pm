@@ -402,21 +402,23 @@ sub get_li {
 			$html .= '</span>';
 		} # end if smart
 	} # end if
-	my @Data = openprint::ProductionFeedback->find(project_id=>$$self{project_id},order=>'starting_on');
-	if ( @Data ) {
-		$html .= '<br class="spacer"/><div class="Feedback"><fieldset><legend>Production Feedback</legend>
-			<table><tr><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="comment">Comment</th><th class="DateTime">Finished On</th></tr>
-			';
-		foreach my $Feedback ( @Data ) {
-			my $specs = $Feedback->Service()->specs();
-			$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
-				$$specs{SignatureIndex},
-				$Feedback->version(), $Feedback->quantity(), $Feedback->comment(), 
-				(Date::Format::time2str( $openprint::config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
- ) );
-		} # end foreach Feedback
-		$html .= '</table></fieldset></div>';
-	} # end if
+	if ( $openprint::session{'/employee/production/print_overview.html?show_feedback'} and ( $ul_id !~ /Pending|Approved/ ) ) {
+		my @Data = openprint::ProductionFeedback->find(project_id=>$$self{project_id},order=>'starting_on');
+		if ( @Data ) {
+			$html .= '<br class="spacer"/><div class="Feedback"><fieldset><legend>Production Feedback</legend>
+				<table><tr><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="comment">Comment</th><th class="DateTime">Finished On</th></tr>
+				';
+			foreach my $Feedback ( @Data ) {
+				my $specs = $Feedback->Service()->specs();
+				$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
+						$$specs{SignatureIndex},
+						$Feedback->version(), $Feedback->quantity(), $Feedback->comment(), 
+						(Date::Format::time2str( $openprint::config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
+						) );
+			} # end foreach Feedback
+			$html .= '</table></fieldset></div>';
+		} # end if
+	} # end if show Feedback
 
 	$html .= "</li>\n";
 	return $html;

@@ -5,6 +5,7 @@
 <style type="text/css">
 <? eval ( 
 	$$variable{'QTYS'} = scalar $$variable{Project}->quantity_indexes();
+	@{$$variable{quantity_indexes}} = $$variable{Project}->quantity_indexes();
     if ( $$variable{'QTYS'} == 3 ) {
 		$$variable{'Columns'} = 'Three';
     } else {
