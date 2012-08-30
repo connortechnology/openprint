@@ -1,6 +1,6 @@
 <? echo (
 my $html = '';
-my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{'Equipment'}, 'order'=>'min,max' );
+my @Prices = openprint::ServicePrice::find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{'Equipment'}, 'order'=>'min NULLS FIRST,max NULLS FIRST' );
 foreach my $Price ( @Prices ) {
 	$html .= sprintf('<tr>
 			<td><input type="checkbox" name="chk-%1$d-%2$s-%3$d" checked="checked" /></td>
