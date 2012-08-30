@@ -449,7 +449,10 @@ sub get_type {
 sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
+	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+    $log->debug("LOCKING Projects for project $$Project{id}");
+    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $specs = get_specs_ref( $Project, $service_index ) if $service_index;
 	my %specs = %{$specs} if $specs;
 
@@ -484,6 +487,22 @@ $log->debug("can calc");
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
+<<<<<<< HEAD
+=======
+	$specs{'Status'} = $status;
+	my $elapsed = time - $starttime;
+	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
+
+
+	status( $project_index, $service_index, $status );
+
+	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
+$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
+
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
+	} # end foreach
+	sql::end_transaction( $dbh, $ac );
+>>>>>>> 22db9112e6b0e45d40ab4dda4632d89d48c25865
 	return \%specs;
 } # end sub internal_calc
 
