@@ -1,4 +1,5 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/prepress.js"></script>
 <div class="PageTitle">
     <h1>Prepress</h1>
     <h2><?ServiceTypeName?></h2>
@@ -6,8 +7,10 @@
 <div class="Service"><div class="<?ServiceTypeID?>">
 <!--#include virtual="/includes/main/proj/required_fields.html"-->
 <form name="f1" id="f1" method="post" action="/main/project/view.html">
-	<!--#include virtual="/includes/main/proj/design.html"-->
-	<!--#include virtual="/includes/main/proj/prices_design.html"-->
+	<fieldset><legend><?ServiceTypeName?></legend>
+		<!--#include virtual="/includes/main/proj/prepress_hours.html"-->
+		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+	</fieldset>
 	<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 	<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
 </form>
