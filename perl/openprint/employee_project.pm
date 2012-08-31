@@ -974,5 +974,8 @@ sub _production_log {
 	ssi::save_params('/employee/project/view.html?production_log', 'project_id');
 } # end sub _production_log
 
+sub _dearchive {
+} # end sub _dearchive
+
 1;
 __END__
