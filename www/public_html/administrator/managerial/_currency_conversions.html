@@ -2,7 +2,7 @@
 	my $html = ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html');;
 	my $id = $$variable{Currency}{id};
 
-	foreach my $C ( openprint::Currency_Conversion->find(from_id=>$id,'order'=>'to_id, period_end NULLS FIRST') ) {
+	foreach my $C ( openprint::Currency_Conversion->find(from_id=>$id,'order'=>'to_id, period_end DESC NULLS FIRST') ) {
 		my $To = new openprint::Currency( $$C{to_id} );
 		$html .= sprintf('1 %s = %s %s %s %s<br/>', $C->From()->name(), $C->amount(), $To->name(),
 			( $$C{period_start} ? 'from '.Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $$C{period_start} ) ) : '' ),

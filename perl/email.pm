@@ -55,6 +55,8 @@ sub start_vacation {
 	$email =~ /(.*)\@.*/;
 	my $autoreply_address = $1.'@'.$config{'mail_autoreply_domain'};
 
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE vacation IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
 	sql::insert( $log, $dbh, 'vacation', 
@@ -70,7 +72,8 @@ sub start_vacation {
 		push @aliases, $alias unless $alias =~ /autoreply/;
 	} # end foreach alias
 	push @aliases, $autoreply_address;
-	sql::update( $log, $dbh, 'alias', "address='$email'", 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	sql::update( $log, $dbh, 'alias', ['address=?', $email], 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	sql::end_transaction( $dbh, $ac );
 
 } # end sub set_vacation
 
@@ -79,6 +82,8 @@ sub stop_vacation {
 
 	$dbh = db_connect() if ! $dbh; 
 
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE vacation IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
 
@@ -87,7 +92,8 @@ sub stop_vacation {
 	foreach my $alias ( split( ',', $_ ) ) {
 		push @aliases, $alias unless $alias =~ /autoreply/;
 	} # end foreach alias
-	sql::update( $log, $dbh, 'alias', "address='$email'", 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	sql::update( $log, $dbh, 'alias', ['address=?', $email], 'goto', join(',', @aliases ), 'modified', 'NOW()' );
+	sql::end_transaction( $dbh, $ac );
 
 } # end sub stop_vacation
 
