@@ -463,9 +463,9 @@ sub get_li {
 		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-			if ( sets::isin( $self->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
+			#if ( sets::isin( $self->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
 				$html .= sprintf( q`<span class="Forms" onclick="job_popup('%1$d');">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
-			} # end if
+			#} # end if
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="job_popup('%1$d');">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
