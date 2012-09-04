@@ -1451,28 +1451,39 @@ sub _li_change {
 
 		my %sql;
 
-		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
-			my @service_ids = @{$$Job{'service_id'}};
-			if ( $Job->forms() > $param{'forms'} ) {
-				my @new_service_ids = splice @service_ids, 0, $param{'forms'};
-				$sql{'service_id'} = \@new_service_ids;
-				$Job->Project()->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
-					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ );	
+		# Job->forms uses pertains_id, param{forms} is a simple count.  
+		if ( (exists $param{forms}) and ( $param{forms} != $Job->forms() ) ) {
+			my $Project = $Job->Project();
+
+			my @service_ids = @{$$Job{pertains_id}};
+			if ( $Job->forms() > $param{forms} ) {
+				my @new_service_ids = splice @service_ids, 0, $param{forms};
+				$sql{pertains_id} = \@new_service_ids;
+				if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
+					# Is a printing service, so service_id==pertains_id, so update service_id as well.
+					$sql{service_id} = \@new_service_ids;
+				} # end if
+				$Project->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );	
 					$$sig_specs{'SignatureIndex'};
 					} @service_ids ) . ' from press schedule.' );
-			} elsif ( $Job->forms() < $param{'forms'} ) {
-				if ( $param{'forms'} > 100 ) {
-					$variable{'error'} .= 'Cant add that many forms.';
+			} elsif ( $Job->forms() < $param{forms} ) {
+				if ( $param{forms} > 100 ) {
+					$variable{error} .= 'Cant add that many forms.';
 				} else {
-					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{'forms'} - @service_ids )." for press schedule");
-					while ( @service_ids < $param{'forms'} ) {
-						push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
-								'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
+					$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
+					while ( @service_ids < $param{forms} ) {
+						push @service_ids, $Project->copy_signature( $sig_specs, { 
+								'txtPrice'.$Project->ordered_quantity_index()   => 0,
 								}, 'Ordered' );
-					} # end while	
+					} # end while
+					$sql{pertains_id} = \@service_ids;
+					if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
+						# Is a printing service, so service_id==pertains_id, so update service_id as well.
+						$sql{service_id} = \@service_ids;
+					} # end if
 				} # end if
-				$sql{'service_id'} = \@service_ids;
 			} # end if
 		} # end if
 		if ( $param{'runtime'} ne $Job->runtime() ) {
