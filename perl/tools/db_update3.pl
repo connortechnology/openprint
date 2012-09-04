@@ -1020,6 +1020,9 @@ if ( ! sets::isin('currency_conversions', \@tables ) ) {
 	if ( ! exists $$data{'period_end'} ) {
 		$dbh->do('ALTER TABLE currency_conversions ADD period_end TIMESTAMP WITH TIME ZONE');
 	} # end if
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD id SERIAL');
+	} # end if
 	$dbh->do( 'ALTER TABLE currency_conversions DROP CONSTRAINT currency_conversions_pkey');
 	$dbh->do( 'ALTER TABLE currency_conversions ADD PRIMARY KEY (id)' );
 	$dbh->do( 'DROP INDEX IF EXISTS currency_conversion_to_from_period_end_idx' );

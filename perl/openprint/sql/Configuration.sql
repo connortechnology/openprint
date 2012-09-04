@@ -41,7 +41,6 @@ INSERT INTO configuration VALUES ('CreditApplicationEmail', '"Isaac Connor" <ico
 INSERT INTO configuration VALUES ('ResellerApplicationEmail', '"Isaac Connor" <iconnor@connortechnology.com>', 'text', 'Email address to send new reseller applications to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('RMAEmail', '"Isaac Connor" <iconnor@connortechnology.com>', 'text', 'Email address to send RMA requests to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('InventoryEmail', '"Isaac Connor" <iconnor@connortechnology.com>', 'text', 'Email address to send Inventory notifications to.', 'Email Notifications');
-INSERT INTO configuration VALUES ('DateTimeFormat', '%Y-%m-%d %H:%M', 'text', 'Format string used when displaying timstamps with both a date and a time part. Edit', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('UseCaptchaOnRegistration', 'Y', 'yes/no', 'Use a CAPTCHA on the registration to protect against automated bots.', 'Captcha Settings');
 INSERT INTO configuration VALUES ('AcceptCreditApplications', 'N', 'yes/no', 'Whether to show links to a credit application page.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('UserProfileRequiredFields', 'firstname', 'list', 'Command separated list of fields that are required to be filled in on the User Profile page.', 'Miscellaneous Settings');
@@ -51,6 +50,7 @@ INSERT INTO configuration VALUES ('HelpdeskEmail', '"Helpdesk" <helpdesk@pleasur
 INSERT INTO configuration VALUES ('TechSupportEmail', '"Support" <support@pleasurablethings.ca>', 'text', 'Email address to send technical support requests to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('UserRegistrationEmail', '"New Accounts" <newaccounts@pleasurablethings.ca>', 'text', 'Email address to send new user registrations to.', 'Email Notifications');
 INSERT INTO configuration VALUES ('DateFormat', '%b %e, %Y', 'text', 'Format string used to show dates, without time', 'Miscellaneous Settings');
+INSERT INTO configuration VALUES ('DateTimeFormat', '%Y-%m-%d %H:%M', 'text', 'Format string used when displaying timstamps with both a date and a time part. Edit', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('RegistrationDisclaimer', '', 'textarea', 'Text to show at bottom of registration', 'Disclaimers');
 INSERT INTO configuration VALUES ('DefaultPricelist', '1', 'pricelist', 'Default Pricelist.', 'Miscellaneous Settings');
 INSERT INTO configuration VALUES ('Timezone', 'America/Toronto', 'text', 'Timezone', 'Miscellaneous Settings');

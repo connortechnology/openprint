@@ -46,11 +46,11 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id', 'show_feedback' ) );
 		} # end if
 		if ( $param{'action'} eq 'Today' ) {
 			@session{'/employee/production/print_overview.html?schedule_start_year',
@@ -82,11 +82,12 @@ sub print_overview {
 '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
-		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
+	$session{'/employee/production/print_overview.html?show_feedback'} = 0 if ! exists $session{'/employee/production/print_overview.html?show_feedback'};
 	$variable{'referer'} = '/employee/production/print_overview.html';
 
 	press_schedule();
@@ -1499,7 +1500,7 @@ sub _li_change {
 			} # end if
 		} # end if
 		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
-		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
+		$sql{'comment'} = $param{'comment'} if (exists $param{comment}) and ( $param{'comment'} ne $Job->comment() );
 		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
 		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 		$sql{'stock_verified'} = $param{'stock_verified'} if exists $param{'stock_verified'} and $param{'stock_verified'} != $$Job{'stock_verified'};

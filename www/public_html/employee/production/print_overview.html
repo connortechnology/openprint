@@ -221,6 +221,9 @@ function textarea_init() {
 					$html .= ssi::button( '1week', { onclick=>'', href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } );
 				) ?>
 			</li>
+			<li><label>Show Production</label>
+			<? echo ( ssi::radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
+			</li>
 			</ul>
 		</div>
 		<div class="legend">
