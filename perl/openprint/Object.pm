@@ -359,6 +359,11 @@ sub find {
 					push @values, $params{$k.'_ilike'};
 					delete $params{$k.'_ilike'};
 				}
+				if ( exists $params{$k.' ilike'} ) {
+					$sql .= " AND $$f{$k} ILIKE ?";
+					push @values, $params{$k.' ilike'};
+					delete $params{$k.' ilike'};
+				}
 				if ( exists $params{$k.'_start'} ) {
 					$sql .= " AND $$f{$k} >= ?";
 					push @values, $params{$k.'_start'};
