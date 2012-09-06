@@ -557,8 +557,12 @@ sub ServiceTypes {
 
 sub Operator_Shifts {
 
-	my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$_[0]{'id'},'order'=>'starttime_seconds');
-# Setup Next and Previous links
+	my @Equipment_Shifts = openprint::Equipment_Shift->find(equipment_id=>$_[0]{id},order=>'starttime_seconds');
+	if ( ! @Equipment_Shifts ) {
+		$openprint::log->error("No Equipment_Shifts for " . $_[0]->to_string() );
+		return ();
+	} # end if
+	# Setup Next and Previous links, turns it into a doubly linked list
 	my $Last_ES;
 	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
 		if ( $Last_ES ) {
