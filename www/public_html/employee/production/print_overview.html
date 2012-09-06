@@ -282,7 +282,7 @@ function textarea_init() {
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ) . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
+				$html .= ssi::button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
 			} # end if
 			$html .= '<br/><span id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
@@ -292,11 +292,12 @@ function textarea_init() {
 		return $html;
 		) ?>
 	<hr style="clear: both;"/>
+<div style="position: relative;">
 	<? echo (
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '" style="height: 100%; width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -379,9 +380,9 @@ $log->debug("Setp 2" . $ES->to_string());
 		$html .= '</div></div>';
 		return $html;
 	) ?>
+</div>
 </form>
 <br class="spacer"/>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
 // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
