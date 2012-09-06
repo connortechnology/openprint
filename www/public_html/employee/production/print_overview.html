@@ -331,6 +331,11 @@ function textarea_init() {
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+			if ( ! @Shifts ) {
+				$html .= 'No Shifts defined.</div>';
+				next;
+			} # end if
+
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
