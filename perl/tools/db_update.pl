@@ -1479,6 +1479,14 @@ if ( ! sets::isin( 'purchaseorder_contenttypes', \@tables ) ) {
 }
 if ( ! sets::isin( 'purchaseorder_items', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Items.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_items'", 'column_name');
+	if ( ! $$data{created_on} ) {
+		$dbh->do('ALTER TABLE purchaseorder_items ADD created_on TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! $$data{updated_on} ) {
+		$dbh->do('ALTER TABLE purchaseorder_items ADD updated_on TIMESTAMP WITH TIME ZONE');
+	} # end if
 } # en dif
 if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die $dbh->errstr();
