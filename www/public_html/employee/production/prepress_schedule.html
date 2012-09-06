@@ -69,16 +69,6 @@
 
 -->
 </script>
-<div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );">
-		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
-		</span>
-	</form>
-</div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="prepress_schedule.html">
 	<input type="hidden" name="btnFunction"/>

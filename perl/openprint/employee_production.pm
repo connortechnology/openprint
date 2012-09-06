@@ -1455,7 +1455,7 @@ sub _li_change {
 		if ( (exists $param{forms}) and ( $param{forms} != $Job->forms() ) ) {
 			my $Project = $Job->Project();
 
-			my @service_ids = @{$$Job{pertains_id}};
+			my @service_ids = $$Job{pertains_id} ? @{$$Job{pertains_id}} : ();
 			if ( $Job->forms() > $param{forms} ) {
 				my @new_service_ids = splice @service_ids, 0, $param{forms};
 				$sql{pertains_id} = \@new_service_ids;

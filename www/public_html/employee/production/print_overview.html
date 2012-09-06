@@ -97,16 +97,6 @@ function textarea_init() {
 
 -->
 </script>
-<div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );" action="">
-		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::button( 'Save5', { onclick=>'if(f5.onsubmit())f5.submit();', text=>'Save' } ); ) ?>
-			<? echo ( ssi::button( 'Cancel5', { onclick=>"popupWin.destroy();", text=>'Cancel' } ); ) ?>
-		</span>
-	</form>
-</div>
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
@@ -277,27 +267,26 @@ function textarea_init() {
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
+<table class="schedule"><thead>
+<tr>
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ) . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
+			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
 			} # end if
-			$html .= '<br/><span id="message'.$E->id().'" class="message">';
+			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
-			$html .= '</span>';
 			$html .= '</div>';
+			$html .= '</th>';
 		} # end foreach
-		return $html;
-		) ?>
-	<hr style="clear: both;"/>
-<div style="position: relative;">
-	<? echo (
+		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
-		my $html;
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '" style="height: 100%; width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
+
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -375,17 +364,18 @@ $log->debug("Setp 2" . $ES->to_string());
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
-			$html .= '</div>';
+			$html .= '</td>';
+			#$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= '</tr></tbody></table>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
-		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= '</tr></table></div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
-		$html .= '</div></div>';
+		$html .= '</tr></table></div>';
 		return $html;
 	) ?>
-</div>
 </form>
 <br class="spacer"/>
 <script type="text/javascript">
