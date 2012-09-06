@@ -347,5 +347,12 @@ sub attendance {
 	return $$self{'attendance'};
 } # end sub attendance
 
+sub copy {
+	my $New = $_[0]->SUPER::copy();
+	my $Album = $_[0]->Album()->copy();
+	$New->save({created_on=>undef,updated_on=>undef,created_by=>$openprint::session{user_id},deleted=>0,album_id=>$$Album{id}});
+	return $New;
+} # end sub copy
+
 1;
 __END__

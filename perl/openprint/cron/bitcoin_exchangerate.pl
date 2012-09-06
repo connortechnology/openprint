@@ -45,6 +45,7 @@ my @args = @ARGV;
 my $opts = {};
 GetOptions($opts, 'help', 'log_file=s', 'log_level=s',
 	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
+	'config=s',
  );
 
 if ($opts->{help}) {
@@ -53,7 +54,7 @@ if ($opts->{help}) {
 }
 
 $log = new logger( {'level'=>'debug'});
-configuration::from_file('/etc/bitcoin_exchangerate.conf');
+configuration::from_file($$opts{config} ? $$opts{config} : '/etc/bitcoin_exchangerate.conf');
 configuration::merge( $opts );
 $log->level($config{'log_level'}) if $config{'log_level'};
 
@@ -72,7 +73,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init( $log, $dbh, \%CFG::Config );
-configuration::from_file('/etc/bitcoin_exchangerate.conf');
+configuration::from_file($$opts{config} ? $$opts{config} : '/etc/bitcoin_exchangerate.conf');
 configuration::merge( $opts );
 
 my $BTC = openprint::Currency->find_one(short=>'BTC');

@@ -81,15 +81,6 @@ $dbh->do('ALTER TABLE Users ALTER password DROP NOT NULL');
 $dbh->do('ALTER TABLE Users ALTER firstname DROP NOT NULL');
 
 
-if ( ! sets::isin( 'photo_albums', \@tables ) ) {
-    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
-    die $dbh->errstr() if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Expense_Accounts.sql' ) );
@@ -1019,6 +1010,9 @@ if ( ! sets::isin('currency_conversions', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'period_end'} ) {
 		$dbh->do('ALTER TABLE currency_conversions ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD id SERIAL');
 	} # end if
 	$dbh->do( 'ALTER TABLE currency_conversions DROP CONSTRAINT currency_conversions_pkey');
 	$dbh->do( 'ALTER TABLE currency_conversions ADD PRIMARY KEY (id)' );
