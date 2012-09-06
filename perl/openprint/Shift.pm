@@ -443,6 +443,7 @@ sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
 	@Equipment_Shifts = $Equipment->Operator_Shifts() if ! @Equipment_Shifts;
+	return () if ! @Equipment_Shifts;
 	my @Shifts;
 	my $parser = 'DateTime::Format::Pg';
 	# Three cases, no shifts, shifts before, shifts after.
