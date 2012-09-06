@@ -179,6 +179,12 @@ if ( $data ) {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
 
+if ( ! sets::isin( 'quotelevels', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} # end if
+
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Types.sql}) );
 }
@@ -302,6 +308,29 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( sets::isin( 'article_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
+	if ( exists $$data{'image_filename'} ) {
+		$dbh->do('ALTER TABLE article_categories DROP image_filename');
+	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE article_categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
+	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD summary TEXT');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
+	die if $dbh->errstr();
+}
+
 if ( ! sets::isin( 'photo_albums', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
@@ -321,11 +350,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
 }
-if ( ! sets::isin( 'quotelevels', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
-} # end if
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );

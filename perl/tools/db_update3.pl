@@ -50,28 +50,6 @@ if ( ! exists $$data{'user_type'} ) {
 	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
 	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
 } # end if
-if ( sets::isin( 'article_categories', \@tables ) ) {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
-	if ( exists $$data{'image_filename'} ) {
-		$dbh->do('ALTER TABLE article_categories DROP image_filename');
-	} # end if
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE article_categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
-	} # end if
-	if ( ! exists $$data{'summary'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD summary TEXT');
-	} # end if
-	if ( ! exists $$data{'deleted'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
-	} # end if
-} else {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
-	die if $dbh->errstr();
-}
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
