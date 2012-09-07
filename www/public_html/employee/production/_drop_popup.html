@@ -14,11 +14,11 @@
 	<p class="buttons">
 		<? echo (
 				my $html;
-				$html .= ssi::writeButton( $log, $dbh, 'SavePopup', 'save.gif',
-					sprintf(q`new Ajax.Request( '_drop.json', { method: 'get', parameters: job_popup_form.serialize(), onSuccess: function() {popupWin.destroy();}, evalScripts: true } );`,
+				$html .= ssi::button( 'SavePopup', { onclick=>
+					sprintf(q`new Ajax.Request( '_drop.json', { parameters: job_popup_form.serialize(), onSuccess: function() {popupWin.destroy();}, evalScripts: true } );`,
 						$param{ul_id}, $param{'services'} ),
-					'', 'Save' );
-				$html .= ssi::writeButton( $log, $dbh, 'CancelShift', 'cancel.gif', "new Ajax.Updater( '$param{ul_id}', '_ul.html', { method: 'get', parameters: { ul_id: '$param{ul_id}' }, evalScripts: true } );popupWin.destroy();", '', 'Cancel' );
+					text=> 'Save' } );
+				$html .= ssi::button( 'CancelShift', { onclick=> "new Ajax.Updater( '$param{ul_id}', '_ul.html', { parameters: { ul_id: '$param{ul_id}' }, evalScripts: true } );popupWin.destroy();", text=> 'Cancel' } );
 				return $html;
 		) ?>
 	</p>
