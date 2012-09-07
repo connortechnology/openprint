@@ -184,12 +184,12 @@ sub get_specifications_pairs {
 
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
-	if ( (! $p_id ) or (! $s_id) ) {
-		cluck("********* Called get_specs_ref with Project Index or Service Index ****************");
-		return;
-	} # end if
 	if ( ref $p_id eq 'openprint::Project' ) {
 		$p_id = $p_id->id();
+	} # end if
+	if ( (! $p_id ) or (! $s_id) ) {
+		cluck("********* Called get_specs_ref with Project Index($p_id) or Service Index($s_id) ****************");
+		return;
 	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
 		%{$specs_cache{$s_id}} = sql::execute( undef, undef, 

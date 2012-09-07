@@ -720,24 +720,24 @@ sub runspeed {
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 	my $speed;
 	foreach my $type ( keys %fold_types ) {
-$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
+#$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
 		if ( $$specs{"$type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} ) {
 			$speed = $Equipment->specification( $type.'RunSpeed' );
 			last if $speed;
 		}# end if
 	}# end foreach
-$openprint::log->debug("Folding runspeed: ($speed)");
+#$openprint::log->debug("Folding runspeed: ($speed)");
 	if ( ! $speed ) {
 		my $Imposition = new openprint::Imposition;
 		$Imposition->load( $sig_specs, $qty_index );
-		$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
+		#$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
 		if ( $Imposition->pages() ) {
 			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
 		} # end if
 	} # end if
 	if ( ! $speed ) {
 		if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-			$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
+			#$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
 			$speed = $Equipment->specification( $$sig_specs{'rdbTemplateType'}.'PageSignatureFoldRunSpeed' );
 		}
 	} # end if
