@@ -311,6 +311,27 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='articles'", 'column_name');
+	if ( ! exists $$data{'source'} ) {
+		$dbh->do('ALTER TABLE articles ADD source TEXT');
+	} # end if
+	if ( ! exists $$data{'keywords'} ) {
+		$dbh->do('ALTER TABLE articles ADD keywords TEXT');
+	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do('ALTER TABLE articles ADD summary TEXT');
+	} # end if
+	if ( ! exists $$data{'source_content'} ) {
+		$dbh->do('ALTER TABLE articles ADD source_content TEXT');
+	} # end if
+	if ( ! exists $$data{'category_id'} ) {
+		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
+	} # end if
+	if ( ! exists $$data{'user_type'} ) {
+		$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
+		$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
+	} # end if
 } # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
