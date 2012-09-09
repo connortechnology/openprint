@@ -308,6 +308,10 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin('articles',\@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -2554,10 +2558,6 @@ if ( ! sets::isin('shifts',\@tables ) ) {
 	die if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin('articles',\@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
 } # end if
