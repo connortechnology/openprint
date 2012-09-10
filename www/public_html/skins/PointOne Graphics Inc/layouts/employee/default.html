@@ -108,7 +108,11 @@
 							<ul>
 <? if ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/logout.html">&raquo; Logout</a></li>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 								<li><a href="/employee/account/profile.html">&raquo; User Profiles</a></li>
+<? else ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/account/profile.html">&raquo; Profile</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 <? else ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/login.html">&raquo; Login</a></li>
 <? endif ( $session{'user_id'} ) ?>

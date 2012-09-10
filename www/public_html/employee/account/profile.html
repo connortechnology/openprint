@@ -233,7 +233,7 @@
 			<label class="radio" for="VacationState0">Disabled</label>
 		</p>
 	</fieldset>
-<? if ( $config{'RADIUS Support'} ) ?>
+<? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
     <? echo ( 
@@ -259,9 +259,7 @@
     ) ?>
         </ul>
     </fieldset>
-<? endif ( $config{'RADIUS Support'} ) ?>
-
-
+<? endif ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
 	</div>
 	<input type="hidden" name="btnFunction"/>
 </form>
