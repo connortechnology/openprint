@@ -663,8 +663,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	} # end if
 	$dbh->do(q`alter table tbl_equipment add message text`) if ! exists $$data{'message'};
 	if ( ! exists $$data{'category_id'} ) {
-		$dbh->do(q`ALTER TABLE tbl_equipment ADD category_id INTEGER`);
-		$dbh->do(q`ALTER TABLE tbl_equipment ADD FOREIGN KEY (category_id) REFERENCES Equipment_Categories (id)`);
+		$dbh->do(q`ALTER TABLE tbl_equipment ADD category_id INTEGER[]`);
 	} # end if
 	
 	if ( exists $$data{strcategory} ) {
@@ -1066,10 +1065,15 @@ if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {
 		$dbh->do('ALTER TABLE service_prices alter id set default nextval(service_prices_id_seq)') or die $dbh->errstr();
 	} # end if
 } # end if
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='pricelists'", 'column_name' );
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
-$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
+if ( $$data{'index'} ) {
+$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id');
+} elsif ( ! exists $$data{id} ) {
+$dbh->do('ALTER TABLE Pricelists ADD id SERIAL');
+}
 $dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
 $dbh->do('ALTER TABLE Pricelists ADD deleted BOOLEAN NOT NULL default false') if ! exists $$data{'deleted'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
@@ -1081,7 +1085,9 @@ $dbh->do('CREATE SEQUENCE pricelists_id_seq');
 $dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
 $dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
 } # end if
+die $dbh->errstr() if $dbh->errstr();
 sql::end_transaction( $dbh, $ac );
+
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
 	my $ac = sql::start_transaction( $dbh );
