@@ -45,7 +45,7 @@
 	</fieldset>
 <p>* denotes required information.<br/></p>
 <div class="column">
-	<fieldset><legend>User Information</legend>
+	<fieldset><legend>User Information for user #<? echo ( $$variable{User}->id() ) ?></legend>
 <? if ( $$variable{'User'}->Company()->notes() ) ?>
 <p><label>Company Notes:</label>
 <b><? echo ( $$variable{'User'}->Company()->notes() ) ?></b>
