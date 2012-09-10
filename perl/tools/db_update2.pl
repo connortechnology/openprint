@@ -58,12 +58,6 @@ if ( sets::isin( 'quotes', \@tables ) ) {
 		$dbh->do('ALTER TABLE quotes add deleted boolean default false') if ! exists $$data{'deleted'};
 	} # end if
 } # end if
-if ( sets::isin( 'pricelists', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM pricelists LIMIT 1', {} );
-	if ( $data ) {
-		$dbh->do('ALTER TABLE pricelists add deleted boolean default false') if ! exists $$data{'deleted'};
-	} # end if
-} # end if
 if ( sets::isin( 'invoiced_products', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM invoiced_products LIMIT 1', {} );
 	if ( $data ) {
@@ -138,6 +132,25 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 	} # end if data
 } else {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Taxes.sql' ) ) or die $dbh->errstr();
+} # end if
+if ( ! sets::isin('currency_conversions', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Currency_Conversions.sql}) );
+	die if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currency_conversions'", 'column_name');
+	if ( ! exists $$data{'period_start'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD period_start TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'period_end'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD period_end TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE currency_conversions ADD id SERIAL');
+	} # end if
+	$dbh->do( 'ALTER TABLE currency_conversions DROP CONSTRAINT currency_conversions_pkey');
+	$dbh->do( 'ALTER TABLE currency_conversions ADD PRIMARY KEY (id)' );
+	$dbh->do( 'DROP INDEX IF EXISTS currency_conversion_to_from_period_end_idx' );
+	$dbh->do( 'CREATE INDEX currency_conversion_to_from_period_end_idx ON currency_conversions (to_id,from_id,period_end)' );
 } # end if
 if ( ! sets::isin( 'invoice_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Invoice_Taxes.sql});
