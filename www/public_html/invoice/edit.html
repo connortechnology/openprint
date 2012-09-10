@@ -42,40 +42,45 @@
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
 	<fieldset><legend><? echo ( $$variable{'Invoice'}->id() ? 'Editing Invoice ' . $$variable{'Invoice'}->id() : 'New Invoice' ) ?></legend>
 		<div class="leftColumn">
-			<p><label for="invoicee_id">Company</label>
-				<select id="invoicee_id" name="invoicee_id">
+			<ul>
+			<li><label for="invoicee_id" onclick="$('invoicee_id').toggle();$('invoicee').toggle();">Company</label>
+				<select id="invoicee_id" name="invoicee_id" onchange="$('invoicee').value='';">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Invoice'}->invoicee_id() ? $$variable{'Invoice'}->invoicee_id() : $session{'company_id'} ); ) ?>
 				</select>
-			</p>
+				<input type="text" name="invoicee" id="invoicee" style="display: none;"/>
+			</li>
 <!--
 			<p><label>Created On</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'posted_on', $$variable{'Invoice'}->posted_on() ); ) ?></span>
 			</p>
 -->
-			<p><label>Due On</label>
+			<li><label>Due On</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
-			</p>
-			<p><label for="monthly_interest">Interest Rate</label>
+			</li>
+			<li><label for="monthly_interest">Interest Rate</label>
 				<input type="text" name="monthly_interest" id="monthly_interest" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->monthly_interest() : $config{'Default Interest'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
-			</p>
+			</li>
+			</ul>
 		</div>
 		<div class="rightColumn">
-			<p>
+			<ul>
+			<li>
 				<label for="external_notes">External Notes</label>
-				<textarea cols="" id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
-			</p>
-			<p>
+				<textarea id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
+			</li>
+			<li>
 				<label for="internal_notes">Internal Notes</label>
 				<textarea cols="" id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Bad Debt?</label>
 				<input type="radio" id="bad_debt1" name="bad_debt" value="1" <? echo ( ssi::checked( $$variable{'Invoice'}->bad_debt() ) ) ?> />
 				<label class="radio" for="bad_debt1">Yes</label>
 				<input type="radio" id="bad_debt0" name="bad_debt" value="0" <? echo ( ssi::checked( ! $$variable{'Invoice'}->bad_debt() ) ) ?> />
 				<label class="radio" for="bad_debt0">No</label>
-			</p>
+			</li>
+			</ul>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
