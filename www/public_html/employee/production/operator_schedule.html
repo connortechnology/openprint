@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	var dropfunction = function(el){
-		new Ajax.Request( '_operator_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_operator_drop.json', { parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
     var drops = new Array();
     function setup_drops( ) {

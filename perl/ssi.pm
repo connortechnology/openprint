@@ -223,7 +223,11 @@ sub encode_html {
 
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
+<<<<<<< HEAD
 	my $check_array; 
+=======
+	my $check_array;
+>>>>>>> afad2119c4981ee00aae27ce395a264c6372f5ce
 	if ( ref $checkval eq 'ARRAY' ) {
 		$check_array = $checkval;
 	} else {
@@ -232,8 +236,13 @@ sub make_drop_down {
 
 	my $temp = '';
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
+<<<<<<< HEAD
 		$temp .= sprintf('<option value="%s"%s>%s</option>', 
 			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])), 
+=======
+		$temp .= sprintf('<option value="%s"%s>%s</option>',
+			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
+>>>>>>> afad2119c4981ee00aae27ce395a264c6372f5ce
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
 			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
 	} # end for
@@ -814,6 +823,7 @@ sub input {
 	$html .= '/>';
 	return $html;
 } # end sub input
+
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
@@ -823,7 +833,7 @@ sub select( $$$ ) {
 	$html .= '>';
 	$html .= make_drop_down( $data, $selected );
 	$html .= '</select>';
-}
+} # end sub select($$$)
 
 1;
 __END__

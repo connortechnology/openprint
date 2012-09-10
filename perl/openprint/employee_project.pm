@@ -83,23 +83,27 @@ sub view {
 	$variable{'OrderID'} = $order_id;
 
 	if ( $param{'action'} eq 'Change Status' ) {
-		my $Service = $Project->Service( $param{'service_id'} );
-		if ( ! $Service->service_id() ) {
-			$variable{'error'} .= 'Service not found.';
-		} else {
-			if ( $Service->status() eq $param{'status'} ) {
-				$variable{'information'} .= 'Status not changed.';
-			} else {
-				my $specs = $Service->specs();
-				$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
-				$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
-				if ( ! $variable{'error'} ) {
-					$Project->update_status();
-				} else {
-					$variable{'information'} .= 'Status changed.';
-				} # end if
+		foreach my $service_id ( split(',', $param{service_id} ) ) {
+			my $Service = $Project->Service( $service_id );
+			if ( ! $Service->service_id() ) {
+				$variable{error} .= 'Service not found.';
+				next;
 			} # end if
-		} # end if
+
+			if ( $Service->status() eq $param{status} ) {
+				$variable{'information'} .= 'Status not changed.';
+				next;
+			} # end if
+
+			my $specs = $Service->specs();
+			$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
+			$variable{error} .= $Service->save({'status'=>$param{'status'}});
+			if ( ! $variable{'error'} ) {
+				$Project->update_status();
+			} else {
+				$variable{'information'} .= 'Status changed.';
+			} # end if
+		} # end foreach service_id
 	} elsif ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
 		$Project->rush( 1 );
 		$variable{'error'} .= $Project->save();
@@ -472,11 +476,8 @@ sub view {
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^chkDelete-([,\d]+)$/ ) {
 				foreach my $sid ( split(',', $1 ) ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $sid );
-					openprint::print_project::delete_service( $project_index, $sid );
-					openprint::press_schedule::remove( $project_index, $sid );
-					openprint::bindery_schedule::remove( $project_index, $sid );
-					$Project->add_to_log( @session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+					my $Service = $Project->Service($sid);
+					$Service->delete();
 				} # end foreach
 			} # end if
 		} # end foreach
@@ -905,31 +906,48 @@ sub _signaturecapture {
 	$variable{'Signature'} = new openprint::SignatureCapture( $param{'id'} );
 }
 
+# service_id may be a comma-separated list of services.  It is assumed that these services are the same type.
 sub _status {
 	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-	my $Service = new openprint::Project_Service( \%param );
+	my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+
+	my @service_ids = split(',',$param{service_id});
+	my $Service = $Project->Service($service_ids[0]);
 	$variable{'status'} = $Service->status();
 	$variable{'name'} = $Service->ServiceType()->name();
 	$variable{'name'} = 'Printing' if ! $variable{'name'};
 
 	if ( $param{'action'} eq 'removefromschedule' ) {
-		my $Job = openprint::ScheduledJob->find_one('project_id'=>$param{'project_id'}, 'service_id'=>$param{'service_id'});
-		if ( ! $Job ) {
-			$variable{'error'} .= 'Job not found on schedule.';
-		} else {
-			$variable{'error'} .= $Job->delete();
-			if ( ! $variable{'error'} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Removed " . $Service->ServiceType->name() . " from schedule." );
+		foreach my $service_id ( @service_ids ) {
+			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id any'=>$service_id);
+			if ( ! $Job ) {
+				$variable{'error'} .= 'Job not found on schedule.';
+			} else {
+				my @service_ids = sets::exclude( $service_id, $Job->service_id() );
+				if ( ! @service_ids ) {
+					$variable{'error'} .= $Job->delete();
+				} else {
+					$variable{'error'} .= $Job->save({service_id=>\@service_ids});
+				} # end if
+				if ( ! $variable{'error'} ) {
+					my @forms;
+					foreach my $s_id ( $Job->pertains_id() ? @{$Job->pertains_id()} : () ) {
+						my $S = $Project->Service($s_id);
+						my $specs = $S->specs();
+						push @forms, $$specs{SignatureIndex};
+					} # end foreach
+			
+					$Project->add_to_log( @session{'company_id','user_id'}, "Removed " . $Service->ServiceType->name() . " form @forms from schedule." );
+				} # end if
 			} # end if
-		} # end if
+		} # end foreach service_id
 	} elsif ( $param{'action'} eq 'addtoschedule' ) {
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'    =>  $param{'project_id'},
-				'equipment_id'  =>  $param{'equipment_id'},
+				'project_id'    =>  $param{project_id},
+				'equipment_id'  =>  $param{equipment_id},
 				'starttime'     =>  undef,
-				'service_id'    =>  [ $param{'service_id'} ],
+				'service_id'    =>  [ split(',',$param{service_id}) ],
 				'servicetype_id'    =>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
@@ -946,18 +964,21 @@ sub _status {
 	} # end if
 } # end sub _status
 
+# service_id could be a comma-separated list of services
 sub _add_to_schedule {
 	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
-	my $Service = new openprint::Project_Service( \%param );
-	my $Job = $variable{'Job'} = new openprint::ScheduledJob();
+	my @service_ids = split(',',$param{service_id});
+
+	my $Service = new openprint::Project_Service( {
+			project_id	=>	$param{project_id},
+			service_id	=>	$service_ids[0],
+			} );
+	my $Job = $variable{Job} = new openprint::ScheduledJob();
 	$Job->set({
 		'project_id'		=>$param{'project_id'},
-		'service_id'		=>[$param{'service_id'}],
+		'service_id'		=>\@service_ids,
 		'servicetype_id'    =>  $Service->ServiceType->id(),
-
 		});
-	
-	
 } # end sub _add_to_schedule
 
 sub _status_dropdown {

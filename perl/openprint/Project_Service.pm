@@ -138,5 +138,11 @@ sub overrides {
 	return ();
 } # end sub overrides
 
+sub delete {
+	my ( $self ) = @_;	
+	my $specs = $self->specs();
+	openprint::print_project::delete_service( $log, $openprint::dbh, @$self{'project_id','service_id'} );
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+} # end sub delete
 1;
 __END__
