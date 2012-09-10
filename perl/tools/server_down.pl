@@ -110,6 +110,7 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	} # end if
 	if ( $$opts{commit} ) {
 		sql::update( undef, undef, 'records', [ 'name=? AND type=?', $$domain{name}, 'SOA' ], content=>"$ns $email $sn $refresh $retry $expiry $min" );
+		print "Updating soa from ($$soa{content}) to ($ns $email $sn $refresh $retry $expiry $min)\n";
 	} else {
 		print "Would update soa from ($$soa{content}) to ($ns $email $sn $refresh $retry $expiry $min)\n";
 	} # end if

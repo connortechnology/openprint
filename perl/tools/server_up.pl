@@ -92,25 +92,25 @@ foreach my $domain ( @{$domains} ) {
 
 	if ( ! $$opts{index} ) {
 		print "Not doing indexed entries \n\n";
-		next;
+	} else {
+
+		foreach my $host ( 'www', 'mail', 'ftp' ) {
+			my $name = $host.$$opts{index}.'.'.$$domain{name};
+
+			my $record = $dbh->selectrow_hashref( 'SELECT * FROM records WHERE name=? AND content=?', {}, $name, $$opts{addr} );
+			if ( $record ) {
+				print "Record $name exists.\n";
+			} else {
+				print "Record $name added.\n";
+	if ( $$opts{commit} ) {
+				sql::insert( undef, undef, 'records', 'name'=>$name, content=>$$opts{addr}, type=>'A','change_date'=>time,
+						domain_id	=>	$$domain{id},
+						ttl     =>  600,
+						);
 	}
-
-	foreach my $host ( 'www', 'mail', 'ftp' ) {
-		my $name = $host.$$opts{index}.'.'.$$domain{name};
-
-		my $record = $dbh->selectrow_hashref( 'SELECT * FROM records WHERE name=? AND content=?', {}, $name, $$opts{addr} );
-		if ( $record ) {
-			print "Record $name exists.\n";
-		} else {
-			print "Record $name added.\n";
-if ( $$opts{commit} ) {
-			sql::insert( undef, undef, 'records', 'name'=>$name, content=>$$opts{addr}, type=>'A','change_date'=>time,
-					domain_id	=>	$$domain{id},
-					ttl     =>  600,
-					);
-}
-		} # end if
-	} # end foreach host
+			} # end if
+		} # end foreach host
+	} # end if
 	my $soa = $dbh->selectrow_hashref( 'SELECT * FROM records WHERE name=? AND type=?', {}, $$domain{name}, 'SOA' );
 	if ( $dbh->errstr() or ! $soa ) {
 		$log->error("ERror finding SOA record.");
@@ -133,6 +133,7 @@ my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	} # end if
 	if ( $$opts{commit} ) {
 		sql::update( undef, undef, 'records', [ 'name=? AND type=?', $$domain{name}, 'SOA' ], content=>"$ns $email $sn $refresh $retry $expiry $min" );
+		print "Updating soa from ($$soa{content}) to ($ns $email $sn $refresh $retry $expiry $min)\n";
 	} else {
 		print "Would update soa from ($$soa{content}) to ($ns $email $sn $refresh $retry $expiry $min)\n";
 	} # end if
