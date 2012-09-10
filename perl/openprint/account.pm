@@ -471,9 +471,29 @@ sub user_profile {
 			} # end if
 
 			$variable{'error'} .= $User->save( \%param );
-
 			$User->Profile()->save( \%param );
-$log->debug("Back from profile sae");
+			if ( $config{mail_db_name} ) {
+				my @domains = email::domains();
+				my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+				if ( sets::isin( $domain, \@domains ) ) {
+					if ( $param{'VacationState'} ) {
+						email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
+					} else {
+						email::stop_vacation( $User->email() );
+					} # end if
+					if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+						email::set_password( @param{'email','EmailPassword'} );
+					} # end if
+					my @aliases = ();
+					foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+						next if ! $alias;
+						push @aliases, $alias;
+					} # end foreach
+					push @aliases, $User->email() if ! @aliases;
+					email::aliases( $User->email(), @aliases );
+				} # end if
+			} # end if
+
 			$variable{'ExternalRedirect'} = '/account/user_profile.html?ddmUser='.$User->id();
 
 			if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
@@ -508,6 +528,15 @@ $log->debug("Sending password change");
 		$User = $Me;
 	} # end if
 	$variable{'User'} = $User;
+    if ( $config{mail_db_name} ) {
+        my @domains = email::domains();
+        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+        if ( sets::isin( $domain, \@domains ) ) {
+            $variable{DoEmail} = 1;
+            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+            @{$variable{Aliases}} = email::aliases( $User->email() );
+        } # end if
+    } # end if
 } # end sub user_profile
 
 sub change_password {

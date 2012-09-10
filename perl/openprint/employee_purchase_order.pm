@@ -675,5 +675,8 @@ sub _assets {
 		} # end if
 	} # end if
 } # end sub _assets
+
+sub _items_dropdown {
+} # end sub _items_dropdown
 1;
 __END__

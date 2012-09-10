@@ -175,6 +175,10 @@ You cannot edit this user.
 <? endif ( $$variable{'User'}->can_edit() ) ?>
    			</fieldset>
 			</div>
+<? if ($variable{DoEmail}) ?> 
+<br class="spacer"/>
+	<!--#include virtual="_email_settings.html"-->
+<? endif ($variable{DoEmail}) ?> 
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
 	</form>

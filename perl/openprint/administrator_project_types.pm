@@ -28,6 +28,17 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$ProjectType->delete();
 		$ProjectType = $ProjectType->next();
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+		my @required_services = $ProjectType->required_services();
+		my @recommendations = sql::execute(undef,undef,'SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
+
+		$ProjectType = $ProjectType->copy();
+		$ProjectType->name('Copy of ' . $ProjectType->name() );
+		$variable{error} .= $ProjectType->save({required_services=>\@required_services});
+
+		foreach my $paper_id ( @recommendations ) {
+			sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$paper_id,'lngProjectTypeIndex', $ProjectType->id() );
+		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $ProjectType->save( \%param );
 
@@ -79,7 +90,7 @@ sub edit {
 		# Add record to audit log - action "Export Project Types".
 		openprint::logs::insertLogRecord('40',);
 	} # end if
-	$variable{'ProjectType'} = $ProjectType;
+	$variable{ProjectType} = $ProjectType;
 } # end sub types_edit
 
 sub defaults_edit {

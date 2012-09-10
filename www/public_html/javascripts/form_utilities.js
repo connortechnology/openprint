@@ -930,23 +930,41 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		do_time = 1;
 	} // end if
 
+	var starting_time_elem = $(starting_prefix+suffix+'_time');
+	var ending_time_elem = $(ending_prefix+suffix+'_time');
+
+	var start_year = form.elements[starting_prefix+suffix+'_year'] ? form.elements[starting_prefix+suffix+'_year'].value : 0;
+	var start_month = form.elements[starting_prefix+suffix+'_month'] ? form.elements[starting_prefix+suffix+'_month'].value : 0;
+	var start_day = form.elements[starting_prefix+suffix+'_day'] ? form.elements[starting_prefix+suffix+'_day'].value : 0;
+	var start_hour = form.elements[starting_prefix+suffix+'_hour'] ? form.elements[starting_prefix+suffix+'_hour'].value : 0;
+	var start_minute = form.elements[starting_prefix+suffix+'_minute'] ? form.elements[starting_prefix+suffix+'_minute'].value : 0;
+
+	var end_year = form.elements[ending_prefix+suffix+'_year'] ? form.elements[ending_prefix+suffix+'_year'].value : 0;
+	var end_month = form.elements[ending_prefix+suffix+'_month'] ? form.elements[ending_prefix+suffix+'_month'].value : 0;
+	var end_day = form.elements[ending_prefix+suffix+'_day'] ? form.elements[ending_prefix+suffix+'_day'].value : 0;
+	var end_hour = form.elements[ending_prefix+suffix+'_hour'] ? form.elements[ending_prefix+suffix+'_hour'].value : 0;
+	var end_minute = form.elements[ending_prefix+suffix+'_minute'] ? form.elements[ending_prefix+suffix+'_minute'].value : 0;
+
+	var start = new Date( start_year, start_month, start_day, start_hour, start_minute );
+	var end = new Date( end_year, end_month, end_day, end_hour, end_minute );
+
+	var difference = parseInt( ( end - start ) / 1000 );
+	var days = parseInt(difference/(60*60*24));
+
 	if ( do_time ) {
 		if ( unknown_time ) {
-			$(starting_prefix+suffix+'_time').hide();
-			$(ending_prefix+suffix+'_time').hide();
+			if(starting_time_elem)starting_time_elem.hide();
+			if(ending_time_elem)ending_time_elem.hide();
+
 			if ( form.elements[starting_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[starting_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[starting_prefix+suffix+'_minute'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_hour'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_hour'], 0 );
 			if ( form.elements[ending_prefix+suffix+'_minute'] ) ddm_select_by_value( form.elements[ending_prefix+suffix+'_minute'], 0 );
 		} else {
-			$(starting_prefix+suffix+'_time').show();
-			$(ending_prefix+suffix+'_time').show();
+			if(starting_time_elem)starting_time_elem.show();
+			if(ending_time_elem)ending_time_elem.show();
 		} // end if
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').show();
-        var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value, form.elements[starting_prefix+suffix+'_hour'].value, form.elements[starting_prefix+suffix+'_minute'].value );
-        var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value, form.elements[ending_prefix+suffix+'_hour'].value, form.elements[ending_prefix+suffix+'_minute'].value );
-        var difference = parseInt( ( end - start ) / 1000 );
-        var days = parseInt(difference/(60*60*24));
         difference -= days * ( 60*60*24 );
         var hours = parseInt( difference/(60*60) );
         difference -= hours * (60*60);
@@ -959,17 +977,19 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			}
 		} else {
 			var duration = $('duration'+suffix);
-			if ( duration )
-				duration.innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+			if ( duration ) {
+				var d = days+'day'+(days==1?'':'s')+' ' + hours+'hour'+(hours==1?'':'s')+' ' + minutes + 'minute'+(minutes==1?'':'s');
+				if ( duration.type == 'text' ) {
+					duration.value = d;
+				} else {
+					duration.innerHTML = d;
+				} // end if
+			} // end if
 		} // end if
     } else {
-		$(starting_prefix+suffix+'_time').hide();
-		$(ending_prefix+suffix+'_time').hide(); 
+		if(starting_time_elem)starting_time_elem.hide();
+		if(ending_time_elem)ending_time_elem.hide();
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
-        var start = new Date( form.elements[starting_prefix+suffix+'_year'].value, form.elements[starting_prefix+suffix+'_month'].value, form.elements[starting_prefix+suffix+'_day'].value );
-        var end = new Date( form.elements[ending_prefix+suffix+'_year'].value, form.elements[ending_prefix+suffix+'_month'].value, form.elements[ending_prefix+suffix+'_day'].value );
-        var difference = parseInt( ( end - start ) / 1000 );
-        var days = parseInt(difference/(60*60*24));
 		if ( form.elements['duration'+suffix+'_days'] ) {
 			form.elements['duration'+suffix+'_days'].value=days;
 			if ( form.elements['duration'+suffix+'_hours'] ) ddm_select_by_value( form.elements['duration'+suffix+'_hours'], 0 );
@@ -1195,16 +1215,23 @@ function popup_window( url, parameters, options ) {
 	if ( ! options ) options = {};
 	if ( (! options.width) && ! ( options.left && options.right) ) options.width = 400;
 	if ( (! options.height) && ! ( options.top && options.bottom ) ) options.height = 400;
-	if ( options.maximizable == undefined ) options.maximizable = false;
-	if ( options.resizable == undefined ) options.resizeable = true;
-	if ( options.hideEffect == undefined ) options.hideEffect = Element.hide;
-	if ( options.showEffect == undefined ) options.showEffect = Element.show;
-	if ( options.destroyOnClose == undefined ) options.destroyOnClose = true;
-	if ( options.className == undefined ) options.className = 'alphacube';
-	if ( options.recenterAuto == undefined ) options.recenterAuto = false;
 
 	if ( ! popupWin ) {
-		popupWin = new Window(options);
+       var defaults = {
+            maximizable: false,
+             resizable: true,
+             hideEffect:Element.hide,
+             showEffect:Element.show,
+             destroyOnClose: true,
+             className:"alphacube",
+             width:400,
+             height:400, 
+			 recenterAuto:false
+        }
+
+        Object.extend( defaults, options );
+        popupWin = new Window(defaults);
+
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

@@ -64,7 +64,7 @@ sub search {
 	if ( ! ( $Location and $Location->id() ) ) {
 		$Location = openprint::Location::from_ip( $ENV{'REMOTE_ADDR'} );
 	} # end if
-	if ( $Location and $Location->id() ) {
+	if ( 0 and $Location and $Location->id() ) {
 		my $Country = $Location->ancestor('type'=>'country');
 		my $State = $Location->ancestor('type'=>'state');
 
@@ -179,6 +179,10 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
+	} elsif ( $param{function} eq 'Copy' ) {
+		my $NewEvent = $variable{Event}->copy();
+		$variable{ExternalRedirect} = '/event/edit.html?event_id='.$$NewEvent{id};
+		return;
 	} elsif ( $param{function} eq 'Send' ) {
 		$variable{'error'} .= $Event->send_invitations();
 	} # end if function

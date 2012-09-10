@@ -666,10 +666,12 @@ sub cod_owing {
 } # end sub cod_owing
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
+	return 0 if ! $cod_total;
 	return 0 if (1*$_[0]->paid()) == (1*$cod_total);
 	return 0 if (1*$_[0]->paid()) eq (1*$cod_total);
 
 	my $owing = int($_[0]->paid()*100/$cod_total) if $cod_total;
+#$openprint::log->debug( "cod_toal $cod_total owing: $owing paid: " . $_[0]->paid() );
 
 	return 0 if $owing == 100;
 	return 100-$owing;

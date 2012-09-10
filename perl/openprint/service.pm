@@ -144,7 +144,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( ! $s_id ) {
-		Carp::cluck("********* Called get_specs_ref without Service Index ****************");
+		Carp::cluck("********* Called get_specs_ref without Service Index ($s_id)****************");
 		return;
 	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
@@ -449,7 +449,10 @@ sub get_type {
 sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
+	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_index );
+    $log->debug("LOCKING Projects for project $$Project{id}");
+    $dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{id}. ' FOR UPDATE' );
 	my $specs = get_specs_ref( $Project, $service_index ) if $service_index;
 	my %specs = %{$specs} if $specs;
 
@@ -465,25 +468,22 @@ sub internal_calc {
 	#require $package;
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring $package $@") if $@;
-$log->debug("can calc");
 	if ( my $function = $package->can('calc') ) {
 		my $status = $function->( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );
 		$specs{'Status'} = $status;
 		my $elapsed = time - $starttime;
 		$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
-		my $ac = sql::start_transaction( $dbh );
 		status( $project_index, $service_index, $status );
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
 			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
-
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} else {
 		$log->error($package . ' cant calc');
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 	return \%specs;
 } # end sub internal_calc
 

@@ -390,16 +390,16 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 			} # end if
 		} # end if
 	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
-			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			if ( $proc ) {
-				my $module = join('_',@path);
-				$log->debug("Calling $module :: $proc");
-				eval {
-					require "openprint/$module.pm";
-					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-				};
-				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
-			} # end if
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		if ( $proc ) {
+			my $module = join('_',@path);
+			$log->debug("Calling $module :: $proc");
+			eval {
+				require "openprint/$module.pm";
+				('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
+			};
+			$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+		} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::print;

@@ -34,11 +34,13 @@ $serial = 'project_types_id_seq';
 
 sub save {
 	my ( $self, $params ) = @_;
-
+$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
+$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
 		$self->required_services( $$params{'required_services'} );
+$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
 		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
 
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );

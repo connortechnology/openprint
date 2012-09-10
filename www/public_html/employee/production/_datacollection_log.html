@@ -33,7 +33,8 @@
 </tr>
 `, $rowclass, 
 Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($PF->starting_on())),
-$$Project{id}, $Project->docket(), $Project->Company()->name(), $$specs{SignatureIndex}, $PF->version(), 
+$$Project{id}, $Project->docket(), $Project->Company()->name(), 
+($specs ? $$specs{SignatureIndex} : 'All'), $PF->version(), 
 Number::Format::format_number(1*$PF->quantity()), $PF->Equipment()->strid(),
 $PF->signature_id(),
 ( $PF->signature_id() ? $PF->Signature()->html({width=>100}) : '' ), 

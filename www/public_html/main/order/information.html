@@ -18,6 +18,20 @@
 								<label>Purchase Order</label>
 								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 							</li>
+							<? echo (
+								my $html;
+								my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'index');
+								if ( @Suppliers > 1 ) {
+									if ( sets::isin($session{user_type}, ['A','E'] ) ) {
+										$html .= '<li><label>Supplier</label><select name="supplier_id">';
+										$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
+										$html .= '</select></li>';
+									} else {
+										$html .= ssi::input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
+									} # end if user_type
+								} # end if @Suppliers > 1 
+								return $html;
+							) ?>
 							<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 							<li class="company_id">
 								<label>Company</label>

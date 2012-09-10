@@ -1,7 +1,7 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_drop.json', { parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
 	function setup_dates( ) {
 		var re = /^JumpToDate(\d*)$/;
@@ -69,16 +69,6 @@
 
 -->
 </script>
-<div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );">
-		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
-		</span>
-	</form>
-</div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="prepress_schedule.html">
 	<input type="hidden" name="btnFunction"/>
@@ -149,8 +139,8 @@
 			</li></ul>
 		</div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
+			<? echo ( ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
 		</p>
 	</fieldset>
 	<div class="unprintable">
@@ -172,11 +162,13 @@
 
 			my @Projects = openprint::Project->find( %sql );
 
+			$html .= '<table><thead><tr>';
 			foreach my $E ( @{$$variable{'Presses'}} ) {
-				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+				$html .= '<td class="PressColumn"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></td>';
 			} # end foreach
+			$html .= '</tr></thead><tbody><tr>';
 			foreach my $E ( @{$$variable{'Presses'}} ) {
-				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
+				$html .= '<td class="PressColumn">';
 				$html .= '<ul>';
 				foreach my $Project ( @Projects ) {
 					next if ! $Project->docket();
@@ -229,7 +221,7 @@
 					if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 						$html .= sprintf( q{<div class="Comment" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
 
-						$html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
+						$html .= sprintf( q{<span class="Forms" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$d %3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
 						$html .= sprintf( q{<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
 						$html .= '<span class="Services">';
 						$html .= '<span class="Service folding">fold</span>' if $$services{'Folding'};
@@ -244,9 +236,10 @@
 					} # end if
 					$html .= '</li>';
 				} # end foreach Project
-				$html .= '</ul></div>';
+				$html .= '</ul></td>';
 			} # End foreach Press
-			$html .= '</fieldset>';
+			
+			$html .= '</tr></tbody></table></fieldset>';
 		} # end foreach status
 		return $html;
 	) ?>
