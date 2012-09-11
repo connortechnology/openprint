@@ -2313,9 +2313,9 @@ sub breakdown {
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	if ( my $run_price = $$price{'Run Price'} ) {
 		if ( $Press->specification('Charge for setup overs') eq 'N' ) {
-			$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','Units','Price'} );
+			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','units','Price'} );
 		} else {
-			$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','Units','Price'} );
+			$breakdown .= sprintf('Impression Charge: %d/(%d Per Hour) * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','units','Price'} );
 		} # end if
 	} # end if
 
@@ -3480,10 +3480,12 @@ sub calc_price {
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 
-	my $std_speed = $Press->Specification('Run Speed' );
+	my $std_speed = $Press->Specification('Standard Run Speed');
+	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
 	my $run_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $$Paper{'calliper'}, 0 );
+		$run_speed = $Press->specification('Run Speed', $$Paper{calliper}, 0 );
+$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
 		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 0 );
 	} # end if
@@ -4470,14 +4472,15 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Run Speed', undef, 0 );
+	my $std_speed = $Press->Specification('Standard Run Speed', undef, 0 );
+	$std_speed = $Press->Specification('Run Speed', undef, 0 ) if ! $std_speed;
 	
 	my $speed_mod;
 	if ( $std_speed ) {
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()), 1 ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()), 0 ) if ! $run_speed;
 		if ( ! $run_speed ) {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
 		} elsif ( $run_speed != $$std_speed{'value'} ) {
