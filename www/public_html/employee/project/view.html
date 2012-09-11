@@ -406,8 +406,8 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 					ssi::button( 'DocketButton', { onclick=>"open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", text=>'Docket' } ),
 					ssi::button( 'Summary', { href=> "summary.html?ProjectIndex=$$variable{'ProjectIndex'}" } ),
 					ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", text=>'Upload PDFs' } ),
-					ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", text=>'JDF' } ),
-					ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", text=>'MXML' } ),
+					#ssi::button( 'ExportJDF', { onclick=>"f1.btnFunction.value='Export JDF';f1.submit();", text=>'JDF' } ),
+					#ssi::button( 'ExportMXML', { onclick=>"f1.btnFunction.value='Export MXML';f1.submit();", text=>'MXML' } ),
 		 ); ) ?>
 	</span>
 	
