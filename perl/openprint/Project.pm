@@ -99,22 +99,21 @@ sub jdf {
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
-	my $project = $doc->appendChild($doc->createElement('JDF'));
-	$project->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
-	$project->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
-	$project->setAttribute('xsi:type','Product');
-	$project->setAttribute('Status','Waiting');
-	$project->setAttribute('Version', $version );
-	$project->setAttribute('MaxVersion', $version );
-	$project->setAttribute('JobID',$self->docket());
-	$project->setAttribute('JobPartID',$self->id());
-	$project->setAttribute('Type', 'Product' );
-	$project->setAttribute('ID', 'Docket'.$self->docket() );
-	$project->setAttribute('DescriptiveName', $self->summary() );
+	my $Product = $doc->appendChild($doc->createElement('JDF'));
+	$Product->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
+	$Product->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
+	$Product->setAttribute('xsi:type','Product');
+	$Product->setAttribute('Status','Waiting');
+	$Product->setAttribute('Version', $version );
+	$Product->setAttribute('MaxVersion', $version );
+	$Product->setAttribute('JobID',$self->docket());
+	$Product->setAttribute('JobPartID',$self->id());
+	$Product->setAttribute('Type', 'Product' );
+	$Product->setAttribute('ID', 'Docket'.$self->docket() );
+	$Product->setAttribute('DescriptiveName', $self->summary() );
 	#my $FinalResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
 	#my $FinalResourceLinkPool = $Product->appendChild( $doc->createElement('ResourceLinkPool') );
 
-	my $Product = $project;
 	#my $Product = $project->appendChild($doc->createElement('JDF'));
 	#$Product->setAttribute('Status','Waiting');
 	#$Product->setAttribute('ID', 'Product'.$self->id() );
@@ -135,7 +134,8 @@ sub jdf {
 				72*openprint::print::get_finished_calliper( $$self{'id'} )
 				));
 
-	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
+	# Later on, this is accessed the getNode, 1.3 does not list this node in it's examples. This makes no sense without signature data
+	#my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	
 	#$Component->setAttribute('ReaderPageCount','2');
 
@@ -167,7 +167,7 @@ if ( 0 ) {
 
 	# Each part of a project is a signature, and has it's own Product Node
 	foreach my $sig_id ( $self->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
 
 		my $Component = $ProductResourcePool->appendChild( $doc->createElement('Component') );
 		$Component->setAttribute('Class', 'Quantity');
@@ -271,7 +271,7 @@ if ( 1 ) {
 		$CustomerInfoLink->setAttribute('Usage','Input');
 		$CustomerInfoLink->setAttribute('rRef','CustInfo');
 	} else {
-		$CustomerInfo = $project->appendChild( $doc->createElement('CustomerInfo') );
+		$CustomerInfo = $Product->appendChild( $doc->createElement('CustomerInfo') );
 	} # end if
 	$CustomerInfo->setAttribute('CustomerID',$self->Company->id() );
 	#$CustomerInfo->setAttribute('Class', 'Parameter' );
@@ -302,7 +302,7 @@ if ( 1 ) {
 	} # end if
 } # end if
 
-	my $AuditPool = $project->appendChild( $doc->createElement('AuditPool') );
+	my $AuditPool = $Product->appendChild( $doc->createElement('AuditPool') );
 	my $Created = $AuditPool->appendChild( $doc->createElement('Created') );
 	$Created->setAttribute('Author', 'IntelligentQuote' );
 	my @gmtime = gmtime(time);
