@@ -783,7 +783,7 @@ sub summary {
 		my $summary = $self->Type()->description() . ' ';
 
 		my $services = $self->services();
-		if ( $$services{''} ) {
+		if ( $$services{''} and @{$$services{''}} ) {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{'Versions'} ) {
 				$summary .= $$printing_specs{'Versions'} .= ' versions ';

@@ -951,6 +951,17 @@ sub _pending {
 	} # end if
 } # end sub _pending
 
+sub _ul_div {
+	if ( $param{'ul_id'} ) {
+		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+		if ( ! $variable{'Shift'} ) {
+			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+		} # end if
+	} else {
+		$variable{'error'} .= "No id given for shift";
+	} # end if
+} # end sub _ul_div
+
 sub _ul {
 	if ( $param{'action'} eq 'approve' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );

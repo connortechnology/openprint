@@ -230,7 +230,7 @@ sub time_string {
 } # end sub time_string
 
 sub thumbnail_id {
-	return undef;
+	return $_[0]->Album()->thumbnail_id();
 } # end sub thumbnail_id
 
 sub thumbnail_html {

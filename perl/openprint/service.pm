@@ -144,7 +144,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( ! $s_id ) {
-		Carp::cluck("********* Called get_specs_ref without Service Index ****************");
+		Carp::cluck("********* Called get_specs_ref without Service Index ($s_id)****************");
 		return;
 	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
