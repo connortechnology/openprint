@@ -21,7 +21,7 @@ require openprint::service;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -344,9 +344,9 @@ sub signature_calc {
 		$$specs{'alert'} .= 'There is no Folding capable equipment.';
 		return;
 	} # end if
-foreach my $E ( @my_equipment ) {
-$openprint::log->debug("Equipment: $$E{strid}");
-}
+#foreach my $E ( @my_equipment ) {
+#$openprint::log->debug("Equipment: $$E{strid}");
+#}
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;

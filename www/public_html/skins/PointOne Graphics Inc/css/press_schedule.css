@@ -377,7 +377,9 @@ width: 265px;
 		padding: 4px 6px 4px 6px;
 	}
 }
-table {
+table.schedule,
+table.PendingApproved,
+table.Pending {
 	table-layout: fixed;
 	width: 100%;
 }
