@@ -43,5 +43,33 @@ sub delete {
 	return $_[0]->SUPER::delete();	
 } # end sub delete
 
+sub html {
+	my ( $Question, $Response ) = @_;
+	$Response = new openprint::Survey_Response() if ! $Response;
+
+	my $html;
+	$html .= '<li class="Question">';
+	$html .= $Question->text();
+	$html .= '<div class="answers">';
+	if ( $Question->type() eq 'radio' ) {
+		$html .= ssi::radio( 'answer_id-'.$Question->id(),
+				[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ],
+				$Response->answer_ids(),
+				);
+	} elsif ( $Question->type() eq 'checkbox' ) {
+		$html .= ssi::checkboxes( 'answer_id-'.$Question->id(),
+				[ map { $_->answer_id(), $_->Answer()->text() . ( $Question->alignment() ? '<br/>' : '' ) } $Question->Available_Answers() ],
+				$Response->answer_ids(),
+				);
+	} elsif ( $Question->type() eq 'select' ) {
+		$html .= sprintf('<select name="answer_id-%1$d" id="answer_id-%1$d">%2$s</select>', $$Question{'id'},
+				ssi::make_drop_down( [ map { $_->answer_id(), $_->Answer()->text() } $Question->Available_Answers() ], $Response->answer_ids() ) );
+	} # end if
+	$html .= sprintf('<textarea name="answer-%1$d" id="answer-%1$d" placeholder="additional comments"></textarea></div>
+			<input type="checkbox" name="public-%1$d" value="1" /> Allow others to see my response
+			</li>', $Question->id() );
+	return $html;
+} # end sub html
+
 1;
 __END__
