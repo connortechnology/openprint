@@ -743,11 +743,12 @@ $log->debug("Stopping job: new runtime: $new_runtime starttime $$self{'starttime
 } # end sub stop
 
 sub status {
-	my ( $self ) = @_;
-	if ( $$self{'project_id'} ) {
-	foreach my $sig_id ( @{$$self{'service_id'}} ) {
-		return openprint::service::status( $$self{'project_id'}, $sig_id );
-	} # end foreach sig_id
+	if ( $_[0]{project_id} ) {
+		my $Project = new openprint::Project($_[0]{project_id});
+		foreach my $sig_id ( @{$_[0]{service_id}} ) {
+			my $Service = $Project->Service( $sig_id );
+			return $Service->status();
+		} # end foreach sig_id
 	} # end if
 } # end sub status
 
