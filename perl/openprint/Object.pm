@@ -549,6 +549,13 @@ sub find_operators {
 			push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
 		} # end if
 	} # end if
+	if ( exists $$params{$k.' not any'} ) {
+		if ( ref $$params{$k.' not any'} eq 'ARRAY' ) {
+			push @{$results{' not any'}}, '(' . join(',', map { '?' } @{$$params{$k.' not any'}} ).") != ANY($f)", @{$$params{$k.' not any'}};
+		} else {
+			push @{$results{' not any'}}, "? != ANY($f)", $$params{$k.' not any'};
+		} # end if
+	} # end if
 	if ( exists $$params{$k.' is null'} ) {
 		if ( $$params{$k.' is null'} ) {
 			push @{$results{' is null'}}, "$f IS NULL";
