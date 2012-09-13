@@ -885,8 +885,8 @@ $openprint::log->debug("No well cut Stock found");
 	} # end foreach qty_index
 
 	foreach my $P ( @Papers ) {
-		$openprint::log->debug("Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( $debug );
-		$Papers{$P->to_string()} = $P;
+		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( $debug or 1 );
+		$Papers{$P->to_string()} = $P->clone();
 	} # end foreach
 
 	return map { $_->clone() } @Papers;
@@ -1258,7 +1258,7 @@ sub get_impositions {
 		push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( $debug or 0 ) {
+		if ( $debug or 1 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $Press->strid() . ': ' . @impositions );
 			foreach my $I ( @impositions ) {
 				$I->display();
@@ -2178,7 +2178,7 @@ $openprint::log->debug("qti: $qty_index Spread: $SpreadLayout");
 			@impositions = @{$$impositions{$Press->id()}} if $$impositions{$Press->id()};
 		} # end if
 		if ( $debug or 1 ) {
-			$openprint::log->debug("QTY: $qty_index before " . @impositions );
+			$openprint::log->debug("QTY: $qty_index before filtering " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
 			} # end foreach
@@ -2319,11 +2319,13 @@ $imp->display("Grain override next");
 		foreach my $imp ( @results ) {
 			my $add = 1;
 			my $Paper = $imp->Paper();
+$imp->display('Filtering:');
 
 			my $stock_qty = int( $qty/$imp->imposition() );
 			#if ( $Paper->type() eq 'Roll' ) {
 # Convert to weight
 				$stock_qty = int( $stock_qty * $Paper->area() * $Paper->wpsi() );
+$log->debug("Stock qty: ($qty/$$imp{imposition})=$stock_qty lbs paper_counts: " . $$PaperCounts{$Paper->to_string()});
 			#} else {
 				#$stock_qty
 			#} # end if
@@ -2341,6 +2343,7 @@ $imp->display("Grain override next");
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
+$I->display('Considering');
 						my $P = $I->Paper();
 
 						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -2357,8 +2360,8 @@ $imp->display("Grain override next");
 									'service'=>'Material'
 									);
 						} # end if
-#$I->display("Comparing ". $P->minimum_order_weight() . ' ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-#$imp->display("Comparing" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+$I->display("Comparing mino:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+$imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2366,7 +2369,7 @@ $imp->display("Grain override next");
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-							if ( 0 ) {
+							if ( 1 ) {
 								$openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
@@ -2378,13 +2381,13 @@ $imp->display("Grain override next");
 								and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-							if ( 0 ) {
+							if ( 1 ) {
 								$openprint::log->debug( "Not adding $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
 							}
 
-						} elsif ( 0 ) {
+						} elsif ( 1 ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
@@ -2444,7 +2447,7 @@ $imp->display("Grain override next");
 	} # end if Folding
 
 	if ( $debug or 1) {
-		$openprint::log->debug($$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$Press->strid() . ' # ' . @impositions );
+		$openprint::log->debug('UPQ: ' . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$Press->strid() . ' # ' . @impositions . ' after filtering');
 		foreach my $imp ( @impositions ) {
 			$imp->display();
 		} # end foreach
@@ -2557,7 +2560,7 @@ $openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.
 				next;
 			} # end if
 			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( $debug or 1 ) {
+				if ( $debug or 0 ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
 					if ( $$sig_specs{'Impositions'} ) {
 						foreach my $I ( reverse @{ $$sig_specs{'Impositions'} } ) {
@@ -2743,7 +2746,7 @@ if ( 0 ) {
 			} # end if
 if ( 1 ) {
 			if ( (scalar %best_price) and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( $debug or 1 ) {
+				if ( $debug or 0 ) {
 $openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} " . \%best_price . ' ' . $price);
 					if ( $$price{'Impositions'} ) {
 					foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
