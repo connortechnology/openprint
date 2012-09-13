@@ -39,7 +39,7 @@ $serial = 'schedule_id_seq';
 	'comment'		=>	'comment',
 	'runtime_seconds'	=>	undef,
 	'starttime_seconds'	=>	undef,
-	'impressions'		=>	undef,
+	'impressions'		=>	'impressions',
 	'created_on'		=>	'created_on',
 	'operator_id'		=>	undef,
 	'stock_verified'	=>	'stock_verified',
@@ -119,21 +119,6 @@ sub comment {
 	# We check for comments in the services, if we find one, we use it, otherwise we generate from the first.
 	if ( @_ > 1 ) {
 		$$self{'comment'} = $comment;
-		if ( $$self{'project_id'} ) {
-			foreach my $service_id ( @{$$self{'service_id'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $service_id, 'txtEmployeeComments', $comment );
-			} # end foreach sig_id	
-		} # end if
-	} else {
-		if ( $$self{'project_id'} ) {
-			my $Project = new openprint::Project( $$self{'project_id'} );
-			foreach my $service_id ( @{$$self{'service_id'}} ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
-				if ( $comment = $$sig_specs{'txtEmployeeComments'} ) {
-					last;
-				} # end if
-			} # end foreach sig_id
-		} # end if
 	} # end if
 
 	if ( ( ! $$self{'comment'} ) and $$self{'project_id'} and $$self{'service_id'} and @{$$self{'service_id'}} ) {
@@ -334,24 +319,21 @@ sub get_li {
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-			if ( sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
-				$html .= ssi::button( 'Approve'.$$self{'id'}, { 
-					'onclick'=>"new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { ul_id: '$ul_id', schedule_id: $$self{'id'}, action:'approve'}, evalScripts: true } );", 'text'=>'A','title'=>'Approve'} );
-			} # end if
+			$html .= ssi::button( 'Approve'.$$self{id}, {onclick=>"approve_job('$ul_id',$$self{id});", text=>'A', title=>'Approve' } ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
 			if ( ! $$self{'locked'} ) {
-				$html .= ssi::button( 'Up'.$$self{'id'}, { 'onclick'=>"new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", 'text'=>'U','title'=>'Move Up' } );
+				$html .= ssi::button( 'Up'.$$self{'id'}, { onclick=>"up_job($$self{id});", text=>'U', title=>'Move Up' } );
 			} # end if
 		} # end if
-			$html .= ssi::button( 'Bump'.$$self{'id'}, { 'onclick'=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", 'text'=>'B','title'=>'Bump to next shift' } );
+		$html .= ssi::button( 'Bump'.$$self{'id'}, { onclick=>"popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", text=> 'B', title=>'Bump to next shift' } );
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::button( 'Complete'.$$self{'id'}, { 'onclick'=>"popup_window('/employee/production/_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", 'text'=>'C',title=>'Complete Job' } );
 			$html .= ssi::button( 'House'.$$self{'id'}, { 'onclick'=>"new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", 'text'=>'H', 'title'=>'House Stock' } );
 			$html .= ssi::button( 'PO'.$$self{'id'}, { 'target'=>'_blank', 'href'=>"/employee/purchase_order/edit.html?project_id=$$self{project_id}", 'text'=>'PO', 'title'=>'Create PO' } );
 		} # end if
-		$html .= ssi::button( 'Remove'.$$self{'id'}, { 'onclick'=>"if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", 'text'=>'D','title'=>'Delete Job from Schedule' } );
+		$html .= ssi::button( 'Remove'.$$self{'id'}, { onclick=>"remove_job($$self{id});", text=> 'D', title=>'Delete from schedule' } );
 		if ( $$self{'project_id'} ) {
 			if ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} == 2 ) or ( @{$$self{service_id}} == 2 ) ) {
-				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", text=> 'S', title=>'Split Job' } );
+				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"split_job('$ul_id',$$self{id});", text=> 'S', title=>'Split Job' } );
 			} elsif ( ( $$self{pertains_id} and @{$$self{'pertains_id'}} > 2 ) or ( @{$$self{service_id}} == 2 ) ) {
 				$html .= ssi::button( 'Split'.$$self{'id'}, { onclick=>"popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", text=> 'S', title=>'Split Job' } );
 			} # end if
@@ -362,9 +344,9 @@ sub get_li {
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
-			$html .= ssi::button( 'Start'.$$self{'id'}, { onclick=> "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", text=> 'Start' } );
+			$html .= ssi::button( 'Start'.$$self{id}, { onclick=> "start_job($$self{id});", text=> 'Start' } );
 		} elsif ( ( $self->starttime_seconds() < time ) and ( (!$$self{'project_id'}) or $self->status() eq 'In Production' ) ) {
-			$html .= ssi::button( 'Stop'.$$self{'id'}, { onclick=> "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", text=> 'Stop' } );
+			$html .= ssi::button( 'Stop'.$$self{id}, { onclick=> "stop_job($$self{id});", text=> 'Stop' } );
 		} # end if
 		$html .= '</span>';
 		if ( $$self{'project_id'} ) {
@@ -468,37 +450,25 @@ $openprint::log->debug($Service->to_string() );
 sub impressions {
 	my $self = shift;
 
-	my $impressions = 0;
-
 	if ( @_ ) {
-		$impressions = shift;
-		if ( $$self{'project_id'} ) {
-			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', int($impressions/@{$$self{'service_id'}}) );
-			} # end foreach sig
-		} # end if
-	} elsif ( $$self{'project_id'} ) {
+		$$self{impressions} = shift;
+	} # end if
+
+	if ( (!$$self{impressions}) and $$self{project_id} ) {
+		my $impressions = 0;
+
 		my $Project = $self->Project();
-		if ( $self->service_id() ) {
-		foreach my $sig_id ( @{$self->service_id()} ) {
+		foreach my $sig_id ( $$self{pertains_id} ? @{$self->pertains_id()} : @{$self->service_id()} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			if ( ! $$sig_specs{'ImpressionQuantity'} ) {
+				$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
+			} # end if
 			$impressions += $$sig_specs{'ImpressionQuantity'};
 		} # end foreach sig
-		} # end if
-		
-		if ( ! $impressions ) {
-# Pull from printing
-			foreach my $sig_id ( @{$self->pertains_id()} ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-				if ( ! $$sig_specs{'ImpressionQuantity'} ) {
-					$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-					openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
-				} # end if
-				$impressions += $$sig_specs{'ImpressionQuantity'};
-			} # end foreach sig
-		} # end if
+		$$self{impressions} = $impressions;
 	} # end if
-	return $impressions;
+	return $$self{impressions};
 } # end sub impressions
 
 sub Project {
@@ -617,11 +587,12 @@ $log->debug("Stopping job: new runtime: $new_runtime starttime $$self{'starttime
 } # end sub stop
 
 sub status {
-	my ( $self ) = @_;
-	if ( $$self{'project_id'} ) {
-	foreach my $sig_id ( @{$$self{'service_id'}} ) {
-		return openprint::service::status( $$self{'project_id'}, $sig_id );
-	} # end foreach sig_id
+	if ( $_[0]{project_id} ) {
+		my $Project = new openprint::Project($_[0]{project_id});
+		foreach my $sig_id ( @{$_[0]{service_id}} ) {
+			my $Service = $Project->Service( $sig_id );
+			return $Service->status();
+		} # end foreach sig_id
 	} # end if
 } # end sub status
 
@@ -753,8 +724,8 @@ sub split {
 
 	my $Project = $self->Project();
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Splitting forms' );
-	my @service_ids = @{$$self{'pertains_id'}};
-	my $printing = ( (!@{$$self{pertains_id}}) or sets::union( @{$$self{service_id}}, @{$$self{pertains_id}} ) == @{$$self{service_id}} );
+	my @service_ids = $$self{'pertains_id'} ? @{$$self{'pertains_id'}} : @{$$self{service_id}};
+	my $printing = ( (!($$self{pertains_id} and @{$$self{pertains_id}})) or sets::union( @{$$self{service_id}}, @{$$self{pertains_id}} ) == @{$$self{service_id}} );
 
 	if ( @service_ids > 1 ) {
 		if ( $forms ) {

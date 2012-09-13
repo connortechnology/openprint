@@ -2556,6 +2556,9 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 		if ( ! exists $$data{'starttime_locked'} ) {
 			$dbh->do('ALTER TABLE Schedule ADD starttime_locked boolean');
 		} # end if
+		if ( ! exists $$data{impressions} ) {
+			$dbh->do('ALTER TABLE Schedule ADD impressions integer');
+		} # end if
 	} # end if
 	$dbh->do('ALTER TABLE Schedule ADD speed INTEGER') if ! exists $$data{'speed'};
 } # end if
