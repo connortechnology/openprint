@@ -5,7 +5,7 @@
 		ssi::date_filter( '/article/history.html?created_on_end','created_on <=' ),
 		ssi::date_filter( '/article/history.html?published_on_start','published_on >=' ),
 		ssi::date_filter( '/article/history.html?published_on_end','published_on <=' ),
-		( $session{'/article/history.html?published'} ? ( 'published' => $session{'/article/history.html?published'} ) : () ),
+		( $session{'/article/history.html?published'} ne '' ? ( 'published' => $session{'/article/history.html?published'} ) : () ),
 		( $session{'/article/history.html?company_id'} ? ( 'company_id'	=> $session{'/article/history.html?company_id'} ) : () ),
 		( $session{'/article/history.html?employee_id'} ? ( 'employee_id' => $session{'/article/history.html?employee_id'} ) : () ), 
 		( $session{'/article/history.html?category_id'} ? ( 'category_id' => $session{'/article/history.html?category_id'} ) : () ),

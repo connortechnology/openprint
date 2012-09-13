@@ -28,7 +28,7 @@ function switch_inputs(e) {
 }
 
 function load_log() {
-	new Ajax.Updater('Log','_datacollection_log.html', { parameters: $('LogForm').serialize() } );
+	new Ajax.Updater('Log','_datacollection.html', { parameters: $('LogForm').serialize() } );
 }
 
 function sig_popup(signature_id) {
@@ -181,6 +181,6 @@ $ipoo = 0;
 </form>
 <script type="text/javascript"> document.f1.docket.focus(); 
 	Event.observe($('signature'),'touchmove', function(event) { event.preventDefault() }); // turns off
-	new Ajax.Updater( 'Log', '/employee/production/_datacollection_log.html' );
+	new Ajax.Updater( 'Log', '/employee/production/_datacollection.html' );
 </script>
 

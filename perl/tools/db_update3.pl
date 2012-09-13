@@ -30,48 +30,6 @@ configuration::init( $log, $dbh );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='articles'", 'column_name');
-if ( ! exists $$data{'source'} ) {
-		$dbh->do('ALTER TABLE articles ADD source TEXT');
-} # end if
-if ( ! exists $$data{'keywords'} ) {
-		$dbh->do('ALTER TABLE articles ADD keywords TEXT');
-} # end if
-if ( ! exists $$data{'summary'} ) {
-		$dbh->do('ALTER TABLE articles ADD summary TEXT');
-} # end if
-if ( ! exists $$data{'source_content'} ) {
-		$dbh->do('ALTER TABLE articles ADD source_content TEXT');
-} # end if
-if ( ! exists $$data{'category_id'} ) {
-		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
-} # end if
-if ( ! exists $$data{'user_type'} ) {
-	$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
-	$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
-} # end if
-if ( sets::isin( 'article_categories', \@tables ) ) {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
-	if ( exists $$data{'image_filename'} ) {
-		$dbh->do('ALTER TABLE article_categories DROP image_filename');
-	} # end if
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE article_categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
-	if ( ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
-	} # end if
-	if ( ! exists $$data{'summary'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD summary TEXT');
-	} # end if
-	if ( ! exists $$data{'deleted'} ) {
-		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
-	} # end if
-} else {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
-	die if $dbh->errstr();
-}
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
@@ -1000,26 +958,7 @@ if ( ! sets::isin('products', \@tables ) ) {
 	} # end if
 	
 } # end if
-if ( ! sets::isin('currency_conversions', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Currency_Conversions.sql}) );
-	die if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='currency_conversions'", 'column_name');
-	if ( ! exists $$data{'period_start'} ) {
-		$dbh->do('ALTER TABLE currency_conversions ADD period_start TIMESTAMP WITH TIME ZONE');
-	} # end if
-	if ( ! exists $$data{'period_end'} ) {
-		$dbh->do('ALTER TABLE currency_conversions ADD period_end TIMESTAMP WITH TIME ZONE');
-	} # end if
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE currency_conversions ADD id SERIAL');
-	} # end if
-	$dbh->do( 'ALTER TABLE currency_conversions DROP CONSTRAINT currency_conversions_pkey');
-	$dbh->do( 'ALTER TABLE currency_conversions ADD PRIMARY KEY (id)' );
-	$dbh->do( 'DROP INDEX IF EXISTS currency_conversion_to_from_period_end_idx' );
-	$dbh->do( 'CREATE INDEX currency_conversion_to_from_period_end_idx ON currency_conversions (to_id,from_id,period_end)' );
-	
-} # end if
+
 $dbh->disconnect();
 1;
 __END__

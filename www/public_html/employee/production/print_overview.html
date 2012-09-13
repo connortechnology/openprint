@@ -66,15 +66,6 @@
 		};
 	}
 
-	function jump_to_date( date ) {
-		var form = date.params.inputField.form;
-		var name = date.params.inputField.name;
-		var reg = /ScheduleDate-(\d*)/;
-		var ar = reg.exec( name );
-		form.ServiceIndex.value = ar[1];
-		form.btnFunction.value='JumpToDate';
-		form.submit();
-	}
 	function setduedate( date ) {
 		var form = date.params.inputField.form;
 		var name = date.params.inputField.name;
@@ -95,18 +86,28 @@ function textarea_init() {
     tinyMCE.init( content_description_options );
 }
 
+	function approve_job( ul_id, job_id ) {
+		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
+	} // end function approve_job(job_id)
+	function remove_job( job_id ) {
+		if(confirm('Are you sure?')){
+			new Ajax.Request('_li_change.json', {parameters: {schedule_id:job_id, action: 'RemoveJob'}, evalScripts: true } );
+		} // end if
+	} // end function remove_job
+	function split_job( ul_id, job_id ) {
+		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'split'}, evalScripts: true } );
+	} // end function split_job
+	function start_job( job_id ) {
+		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'start' } } );
+	} // end function start_job
+	function stop_job( job_id ) {
+		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'stop' } } );
+	} // end function stop_job
+	function up_job( job_id ) {
+		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
+	} // end function up_job
 -->
 </script>
-<div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );" action="">
-		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms <input type="text" name="Forms"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::button( 'Save5', { onclick=>'if(f5.onsubmit())f5.submit();', text=>'Save' } ); ) ?>
-			<? echo ( ssi::button( 'Cancel5', { onclick=>"popupWin.destroy();", text=>'Cancel' } ); ) ?>
-		</span>
-	</form>
-</div>
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
@@ -274,26 +275,26 @@ function textarea_init() {
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
+<table class="schedule"><thead>
+<tr>
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ) . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
+			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
+				$html .= ssi::button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
 			} # end if
-			$html .= '<br/><span id="message'.$E->id().'" class="message">';
+			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
-			$html .= '</span>';
 			$html .= '</div>';
+			$html .= '</th>';
 		} # end foreach
-		return $html;
-		) ?>
-	<hr style="clear: both;"/>
-	<? echo (
+		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
-		my $html;
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . join(' ', $E->categories() ). '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
+
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -328,6 +329,11 @@ function textarea_init() {
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+			if ( ! @Shifts ) {
+				$html .= 'No Shifts defined.</div>';
+				next;
+			} # end if
+
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
@@ -366,24 +372,23 @@ $log->debug("Setp 2" . $ES->to_string());
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
-			$html .= '</div>';
+			$html .= '</td>';
+			#$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide)</h3><div id="PendingApproved">`;
+		$html .= '</tr></tbody></table>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
-		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide)</h3><div id="Pending">`;
+		$html .= '</tr></table></div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
-		$html .= '</div></div>';
+		$html .= '</tr></table></div>';
 		return $html;
 	) ?>
 </form>
 <br class="spacer"/>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
-// <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
 	setup_drops();
 	setup_dates();
-// ]]>
 </script>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>

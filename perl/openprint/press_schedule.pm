@@ -94,35 +94,17 @@ sub find {
 	return @$data;
 } # end sub find
 
-# Takes an array of hash pointers.  Each hash is an item to schedule assumes that the item is not already on the schedule.  Code should determine that prior to calling add
-sub add {
-	my $error = '';
-	foreach my $item ( @_ ) {
-		my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE equipment_id=?', $$item{equipment_id} );
-		( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
-
-		my $runtime = openprint::service::get_runtime( new openprint::Project( $$item{'projectindex'} ), $$item{'serviceindex'} );
-
-		$error .= sql::insert( undef, undef, 'Schedule',
-				'ProjectIndex', $$item{projectindex},
-				'ServiceIndex',	$$item{serviceindex},
-				'equipment_id',	$$item{equipment_id},
-				'StartTime',		$start_time,
-				'RunTime',			join(':', misc::seconds_to_interval( $runtime ) ),
-				);
-	} # end foreach item
-	return $error;
-} # end sub add
-
 sub remove {
 	my ( $p_id, $s_id ) = @_;
-	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$p_id, ( $s_id ? ('service_id'=>$s_id) : () ) ) ) {
-		if ( $Job->service_id() > 1 ) {
-			$Job->save({'service_id'=>[ sets::exclude( [ $s_id ], $Job->service_id() ) ]});
+	my $error;
+	foreach my $Job ( openprint::ScheduledJob->find(project_id=>$p_id, ( $s_id ? ('service_id any'=>$s_id) : () ) ) ) {
+		if ( $s_id and ( $Job->service_id() > 1 ) ) {
+			$error .= $Job->save({'service_id'=>[ sets::exclude( [ $s_id ], $Job->service_id() ) ]});
 		} else {
-			$Job->delete();
+			$error .= $Job->delete();
 		} # end if
 	} # end foreach
+	return $error;
 } # end sub remove
 
 sub add_project_to_press_schedule {
@@ -136,8 +118,13 @@ sub add_project_to_press_schedule {
 
 	my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 
-	foreach my $s_s_id ( @sigs ) {
-		next if openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$s_s_id );
+	my @sigs_not_on_schedule;
+	foreach my $s_s_id ( sets::union(@sigs) ) {
+		next if openprint::ScheduledJob->find('project_id'=>$$Project{id}, 'service_id any'=>$s_s_id );
+		push @sigs_not_on_schedule;
+	} # end foreach sig
+
+	while ( my $s_s_id = shift @sigs_not_on_schedule ) {
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
@@ -149,11 +136,14 @@ sub add_project_to_press_schedule {
 		my @service_ids = ( $s_s_id );
 
 		# Merge identical sigs
-		foreach my $s_id_2 ( @sigs ) {
-			next if $s_id_2 == $s_s_id;
+		for( my $i = 0; $i < @sigs_not_on_schedule; $i += 1 ) {
+			my $s_id_2 = $sigs_not_on_schedule[$i];
+
 			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
 			if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
 				push @service_ids, $s_id_2;
+				splice @sigs_not_on_schedule, $i, 1;
+				$i -= 1;
 			} # end if
 		} # end foreach
 
@@ -164,6 +154,7 @@ sub add_project_to_press_schedule {
 				'equipment_id'	=>	$Equipment->id(),
 				'starttime'		=>	undef,
 				'service_id'	=>	\@service_ids,
+				'pertains_id'	=>	\@service_ids,
 				'servicetype_id'	=>	$ServiceType->id(),
 			});
 			if ( $_ ) {
