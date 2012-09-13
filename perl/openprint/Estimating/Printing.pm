@@ -985,8 +985,8 @@ $openprint::log->debug("No well cut Stock found");
 
 	foreach my $P ( @Papers ) {
 		#$P->Prices();
-		$openprint::log->debug("Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( DEBUG );
-		$Papers{$P->to_string()} = $P;
+		$openprint::log->debug("Base Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( DEBUG );
+		$Papers{$P->to_string()} = $P->clone();
 	} # end foreach
 
 	return map { $_->clone() } @Papers;
@@ -2542,6 +2542,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 		foreach my $imp ( @results ) {
 			my $add = 1;
 			my $Paper = $imp->Paper();
+$imp->display('Filtering:');
 
 			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
@@ -2569,6 +2570,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
+$I->display('Considering');
 						my $P = $I->Paper();
 
 						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -2585,8 +2587,8 @@ $imp->dispay('Ma imposition!') if DEBUG;
 									'service'=>'Material'
 									);
 						} # end if
-#$I->display("Comparing ". $P->minimum_order_weight() . ' ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
-#$imp->display("Comparing" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+$I->display("Comparing mino:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
+$imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
 						if ( ( $P->area() >= $Paper->area() )
 								and ( $P->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
@@ -2594,7 +2596,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-							if ( 0 ) {
+							if ( 1 ) {
 								$openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
@@ -2606,13 +2608,13 @@ $imp->dispay('Ma imposition!') if DEBUG;
 								and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-							if ( 0 ) {
+							if ( 1 ) {
 								$openprint::log->debug( "Not adding $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
 							}
 
-						} elsif ( 0 ) {
+						} elsif ( 1 ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
