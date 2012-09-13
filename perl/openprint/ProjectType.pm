@@ -73,15 +73,11 @@ sub find {
 
 sub save {
 	my ( $self, $params ) = @_;
-$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
-$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
-		$self->required_services( $$params{'required_services'} );
-$openprint::log->debug("ProjectTYpeSave:: required_serviecs: $$params{required_services}");
 		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
-
+		$self->required_services( $$params{required_services} );
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		# The union gets rid of duplicates
 		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
@@ -110,14 +106,13 @@ sub prev {
 
 sub required_services {
 	my $self = shift;
-
 	if ( @_ > 1 ) {
 		@{$$self{'required_services'}} = @_;
 	} elsif ( @_ ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			@{$$self{'required_services'}} = @{$_[0]};
-		} elsif ( $_ ) {
-			@{$$self{'required_services'}} = ($_[0]);
+			$$self{'required_services'} = $_[0];
+		} elsif ( $_[0] ) {
+			$$self{'required_services'} = [$_[0]];
 		} # end if
 	} # end if
 	if ( ! $$self{'required_services'} ) {

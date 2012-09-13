@@ -92,7 +92,7 @@ sub edit {
 		openprint::logs::insertLogRecord('40',);
 	} # end if
 	$variable{ProjectType} = $ProjectType;
-} # end sub types_edit
+} # end sub edit
 
 sub defaults_edit {
 	my $index = $param{'ddmProjectType'};
