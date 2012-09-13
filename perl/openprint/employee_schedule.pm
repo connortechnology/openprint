@@ -1,4 +1,5 @@
 package openprint::employee_schedule;
+use strict;
 
 use Date::Calc qw(Add_Delta_Days);
 use openprint ();
@@ -11,30 +12,7 @@ use vars qw( $log $dbh %variable %config );
 require sql;
 require openprint::Equipment;
 require openprint::service;
-require openprint::Shift;
 require openprint::ScheduledJob;
-
-use strict;
-
-sub add_missing_jobs_to_schedule {
-	if ( $config{'Smart Schedule'} ne 'Y') {
-		$log->debug("Not add lost jobs due to Smart Scheduling being turned off.");
-		return;
-	} # end if
-	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE strStatus='Approved' AND Index NOT IN (SELECT ProjectIndex FROM Schedule)} );
-	foreach my $project_id ( @missing_jobs ) {
-		my $Project = new openprint::Project( $project_id );
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			if ( ! $$sig_specs{'UsePress'} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-			} # end if
-			if ( my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ) ) {
-				openprint::employee_schedule::insert( $log, $dbh, $project_id, $signature_service_index, $equipment[0]->id() );
-			} # end if
-		} # end foreach signature
-	} # end foreach
-} # end sub add_missing_jobs_to_schedule
 
 sub update_late_jobs {
 	# Make sure that we don't lose any jobs to the past.
@@ -69,6 +47,7 @@ sub insert {
 	$Job->save({
 			'project_id'		=>	$project_index,
 			'service_id'		=>	[ $service_index ],
+			'pertains_id'		=>	[ $service_index ],
 			'equipment_id'		=>	$equipment_id,
 			'starttime'			=>	$start_time,
 			'runtime_seconds'	=>	$runtime,

@@ -12,7 +12,7 @@
 	width: 100%;
 	font-weight: normal;
 	font-size: 10px;
-	margin:0px;
+	margin:0;
 	padding:0;
 	margin-bottom: 4px;
 	height: auto;
@@ -30,34 +30,34 @@
 	font-weight: bold;
 	font-size: 16px;
 }
-	.PressColumn {
-		margin:0;
-		padding:0;
-		border: none;
-		text-align: center;
-		font-size:16px;
-		font-weight:bold;
-		vertical-align: top;
-	}
-	.PressColumn ul {
-		padding:0;
-		margin:0 1px 0 1px;
-		border-bottom: 1px solid black;
-		list-style: none;
-        font-weight: normal;
-        text-align: left;
-        font-size: 12px;
-	}
-	.PressColumn li {
-		padding:0;
-		margin:2px 0;
-		border-top: 1px solid black;
-		list-style: none;
-		background-color: #ffffff;
-		z-index: 0;
-		max-height: 2048px;
-		overflow: hidden;
-	}
+.PressColumn {
+	margin:0;
+	padding:0;
+	border: none;
+	text-align: center;
+	font-size:16px;
+	font-weight:bold;
+	vertical-align: top;
+}
+.PressColumn ul {
+	padding:0;
+	margin:0 1px;
+	border-bottom: 1px solid black;
+	list-style: none;
+	font-weight: normal;
+	text-align: left;
+	font-size: 12px;
+}
+.PressColumn li {
+	padding:0;
+	margin:2px 0;
+	border-top: 1px solid black;
+	list-style: none;
+	background-color: #ffffff;
+	z-index: 0;
+	max-height: 2048px;
+	overflow: hidden;
+}
 
 .PressColumn .multibindery,
 .PressColumn .multipress, 
@@ -88,15 +88,13 @@
 .legend li.rush {
 width: 196px;
 } 
-	.When {
-		background-color: #ffb4da;
-		font-weight: bold;
-		font-size: 14px;
-	   margin:0;
-	   margin-left: 1px;
-	   margin-right: 1px;
-	   padding:0;
-	}
+.When {
+	background-color: #ffb4da;
+	font-weight: bold;
+	font-size: 14px;
+	margin:0 1px;
+	padding:0;
+}
 .Printing .When {
 		background-color: #ffb4da;
 }
@@ -109,56 +107,58 @@ width: 196px;
 .When .operator {
 	float: right;
 }
-	.When span {
-		padding: 2px;
-		width: auto;
-	}
-	.When .Interval {
-		float: left;
-	} 
-	.docket {
-		float: right;
-		p\osition: relative;
-		margin-left: 5px;
-	}
-	.Company {
-		font-weight: bold;
-		font-size: 14px;
-		overflow: hidden;
-		text-align: left;
-	}
-	.Forms {
-        width: 65px;
-	}
-	.DueDate {
-		font-weight: bold;
-		float: right;
-		margin-left: 5px;
-		display: inline;
-	}
-	.Impressions {
-		min-width: 70px;
-		padding:0 4px 0 4px;
-	}
-	.RunTime {
-        width: 85px;
-	}
-	.StockVerified {
-        width: 80px;
-	}
-	.StockVerified,
-	.Forms,
-	.Impressions,
-	.RunTime,
-	.StartTime {
-		float: left;
-        display: inline;
-        border: 1px outset gray;
-        text-align: center;
-	}
-	.StartTime {
-        width: 80px;
-	}
+.When span {
+	padding: 2px;
+	width: auto;
+}
+.When .Interval {
+	float: left;
+} 
+table .docket {
+	float: right;
+	p\osition: relative;
+	margin-left: 5px;
+	width: auto;
+}
+.Company {
+	font-weight: bold;
+	font-size: 14px;
+	overflow: hidden;
+	text-align: left;
+}
+.Forms {
+	width: 65px;
+}
+.DueDate {
+	font-size: 14px;
+	font-weight: bold;
+	float: right;
+	margin-left: 5px;
+	display: inline;
+}
+.Impressions {
+	min-width: 70px;
+	padding:0 4px 0 4px;
+}
+.RunTime {
+	width: 85px;
+}
+.StockVerified {
+	width: 80px;
+}
+.StockVerified,
+.Forms,
+.Impressions,
+.RunTime,
+.StartTime {
+	float: left;
+	display: inline;
+	border: 1px outset gray;
+	text-align: center;
+}
+.StartTime {
+	width: 80px;
+}
 .StartTime img {
     margin:0;
     padding:0;
