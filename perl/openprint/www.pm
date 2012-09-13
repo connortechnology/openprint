@@ -133,7 +133,6 @@ sub handler {
 			   ) {
 #$log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
-$log->debug("Sending js redirect");
 					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
 				} else {
 				$page = '/error/error_login.html';
@@ -219,13 +218,12 @@ $log->debug("Sending js redirect");
 		my $filename = pop @page_path;
 		# _ signifies a page fragment, so don't load layout
 		if ( substr($filename, 0, 1 ) ne '_' ) {
+			my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
+			#$log->debug("Looking for $file");
+			if ( -e $file ) {
+				$template = misc::load_file( $log, $file );
+			} else {
 			while ( @page_path ) {
-				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
 				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
@@ -234,6 +232,7 @@ $log->debug("Sending js redirect");
 				} # end if
 				pop @page_path;
 			} # end while
+			} # end if
 		} # end if _
 		if ( $template ) {
 			#$log->debug("parsing template!");

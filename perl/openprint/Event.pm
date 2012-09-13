@@ -92,7 +92,7 @@ sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
 		my $Album = $_[0]->Album();
 		if ( $Album->id() ) {
-$openprint::log->debug("Album? " . $Album->to_string() );
+#$openprint::log->debug("Album? " . $Album->to_string() );
 			if ( $$Album{'thumbnail_id'} ) {
 				$_[0]{'Asset'} = new openprint::Asset( $$Album{'thumbnail_id'} );
 			} elsif ( my @Photos = $Album->Photos() ) {
