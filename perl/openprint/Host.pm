@@ -3,7 +3,7 @@ package openprint::Host;
 require openprint::Object;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 use vars qw( $log $dbh $table $serial %fields %tansforms %defaults %types );
 $table = 'hosts';
 $serial = 'hosts_id_seq';
