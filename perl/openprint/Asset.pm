@@ -267,6 +267,12 @@ sub large_path {
 	return $openprint::config{'AssetPath'}.$url;
 } # end sub medium_path
 
+sub sized_path {
+	my $url = $_[0]->sized_url($_[1]);
+	$url =~ s/^\/assets//;
+	return $openprint::config{'AssetPath'}.$url;
+} # end sub sized_path
+
 sub md5 {
 	if ( @_ > 1 ) {
 		$_[0]{'md5'} = $_[1];

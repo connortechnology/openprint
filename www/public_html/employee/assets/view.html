@@ -35,11 +35,18 @@
 							<li><label>Description</label>
 							<? echo ( $$variable{'Asset'}->description() ) ?>
 							</li>
-							<li><label>Full Size URL</label>
-							<? echo ( $config{'ExternalSiteURL'}.$$variable{'Asset'}->url() ) ?>
-							</li>
-							<li><label>Thumbnail URL</label>
-							<? echo ( $config{'ExternalSiteURL'}.$$variable{'Asset'}->thumbnail_url() ) ?>
+							<li><table><tr><th>Version</th><th>URL</th><th class="size">File Size</th></tr>
+							<? echo (
+								my $html;
+								foreach my $size ( '', 'large','medium','small', 'thumbnail' ) {
+									$html .= sprintf( '<tr><td>%1$s</td><td><a href="%2$s" target="_blank">%2$s</a></td><td class="size">%3$s</td></tr>', ($size?$size:'Original'),
+										$config{'ExternalSiteURL'}.$$variable{'Asset'}->sized_url($size),
+										misc::format_bytes( -s $variable{Asset}->sized_path($size) ),
+										);
+								} # end foreach size
+								return $html;
+							) ?>
+							</table>
 							</li>
 						</ul>
 					</div>

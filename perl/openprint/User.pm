@@ -419,7 +419,8 @@ if ( 0 ) {
 	} # end if
 } # end if
 	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
+		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
 			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
