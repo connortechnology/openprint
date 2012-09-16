@@ -730,10 +730,13 @@ function countLines(strtocount, cols) {
 		if ( last == -1 ) break;
 		hard_lines ++;
 	}
-	var soft_lines = Math.round(strtocount.length / (cols-1));
-	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
-	if ( hard ) soft_lines = hard_lines;
-	return soft_lines;
+	if ( cols ) {
+alert(cols);
+		var soft_lines = Math.round(strtocount.length / (cols-1));
+		if ( hard_lines > soft_lines ) return hard_lines;
+		return soft_lines;
+	}
+	return hard_lines;	
 }
 
 function textarea_resize( element ) {
