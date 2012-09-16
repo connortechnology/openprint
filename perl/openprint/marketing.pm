@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 use strict;
-package openprint::employee_marketing;
+package openprint::marketing;
 
 require openprint::EmailCampaign;
 require openprint::MarketingCategory;
