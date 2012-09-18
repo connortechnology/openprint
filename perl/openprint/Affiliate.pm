@@ -21,6 +21,7 @@ $serial = 'affiliates_id_seq';
 );
 
 %defaults = (
+	supplier_id		=>	undef,
 	'created_on'	=>	q`'NOW()'`,
 	'sort'			=>	undef,
 );

@@ -86,7 +86,7 @@ fi;
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
 #echo "$RSYNC \"$1\" \"$2\""
-$RSYNC -a --delete --delete-excluded "$1" "$2.0"
+$RSYNC -a --exclude .gvfs --delete --delete-excluded "$1" "$2.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
 $TOUCH "$2.0"

@@ -179,6 +179,12 @@ if ( $data ) {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
 
+if ( ! sets::isin( 'quotelevels', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
+} # end if
+
 if ( ! sets::isin( 'user_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Types.sql}) );
 }
@@ -302,6 +308,64 @@ if ( ! sets::isin( 'assets', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin('articles',\@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='articles'", 'column_name');
+	if ( ! exists $$data{'source'} ) {
+		$dbh->do('ALTER TABLE articles ADD source TEXT');
+	} # end if
+	if ( ! exists $$data{'keywords'} ) {
+		$dbh->do('ALTER TABLE articles ADD keywords TEXT');
+	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do('ALTER TABLE articles ADD summary TEXT');
+	} # end if
+	if ( ! exists $$data{'source_content'} ) {
+		$dbh->do('ALTER TABLE articles ADD source_content TEXT');
+	} # end if
+	if ( ! exists $$data{'category_id'} ) {
+		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
+	} # end if
+	if ( ! exists $$data{'user_type'} ) {
+		$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
+		$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
+	} # end if
+} # end if
+if ( sets::isin( 'article_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
+	if ( exists $$data{'image_filename'} ) {
+		$dbh->do('ALTER TABLE article_categories DROP image_filename');
+	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE article_categories ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
+	} # end if
+	if ( ! exists $$data{'summary'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD summary TEXT');
+	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
+	die if $dbh->errstr();
+}
+
+if ( ! sets::isin( 'photo_albums', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Photo_Albums.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='photo_albums'", 'column_name');
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE photo_albums ADD description TEXT');
+	} # end if
+} # end if
+
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) );
 } else {
@@ -311,11 +375,6 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
 }
-if ( ! sets::isin( 'quotelevels', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
-	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
-} # end if
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
@@ -568,6 +627,7 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	if ( ! exists $$data{'album_id'} ) {
 		$dbh->do('ALTER TABLE Locations add album_id INTEGER');
 		$dbh->do('ALTER TABLE Locations ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 	$dbh->do('ALTER TABLE Locations DROP CONSTRAINT locations_name_key');
 	$dbh->do('CREATE INDEX locations_name_idx on locations (name)');
@@ -603,8 +663,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	} # end if
 	$dbh->do(q`alter table tbl_equipment add message text`) if ! exists $$data{'message'};
 	if ( ! exists $$data{'category_id'} ) {
-		$dbh->do(q`ALTER TABLE tbl_equipment ADD category_id INTEGER`);
-		$dbh->do(q`ALTER TABLE tbl_equipment ADD FOREIGN KEY (category_id) REFERENCES Equipment_Categories (id)`);
+		$dbh->do(q`ALTER TABLE tbl_equipment ADD category_id INTEGER[]`);
 	} # end if
 	
 	if ( exists $$data{strcategory} ) {
@@ -1006,10 +1065,15 @@ if ( ! sets::isin( 'service_prices_id_seq',\@sequences ) ) {
 		$dbh->do('ALTER TABLE service_prices alter id set default nextval(service_prices_id_seq)') or die $dbh->errstr();
 	} # end if
 } # end if
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='pricelists'", 'column_name' );
 my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
-$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
+if ( $$data{'index'} ) {
+$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id');
+} elsif ( ! exists $$data{id} ) {
+$dbh->do('ALTER TABLE Pricelists ADD id SERIAL');
+}
 $dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
 $dbh->do('ALTER TABLE Pricelists ADD deleted BOOLEAN NOT NULL default false') if ! exists $$data{'deleted'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
@@ -1021,7 +1085,9 @@ $dbh->do('CREATE SEQUENCE pricelists_id_seq');
 $dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
 $dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
 } # end if
+die $dbh->errstr() if $dbh->errstr();
 sql::end_transaction( $dbh, $ac );
+
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -1029,7 +1095,7 @@ if ( $version < 1901 ) {
 	push @Services, openprint::Service->find('name'=>'PressUnitMakeReadySheet Work');
 	if ( @Services ) {
 		my $Service = $Services[0];
-		foreach my $Equipment ( openprint::Equipment->find('category'=>'Printing') ) {
+		foreach my $Equipment ( openprint::Equipment->find('category any'=>'Printing') ) {
 			foreach my $Price ( openprint::ServicePrice->find('equipment_id'=>$Equipment->id(), 'service_id'=>$Service->id() )) {
 				if ( $$Price{'units'} eq 'Per Unit' ) {
 					$$Price{'cost'} = $$Price{'cost'}/$$Price{'min'};
@@ -1092,7 +1158,7 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Cutting Capable'=
 		} # end if
 	} # end foreach
 }
-foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
+foreach my $E ( openprint::Equipment->find('category any'=>'Printing') ) {
 	foreach my $Spec ( $E->Specifications('name'=>'Envelope Ready') ) {
 		$Spec->name('Envelope Capable');
 		$Spec->save();
@@ -1468,6 +1534,14 @@ if ( ! sets::isin( 'purchaseorder_contenttypes', \@tables ) ) {
 }
 if ( ! sets::isin( 'purchaseorder_items', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Items.sql}) ) or die $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorder_items'", 'column_name');
+	if ( ! $$data{created_on} ) {
+		$dbh->do('ALTER TABLE purchaseorder_items ADD created_on TIMESTAMP WITH TIME ZONE');
+	} # end if
+	if ( ! $$data{updated_on} ) {
+		$dbh->do('ALTER TABLE purchaseorder_items ADD updated_on TIMESTAMP WITH TIME ZONE');
+	} # end if
 } # en dif
 if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die $dbh->errstr();
@@ -2482,6 +2556,9 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 		if ( ! exists $$data{'starttime_locked'} ) {
 			$dbh->do('ALTER TABLE Schedule ADD starttime_locked boolean');
 		} # end if
+		if ( ! exists $$data{impressions} ) {
+			$dbh->do('ALTER TABLE Schedule ADD impressions integer');
+		} # end if
 	} # end if
 	$dbh->do('ALTER TABLE Schedule ADD speed INTEGER') if ! exists $$data{'speed'};
 } # end if
@@ -2511,10 +2588,6 @@ if ( ! sets::isin('shifts',\@tables ) ) {
 	die if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin('articles',\@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Articles.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
 } # end if

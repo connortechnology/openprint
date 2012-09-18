@@ -179,6 +179,10 @@ sub view {
 		if ( ! $variable{'error'} ) {
 			$variable{'ExternalRedirect'} = '/event/view.html?event_id='.$Event->id();
 		} # end if
+	} elsif ( $param{function} eq 'Copy' ) {
+		my $NewEvent = $variable{Event}->copy();
+		$variable{ExternalRedirect} = '/event/edit.html?event_id='.$$NewEvent{id};
+		return;
 	} elsif ( $param{function} eq 'Send' ) {
 		$variable{'error'} .= $Event->send_invitations();
 	} # end if function

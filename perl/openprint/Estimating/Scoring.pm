@@ -188,7 +188,6 @@ sub calc {
 				} # end if
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= $Price{'Breakdown'};
-$openprint::log->debug("Breakdown: $Price{'Breakdown'}");
 
 			$qtyTotal += $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"};
 			$qtyTotal += $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"};

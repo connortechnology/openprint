@@ -87,7 +87,7 @@ sub runtime {
 	my $Project = $self->Project();
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = $self->specs();
-$log->debug("Project Service runtime $$specs{'ServiceType'}");
+#$log->debug("Project Service runtime $$specs{'ServiceType'}");
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
 		return $$time{'Total'} if $time;
@@ -138,5 +138,11 @@ sub overrides {
 	return ();
 } # end sub overrides
 
+sub delete {
+	my ( $self ) = @_;	
+	my $specs = $self->specs();
+	openprint::print_project::delete_service( $log, $openprint::dbh, @$self{'project_id','service_id'} );
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+} # end sub delete
 1;
 __END__

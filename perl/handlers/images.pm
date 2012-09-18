@@ -56,7 +56,7 @@ sub handler {
 		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
-			if ( $Asset->id() ) {
+			if ( $$Asset{id} ) {
 				if ( my @Photos = openprint::Photo_in_Album->find('asset_id'=>$$Asset{id}) ) {
 					my $can_view = 0;
 					foreach my $Album ( map { $_->Album() } @Photos ) {
@@ -83,15 +83,15 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
-						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
-						if ( $path eq 'thumbnails' ) {
-							$r->sendfile( $Asset->thumbnail_path() );
-						} elsif ( $path eq 'medium' ) {
-							$r->sendfile( $Asset->medium_path() );
-						} else {
+					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
+					if ( $path eq 'thumbnails' ) {
+						$r->sendfile( $Asset->thumbnail_path() );
+					} elsif ( $path eq 'medium' ) {
+						$r->sendfile( $Asset->medium_path() );
+					} else {
 # No album means has to be an article image, or a generic site image.
-							$r->sendfile( $Asset->on_disk_path() );
-						}
+						$r->sendfile( $Asset->on_disk_path() );
+					}
 				} # end if
 			} else {
 $log->error("NOT FOUND");

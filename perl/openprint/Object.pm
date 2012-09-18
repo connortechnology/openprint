@@ -192,7 +192,8 @@ $log->debug("No serial") if $debug;
 		} else {
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
-				($$self{$id}) = ($sql{$$fields{$id}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial{$id} . q{')} );
+				($$self{$id}) = ($sql{$$fields{$id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial{$id} . q{')} );
+				$log->debug("SQL statement execution SELECT nextval('$serial{$id}') returned $$self{$id}") if $debug or $debug_all;
 				$insert = 1;
 			} # end foreach
 		} # end if
@@ -232,7 +233,8 @@ $log->debug("No serial") if $debug;
 			if ( ! $$self{'id'} ) {
 				my $serial = eval '$'.$type.'::serial';
 				if ( $serial ) {
-					($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+					($$self{id}) = ($sql{$$fields{id}}) = $local_dbh->selectrow_array( q{SELECT nextval('} . $serial . q{')} );
+					$log->debug("SQL statement execution SELECT nextval('$serial') returned $$self{id}") if $debug or $debug_all;
 				} # end if
 			} # end if
 			my @keys = keys %sql;
@@ -545,6 +547,13 @@ sub find_operators {
 			push @{$results{' any'}}, '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", @{$$params{$k.' any'}};
 		} else {
 			push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+		} # end if
+	} # end if
+	if ( exists $$params{$k.' not any'} ) {
+		if ( ref $$params{$k.' not any'} eq 'ARRAY' ) {
+			push @{$results{' not any'}}, '(' . join(',', map { '?' } @{$$params{$k.' not any'}} ).") != ANY($f)", @{$$params{$k.' not any'}};
+		} else {
+			push @{$results{' not any'}}, "? != ANY($f)", $$params{$k.' not any'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' is null'} ) {

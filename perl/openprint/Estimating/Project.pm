@@ -756,6 +756,18 @@ $openprint::log->debug('Deleting Folding');
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
 		} # end foreach
 	} # end foreach
+	foreach my $service_name ( 'Design' ) {
+		if ( $$specs{$service_name.'_txtQuantity'} ) {
+			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
+			foreach my $sid ( @{$$services{$service_name}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $sid, 'txtQuantity', $$specs{$service_name.'_txtQuantity'} );
+			} # end foreach
+		} else {
+			foreach ( @{$$services{$service_name}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $$Project{id}, $_ );
+			} # end foreach
+		} # end if
+	}  # end foreach service_name
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
 	openprint::Estimating::MultiPage::calculate_signatures( $Project );
