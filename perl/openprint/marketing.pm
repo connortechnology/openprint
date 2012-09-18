@@ -160,7 +160,7 @@ sub email_templates {
 sub banners {
 } # end sub banners
 
-sub unsubscribe {
+sub subscriptions {
 	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
 	openprint::account::login() if ! $session{user_id};
 	if ( $session{user_id} ) {
@@ -176,7 +176,7 @@ sub unsubscribe {
 			} # end if
 		} # end if	
 	} # end if	
-} # end sub unsubscribe
+} # end sub subscriptions
 
 1;
 __END__
