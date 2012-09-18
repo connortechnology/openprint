@@ -731,7 +731,6 @@ function countLines(strtocount, cols) {
 		hard_lines ++;
 	}
 	if ( cols ) {
-alert(cols);
 		var soft_lines = Math.round(strtocount.length / (cols-1));
 		if ( hard_lines > soft_lines ) return hard_lines;
 		return soft_lines;

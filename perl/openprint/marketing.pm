@@ -21,6 +21,7 @@ require openprint::EmailCampaign;
 require openprint::MarketingCategory;
 require openprint::Banner;
 require openprint::Survey;
+require openprint::account;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -162,14 +163,17 @@ sub banners {
 
 sub subscriptions {
 	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
-	openprint::account::login() if ! $session{user_id};
+	$User = $variable{User} = new openprint::User($session{user_id}) if ! $$User{id};
+	if ( ( ! $session{user_id} ) and $param{email} ) {
+		openprint::account::login();
+	} # end if
 	if ( $session{user_id} ) {
 		if ( ( $param{action} eq 'Save' ) or ( $param{btnFunction} eq 'Login' ) ) {
-			if ( ( ! $param{all} ) and $User->mailinglist() ) {
-				$variable{error} .= $User->save({mailinglist=>0});
+			if ( ( $param{all} eq 'N' ) and ( $User->mailinglist() eq 'Y' ) ) {
+				$variable{error} .= $User->save({mailinglist=>$param{all}});
 				$variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
-			} elsif ( $param{all} and ! $User->mailinglist() ) {
-				$variable{error} .= $User->save({mailinglist=>1});
+			} elsif ( ( $param{all} eq 'Y' ) and ( $User->mailinglist() eq 'N' ) ) {
+				$variable{error} .= $User->save({mailinglist=>'Y'});
 				$variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
 			} else {
 				$variable{information} .= ' No changes made.';
