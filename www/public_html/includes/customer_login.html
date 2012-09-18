@@ -1,51 +1,22 @@
 <div id="Login">
 	<form id="LoginForm" name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
-	<div class="Register">
-		<fieldset><legend>Registration</legend>
-			<div class="content">
-			<div class="instruction">
-<? if ( $config{'WhyRegister'} ) ?>
-<? echo ( $config{'WhyRegister'} ) ?>
-<? else ( $config{'WhyRegister'} ) ?>
-Why register?  We require you to have an account to keep an order history, and to allow you to check the status of your project through production and shipping.
-<? endif ( $config{'WhyRegister'} ) ?>
-</div>
-			</div>
-			<p class="buttons">
-				<? echo ( ssi::button( 'Register', { href=>'/account/registration.html', text=>'Register Now' } ); ) ?>
-			</p>
-		</fieldset>
-	</div>
-	<div class="Login">
-		<fieldset><legend>Please login</legend>
-			<div class="content">
-				<div class="instruction">Please enter your e-mail address and password.<br/><br/></div>
-				<ul>
-					<li>
-						<label for="email">E-mail</label>
-						<input type="email" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.password );}" /><br/>
-						<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
-					</li>
-					<li>
-						<label for="password">Password</label>
-						<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-						<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
-					</li>
-					<li>
-						<label>Remember me</label>
-						<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( ssi::checked( $param{'rdbRememberMe'} eq 'Y' ); ) ?> />
-						<label class="radio" for="rdbRememberMeY">Yes</label>
-						<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( ssi::checked( $param{'rdbRememberMe'} ne 'Y' ); ) ?> />
-						<label class="radio" for="rdbRememberMeN">No</label>
-					</li>
-				</ul>
-			</div>
-			<p class="buttons">
-				<? echo ( ssi::button( 'Login', { onclick=>"LoginForm.btnFunction.value='Login';checkLoginData(LoginForm.email,LoginForm.password);", text=>'Login' } ); ) ?>
-				<? echo ( ssi::button( 'Forgot', { onclick=>"LoginForm.btnFunction.value='Forgotten Password';checkLoginData(LoginForm.email);", text=>'Forgotten Password' } ); ) ?>
-			</p>
-		</fieldset>
+		<div class="Register">
+			<fieldset><legend>Registration</legend>
+				<div class="content">
+				<div class="instruction">
+				<? if ( $config{'WhyRegister'} ) ?>
+				<? echo ( $config{'WhyRegister'} ) ?>
+				<? else ( $config{'WhyRegister'} ) ?>
+				Why register?  We require you to have an account to keep an order history, and to allow you to check the status of your project through production and shipping.
+				<? endif ( $config{'WhyRegister'} ) ?>
+				</div>
+				</div>
+				<p class="buttons">
+					<? echo ( ssi::button( 'Register', { href=>'/account/registration.html', text=>'Register Now' } ); ) ?>
+				</p>
+			</fieldset>
 		</div>
+		<!--#include virtual="/includes/_login_part.html"-->
 		<input type="hidden" name="btnFunction" value="Login" />
 	</form>
 </div>

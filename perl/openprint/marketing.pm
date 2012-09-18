@@ -82,7 +82,6 @@ sub email_campaign {
 		$variable{'Results'} = $Campaign->send();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
-$log->debug("Campgian: " . $Campaign->to_string());
 		$variable{error} .= $Campaign->save({name=>'Copy of '.$$Campaign{name}});
     } elsif ( $param{'btnFunction'} eq 'Test' ) {
         $variable{'information'} = $Campaign->test();
@@ -160,6 +159,24 @@ sub email_templates {
 
 sub banners {
 } # end sub banners
+
+sub unsubscribe {
+	my $User = $variable{User} = new openprint::User($param{user_id} ? $param{user_id} : $session{user_id});
+	openprint::account::login() if ! $session{user_id};
+	if ( $session{user_id} ) {
+		if ( ( $param{action} eq 'Save' ) or ( $param{btnFunction} eq 'Login' ) ) {
+			if ( ( ! $param{all} ) and $User->mailinglist() ) {
+				$variable{error} .= $User->save({mailinglist=>0});
+				$variable{information} .= 'Unsubscribed from all email communications.<br/>' if ! $variable{error};
+			} elsif ( $param{all} and ! $User->mailinglist() ) {
+				$variable{error} .= $User->save({mailinglist=>1});
+				$variable{information} .= 'Subscribed to all email communications.<br/>' if ! $variable{error};
+			} else {
+				$variable{information} .= ' No changes made.';
+			} # end if
+		} # end if	
+	} # end if	
+} # end sub unsubscribe
 
 1;
 __END__
