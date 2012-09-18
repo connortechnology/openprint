@@ -70,7 +70,7 @@ sub view {
 		} # end if
 	} # end if
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
 	if ( ! $$Project{id} ) {
 		$variable{error} .= "Project $project_index not found.<br/>";
 		return;
@@ -488,7 +488,6 @@ sub view {
 	if ( $project_index ) {
 		openprint::project::view( $log, $dbh, \%variable, $project_index );
 	} # end if
-	$variable{'Project'} = $Project if ! $variable{'Project'};
 
 } # end sub view_project
 
