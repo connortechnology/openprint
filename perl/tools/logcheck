@@ -4,6 +4,7 @@ use strict;
 
 require sql;
 require sets;
+require logger;
 
 use Date::Parse ();
 use Date::Calc ();
@@ -11,7 +12,6 @@ use Socket ();
 require openprint::Blacklist;
 require openprint::Host;
 
-require logger;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -176,6 +176,18 @@ if ( $opts->{'blacklist'} ) {
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;
+} else {
+		foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
+			if ( my $macs = $Host->mac() ) {
+				foreach my $mac ( @{$macs} ) {
+					$mac =~ s/:/\-/g;
+					`shorewall drop ~$mac`;
+				} # end foreach mac
+			} elsif ( $Host->ip() ) {
+				`shorewall drop $$Host{ip}`;
+			} # end if
+		} # end foreach Host
+	} # end if
 } # end if
 
 sub usage {
