@@ -1,7 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <table class="List sortable">
 	<tr>
-		<th align="left">Name</th><th align="left" class="DateTime">Last Run</th><th align="left" class="DateTime">Next Run</th><th align="right">Active</th>
+		<th class="name">Name</th><th class="DateTime">Last Run</th><th class="DateTime">Next Run</th><th class="active">Active</th>
 	</tr>
 	<? echo (
 		my $html;
@@ -9,10 +9,10 @@
 		foreach my $Campaign ( openprint::EmailCampaign->find( 'order' => 'lower(name)' ) ) {
 			$html .= sprintf(q`
 			<tr%6$s>
-				<td><a href="email_campaign.html?campaign_id=%1$d">%2$s</a></td>
-				<td align="left"><a href="email_campaign.html?campaign_id=%1$d">%3$s</a></td>
-				<td align="left"><a href="email_campaign.html?campaign_id=%1$d">%4$s</a></td>
-				<td align="right"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
+				<td class="name"><a href="email_campaign.html?campaign_id=%1$d">%2$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%3$s</a></td>
+				<td class="DateTime"><a href="email_campaign.html?campaign_id=%1$d">%4$s</a></td>
+				<td class="active"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
 			</tr>
 `, $Campaign->id(), $Campaign->name(),
 $Campaign->lastrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
@@ -24,5 +24,5 @@ $Campaign->active(), $rowclass );
 	) ?>
 </table>
 <p class="buttons">
-<? echo ( ssi::button( 'New', { 'href'=>'email_campaign.html' } ); ) ?>
+<? echo ( ssi::button( 'New', { href=>'email_campaign.html' } ); ) ?>
 </p>

@@ -75,10 +75,10 @@ sub email_campaign {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 ) if $param{'nextrun_year'};
 		$variable{error} .= $Campaign->save( \%param );
-		$variable{ExternalRedirect} = '/employee/marketing/email_campaigns.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
     } elsif ( $param{'btnFunction'} eq 'Delete' ) {
         $variable{error} .= $Campaign->delete();
-		$variable{ExternalRedirect} = '/employee/marketing/email_campaigns.html' if ! $variable{error};
+		$variable{ExternalRedirect} = '/marketing/email_campaigns.html' if ! $variable{error};
 	} elsif ( $param{'btnFunction'} eq 'Run' ) {
 		$variable{'Results'} = $Campaign->send();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {

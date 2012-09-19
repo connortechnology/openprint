@@ -66,6 +66,7 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+eval {
 						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
@@ -78,11 +79,13 @@ sub handler {
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
+};
 					} else {
 $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
+eval {
 					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 					if ( $path eq 'thumbnails' ) {
 						$r->sendfile( $Asset->thumbnail_path() );
@@ -91,7 +94,8 @@ $log->error("FORBIDDEN");
 					} else {
 # No album means has to be an article image, or a generic site image.
 						$r->sendfile( $Asset->on_disk_path() );
-					}
+					} # end if
+};
 				} # end if
 			} else {
 $log->error("NOT FOUND");

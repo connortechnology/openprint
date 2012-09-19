@@ -140,13 +140,18 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	my $user_id = @_ > 1 ? $_[1] : $openprint::session{user_id};
 	return 1 if ! $_[0]{'id'};
-	return 1 if $openprint::session{user_type} eq 'A';
-	return 1 if $_[0]{created_by} == $user_id;
+	my $User;
+	if ( @_ > 1 ) {
+		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User($_[1]);
+	} else {
+		$User = new openprint::User($openprint::session{user_id});
+	} # end if
+	return 1 if $$User{type} eq 'A';
+	return 1 if $_[0]{created_by} == $$User{id};
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{'id'};
-	return $Privacy->can_view($user_id);
+	return $Privacy->can_view($$User{id});
 } # end sub can_view
 
 sub Comments {
