@@ -1,14 +1,15 @@
 #!/usr/bin/perl
 use lib '/etc/apache2/lib/perl';
+use strict;
 
 use sql;
 use sets;
 
-use strict;
 use Socket;
 use Date::Parse;
 
 require logger;
+require openprint::Host;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -147,7 +148,11 @@ if ( $opts->{'blacklist'} ) {
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;
-} # end if
+} else {
+	foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'2 months'::interval AND count > 5 ORDER BY ip` ) ) {
+		`shorewall drop $ip`;
+	} # end foreach ip
+} # end if blacklist
 
 sub usage {
 	print <<EOH;
