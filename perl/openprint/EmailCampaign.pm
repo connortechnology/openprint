@@ -185,12 +185,12 @@ sub send {
 
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
-			$results .= 'No body.  Not sending.<br/>';
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
 			next;
 		} # end if
 
 		if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
 		} else {
 			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
 			$self->send_email( \%replacements );

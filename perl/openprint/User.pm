@@ -419,7 +419,8 @@ if ( 0 ) {
 	} # end if
 } # end if
 	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
+		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
 			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
@@ -475,16 +476,12 @@ sub html {
 } # end sub html
 
 sub last_logged_in {
-$openprint::log->debug("last_Logged_in");
 	if ( ! $_[0]{'last_logged_on'} ) {
-$openprint::log->debug("last_Logged_in");
 		# Almost any entry means we were logged in.  
-		my @Logs = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs ) {
-$openprint::log->debug("last_Logged_in: " . $Logs[0]->to_string() );
-			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
-		} else {
-			$openprint::log->debug("@ of logs returned " . @Logs );
+		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( $Log ) {
+$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
+			$_[0]{'last_logged_on'} = $$Log{date_time};
 		} # end if
 	}
 	return $_[0]{'last_logged_on'};

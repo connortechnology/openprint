@@ -93,12 +93,12 @@ sub endtime_seconds {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() );
+	#$log->debug("Emanantise: " . $self->to_string() );
 	my $parser = 'DateTime::Format::Pg';
 	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 
 	my $requested_dt = DateTime->from_epoch( 'epoch'=>$date_seconds, 'time_zone'=>$TZ );
-	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( 'seconds' => $self->starttime_seconds() % DAY );
@@ -106,12 +106,12 @@ sub emanantise {
 	my $date_part_dt = $requested_dt->clone()->truncate('to'=>'day');
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	if ( $st < $requested_dt ) {
 		# Need to add a day
 		$st += DateTime::Duration->new( 'days'=>1 );
 	} # end if
-	$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $et = $st + DateTime::Duration->new( 'seconds' => $self->duration_seconds() );
 
 	my $Shift;

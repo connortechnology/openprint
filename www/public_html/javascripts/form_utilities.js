@@ -26,9 +26,11 @@ function get_value( obj ) {
 		return obj.value;
 	} else if ( obj.length ) {
 		var value = new Array();
-		for ( var x = 0; x < obj.length; x += 1 ) {
-			if ( obj[x].checked )
+		for ( var x = 0, len=obj.length; x < len; x += 1 ) {
+			if ( obj[x].checked ) {
+				if ( obj[x].type == 'radio' ) return obj[x].value;
 				value[value.length] = obj[x].value;
+			} // end if
 		}
 		return value;
 	} else {
@@ -728,10 +730,12 @@ function countLines(strtocount, cols) {
 		if ( last == -1 ) break;
 		hard_lines ++;
 	}
-	var soft_lines = Math.round(strtocount.length / (cols-1));
-	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
-	if ( hard ) soft_lines = hard_lines;
-	return soft_lines;
+	if ( cols ) {
+		var soft_lines = Math.round(strtocount.length / (cols-1));
+		if ( hard_lines > soft_lines ) return hard_lines;
+		return soft_lines;
+	}
+	return hard_lines;	
 }
 
 function textarea_resize( element ) {
@@ -852,7 +856,7 @@ function check_time_starting( form, starting_prefix, ending_prefix, suffix ) {
     var end;
 	var do_time = 0;
 
-    if ( form.elements['time_assocated'+suffix] ) {
+    if ( form.elements['time_associated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -922,7 +926,7 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 		if ( get_value( form.elements['unknown_time'+suffix] ) == 1 ) unknown_time = 1;
 	} // end if
 
-    if ( form.elements['time_assocated'+suffix] ) {
+    if ( form.elements['time_associated'+suffix] ) {
 		if ( get_value( form.elements['time_associated'+suffix] ) == 1 ) do_time = 1;
 	} else if ( form.elements['all_day_event'+suffix] ) {
 		if ( get_value( form.elements['all_day_event'+suffix] ) == 0 ) do_time = 1;
@@ -987,7 +991,9 @@ function update_duration(form, starting_prefix, ending_prefix, suffix ) {
 			} // end if
 		} // end if
     } else {
-		if(starting_time_elem)starting_time_elem.hide();
+		if(starting_time_elem){
+			starting_time_elem.hide();
+		}
 		if(ending_time_elem)ending_time_elem.hide();
 		if ( $('duration'+suffix+'_time') ) $('duration'+suffix+'_time').hide(); 
 		if ( form.elements['duration'+suffix+'_days'] ) {
