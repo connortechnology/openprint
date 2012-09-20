@@ -422,9 +422,13 @@ sub external_calc {
 	} # end if
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
-	@vars = keys %specs if ! @vars;
+	if ( ! @vars ) {
+		#$log->warn("No outputs for $service_type");
+		@vars = keys %specs;
+	} # end if
 
 	my @no_outputs = eval( 'return openprint::Estimating::'.$service_type.'::no_outputs( @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
+	push @no_outputs, ( 'ProjectIndex', 'ServiceIndex' );
 
 $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );

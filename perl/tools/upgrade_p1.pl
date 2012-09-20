@@ -488,7 +488,17 @@ if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
 } # end if
+foreach my $Project ( openprint::Project->find('created_on >'=>q`NOW()-'7 days'::interval`) ) {
+	my @qtys = $Project->quantities();
+	$Project->recalculate();
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( ($Project->quantity($qty_index) < $qtys[$qty_index-1]-10) or ( $Project->quantity($qty_index)>$qtys[$qty_index-1]+10) ) {
+			print 'Project: '.$Project->id().' has changed by more than $10'."\n";
+		} # end if
+	} # end foreach qty_index
+} # end foreach Project
 $dbh->disconnect();
-`/etc/init.d/postgresql restart`;
+#`/etc/init.d/postgresql reload`;
+`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
 0;
 __END__
