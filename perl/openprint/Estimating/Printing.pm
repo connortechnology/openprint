@@ -1565,7 +1565,8 @@ sub breakdown {
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
 	my $plate_costs = $$price{'Plate Costs'};
-	$breakdown .= sprintf( "\tPlates: \%d plates * \$%.2f per plate = \$%.2f<br/>", @$price{'txtPlateQuantity','Plate Cost','Plate Price'});
+	$breakdown .= sprintf( 'Plates: %1$d %4$s * $%2$.2f per plate = $%3$.2f<br/>', @$price{'txtPlateQuantity','Plate Cost','Plate Price'}, $$plate_costs{'Plate ID'} );
+
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 	my $stock_qty = $$price{'Stock Quantity'};
 	$breakdown .= sprintf( 'Overs: Base:%s Setup: %s Run:%s FM:%s Additional Plate:%s Bindery: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'Bindery Overs','Total Overs'} );
@@ -2074,7 +2075,7 @@ $imp->display();
 			if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 				%plate_price = $materials[0]->get_price( $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			} # end if
-#$openprint::log->debug("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
+$openprint::log->debug("Plates : " . $$price{'Plate Costs'}{'Plate ID'} . ':'. $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}.':'.$plate_price{'Price'} );
 			$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 			$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
 			$$price{'Plate Cost'} = $plate_price{'Price'};
