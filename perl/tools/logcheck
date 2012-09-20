@@ -177,17 +177,16 @@ if ( $opts->{'blacklist'} ) {
 	} # end if
 	`/etc/init.d/shorewall restart`;
 } else {
-		foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-			if ( my $macs = $Host->mac() ) {
-				foreach my $mac ( @{$macs} ) {
-					$mac =~ s/:/\-/g;
-					`shorewall drop ~$mac`;
-				} # end foreach mac
-			} elsif ( $Host->ip() ) {
-				`shorewall drop $$Host{ip}`;
-			} # end if
-		} # end foreach Host
-	} # end if
+	foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
+		if ( my $macs = $Host->mac() ) {
+			foreach my $mac ( @{$macs} ) {
+				$mac =~ s/:/\-/g;
+				`shorewall drop ~$mac`;
+			} # end foreach mac
+		} elsif ( $Host->ip() ) {
+			`shorewall drop $$Host{ip}`;
+		} # end if
+	} # end foreach Host
 } # end if
 
 sub usage {
