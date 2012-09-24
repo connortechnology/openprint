@@ -2,13 +2,16 @@ use strict;
 package openprint::Currency;
 our @ISA = qw(openprint::Object);
 
-use Number::Format;
-use openprint ();
+require Number::Format;
+require openprint;
 require openprint::Currency_Conversion;
+require openprint::Pricelist;
+require openprint::Company;
+require sql;
+
 use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-require sql;
 
 $debug = 0;
 $table = 'Currencies';

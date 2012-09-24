@@ -407,7 +407,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} elsif ( $param{'order_id'} ) {
@@ -420,7 +420,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} # end if

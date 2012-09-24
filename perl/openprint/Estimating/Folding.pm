@@ -523,7 +523,8 @@ sub signature_calc {
 					$i->dutch_rows(0);
 					$i->quantity(1);
 					push @Impositions, $i;
-					my $i = $I->copy();
+
+					$i = $I->copy();
 					$i->columns( $i->dutch_columns() );
 					$i->rows( $i->dutch_rows() );
 					$i->dutch_columns(0);

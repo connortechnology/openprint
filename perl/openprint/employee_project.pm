@@ -681,8 +681,8 @@ sub send_proofs_approved_email {
 	my ( $project_index, $order_id ) = @_;
 # Send email to sales rep
 	my %info;
-	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
+	$info{'SecureSiteURL'} = $config{'ExternalSecureSiteURL'};
+	$info{'siteURL'} = $config{'ExternalSiteURL'};
 
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
@@ -690,7 +690,7 @@ sub send_proofs_approved_email {
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
 
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
@@ -725,7 +725,7 @@ sub send_duedate_change_notification {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Project = new openprint::Project( $project_index );
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );

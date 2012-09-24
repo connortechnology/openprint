@@ -464,16 +464,17 @@ sub send_completion_notice {
 # >Something to note:	the order email is sent in the currency that the order is stored in, not neccessarily the current currency
 sub send_sales_order {
 	my ( $self ) = @_;
-	my %order;
-
-	$order{'OrderID'} = $$self{'id'};
-	$order{'Order'} = $self;
+	my %order = (
+		OrderID => $$self{id},
+		Order => $self,
+	);
 
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
 	my $Currency = $self->Currency();
 	@order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
 	$order{'Currency'} = $Currency;
+
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
@@ -507,7 +508,7 @@ sub send_sales_order {
 	
 	new openprint::Email()->send(
 		FROM	=> $sales_person_email,
-		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
+		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
@@ -524,12 +525,12 @@ sub send_sales_order {
 	my @project_dockets = ();
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
+	my $docket_content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data;
 		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 		if ( $_ ) {
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$content, \%data ) ) );
+			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$docket_content, \%data ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
 		} # end if
 	} # for each

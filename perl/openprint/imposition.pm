@@ -532,7 +532,7 @@ sub calc_setup_object {
 	} # end if run_style
 
 # Only consider the rotated view if teh grain direction is unspecified or is correct for this.
-	my $gutters = $$specs{'Gutter'};
+	$gutters = $$specs{'Gutter'};
 	$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 	if ( sets::isin( 'Top', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
@@ -556,7 +556,7 @@ sub calc_setup_object {
 		$gutters = 0 if $gutters < 0;
 	} # end if
 
-	my $adjusted_paper_height;
+	$adjusted_paper_height = 0;
 	if ( $paper_height ) {
 		$adjusted_paper_height = $paper_height;
 	} elsif ( $$specs{'Cut Off'} ) {
@@ -592,7 +592,7 @@ sub calc_setup_object {
 	$adjusted_paper_height -= $setup2->cropmark_bottom();
 	$adjusted_paper_height = 0 if $adjusted_paper_height < 0;
 
-	my $adjusted_paper_width = $paper_width;
+	$adjusted_paper_width = $paper_width;
 	$cropmarkspace = $$specs{'CropMarkSpace'};
 	$cropmarkspace -= $$specs{'BleedSize'} if sets::isin( 'Top', \@bleed_locations );
 	$cropmarkspace = 0 if $cropmarkspace < 0;

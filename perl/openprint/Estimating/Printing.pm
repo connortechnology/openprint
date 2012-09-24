@@ -1142,7 +1142,6 @@ sub get_impositions {
 		my $minimum_sheet_length = $Press->specification('Minimum Sheet Length');
 		my $maximum_roll_width = $Press->specification('Maximum Roll Width');
 		my $minimum_roll_width = $Press->specification('Minimum Roll Width');
-		my $printing_type = $Press->specification('Printing Type');
 		my $roll2sheet_minimum_weight = $Press->Specification('Roll2Sheet Minimum Weight');
 
 		foreach my $Paper ( @$Papers ) {

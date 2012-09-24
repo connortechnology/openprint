@@ -121,7 +121,7 @@ sub add_project_to_press_schedule {
 	my @sigs_not_on_schedule;
 	foreach my $s_s_id ( sets::union(@sigs) ) {
 		next if openprint::ScheduledJob->find('project_id'=>$$Project{id}, 'service_id any'=>$s_s_id );
-		push @sigs_not_on_schedule;
+		push @sigs_not_on_schedule, $s_s_id;
 	} # end foreach sig
 
 	while ( my $s_s_id = shift @sigs_not_on_schedule ) {
