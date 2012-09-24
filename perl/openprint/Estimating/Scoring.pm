@@ -638,7 +638,7 @@ sub get_specs {
 
 	@{$$variable{'SignatureGroups'}} = ();
 
-	my @capabilities = 'Y', 'When Printing';
+	my @capabilities = ( 'Y', 'When Printing' );
 	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$services{'Folding'};
 	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
@@ -655,7 +655,7 @@ sub get_specs {
 sub signature_summary {
 	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );

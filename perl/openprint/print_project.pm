@@ -102,7 +102,7 @@ sub create_edit_display {
 
 	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
-	@variable{'SelectedProjectType'} = $Project->Type()->name();
+	$variable{'SelectedProjectType'} = $Project->Type()->name();
 
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 

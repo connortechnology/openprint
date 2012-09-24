@@ -515,10 +515,8 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	my @sales_order;
+	@body = ('', $_, 'text/html', 'quoted-printable');
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
@@ -537,10 +535,10 @@ sub send_sales_order {
 	} # for each
 
 	my @admin_emails = split( ',', $config{'OrderingEmail'} );
-	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
+	@admin_emails = map { lc misc::trim($_) } @admin_emails;
 
 	my @accounting_emails = split( ',', $config{'AccountingEmail'} );
-	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+	@accounting_emails = map { lc misc::trim($_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
