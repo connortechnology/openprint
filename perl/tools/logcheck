@@ -117,26 +117,27 @@ print "Trying $re against $line\n" if $opts->{debug};
 					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
-					} else {
-						if ( ! $host_counts{$ip} ) {
-							my $Host = openprint::Host->find_one(ip=>$ip);
-							if ( $Host ) {
-								$host_counts{$$Host{ip}} = $Host;
-							} else {
-								$host_counts{$ip} = new openprint::Host();
-								$host_counts{$ip}->ip( $ip );
-								$host_counts{$ip}->hostname( $hostname );
-							} # end if
-						} # end if
-						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
-						my $occurrence = Date::Parse::str2time( $when );
-#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
-						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
-							$host_counts{$ip}{'count'} += 1;
-							$host_counts{$ip}{'update'} = 1;
+						next;
+					} # end if
+
+					if ( ! $host_counts{$ip} ) {
+						my $Host = openprint::Host->find_one(ip=>$ip);
+						if ( $Host ) {
+							$host_counts{$$Host{ip}} = $Host;
 						} else {
-							print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
+							$host_counts{$ip} = new openprint::Host();
+							$host_counts{$ip}->ip( $ip );
+							$host_counts{$ip}->hostname( $hostname );
 						} # end if
+					} # end if
+					my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
+					my $occurrence = Date::Parse::str2time( $when );
+#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
+					if ( (!$last_seen) or ($last_seen < $occurrence) ) {
+						$host_counts{$ip}{'count'} += 1;
+						$host_counts{$ip}{'update'} = 1;
+					} else {
+						print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
 					} # end if
 					last;
 				} # end if line matches re
@@ -164,7 +165,8 @@ if ( $opts->{'blacklist'} ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
 		foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-			if ( my $macs = $Host->mac() ) {
+			my $macs = $Host->mac();
+			if ( $macs and @{$macs} ) {
 				foreach my $mac ( @{$macs} ) {
 					$mac =~ s/:/\-/g;
 					print FH "~$mac\n";
@@ -178,7 +180,8 @@ if ( $opts->{'blacklist'} ) {
 	`/etc/init.d/shorewall restart`;
 } else {
 	foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-		if ( my $macs = $Host->mac() ) {
+		my $macs = $Host->mac();
+		if ( $macs and @{$macs} ) {
 			foreach my $mac ( @{$macs} ) {
 				$mac =~ s/:/\-/g;
 				`shorewall drop ~$mac`;
