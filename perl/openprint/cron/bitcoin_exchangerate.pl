@@ -92,10 +92,13 @@ if ($res->is_success) {
 	$log->debug("Content: " . $res->content );
 	my $content = $res->content;
 	my $rates = JSON::decode_json( $content );
-	print " CAD Rate: ".$$rates{CAD}{'30d'}."\n";
 	my %Currencies = map { $_->short(), $_ } openprint::Currency->find();
 	foreach my $cur ( keys %$rates ) {
 		next if ! $Currencies{$cur};
+		if ( ! $$rates{$cur}{'30d'} ) {
+			$log->error("NULL 30d rate for $cur");
+			next;
+		} # end if
 		my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id}, period_end=>undef);
 		if ( ! $Conversion ) {
 			$Conversion = new openprint::Currency_Conversion();

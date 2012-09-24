@@ -2,7 +2,7 @@ CREATE TABLE Currency_Conversions (
 	id	SERIAL,
 	from_id		INTEGER NOT NULL, FOREIGN KEY (from_id) REFERENCES Currencies (id),
 	to_id		INTEGER NOT NULL, FOREIGN KEY (to_id) REFERENCES Currencies (id),
-	rate		float NOT NULL,
+	rate		float,
 	period_start	TIMESTAMP WITH TIME ZONE,
 	period_end		TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (id)

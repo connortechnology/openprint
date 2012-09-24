@@ -109,12 +109,13 @@ sub Asset {
 
 sub location {
 	if ( @_ > 1 ) {
-		my $Location = openprint::Location->find_one('name_lc'=>lc $_[1]);
+		$_[1] = openprint::Location->transform('name', $_[1]);
+		my $Location = openprint::Location->find_one('name lc'=>lc $_[1]);
 		if ( ! $Location ) {
 			$Location = new openprint::Location();
-			$Location->save({'name'=>$_[1]});
+			$Location->save({name=>$_[1]});
 		} # end if
-		$_[0]{'location_id'} = $Location->id();
+		$_[0]{location_id} = $Location->id();
 		return $Location->name();
 	} # end if
 	return new openprint::Location( $_[0]{'location_id'} )->name();
@@ -128,7 +129,6 @@ sub Photos {
 } # end sub Photos
 
 sub Album {
-$openprint::log->debug("Loading album: $_[0]{'album_id'}");
 	return new openprint::Photo_Album( $_[0]{'album_id'} );
 } # end sub Album
 
