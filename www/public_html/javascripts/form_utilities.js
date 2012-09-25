@@ -693,17 +693,16 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
-function Location_onchange( parent_element, type ) {
-	//if ( parent_element.getValue() ) {
-		// only do anything if we have selected something	
-		new Ajax.Request( '/location/_ddm.json', { 
-			parameters: { 
-					type: type,
-					parent_element: parent_element.id,
-					parent_id: parent_element.getValue(), 
-				}, evalScripts: true
-			}
-			);
+function Location_onchange( parent_element, type, options ) {
+	if ( ! options ) options = {};
+	new Ajax.Request( '/location/_ddm.json', { 
+		parameters: { 
+				type: type,
+				parent_element: parent_element.id,
+				parent_id: parent_element.getValue(), 
+			}, onSuccess: options.onSuccess,
+		}
+		);
 	//} // end if
 	if ( type == 'country' ) {
 		var state_label = $(parent_element.name + '_state');
@@ -730,10 +729,12 @@ function countLines(strtocount, cols) {
 		if ( last == -1 ) break;
 		hard_lines ++;
 	}
-	var soft_lines = Math.round(strtocount.length / (cols-1));
-	var hard = eval("hard_lines  " + unescape("%3e") + "soft_lines;");
-	if ( hard ) soft_lines = hard_lines;
-	return soft_lines;
+	if ( cols ) {
+		var soft_lines = Math.round(strtocount.length / (cols-1));
+		if ( hard_lines > soft_lines ) return hard_lines;
+		return soft_lines;
+	}
+	return hard_lines;	
 }
 
 function textarea_resize( element ) {

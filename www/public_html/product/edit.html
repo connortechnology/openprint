@@ -58,9 +58,11 @@
 		); ) ?>
 			</p>
 		</fieldset>
-		<br class="spacer"/><hr/><br class="spacer"/>
 		<div class="leftColumn">
 			<fieldset><legend>Product Information</legend>
+				<? if ( $$variable{Product}->deleted() ) ?>
+				<div class="warning">This product has been deleted.</div>
+				<? endif ( $$variable{Product}->deleted() ) ?>
 				<ul>
 					<li> 
 						<label>Product ID</label>
@@ -97,6 +99,9 @@
 					<li>
 						<label>Sort</label>
 						<input type="number" name="sort" value="<? echo ( 1*$$variable{'Product'}->sort(); ) ?>" />
+					</li>
+					<li><label>Created On</label>
+						<? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $variable{Product}->created_on() ) ); ) ?>
 					</li>
 <? if ( openprint::ProjectType->find_one() ) ?>
 					<li>

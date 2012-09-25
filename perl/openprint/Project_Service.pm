@@ -115,6 +115,8 @@ sub delete {
 	delete $$Project{'service_types'};
 	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id'=>$$self{'service_id'} );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
+	my $specs = $self->specs();
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -137,12 +139,5 @@ sub overrides {
 	} # end if
 	return ();
 } # end sub overrides
-
-sub delete {
-	my ( $self ) = @_;	
-	my $specs = $self->specs();
-	openprint::print_project::delete_service( $log, $openprint::dbh, @$self{'project_id','service_id'} );
-	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
-} # end sub delete
 1;
 __END__

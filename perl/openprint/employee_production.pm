@@ -407,7 +407,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} elsif ( $param{'order_id'} ) {
@@ -420,7 +420,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} # end if
@@ -583,7 +583,7 @@ sub send_duedate_change_notification {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Project = new openprint::Project( $project_index );
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
@@ -700,7 +700,7 @@ sub barcode {
 		$param{$param} =~ s/\D//g;
 	} # end foreach param
 
-	@param{'Order'} = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
+	($param{'Order'}) = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
 	my %operators = map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A']);
 
 	if ( $param{'Project'} or $param{'Action'} or $param{'Operator'} ) {

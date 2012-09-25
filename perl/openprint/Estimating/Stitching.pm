@@ -89,7 +89,7 @@ sub no_outputs {
 
 sub has_overrides {
     my ( $Project, $service_id, $specs ) = @_;
-    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
     my @v;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -353,8 +353,6 @@ sub calc {
 		$$specs{'alert'} .= 'Unable to find any signatures to stitch.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-
-	my @signatures = $Project->signatures();
 
 	# Figure out whether we need a cover
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );

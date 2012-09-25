@@ -22,7 +22,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'Users';
 $serial = 'users_id_seq';
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	'id'				=>	'id',

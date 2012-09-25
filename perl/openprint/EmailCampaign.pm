@@ -185,7 +185,7 @@ sub send {
 
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
 			next;
 		} # end if
 

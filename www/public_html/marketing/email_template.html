@@ -3,7 +3,7 @@
 	<input type="hidden" name="template_id" value="<? echo ( $$variable{'Template'}->id(); ) ?>"/>
 	<fieldset>
 		<p><label>Name</label><input type="text" name="name" value="<? echo ( $$variable{'Template'}->name() ) ?>" /></p>
-		<p><label>Body</label><textarea name="body" rows="<? echo ( ssi::count_lines( $$variable{'Template'}->body() ); ) ?>" onkeyup="textarea_resize( this );" ><? hecho ( $$variable{'Template'}->body() ) ?></textarea></p>
+		<p><label>Body</label><textarea name="body" rows="<? echo ( ssi::count_lines( $$variable{'Template'}->body() ); ) ?>" onkeyup="textarea_resize(this);" ><? hecho ( $$variable{'Template'}->body() ) ?></textarea></p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::button( 'DeleteBottom', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ),

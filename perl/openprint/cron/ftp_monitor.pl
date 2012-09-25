@@ -1,8 +1,8 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require configuration;
 require sql;
@@ -51,32 +51,32 @@ if ($opts->{help}) {
 
 $log = new logger('level'=>'debug');
 # Get our configuration information
-if (my $err = misc::ReadCfg('/etc/ftp_monitor.conf')) {
+if (my $err = configuration::from_file('/etc/ftp_monitor.conf')) {
     die $err;
 }
 
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
+	$config{$param} = $$opts{$param} if $$opts{$param};
+	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
+	$config{$param} = $$opts{$param} if $$opts{$param};
 } # end foreach non-requiredp aram
-if ( $CFG::Config{'site_url'} ) {
-	$CFG::Config{'siteURL'} = $CFG::Config{'site_url'};
-	$CFG::Config{'ExternalSiteURL'} = $CFG::Config{'site_url'};
+if ( $config{'site_url'} ) {
+	$config{'siteURL'} = $config{'site_url'};
+	$config{'ExternalSiteURL'} = $config{'site_url'};
 } # end if
 
-$CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
-$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
-$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
+$config{'SiteTitle'} = $config{'site_title'};
+$config{'SkinPath'} = $config{'skin_path'};
+$config{'log_level'} = 'debug' if ! $config{'log_level'};
+$config{'sleep'} = 1.0 if ! $config{'sleep'};
 
-if ( $CFG::Config{'pid_file'} ) {
+if ( $config{'pid_file'} ) {
 	my $pidh;
-	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
+	if (open($pidh, '> '.$config{'pid_file'} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
@@ -84,26 +84,27 @@ if ( $CFG::Config{'pid_file'} ) {
 	} # end if
 } # end if
 
-$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
+$log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 $log->info("Opening SQL connection");
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $CFG::Config{'db_host'},
-	'database'	=> $CFG::Config{'db_name'},
+	'host'		=> $config{'db_host'},
+	'database'	=> $config{'db_name'},
 	'driver'	=> 'Pg',
-	'login'		=> $CFG::Config{'db_user'},
-	'password'	=> $CFG::Config{'db_pass'},
+	'login'		=> $config{'db_user'},
+	'password'	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-configuration::init_cache( \%CFG::Config );
+configuration::init( \%config );
+configuration::from_file('/etc/ftp_monitor.conf');
 $openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
 my %Users; # Cache of User Objects keyed by user/email address
 
-#my $scoreboard = get_scoreboard( $CFG::Config{'scoreboard'} );
+#my $scoreboard = get_scoreboard( $config{'scoreboard'} );
 my $fifoh;
-if (open($fifoh, "< $CFG::Config{fifo}")) {
+if (open($fifoh, "< $config{fifo}")) {
 	while (1) {
 		my $line;
 		eval {
@@ -202,14 +203,14 @@ if (open($fifoh, "< $CFG::Config{fifo}")) {
 		if ( ! $dbh->ping() ) {
 			$log->warn("REOpening SQL connection");
 			$openprint::dbh = sql::open_sql( $log, 
-					'host'		=> $CFG::Config{'db_host'},
-					'database'	=> $CFG::Config{'db_name'},
+					'host'		=> $config{'db_host'},
+					'database'	=> $config{'db_name'},
 					'driver'	=> 'Pg',
-					'login'		=> $CFG::Config{'db_user'},
-					'password'	=> $CFG::Config{'db_pass'},
+					'login'		=> $config{'db_user'},
+					'password'	=> $config{'db_pass'},
 					);
 			die 'Error opening db' if ! $dbh;
-			configuration::init_cache( \%CFG::Config );
+			configuration::init_cache( \%config );
 		} # end if
 	} # end while <input>
 
@@ -231,7 +232,7 @@ sub check_scoreboard {
 		my $User = $Users{$username};
 
 
-		if ( ( ! sets::isin( $username, \@users ) ) or ( $CFG::Config{'max_files'} and @{$uploads{$username}} > $CFG::Config{'max_files'} ) ) {
+		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and @{$uploads{$username}} > $config{'max_files'} ) ) {
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$username}} );
@@ -280,11 +281,11 @@ sub send_email {
 
 	if ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 		$openprint::dbh = sql::open_sql( $log, 
-			'host'		=> $CFG::Config{'db_host'},
-			'database'	=> $CFG::Config{'db_name'},
+			'host'		=> $config{'db_host'},
+			'database'	=> $config{'db_name'},
 			'driver'	=> 'Pg',
-			'login'		=> $CFG::Config{'db_user'},
-			'password'	=> $CFG::Config{'db_pass'},
+			'login'		=> $config{'db_user'},
+			'password'	=> $config{'db_pass'},
 		);
 	} # end if
 	if ( $openprint::dbh and $openprint::dbh->ping() and $$upload{'company_name'} ) {
@@ -578,7 +579,6 @@ sub get_scoreboard {
 	my $header = "L L l L L L L L";
 	my $template = "L L L A32 L A80 A32 A16 A80 A32 A80 A5 A79 L L L L L L";
 	my $recordsize = length(pack($template,(  )));
-<<<<<<< HEAD
 	if ( open(SCORE,$score_file) ) {
 		my $headersize = length(pack($header));
 		read(SCORE, $record, $headersize );
@@ -596,22 +596,6 @@ sub get_scoreboard {
 		$log->warn("Unable to open scoreboard at $score_file: reason $!");
 		sleep 1;
 	} # end if
-=======
-	open(SCORE,$score_file) or die "Unable' to open $score_file:$!\n";
-	my $headersize = length(pack($header));
-	read(SCORE, $record, $headersize );
-	while (read(SCORE,$record,$recordsize)) {
-		my %score;
-		@score{'pid','uid','gid','user','server_port','server_addr',
-			'server_label','client_addr','client_name','class','cwd','cmd','cmd_arg','begin_idle','begin_session',
-			'xfer_size','xfer_done','xfer_len','xfer_elapsed'} = unpack($template,$record);
-		if ($score{'pid'} != 0) {
-			push @scoreboard, \%score;
-		} # end if
-		$log->debug(Dumper(\%score));
-	} # end while
-	close(SCORE);
->>>>>>> f46c80d71274221a8ed1edc7753fa1b03f785e14
 	return \@scoreboard;
 } # end sub get_scoreboard
 

@@ -263,7 +263,7 @@ sub neccessary {
 
 sub has_overrides {
 	my ( $Project, $service_id, $specs ) = @_;
-	my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	my @v;
     foreach my $s_s_id ( $Project->signatures() ) {
@@ -523,7 +523,8 @@ sub signature_calc {
 					$i->dutch_rows(0);
 					$i->quantity(1);
 					push @Impositions, $i;
-					my $i = $I->copy();
+
+					$i = $I->copy();
 					$i->columns( $i->dutch_columns() );
 					$i->rows( $i->dutch_rows() );
 					$i->dutch_columns(0);
@@ -1389,7 +1390,7 @@ sub display {
 sub signature_summary {
 	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );

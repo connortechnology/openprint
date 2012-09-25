@@ -62,10 +62,6 @@ $debug = 0;
 	category_id		=>	undef,
 );
 
-sub cache_field {
-	return 'name';
-}
-
 sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;
 

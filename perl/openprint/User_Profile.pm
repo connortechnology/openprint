@@ -127,7 +127,9 @@ sub save {
 							'field-'.$Field->id().'_day'} ) );
 			} # end if
 		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
-			if ( $$param{'field-'.$$Field{'id'}.'_name'} ) {
+			$$param{'field-'.$$Field{id}.'_name'} = openprint::Location->transform('name', $$param{'field-'.$$Field{id}.'_name'});
+
+			if ( $$param{'field-'.$$Field{id}.'_name'} ) {
 
 				# A new one... need to see if it already exists
 
@@ -137,12 +139,12 @@ sub save {
 #$openprint::log->debug("Got parent: $parent_id");
 
 
-				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name lc'=>lc $$param{'field-'.$$Field{'id'}.'_name'}, $parent_id?('parent_id'=>$parent_id):() );
+				my $Location = openprint::Location->find_one('type'=>$Field->type(), 'name lc'=>lc $$param{'field-'.$$Field{id}.'_name'}, $parent_id?('parent_id'=>$parent_id):() );
 				if ( ! $Location ) {
 #$openprint::log->debug("DIdn't find location, so adding it");
 					$Location = new openprint::Location();
-					$error .= $Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{'id'}.'_name'}, 
-($parent_id?('parent_id'=>$parent_id):())});
+					$error .= $Location->save({'type'=>$Field->type(),'name'=>$$param{'field-'.$$Field{id}.'_name'}, 
+							($parent_id?('parent_id'=>$parent_id):())});
 					return $error if $error;
 				} # end if
 				$self->value( $Field, $Location->id() ) if $Location->id();

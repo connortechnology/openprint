@@ -95,12 +95,16 @@ sub from_file {
 # Check for errors
 	if ($@) {
 		$openprint::log->error( "ERROR: Failure compiling '$file' - $@" );
+	return "ERROR: Failure compiling '$file' - $@";;
 	} elsif (! defined($rc)) {
 		$openprint::log->error( "ERROR: Failure reading '$file' - $!" );
+		return "ERROR: Failure reading '$file' - $!";
 	} elsif (! $rc) {
 		$openprint::log->error( "ERROR: Failure processing '$file'" );
+		return "ERROR: Failure processing '$file'";
 	}
 	@config{keys %Config} = values %Config;
+	return;
 } # end sub from_file
 
 sub from_db {

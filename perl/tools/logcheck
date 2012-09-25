@@ -4,6 +4,7 @@ use strict;
 
 require sql;
 require sets;
+require logger;
 
 use Date::Parse ();
 use Date::Calc ();
@@ -11,7 +12,6 @@ use Socket ();
 require openprint::Blacklist;
 require openprint::Host;
 
-require logger;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -60,6 +60,7 @@ die 'Error opening db' if ! $dbh;
 
 my @log_files = (
 	'/var/log/auth.log',
+	'/var/log/syslog',
 );
 
 my @re = (
@@ -80,6 +81,7 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user fround from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]+>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+$',
+q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: query \(cache\) '\./NS/IN' denied$`,
 );
 
 my $ac = sql::start_transaction( $dbh );
@@ -91,7 +93,7 @@ foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
 		foreach my $line (<FH>) {
 			foreach my $re ( @re ) {
-#print "Trying $re against $line\n" if $opts->{debug};
+print "Trying $re against $line\n" if $opts->{debug};
 				if ( $line =~ /$re/ ) {
 					my ($when, $source ) = ( $1, $2 );
 					print "match for $source\n" if $opts->{debug};
@@ -115,26 +117,27 @@ foreach my $log_file ( @log_files ) {
 					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
-					} else {
-						if ( ! $host_counts{$ip} ) {
-							my $Host = openprint::Host->find_one('ip'=>$ip);
-							if ( $Host ) {
-								$host_counts{$Host->ip()} = $Host;
-							} else {
-								$host_counts{$ip} = new openprint::Host();
-								$host_counts{$ip}->ip( $ip );
-								$host_counts{$ip}->hostname( $hostname );
-							} # end if
-						} # end if
-						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip};
-						my $occurrence = Date::Parse::str2time( $when );
-#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
-						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
-							$host_counts{$ip}{'count'} += 1;
-							$host_counts{$ip}{'update'} = 1;
+						next;
+					} # end if
+
+					if ( ! $host_counts{$ip} ) {
+						my $Host = openprint::Host->find_one(ip=>$ip);
+						if ( $Host ) {
+							$host_counts{$$Host{ip}} = $Host;
 						} else {
-						print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
+							$host_counts{$ip} = new openprint::Host();
+							$host_counts{$ip}->ip( $ip );
+							$host_counts{$ip}->hostname( $hostname );
 						} # end if
+					} # end if
+					my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
+					my $occurrence = Date::Parse::str2time( $when );
+#$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
+					if ( (!$last_seen) or ($last_seen < $occurrence) ) {
+						$host_counts{$ip}{'count'} += 1;
+						$host_counts{$ip}{'update'} = 1;
+					} else {
+						print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
 					} # end if
 					last;
 				} # end if line matches re
@@ -162,7 +165,8 @@ if ( $opts->{'blacklist'} ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
 		foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
-			if ( my $macs = $Host->mac() ) {
+			my $macs = $Host->mac();
+			if ( $macs and @{$macs} ) {
 				foreach my $mac ( @{$macs} ) {
 					$mac =~ s/:/\-/g;
 					print FH "~$mac\n";
@@ -174,6 +178,18 @@ if ( $opts->{'blacklist'} ) {
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;
+} else {
+	foreach my $Host ( openprint::Host->find('blacklist'=>1,'order'=>'ip') ) {
+		my $macs = $Host->mac();
+		if ( $macs and @{$macs} ) {
+			foreach my $mac ( @{$macs} ) {
+				$mac =~ s/:/\-/g;
+				`shorewall drop ~$mac`;
+			} # end foreach mac
+		} elsif ( $Host->ip() ) {
+			`shorewall drop $$Host{ip}`;
+		} # end if
+	} # end foreach Host
 } # end if
 
 sub usage {

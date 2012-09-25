@@ -1,9 +1,8 @@
 <? eval (
-	$$variable{'subtotal'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
-	@{$$variable{'Taxes'}} = openprint::Tax->find(
-		'period_end_null_or_>='	=>sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
-		( Date::Calc::check_date( @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ) ? (
-		'period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ) ) : () ),
+	$$variable{subtotal} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+	@{$$variable{Taxes}} = openprint::Tax->find(
+		ssi::date_filter( '/invoice/history.html?created_on_end', 'period_start_null_or_<=' ),
+		ssi::date_filter( '/invoice/history.html?created_on_start', 'period_end_null_or_>=' ),
 		'order'		=>	'period_start,name',
 	);
 	my @Invoices = @{$$variable{'Invoices'}} = ();
@@ -11,8 +10,8 @@
 		@Invoices = openprint::Invoice->find( 'id' => $param{'invoice_id'},
 			( sets::isin( $session{'user_type'}, ['E','A'] ) ?  () : ( 'invoicee_id'=>$session{'company_id'} ) ),
 			);
-	} elsif ( $param{'po'} ) {
-		@Invoices = openprint::Invoice->find('po in'=>$param{'po'},
+	} elsif ( $param{po} ) {
+		@Invoices = openprint::Invoice->find('po any'=>$param{po},
 			( sets::isin( $session{'user_type'}, ['E','A'] ) ?  () : ( 'invoicee_id'=>$session{'company_id'} ) ),
 );
 	} else {
