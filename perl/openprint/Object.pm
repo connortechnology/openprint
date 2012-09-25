@@ -431,136 +431,166 @@ sub find_operators {
 	my %results;
 
 	if ( exists $$params{$k.' ='} ) {
-		push @{$results{' ='}}, $f.' = ?', $$params{$k.' ='};
+		push @{$results{' ='}}, $f.' = ?', $k.' =', $$params{$k.' ='};
 	} # end if
 	if ( exists $$params{$k.'_like'} ) {
-		push @{$results{'_like'}}, $f.'::text LIKE ?', $$params{$k.'_like'};
+		push @{$results{'_like'}}, $f.'::text LIKE ?', $k.'_like', $$params{$k.'_like'};
 	} 
 	if ( exists $$params{$k.' like'} ) {
-		push @{$results{' like'}}, $f.'::text LIKE ?', $$params{$k.' like'};
+		push @{$results{' like'}}, $f.'::text LIKE ?', $k.' like', $$params{$k.' like'};
 	} 
 	if ( exists $$params{$k.' ilike'} ) {
-		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $$params{$k.' ilike'};
+		push @{$results{' ilike'}}, $f.'::text ILIKE ?', $k.' ilike', $$params{$k.' ilike'};
 	} 
 	if ( exists $$params{$k.'_start'} ) {
-		push @{$results{'_start'}}, $f.' >= ?', $$params{$k.'_start'};
+		push @{$results{'_start'}}, $f.' >= ?', $k.'_start', $$params{$k.'_start'};
 	} 
 	if ( exists $$params{$k.'_end'} ) {
-		push @{$results{'_end'}}, $f.' <= ?', $$params{$k.'_end'};
+		push @{$results{'_end'}}, $f.' <= ?', $k.'_end', $$params{$k.'_end'};
 	} # end if
 	if ( exists $$params{$k.' <'} ) {
-		push @{$results{' <'}}, $f.' < ?', $$params{$k.' <'};
+		push @{$results{' <'}}, $f.' < ?', $k.' <', $$params{$k.' <'};
 	} # end if
 	if ( exists $$params{$k.' <='} ) {
-		push @{$results{' <='}}, $f.' <= ?', $$params{$k.' <='};
+		push @{$results{' <='}}, $f.' <= ?', $k.' <=', $$params{$k.' <='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_<='} ) {
-		push @{$results{'_null_or_<='}}, "( $f <= ? OR $f IS NULL )", $$params{$k.'_null_or_<='};
+		push @{$results{'_null_or_<='}}, "( $f <= ? OR $f IS NULL )", $k.'_null_or_<=', $$params{$k.'_null_or_<='};
 	} # end if
 	if ( exists $$params{$k.' >='} ) {
-		push @{$results{' >='}}, $f.' >= ?', $$params{$k.' >='};
+		push @{$results{' >='}}, $f.' >= ?', $k.' >=', $$params{$k.' >='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_>='} ) {
-		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
+		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $k.'_null_or_>=', $$params{$k.'_null_or_>='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_>'} ) {
-		push @{$results{'_null_or_>'}}, "( $f > ? OR $f IS NULL )", $$params{$k.'_null_or_>'};
+		push @{$results{'_null_or_>'}}, "( $f > ? OR $f IS NULL )", $k.'_null_or_>', $$params{$k.'_null_or_>'};
 	} # end if
 	if ( exists $$params{$k.'_null_or_<'} ) {
-		push @{$results{'_null_or_<'}}, "( $f < ? OR $f IS NULL )", $$params{$k.'_null_or_<'};
+		push @{$results{'_null_or_<'}}, "( $f < ? OR $f IS NULL )", $k.'_null_or_<', $$params{$k.'_null_or_<'};
 	} # end if
 	if ( exists $$params{$k.' is null or ='} ) {
-		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $$params{$k.' is null or ='};
+		push @{$results{' is null or ='}}, "( $f = ? OR $f IS NULL )", $k.' is null or =', $$params{$k.' is null or ='};
 	} # end if
 	if ( exists $$params{$k.' exists'} ) {
-		push @{$results{' exists'}}, ( $$params{$k.' exists'} ? ' EXISTS' : ' NOT EXISTS ' ) . $f;
+		push @{$results{' exists'}}, ( $$params{$k.' exists'} ? ' EXISTS' : ' NOT EXISTS ' ) . $f, $k.' exists';
 	} # end if
 	if ( exists $$params{$k.' >'} ) {
-		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
+		push @{$results{' >'}}, $f.' > ?', $k.' >', $$params{$k.' >'};
 	} # end if
 	if ( exists $$params{$k.' !='} ) {
-		push @{$results{' !='}}, $f.' != ?', $$params{$k.' !='};
+		push @{$results{' !='}}, $f.' != ?', $f.' != ?', $$params{$k.' !='};
 	} # end if
 	if ( exists $$params{$k.' <<='} ) {
-		push @{$results{' <<='}}, "$f <<= ?", $$params{$k.' <<='};
+		push @{$results{' <<='}}, "$f <<= ?", "$f <<= ?", $$params{$k.' <<='};
 	} # end if
 	if ( exists $$params{$k.' &&'} ) {
 		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' &&'}} ) {
-				push @{$results{' &&'}}, $f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', @{$$params{$k.' <@'}};
+				push @{$results{' &&'}}, 
+					$f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', 
+					$k.' &&',
+					@{$$params{$k.' <@'}};
 			} # end if
 		} else {
-			push @{$results{' &&'}}, "$f && ?", $$params{$k.' &&'};
+			push @{$results{' &&'}}, "$f && ?", $k.' &&', $$params{$k.' &&'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' <@'} ) {
 		if ( ref $$params{$k.' <@'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' <@'}} ) {
-				push @{$results{' <@'}}, $f . ' <@ ARRAY['. join(',', map { '?' } @{$$params{$k.' <@'}} ).']', @{$$params{$k.' <@'}};
+				push @{$results{' <@'}}, 
+					$f . ' <@ ARRAY['. join(',', map { '?' } @{$$params{$k.' <@'}} ).']',
+					$k.' <@',
+					@{$$params{$k.' <@'}};
 			} # end if
 		} else {
-			push @{$results{' <@'}}, "$f <@ ?", $$params{$k.' <@'};
+			push @{$results{' <@'}}, "$f <@ ?", $k.' <@', $$params{$k.' <@'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' @>'} ) {
 		if ( ref $$params{$k.' @>'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' @>'}} ) {
-				push @{$results{' @>'}}, $f . ' @> ARRAY['. join(',', map { '?' } @{$$params{$k.' @>'}} ).']', @{$$params{$k.' @>'}};
+				push @{$results{' @>'}}, 
+					$f . ' @> ARRAY['. join(',', map { '?' } @{$$params{$k.' @>'}} ).']', 
+					$k.' @>',
+					@{$$params{$k.' @>'}};
 			} # end if
 		} else {
-			push @{$results{' @>'}}, "$f @> ?", $$params{$k.' @>'};
+			push @{$results{' @>'}}, "$f @> ?", $k.' @>', $$params{$k.' @>'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' in'} ) {
 		if ( ref $$params{$k.' in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' in'}} ) {
-				push @{$results{' in'}}, $f.' IN (' . join(',', map { '?' } @{$$params{$k.' in'}} ).')', @{$$params{$k.' in'}};
+				push @{$results{' in'}}, 
+					$f.' IN (' . join(',', map { '?' } @{$$params{$k.' in'}} ).')', 
+					$k.' in',
+					@{$$params{$k.' in'}};
 			} # end if
 		} elsif ( $$params{$k.' in'} ) {
-			push @{$results{' in'}}, $f.' IN (?)', $$params{$k.' in'};
+			push @{$results{' in'}}, $f.' IN (?)', $k.' in', $$params{$k.' in'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' not in'} ) {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
 			if ( @{$$params{$k.' not in'}} ) {
-				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+				push @{$results{' not in'}}, 
+					$f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', 
+					$k.' not in',
+					@{$$params{$k.' not in'}};
 			} else {
-					push @{$results{' not in'}}, ();
+				push @{$results{' not in'}}, $k.' not in', ();
 			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
-			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
+			push @{$results{' not in'}}, $f.' != ?', $k.' not in', $$params{$k.' not in'};
 		} else {
-			push @{$results{' not in'}}, ();
+			push @{$results{' not in'}}, $k.' not in', $k.' not in', ();
+		} # end if
+	} # end if
+	if ( exists $$params{'not in '.$k} ) {
+		if ( ref $$params{'not in '.$k} eq 'ARRAY' ) {
+$log->error("Bad use of not in");
+		} elsif ( $$params{'not in '.$k} ) {
+			push @{$results{'not in '}}, '? NOT IN '.$f, 'not in '.$k, $$params{'not in '.$k};
+		} else {
+			push @{$results{'not in '}}, '? NOT IN '.$f, 'not in '.$k, ();
 		} # end if
 	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
-		push @{$results{'_lc'}}, "lower($f) = ?", $$params{$k.'_lc'};
+		push @{$results{'_lc'}}, "lower($f) = ?", $k.'_lc', $$params{$k.'_lc'};
 	} # end if
 	if ( exists $$params{$k.' lc'} ) {
-		push @{$results{' lc'}}, "lower($f) = ?", $$params{$k.' lc'};
+		push @{$results{' lc'}}, "lower($f) = ?", $k.' lc', $$params{$k.' lc'};
 	} # end if
 	if ( exists $$params{$k.' uc'} ) {
-		push @{$results{' uc'}}, "upper($f) = ?", $$params{$k.' uc'};
+		push @{$results{' uc'}}, "upper($f) = ?", $k.' uc', $$params{$k.' uc'};
 	} # end if
 	if ( exists $$params{$k.' any'} ) {
 		if ( ref $$params{$k.' any'} eq 'ARRAY' ) {
-			push @{$results{' any'}}, '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", @{$$params{$k.' any'}};
+			push @{$results{' any'}}, 
+				 '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", 
+				 $k.' any',
+				 @{$$params{$k.' any'}};
 		} else {
-			push @{$results{' any'}}, "? = ANY($f)", $$params{$k.' any'};
+			push @{$results{' any'}}, "? = ANY($f)", $k.' any', $$params{$k.' any'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' not any'} ) {
 		if ( ref $$params{$k.' not any'} eq 'ARRAY' ) {
-			push @{$results{' not any'}}, '(' . join(',', map { '?' } @{$$params{$k.' not any'}} ).") != ANY($f)", @{$$params{$k.' not any'}};
+			push @{$results{' not any'}}, 
+				 '(' . join(',', map { '?' } @{$$params{$k.' not any'}} ).") != ANY($f)",
+				 $k.' not any',
+				 @{$$params{$k.' not any'}};
 		} else {
-			push @{$results{' not any'}}, "? != ANY($f)", $$params{$k.' not any'};
+			push @{$results{' not any'}}, "? != ANY($f)", $k.' not any', $$params{$k.' not any'};
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' is null'} ) {
 		if ( $$params{$k.' is null'} ) {
-			push @{$results{' is null'}}, "$f IS NULL";
+			push @{$results{' is null'}}, "$f IS NULL", $k.' is null';
 		} else {
-			push @{$results{' is null'}}, "$f IS NOT NULL";
+			push @{$results{' is null'}}, "$f IS NOT NULL", $k.' is null';
 		} # end if
 	} # end if
 
@@ -674,27 +704,24 @@ sub find {
 		foreach my $k ( keys %$f ) {
 			if ( ref $$f{$k} eq 'ARRAY' ) {
 				my @w;
-				my @d;
-
 				foreach my $field ( @{$$f{$k}} ) {
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						if ( @{$$results{$operator}} ) {
 							push @w, shift @{$$results{$operator}};
-							push @d, $k.$operator;
+							delete $$params{shift @{$$results{$operator}}};
 							push @values, @{$$results{$operator}};
 						} # end if
 						push @used_fields, $k;
 					} # end foreach
 				} # end foreach field
-				foreach ( @d ) { delete $$params{$_}; };
 				push @where, '(' . join(' OR ', @w ) . ')' if @w;
 			} else {
 				my $results = find_operators( $params, $k, $$f{$k} );
 				foreach my $operator ( keys %$results ) {
-					delete $$params{$k.$operator};
 					if ( @{$$results{$operator}} ) {
 						push @where, shift @{$$results{$operator}};
+						delete $$params{shift @{$$results{$operator}}};
 						push @values, @{$$results{$operator}};
 					} # end if
 					push @used_fields, $k;

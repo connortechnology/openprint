@@ -26,6 +26,7 @@ BEGIN {
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape ();
+	use HTML::Strip ();
 	use HTML::Entities ();
 	use Data::Dumper ();
 

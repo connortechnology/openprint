@@ -2,11 +2,9 @@
 	my $Question = openprint::Survey_Question->find_one(
 		($session{user_id} ? ( 'not in user_id'=>$session{user_id} ) : () ),
 		);
-	return if ! $Question;
+	return 'No more questions.' if ! $Question;
 	
-	my $html = '<div class="latest_survey"><form id="survey_form" action="/survey/answer_question.html" method="post"><fieldset><legend>Latest Survey</legend><div id="latest_survey"><ul>';
-	$html .= $Question->html();
-	$html .= '</ul>';
+	my $html = '<ul>'.$Question->html().'</ul>';
 	$html .= ssi::input(type=>'hidden', name=>'question_id', value=>$$Question{id});
 	$html .= '<p class="buttons">';
 	if ( $session{user_id} ) {
@@ -14,6 +12,6 @@
 	} else {
 		$html .= ssi::button('SubmitLatestSurvey', { onclick=>q`$('survey_form').submit();`, text=>'Submit' } );
 	} # end if
-	$html .= '</p></div></fieldset></form></div>';
+	$html .= '</p>';
 	return $html;
 ) ?>

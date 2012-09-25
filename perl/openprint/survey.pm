@@ -246,7 +246,7 @@ $log->error("Attempt to delete a comment without rights");
 		} # end if
 	} # end if
 } # end sub _comments
-sub _latest_survey {
+sub _latest_survey_question {
 	my $Question = new openprint::Survey_Question($param{question_id});
 	if ( ! $$Question{id} ) {
 		$variable{error} .= "Invalid question id ($param{question_id})<br/>";
@@ -268,7 +268,7 @@ sub _latest_survey {
 	});
 } # end sub _latest_survey
 sub answer_question {
-	_latest_survey();
+	_latest_survey_question();
 } # end sub answer_question
 
 1;
