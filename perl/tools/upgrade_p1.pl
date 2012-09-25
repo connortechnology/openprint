@@ -488,7 +488,7 @@ if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
 } # end if
-foreach my $Project ( openprint::Project->find('created_on >'=>q`NOW()-'7 days'::interval`) ) {
+foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), '7 days') ) ) ) {
 	my @qtys = $Project->quantities();
 	$Project->recalculate();
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
