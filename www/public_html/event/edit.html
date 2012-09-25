@@ -119,6 +119,10 @@ $company_id = $session{company_id} if (!$company_id);
 							<label for="info">More info</label>
 							<textarea id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{Event}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Event}->info()); ) ?></textarea>
 						</li>
+						<li><label>URL</label>
+							<input type="url" id="url" name="url" value="<? echo ( $$variable{Event}->url() ) ?>" />
+						</li>
+						
 						<? eval ( $$variable{'Privacy'} = $$variable{Event}->Privacy(); ) ?>
 						<!--#include virtual="/includes/_privacy_widget.html"-->
 					</ul>

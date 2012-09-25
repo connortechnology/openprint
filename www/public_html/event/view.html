@@ -98,6 +98,9 @@
 						<label for="info">More info</label>
 						<? echo ( $$variable{Event}->info() ) ?>
 					</li>
+					<? if ( $$variable{Event}->url() ) ?>
+					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
+					<? endif ( $$variable{Event}->url() ) ?>
 				</ul>
 			</div>
 		</fieldset>
