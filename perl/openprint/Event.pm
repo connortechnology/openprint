@@ -31,6 +31,7 @@ $serial = 'events_id_seq';
 	#'asset_id'		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
 	'album_id'		=>	'album_id', 
+	url				=>	'url',
 );
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
