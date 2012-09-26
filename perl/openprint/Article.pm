@@ -47,6 +47,7 @@ $serial = 'articles_id_seq';
 	'summary'			=>	'summary',
 	'user_type'			=>	'user_type',
 	'keywords'			=>	'keywords',
+	anonymous			=>	'anonymous',
 );
 
 %transforms = (
@@ -60,6 +61,7 @@ $serial = 'articles_id_seq';
 	'category_id'	=>	undef,
 	'user_type'		=>	undef,
 	'created_by'	=>	undef,
+	anonymous		=>	0,
 );
 
 sub name {

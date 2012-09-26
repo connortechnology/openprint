@@ -78,6 +78,9 @@
 					<li><label>Published at</label>
 						<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{Article}->published_on(), {'with_today'=>1} ); ) ?></span>
 					</li>
+					<li><label>Anonymous</label>
+						<? echo ( ssi::radio( 'anonymous', ['1', 'Yes', '0', 'No' ], 1*$$variable{Article}->anonymous() ); ) ?>
+					</li>
 					<li><label>Who</label>
 						<select name="user_type" id="user_type">
 							<option value=""> All </option>
