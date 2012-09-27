@@ -80,6 +80,7 @@ eval {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
 };
+$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 					} else {
 $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
@@ -96,6 +97,7 @@ eval {
 						$r->sendfile( $Asset->on_disk_path() );
 					} # end if
 };
+$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 				} # end if
 			} else {
 $log->error("NOT FOUND");
@@ -108,7 +110,7 @@ $log->error("No value for aset. " . $r->uri() );
 		untie %session;
 		$dbh->disconnect();
 	} else {
-	$log->warn("No dbh!");
+		$log->error("No dbh!");
 	} # end if dbh
 	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if DEBUG;
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.

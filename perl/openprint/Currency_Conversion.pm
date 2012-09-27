@@ -5,7 +5,7 @@ require Math::Round;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'currency_conversions';
 $serial	= 'currency_conversions_id_seq';
 %fields = (
@@ -17,6 +17,7 @@ $serial	= 'currency_conversions_id_seq';
 	rate			=>	'rate',
 );
 %transforms = (
+	rate	=>	[ 's/[^\-\.\d]//g' ],
 );
 %defaults = (
 	period_start	=>	undef,
