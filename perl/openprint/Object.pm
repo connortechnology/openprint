@@ -433,6 +433,9 @@ sub find_operators {
 	if ( exists $$params{$k.' ='} ) {
 		push @{$results{' ='}}, $f.' = ?', $k.' =', $$params{$k.' ='};
 	} # end if
+	if ( exists $$params{$k.' !='} ) {
+		push @{$results{' !='}}, $f.' != ?', $k.' != ?', $$params{$k.' !='};
+	} # end if
 	if ( exists $$params{$k.'_like'} ) {
 		push @{$results{'_like'}}, $f.'::text LIKE ?', $k.'_like', $$params{$k.'_like'};
 	} 
@@ -477,9 +480,6 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.' >'} ) {
 		push @{$results{' >'}}, $f.' > ?', $k.' >', $$params{$k.' >'};
-	} # end if
-	if ( exists $$params{$k.' !='} ) {
-		push @{$results{' !='}}, $f.' != ?', $f.' != ?', $$params{$k.' !='};
 	} # end if
 	if ( exists $$params{$k.' <<='} ) {
 		push @{$results{' <<='}}, "$f <<= ?", "$f <<= ?", $$params{$k.' <<='};

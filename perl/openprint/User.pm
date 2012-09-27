@@ -480,7 +480,7 @@ sub last_logged_in {
 		# Almost any entry means we were logged in.  
 		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
 		if ( $Log ) {
-$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
+#$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
 			$_[0]{'last_logged_on'} = $$Log{date_time};
 		} # end if
 	}

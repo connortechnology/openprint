@@ -184,6 +184,48 @@ sub _history {
 	} # end if
 } # end sub _history
 
+sub search {
+	_search();
+
+	if ( ( ! $session{'/article/search.html?lastupdated'} ) or ( time - $session{'/article/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/article/search.html', 'published_on_start', -31 );
+		ssi::setup_date_select( '/article/search.html', 'published_on_end', '' );
+		ssi::setup_date_select( '/article/search.html', 'created_on_start', -31 );
+		ssi::setup_date_select( '/article/search.html', 'created_on_end', '' );
+	} # end if
+
+} # end sub history
+
+sub _search {
+	if ( ! $param{'func'} ) {
+		ssi::save_params( '/article/search.html', ( 
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
+				'published','company_id', 'category_id', 'author_id' ) );
+	} 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->delete();
+		} # end foreach id
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->destroy();
+		} # end foreach id
+	} # end if
+} # end sub _search
+
 sub edit {
 	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 
