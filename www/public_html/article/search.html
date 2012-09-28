@@ -78,12 +78,7 @@
 				<ul>
 <? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li><label>Published?</label>
-						<input type="radio" id="published_1" name="published" value="1" <? echo ( ssi::checked( $session{'/article/search.html?published'} eq '1' ); ) ?> onclick="load_articles(this.form);" />
-						<label class="radio" for="published_1">Yes</label>
-						<input type="radio" id="published_0" name="published" value="0" <? echo ( ssi::checked( $session{'/article/search.html?published'} eq '0' ); ) ?> onclick="load_articles(this.form);" />
-						<label class="radio" for="published_0">No</label>
-						<input type="radio" id="published_01" name="published" value="" <? echo ( ssi::checked( $session{'/article/search.html?published'} eq '' ) ) ?> onclick="load_articles(this.form);" />
-						<label class="radio" for="published_01">Both</label>
+					<? echo ( ssi::radio( 'published', [ '1', 'Yes', '0', 'No', '', 'Both' ], $session{'/article/search.html?published'}, {onclick=>'load_articles(this.form);'} ); ) ?>
 					</li>
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
 					<li>

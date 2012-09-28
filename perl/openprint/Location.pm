@@ -48,7 +48,7 @@ $serial = 'locations_id_seq';
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
     'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'postalcode'	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'postalcode'	=> [ 's/\s*//' ],
 	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
 	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );

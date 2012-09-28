@@ -10,25 +10,34 @@
 		) ) {
 		#next if ! $Location->can_view();
 		if ( $session{'/location/search.html?country_id'} ) {
-			my $Country = $Location->ancestor('type','country');
-			if ( $Country and $Country->id() != $session{'/location/search.html?country_id'} ) {
-				next;
+			if ( $$Location{type} eq 'country' and $$Location{id} == $session{'/location/search.html?country_id'} ) {
+			} else {
+				my $Country = $Location->ancestor('type','country');
+				if ( $Country and $Country->id() != $session{'/location/search.html?country_id'} ) {
+					next;
+				} # end if
 			} # end if
 		} # end if
 		if ( $session{'/location/search.html?state_id'} ) {
-			my $State = $Location->ancestor('type','state');
-			if ( $State and $State->id() != $session{'/location/search.html?state_id'} ) {
-				next;
+			if ( $$Location{type} eq 'state' and $$Location{id} == $session{'/location/search.html?state_id'} ) {
+			} else {
+				my $State = $Location->ancestor('type','state');
+				if ( $State and $State->id() != $session{'/location/search.html?state_id'} ) {
+					next;
+				} # end if
 			} # end if
 		} # end if
 		if ( $session{'/location/search.html?city_id'} ) {
-			my $City = $Location->ancestor('type','city');
-			if ( $City and $City->id() != $session{'/location/search.html?city_id'} ) {
-				next;
-			} elsif ( my $State = $Location->ancestor('type','state') ) {
-				my $Location_State = new openprint::Location( $session{'/location/search.html?city_id'} )->ancestor('type','state');
-				if ( $Location_State and $State->id() != $Location_State->id() ) {
+			if ( $$Location{type} eq 'city' and $$Location{id} == $session{'/location/search.html?city_id'} ) {
+			} else {
+				my $City = $Location->ancestor('type','city');
+				if ( $City and $City->id() != $session{'/location/search.html?city_id'} ) {
 					next;
+				} elsif ( my $State = $Location->ancestor('type','state') ) {
+					my $Location_State = new openprint::Location( $session{'/location/search.html?city_id'} )->ancestor('type','state');
+					if ( $Location_State and $State->id() != $Location_State->id() ) {
+						next;
+					} # end if
 				} # end if
 			} # end if
 		} # end if

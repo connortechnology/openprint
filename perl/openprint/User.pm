@@ -524,7 +524,7 @@ sub Location {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
-			$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );

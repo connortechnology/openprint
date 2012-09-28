@@ -110,9 +110,12 @@
 					<li><label>Location</label>
 						<? echo ( 
 								my $html .= $$variable{Event}->where();
-								if ( $session{'user_id'} ) {
+								if ( $session{user_id} ) {
 									my $MyLocation = new openprint::User($session{'user_id'})->Location();
+$log->debug("My location is " . $MyLocation->to_string() );
 									if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+$log->debug('getting coords');
+$log->debug("My location is " . $MyLocation->to_string() );
 										$MyLocation->get_latitude_and_longitude();
 									} # end if
 

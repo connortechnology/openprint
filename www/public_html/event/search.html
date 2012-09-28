@@ -61,12 +61,12 @@
 			<div class="rightColumn">
 				<ul>
 					<li><label>Country</label>
-					<select id="country_id" name="country_id" onchange="Location_onchange( this, this.form.elements['state_id'], 'state' );"><option value=""> All </option>
+					<select id="country_id" name="country_id" onchange="Location_onchange( this, 'country' );"><option value=""> All </option>
 					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'country'), $session{'/event/search.html?country_id'} ); ) ?>
 					</select>
 					</li>
 					<li><label>State/Province</label>
-					<select id="state_id" name="state_id" onchange="Location_onchange( this, this.form.elements['city_id'], 'city' );"><option value=""> All </option>
+					<select id="state_id" name="state_id" onchange="Location_onchange( this, 'state' );"><option value=""> All </option>
 					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'state'), $session{'/event/search.html?state_id'} ); ) ?>
 					</select>
 					</li>
