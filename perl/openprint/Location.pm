@@ -493,5 +493,42 @@ sub upload {
 	} # end if
 	return $Album->upload( @_ );
 } # end sub upload
+
+sub filters {
+	my ( $prefix, $selected, $options ) = @_;
+
+	my ( $country_id, $state_id, $city_id );
+	if ( ref $selected eq 'openprint::Location' ) {
+		$_ = $selected->ancestor('country');
+		$country_id = $_->id() if $_;
+		$_ = $selected->ancestor('state');
+		$state_id = $_->id() if $_;
+		$_ = $selected->ancestor('city');
+		$city_id = $_->id() if $_;
+	} elsif ( ref $selected eq 'HASH' ) {
+		( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
+	} elsif ( ref $selected eq 'ARRAY' ) {
+		( $country_id, $state_id, $city_id ) = @$selected;
+	} # end if	
+
+    my $html = '<li><label>Country</label>';
+    my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>q`Location_onchange( this, 'country' );"` } );
+
+    $html .= '</li><li><label>State/Province</label>';
+    my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
+			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
+			);
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>q`Location_onchange( this, 'state' );"` } );
+
+    $html .= '</li><li><label>City</label>';
+    my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
+        ( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
+    );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>q`Location_onchange( this, 'city' );"` } );
+	$html .= '</li>';
+
+    return $html;
+} # end sub filters
 1;
 __END__
