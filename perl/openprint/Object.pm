@@ -722,133 +722,135 @@ sub find {
 	my @used_fields;
 
 	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
+	my %search;
+	@search{@param_keys} = @$params{@param_keys};
+	
+	if ( @param_keys ) {
+		foreach ( 'find_fields', 'fields' ) {
+			my $f = \%{$type.'::'.$_};
+			next if ! $f;
 
-	foreach ( 'find_fields', 'fields' ) {
-		my $f = \%{$type.'::'.$_};
-		next if ! $f;
+			foreach my $k ( @param_keys ) {
+#$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
+				next if ! $$f{$k};
 
-		foreach my $k ( @param_keys ) {
-			next if ! $$f{$k};
-
-			# This allows mainly for find_fields to reference multiple values, opinion in Project, value
-			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
-				if ( ref $$params{$k} eq 'ARRAY' ) {
-					if ( @{$$params{$k}} ) {
-						push @where, "$field IN (".join(',', map {'?'} @{$$params{$k}} ) . ')';
-						push @values, @{$$params{$k}};
-					} # end if
-				} elsif ( ref $$params{$k} eq 'HASH' ) {
-					foreach my $p_k ( keys %{$$params{$k}} ) {
-						my $v = $$params{$k}{$p_k};
-						if ( ref $v eq 'ARRAY' ) {
-							push @where, "$field IN (".join(',', map {'?'} @{$v} ) . ')';
-							push @values, $p_k, @{$v};
-						} else {
-							push @where, "$field=?";
-							push @values, $p_k, $v;
+# This allows mainly for find_fields to reference multiple values, opinion in Project, value
+				foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
+					if ( ref $search{$k} eq 'ARRAY' ) {
+						if ( @{$search{$k}} ) {
+							push @where, "$field IN (".join(',', map {'?'} @{$search{$k}} ) . ')';
+							push @values, @{$search{$k}};
 						} # end if
-					} # end foreach p_k
-				} elsif ( ! defined $$params{$k} ) {
-					push @where, "$field IS NULL";
-				} else {
-					push @where, "$field=?";
-					push @values, $$params{$k};
-				} # end if
-			} # end foreach field
-			delete $$params{$k};
-			push @used_fields, $k;
-		} # end foreach k
-		last if ! %$params;
+					} elsif ( ref $search{$k} eq 'HASH' ) {
+						foreach my $p_k ( keys %{$search{$k}} ) {
+							my $v = $search{$k}{$p_k};
+							if ( ref $v eq 'ARRAY' ) {
+								push @where, "$field IN (".join(',', map {'?'} @{$v} ) . ')';
+								push @values, $p_k, @{$v};
+							} else {
+								push @where, "$field=?";
+								push @values, $p_k, $v;
+							} # end if
+						} # end foreach p_k
+					} elsif ( ! defined $search{$k} ) {
+						push @where, "$field IS NULL";
+					} else {
+						push @where, "$field=?";
+						push @values, $search{$k};
+					} # end if
+				} # end foreach field
+				delete $search{$k};
+				push @used_fields, $k;
+			} # end foreach k
+			last if ! %search;
+			#$log->debug("Used fields @used_fields" . join(',',keys %search));
 
-		foreach my $k ( keys %$f ) {
-			if ( ref $$f{$k} eq 'ARRAY' ) {
-				my @w;
-				foreach my $field ( @{$$f{$k}} ) {
-					my $results = find_operators( $params, $k, $field );
+			foreach my $k ( keys %$f ) {
+				if ( ref $$f{$k} eq 'ARRAY' ) {
+					my @w;
+					foreach my $field ( @{$$f{$k}} ) {
+						my $results = find_operators( \%search, $k, $field );
+						foreach my $operator ( keys %$results ) {
+							if ( @{$$results{$operator}} ) {
+								delete $search{shift @{$$results{$operator}}};
+								if ( @{$$results{$operator}} ) {
+									push @w, shift @{$$results{$operator}};
+									push @values, @{$$results{$operator}};
+								} # end if
+							} # end if
+							push @used_fields, $k;
+						} # end foreach
+					} # end foreach field
+					push @where, '(' . join(' OR ', @w ) . ')' if @w;
+				} else {
+					my $results = find_operators( \%search, $k, $$f{$k} );
 					foreach my $operator ( keys %$results ) {
 						if ( @{$$results{$operator}} ) {
-							delete $$params{shift @{$$results{$operator}}};
+							delete $search{shift @{$$results{$operator}}};
 							if ( @{$$results{$operator}} ) {
-								push @w, shift @{$$results{$operator}};
+								push @where, shift @{$$results{$operator}};
 								push @values, @{$$results{$operator}};
 							} # end if
 						} # end if
 						push @used_fields, $k;
-					} # end foreach
-				} # end foreach field
-				push @where, '(' . join(' OR ', @w ) . ')' if @w;
-			} else {
-				my $results = find_operators( $params, $k, $$f{$k} );
-				foreach my $operator ( keys %$results ) {
-					if ( @{$$results{$operator}} ) {
-						delete $$params{shift @{$$results{$operator}}};
-						if ( @{$$results{$operator}} ) {
-							push @where, shift @{$$results{$operator}};
-							push @values, @{$$results{$operator}};
-						} # end if
-					} # end if
-					push @used_fields, $k;
-				} # end foraech
-			} # end if
-		} # end foreach k in fields
-		last if ! %$params;
-	} # end foreach set of fields
+					} # end foraech
+				} # end if
+			} # end foreach k in fields
+			last if ! %search;
+		} # end foreach set of fields
 
 #$log->debug("Where: (@where)");
 
+	} # end if @find_fields
 	my $fields = \%{$type.'::fields'};
-	# Check for Object references
-	if ( %$params ) {
+# Check for Object references
+	if ( %search ) {
 		foreach my $k ( keys %$params ) {
-			next if sets::isin( ref $$params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
+			next if sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $$fields{$f} ) {
-Carp::cluck("Use of deprecated Object ref in find");
-				if ( $$params{$k}->id() ) {
+				Carp::cluck("Use of deprecated Object ref in find");
+				if ( $search{$k}->id() ) {
 					push @where, $$fields{$f}.' = ?';
-					push @values, $$params{$k}->id();
+					push @values, $search{$k}->id();
 				} else {
 					push @where, "$$fields{$f} IS NULL";
 				} # end if
-				delete $$params{$k};
+				delete $search{$k};
 			} # end if
 		} # end foreach
 	} # end if
+	if ( $search{'custom'} ) {
+		push @where, shift @{$search{'custom'}};
+		push @values, @{$search{'custom'}};
+		delete $search{'custom'};
+	} # end if
+
 	if ( $$fields{'deleted'} and ! sets::isin( 'deleted', \@used_fields ) ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
-	} # end if
-	if ( $$params{'custom'} ) {
-		push @where, shift @{$$params{'custom'}};
-		push @values, @{$$params{'custom'}};
-		delete $$params{'custom'};
 	} # end if
 
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $$params{'or'} ) {
 		$sql .= ' WHERE' if ! @where;
 		$sql .= " OR $$params{'or'}";
-		delete $$params{'or'};
 	} # end if
 	if ( $$params{'order'} ) {
 		$sql .= " ORDER BY $$params{'order'}";
-		delete $$params{'order'};
 	} # end if
 	if ( $$params{'group'} ) {
 		$sql .= " GROUP BY $$params{'group'}";
-		delete $$params{'group'};
 	} # end if
 	if ( exists $$params{'limit'} ) {
 		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
-		delete $$params{'limit'};
 	} # end if
 	if ( exists $$params{'offset'} ) {
 		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
-		delete $$params{'offset'};
 	} # end if
-	foreach my $k ( keys %$params ) {
-		$log->error("Extra parameters in $type ::find $k => $$params{$k}");
-		Carp::cluck("Extra parameters in $type ::find $k => $$params{$k}");
+	foreach my $k ( keys %search ) {
+		$log->error("Extra parameters in $type ::find $k => $search{$k}");
+		Carp::cluck("Extra parameters in $type ::find $k => $search{$k}");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;

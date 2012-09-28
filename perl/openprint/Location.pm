@@ -63,6 +63,7 @@ $serial = 'locations_id_seq';
 	'asset_id'		=>	undef,
 	'album_id'		=>	undef,
 	'deleted'		=>	'0',
+	'name'			=>	undef,
 );
 
 sub children {
@@ -497,6 +498,14 @@ sub upload {
 sub filters {
 	my ( $prefix, $selected, $options ) = @_;
 
+	my $option_string;
+	if ( $$options{onSuccess} ) {
+		$option_string = 'onSuccess: function(){' . $$options{onSuccess}.'}';
+	} # end if
+	if ( $option_string ) {
+		$option_string = ',{'.$option_string.'}';
+	} # end if
+
 	my ( $country_id, $state_id, $city_id );
 	if ( ref $selected eq 'openprint::Location' ) {
 		$_ = $selected->ancestor('country');
@@ -510,10 +519,10 @@ sub filters {
 	} elsif ( ref $selected eq 'ARRAY' ) {
 		( $country_id, $state_id, $city_id ) = @$selected;
 	} # end if	
-
+$openprint::log->debug("$country_id $state_id $city_id");
     my $html = '<li><label>Country</label>';
     my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>q`Location_onchange( this, 'country' );"` } );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );"` } );
 
     $html .= '</li><li><label>';
 	my $Country = new openprint::Location($country_id);
@@ -528,13 +537,13 @@ sub filters {
     my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
 			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
 			);
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>q`Location_onchange( this, 'state' );"` } );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
 
     $html .= '</li><li><label>City</label>';
     my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
         ( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
     );
-    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>q`Location_onchange( this, 'city' );"` } );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );"` } );
 	$html .= '</li>';
 
     return $html;

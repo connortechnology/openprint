@@ -126,6 +126,55 @@ sub save {
 							'field-'.$Field->id().'_month',
 							'field-'.$Field->id().'_day'} ) );
 			} # end if
+		} elsif ( $Field->type() eq 'location' ) {
+			my $prefix = "field-$$Field{id}-";
+
+			foreach ( 'country','state','city','location' ) {
+				$$param{$prefix.$_} = openprint::Location->transform('name',$$param{$prefix.$_});
+			} # end foreach
+			my $parent_id;
+			foreach my $region ( 'country','state','province','city' ) {
+				if ( $$param{$prefix.$region} ) {
+					my $Region = openprint::Location->find_one('name lc'=> lc $$param{$prefix.$region}, 'type'=>$region);
+					if ( ! $Region ) {
+						$Region = new openprint::Location();
+						$error .= $Region->save({'name'=>$$param{$prefix.$region}, 'type'=>$region, 'parent_id'=>$parent_id});
+					} # end if
+					$$param{$prefix.$region.'_id'} = $Region->id();
+				} # end if
+				if ( $$param{$prefix.$region.'_id'} ) {
+					my $Region = new openprint::Location($$param{$prefix.$region.'_id'});
+					if ( $Region->id() ) {
+						if ( $parent_id and ! $Region->parent_id() ) {
+							$error .= $Region->save({'parent_id'=>$parent_id});
+						} # end if
+						$parent_id = $$param{$prefix.$region.'_id'};
+					} else {
+						$openprint::log->error($region.' specified, but not found!?');
+					} # end if
+				} # end if
+			} # end foreach region
+
+			my $Location;
+# Now postal code
+			if ( $$param{$prefix.'postalcode'} ) {
+				my $Place = openprint::Location->find_one( postalcode=>openprint::Location->transform('postalcode', $$param{$prefix.'postalcode'} ), parent_id => $parent_id );
+				if ( ! $Place ) {
+					$Place = new openprint::Location();
+					$error .= $Place->save({
+							parent_id=>	$parent_id,
+							type=>'place',
+							postalcode	=>	$$param{$prefix.'postalcode'},
+							});
+				} elsif ( $parent_id and ! $Place->parent_id() ) {
+					$error .= $Place->save({parent_id=>$parent_id});
+				} # end if
+				$Location = $Place;
+			} else {
+				$Location = new openprint::Location($parent_id);
+			} # end if
+			$self->value( $Field, $Location->id() );	
+	
 		} elsif ( sets::isin( $Field->type(), [ 'country','state','city' ] ) ) {
 			$$param{'field-'.$$Field{id}.'_name'} = openprint::Location->transform('name', $$param{'field-'.$$Field{id}.'_name'});
 
