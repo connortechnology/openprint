@@ -4,14 +4,14 @@
 </div>
 <script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $session{'user_id'} ) ?>
+<? if ( $session{user_id} ) ?>
 	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="Account"><div class="UserProfile">
 			<fieldset class="filters">
 				<ul>
-			<? if ( $$variable{'User'}->Company()->can_edit() ) ?>
+			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 			<? echo (
-				my @Users = openprint::User->find('company_id'=>$$variable{'User'}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
+				my @Users = openprint::User->find('company_id'=>$$variable{User}->company_id(), 'order'=>'lower(firstname),lower(lastname)' );
 				if ( @Users == 1 ) {
 					return sprintf('<input type="hidden" name="ddmUser" value="%d"/>', $Users[0]->id() );
 				} elsif ( @Users ) {
@@ -20,35 +20,35 @@
 					<label for="ddmUser">User Name</label>
 					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 						<option value="">Select a User</option>`.
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $$variable{'User'}->id() ).'
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $$variable{User}->id() ).'
 					</select>
 				</li>';
 				} 	
 			) ?>
-			<? else ( $$variable{'User'}->Company()->can_edit() ) ?>
-					<input type="hidden" name="ddmUser" value="<? echo ( $session{'user_id'} ) ?>"/>
-			<? endif ( $$variable{'User'}->Company()->can_edit() ) ?>
+			<? else ( $$variable{User}->Company()->can_edit() ) ?>
+					<input type="hidden" name="ddmUser" value="<? echo ( $session{user_id} ) ?>"/>
+			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
 				</ul>
 				<p class="buttons">
-			<? if ( $$variable{'User'}->Company()->can_edit() ) ?>
+			<? if ( $$variable{User}->Company()->can_edit() ) ?>
 					<? echo ( ssi::button( 'Previous', { onclick=>"f1.btnFunction.value='<<';fmCheck(f1);", text=>'<<' } ); ) ?>
 					<? echo ( ssi::button( 'Next', { onclick=>"f1.btnFunction.value='>>';fmCheck(f1);", text=>'>>' } ); ) ?>
 					<? echo ( ssi::button( 'New', { onclick=>"addCheck(f1);", text=>'New' } ); ) ?>
-			<? endif ( $$variable{'User'}->Company()->can_edit() ) ?>
+			<? endif ( $$variable{User}->Company()->can_edit() ) ?>
 					<? echo ( ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } ); ) ?>
 					<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } ); ) ?>
 					<? echo ( ssi::button( 'Reset', { onclick=>"f1.reset();", text=>'Reset' } ); ) ?>
 				</p>
 			</fieldset>
-<? if ( $$variable{'User'}->can_edit() ) ?>
+<? if ( $$variable{User}->can_edit() ) ?>
 			<span class="required"></span> denotes required information.<br/>
 			<div class="leftColumn">
 				<div id="ProfilePicture">
-				<? if ( $$variable{'User'}->Asset()->id() ) ?>
-				<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
-				<? else ( $$variable{'User'}->Asset()->id() ) ?>
+				<? if ( $$variable{User}->Asset()->id() ) ?>
+				<img src="<? echo ( $$variable{User}->Asset()->url() ) ?>" alt="<? echo ( $$variable{User}->Asset()->caption() ) ?>"/>
+				<? else ( $$variable{User}->Asset()->id() ) ?>
 				No profile picture set.
-				<? endif ( $$variable{'User'}->Asset()->id() ) ?>
+				<? endif ( $$variable{User}->Asset()->id() ) ?>
 				</div>
 				<!--#include virtual="_statistics.html"-->
 			</div>
@@ -58,73 +58,73 @@
 					<ul>
    				<li class="salutation required"> 
    					<label>Salutation</label>
-					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ); ) ?> />
+					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{User}->salutation() eq 'Mr.' ); ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
-					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mrs.' ); ) ?> />
+					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{User}->salutation() eq 'Mrs.' ); ) ?> />
 					<label class="radio" for="SalutationMrs.">Mrs.</label>
-					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Ms.' ); ) ?> />
+					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{User}->salutation() eq 'Ms.' ); ) ?> />
 					<label class="radio" for="SalutationMs.">Ms.</label>
-					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Miss' ); ) ?> />
+					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{User}->salutation() eq 'Miss' ); ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
    				<li class="required" class="firstname">
    					<label for="firstname">First Name</label>
-   					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
+   					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{User}->firstname() ) ?>" />
    				</li>
-   				<li class="required" class="lastname"> 
+   				<li class="notrequired" class="lastname"> 
    					<label for="lastname">Last Name</label>
-   					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
+   					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{User}->lastname() ) ?>" />
    				</li>
    				<li class="title notrequired"> 
    					<label for="title">Title</label>
-   					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
+   					<input type="text" id="title" name="title" value="<? echo ( $$variable{User}->title() ) ?>" />
    				</li>
    				<li class="phone notrequired"> 
    					<label for="phone">Phone</label>
-   					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" />
+   					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{User}->phone() ) ?>" />
    				</li>
    				<li class="mobile notrequired">
    					<label for="mobile">Mobile</label>
-   					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{'User'}->mobile() ) ?>" />
+   					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{User}->mobile() ) ?>" />
    				</li>
    				<li class="fax notrequired">
    					<label for="fax">Fax</label>
-   					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
+   					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{User}->fax() ) ?>" />
    				</li>
    				<li class="mailinglist notrequired">
    					<label>Add to our Mailing List</label>
-					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() eq 'Y' ); ) ?> value="Y" />
+					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{User}->mailinglist() eq 'Y' ); ) ?> value="Y" />
 					<label class="radio" for="MailingListY">Yes</label>
-					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() ne 'Y' ); ) ?> value="N" />
+					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( ssi::checked( $$variable{User}->mailinglist() ne 'Y' ); ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
    				</li>
 			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<li class="web_active notrequired">
    					<label>Can login to the web site?</label>
-   					<input type="radio" id="web_activeY" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() eq 'Y' ); ) ?> value="Y" />
+   					<input type="radio" id="web_activeY" name="web_active" <? echo ( ssi::checked( $$variable{User}->web_active() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="web_activeY">Yes</label>
-   					<input type="radio" id="web_activeN" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() ne 'Y' ); ) ?> value="N" />
+   					<input type="radio" id="web_activeN" name="web_active" <? echo ( ssi::checked( $$variable{User}->web_active() ne 'Y' ); ) ?> value="N" />
    					<label class="radio" for="web_activeN">No</label>
    				</li>
 				<li class="ftp_active notrequired">
 					<label>Can login to the FTP site?</label>
-					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( ssi::checked( $$variable{'User'}->ftp_active() ); ) ?> value="1" />
+					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( ssi::checked( $$variable{User}->ftp_active() ); ) ?> value="1" />
 					<label class="radio" for="ftp_active1"/>Yes</label>
-					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( ssi::checked( ! $$variable{'User'}->ftp_active() ); ) ?> value="0" />
+					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( ssi::checked( ! $$variable{User}->ftp_active() ); ) ?> value="0" />
 					<label class="radio" for="ftp_active0"/>No</label>
 				</li>
    				<li class="administrator notrequired">
    					<label>Company administrator?</label>
-   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() eq 'Y' ); ) ?> value="Y" />
+   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( ssi::checked( $$variable{User}->administrator() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="AdministratorY">Yes</label>
-   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() ne 'Y' ); ) ?> value="N" /> 
+   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( ssi::checked( $$variable{User}->administrator() ne 'Y' ); ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</li>
    				<li class="email_quotes notrequired">
    					<label>Email my quotes to myself?</label>
-   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="1" />
+   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{User}->email_quotes_to_myself() ); ) ?> value="1" />
    					<label class="radio" for="email_quotes_to_myself1">Yes</label>
-   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="0" />
+   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{User}->email_quotes_to_myself() ); ) ?> value="0" />
    					<label class="radio" for="email_quotes_to_myself0">No</label>
    				</li>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
@@ -133,7 +133,7 @@
    					<label>Quote Level</label>
 					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
+						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{User}->quote_level() ) ) ?>
 					</select>
    				</li>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
@@ -149,7 +149,7 @@
 					<ul>
 						<li class="required">
 							<label for="email">E-mail Address</label>
-							<input type="email" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+							<input type="email" id="email" name="email" value="<? echo ( $$variable{User}->email() ) ?>" >
 						</li>
 						<? echo ( ($_) = misc::trim(ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/password_requirements.html') );
 							return '<li>'.$_.'</li>' if $_;
@@ -166,13 +166,13 @@
 							<span id="password_alert"></span>
 						</li>
 						<li><label>Password Last Changed</label>
-						<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
+						<? echo ( $$variable{User}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{User}->password_changed_on() ) ) : 'never' ) ?>
 						</li>
 					</ul>
 				</div>
-<? else ( $$variable{'User'}->can_edit() ) ?>
+<? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.
-<? endif ( $$variable{'User'}->can_edit() ) ?>
+<? endif ( $$variable{User}->can_edit() ) ?>
    			</fieldset>
 			</div>
 <? if ($variable{DoEmail}) ?> 
@@ -183,6 +183,6 @@ You cannot edit this user.
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>
-<? else ( $session{'user_id'} ) ?>
+<? else ( $session{user_id} ) ?>
 You must be logged in to edit user profiles.<br/>
-<? endif ( $session{'user_id'} ) ?>
+<? endif ( $session{user_id} ) ?>

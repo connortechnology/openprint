@@ -693,12 +693,14 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
-function Location_onchange( parent_element, type, options ) {
+/* 
+I think I just have to do only 1 ddm update at a time.  
+*/
+function Location_onchange( parent_element, child_element, type, options ) {
 	if ( ! options ) options = {};
 	new Ajax.Request( '/location/_ddm.json', { 
 		parameters: { 
-				type: type,
-				parent_element: parent_element.id,
+				child_element: child_element.id,
 				parent_id: parent_element.getValue(), 
 			}, onSuccess: options.onSuccess,
 		}

@@ -20,12 +20,12 @@ $table = 'user_profiles';
 
 sub Field {
 	if ( @_ > 1 ) {
-		$_[0]{'Field'} = $_[1];
+		$_[0]{Field} = $_[1];
 	} # end if
-	if ( ! $_[0]{'Field'} ) {
-		$_[0]{'Field'} = new openprint::User_Profile_Field( $_[0]{'field_id'} );
+	if ( ! $_[0]{Field} ) {
+		$_[0]{Field} = new openprint::User_Profile_Field( $_[0]{field_id} );
 	} # end if
-	return $_[0]{'Field'};
+	return $_[0]{Field};
 } # end sub Field
 
 sub field {
@@ -33,7 +33,7 @@ sub field {
 } # end sub field
 
 sub html {
-	return $_[0]->Field()->html( $_[0]{'value'} );
+	return $_[0]->Field()->html( $_[0]{value} );
 } # end sub html
 
 1;
