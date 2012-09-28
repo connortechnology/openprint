@@ -515,7 +515,16 @@ sub filters {
     my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
     $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>q`Location_onchange( this, 'country' );"` } );
 
-    $html .= '</li><li><label>State/Province</label>';
+    $html .= '</li><li><label>';
+	my $Country = new openprint::Location($country_id);
+	if ( $Country->name() eq 'Canada' ) {
+		$html .= 'Province';
+	} elsif ( $Country->name() eq 'United States' ) {
+		$html .= 'State';
+	} else {
+		$html .= 'State/Province';
+	} # end if
+	$html .= '</label>';
     my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
 			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
 			);
