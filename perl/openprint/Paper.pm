@@ -265,7 +265,7 @@ sub prices {
 	my ( $self, $list_id ) = @_;
 	$list_id = openprint::pricing::get_pricelist_id( ) if ! $list_id;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>$list_id );
+		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>$list_id, order=>'lngmin NULLS FIRST' );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -1011,7 +1011,7 @@ sub wpsi {
 
 sub Prices {
 	my $self = shift;
-	return openprint::PaperPrice::find('paper_id'=>$$self{'id'}, @_ );
+	return openprint::PaperPrice::find(order=>'lngmin NULLS FIRST','paper_id'=>$$self{'id'}, @_ );
 } # end sub Prices
 
 sub JDF_Media {

@@ -1114,18 +1114,17 @@ sub send_invoice {
 
 	get_projects( $log, $dbh, \%order, $order_id );
 
-	my @attachments = ();
+	@attachments = ();
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
+	@body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
 	if ( $_ ) {
 		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
-	my %mail = (
+	%mail = (
 		SMTP	=> $openprint::config{'Mail Server'},
 		FROM	=> $openprint::config{'AccountingEmail'},
 		TO		=> $openprint::config{'AccountingEmail'},
@@ -1201,10 +1200,9 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	my @sales_order;
+	@body = ('', $_, 'text/html', 'quoted-printable');
+	@sales_order = ();
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
@@ -1227,10 +1225,10 @@ sub send_sales_order {
 	} # for each
 
 	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
-	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
+	@admin_emails = map { lc misc::trim($_) } @admin_emails;
 
 	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
-	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+	@accounting_emails = map { lc misc::trim($_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 

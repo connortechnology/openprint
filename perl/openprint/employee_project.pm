@@ -296,7 +296,7 @@ sub view {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 
 				my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
-				my $category = @ServiceTypes? @ServiceTypes[0]->category():'';
+				my $category = @ServiceTypes? $ServiceTypes[0]->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
 						 AND strName='ServiceType'
@@ -684,7 +684,7 @@ sub send_proofs_approved_email {
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
 
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
@@ -723,7 +723,7 @@ sub send_duedate_change_notification {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Project = new openprint::Project( $project_index );
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );

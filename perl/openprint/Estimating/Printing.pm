@@ -1608,7 +1608,7 @@ sub get_project_price {
 
 	my %best_price;
 	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	#$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if ! ;
 
 	# indexed by # of spreads
 	my %additional_signature_cache;

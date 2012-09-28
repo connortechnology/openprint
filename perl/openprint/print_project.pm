@@ -949,13 +949,14 @@ sub calc {
 				@specs{'txtFinalWidth','txtFinalHeight'} = sql::execute( $log, $dbh, $_, @args );
 				@specs{'txtWidth','txtHeight'} = ($width, $height);
 				if ( ! $specs{'txtFinalWidth'} ) {
-					if ( ( my ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) ) {
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} * 1000 / $folds)/1000 );
+					my ( $pages, $folds );
+					if ( ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) {
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth} * 1000 / $folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'} / (($pages/2)/$folds);
-					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
+					} elsif ( ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) {
 						#$folds =~ s/\D//g;
 						#$folds += 1;
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'}*1000/$folds)/1000 );
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth}*1000/$folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 					} # end if
 				} # end if

@@ -119,9 +119,9 @@ sub add_project_to_press_schedule {
 	my $ServiceType = openprint::ServiceType::find_one('name'=>'AdditionalSignature');
 
 	my @sigs_not_on_schedule;
-	foreach my $s_s_id ( sets::union(@sigs) ) {
-		next if openprint::ScheduledJob::find('project_id'=>$$Project{id}, 'service_id'=>$s_s_id );
-		push @sigs_not_on_schedule;
+	foreach my $s_s_id ( @sigs ) {
+		next if openprint::ScheduledJob::find(project_id=>$$Project{id}, service_id=>$s_s_id );
+		push @sigs_not_on_schedule, $s_s_id;
 	} # end foreach sig
 
 	while ( my $s_s_id = shift @sigs_not_on_schedule ) {
@@ -134,6 +134,7 @@ sub add_project_to_press_schedule {
 		} # end if
 
 		my @service_ids = ( $s_s_id );
+		my @forms = ( $$sig_specs{'SignatureIndex'} );
 
 		# Merge identical sigs
 		for( my $i = 0; $i < @sigs_not_on_schedule; $i += 1 ) {
@@ -142,16 +143,17 @@ sub add_project_to_press_schedule {
 			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
 			if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
 				push @service_ids, $s_id_2;
+				push @forms, $$sig_specs2{SignatureIndex};
 				splice @sigs_not_on_schedule, $i, 1;
 				$i -= 1;
 			} # end if
 		} # end foreach
 
-		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
+		if ( my $Equipment = openprint::Equipment::find_one(strid=>$$sig_specs{UsePress}) ) {
 			my $Job = new openprint::ScheduledJob();
 			$_ = $Job->save({
 				'project_id'	=>	$Project->id(),
-				'equipment_id'	=>	$Equipment[0]->id(),
+				'equipment_id'	=>	$Equipment->id(),
 				'starttime'		=>	undef,
 				'service_id'	=>	\@service_ids,
 				'pertains_id'	=>	\@service_ids,
@@ -159,9 +161,9 @@ sub add_project_to_press_schedule {
 			});
 			if ( $_ ) {
 				$error .= 'Error adding to press schedule: ' . $_;
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Error Adding Form @forms to pending press schedule." );
 			} else {
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending press schedule." );
-
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Added Form @forms to pending press schedule." );
 			} # end if
 		} else {
 			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
