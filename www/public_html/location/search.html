@@ -25,6 +25,7 @@
 						</select>
 					</li>
 -->
+<input type="hidden" name="type_id" value="<? echo ( if( $_ = openprint::Location_Type->find_one(name=>'place') ) { return $_->id(); } ) ?>" />
 					<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>"/></li>
 				</ul>
 			</div>
@@ -34,7 +35,7 @@
 	openprint::Location::filters('',[
 @session{'/location/search.html?country_id',
 '/location/search.html?state_id',
-'/location/search.html?city_id'}], {} );
+'/location/search.html?city_id'}], { onSuccess=>'load_locations(f1);'} );
 ) ?>
 				</ul>
 			</div>

@@ -694,15 +694,19 @@ function Country_onchange( country_ddm, state ) {
 } // end function
 
 /* 
-I think I just have to do only 1 ddm update at a time.  
 */
-function Location_onchange( parent_element, child_element, type, options ) {
+function Location_onchange( parent_element, type, options ) {
+
 	if ( ! options ) options = {};
+	var parameters = {};
+	parameters.parent_id = parent_element.getValue();
+	parameters.parent_element = parent_element.id;
+	parameters.type = type;
+	if ( options.state_element ) parameters.state_element = options.state_element;
+	if ( options.city_element ) parameters.city_element = options.city_element;
+
 	new Ajax.Request( '/location/_ddm.json', { 
-		parameters: { 
-				child_element: child_element.id,
-				parent_id: parent_element.getValue(), 
-			}, onSuccess: options.onSuccess,
+		parameters: parameters, onSuccess: options.onSuccess,
 		}
 		);
 	//} // end if

@@ -16,7 +16,7 @@
 			<td class="onregistration">%12$s</td>
 			<td class="buttons">%13$s</td>
 		</tr>`, $Field->id(), $Field->name(), $Field->description(),
-			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','country','state','city' ) ], $Field->type() ),
+			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'number', 'radio', 'select-one','location','country','state','city' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
 			( $Field->defaults() ? join(',', @{$Field->defaults()} ) : '' ),
 			ssi::radio( 'required-'.$Field->id(), [1,'Yes',0,'No'], $Field->required() ),

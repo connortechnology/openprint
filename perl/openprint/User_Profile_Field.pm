@@ -70,37 +70,78 @@ sub html {
 		$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), $value, { 'start'=>$start, 'end'=>$end } ) . '</span>';
 #$openprint::log->debug("Done");
 
+	} elsif ( $Field->type() eq 'location' ) {
+		$html .= '<ul class="location">';
+		my $Location = new openprint::Location( $value );
+		my $Country = $Location->ancestor(type=>'country');
+		my $country_id = $Country->id() if $Country;
+		$Country = new openprint::Location() if ! $country_id;
+		my $State = $Location->ancestor(type=>'state');
+		my $state_id = $State->id() if $State;
+		my $City = $Location->ancestor(type=>'city');
+		my $city_id = $City->id() if $City;
+
+		my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
+		my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
+            ( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
+            );
+		my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
+				( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
+				);
+
+		my $prefix = 'field-'.$$Field{id}.'-';
+
+		$html .= '<li class="country"><label>Country</label>';
+		$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>$prefix.'country_id', id=>$prefix.'country_id', onchange=>qq`Location_onchange( this, 'country' );\$('${prefix}country').value='';` } );
+
+		$html .= qq` or other <input type="text" name="${prefix}country" id="${prefix}country" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( \$('${prefix}country_id'), this.value, 0 );}"/>`;
+		$html .= '</li><li class="state"><label>';
+		if ( $Country->name() eq 'Canada' ) {
+			$html .= 'Province';
+		} elsif ( $Country->name() eq 'United States' ) {
+			$html .= 'State';
+		} else {
+			$html .= 'State/Province';
+		} # end if
+		$html .= '</label>';
+		$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>$prefix.'state_id', id=>$prefix.'state_id', onchange=>qq`Location_onchange( this, 'state' );\$('${prefix}state').value='';` } );
+
+		$html .= qq` or other <input type="text" name="${prefix}state" id="${prefix}state" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( \$('${prefix}state_id'), this.value, 0 );}"/>`;
+		$html .= '</li><li class="city"><label>City</label>';
+		$html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>$prefix.'city_id', id=>$prefix.'city_id', onchange=>qq`\$(${prefix}'city').value='';` } );
+		$html .= q` or other <input type="text" name="${prefix}city" id="${prefix}city" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( \$('${prefix}city_id'), this.value, 0 );}"/>`; 
+		$html .= '</li>';
+		#$html .= sprintf('<li><label>Address</label><input type="text" name="address" id="address" value="%s" /></li>', $Location->address() );
+		$html .= sprintf('<li><label>Postal/Zip Code</label><input type="text" name="%1$spostalcode" id="%1$spostalcode" value="%2$s"/></li>', $prefix, $Location->postalcode() );
+		$html .= '</ul>';
 	} elsif ( $Field->type() eq 'country' ) {
 		# Have to look up the child element so we can update it
 		my $StateField = openprint::User_Profile_Field->find_one(type=>'state');
-		if ( $StateField ) {
-			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'country' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
-			 or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}"/>`, $Field->id(),
-			ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)',type=>'country'), $value ),
-			$StateField->id(),
+		my $CityField = openprint::User_Profile_Field->find_one(type=>'city');
+		my $options = join(',',
+				( $StateField ? "state_element: 'field-$$StateField{id}'" : '' ),
+				( $CityField ? "city_element: 'field-$$CityField{id}'" : '' ),
 			);
-		} else {
-			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>%2$s</select>
-			 or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" />`, $Field->id(),
-			ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)',type=>'country'), $value ),
-			);
-		} # end if
+		$options = ', { ' . $options . '}' if $options;
+		
+
+			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, 'country'%3$s );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
+					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}"/>`, $Field->id(),
+					ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)',type=>'country'), $value ),
+					$options,
+					);
 	} elsif ( $Field->type() eq 'state' ) {
 		my $CityField = openprint::User_Profile_Field->find_one(type=>'city');
-		if ( $CityField ) {
-			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, this.form.elements['field-%3$d'], 'state' );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
+		my $options = join(',',
+				( $CityField ? "city_element: 'field-$$CityField{id}'" : '' ),
+			);
+		$options = ', { ' . $options . '}' if $options;
+			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="Location_onchange( this, 'state'%3$s );$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
 					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}" />
 					`, $Field->id(),
 					ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)',type=>['state','province']), $value ),
-					$CityField->id(),
+					$options,
 					);
-		} else {
-			$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d"><option value=""> </option>%2$s</select>
-					or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" />
-					`, $Field->id(),
-					ssi::make_drop_down( openprint::Location->dropdown(order=>'lower(name)',type=>['state','province']), $value ),
-					);
-		} # end if
 	} elsif ( $Field->type() eq 'city' ) {
 		$html .= sprintf( q`<select id="field-%1$d" name="field-%1$d" onchange="$('field-%1$d_name').value='';"><option value=""> </option>%2$s</select>
 				or other <input type="text" name="field-%1$d_name" id="field-%1$d_name" onkeyup="if(this.value){ddm_select_by_text_case_insensitive( $('field-%1$d'), this.value, 0 );}" />

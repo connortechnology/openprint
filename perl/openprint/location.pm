@@ -172,7 +172,7 @@ sub _search {
 		ssi::save_params( '/location/search.html', ( 
 				#'starting_on_start_year','starting_on_start_month','starting_on_start_day',
 				#'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				#'type_id', 
+				'type_id', 
 				'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
 	} # end if
 	#$session{'/location/search.html?type_id'} = openprint::Location_Type->find_one('name'=>'place')->id() if ! exists $session{'/location/search.html?type_id'};

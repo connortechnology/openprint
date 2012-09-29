@@ -64,7 +64,7 @@
     openprint::Location::filters('',[
 @session{'/event/search.html?country_id',
 '/event/search.html?state_id',
-'/event/search.html?city_id'}], {} );
+'/event/search.html?city_id'}], {onchange=>'load_events(f1);'} );
 ) ?>
 					<li><label>Distance</label>
 						<select name="distance">
