@@ -547,5 +547,20 @@ sub filters {
 
     return $html;
 } # end sub filters
+sub html {
+	my $self = $_[0];
+	my $html = sprintf(q`
+			<div class="Location">
+				<div class="Assets"><a class="medium %4$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%5$s"/></a></div>
+				<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+				<div class="Where">%3$s</div>
+			</div>
+			`, $self->id(), ssi::html_escape($self->name()), 
+			$self->where(),
+			$self->Asset()->layout(),
+			$self->Asset()->medium_url(),
+			);
+	return $html;
+} # end  sub html
 1;
 __END__

@@ -53,18 +53,7 @@
 		<? echo ( 
 			my $html;
 			foreach my $Location ( @{$$variable{'Locations'}} ) {
-				my $Asset = $Location->Asset();
-
-				$html .= sprintf(q` 
-					<div title="%2$s" class="Result"> %6$s
-						<div class="Name"><a href="/location/view.html?location_id=%1$d">%2$s</a></div>
-						<div class="Where">%3$s</div>
-						<a href="/location/view.html?location_id=%1$d" class="thumbnail">%4$s</a>
-					</div>
-					`, $Location->id(), ssi::html_escape($Location->name()),
-					$Location->where(),
-					$Asset->thumbnail_html(),
-				);
+				$html .= $Location->html();
 			} # end foreach Locations
 			return $html;
 		) ?>
