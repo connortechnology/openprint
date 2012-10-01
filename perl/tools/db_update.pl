@@ -2851,6 +2851,10 @@ if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_In_Marketing_Categories.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Bitcoin_Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;

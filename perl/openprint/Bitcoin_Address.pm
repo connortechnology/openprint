@@ -30,12 +30,12 @@ $serial = 'bitcoin_addresses_id_seq';
 
 sub generate {
 
+	my $ac = sql::start_transaction( $openprint::dbh );
 	$openprint::dbh->do( "LOCK TABLE $table IN ACCESS EXCLUSIVE MODE" ) or $openprint::log->error( DBI->errstr );
-	my $New = openprint::Address->find_one('object_id is null'=>1);
+	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {
 		my $client = new JSON::RPC::Client;
 
-	
 		$client->ua->credentials(
 				($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
 				($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332'),
@@ -61,6 +61,7 @@ sub generate {
 			print $client->status_line;
 		}
 	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub generate
 1;
 __END__
