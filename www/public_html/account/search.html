@@ -70,6 +70,8 @@
 			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_start', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } ) . '</span>';
 			$html .= ' to ';
 			$html .= '<span class="DateSelector">'.ssi::date_select_session( '/account/search.html', 'field-'.$Field->id().'_end', { 'start'=>$start, 'end'=>$end, onclick=>'load_results()' } ) . '</span>';
+		} elsif ( $$Field{type} eq 'location' ) {
+			$html .= openprint::Location::filters( 'field-'.$$Field{id}.'-', new openprint::Location($value), { onSuccess=>'load_results();'} );
 		} elsif ( sets::isin( $Field->type(), [ 'country', 'state', 'city' ] ) ) {
 			$html .= sprintf(q`<select id="%2$s" name="field-%1$d" onchange="Location_onchange( this, '%2$s', { onSuccess: load_results } );"><option value=""> </option>`, $Field->id(), $Field->type() );
 			$html .= ssi::make_drop_down( openprint::Location->dropdown('type'=>$Field->type(), 'order'=>'lower(name)'), $value ? $value : $Field->search_default() );
