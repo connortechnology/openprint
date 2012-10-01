@@ -315,6 +315,9 @@ table .supplier, table .item_name, table .product {
 #Assets .Thumbnail {
 	width: 75px;
 }
+#Assets .Thumbnail img {
+	width: 100%;
+}
 #Assets .actions {
 	width: 75px;
 }
