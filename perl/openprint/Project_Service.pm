@@ -132,9 +132,7 @@ sub overrides {
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
-		$openprint::log->debug("$module :: has_overrides() $specs");
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
-		$log->debug("Overrides: @o");
 		return @o;
 	} # end if
 	return ();

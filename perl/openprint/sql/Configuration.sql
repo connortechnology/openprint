@@ -68,3 +68,8 @@ INSERT INTO configuration VALUES ('Large Asset Width', '800', 'text', '', 'Asset
 INSERT INTO configuration VALUES ('Medium Asset Width', '300', 'text', '', 'Asset Settings');
 INSERT INTO configuration VALUES ('Small Asset WIdth', '50', 'text', '', 'Asset Settings');
 INSERT INTO configuration VALUES ('PhotoUploadDisclaimer', '', 'textarea', 'Content to show on photo upload pages.', 'Disclaimers');
+
+INSERT INTO configuration VALUES ('bitcoin_server', 'localhost', 'text', 'Bitcoin Server Hostname', 'Bitcoin Settings');
+INSERT INTO configuration VALUES ('bitcoin_port', '8332', 'text', 'Bitcoin Server Port', 'Bitcoin Settings');
+INSERT INTO configuration VALUES ('bitcoin_user', '', 'text', 'Bitcoin Server Username', 'Bitcoin Settings');
+INSERT INTO configuration VALUES ('bitcoin_password', '', 'text', 'Bitcoin Server Password', 'Bitcoin Settings');

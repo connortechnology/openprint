@@ -2374,7 +2374,6 @@ $openprint::log->debug("SpreadSize: $$project{'txtSpreadSize'} SpreadLayout: $Sp
 		return;
 	} # end if
 	if ( $use_filtered_imposition_cache and ( $_ = $filtered_imposition_cache{$cache_string} ) ) {
-
 		@impositions = @{$_};
 	} else {
 		if ( $SpreadLayout > 0 ) {

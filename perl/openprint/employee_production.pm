@@ -700,7 +700,7 @@ sub barcode {
 		$param{$param} =~ s/\D//g;
 	} # end foreach param
 
-	($param{'Order'}) = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
+	($param{Order}) = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
 	my %operators = map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A']);
 
 	if ( $param{'Project'} or $param{'Action'} or $param{'Operator'} ) {

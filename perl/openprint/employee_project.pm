@@ -301,8 +301,8 @@ sub view {
 			if ( $param{'rdbComplete'} eq 'Yes' ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 
-				my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
-				my $category = @ServiceTypes? $ServiceTypes[0]->category():'';
+				my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
+				my $category = $ServiceType? $ServiceType->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
 						 AND strName='ServiceType'
