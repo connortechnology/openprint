@@ -3062,11 +3062,11 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$$Paper{'type'}, undef, undef ) ) {
-					if ( lc $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
+					if ( $SuppliedPaperPrice{'units'} eq 'per 100lbs' ) {
 						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Stock Weight'} / 100;
-					} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per sheet' ) {
+					} elsif ( $SuppliedPaperPrice{'units'} eq 'per sheet' ) {
 						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Gross Sheet Count'};
-					} elsif ( lc $SuppliedPaperPrice{'units'} eq 'per m' ) {
+					} elsif ( $SuppliedPaperPrice{'units'} eq 'per m' ) {
 						$SuppliedPaperPrice{'Total'} = $SuppliedPaperPrice{'Price'} * $$price{'Gross Sheet Count'}/1000;
 					} # end if
 					$$price{'SuppliedPaperPrice'} = \%SuppliedPaperPrice;
@@ -3486,11 +3486,12 @@ sub calc_price {
 	$std_speed = $Press->Specification('Run Speed') if ! $std_speed;
 	my $run_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $$Paper{calliper}, 0 );
+		$run_speed = $Press->specification('Run Speed', $$Paper{calliper} );
 #$openprint::log->debug("Runspeed by calliper($$Paper{calliper}): $run_speed on $$Press{strid}");
 	} else {
-		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 0 );
+		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
+$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
 if ( 0 ) {
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
@@ -3762,7 +3763,7 @@ $openprint::log->debug("Using cached folding");
 		if ( $real_colour =~ /Varnish/ ) {
 			#$price{'Press Washes'} += 1;
 			$colour = $real_colour;
-			if ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
+			if ( $$Imposition{'runstyle'} =~ /^Work/ ) {
 				if ( ( $real_colour =~ /Overall/ ) and ! ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) ) {
 					$real_colour =~ s/Overall/Spot/;
 				} # end if
@@ -3805,7 +3806,7 @@ $openprint::log->debug("Using cached folding");
 
 		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
 		if ( %InkService ) {
-			if ( lc $InkService{'units'} eq 'per m' ) {
+			if ( $InkService{'units'} eq 'per m' ) {
 				$InkService{'Total'} = $InkService{'Price'} * $impressions/1000;
 			} else {
 				$price{'Ink breakdown'} .= 'unknown units for '.$real_colour;
@@ -3879,7 +3880,7 @@ $openprint::log->debug("Using cached folding");
 		my $grade = $$Paper{'grade'};
 		$grade = 4 if ! $grade;
 
-		if ( lc $ink_price{'units'} eq 'per cartridge' ) {
+		if ( $ink_price{'units'} eq 'per cartridge' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
@@ -3890,7 +3891,7 @@ $openprint::log->debug("Using cached folding");
 			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
-		} elsif ( lc $ink_price{'units'} eq 'per kg' ) {
+		} elsif ( $ink_price{'units'} eq 'per kg' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
@@ -3900,12 +3901,12 @@ $openprint::log->debug("Using cached folding");
 			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
-		} elsif ( lc $ink_price{'units'} eq 'per square foot' ) {
+		} elsif ( $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
 			$ink_price{'Total'} = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units','Total'} );
-		} elsif ( lc $ink_price{'units'} eq 'per unit' ) {
+		} elsif ( $ink_price{'units'} eq 'per unit' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
 				$area /= 2;
 			} # end if
@@ -3913,14 +3914,14 @@ $openprint::log->debug("Using cached folding");
 			my $p = $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'};
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
-		} elsif ( lc $ink_price{'units'} eq 'per square inch' ) {
+		} elsif ( $ink_price{'units'} eq 'per square inch' ) {
 			my $p = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
-		} elsif ( lc $ink_price{'units'} eq 'per m' ) {
+		} elsif ( $ink_price{'units'} eq 'per m' ) {
 			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
 			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
-		} elsif ( lc $ink_price{'units'} eq 'per impression' ) {
+		} elsif ( $ink_price{'units'} eq 'per impression' ) {
 			$price{'Ink Price'} += $ink_price{'Price'} * $impressions;
 			$price{'Ink breakdown'} .= ' ' . $impressions . " * $ink_price{'Price'}$ink_price{'units'} = " . $ink_price{'Price'} * $impressions;
 		} else {
@@ -4474,26 +4475,26 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Standard Run Speed', undef, 0 );
-	$std_speed = $Press->Specification('Run Speed', undef, 0 ) if ! $std_speed;
+	my $std_speed = $Press->Specification('Standard Run Speed' );
+	$std_speed = $Press->Specification('Run Speed' ) if ! $std_speed;
 	
 	my $speed_mod;
 	if ( $std_speed ) {
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()), 0 ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()) ) if ! $run_speed;
 		if ( ! $run_speed ) {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
-		} elsif ( $run_speed != $$std_speed{'value'} ) {
-			$speed_mod = Math::Round::nearest( .01, $$std_speed{'value'} / $run_speed );
-			#$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
+		} elsif ( $run_speed != $$std_speed{value} ) {
+			$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
+			$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
 		} # end if
 	} else {
 		$openprint::log->error("No standard speed on $$Press{strid}");
 	} # end if
 
-	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
+	if ( sets::isin( $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
 		if ( $speed_mod ) {
 			$running_price *= $speed_mod;
 		} # end if
@@ -4502,7 +4503,7 @@ sub get_run_price {
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions)/1000;
 		$run_price{'MPrice'} = $run_price{'Cost'};
 
-	} elsif ( sets::isin( lc $run_price{'units'}, ['per impression'] ) ) {
+	} elsif ( sets::isin( $run_price{'units'}, ['per impression'] ) ) {
 		if ( $speed_mod ) {
 			$running_price *= $speed_mod;
 		} # end if
@@ -4511,7 +4512,7 @@ sub get_run_price {
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions);
 		$run_price{'MPrice'} = $run_price{'Cost'} * 1000;
 
-	} elsif ( lc $run_price{'units'} eq 'per hour' ) {
+	} elsif ( $run_price{'units'} eq 'per hour' ) {
 		if ( $run_speed ) {
 # In Minutes, not hours
 			$run_price{'RunHours'} = $impressions / $run_speed;
@@ -4575,7 +4576,7 @@ sub press_setup_cost {
 		$plates *= $plate_runs if $plate_runs;
 		$plates += $plate_change_qty;
 		$Price{'Plate Count'} = $plates;
-		my $units = lc $PlateSetupPrice{'units'};
+		my $units = $PlateSetupPrice{'units'};
 		if ( $units eq 'per hour' ) {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
