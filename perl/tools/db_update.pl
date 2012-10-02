@@ -332,6 +332,9 @@ if ( ! sets::isin('articles',\@tables ) ) {
 		$dbh->do('ALTER TABLE articles ADD user_type CHAR(1)');
 		$dbh->do('ALTER TABLE articles ADD FOREIGN KEY (user_type) REFERENCES user_types (identifier)');
 	} # end if
+	if ( ! exists $$data{anonymous} ) {
+	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
+	} # end if
 } # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
@@ -2846,6 +2849,10 @@ if ( ! sets::isin( 'users_in_marketing_categories', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_In_Marketing_Categories.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Bitcoin_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 $dbh->disconnect();

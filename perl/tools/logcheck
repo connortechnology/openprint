@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use strict;
 
 require sql;
@@ -18,7 +18,7 @@ use vars qw( $log $dbh %config);
 *dbh = \$openprint::dbh;
 #*config = \%openprint::config;
 $log = logger->new();
-$log->{level} = 'warn';
+$log->{level} = 'debug';
 
 use Getopt::Long;
 use File::Basename qw(basename);
@@ -80,14 +80,15 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user fround from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]+>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]+>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+(, session=<[^>]+)?$',
 q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: query \(cache\) '\./NS/IN' denied$`,
 );
 
 my $ac = sql::start_transaction( $dbh );
 #$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
-my @whitelist = map{ $_->ip() } openprint::Host->find('whitelist'=>1);
+my @whitelist = map{ $_->ip() } openprint::Host->find('whitelist'=>1,'ip is null'=>0);
+#$log->debug("@whitelist");
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {

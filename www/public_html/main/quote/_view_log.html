@@ -3,21 +3,27 @@
 	<tr>
 		<th align="left">Company</th>
 		<th align="left">User</th>
-		<th align="left" width="150">When</th>
+		<th class="DateTime">When</th>
 		<th align="left">Description</th>
 	</tr>
-	<? eval ( 
-		$_ = q{SELECT company_id, user_id, to_char(created_on,'HH12:MIpm MM/DD/YYYY'), Description FROM Quote_Log WHERE quote_id=? ORDER BY created_on DESC};
-		@{$$variable{'Log'}} = sql::execute( $log, $dbh, $_, $openprint::param{'quote_id'} );
-	) ?>
-	<? while ( @$variable{'company_id','user_id','when','description'} = splice @{$$variable{'Log'}},0,4; ) ?>
-	<tr<?rowclass?>>
-		<td><? echo ( new openprint::Company( $$variable{'company_id'} )->name(); ) ?></td>
-		<td><? echo ( new openprint::User( $$variable{'user_id'} )->name(); ) ?></td>
-		<td width="150"><?when?></td>
-		<td><? echo ( $$variable{'description'} ) ?></td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'company_id','user_id','when','description'} = splice @{$$variable{'Log'}},0,4; ) ?>
+	<? echo ( 
+	require openprint::Quote_Log;
+		my $html;
+		my $rowclass;
+		foreach my $Log ( openprint::Quote_Log->find(quote_id=>$param{quote_id},order=>'created_on DESC') ) {
+			$html .= sprintf(q`
+	<tr%1$s>
+		<td>%2$s</td>
+		<td>%3$s</td>
+		<td class="DateTime">%4$s</td>
+		<td>%5$s</td>
+	</tr>`, $rowclass, $Log->Company()->name(), $Log->User()->name(), 
+		Date::Format::time2str($config{DateTimeFormat}, Date::Parse::str2time($$Log{created_on}) ),
+		$Log->description_html()
+);
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach Log
+	return $html;
+) ?>
 	</table>
 </fieldset>

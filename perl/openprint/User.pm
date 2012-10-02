@@ -480,7 +480,7 @@ sub last_logged_in {
 		# Almost any entry means we were logged in.  
 		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
 		if ( $Log ) {
-$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
+#$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
 			$_[0]{'last_logged_on'} = $$Log{date_time};
 		} # end if
 	}
@@ -526,7 +526,7 @@ sub Location {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
-			$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );

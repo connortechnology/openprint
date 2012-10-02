@@ -693,14 +693,20 @@ function Country_onchange( country_ddm, state ) {
 	} // end if
 } // end function
 
+/* 
+*/
 function Location_onchange( parent_element, type, options ) {
+
 	if ( ! options ) options = {};
+	var parameters = {};
+	parameters.parent_id = parent_element.getValue();
+	parameters.parent_element = parent_element.id;
+	parameters.type = type;
+	if ( options.state_element ) parameters.state_element = options.state_element;
+	if ( options.city_element ) parameters.city_element = options.city_element;
+
 	new Ajax.Request( '/location/_ddm.json', { 
-		parameters: { 
-				type: type,
-				parent_element: parent_element.id,
-				parent_id: parent_element.getValue(), 
-			}, onSuccess: options.onSuccess,
+		parameters: parameters, onSuccess: options.onSuccess,
 		}
 		);
 	//} // end if

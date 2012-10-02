@@ -53,16 +53,18 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$log = new logger( {'level'=>'debug'});
+$log = new logger({level=>'debug'});
 configuration::from_file($$opts{config} ? $$opts{config} : '/etc/bitcoin_exchangerate.conf');
+# Commandline overrides config file
 configuration::merge( $opts );
-$log->level($config{'log_level'}) if $config{'log_level'};
+$log->level($config{log_level}) if $config{log_level};
+$log->debug("log level is: $config{log_level}");
 
 # Declare variables
 foreach my $param ( 'db_name','db_user','db_pass' ) {
 	if ( ! $config{$param} ) {
 		die "$program: missing required --$param parameter";
-	}
+	} # end if
 } # end foreach required-param
 $openprint::dbh = sql::open_sql( $log, 
 	'host'		=> $config{'db_host'},
@@ -72,7 +74,7 @@ $openprint::dbh = sql::open_sql( $log,
 	'password'	=> $config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-configuration::init( $log, $dbh, \%CFG::Config );
+configuration::init();
 configuration::from_file($$opts{config} ? $$opts{config} : '/etc/bitcoin_exchangerate.conf');
 configuration::merge( $opts );
 

@@ -848,5 +848,8 @@ sub _logs {
 	} # end if
 } # end sub _logs
 
+sub bitcoin {
+} # end sub bitcoin
+
 1;
 __END__
