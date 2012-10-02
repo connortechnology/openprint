@@ -720,13 +720,13 @@ sub delete_service {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id any'=>$service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$service_index ) ) {
 		$Job->save( { 
 				service_id	=> [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
 				pertains_id	=> [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
 				} );
 	} # end foreach Job
-	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'pertains_id any'=>$service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'pertains_id any'=>$service_index ) ) {
 		$Job->save( { 
 				pertains_id => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
 				} );

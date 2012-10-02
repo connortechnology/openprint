@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my $master_time;
 
 my %folding_cache;
@@ -2366,7 +2366,7 @@ sub calculate_impositions {
 #$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 	} elsif ( $$sig_specs{'txtSignatureType'} ) {
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$project{'txtSpreadSize'};
-$openprint::log->debug("SpreadSize: $$project{'txtSpreadSize'} SpreadLayout: $SpreadLayout override: " . $$sig_specs{'chkOverridePageQuantity'.$qty_index} . ' PageQ: ' . $$sig_specs{'PageQuantity'.$qty_index} . ' unspec:' . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index});
+#$openprint::log->debug("SpreadSize: $$project{'txtSpreadSize'} SpreadLayout: $SpreadLayout override: " . $$sig_specs{'chkOverridePageQuantity'.$qty_index} . ' PageQ: ' . $$sig_specs{'PageQuantity'.$qty_index} . ' unspec:' . $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index});
 	} # end if
 	my $cache_string = join('-', $$Press{id}, $SpreadLayout, @$sig_specs{'PreviousStockType', 'PreviousGrainDirection'} );
 	if ( ! $Press ) {
