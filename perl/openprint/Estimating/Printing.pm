@@ -3157,10 +3157,10 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) if ! $run_speed;
-	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
-#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-	$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
+	my $std_speed = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() );
+	my $speed_mod = $std_speed / $run_speed if $std_speed != $run_speed and $run_speed;
+#$Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
+#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($std_speed) RUN ($run_speed),  std/run: " . $speed_mod  )  if $debug or 1;
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
 		if ( $speed_mod ) {

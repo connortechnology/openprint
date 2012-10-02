@@ -9,7 +9,7 @@ require openprint::logs;
 require openprint::MaterialSpecification;
 
 use vars qw{ $debug $table $serial %fields %transforms %defaults };
-$debug = 1;
+$debug = 0;
 
 $table = 'materials';
 $serial = 'materialindex_seq';
