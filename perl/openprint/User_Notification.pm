@@ -1,10 +1,9 @@
 use strict;
 require openprint::Object;
-require openprint::User;
 package openprint::User_Notification_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'user_notification_types';
 $serial = 'user_notification_types_id_seq';
 %fields = (
@@ -30,6 +29,7 @@ $table = 'user_notifications';
 );
 
 sub User {
+	require openprint::User;
 	return new openprint::User( $_[0]{'user_id'} );
 }
 sub type {

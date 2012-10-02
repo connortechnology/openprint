@@ -2,9 +2,6 @@ use strict;
 package openprint::Upload;
 our @ISA = qw( openprint::Object );
 
-require openprint::File;
-require openprint::Company;
-require openprint::User;
 require misc;
 
 use openprint ();
@@ -33,14 +30,17 @@ $serial = 'uploads_id_seq';
 );
 
 sub Company {
+	require openprint::Company;
 	return new openprint::Company($_[0]{company_id});
 } # end sub Company
 
 sub User {
+	require openprint::User;
 	return new openprint::User($_[0]{user_id});
 } # end sub User
 
 sub Files {
+	require openprint::File;
 	return openprint::File->find(upload_id=>$_[0]{id});
 } # end sub
 

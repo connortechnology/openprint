@@ -1,7 +1,7 @@
 use strict;
 package openprint::upload;
 require openprint::File;
-require openprint::upload_handler;
+require handlers::upload;
 
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );
@@ -20,7 +20,7 @@ sub _upload_form {
 sub _files {
 $log->debug("Here");
    if ( $param{'btnFunction'} eq 'Delete' ) {
-		my $destdir = openprint::upload_handler::get_destdir();
+		my $destdir = handlers::upload::get_destdir();
 		my $error = '';
 		if ( $param{'chkFiles'} ) {
 			foreach my $filename ( ref($param{'chkFiles'}) =~ /ARRAY/ ? @{$param{'chkFiles'}} : $param{'chkFiles'} ) {

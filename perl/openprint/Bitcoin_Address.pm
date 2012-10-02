@@ -45,9 +45,12 @@ sub generate {
 		my $uri = 'http://'.($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
                 ($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332').'/';
 		my $obj = {
-			method  => 'getinfo',
-			params  => [],
+			method  => 'getnewaddress',
+			params  => {
+				account	=>	$openprint::config{getnewaddress},
+			},
 		};
+$openprint::log->debug("Asking bitcon for a new addres $uri");
 
 		my $res = $client->call( $uri, $obj );
 
@@ -58,7 +61,7 @@ sub generate {
 				$openprint::log->debug( Data::Dumper::Dumper($res->result) );
 			}
 		} else {
-			print $client->status_line;
+			$openprint::log->debug( $client->status_line );
 		}
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );

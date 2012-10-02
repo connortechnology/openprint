@@ -73,3 +73,4 @@ INSERT INTO configuration VALUES ('bitcoin_server', 'localhost', 'text', 'Bitcoi
 INSERT INTO configuration VALUES ('bitcoin_port', '8332', 'text', 'Bitcoin Server Port', 'Bitcoin Settings');
 INSERT INTO configuration VALUES ('bitcoin_user', '', 'text', 'Bitcoin Server Username', 'Bitcoin Settings');
 INSERT INTO configuration VALUES ('bitcoin_password', '', 'text', 'Bitcoin Server Password', 'Bitcoin Settings');
+INSERT INTO configuration VALUES ('bitcoin_account', '', 'text', 'Bitcoin Account', 'Bitcoin Settings');
