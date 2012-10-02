@@ -90,7 +90,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 			my $qty = $$specs{"txtQuantity$qty_index"};
 			my %PunchingPrice = openprint::service::get_price_object( $ServiceType->name().'Punching', $qty, undef );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Punching: " . sprintf( '%.4f', $PunchingPrice{'Price'} ) . "$PunchingPrice{'units'}<br/>";
-			if ( $PunchingPrice{'units'} eq 'Per M' ) {
+			if ( $PunchingPrice{'units'} eq 'per m' ) {
 				$PunchingPrice{'Total'} = ( $PunchingPrice{'Price'} / 1000 ) * $qty;
 			} else {
 				$PunchingPrice{'Total'} = $PunchingPrice{'Price'} * $qty;
@@ -98,7 +98,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 
 			my %CoilingPrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
 			$$specs{'hdnBreakdown'.$qty_index} .= "Coiling: " . sprintf( '%.4f', $CoilingPrice{'Price'} ) . "$CoilingPrice{'units'}<br/>";
-			if ( $CoilingPrice{'units'} eq 'Per M' ) {
+			if ( $CoilingPrice{'units'} eq 'per m' ) {
 				$CoilingPrice{'Total'} = ( $CoilingPrice{'Price'} / 1000 ) * $qty;
 			} # end if
 

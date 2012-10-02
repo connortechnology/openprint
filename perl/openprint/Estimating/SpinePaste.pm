@@ -343,7 +343,7 @@ $openprint::log->debug("Max run speed $MaxRunSpeed");
 				%ServicePrice = openprint::service::get_price_object( 'SpinePaste', $qty, $Equipment );
 			} # end if
 		} # end if
-		if ( $ServicePrice{'units'} eq 'Per M' ) {
+		if ( $ServicePrice{'units'} eq 'per m' ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
 		} # end if
 		$Price{'ServicePrice'} = \%ServicePrice;
@@ -362,7 +362,7 @@ $openprint::log->debug("Max run speed $MaxRunSpeed");
 			$Price{'TrimmingPrice'} = \%TrimmingPrice;
 $openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}");
 			$TrimmingPrice{'Price'} -= $ServicePrice{'Price'};
-			if ( $TrimmingPrice{'units'} eq 'Per M' ) {
+			if ( $TrimmingPrice{'units'} eq 'per m' ) {
 				$TrimmingPrice{'Total'} = $TrimmingPrice{'Price'} * $qty / 1000;
 			} # end if
 			$Price{'Total'} += $TrimmingPrice{'Total'};

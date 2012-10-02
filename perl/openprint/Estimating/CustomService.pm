@@ -47,9 +47,9 @@ sub calc {
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $price;
-		if ( $$specs{'Units'} eq 'Per Item' ) {
+		if ( lc $$specs{'Units'} eq 'per item' ) {
 			$price = $$specs{'Price'.$qty_index} * $Project->quantity($qty_index);
-		} elsif ( $$specs{'Units'} eq 'Per M' ) {
+		} elsif ( lc $$specs{'Units'} eq 'per m' ) {
 			$price = $$specs{'Price'.$qty_index} * $Project->quantity($qty_index)/1000;
 		} else { # Flat
 			next;

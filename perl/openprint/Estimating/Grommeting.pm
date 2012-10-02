@@ -114,16 +114,16 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		my %servicePrice = openprint::service::get_price_object( 'Grommeting', $qty * $$specs{'Quantity'}, undef );
-		if ( sets::isin( $servicePrice{'units'}, ['', 'Per M', 'Per 1000'] ) ) {
+		if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
 			$servicePrice{'Total'} = $qty * $$specs{'Quantity'} * $servicePrice{'Price'} / 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
-		if ( my @Materials = openprint::Material->find('name'=>'Grommets') ) {
-			my %materialPrice = $Materials[0]->get_price( $qty * $$specs{'Quantity'}, undef );
+		if ( my $Material = openprint::Material->find_one('name'=>'Grommets') ) {
+			my %materialPrice = $Material->get_price( $qty * $$specs{'Quantity'}, undef );
 			if ( %materialPrice ) {
 				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Material: \$\%.2f \%s * \%d grommets * \%d = \$\%.2f<br/>", @materialPrice{'Price','units'}, $$specs{'Quantity'}, $qty, $materialPrice{'Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d grommets * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{'Quantity'}, $qty, $materialPrice{'Total'} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 			} # end if

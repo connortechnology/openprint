@@ -664,10 +664,9 @@ sub signature_calc {
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
 
-				#if ( DEBUG and 0 ) {
-					#$openprint::log->debug("trying: ");
-					#$Imposition->display();
-				#} # end if
+				if ( DEBUG ) {
+					$Imposition->display('trying');
+				} # end if
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
@@ -704,9 +703,9 @@ $Imposition->display("Folding on press");
 				} else { # Not the press
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
+$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
-						#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
+						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc ) if DEBUG;
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
@@ -780,7 +779,7 @@ $Imposition->display("Folding on press");
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 
 						if ( ! $_ )  {
-
+$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									'pages'				=>	$Imposition->pages(),
 									'page_columns'		=>	$Imposition->page_columns(),
@@ -798,12 +797,14 @@ $Imposition->display("Folding on press");
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
 
-								push @{$folds{$Fold->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
+								push @{$folds{$Fold->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
 								next;
 							} elsif( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
 								$Breakdown .= sprintf('Didnt find: %dx%d %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
+							} elsif ( DEBUG ) {
+								$Imposition->display('Didnt find fold:' ) if DEBUG;
 							} # end if
 						} elsif ( DEBUG or ( @my_equipment == 1 ) ) {
 							$Breakdown .= "Doesn't fit $_.<br/>";
@@ -813,6 +814,7 @@ $Imposition->display("Folding on press");
 						$complete = 0;
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
+$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
@@ -878,7 +880,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						my $Fold;
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
 						if ( $Fold = openprint::Fold->find_one( 
-									'imposition'	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'min_imposition <='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'max_imposition >='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'equipment_id'	=>	$Equipment->id(),
 									'pages'			=>	$pages,

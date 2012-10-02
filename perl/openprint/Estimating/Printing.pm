@@ -1063,8 +1063,8 @@ sub get_impositions {
 			if ( ! $$Papers[0]->doublesided() ) {
 				$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->brand() );
 				$do_work_turn = 0;
-			} elsif ( $$project{'filtered_colours'} > $number_of_colours and $Press->specification('Multipass', $$Papers[0]->gsm() ) ne 'Y' ) {
-				$openprint::log->debug("No W&T on $$Press{strid} due to multipass colors:".join(',',@{$$project{'filtered_colours'}})." > $number_of_colours " . $$Papers[0]->gsm() );
+			} elsif ( $$project{'filtered_colours'} and ( @{$$project{'filtered_colours'}} > $number_of_colours ) and ($Press->specification('Multipass', $$Papers[0]->gsm() ) ne 'Y' ) ) {
+				$openprint::log->debug("No W&T on $$Press{strid} due to multipass colors:".(scalar@{$$project{'filtered_colours'}})." > $number_of_colours " . $$Papers[0]->gsm() );
 				$do_work_turn = 0;
 			} elsif ( $$specs{'sides_the_same'} eq 'Y' ) {
 				$do_work_turn = 0;
@@ -1435,7 +1435,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 		@impositions = map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-		if ( DEBUG ) {
+		if ( DEBUG or 1 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions );
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'} );
@@ -1638,7 +1638,7 @@ sub set_size {
 			} elsif ( $$specs{'GroupPageQuantity'} % 4 ) {
 				$$specs{'txtSpreadSize'} = 2;
 			} else {	
-$openprint::log->error("Spreadsize: $$specs{'txtSpreadSize'} ");
+#$openprint::log->error("Spreadsize: $$specs{'txtSpreadSize'} ");
 				$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 			} # end if
 			$variables{'txtSpreadSize'} = [ sets::union( 'output', @{$variables{'txtSpreadSize'}} ) ];
@@ -2556,7 +2556,7 @@ $imp->display('Filtering:');
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 						my $I = $imps{$str}[$j];
-$I->display('Considering');
+$I->display('Considering') if DEBUG;
 						my $P = $I->Paper();
 
 						if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( $P->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -2573,15 +2573,17 @@ $I->display('Considering');
 									'service'=>'Material'
 									);
 						} # end if
+if ( DEBUG ) {
 $I->display("Comparing mino:". $P->minimum_order_weight() . ' Price: ' . $$BiggerPrice{'100lb Price'} . ' total: ' . $$BiggerPrice{'100lb Total'} .' cut ' . $P->is_cut());
 $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $$SmallerPrice{'100lb Price'} . ' total: ' . $$SmallerPrice{'100lb Total'} . ' cut' . $Paper->is_cut() );
+} 
 						if ( ($$I{pages} == $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) 
 							and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
 						   ) {
 							# There won't be any additional signatures, so we can compare directly on value
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-							if ( 1 ) {
+							if ( DEBUG ) {
 								$openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
@@ -2594,7 +2596,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-							if ( 1 ) {
+							if ( DEBUG ) {
 								$openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
@@ -2606,13 +2608,13 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 								and ( ( ! $P->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
-							if ( 1 ) {
+							if ( DEBUG ) {
 								$openprint::log->debug( "Not adding $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
 								$I->display();
 								$imp->display();
 							}
 
-						} elsif ( 1 ) {
+						} elsif ( DEBUG ) {
 							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
@@ -3091,8 +3093,8 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				} # end if
 # Add Roll2SheetRun
 				if ( my %R2SPrice = openprint::service::get_price_object( 'Roll2Sheet', $$price{'Impressions'}, $Press ) ) {
-					if ( $R2SPrice{'units'} eq 'Per M' ) {
-						$$price{'Roll2SheetRunCharge'} = sprintf('%.2f',$R2SPrice{'Price'} * $$price{'Impressions'}/1000);
+					if ( $R2SPrice{'units'} eq 'per m' ) {
+						$$price{'Roll2SheetRunCharge'} = Math::Round::nearest(0.01,$R2SPrice{'Price'} * $$price{'Impressions'}/1000);
 					} else {
 						$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
 					} # end if
@@ -3491,7 +3493,7 @@ sub calc_price {
 	} else {
 		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
-$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
+#$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
 if ( 0 ) {
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
@@ -4488,7 +4490,7 @@ sub get_run_price {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
 		} elsif ( $run_speed != $$std_speed{value} ) {
 			$speed_mod = Math::Round::nearest( .001, $$std_speed{'value'} / $run_speed );
-			$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
+			#$openprint::log->warn("1Press ".$$Press{'strid'}." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if DEBUG or 1;
 		} # end if
 	} else {
 		$openprint::log->error("No standard speed on $$Press{strid}");
