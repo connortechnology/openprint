@@ -189,16 +189,18 @@ sub html {
 	my @Assets = $Article->Assets();
 	my $html = sprintf(q`
 			<div class="Article">
-			<div class="Assets">%7$s</div>
+			<div class="Assets">%8$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
-			Posted on %6$s by %5$s<br/>
+			%6$s
+			Posted on %7$s by %5$s<br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
 			`, $Article->id(),
 			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
-			($Article->anonymous() ? 'Anonymous Sexy Contributor' : $Article->Author()->thumbnail_html() ),
+			($Article->anonymous() ? 'Anonymous Sexy Contributor' : $Article->Author()->link() ),
+			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
@@ -215,6 +217,31 @@ sub html {
 } # end  sub html
 
 sub summary_html {
+	my $Article = $_[0];
+	my @Comments = $Article->Comments();
+	my @Assets = $Article->Assets();
+	my $html = sprintf(q`
+			<div class="Article">
+			<div class="Assets">%7$s</div>
+			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
+			<div class="source_content">%3$s</div>
+			<div class="summary">%4$s</div>
+			`, $Article->id(),
+			ssi::escape_quotes($Article->title()),
+			$Article->source_content(),
+			($Article->summary() ? $Article->summary() : $Article->body() ),
+			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
+    );
+	if ( $Article->source() ) {
+		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
+	} # end if
+	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
+		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
+	} # end if
+	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	$html .= '</div>';
+	return $html;
 } # end sub summary_html
 
 sub view_url {
