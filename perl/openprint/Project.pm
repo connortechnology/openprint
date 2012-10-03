@@ -27,7 +27,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';

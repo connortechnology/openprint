@@ -22,7 +22,7 @@ sub cache_field {
     return $cache_field;
 }
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -51,7 +51,7 @@ $debug = 1;
 );
 %find_fields = (
 	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
-	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id = ANY(category_id))',
+	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
 );
 %transforms = (
 );

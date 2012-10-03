@@ -1163,11 +1163,15 @@ $Breakdown .= $$results{'Breakdown'};
 				$bestEquipment = $Equipment;
 				$bestRunTime = int($totalTime);
 				$bestFolds = \%folds;
+
+				# folding could be free, in which case, we can probably just give up now.
+				last if ! $bestPrice;
 			} # end if
 
 		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
 		last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
+		last if defined $bestPrice and ! $bestPrice;
 	} # end foreach Equipment
 
 	my %results = (

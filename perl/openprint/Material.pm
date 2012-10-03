@@ -71,7 +71,7 @@ sub New_Specification {
 	my ( $self, $name, $options ) = @_;
 
 	if ( ! $$self{'NewSpecifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification::find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
 			push @{$$self{'NewSpecifications'}{$$Spec{equipment_id}}{$name}}, $Spec;
 		} # end foreach
 	} # end if

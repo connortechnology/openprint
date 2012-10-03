@@ -518,8 +518,10 @@ sub AUTOLOAD {
 sub can_edit {
 	return 1 if $openprint::session{'user_id'} == $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if ( new openprint::User( $openprint::session{'user_id'} )->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
-	return 1 if new openprint::Company( $_[0]{'company_id'} )->salesrep_id() == $openprint::session{'user_id'};
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	my $Company = new openprint::Company( $_[0]{'company_id'} );
+	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	return 0;
 } # end sub can_edit
 
