@@ -52,6 +52,7 @@
 				</select>
 			</li>
 <? endif ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+<? if ( 0 ) ?>
 			<li>
 				<label>Created</label>
 				<span class="DateSelectorCT">
@@ -62,6 +63,7 @@
 <? echo ( ssi::date_select_session( '/article/search.html', 'created_on_end', {onchange=>'load_articles(this.form);','with_today'=>1,'with_clear'=>1} ); ) ?>
 				</span>
 			</li>
+<? endif ( 0 ) ?>
 			<li>
 				<label>Published</label>
 				<span class="DateSelectorCT">
@@ -95,15 +97,24 @@
 				<? echo ( join('',
 					ssi::button( 'ShowResults', {'onclick'=>"load_articles(f1);", 'text'=>'Show Results'} ),
 					ssi::button( 'Reset', { 'onclick'=>'f1.reset();', 'text'=>'Reset'} ),
+					( $session{user_id} ? (
 					ssi::button( 'New', {'href'=>'/article/edit.html', 'text'=>'New Article'} ),
+					) : () ),
 					); ) ?>
 			</p>
 		</fieldset>
 		<div id="ArticleList"><!--#include virtual="_search.html"--></div>
-	<p class="buttons">
-		<? echo ( ssi::button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
-		<? echo ( ssi::button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ); ) ?>
-	</p>
+		<p class="buttons">
+			<? echo ( 
+				if ( $session{user_type} eq 'A' ) {
+					return join("\n",
+						ssi::button('Delete', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Delete', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						ssi::button('Destroy', { onclick=>q`new Ajax.Updater( 'ArticleList', '_search.html', { parameters: { action: 'Destroy', article_id: $A($('f1').article_id).map(function(x){if(x.checked) return x.value;}) } } );` } ),
+						);
+				} # end if
+				return '';
+			) ?>
+		</p>
 	</form>
 	</div>
 </div>
