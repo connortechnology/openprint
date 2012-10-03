@@ -814,7 +814,7 @@ $openprint::log->debug("Fits") if DEBUG;
 						$complete = 0;
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
-$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
+#$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );

@@ -4542,19 +4542,19 @@ sub press_setup_cost {
 	if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, undef, $Press ) ) ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
-	if ( $Price{'units'} eq 'Stock Calliper - Per Plate' ) {
+	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
-	} elsif ( $Price{'units'} eq 'Per Form' ) {
+	} elsif ( $Price{'units'} eq 'per form' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
-	} elsif ( $Price{'units'} eq 'Total' ) {
+	} elsif ( $Price{'units'} eq 'total' ) {
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if
 		
 		$Price{'Total'} = $Price{'Price'};
-	} elsif ( $Price{'units'} eq 'Per Side' ) {
+	} elsif ( $Price{'units'} eq 'per side' ) {
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$$Imposition{'runstyle'}, $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if

@@ -366,14 +366,14 @@ sub summary {
 				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
 				my $Price = $Paper->get_price( 'weight'=>$$specs{"qty-$stock_id-$qty_index"},'service'=>'Material' );
 				if ( $$Price{'units'} eq 'per square foot' ) {
-					$html .= sprintf(' %.0f sq feet', ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 );
+					$html .= ' ' . Math::Round::nearest( 1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / 144 ).' sq feet';
 				} elsif ( $$Price{'units'} eq 'per square inch' ) {
-					$html .= sprintf(' %.0f sq inches', $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() );
-				} elsif ( $$Price{'units'} eq 'Per 100lbs' ) {
+					$html .= ' ' . Math::Round::nearest(1, $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ). ' sq inches';
+				} elsif ( $$Price{'units'} eq 'per 100lbs' ) {
 				} elsif ( $$Price{'units'} ) {
 					$html .= 'unknown units: ' . $$Price{'units'};
 				} elsif ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
-					$html .= sprintf(' %.0finches',( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() );
+					$html .= ' ' . Math::Round::nearest(1, ( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() ).'inches';
 				} # end if
 			} else {
 				$html .= 'none';

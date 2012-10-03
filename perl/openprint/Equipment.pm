@@ -157,7 +157,6 @@ $openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
 			next;
 		} # end if
 
-		$openprint::log->debug( 'Fold: ' . $Fold->name() );
 		if ( $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching} ) {
 			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
 			next;

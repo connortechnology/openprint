@@ -29,7 +29,7 @@ my %variables = (
         'ServiceType'=>[],
         'alert'=>['output'],
         'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
-        'txtCalliper'=>['save','output'],
+        'txtCalliper'=>['save','output'], 'OverrideCalliper'=>['save'],
         'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
         'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
         'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
@@ -232,7 +232,7 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	my @signatures = $Project->signatures();
 
-	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
+	if ( $$specs{'OverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'txtCalliper'} = 0;
 			foreach my $signature_service_index ( @signatures ) {
