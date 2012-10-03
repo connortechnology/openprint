@@ -426,6 +426,10 @@ if ( 0 ) {
 	return $_[0]{'icon'};
 }
 
+sub link {
+	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+} # end sub link
+
 sub html {
 	if ( ! $_[0]{'id'} ) {
 		$log->error("called html on user without id".$_[0]->to_string() );
