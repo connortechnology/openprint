@@ -671,6 +671,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	
 	if ( exists $$data{strcategory} ) {
 		foreach my $category ( sql::execute( undef,undef, 'SELECT DISTINCT strcategory FROM tbl_equipment' ) ) {
+			next if sql::execute( undef, undef, 'SELECT name from equipment_categories where name=?', $category );
 			sql::insert( undef, undef, 'equipment_categories', 'name', $category );
 		} # end foreach category
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');

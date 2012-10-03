@@ -24,11 +24,11 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
-my $projects_count = 100;
+my $projects_count = 1000;
 my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
-my $company_id = 6;
+my $company_id = 0;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;

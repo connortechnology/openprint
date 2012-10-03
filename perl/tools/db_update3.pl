@@ -224,7 +224,9 @@ if ( ! exists $$data{'servicetype_id'} ) {
 } # end if
 if ( ! exists $$data{'category_id'} ) {
 	$dbh->do('ALTER TABLE tbl_equipment ADD category_id INTEGER[]');
-	$dbh->do('UPDATE tbl_equipment SET category_id = category_id || (SELECT id FROM equipment_categories WHERE name=strcategory)');	
+	if ( exists $$data{strcategory} ) {
+		$dbh->do('UPDATE tbl_equipment SET category_id = category_id || (SELECT id FROM equipment_categories WHERE name=strcategory)');	
+	} # end if
 } # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
@@ -962,6 +964,9 @@ if ( ! sets::isin('products', \@tables ) ) {
 	
 } # end if
 
+$dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
+$dbh->do( 'update service_prices set units=lower(units)');
+$dbh->do( 'update paper_prices set strunits=lower(strunits)');
 $dbh->disconnect();
 1;
 __END__
