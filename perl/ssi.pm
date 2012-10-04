@@ -1,17 +1,12 @@
 use strict;
 package ssi;
 
-use countries;
-use states;
-use provinces;
-
 use Date::Calc qw(Days_in_Month Month_to_Text);
-use HTML::Entities qw(encode_entities);
 
 require sets;
 require sql;
 
-use openprint ();
+require openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -222,6 +217,7 @@ sub encode_html {
 } # end sub encode_html
 
 sub make_drop_down {
+	require HTML::Entities;
 	my ( $search_data, $checkval, $length ) = @_;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
@@ -256,6 +252,8 @@ sub fill_select {
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
+	require provinces;
+	require states;
 	my @states_and_provinces = ();
 	push @states_and_provinces, @states::states;
 	push @states_and_provinces, @provinces::provinces;
@@ -263,14 +261,17 @@ sub return_states_and_provinces {
 } # end sub return_states_and_provinces
 
 sub return_states {
+	require states;
 	return make_drop_down( \@states::states, shift );
 } # end sub return_states
 
 sub return_provinces {
+	require provinces;
 	return make_drop_down( \@provinces::provinces, shift );
 } # end sub return_provinces
 
 sub return_countries {
+	require countries;
 	return make_drop_down( \@countries::countries, [@_] );
 } # end sub return_countries
 

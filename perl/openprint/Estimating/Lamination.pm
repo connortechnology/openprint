@@ -173,7 +173,7 @@ sub calc {
 
 			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
 			if ( %ServicePrice ) {
-				if ( $ServicePrice{'units'} eq 'Per M' ) {
+				if ( $ServicePrice{'units'} eq 'per m' ) {
 					my $serviceprice = ($ServicePrice{'Price'} * $qty)/1000;
 					$price += $serviceprice;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );

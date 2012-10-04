@@ -452,10 +452,10 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 			my $servicePrice;
 			my %servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );
 
-			if ( lc $servicePrice{'units'} eq 'per m' ) {
+			if ( $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
 				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $score_qty, $servicePrice );
-			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
+			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
 				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
@@ -478,10 +478,10 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 			if ( $horizontal_rule ) {
 				if ( my @Materials = openprint::Material->find('name'=>'ScoringRule') ) {
 					%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
-					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each','per score'] ) ) {
+					if ( sets::isin( $horizontal_price{'units'},['per rule','each','per score'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rule;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
-					} elsif ( lc $horizontal_price{'units'} eq 'per inch' ) {
+					} elsif ( $horizontal_price{'units'} eq 'per inch' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length;
 						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
 					} elsif ( $horizontal_price{'units'} eq 'per foot' ) {
@@ -509,10 +509,10 @@ $Results{'Breakdown'} .= "Has orientation setting.<br/>";
 			if ( $vertical_rule ) {
 				if ( my @Materials = openprint::Material->find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
-					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
+					if ( sets::isin( $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
-					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {
+					} elsif ( $vertical_price{'units'} eq 'per inch' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length;
 						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
 					} elsif ( $vertical_price{'units'} eq 'per foot' ) {

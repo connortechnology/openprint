@@ -29,7 +29,7 @@ my %variables = (
         'ServiceType'=>[],
         'alert'=>['output'],
         'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
-        'txtCalliper'=>['save','output'],
+        'txtCalliper'=>['save','output'], 'OverrideCalliper'=>['save'],
         'Imposition1'=>['save','output'], 'Imposition2'=>['save','output'], 'Imposition3'=>['save','output'],
         'ddmEquipment1'=>['save','output'], 'ddmEquipment2'=>['save','output'], 'ddmEquipment3'=>['save','output'],
         'OverridePockets1'=>['save'], 'OverridePockets2'=>['save'], 'OverridePockets3'=>['save'],
@@ -232,7 +232,7 @@ sub calc {
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	my @signatures = $Project->signatures();
 
-	if ( $$specs{'chkOverrideCalliper'} ne 'Y' ) {
+	if ( $$specs{'OverrideCalliper'} ne 'Y' ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			$$specs{'txtCalliper'} = 0;
 			foreach my $signature_service_index ( @signatures ) {
@@ -467,10 +467,10 @@ sub get_price {
 			$price{'RunTime'} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
-			if ( $servicePrice{'units'} eq 'Per M' ) {
+			if ( $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 				$price{'Service'} += $servicePrice{'Total'};
-			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+			} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 				$price{'Service'} += $servicePrice{'Total'}
 			} else {
@@ -494,10 +494,10 @@ sub get_price {
 	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 	$price{'RunTime'} += $runtime * 360;
-	if ( $servicePrice{'units'} eq 'Per M' ) {
+	if ( $servicePrice{'units'} eq 'per m' ) {
 		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 		$price{'Service'} += $servicePrice{'Total'};
-	} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+	} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
 		$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 		$price{'Service'} += $servicePrice{'Total'}
 	} else {
@@ -509,10 +509,10 @@ sub get_price {
 	if ( $$specs{'glue_id'} ) {
 		my $Material = new openprint::Material( $$specs{'glue_id'} );
 		my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
-		if ( $GluePrice{units} eq 'Per Square Inch' ) {
+		if ( $GluePrice{units} eq 'per square inch' ) {
 			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"};
 			$price{'GluePrice'} = \%GluePrice;
-		} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+		} elsif ( $GluePrice{units} eq 'per square foot' ) {
 			$GluePrice{'Total'} = $GluePrice{Price} * $$specs{'Width'} * $$specs{'txtCalliper'} * $$specs{"txtQuantity$qty_index"} / 144;
 			$price{'GluePrice'} = \%GluePrice;
 		} # end if

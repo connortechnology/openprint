@@ -22,7 +22,7 @@ sub cache_field {
     return $cache_field;
 }
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -51,7 +51,7 @@ $debug = 1;
 );
 %find_fields = (
 	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
-	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id = ANY(category_id))',
+	'category'		=>	'(SELECT name FROM Equipment_Categories WHERE id=ANY(category_id))',
 );
 %transforms = (
 );
@@ -135,14 +135,19 @@ sub Fold {
 	my ( $self, $params ) = @_;
 
 	$self->Folds() if ! $$self{'Folds'};
-#$openprint::log->debug("Param" . ref $params );
-#foreach my $k ( keys %params ) {
-#$openprint::log->debug("Param: $k => $$params{$k}");
-#}
+if ( $debug ) {
+$openprint::log->debug("Param" . ref $params );
+foreach my $k ( keys %$params ) {
+$openprint::log->debug("Param: $k => $$params{$k}");
+}
+foreach my $F ( @{$$self{'Folds'}{$$params{pages}}} ) {
+$openprint::log->debug("Fold for $$params{pages} " . $F->to_string() );
+}
+}
 
 	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
-			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;
 		} else {
 			$openprint::log->debug("Found fold: " . $Fold->name() ) if $debug;
@@ -152,7 +157,6 @@ sub Fold {
 			next;
 		} # end if
 
-		#$openprint::log->debug( 'Fold: ' . $Fold->name() );
 		if ( $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching} ) {
 			$openprint::log->debug("Wanted stitching: $$params{stitching}, have $$Fold{stitching}") if $debug;
 			next;
@@ -213,8 +217,10 @@ sub Fold {
 			$openprint::log->debug("Wanted imposition: $$params{'imposition'}, have $$Fold{'min_imposition'} x $$Fold{'max_imposition'}") if $debug;
 			next;
 		} # end if
-		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
-		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
+		if ( $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} ) ) {
+			$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
+			next;
+		} # end if
 
 		if ( $$params{'printing_type'} and $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, [ split(',', $$Fold{'printing_type'}) ] ) ) {
             $openprint::log->debug("Fold no good due to PrintingType ($$params{'printing_type'}) != " . $$Fold{'printing_type'} ) if $debug;

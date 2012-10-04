@@ -671,6 +671,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	
 	if ( exists $$data{strcategory} ) {
 		foreach my $category ( sql::execute( undef,undef, 'SELECT DISTINCT strcategory FROM tbl_equipment' ) ) {
+			next if sql::execute( undef, undef, 'SELECT name from equipment_categories where name=?', $category );
 			sql::insert( undef, undef, 'equipment_categories', 'name', $category );
 		} # end foreach category
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
@@ -2849,6 +2850,10 @@ if ( ! sets::isin( 'users_in_marketing_categories', \@tables ) ) {
 } # end if
 if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Companies_In_Marketing_Categories.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Bitcoin_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 $dbh->disconnect();

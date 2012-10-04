@@ -536,10 +536,10 @@ sub send_sales_order {
 	} # for each
 
 	my @admin_emails = split( ',', $config{'OrderingEmail'} );
-	@admin_emails = map { lc misc::trim($_) } @admin_emails;
+	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
 
 	my @accounting_emails = split( ',', $config{'AccountingEmail'} );
-	@accounting_emails = map { lc misc::trim($_) } @accounting_emails;
+	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 

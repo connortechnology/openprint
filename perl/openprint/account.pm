@@ -530,6 +530,7 @@ $log->debug("Sending password change");
 	$variable{'User'} = $User;
     if ( $config{mail_db_name} ) {
         my @domains = email::domains();
+$log->debug("Domains: @domains");
         my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
         if ( sets::isin( $domain, \@domains ) ) {
             $variable{DoEmail} = 1;

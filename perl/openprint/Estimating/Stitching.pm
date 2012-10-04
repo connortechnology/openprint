@@ -419,7 +419,7 @@ sub calc {
 	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	my $plusCover = 0;
 	if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
-		#$log->debug("************* We Have Plus Cover *************************");
+		$log->debug("************* We Have Plus Cover *************************");
 		$plusCover = 1;
 	} # end if
 
@@ -463,11 +463,15 @@ sub calc {
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
-						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $$sig_specs{'PageQuantity'.$qty_index} ) {
+$openprint::log->debug("Folding pages: $type $sig_pages / $pages");
+						if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
+$openprint::log->debug('1 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . ' > ' . $sig_pages);
 							$pages{$pages} += $$sig_specs{'PageQuantity'.$qty_index} / $pages;
-						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
+						} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $sig_pages ) {
+$openprint::log->debug('2 ' . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"});
 							$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						} else {
+$openprint::log->debug('3');
 							$pages{$pages} += 1;
 						} # end if
 #$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
@@ -749,13 +753,13 @@ sub get_price {
 			$price{'RunTime'} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;
 		while ( $neededPockets > $maxPockets ) {
-			if ( $servicePrice{'units'} eq 'Per M' ) {
+			if ( $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 				$price{'Service'} += $servicePrice{'Total'};
-			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
+			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 				$price{'Service'} += $servicePrice{'Total'}
-			} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+			} elsif ( $servicePrice{'units'} eq 'each' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
 				$price{'Service'} += $servicePrice{'Total'};
 			} else {
@@ -779,13 +783,13 @@ sub get_price {
 		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 		$price{'RunTime'} += $runtime * 360;
-		if ( $servicePrice{'units'} eq 'Per M' ) {
+		if ( $servicePrice{'units'} eq 'per m' ) {
 			$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 			$price{'Service'} += $servicePrice{'Total'};
-		} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+		} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
 			$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 			$price{'Service'} += $servicePrice{'Total'}
-		} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+		} elsif ( $servicePrice{'units'} eq 'each' ) {
 			$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
 			$price{'Service'} += $servicePrice{'Total'}
 		} else {
@@ -820,10 +824,10 @@ sub get_price {
 					$runtime *= (1+$slowdown_percent/100);
 				} # end if
 				$price{'RunTime'} += $runtime * 360;
-				if ( $servicePrice{'units'} eq 'Per M' ) {
+				if ( $servicePrice{'units'} eq 'per m' ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 					$price{'Service'} += $servicePrice{'Total'};
-				} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+				} elsif ( $servicePrice{'units'} =~ /per hour/i ) {
 					$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 					$price{'Service'} += $servicePrice{'Total'}
 				} else {

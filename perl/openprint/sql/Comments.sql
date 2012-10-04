@@ -1,5 +1,4 @@
 
-DROP TABLE IF EXISTS Comments;
 CREATE TABLE Comments (
 	id SERIAL,
 	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),

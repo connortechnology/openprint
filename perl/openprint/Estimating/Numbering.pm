@@ -264,12 +264,12 @@ $openprint::log->debug("Got press $Press for " . $$printing_specs{"ddmPress$qty_
 
 				if ( ! %ServicePrice ) {
 					$Results{'Breakdown'} .= 'No Service price.<br/>';
-				} elsif ( $ServicePrice{'units'} eq 'Per M' ) {
+				} elsif ( $ServicePrice{'units'} eq 'per m' ) {
 					$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $qty / 1000;
 					$total += $ServicePrice{'Total'};
 					$mprice += $ServicePrice{'Price'} * $runs / $I->imposition();
 					$Results{'Breakdown'} .= sprintf('Service Price: %4$d runs of %5$d numbers : $%1$.4f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $heads );
-				} elsif ( sets::isin( lc $ServicePrice{'units'},[ 'per impression', 'each' ] ) ) {
+				} elsif ( sets::isin( $ServicePrice{'units'},[ 'per impression', 'each' ] ) ) {
 					$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $qty;
 					$total += $ServicePrice{'Total'};
 					$mprice += $ServicePrice{'Price'} * $runs / $I->imposition();
@@ -283,12 +283,12 @@ $openprint::log->debug("Got press $Press for " . $$printing_specs{"ddmPress$qty_
 				%LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment ) if ! %LastServicePrice;
 				if ( ! %LastServicePrice ) {
 					$Results{'Breakdown'} .= 'No Service price.<br/>';
-				} elsif ( sets::isin( lc $LastServicePrice{'units'},[ 'per m' ] ) ) {
+				} elsif ( sets::isin( $LastServicePrice{'units'},[ 'per m' ] ) ) {
 					$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $qty / 1000;
 					$Results{'Breakdown'} .= sprintf('Service Price: 1 run of %4$d numbers : $%1$.4f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run );
 					$total += $LastServicePrice{'Total'};
 					$mprice += $LastServicePrice{'Price'} / $I->imposition();
-				} elsif ( sets::isin( lc $LastServicePrice{'units'},[ 'per impression', 'each' ] ) ) {
+				} elsif ( sets::isin( $LastServicePrice{'units'},[ 'per impression', 'each' ] ) ) {
 					$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $qty;
 					$total += $LastServicePrice{'Total'};
 					$mprice += $LastServicePrice{'Price'} / $I->imposition();
