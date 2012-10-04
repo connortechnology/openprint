@@ -210,7 +210,7 @@ if (open($fifoh, "< $config{fifo}")) {
 					'password'	=> $config{'db_pass'},
 					);
 			die 'Error opening db' if ! $dbh;
-			configuration::init_cache( \%config );
+			configuration::init( \%config );
 		} # end if
 	} # end while <input>
 
