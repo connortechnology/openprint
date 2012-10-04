@@ -235,7 +235,7 @@ sub handler {
 			} # end if
 		} # end if _
 		if ( $template ) {
-			#$log->debug("parsing template!");
+			$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
