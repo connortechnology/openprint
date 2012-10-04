@@ -56,7 +56,7 @@ $log->debug("Looking up basic pricing for $min");
 	} # end if
 	
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		if ( $Price{'units'} eq 'Percent' ) {
+		if ( $Price{'units'} eq 'percent' ) {
 			my ( $price ) = misc::sum( sql::execute( $log, $dbh, qq{SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex != ? and strName='txtPrice$qty_index'}, $project_index, $service_index ) );
 			$$specs{"txtPrice$qty_index"} = $price * $Price{'Price'}/100;
 $log->debug("Price: $price * $Price{Price}/100 = " . $$specs{"txtPrice$qty_index"} );

@@ -100,13 +100,13 @@ sub calc {
 		my $unitPrice = 0;
 		my %ServicePrice = openprint::service::get_price_object( $ServiceType->name(), $qty, undef );
 		if ( %ServicePrice ) {
-			if ( lc $ServicePrice{'units'} eq 'per m' ) {
+			if ( $ServicePrice{'units'} eq 'per m' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-			} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
+			} elsif ( $ServicePrice{'units'} eq 'each' ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-			} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per bundle', 'per package' ] ) ) {
+			} elsif ( sets::isin( $ServicePrice{'units'}, [ 'per bundle', 'per package' ] ) ) {
 				$ServicePrice{'Total'} = $ServicePrice{'Price'} * $package_qty;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice %1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $package_qty );
 			} else {
@@ -120,11 +120,11 @@ sub calc {
 
 			if ( my @Materials = openprint::Material->find('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Materials[0]->get_price( $package_qty, undef );
-				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
+				if ( $CardboardPrice{'units'} eq 'per square inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'};
-				} elsif ( $CardboardPrice{'units'} eq 'Per Square Foot' ) {
+				} elsif ( $CardboardPrice{'units'} eq 'per square foot' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * ($$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'}/144);
-				} elsif ( $CardboardPrice{'units'} eq 'Per Pad' ) {
+				} elsif ( $CardboardPrice{'units'} eq 'per pad' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%.2f %s * %s x %s = $%.2f per package = %.2f total<br/>',@CardboardPrice{'Price','units'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $CardboardPrice{'Total'}, $CardboardPrice{'Total'}*$package_qty );
@@ -145,13 +145,13 @@ sub calc {
 				my $material_qty = $package_qty;
 				$material_qty *= $$specs{'bands_per_package'};
 # if $$specs{'bands_per_package'};
-				if ( lc $MaterialPrice{units} eq 'per m' ) {
+				if ( $MaterialPrice{units} eq 'per m' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty / 1000;
-				} elsif ( lc $MaterialPrice{units} eq 'each' ) {
+				} elsif ( $MaterialPrice{units} eq 'each' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $material_qty;
-				} elsif ( lc $MaterialPrice{units} eq 'per inch' ) {
+				} elsif ( $MaterialPrice{units} eq 'per inch' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty;
-				} elsif ( lc $MaterialPrice{units} eq 'per foot' ) {
+				} elsif ( $MaterialPrice{units} eq 'per foot' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $material_qty / 144;
 				} # end if
 				$price += $MaterialPrice{'Total'};

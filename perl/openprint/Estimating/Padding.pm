@@ -173,13 +173,13 @@ sub calc {
 		$price += $ServicePrice{'Total'};
 			
 		if ( $$specs{'Backing'} eq 'Cardboard' ) {
-			if ( my @Materials = openprint::Material->find('name'=>'CardboardBacking') ) {
-				my %CardboardPrice = $Materials[0]->get_price( $qty, undef );
-				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
+			if ( my $Material = openprint::Material->find_one('name'=>'CardboardBacking') ) {
+				my %CardboardPrice = $Material->get_price( $qty, undef );
+				if ( $CardboardPrice{'units'} eq 'per square inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $$specs{"txtQuantity$qty_index"};
-				} elsif ( $CardboardPrice{'units'} eq 'Per Square Foot' ) {
+				} elsif ( $CardboardPrice{'units'} eq 'per square foot' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * ($$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'}/144) * $$specs{"txtQuantity$qty_index"};
-				} elsif ( $CardboardPrice{'units'} eq 'Per Pad' ) {
+				} elsif ( $CardboardPrice{'units'} eq 'per pad' ) {
 					$CardboardPrice{'Total'} = $qty * $CardboardPrice{'Price'};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
@@ -187,8 +187,8 @@ sub calc {
 			} # end if
 		} # end if
 		if ( $$specs{'rdbDTape'} eq 'Y' ) {
-			if ( my @Materials = openprint::Material->find('name'=>'DTape') ) {
-				my %DTapePrice = $Materials[0]->get_price( $qty, undef );
+			if ( my $Material = openprint::Material->find_one('name'=>'DTape') ) {
+				my %DTapePrice = $Material->get_price( $qty, undef );
 				$DTapePrice{'Total'} = $DTapePrice{'Price'} * $$printing_specs{'txtFinalWidth'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape Price: $%1$.2f%2$s = $%3$.2f<br/>', @DTapePrice{'Price','units','Total'} );
 				$price += $DTapePrice{'Total'};
@@ -198,10 +198,10 @@ sub calc {
 			my $calliper = get_finished_calliper( $Project, $specs );
 			my $Material = new openprint::Material( $$specs{'glue_id'} );
 			my %GluePrice = $Material->get_price( $$specs{"txtQuantity$qty_index"}, undef );
-			if ( $GluePrice{units} eq 'Per Square Inch' ) {
+			if ( $GluePrice{units} eq 'per square inch' ) {
 				$GluePrice{'Total'} = $GluePrice{Price} * $$printing_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{'txtFinalWidth'}, $calliper );
-			} elsif ( $GluePrice{units} eq 'Per Square Foot' ) {
+			} elsif ( $GluePrice{units} eq 'per square foot' ) {
 				$GluePrice{'Total'} = $GluePrice{Price} * $$printing_specs{'txtFinalWidth'} * $calliper * $$specs{"txtQuantity$qty_index"} / 144;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $Material->description(), @GluePrice{'Price','units','Total'}, $$printing_specs{'txtFinalWidth'}, $calliper );
 			} # end if

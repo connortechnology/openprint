@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 0;
+use constant DEBUG => 1;
 my $master_time;
 
 my %folding_cache;
@@ -710,13 +710,13 @@ sub calc_from_imposition {
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $$Paper{'width'} * $$Paper{'height'} * 1000;
 		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
 		$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
-		if ( $$Paper{'type'} eq 'Roll' ) {
-			$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{'width'} . '" Roll';
+		if ( $$Paper{type} eq 'Roll' ) {
+			$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width};
 			$$specs{'txtPressSheetQty'.$qty_index} = sprintf('%.0f lbs', $$price{'Stock Weight'} );
 			$$specs{'StockQuantity'.$qty_index} = $$price{'Stock Weight'};
 #$openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}");
-		} elsif ( $$Paper{'type'} eq 'Sheet' ) {
-			$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{'width'} . 'x' . $$Paper{'height'};
+		} elsif ( $$Paper{type} eq 'Sheet' ) {
+			$$specs{'ddmStockSheetSize'.$qty_index} = $$Paper{width} . 'x' . $$Paper{height};
 			$$specs{'txtPressSheetQty'.$qty_index} = $$price{'Gross Sheet Count'} .'sheets';
 			$$specs{'hdnNetSheetCount'.$qty_index} = $$price{'Net Sheet Count'};
 			$$specs{'StockQuantity'.$qty_index} = $$price{'Gross Sheet Count'};
@@ -1287,7 +1287,7 @@ sub get_impositions {
 		my %imps;
 		my %dutches;
 		if ( DEBUG or 1 ) {
-			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} );	
+			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions');	
 			foreach my $i ( @impositions ) {
 				$i->display();
 			}
@@ -1358,8 +1358,8 @@ $imp->display("Foudn non-dutch");
 			} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $$A{height} == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
 			} elsif ( $imps{$str} ) {
-				my $APrice = $A->get_price('service'=>'Material');
-$imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Price'}) if DEBUG;
+				my $APrice = $$imp{PaperPrice} = $A->get_price('service'=>'Material');
+$imp->display('Comparing A QTY ' . $$APrice{'100lb Price'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Price'}) if DEBUG;
 
 				# Can't do any decisions based on absolute price or qty, because we just don't know how much paper we need
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
@@ -1372,8 +1372,8 @@ $imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'Pape
 						last;
 					} # end if
 
-					my $BPrice = $B->get_price('service'=>'Material');
-$I->display('Comparing B QTY ' . '$' . $$I{'PaperPrice'}{'100lb Price'}) if DEBUG;
+					my $BPrice = $$B{PaperPrice} = $B->get_price('service'=>'Material') if ! $$B{PaperPrice};
+$I->display('Comparing B QTY ' . '$' . $$BPrice{'100lb Price'}) if DEBUG;
 					
 					if (
 							( $B->area() >= $A->area() )
@@ -1438,7 +1438,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 		if ( DEBUG or 1 ) {
 			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions );
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
-				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'} );
+				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Price'} );
 			} # end foreach
 		} # end if
 
@@ -2273,11 +2273,11 @@ sub breakdown {
 	} # end if
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $ImpositionCharge ) {
-		if ( $$ImpositionCharge{units} eq 'Per Page' ) {
+		if ( $$ImpositionCharge{units} eq 'per page' ) {
 			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $$Imposition{'pages'} );
-		} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Object' ) {
+		} elsif ( $$ImpositionCharge{units} eq 'per square inch of object' ) {
 			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->object_width(), $Imposition->object_height() );
-		} elsif ( $$ImpositionCharge{units} eq 'Per Square Inch of Layout' ) {
+		} elsif ( $$ImpositionCharge{units} eq 'per square inch of layout' ) {
 			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$s x %5$s = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->layout_width(), $Imposition->layout_height() );
 		} elsif ( $$ImpositionCharge{Price} ) {
 			$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d out = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $$Imposition{'imposition'} );
@@ -3236,6 +3236,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 if ( DEBUG ) {
 				$openprint::log->error("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 				$imp->display('Worst than best');
+				$openprint::log->debug( breakdown( \%best_price, $sig_specs ) ) if $best_price{'Imposition'};
 }
 				
 			} else {
@@ -4139,8 +4140,8 @@ $openprint::log->warn("Something wrong in AQ");
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
 		} # end if
 		if ( %ImpositionMakeReady ) {
-			if ( $ImpositionMakeReady{'units'} eq 'Per Form' ) {
-#$openprint::log->debug("Make Ready Per Form " . ($$specs{'PreviousForms'.$qty_index}+1) );
+			if ( $ImpositionMakeReady{'units'} eq 'per form' ) {
+#$openprint::log->debug("Make Ready per form " . ($$specs{'PreviousForms'.$qty_index}+1) );
 				%ImpositionMakeReady = openprint::service::get_price_object( $service, $$specs{'PreviousForms'.$qty_index} + 1, $Press );
 			} # end if
 		} else {	
@@ -4157,13 +4158,13 @@ $openprint::log->warn("Something wrong in AQ");
 			$service = 'Imposition';
 			%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press);
 		} # end if
-		if ( $ImpositionCharge{'units'} eq 'Per Page' ) {
+		if ( $ImpositionCharge{'units'} eq 'per page' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$$Imposition{'pages'},$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $$Imposition{'pages'};
-		} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch of Object' ) {
+		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
-		} elsif ( $ImpositionCharge{'units'} eq 'Per Square Inch of Layout' ) {
+		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->layout_area();
 		} else {
@@ -4189,7 +4190,7 @@ $openprint::log->warn("Something wrong in AQ");
 				%PageCharge = openprint::service::get_price_object( 'Page Charge', $$Imposition{'pages'}, $Press );
 			} # end if
 			if ( %PageCharge ) {
-				if ( $PageCharge{'units'} eq 'Per Page' ) {
+				if ( $PageCharge{'units'} eq 'per page' ) {
 					$PageCharge{'Total'} = $PageCharge{'Price'} * $$Imposition{'pages'};
 				} # end if
 				$price{'Page Charge'} = \%PageCharge;
@@ -4565,7 +4566,7 @@ sub press_setup_cost {
 		} # end if
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} # end if
-	if ( $Price{'units'} =~ /Per Run/i ) {
+	if ( $Price{'units'} =~ /per run/i ) {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
