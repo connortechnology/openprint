@@ -33,6 +33,19 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub cleanup {
+	if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+	} else {
+$log->debug("cleanup");
+	} # end if
+	if ( $dbh ) {
+		$session{'lastupdated'} = time;
+		untie %session;
+		$dbh->disconnect();
+	} # end if
+} # end sub cleanup
+
 sub handler {
 
 	my $request = shift;
@@ -45,6 +58,7 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
 	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
@@ -245,11 +259,6 @@ sub handler {
 		} # end if
 	} # end if
 
-	if ( $dbh ) {
-		$session{'lastupdated'} = time;
-		untie %session;
-		$dbh->disconnect();
-	} # end if
 	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::pricing::clear_cache();
