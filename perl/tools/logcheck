@@ -5,6 +5,7 @@ use strict;
 require sql;
 require sets;
 require logger;
+require configuration;
 
 use Date::Parse ();
 use Date::Calc ();
@@ -16,7 +17,7 @@ require openprint::Host;
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-#*config = \%openprint::config;
+*config = \%openprint::config;
 $log = logger->new();
 $log->{level} = 'debug';
 
@@ -47,6 +48,8 @@ unless ($opts->{db_pass}) {
     print STDERR "$program: missing required --db_pass parameter\n";
     exit 1;
 }
+
+configuration::merge( $opts );
 
 $dbh = sql::open_sql( $log,
     'host'      => $opts->{'db_host'},
