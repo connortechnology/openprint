@@ -11,6 +11,7 @@ require openprint::UserGroup;
 require openprint::User_Notification;
 require openprint::Asset;
 require openprint::User_Profile;
+require openprint::Blocklist;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
@@ -524,6 +525,20 @@ sub can_edit {
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	return 0;
 } # end sub can_edit
+
+sub can_view {
+	return 1 if $openprint::session{'user_id'} == $_[0]{id};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	my $Company = new openprint::Company( $_[0]{'company_id'} );
+	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	my $Block = openprint::Blocklist->find_one('blockee in'=>[$openprint::session{user_id},$_[0]{id}]);
+	return 0 if $Block;
+	my $Block = openprint::Blocklist->find_one('blocker in'=>[$openprint::session{user_id},$_[0]{id}]);
+	return 0 if $Block;
+	return 1;
+} # end sub can_view
 
 sub Location {
 	if ( ! $_[0]{'Location'} ) {
