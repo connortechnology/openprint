@@ -33,6 +33,9 @@
 		);
 
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
+			if ( $Field->type() eq 'location' ) {
+				# Can use multiple inputs
+			} # end if
 			next if ! $session{'/account/search.html?field-'.$$Field{'id'}};
 
 			if ( ! $openprint::User::find_fields{'profile_field-'.$$Field{'id'}} ) {
@@ -138,7 +141,9 @@
 
 		if ( $birthday and $birthday ne '--' ) {
 			my @Birthday = split('-', $birthday );
-			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+			$age = @Birthday == 3 ? (
+				Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0
+				) : ( 0 );
 		} # end if 
 
 		$html .= sprintf(q`

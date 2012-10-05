@@ -1,22 +1,23 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
 	foreach my $Stock ( openprint::Paper->find( 
-			'columns'	=>	'*,(select name from stockbrands where id=brand_id) AS name, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
-			( $session{'/administrator/stock/list.html?Group'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?Group'} ) : () ),
+			'columns'	=>	'*,(select name from stockbrands where id=brand_id) AS brand, (select name from stockfinishes where id=finish_id) AS finish, (select name from stockcolours where id=colour_id) AS colour, (select name from stockweights where id=weight_id) AS weight',
+			( $session{'/administrator/stock/list.html?group_id'} ? ( 'group_id'		=> $session{'/administrator/stock/list.html?group_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?owner_id'} ? ( 'owner_id'		=> $session{'/administrator/stock/list.html?owner_id'} ) : () ),
-			( $session{'/administrator/stock/list.html?Manufacturer'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'} ) : () ),
-			( $session{'/administrator/stock/list.html?Brand'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?Brand'} ) : () ),
-			( $session{'/administrator/stock/list.html?Finish'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?Finish'} ) : () ),
-			( $session{'/administrator/stock/list.html?Colour'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?Colour'} ) : () ),
-			( $session{'/administrator/stock/list.html?Weight'} ? ( 'weight_id'	=> $session{'/administrator/stock/list.html?Weight'} ) : () ), 
-			( $session{'/administrator/stock/list.html?Quality'} ? ( 'quality_id'	=> $session{'/administrator/stock/list.html?Quality'} ) : () ),
+			( $session{'/administrator/stock/list.html?manufacturer_id'} ? ( 'manufacturer_id'		=> $session{'/administrator/stock/list.html?manufacturer_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?brand_id'} ? ( 'brand_id'	=> $session{'/administrator/stock/list.html?brand_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?finish_id'} ? ( 'finish_id'	=> $session{'/administrator/stock/list.html?finish_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?colour_id'} ? ( 'colour_id'	=> $session{'/administrator/stock/list.html?colour_id'} ) : () ),
+			( $session{'/administrator/stock/list.html?weight_id'} ? ( 'weight_id'	=> $session{'/administrator/stock/list.html?weight_id'} ) : () ), 
+			( $session{'/administrator/stock/list.html?quality_id'} ? ( 'quality_id'	=> $session{'/administrator/stock/list.html?quality_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?material_id'} ? ( 'material_id'	=> $session{'/administrator/stock/list.html?material_id'} ) : () ),
 			( $session{'/administrator/stock/list.html?Types'} ? ( 'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ] ) : () ),
 			( $session{'/administrator/stock/list.html?fsc_code'} ? ( 'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'} ) : () ),
 			( $session{'/administrator/stock/list.html?width'} ? ( 'width'=>$session{'/administrator/stock/list.html?width'} ) : () ),
 			( $session{'/administrator/stock/list.html?height'} ? ( 'height'=>$session{'/administrator/stock/list.html?height'} ) : () ),
 			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
-			'order'		=> 'name,finish,colour,weight, width, height'
+			( $session{'/administrator/stock/list.html?digital'} ne '' ? ( digital=>$session{'/administrator/stock/list.html?digital'} ) : () ),
+			'order'		=> 'brand,finish,colour,weight, width, height'
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();

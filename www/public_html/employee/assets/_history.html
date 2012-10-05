@@ -47,23 +47,23 @@
 		my $html = '';
 		my $report_total = 0;
 		while ( my $Asset = shift @{$$variable{'Assets'}} ) {
-			$html .= sprintf(q`<tr id="tr-%1$d">`, $Asset->id() );
 			$html .= sprintf( q`
-				<td class="checkbox"><input type="checkbox" id="asset_id%1$d" name="asset_id" value="%1$d"/></td>
-				<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
-				<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
-				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
-				<td class="Name"><a href="view.html?asset_id=%1$d">%4$s</a></td>
-				<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
-				<td class="thumbnail"><a href="view.html?asset_id=%1$d">%6$s</a></td>
-			</tr>`, $Asset->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Asset->created_on())), 
-			$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
-			sprintf('<img src="%s" alt=""/>', $Asset->thumbnail_url() ),
+				<tr id="tr-%1$d">
+					<td class="checkbox"><input type="checkbox" id="asset_id%1$d" name="asset_id" value="%1$d"/></td>
+					<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
+					<td class="DateTime"><a href="view.html?asset_id=%1$d">%2$s</a></td>
+					<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
+					<td class="Name"><a href="view.html?asset_id=%1$d">%4$s</a></td>
+					<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
+					<td class="thumbnail"><a href="view.html?asset_id=%1$d">%6$s</a></td>
+				</tr>`, $$Asset{id}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Asset->created_on())), 
+				$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
+				sprintf('<img src="%s" alt=""/>', $Asset->thumbnail_url() ),
 				);
 		} # end while
 		return $html;
 	) ?>
-		<tbody>
+		</tbody>
 	</table>
 	<p class="buttons">
 		<? echo (

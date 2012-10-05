@@ -412,9 +412,9 @@ sub yearly_sales {
 
 			my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
 			foreach my $Company ( @Companies ) {
-				my $Contact = openprint::User::find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'index');
-				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'index') if ! $Contact;
-				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'order'=>'index') if ! $Contact;
+				my $Contact = openprint::User->find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'id');
+				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'id') if ! $Contact;
+				$Contact = openprint::User->find_one('company_id'=>$Company->id(), 'order'=>'id') if ! $Contact;
 				$Contact = new openprint::User() if ! $Contact;
 
 				push @data, $CSR->name(), $Company->name(), $Contact->name(), $Contact->phone(), $Contact->email();
@@ -444,7 +444,7 @@ sub yearly_sales {
 					$totals{$year}[1] += $order_total;
 					$totals{$year}[2] += $payment_cycle;
 				} # end foreach year
-				my $LastOrder = openprint::Order::find_one( 
+				my $LastOrder = openprint::Order->find_one( 
 						'company_id' => $Company->id(),
 						'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						'order'	=>	$openprint::Order::fields{'id'}.' DESC',
@@ -469,7 +469,8 @@ sub _yearly_sales {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'salesrep_id' );
 } # end sub _yearly_sales
+sub bindery {
+} # end sub bindery
 
 1;
-
 __END__

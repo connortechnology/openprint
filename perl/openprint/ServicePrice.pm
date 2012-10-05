@@ -1,14 +1,13 @@
 use strict;
 require sql;
 require openprint::Object;
-require openprint::logs;
-use Math::Round qw(nearest);
+require Math::Round;
 package openprint::ServicePrice;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'Service_Prices';
 $serial = 'service_prices_id_seq';
 
@@ -47,8 +46,7 @@ $serial = 'service_prices_id_seq';
 );
 
 sub next {
-	my $self = shift;
-	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(id) WHERE id > ?}, $$self{'id'} ) );
+	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(id) WHERE id > ?}, $_[0]{id} ) );
 } # end sub next
 
 sub Pricelist {

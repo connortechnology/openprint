@@ -3,11 +3,12 @@ require openprint::SignatureCapture;
 require openprint::User;
 require openprint::Project;
 require openprint::Equipment;
+require openprint::Project_Service;
 
 package openprint::ProductionFeedback;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 1;
 $table = 'ProductionFeedback';
@@ -20,9 +21,14 @@ $serial = 'ProductionFeedback_id_seq';
 	'ending_on'		=>	'ending_on',
 	'user_id'		=>	'user_id',
 	'comment'		=>	'comment',
+	'version'		=>	'version',
 	'signature_id'	=>	'signature_id',
 	'equipment_id'	=>	'equipment_id',
 	'quantity'		=>	'quantity',
+);
+%find_fields = (
+	'company_id'	=>	'(SELECT companyindex FROM tbl_Projects WHERE index=project_id)',
+	'signature'		=>	'(SELECT image_data FROM signaturecapture WHERE signaturecapture.id=signature_id)',
 );
 %defaults = (
 	'user_id'		=>	undef,
@@ -57,6 +63,14 @@ sub Project {
 sub Equipment {
 	return new openprint::Equipment( $_[0]{equipment_id} );
 } # end sub Equipment
+
+sub Service {
+    if ( $_[0]{project_id} and $_[0]{service_id} ) {
+    return new openprint::Project_Service( { project_id=>$_[0]{project_id}, service_id=>$_[0]{service_id} } );
+    } else {
+    return new openprint::Project_Service();
+    } # end if
+} # end sub Service
 
 1;
 __END__

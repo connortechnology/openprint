@@ -1,8 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Survey"><div class="View">
 	<? if ( $$variable{'Survey'}->created_by() ) ?>
-	<div class="CreatedBy"><? echo ( new openprint::User( $$variable{'Survey'}->created_by() );
-		return sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s"/>%3$s</a>', $User->id(), $User->Asset()->thumbnail_url(), $User->name() ); ) ?></div>
+	<div class="CreatedBy"><? echo ( my $User = new openprint::User( $$variable{'Survey'}->created_by() )->thumbnail_html(); ) ?></div>
 	<? endif ( $$variable{'Survey'}->created_by() ) ?>
 	<h1><? echo ( $$variable{'Survey'}->name() ) ?></h1>
 	<? echo ( $$variable{'Survey'}->description() ) ?>
@@ -16,11 +15,11 @@
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::button( 'SubmitTop', { 'onclick'=>"f1.elements['action'].value='submit';f1.submit();", 'text'=>'Submit' } ),
-( $$variable{'Survey'}->can_edit() ? (
-	ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
-	ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
-	ssi::button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
-) : () ),
+				( $$variable{'Survey'}->can_edit() ? (
+				  ssi::button( 'DeleteTop', { 'href'=>'/survey/view.html?action=delete&amp;survey_id='.$$variable{'Survey'}->id(), 'text'=>'Delete' } ),
+				  ssi::button( 'EditTop', { 'href'=>'/survey/edit.html?survey_id='.$$variable{'Survey'}->id(), 'text'=>'Edit' } ),
+				  ssi::button( 'ResponsesTop', { href=>'/survey/responses.html?survey_id='.$$variable{'Survey'}->id(), text=>'Responses' } ),
+				  ) : () ),
 			); ) ?>
 		</p>
 		<? echo (

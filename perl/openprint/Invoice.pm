@@ -166,13 +166,19 @@ sub paid {
 sub add_Payment {
 	my ( $self, $Payment ) = @_;
 	if ( $Payment->remaining() and $self->owing() ) {
+		my $error;
 		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
 		my $IP = new openprint::Invoice_Payment();
-		$IP->save({'payment_id'=>$Payment->id(),'invoice_id'=>$$self{'id'}, 'amount'=>$amount});
+		$error .= $IP->save({'payment_id'=>$Payment->id(),'invoice_id'=>$$self{'id'}, 'amount'=>$amount});
 		$Payment->remaining( undef ); # force update
-		$Payment->save();
+		$error .= $Payment->save();
 		$self->paid( undef );
-		$self->save();
+		$error .= $self->save();
+		return $error;
+	} elsif ( ! $Payment->remaining() ) {
+		return 'No money left in payment.';
+	} elsif ( ! $self->owing() ) {
+		return 'Nothing owing in invoice.';
 	} # end if
 } # end sub add_Payment
 

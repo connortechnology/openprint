@@ -2,12 +2,16 @@ use strict;
 package openprint::Currency;
 our @ISA = qw(openprint::Object);
 
-use Number::Format;
-use openprint ();
+require Number::Format;
+require openprint;
+require openprint::Currency_Conversion;
+require openprint::Pricelist;
+require openprint::Company;
+require sql;
+
 use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-require sql;
 
 $debug = 0;
 $table = 'Currencies';
@@ -31,7 +35,7 @@ sub conversions {
 	return 1 if $$self{id} == $to;
 	if ( ! exists $$self{'Conversions'} ) {
 		if ( $$self{'id'} ) {
-			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$self{'id'} );
+			%{$$self{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$self{'id'} );
 		} else {
 			%{$$self{'Conversions'}} = ();
 		} # end if
@@ -43,7 +47,7 @@ sub conversions {
 			my $To = new openprint::Currency( $to );
 			if ( $To->id() ) {
 				if ( ! exists $$To{'Conversions'} ) {
-					%{$$To{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=?}, $$To{'id'} );
+					%{$$To{'Conversions'}} = sql::execute( undef, undef, q{SELECT to_id, rate FROM Currency_Conversions WHERE from_id=? AND period_end IS NULL}, $$To{'id'} );
 				} # end if
 				if ( my $rate = $$To{'Conversions'}{$$self{'id'}} ) {
 					return 1/$rate if $rate;
@@ -56,9 +60,16 @@ sub conversions {
 } # end sub conversions
 
 sub set_conversion {
-	my ( $self, $to, $rate ) = @_;
-	sql::execute( undef, undef, q{DELETE FROM Currency_Conversions WHERE from_id=? AND to_id=?}, $$self{'id'}, $to );
-	sql::insert( undef, undef, 'Currency_Conversions', 'from_id', $$self{'id'}, 'to_id', $to, 'rate', $rate ) if $rate;
+	my ( $self, $to_id, $rate ) = @_;
+	my $Conversion = openprint::Currency_Conversion->find_one({to_id=>$to_id, from_id=>$$self{id},period_end=>undef});
+	if ( ! $Conversion ) {
+		$Conversion = new openprint::Currency_Conversion();
+		$Conversion->set({to_id=>$to_id, from_id=>$$self{id}});
+	} else {
+		$Conversion->save({period_end=>'NOW()'});
+		$Conversion->set({period_start=>'NOW()',period_end=>undef});
+	} # end if
+	$Conversion->save({rate=>$rate});
 } # end sub add_conversion
 
 sub convert_from {

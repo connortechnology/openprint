@@ -70,7 +70,11 @@ sub view {
 		} # end if
 	} # end if
 
-	my $Project = new openprint::Project( $project_index );
+	my $Project = $variable{Project} = new openprint::Project( $project_index );
+	if ( ! $$Project{id} ) {
+		$variable{error} .= "Project $project_index not found.<br/>";
+		return;
+	} # end if
 	my $order_id = $param{'OrderID'};
 	$order_id = $Project->order_id() if ! $order_id;
 	if ( $project_index and ( ! $order_id ) and $param{'Docket'} ) {
@@ -79,23 +83,27 @@ sub view {
 	$variable{'OrderID'} = $order_id;
 
 	if ( $param{'action'} eq 'Change Status' ) {
-		my $Service = $Project->Service( $param{'service_id'} );
-		if ( ! $Service->service_id() ) {
-			$variable{'error'} .= 'Service not found.';
-		} else {
-			if ( $Service->status() eq $param{'status'} ) {
-				$variable{'information'} .= 'Status not changed.';
-			} else {
-				my $specs = $Service->specs();
-				$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
-				$variable{'error'} .= $Service->save({'status'=>$param{'status'}});
-				if ( ! $variable{'error'} ) {
-					$Project->update_status();
-				} else {
-					$variable{'information'} .= 'Status changed.';
-				} # end if
+		foreach my $service_id ( split(',', $param{service_id} ) ) {
+			my $Service = $Project->Service( $service_id );
+			if ( ! $Service->service_id() ) {
+				$variable{error} .= 'Service not found.';
+				next;
 			} # end if
-		} # end if
+
+			if ( $Service->status() eq $param{status} ) {
+				$variable{'information'} .= 'Status not changed.';
+				next;
+			} # end if
+
+			my $specs = $Service->specs();
+			$Project->add_to_log( @session{'company_id','user_id'}, 'Marked ' . ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $Service->ServiceType()->name() ). ' ' . $param{'status'} . ' from ' . $Service->status() );
+			$variable{error} .= $Service->save({'status'=>$param{'status'}});
+			if ( ! $variable{'error'} ) {
+				$Project->update_status();
+			} else {
+				$variable{'information'} .= 'Status changed.';
+			} # end if
+		} # end foreach service_id
 	} elsif ( ( $param{'btnFunction'} eq 'Rush' ) and ! $Project->rush() ) {
 		$Project->rush( 1 );
 		$variable{'error'} .= $Project->save();
@@ -293,8 +301,8 @@ sub view {
 			if ( $param{'rdbComplete'} eq 'Yes' ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
 
-				my @ServiceTypes = openprint::ServiceType->find('name'=>$service_type);
-				my $category = @ServiceTypes? @ServiceTypes[0]->category():'';
+				my $ServiceType = openprint::ServiceType->find_one(name=>$service_type);
+				my $category = $ServiceType? $ServiceType->category():'';
 				if ( $category eq 'Bindery' ) {
 					$_ = q{ SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?
 						 AND strName='ServiceType'
@@ -468,11 +476,8 @@ sub view {
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^chkDelete-([,\d]+)$/ ) {
 				foreach my $sid ( split(',', $1 ) ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $sid );
-					openprint::print_project::delete_service( $project_index, $sid );
-					openprint::press_schedule::remove( $project_index, $sid );
-					openprint::bindery_schedule::remove( $project_index, $sid );
-					$Project->add_to_log( @session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+					my $Service = $Project->Service($sid);
+					$Service->delete();
 				} # end foreach
 			} # end if
 		} # end foreach
@@ -489,7 +494,6 @@ sub view {
 	if ( $project_index ) {
 		openprint::main_project::view( $project_index );
 	} # end if
-	$variable{'Project'} = $Project if ! $variable{'Project'};
 } # end sub view
 
 sub send_additional_charges_notifications {
@@ -677,8 +681,8 @@ sub send_proofs_approved_email {
 	my ( $project_index, $order_id ) = @_;
 # Send email to sales rep
 	my %info;
-	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
+	$info{'SecureSiteURL'} = $config{'ExternalSecureSiteURL'};
+	$info{'siteURL'} = $config{'ExternalSiteURL'};
 
 	my $Project = new openprint::Project( $project_index );
 	$order_id = $Project->order_id() if ! $order_id;
@@ -686,7 +690,7 @@ sub send_proofs_approved_email {
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
 
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
@@ -721,7 +725,7 @@ sub send_duedate_change_notification {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Project = new openprint::Project( $project_index );
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
@@ -901,31 +905,48 @@ sub _signaturecapture {
 	$variable{'Signature'} = new openprint::SignatureCapture( $param{'id'} );
 }
 
+# service_id may be a comma-separated list of services.  It is assumed that these services are the same type.
 sub _status {
 	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
-	my $Service = new openprint::Project_Service( \%param );
+	my $Project = $variable{Project} = new openprint::Project( $param{project_id} );
+
+	my @service_ids = split(',',$param{service_id});
+	my $Service = $Project->Service($service_ids[0]);
 	$variable{'status'} = $Service->status();
 	$variable{'name'} = $Service->ServiceType()->name();
 	$variable{'name'} = 'Printing' if ! $variable{'name'};
 
 	if ( $param{'action'} eq 'removefromschedule' ) {
-		my $Job = openprint::ScheduledJob->find_one('project_id'=>$param{'project_id'}, 'service_id'=>$param{'service_id'});
-		if ( ! $Job ) {
-			$variable{'error'} .= 'Job not found on schedule.';
-		} else {
-			$variable{'error'} .= $Job->delete();
-			if ( ! $variable{'error'} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Removed " . $Service->ServiceType->name() . " from schedule." );
+		foreach my $service_id ( @service_ids ) {
+			my $Job = openprint::ScheduledJob->find_one(project_id=>$param{project_id}, 'service_id any'=>$service_id);
+			if ( ! $Job ) {
+				$variable{'error'} .= 'Job not found on schedule.';
+			} else {
+				my @service_ids = sets::exclude( $service_id, $Job->service_id() );
+				if ( ! @service_ids ) {
+					$variable{'error'} .= $Job->delete();
+				} else {
+					$variable{'error'} .= $Job->save({service_id=>\@service_ids});
+				} # end if
+				if ( ! $variable{'error'} ) {
+					my @forms;
+					foreach my $s_id ( $Job->pertains_id() ? @{$Job->pertains_id()} : () ) {
+						my $S = $Project->Service($s_id);
+						my $specs = $S->specs();
+						push @forms, $$specs{SignatureIndex};
+					} # end foreach
+			
+					$Project->add_to_log( @session{'company_id','user_id'}, "Removed " . $Service->ServiceType->name() . " form @forms from schedule." );
+				} # end if
 			} # end if
-		} # end if
+		} # end foreach service_id
 	} elsif ( $param{'action'} eq 'addtoschedule' ) {
 		my $Job = new openprint::ScheduledJob();
 		$_ = $Job->save({
-				'project_id'    =>  $param{'project_id'},
-				'equipment_id'  =>  $param{'equipment_id'},
+				'project_id'    =>  $param{project_id},
+				'equipment_id'  =>  $param{equipment_id},
 				'starttime'     =>  undef,
-				'service_id'    =>  [ $param{'service_id'} ],
+				'service_id'    =>  [ split(',',$param{service_id}) ],
 				'servicetype_id'    =>  $Service->ServiceType->id(),
 				});
 		if ( $_ ) {
@@ -942,24 +963,39 @@ sub _status {
 	} # end if
 } # end sub _status
 
+# service_id could be a comma-separated list of services
 sub _add_to_schedule {
 	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
-	my $Service = new openprint::Project_Service( \%param );
-	my $Job = $variable{'Job'} = new openprint::ScheduledJob();
+	my @service_ids = split(',',$param{service_id});
+
+	my $Service = new openprint::Project_Service( {
+			project_id	=>	$param{project_id},
+			service_id	=>	$service_ids[0],
+			} );
+	my $Job = $variable{Job} = new openprint::ScheduledJob();
 	$Job->set({
 		'project_id'		=>$param{'project_id'},
-		'service_id'		=>[$param{'service_id'}],
+		'service_id'		=>\@service_ids,
 		'servicetype_id'    =>  $Service->ServiceType->id(),
-
 		});
-	
-	
 } # end sub _add_to_schedule
 
 sub _status_dropdown {
 	my $Project = $variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	my $Service = $variable{'Service'} = $Project->Service( $param{'service_id'} );
 } # end sub _status_dropdown
+
+sub _modification_history {
+	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+} # end sub _modification_history
+
+sub _production_log {
+	my $Project = $variable{Project} = new openprint::Project($param{project_id});
+	ssi::save_params('/employee/project/view.html?production_log', 'project_id');
+} # end sub _production_log
+
+sub _dearchive {
+} # end sub _dearchive
 
 1;
 __END__

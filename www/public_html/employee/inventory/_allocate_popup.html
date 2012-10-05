@@ -1,19 +1,101 @@
 <div id="Allocate">
 	<form id="allocateform" name="allocateform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="Allocate" />
-		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
-		<input type="hidden" name="skid_id" value="<? echo ( $param{'skid_id'} ) ?>" />
+		<input type="hidden" name="paper_id" value="<? echo ( $$variable{Paper}->id() ) ?>" />
+		<input type="hidden" name="skid_id" value="<? echo ( $param{skid_id} ) ?>" />
 		<fieldset><legend>Allocate Paper</legend>
 			<p>
 			<? echo ( 
 				my $html = '';
-				my $captcha = 0;
 
-				if ( $$variable{'Paper'}->Quality()->message() ) {
-					$html .= '<div class="warning">'.$$variable{'Paper'}->Quality()->message().'</div>';
-					$captcha = 1;
+				if ( $$variable{Paper}->Quality()->message() ) {
+					$html .= '<div class="warning">'.$$variable{Paper}->Quality()->message().'</div>';
+					$variable{captcha} = 1;
 				} # end if
-				my @SkidContents = openprint::SkidContent->find('paper_id'=>$$variable{'Paper'}{'id'}, 'quantity >'=>1 );
+
+				$html .= '
+			</p>
+			<ul>
+			<li>
+				<label>Docket:</label>';
+				$html .= join("\n",
+							ssi::input( type=>'cardinal', name=>'Docket', onkeypress=>'return input_handler(this,event);' ),
+							ssi::button( 'clearAllocateDocket', { onclick=>"allocateform.Docket.value='';", text=>'C', title=>'Clear' } ),
+							);
+			$html .= '</li><li><label>Project:</label>';
+			$html .= join("\n",
+							ssi::input( type=>'cardinal', name=>'Project', onkeypress=>'return input_handler(this,event);' ),
+							ssi::button( 'clearAllocateProject', { onclick=>"allocateform.Project.value='';", text=>'C', title=>'Clear' } ), 
+							);
+			$html .= '</li><li>
+				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
+				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
+			</li>
+			</ul>';
+			my @Conditions = openprint::InventoryCondition->find(order=>'lower(name)');
+			foreach my $Condition ( @Conditions ) {
+				next if $Condition->message();
+				my $condition_id = $Condition->id();
+
+				my @SkidContents = openprint::SkidContent->find(
+					condition_id	=>	$condition_id,
+					paper_id		=>	$$variable{Paper}{id}, 
+					'quantity >'	=>	1,
+					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
+					);
+				next if ! @SkidContents;
+				my @Allocations = openprint::PaperAllocation->find(
+					condition_id	=>	$Condition->id(),
+					paper_id		=>	$$variable{Paper}{id}, 
+					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
+				);
+
+				my $available = misc::sum(map { $_->quantity() } @SkidContents) - misc::sum(map { $_->quantity() } @Allocations );
+				next if $available <= 0;
+
+				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{id} } @SkidContents ] );
+				if ( @ClaimContents ) {
+					$html .= join('<br/>', 
+						map { 
+						sprintf('skid %d is included in <a href="/employee/claims/view.html?claim_id=%d">claim %d</a>', @$_{'skid_id','claim_id','claim_id'} );
+						} @ClaimContents
+						);
+				} # end if
+					
+				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition.';
+
+				$html .= sprintf(q` 
+			<ul><li>
+				<label>Quantity:</label>
+				<input type="hidden" name="available-%2$d" value="%3$d"/>%4$s of
+                        <a href="#" onclick="$('quantity-%2$d').value='%3$d';">%3$d %1$s</a>
+			</li></ul>`, $variable{Paper}->units(), $condition_id, $available,
+			join("\n",
+				ssi::input( type=>'integer', id=>'quantity-'.$condition_id, name=>'quantity-'.$condition_id, value=>$available, onkeypress=>'return input_handler(this,event);' ),
+				ssi::button( 'clear'.$condition_id, { onclick=>"\$('quantity-${condition_id}').value='';", text=>'C', title=>'Clear' } ),
+				) );
+			} # end foreach Good Condition
+
+			foreach my $Condition ( @Conditions ) {
+				next if ! $Condition->message();
+				my $condition_id = $Condition->id();
+
+				my @SkidContents = openprint::SkidContent->find(
+					condition_id	=>	$condition_id,
+					paper_id		=>	$$variable{Paper}{id}, 
+					'quantity >'	=>	1,
+					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
+					);
+				next if ! @SkidContents;
+				my @Allocations = openprint::PaperAllocation->find(
+					condition_id	=>	$condition_id,
+					paper_id		=>	$$variable{Paper}{id}, 
+					( $param{skid_id} ? ( skid_id=>[ split(',', $param{skid_id} ) ] ) : () ),
+				);
+
+				my $available = misc::sum(map { $_->quantity() } @SkidContents) - misc::sum(map { $_->quantity() } @Allocations );
+				next if $available <= 0;
+
 				my @ClaimContents = openprint::Claim_Content->find('skid_id in'=>[ map { $$_{'id'} } @SkidContents ] );
 				if ( @ClaimContents ) {
 					$html .= join('', 
@@ -22,75 +104,34 @@
 						} @ClaimContents
 						);
 				} # end if
+				$html .= '<div class="warning">';
+				$html .= '<hr/>Stock in ' . $Condition->name() . ' condition.<br/>' . $Condition->message();
+				$html .= sprintf(q` 
+					<ul><li>
+						<label>Quantity:</label>
+						<input type="hidden" name="available-%2$d" value="%3$d"/>%4$s of 
+						<a href="#" onclick="$('quantity-%2$d').value='%3$d';">%3$d %1$s</a>
+					</li></ul></div>`, $variable{Paper}->units(), $condition_id, $available,
+					join("\n",
+						ssi::input( type=>'integer', id=>'quantity-'.$condition_id, name=>'quantity-'.$condition_id, onkeypress=>'return input_handler(this,event);' ),
+						ssi::button( 'clear'.$condition_id, { onclick=>"\$('quantity-${condition_id}').value='';", text=>'C', title=>'Clear' } ),
+				) );
+				
 
-				my %Conditions;
-				foreach my $SkidContent ( @SkidContents ) {
-					push @{$Conditions{$$SkidContent{'condition_id'}}}, $SkidContent if $SkidContent->Condition()->message();
-				} # end foreach SkidContent
-
-				if ( %Conditions ) {
-					$html .= '<div class="warning">';
-					foreach my $condition_id ( keys %Conditions ) {
-						my $Condition = new openprint::InventoryCondition($condition_id);
-						
-						$html .= @{$Conditions{$condition_id}}.
-							($$variable{'Paper'}->type() eq 'Roll' ? ' Roll' : ' Skid').
-							(@{$Conditions{$condition_id}}==1?' is':'s are').' in ' . $Condition->name() . ' condition.<br/>' . $Condition->message().'<br/>';
-					} # end foreach
-					$html .= '</div>';
-					$captcha = 1;
-				} # end if
-				if ( $captcha ) {
-					$html .= 'Do you still wish to allocate this stock?';
-					$html .= '<div id="Captcha">'.ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ).'</div>';
-				} # end if
-				$$variable{'available'} = 0;
-				if ( $param{'skid_id'} ) {
-					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
-						my $Skid = new openprint::Skid( $skid_id );
-						if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
-							$$variable{'available'} += $C->allocateable();
-							$html .= sprintf('skid %d contains: %s available: %s<br/>', $skid_id, 
-								Number::Format::format_number($C->quantity()).$$variable{'Paper'}->units(), 
-								Number::Format::format_number($C->allocateable()).$$variable{'Paper'}->units(),
-								); 
-						} # end if
-					} # end foreach Skid
-				} else {
-					$$variable{'available'} = $$variable{'Paper'}->available();
-				} # end if
-				return $html;
-			) ?>
-			</p>
-			<ul>
-			<li>
-				<label>Docket:</label>
-				<input type="number" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateDocket', 'clear.gif', "allocateform.Docket.value='';", '', 'Clear' ); ) ?>
-			</li>
-			<li>
-				<label>Project:</label>
-				<input type="number" name="Project" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateProject', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
-			</li>
-			<li>
-				<label>Quantity: (<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>)</label>
-				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
-				<input type="hidden" name="available_quantity" value="<?available?>"/>
-				<input type="number" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="integerize(this);"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Quantity.value='';", '', 'Clear' ); ) ?>
-			</li>
-			<li>
-				<label><a title="Click to allocate specific skids on the floor.">Specific Skids:</label>
-				<input type="checkbox" name="specific" id="specific" value="1" /><label class="radio" for="specific" title="Click to allocate specific skids on the floor.">Yes</label>
-			</li>
-</ul>
+			} # end foreach Good Condition
+			return $html;
+		) ?>
+			
+			<? if ( $variable{captcha} ) ?>
+				Do you still wish to allocate this stock?
+				<div id="Captcha"><? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/_captcha.html' ); ) ?></div>
+			<? endif ( $variable{captcha} ) ?>
 			<hr/>
 			<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'SaveAllocate', 'save.gif', 'if(check_inputs(allocateform)){document.allocateform.submit();}', '', 'Save' );
-				$html .= ssi::writeButton( $log, $dbh, 'CancelAllocate', 'cancel.gif', "allocateWin.destroy();", '', 'Cancel' ); 
+				$html .= ssi::button( 'SaveAllocate', { onclick=>'if(check_inputs(allocateform)){document.allocateform.submit();}', text=>'Save' } );
+				$html .= ssi::button( 'CancelAllocate', { onclick=>"allocateWin.destroy();", text=>'Cancel' } ); 
 				return $html;
 			) ?>
 			</p>

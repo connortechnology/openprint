@@ -72,7 +72,7 @@ sub calc {
 			$$specs{'alert'} .= 'No price for PolyBagging'.$pockets.'Pocket.<br/>';
 			next;
 		} # end if
-		if ( $Price{'units'} eq 'Per M' ) {
+		if ( $Price{'units'} eq 'per m' ) {
 			$Price{'Total'} = $Price{'Price'} * $qty/1000;
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $Price{'Price'}/1000 );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('$%.2fMR + $%.2f%s * %d = $%.2f<br/>', $MRPrice{'Price'}, @Price{'Price','units'}, $qty, $MRPrice{'Price'} + $Price{'Total'} ); 

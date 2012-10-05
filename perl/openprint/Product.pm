@@ -2,13 +2,14 @@ use strict;
 package openprint::Product;
 our @ISA = qw( openprint::Object );
 
+require openprint::Manufacturer;
 require openprint::Product_Specification;
 require openprint::Product_Category;
 require openprint::Log;
 require sql;
 
 use vars qw( $log $dbh $debug $table $serial %fields %defaults %transforms );
-$debug = 0;
+$debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'products';
@@ -29,6 +30,8 @@ $serial = 'products_id_seq';
 	'owner_id'		=>	'owner_id',
 	'created_on'	=>	'created_on',
 	'album_id'		=>	'album_id',
+	'manufacturer_id'	=>	'manufacturer_id',
+	'manufacturer'	=>	undef,
 );
 
 %transforms = (
@@ -46,6 +49,7 @@ $serial = 'products_id_seq';
 	'deleted'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'album_id'		=>	undef,
+	'manufacturer_id'	=>	undef,
 );
 
 sub destroy {
@@ -201,6 +205,10 @@ sub Album {
     return $Album;
 } # end sub Album
 
+sub thumbnail_id {
+	return $_[0]->Album()->thumbnail_id();
+} # end sub thumbnail_id
+
 sub thumbnail_html {
 	my $self = shift;
     if ( ! $$self{'thumbnail_html'} ) {
@@ -238,6 +246,22 @@ sub can_edit {
     } # end if
     return 0;
 } # end sub can_edit
+
+sub manufacturer {
+    if ( defined $_[1] ) {
+        $_[1] = openprint::Manufacturer->transform( 'name', $_[1] );
+		my $Manufacturer = openprint::Manufacturer->find_one('name lc'=> lc $_[1] );
+		if ( ! $Manufacturer ) {
+			$Manufacturer = new openprint::Manufacturer();
+			$Manufacturer->save({name=>$_[1]});
+		} # end if
+		@{$_[0]}{'manufacturer_id','manufacturer'} = @$Manufacturer{'id','name'};
+    } elsif ( $_[0]{manufacturer_id} and ! $_[0]{manufacturer} ) {
+        $_[0]{manufacturer} = new openprint::Manufacturer( $_[0]{manufacturer_id} )->name();
+    } # end if
+    return $_[0]{manufacturer};
+} # end sub manufacturer
+
 
 1;
 __END__

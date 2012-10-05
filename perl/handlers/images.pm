@@ -23,6 +23,19 @@ use vars qw( $r %session %config $log $dbh );
 
 use constant DEBUG => 0;
 
+sub cleanup {
+    if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+    } else {
+$log->debug("cleanup");
+    } # end if
+    if ( $dbh ) {
+        $session{'lastupdated'} = time;
+        untie %session;
+        $dbh->disconnect();
+    } # end if
+} # end sub cleanup
+
 sub handler {
 
 	my $request = $_[0];
@@ -31,6 +44,7 @@ sub handler {
 	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $r->dir_config('db_name'),
@@ -56,7 +70,7 @@ sub handler {
 		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
-			if ( $Asset->id() ) {
+			if ( $$Asset{id} ) {
 				if ( my @Photos = openprint::Photo_in_Album->find('asset_id'=>$$Asset{id}) ) {
 					my $can_view = 0;
 					foreach my $Album ( map { $_->Album() } @Photos ) {
@@ -66,6 +80,7 @@ sub handler {
 						} # end if
 					} # end foreach Album
 					if ( $can_view ) {
+eval {
 						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
@@ -78,20 +93,25 @@ sub handler {
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
+};
+$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 					} else {
 $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
-						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
-						if ( $path eq 'thumbnails' ) {
-							$r->sendfile( $Asset->thumbnail_path() );
-						} elsif ( $path eq 'medium' ) {
-							$r->sendfile( $Asset->medium_path() );
-						} else {
+eval {
+					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
+					if ( $path eq 'thumbnails' ) {
+						$r->sendfile( $Asset->thumbnail_path() );
+					} elsif ( $path eq 'medium' ) {
+						$r->sendfile( $Asset->medium_path() );
+					} else {
 # No album means has to be an article image, or a generic site image.
-							$r->sendfile( $Asset->on_disk_path() );
-						}
+						$r->sendfile( $Asset->on_disk_path() );
+					} # end if
+};
+$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 				} # end if
 			} else {
 $log->error("NOT FOUND");
@@ -104,7 +124,7 @@ $log->error("No value for aset. " . $r->uri() );
 		untie %session;
 		$dbh->disconnect();
 	} else {
-	$log->warn("No dbh!");
+		$log->error("No dbh!");
 	} # end if dbh
 	$log->debug( "Elapsed seconds after: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' ) if DEBUG;
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.

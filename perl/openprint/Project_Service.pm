@@ -87,7 +87,7 @@ sub runtime {
 	my $Project = $self->Project();
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = $self->specs();
-$log->debug("Project Service runtime $$specs{'ServiceType'}");
+#$log->debug("Project Service runtime $$specs{'ServiceType'}");
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
 		return $$time{'Total'} if $time;
@@ -115,6 +115,8 @@ sub delete {
 	delete $$Project{'service_types'};
 	my $Job = openprint::ScheduledJob->find_one('project_id'=>$$self{'project_id'}, 'service_id'=>$$self{'service_id'} );
 	$Job->save( { 'service_id' => [ sets::exclude( [ $$self{'service_id'} ], $Job->service_id() ) ] } ) if $Job;
+	my $specs = $self->specs();
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -130,13 +132,10 @@ sub overrides {
 	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
 	if ( my $function = $module->can( 'has_overrides' ) ) {
 		my $specs = $_[0]->specs();
-		$openprint::log->debug("$module :: has_overrides() $specs");
 		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
-		$log->debug("Overrides: @o");
 		return @o;
 	} # end if
 	return ();
 } # end sub overrides
-
 1;
 __END__

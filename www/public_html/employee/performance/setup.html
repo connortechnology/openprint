@@ -31,7 +31,7 @@
 			my @Equipment = openprint::Equipment->find(
 					'useinscheduling'=>1,
 					( $Type->category() ? ( 'category'=>$Type->category() ) : () ), 
-					'order'=>'strcategory,lower(strid)');
+					'order'=>'lower(strid)');
 			$html .= sprintf('<fieldset id="type-%d"><legend>%s</legend><p class="buttons">%s</p>', $Type->id(), $Type->name(),
 					ssi::button( 'delete'.$Type->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_type( $$Type{id} );` } ),
 				);

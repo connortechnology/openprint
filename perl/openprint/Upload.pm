@@ -2,11 +2,12 @@ use strict;
 package openprint::Upload;
 our @ISA = qw( openprint::Object );
 
-require openprint::File;
+require misc;
+
 use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'uploads';
 $serial = 'uploads_id_seq';
 %fields = (
@@ -29,27 +30,25 @@ $serial = 'uploads_id_seq';
 );
 
 sub Company {
-	my $self = shift;
-	return new openprint::Company($$self{company_id});
+	require openprint::Company;
+	return new openprint::Company($_[0]{company_id});
 } # end sub Company
 
 sub User {
-	my $self = shift;
-	return new openprint::User($$self{user_id});
+	require openprint::User;
+	return new openprint::User($_[0]{user_id});
 } # end sub User
 
 sub Files {
-	my $self = shift;
-	return openprint::File->find('upload_id'=>$$self{id});
+	require openprint::File;
+	return openprint::File->find(upload_id=>$_[0]{id});
 } # end sub
 
 sub total_text {
-	my ( $self ) = @_;
-	return misc::format_bytes( $$self{'total'}, '.1' );
+	return misc::format_bytes( $_[0]{total}, '.1' );
 } #end sub total_text
 sub size_text {
-	my ( $self ) = @_;
-	return misc::format_bytes( $$self{'size'}, '.1' );
+	return misc::format_bytes( $_[0]{size}, '.1' );
 } #end sub size_text
 
 1;

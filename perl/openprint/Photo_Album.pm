@@ -134,5 +134,15 @@ sub can_view {
 	return $Privacy->can_view();
 } # end sub can_view
 
+sub copy {
+	my $New = $_[0]->SUPER::copy();
+	$New->save({created_on=>undef,user_id=>$openprint::session{user_id},deleted=>0});
+	foreach my $Photo ( $_[0]->Photos() ) {
+		my $NewPhoto = $Photo->copy();
+		$NewPhoto->save({album_id=>$$New{id}});
+	} # end foreach Photo
+	return $New;
+} # end sub copy
+
 1;
 __END__

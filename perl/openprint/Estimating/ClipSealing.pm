@@ -60,7 +60,7 @@ sub calc {
 			my %ServicePrice = openprint::service::get_price_object('ClipSealing', $runs, $Equipment );
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service Price.<br/>';
-			} elsif ( $ServicePrice{'units'} eq 'Per M' ) {
+			} elsif ( $ServicePrice{'units'} eq 'per m' ) {
 				$ServicePrice{'Total'} = $ServicePrice{Price} * $$specs{'txtQuantity'.$qty_index} * $runs/ 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
 				$totalPrice += $ServicePrice{'Total'};
@@ -72,11 +72,11 @@ sub calc {
 			my %MaterialPrice = $Material->get_price( $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} );
 			if ( ! %MaterialPrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
-			} elsif ( $MaterialPrice{'units'} eq 'Per M' ) {
+			} elsif ( $MaterialPrice{'units'} eq 'per m' ) {
 				$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'} /1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
 				$totalPrice += $MaterialPrice{'Total'};
-			} elsif ( $MaterialPrice{'units'} eq 'Per Seal' ) {
+			} elsif ( $MaterialPrice{'units'} eq 'per seal' ) {
 				$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $$specs{'txtQuantity'.$qty_index} * $$specs{'SealQuantity'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material Price: $%1$f%2$s * %4$d seals * %5$d = $%3$.2f<br/>', @MaterialPrice{'Price','units','Total'}, @$specs{'SealQuantity','txtQuantity'.$qty_index} );
 				$totalPrice += $MaterialPrice{'Total'};

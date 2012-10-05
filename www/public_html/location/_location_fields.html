@@ -1,11 +1,10 @@
 <ul class="location">
 <? echo (
-	my $html;
-	my $Country = $$variable{'Location'}->ancestor('type'=>'country');
-	my $State = $$variable{'Location'}->ancestor('type'=>'state');
-	my $City = $$variable{'Location'}->ancestor('type'=>'city');
+	my $Country = $$variable{'Location'}->ancestor(type=>'country');
+	my $State = $$variable{'Location'}->ancestor(type=>'state');
+	my $City = $$variable{'Location'}->ancestor(type=>'city');
 
-	$html .= '<li class="place"><label>Place</label>';
+	my $html .= '<li class="place"><label>Place</label>';
 	$html .= sprintf(q`<input type="text" id="location" name="location" value="%1$s"/>
 		<div id="location_autocomplete" class="autocomplete" style="display:none;"></div>
 		<script type="text/javascript">
@@ -46,7 +45,6 @@
 			} # end if ! city
 		} # end if ! state
 	} # end if ! country
-
 	return $html;
 ) ?>
 </ul>

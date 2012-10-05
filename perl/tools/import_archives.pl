@@ -16,7 +16,7 @@ use vars qw( $log $dbh %config %session );
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$log = new logger( 'debug' );
+$log = new logger( 'warn' );
 
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'database') );

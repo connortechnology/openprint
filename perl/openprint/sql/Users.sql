@@ -38,5 +38,4 @@ CREATE TABLE Users (
 );
 CREATE INDEX users_email_idx ON Users (email);
 alter table Users add foreign key (Company_Id) REFERENCES Companies (Id);
-alter table Users add foreign key (asset_Id) REFERENCES assets (Id);
 ALTER TABLE Companies add FOREIGN KEY (Salesrep_id) REFERENCES Users (id);

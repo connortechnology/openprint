@@ -1,5 +1,4 @@
 use strict;
-
 package openprint::Pricelist;
 our @ISA = qw(openprint::Object);
 

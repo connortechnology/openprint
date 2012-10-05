@@ -33,6 +33,19 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+sub cleanup {
+	if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+	} else {
+$log->debug("cleanup");
+	} # end if
+	if ( $dbh ) {
+		$session{'lastupdated'} = time;
+		untie %session;
+		$dbh->disconnect();
+	} # end if
+} # end sub cleanup
+
 sub handler {
 
 	my $request = shift;
@@ -45,9 +58,11 @@ sub handler {
 	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
 	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
 
+	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( $r->param ) {
 	#foreach my $key ( sets::union( $r->param ) ) {
@@ -132,7 +147,6 @@ sub handler {
 			   ) {
 #$log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
-$log->debug("Sending js redirect");
 					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
 				} else {
 				$page = '/error/error_login.html';
@@ -218,13 +232,12 @@ $log->debug("Sending js redirect");
 		my $filename = pop @page_path;
 		# _ signifies a page fragment, so don't load layout
 		if ( substr($filename, 0, 1 ) ne '_' ) {
+			my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
+			#$log->debug("Looking for $file");
+			if ( -e $file ) {
+				$template = misc::load_file( $log, $file );
+			} else {
 			while ( @page_path ) {
-				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
-				#$log->debug("Looking for $file");
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
 				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
@@ -233,9 +246,10 @@ $log->debug("Sending js redirect");
 				} # end if
 				pop @page_path;
 			} # end while
+			} # end if
 		} # end if _
 		if ( $template ) {
-			#$log->debug("parsing template!");
+			$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
@@ -245,11 +259,6 @@ $log->debug("Sending js redirect");
 		} # end if
 	} # end if
 
-	if ( $dbh ) {
-		$session{'lastupdated'} = time;
-		untie %session;
-		$dbh->disconnect();
-	} # end if
 	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::pricing::clear_cache();
@@ -389,16 +398,16 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 			} # end if
 		} # end if
 	} elsif ( sets::isin( $first, [ 'content', 'account' ] ) ) { # main
-			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			if ( $proc ) {
-				my $module = join('_',@path);
-				$log->debug("Calling $module :: $proc");
-				eval {
-					require "openprint/$module.pm";
-					('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
-				};
-				$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
-			} # end if
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		if ( $proc ) {
+			my $module = join('_',@path);
+			$log->debug("Calling $module :: $proc");
+			eval {
+				require "openprint/$module.pm";
+				('openprint::'.$module)->$proc( $r, $log, $dbh, \%variable );
+			};
+			$log->error( "Eval error of require $module :: $proc, Reason: " . $@ ) if $@;
+		} # end if
 	} elsif ( $first eq 'main' ) { # main
 		if ( $second eq 'project' ) {
 			require openprint::print;
@@ -494,11 +503,7 @@ $openprint::log->warn('bind');
 					
 					} # end if
 				} elsif ($third eq 'spec') {
-					if ( $filename eq 'lamination.html' ) {
-						require openprint::Estimating::Lamination;
-						openprint::Estimating::Lamination::display( $log, $dbh, \%variable );
-					} elsif ( $filename =~ /^(\w*).html$/ ) {
-$openprint::log->debug("$1");
+					if ( $filename =~ /^(\w*).html$/ ) {
 						eval sprintf('require openprint::Estimating::%1$s;
 						openprint::Estimating::%1$s::display( $log, $dbh, \%variable, $project_index, $service_index );', $1 );
 						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;

@@ -263,7 +263,7 @@ sub neccessary {
 
 sub has_overrides {
 	my ( $Project, $service_id, $specs ) = @_;
-	my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
 	my @v;
     foreach my $s_s_id ( $Project->signatures() ) {
@@ -523,7 +523,8 @@ sub signature_calc {
 					$i->dutch_rows(0);
 					$i->quantity(1);
 					push @Impositions, $i;
-					my $i = $I->copy();
+
+					$i = $I->copy();
 					$i->columns( $i->dutch_columns() );
 					$i->rows( $i->dutch_rows() );
 					$i->dutch_columns(0);
@@ -663,10 +664,9 @@ sub signature_calc {
 			for ( my $imp_index = 0; $imp_index < @$Set_Of_Impositions; $imp_index += 1 ) {
 				my $Imposition = $$Set_Of_Impositions[$imp_index];
 
-				#if ( DEBUG and 0 ) {
-					#$openprint::log->debug("trying: ");
-					#$Imposition->display();
-				#} # end if
+				if ( DEBUG ) {
+					$Imposition->display('trying');
+				} # end if
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
@@ -703,9 +703,9 @@ $Imposition->display("Folding on press");
 				} else { # Not the press
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
+$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if DEBUG;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
-						#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
+						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc ) if DEBUG;
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
@@ -779,7 +779,7 @@ $Imposition->display("Folding on press");
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $$Paper{'calliper'} );
 
 						if ( ! $_ )  {
-
+$openprint::log->debug("Fits") if DEBUG;
 							my $Fold = $Equipment->Fold({
 									'pages'				=>	$Imposition->pages(),
 									'page_columns'		=>	$Imposition->page_columns(),
@@ -797,12 +797,14 @@ $Imposition->display("Folding on press");
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
 
-								push @{$folds{$Fold->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
+								push @{$folds{$Fold->pages().'PageFold-'.$$Imposition{imposition}.'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if DEBUG;
 								next;
 							} elsif( @my_equipment == 1 ) {
 								$Imposition->display('Didnt find:' ) if DEBUG;
 								$Breakdown .= sprintf('Didnt find: %dx%d %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
+							} elsif ( DEBUG ) {
+								$Imposition->display('Didnt find fold:' ) if DEBUG;
 							} # end if
 						} elsif ( DEBUG or ( @my_equipment == 1 ) ) {
 							$Breakdown .= "Doesn't fit $_.<br/>";
@@ -812,6 +814,7 @@ $Imposition->display("Folding on press");
 						$complete = 0;
 						if ( $set_index < @All_Impositions-1 ) {
 							# if we aren't the last set, then do nothing because we assume that this set has already been cut down.
+#$openprint::log->debug("$set_index < " . ( @All_Impositions-1 ) );
 						} elsif ( $Imposition->imposition() > 1 ) {
 							my @new_impositions = @$Set_Of_Impositions;
 							splice @new_impositions, $imp_index, 1, cut_imposition( $Imposition );
@@ -877,7 +880,8 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						my $Fold;
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
 						if ( $Fold = openprint::Fold->find_one( 
-									'imposition'	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'min_imposition <='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'max_imposition >='	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'equipment_id'	=>	$Equipment->id(),
 									'pages'			=>	$pages,
@@ -1015,13 +1019,13 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					$totalPrice += $setupPrice{'Total'};
 
 					my %FoldMakeReady = openprint::service::get_price_object( 'FoldingFoldMakeReady', undef, $Equipment );
-					if ( $FoldMakeReady{'units'} eq 'Per Fold' ) {
+					if ( $FoldMakeReady{'units'} eq 'per fold' ) {
 						$FoldMakeReady{'Total'} = $FoldMakeReady{'Price'} * ($width_folds);
 						$totalPrice += $FoldMakeReady{'Total'};
 					} # end if
 
 					my %AngleMakeReady = openprint::service::get_price_object( 'FoldingAngleMakeReady', undef, $Equipment );
-					if ( $AngleMakeReady{'units'} eq 'Per Angle' ) {
+					if ( $AngleMakeReady{'units'} eq 'per angle' ) {
 						$AngleMakeReady{'Total'} = $AngleMakeReady{'Price'} * ($height_folds);
 						$totalPrice += $AngleMakeReady{'Total'};
 					} # end if
@@ -1162,11 +1166,15 @@ $Breakdown .= $$results{'Breakdown'};
 				$bestEquipment = $Equipment;
 				$bestRunTime = int($totalTime);
 				$bestFolds = \%folds;
+
+				# folding could be free, in which case, we can probably just give up now.
+				last if ! $bestPrice;
 			} # end if
 
 		} # end foreach set of Impositions
 		# The idea is that if we find a price on the press, then we are done, cuz nothing else will be better.... 
 		last if $bestPrice and ( $Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index} );
+		last if defined $bestPrice and ! $bestPrice;
 	} # end foreach Equipment
 
 	my %results = (
@@ -1389,7 +1397,7 @@ sub display {
 sub signature_summary {
 	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
 	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	$sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
 	if ( $qty_index ) {
 		my @folds;
 		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
@@ -1428,24 +1436,24 @@ sub runspeed {
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 	my $speed;
 	foreach my $type ( keys %fold_types ) {
-$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
+#$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
 		if ( $$specs{"$type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} ) {
 			$speed = $Equipment->specification( $type.'RunSpeed' );
 			last if $speed;
 		}# end if
 	}# end foreach
-$openprint::log->debug("Folding runspeed: ($speed)");
+#$openprint::log->debug("Folding runspeed: ($speed)");
 	if ( ! $speed ) {
 		my $Imposition = new openprint::Imposition;
 		$Imposition->load( $sig_specs, $qty_index );
-		$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
+		#$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
 		if ( $Imposition->pages() ) {
 			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
 		} # end if
 	} # end if
 	if ( ! $speed ) {
 		if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-			$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
+			#$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
 			$speed = $Equipment->specification( $$sig_specs{'rdbTemplateType'}.'PageSignatureFoldRunSpeed' );
 		}
 	} # end if

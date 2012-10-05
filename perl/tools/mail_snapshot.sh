@@ -12,7 +12,6 @@ unset PATH      # suggestion from H. Milz: avoid accidental use of $PATH
 ID=/usr/bin/id;
 ECHO=/bin/echo;
 
-MOUNT=/bin/mount;
 MKDIR=/bin/mkdir
 RM=/bin/rm;
 MV=/bin/mv;

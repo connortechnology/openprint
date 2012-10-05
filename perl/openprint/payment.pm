@@ -28,6 +28,9 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
+	} elsif ( $param{'btnFunction'} eq 'Send Receipt' ) {
+		my $Payment = new openprint::Payment( $param{'payment_id'} );
+		$variable{'error'} .= $Payment->send_receipt();
 	} else {
 		_history();
 		ssi::setup_date_select( '/payment/history.html', 'received_on_start', -31 );
@@ -57,12 +60,19 @@ sub edit {
 } # end sub edit
 
 sub _paid {
-	my $Payment = new openprint::Payment( $param{'payment_id'} );
-	if ( $param{'invoice_id'} ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		$Invoice->add_Payment( $Payment );
+	my $Payment = $variable{Payment} = new openprint::Payment( $param{'payment_id'} );
+	if ( ! $$Payment{id} ) {
+		$variable{error} .= "Payment $param{payment_id} not found.<br/>";
+		return;
 	} # end if
-	$variable{'Payment'} = $Payment;
+	if ( $param{invoice_id} ) {
+		my $Invoice = new openprint::Invoice( $param{invoice_id} );
+		if ( ! $$Invoice{id} ) {
+			$variable{error} .= "Payment $param{payment_id} not found.<br/>";
+			return;
+		} # end if
+		$variable{error} .= $Invoice->add_Payment( $Payment );
+	} # end if
 } # end sub _paid
 
 sub _unpaid {

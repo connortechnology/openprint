@@ -246,5 +246,30 @@ $log->error("Attempt to delete a comment without rights");
 		} # end if
 	} # end if
 } # end sub _comments
+sub _latest_survey_question {
+	my $Question = new openprint::Survey_Question($param{question_id});
+	if ( ! $$Question{id} ) {
+		$variable{error} .= "Invalid question id ($param{question_id})<br/>";
+		return;
+	} # end if
+	if ( $_ = openprint::Survey_Response->find_one(question_id=>$param{question_id}, user_id=>$session{user_id}) ) {
+		$variable{error} .= $_->destroy();
+		$variable{warning} .= 'You already answered that question, replacing the old answer with your new one.<br/>';
+	} # end if
+	
+	my $Response = new openprint::Survey_Response();
+	$variable{error} .= $Response->save({
+		question_id	=>	$$Question{id},
+		company_id	=>	$session{company_id},
+		user_id		=>	$session{user_id},
+		answer_ids	=>	( ref $param{answer_id} eq 'ARRAY' ? $param{answer_id} : [ $param{answer_id} ] ),
+		answer		=>	$param{answer},
+		survey_id	=>	$$Question{survey_id},
+	});
+} # end sub _latest_survey
+sub answer_question {
+	_latest_survey_question();
+} # end sub answer_question
+
 1;
 __END__

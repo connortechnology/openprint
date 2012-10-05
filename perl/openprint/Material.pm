@@ -14,7 +14,7 @@ use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %tran
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
-$debug = 1;
+$debug = 0;
 $table = 'materials';
 $serial = 'materialindex_seq';
 
@@ -71,17 +71,31 @@ sub New_Specification {
 	my ( $self, $name, $options ) = @_;
 
 	if ( ! $$self{'NewSpecifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification::find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
-			push @{$$self{'NewSpecifications'}{$$Spec{equipment_id}}{$name}}, $Spec;
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{id}, 'order'=>'equipment_id, min NULLS FIRST' ) ) {
+			push @{$$self{'NewSpecifications'}{$$Spec{equipment_id}}{$$Spec{name}}}, $Spec;
 		} # end foreach
 	} # end if
-	if ( ! ( $$self{'NewSpecifications'} and $$self{'NewSpecifications'}{$$options{equipment_id}} and $$self{NewSpecifications}{$$options{equipment_id}}{$name}) ) {
-		#$openprint::log->warn("No specfications for " . $self->name() );
+	if ( ! $$self{'NewSpecifications'} ) {
+		$openprint::log->warn("No specfications for " . $self->name() );
 		return;
 	} # end if
+#if ( $debug ) {
+	#$openprint::log->debug("Looking for " . $self->name() . " equipment: $$options{equipment_id} range: $$options{range} spec: $name");
+#} # end if debug
 
-	return $$self{'NewSpecifications'}{$$options{equipment_id}}{$name}[0] if ! defined $$options{range};
-	return misc::find_entry( $$options{range}, $$self{'NewSpecifications'}{$$options{equipment_id}}{$name} );
+	if ( $$self{'NewSpecifications'}{$$options{equipment_id}} and $$self{NewSpecifications}{$$options{equipment_id}}{$name}) {
+		return $$self{'NewSpecifications'}{$$options{equipment_id}}{$name}[0] if ! defined $$options{range};
+		return misc::find_entry( $$options{range}, $$self{'NewSpecifications'}{$$options{equipment_id}}{$name}, $debug );
+	} elsif ( $$self{'NewSpecifications'}{''} and $$self{NewSpecifications}{''}{$name}) {
+#$log->debug("Look by emptry press");
+		return $$self{'NewSpecifications'}{''}{$name}[0] if ! defined $$options{range};
+#$log->debug("Calling find_entry $$options{range}");
+		my $v = misc::find_entry( $$options{range}, $$self{'NewSpecifications'}{''}{$name}, $debug );
+#$log->debug("Returned $v: $$v{value}");
+		return $v;
+	} # end if 
+	$openprint::log->warn("No specfications for " . $self->name() . " Looking for equipment: $$options{equipment_id} spec: $name") if $debug;
+	return;
 
 } # end sub New_Specification
 
@@ -106,7 +120,7 @@ sub Specification {
 	return $$self{'Specifications'}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name} );
+	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub Specification
 
 sub specification {

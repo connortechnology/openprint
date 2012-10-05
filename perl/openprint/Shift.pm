@@ -149,25 +149,14 @@ sub to_string {
 
 sub get_lis {
 	my ( $Shift, $filters ) = @_;
-	my $self = $Shift;
 
-	my ( $s, $min, $h, $day, $month, $year );
-	if ( $Shift->starttime() ) {
-		( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $Shift->starttime );
-		$year += 1900;
-		$month += 1;
-	} # endif
-
+	my @Jobs = $Shift->Schedule();
+	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
+		return 'empty';
+	} # end if
 	my $html;
 	my $ul_id = $Shift->ul_id();
 
-	my $previous_row;
-	my $total_impressions;
-
-	my @Jobs = $self->Schedule();
-	if ( ( ! @Jobs ) and ! $Shift->starttime() ) {
-		$html .= 'empty';
-	} # end if
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
 			if ( $$filters{'Status'} ) {
@@ -176,29 +165,8 @@ sub get_lis {
 		} # end if
 		
 		$html .= $Job->get_li( $ul_id );
-		$total_impressions += $Job->impressions();
 	} # end foreach Job
 
-	if ( $Shift->name() and Date::Calc::check_date( $year, $month, $day ) ) {
-		my $Operator = $Shift->Operator();
-
-		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
-			$html = sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`,
-
-			$Shift->id(), 
-Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
-			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
-			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-			$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ), 
-			($Operator->id() ? $Operator->name() : 'assign') ) . $html;
-		} else {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', 
-					Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
-			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
-			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-			( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
-		} # end if
-	} # end if
 	return $html;
 } # end sub get_lis
 
@@ -232,8 +200,51 @@ sub get_from_ul_id {
 sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
+	my $html = '<div id="'.$Shift->ul_id().'_div">';
+	my $total_impressions;
+
+	my @Jobs = $Shift->Schedule();
+	foreach my $Job ( @Jobs ) {
+		if ( $filters ) {
+			if ( $$filters{'Status'} ) {
+				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
+			} # end if
+		} # end if
+		$total_impressions += $Job->impressions();
+	} # end foreach Job
+
+	if ( $Shift->name() ) {
+		my ( $s, $min, $h, $day, $month, $year );
+		if ( $Shift->starttime() ) {
+			( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $Shift->starttime );
+			$year += 1900;
+			$month += 1;
+		} # endif
+		if ( Date::Calc::check_date( $year, $month, $day ) ) {
+			my $Operator = $Shift->Operator();
+
+			if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
+				$html .= sprintf( q`<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d', {width:475});"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>`, 
+						$Shift->id(), 
+						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
+						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
+						$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ), 
+						($Operator->id() ? $Operator->name() : 'assign') );
+			} else {
+				$html .= sprintf( '<div class="When"><span class="Shift_time">%s %d %.3s %s %s to %s</span><span class="operator">%s</span></div>', 
+						Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+						Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
+						Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
+						( $Operator->id() ? $Operator->name() : 'assign' ) );
+			} # end if
+		} # end if valid date
+	} # end if Shift->name
 	my $content = $Shift->get_lis($filters);
-	return sprintf('<ul id="%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
+	$html .= sprintf('<ul id="%s" class="shift%s">', $Shift->ul_id(), ($content ? '' : ' Empty') );
+	$html .= $content;
+	$html .= '</ul></div>';
+	return $html;
 } # end sub get_ul
 
 sub get {
@@ -286,6 +297,7 @@ sub get_Shifts {
 	my ( $Equipment, $start_dt, $end_dt, @Equipment_Shifts ) = @_;
 
 	@Equipment_Shifts = $Equipment->Operator_Shifts() if ! @Equipment_Shifts;
+	return () if ! @Equipment_Shifts;
 	my @Shifts;
 	my $parser = 'DateTime::Format::Pg';
 	# Three cases, no shifts, shifts before, shifts after.

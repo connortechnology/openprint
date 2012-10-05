@@ -22,7 +22,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 $table = 'Users';
 $serial = 'users_id_seq';
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	'id'				=>	'id',
@@ -59,6 +59,7 @@ $debug = 1;
 	'notes'				=>	'notes',
 	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
+	last_Logged_in		=>	undef,
 ); # end %fields
 %find_fields = (
 	'name'	=>	q`firstname || ' ' || lastname`,
@@ -284,9 +285,12 @@ sub assistant_ids {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-		return @_;
+		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	} # end if
+	return @{$$self{assistant_ids}};
 } # end sub
 
 sub csr_ids {
@@ -298,9 +302,12 @@ sub csr_ids {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
-		return @_;
+		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	} # end if
+	return @{$$self{csr_ids}};
 } # end sub
 
 sub Groups {
@@ -412,11 +419,16 @@ if ( 0 ) {
 	} # end if
 } # end if
 	if ( ! $_[0]{'icon'} ) {
-		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
+		$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s" alt="%3$s" title="%3$s"/></a>',
+		#$_[0]{'icon'} = sprintf('<a href="/account/view.html?user_id=%1$d" class="thumbnail"><img src="%2$s?user_id=%1$d" alt="%3$s" title="%3$s" /></a>',
 			$_[0]{'id'}, $_[0]->Asset()->thumbnail_url(), $_[0]->alias() );
 	} # end if
 	return $_[0]{'icon'};
 }
+
+sub link {
+	return sprintf('<a href="/account/view.html?user=%1$d">%2$s</a>', $_[0]{id}, $_[0]->name() );
+} # end sub link
 
 sub html {
 	if ( ! $_[0]{'id'} ) {
@@ -470,11 +482,10 @@ sub html {
 sub last_logged_in {
 	if ( ! $_[0]{'last_logged_on'} ) {
 		# Almost any entry means we were logged in.  
-		my @Logs = openprint::Log->find('limit'=>1, 'user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
-		if ( @Logs >= 1 ) {
-			$_[0]{'last_logged_on'} = $Logs[0]{'date_time'};
-		} else {
-			$openprint::log->debug("@ of logs returned " . @Logs );
+		my $Log = openprint::Log->find_one('user_id'=>$_[0]{'id'},'order'=>'date_time DESC');
+		if ( $Log ) {
+#$openprint::log->debug("last_Logged_in: " . $Log->to_string() );
+			$_[0]{'last_logged_on'} = $$Log{date_time};
 		} # end if
 	}
 	return $_[0]{'last_logged_on'};
@@ -483,6 +494,7 @@ sub last_logged_in {
 sub AUTOLOAD {
 	my $name = $AUTOLOAD;
 	$name =~ s/.*://;
+#$openprint::log->debug("AUTOLOAD $name");
 	if ( $fields{$name} ) {
 		if ( @_ > 1 ) {
 #$openprint::log->debug("Autoload $type $name $_[0]");
@@ -506,8 +518,10 @@ sub AUTOLOAD {
 sub can_edit {
 	return 1 if $openprint::session{'user_id'} == $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
-	return 1 if ( new openprint::User( $openprint::session{'user_id'} )->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
-	return 1 if new openprint::Company( $_[0]{'company_id'} )->salesrep_id() == $openprint::session{'user_id'};
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	my $Company = new openprint::Company( $_[0]{'company_id'} );
+	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	return 0;
 } # end sub can_edit
 
@@ -516,7 +530,7 @@ sub Location {
 		my $Profile = $_[0]->Profile();
 		my $Location;
 		if ( $Profile->postalcode() ) {
-			$Location = openprint::Location->find_one( 'postalcode'=>$Profile->postalcode() );
+			$Location = openprint::Location->find_one( 'postalcode'=>openprint::Location->transform('postalcode', $Profile->postalcode() ) );
 		} # end if
 		if ( ! $Location and $Profile->city() ) {
 			my $City = new openprint::Location( $Profile->city() );

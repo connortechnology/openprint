@@ -24,11 +24,11 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
-my $projects_count = 100;
+my $projects_count = 1000;
 my $project_id = $ARGV[3];
 #
 #my $project_id = 407192;
-my $company_id = 6;
+my $company_id = 0;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -341,6 +341,34 @@ if ( 1 ) {
 	} # end if Type
 	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 }
+
+# This appears to have already been applied to live
+foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
+	foreach my $Price ( $Service->prices() ) {
+		if ( $Price->units() eq 'Per Page' ) {
+			$Price->units('Per Imposition');
+			$Price->save();
+		} # end if
+	} # end foreach
+} # end foreach
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Standard Run Speed'], 'strname','Standard Run Speed' );
+	sql::execute( undef, undef, "delete from tbl_equipment_specifications WHERE lngequipmentindex=28 and strname='Press Additional Run Speed'" );
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname','Run Speed' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+
+	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category->find('name'=>'Printing');
+	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category->find('name'=>'Coatings');
+	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>3}) if ! openprint::ServiceType_Category->find('name'=>'Prepress');
+	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>4}) if ! openprint::ServiceType_Category->find('name'=>'Bindery');
+	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>5}) if ! openprint::ServiceType_Category->find('name'=>'Specialty');
+	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>6}) if ! openprint::ServiceType_Category->find('name'=>'Packaging');
+	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>7}) if ! openprint::ServiceType_Category->find('name'=>'Shipping');
+	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
+	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category->find('name'=>'Custom Services');
 $dbh->disconnect();
 	
 1;

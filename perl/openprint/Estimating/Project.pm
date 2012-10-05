@@ -191,7 +191,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
 		} # end if
-	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSize'} ) ) {
+	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( exists $$specs{'ddmStockSize'} ) ) {
 		@$specs{'txtWidth','txtHeight'} = $$specs{'ddmStockSize'} =~ /^([\d\.]+)"?\s*x?\s*([\d\.]+)?"?\s*$/;
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} else {
@@ -210,7 +210,19 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	@StockOptions = misc::trim(split (',', $openprint::config{'StockOptions'} )) if ! @StockOptions;
 	@StockOptions = ( 'Brand','Finish','Colour','Weight' ) if ! @StockOptions;
 
+	my $ac = sql::start_transaction( $dbh );
+	# This is kinda neccessary, because clicking the recalc button skips over the javascript mutex,  so we need a real one... this seems as good a place as any.
+	$log->debug("LOCKING tbl_Projects for project $$Project{id}");
+	$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{'id'}. ' FOR UPDATE' );
+	if ( $dbh->errstr() ) {
+		$log->error( DBI->errstr );
+		sql::end_transaction( $dbh, $ac );
+		$$specs{'alert'} .= 'Database error<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
+# It's a multi-page publication
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} .= 'Please enter the number of pages.<br/>';
 			return $$specs{'Status'} = 'uncalculated';
@@ -238,31 +250,15 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
-# It's a multi-page publication
-		my $ac = sql::start_transaction( $dbh );
 
 		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','txtTotalPageQuantity','rdbCover','rdbTemplateType','PrintingType' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
-$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
-				$$printing_specs{$spec} = $$specs{$spec};
-				} # end if
 			} # end if
 		} # end foreach
 
-		# This is kinda neccessary, because clicking the recalc button skips over the javascript mutex,  so we need a real one... this seems as good a place as any.
-		$dbh->do( "SELECT * FROM Projects WHERE id=".$$Project{'id'}. ' FOR UPDATE' );
-		if ( $dbh->errstr() ) {
-			$log->error( DBI->errstr );
-			sql::end_transaction( $dbh, $ac );
-			$$specs{'alert'} .= 'Database error<br/>';
-			return $$specs{'Status'} = 'uncalculated';
-		} # end if
-
 # Sets up the book service
 		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'MultiPage' );
-		sql::end_transaction( $dbh, $ac );
 
 # Setup the colours
 		if ( $$specs{'Colours'} eq '4/4' ) {
@@ -283,6 +279,11 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 		} elsif ( $$specs{'Colours'} eq '1/1' ) {
 			$$specs{'chkBlackSideOne2'} = 'Black';
 			$$specs{'chkBlackSideTwo2'} = 'Black';
+			$$specs{'chkProcessColourSideOne2'} = undef;
+			$$specs{'chkProcessColourSideTwo2'} = undef;
+		} elsif ( $$specs{'Colours'} eq '1/0' ) {
+			$$specs{'chkBlackSideOne2'} = 'Black';
+			$$specs{'chkBlackSideTwo2'} = undef;
 			$$specs{'chkProcessColourSideOne2'} = undef;
 			$$specs{'chkProcessColourSideTwo2'} = undef;
 		} # end if
@@ -478,14 +479,9 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			delete $$services{'Aqueous'};
 		} # end if
 
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity', 'ddmStockSize' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
-$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
-				$$printing_specs{$spec} = $$specs{$spec};
-}
 			} # end if
 		} # end foreach
 		if ( $$specs{'PrintingType'} ) {
@@ -498,32 +494,24 @@ $openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 			foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
-$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
-					$$printing_specs{$spec} = $$specs{$spec};
-				} # end if
 				} # end if
 			} # end foreach
 		} elsif ( $ProjectType->name() eq 'Banners' ) {
 			foreach my $spec ( 'PocketSize','grommets','hemmed','pockets','EdgeLeft','EdgeRight','EdgeBottom','EdgeTop' ) {
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
-$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
-					$$printing_specs{$spec} = $$specs{$spec};
-				} # end if
 				} # end if
 			} # end foreach
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'rdbTemplateType', $$specs{'FoldType'} );
 		} # end if
-		sql::end_transaction( $dbh, $ac );
 
 		# Although this could calculate the printing, it is here only to further store and validate and auto-ppulate fields
 		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
-		#%printing_specs = %{$sig_specs};
-	} # end if printing
+	} # end if printing (actually looks for txtTotalPageQut
+
+	sql::end_transaction( $dbh, $ac );
 
 	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
@@ -744,11 +732,18 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} # end if
 
-	if ( $$specs{'LaminationType'} ) {
+	if ( $$specs{'LaminationType'} or $$specs{LaminationTypeFront} or $$specs{LaminationTypeBack} ) {
 		if ( ! $$services{'Lamination'} ) {
 			push @{$$services{'Lamination'}}, $Project->add_service( 'Lamination' );
 		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'LaminationType', $$specs{'LaminationType'} );
+		if ( $$specs{LaminationType} ) {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeFront', $$specs{'LaminationType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeBack', $$specs{'LaminationType'} );
+		} else {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeFront', $$specs{'LaminationTypeFront'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'TypeBack', $$specs{'LaminationTypeBack'} );
+		} # end if
+		
 	} else {
 		foreach ( @{$$services{'Lamination'}} ) {
 			openprint::print_project::delete_service( $$Project{'id'}, $_ );
@@ -761,6 +756,18 @@ $openprint::log->debug('Deleting Folding');
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
 		} # end foreach
 	} # end foreach
+	foreach my $service_name ( 'Design' ) {
+		if ( $$specs{$service_name.'_txtQuantity'} ) {
+			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
+			foreach my $sid ( @{$$services{$service_name}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{id}, $sid, 'txtQuantity', $$specs{$service_name.'_txtQuantity'} );
+			} # end foreach
+		} else {
+			foreach ( @{$$services{$service_name}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $$Project{id}, $_ );
+			} # end foreach
+		} # end if
+	}  # end foreach service_name
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
 	openprint::Estimating::MultiPage::calculate_signatures( $Project );

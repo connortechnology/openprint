@@ -464,16 +464,17 @@ sub send_completion_notice {
 # >Something to note:	the order email is sent in the currency that the order is stored in, not neccessarily the current currency
 sub send_sales_order {
 	my ( $self ) = @_;
-	my %order;
-
-	$order{'OrderID'} = $$self{'id'};
-	$order{'Order'} = $self;
+	my %order = (
+		OrderID => $$self{id},
+		Order => $self,
+	);
 
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
 	my $Currency = $self->Currency();
 	@order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
 	$order{'Currency'} = $Currency;
+
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
@@ -507,7 +508,7 @@ sub send_sales_order {
 	
 	new openprint::Email()->send(
 		FROM	=> $sales_person_email,
-		TO	=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
+		TO		=> sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
 		#BCC	 =>	'iconnor@penultima.org',
 		SUBJECT => "Order $$self{id}",
 		ATTACHMENTS	=>	[ @body, @sales_order ],
@@ -515,10 +516,8 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	my @sales_order;
+	@body = ('', $_, 'text/html', 'quoted-printable');
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
@@ -526,21 +525,21 @@ sub send_sales_order {
 	my @project_dockets = ();
 
 	$log->debug("***************** ADDING PROJECT DOCKET *************************");
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
+	my $docket_content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
 	foreach my $Project ($self->Projects()) {
 		my %data;
 		openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
 		if ( $_ ) {
-			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$content, \%data ) ) );
+			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$docket_content, \%data ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
 		} # end if
 	} # for each
 
 	my @admin_emails = split( ',', $config{'OrderingEmail'} );
-	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
+	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
 
 	my @accounting_emails = split( ',', $config{'AccountingEmail'} );
-	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
@@ -666,7 +665,15 @@ sub cod_owing {
 } # end sub cod_owing
 sub cod_owing_percent {
 	my $cod_total = $_[0]->cod();
-	return 100-int($_[0]->paid()*100/$cod_total) if $cod_total;
+	return 0 if ! $cod_total;
+	return 0 if (1*$_[0]->paid()) == (1*$cod_total);
+	return 0 if (1*$_[0]->paid()) eq (1*$cod_total);
+
+	my $owing = int($_[0]->paid()*100/$cod_total) if $cod_total;
+#$openprint::log->debug( "cod_toal $cod_total owing: $owing paid: " . $_[0]->paid() );
+
+	return 0 if $owing == 100;
+	return 100-$owing;
 	return 0;
 } # end sub cod_owing_percent
 sub supplier_id {

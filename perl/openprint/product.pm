@@ -26,11 +26,13 @@ sub edit {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
-		if ( $param{'category'} ) {
-			delete $param{'category_id'};
-		} else {
-			delete $param{'category'};
-		} # end if
+		foreach my $field ( 'category', 'manufacturer' ) {
+			if ( $param{$field} ) {
+				delete $param{$field.'_id'};
+			} else {
+				delete $param{$field};
+			} # end if
+		} # end foreach
 			
 		$variable{'error'} = $Product->save( \%param );
 		if ( $param{'product_id'} ) {

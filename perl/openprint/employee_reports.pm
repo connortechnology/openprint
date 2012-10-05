@@ -36,7 +36,7 @@ sub _project_history_results {
 		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
-	my @Companies = openprint::Company::find( %parameters );
+	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	my %filters = (
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
@@ -57,7 +57,7 @@ sub _project_history_results {
 
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
-		foreach my $Project ( openprint::Project::find( %filters ) ) {
+		foreach my $Project ( openprint::Project->find( %filters ) ) {
 			if ( $param{'previous_status'} and (
 						Date::Calc::check_date( @param{'status_on_start_year','status_on_start_month','status_on_start_day'} ) or 
 						Date::Calc::check_date( @param{'status_on_end_year','status_on_end_month','status_on_end_day'} )
@@ -506,5 +506,7 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+sub prepress_productivity {
+} # end sub prepress_productivity
 1;
 __END__

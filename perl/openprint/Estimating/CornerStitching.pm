@@ -143,9 +143,9 @@ sub calc {
 			my $runtime = $$specs{"txtQuantity$qty_index"}/$unitsPerHour; # in seconds
 				$price{'RunTime'} += $runtime * 360;
 			my %servicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
-			if ( $servicePrice{'units'} eq 'Per M' ) {
+			if ( $servicePrice{'units'} eq 'per m' ) {
 				$price{'Service'} += $servicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index}/1000;
-			} elsif ( $servicePrice{'units'} eq 'Per Hour' ) {
+			} elsif ( $servicePrice{'units'} eq 'per hour' ) {
 				$price{'Service'} += $servicePrice{'Price'} * $runtime;
 			} else {
 				$log->debug("Unknown Unit Type: $servicePrice{'units'}");

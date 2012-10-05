@@ -38,10 +38,9 @@
 				inches
 			</li>
 <? eval (
-	@{$$variable{'PaperTypes'}} = ('Sheet');
-	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-		push @{$$variable{'PaperTypes'}}, 'Roll';
-	} # end if
+	@{$$variable{'PaperTypes'}} = ();
+	push @{$$variable{'PaperTypes'}}, 'Sheet' if openprint::Paper->find_one(type=>'Sheet');
+	push @{$$variable{'PaperTypes'}}, 'Roll' if openprint::Paper->find_one(type=>'Roll');
 ) ?>
 <? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<li><label>Format</label>
@@ -129,10 +128,7 @@
 			<ul>
 <? echo (
 	my $html;
-	my @types = ('Sheet');
-	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $session{'user_id'} ) ) {
-		push @types, 'Roll';
-	} # end if
+	my @types = @{$$variable{'PaperTypes'}};
 
 	my @user_types = ('');
 	push @user_types, 'C' if $session{'user_id'};

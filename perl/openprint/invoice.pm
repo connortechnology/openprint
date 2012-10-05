@@ -15,6 +15,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 require openprint::Invoice;
 require openprint::Invoice_Interest;
 require openprint::Tax;
+require openprint::Bitcoin_Address;
 
 sub history {
 
@@ -186,6 +187,16 @@ sub edit {
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} ) if ! $param{'due_on'};
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
+		if ( $param{invoicee} ) {
+			my $Invoicee = openprint::Company->find_one(name=>openprint::Company->transform('name', $param{invoicee}) );
+			if ( ! $Invoicee ) {
+				$Invoicee = new openprint::Company();
+				$Invoicee->save({name=>$param{invoicee}});
+			} # end if
+			$param{invoicee} = $Invoicee->id();
+		} else {
+			delete $param{invoicee};
+		} # end if
 		$variable{'error'} .= $variable{'Invoice'}->save(\%param);
 	} # end if
 	if ( ! $variable{'Invoice'}->id() ) {

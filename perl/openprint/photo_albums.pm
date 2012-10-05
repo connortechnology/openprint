@@ -118,8 +118,8 @@ sub _album_photos {
 	} # end if
 
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
-		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
-		$variable{'error'} .= $Object->save({'thumbnail_id'=>$param{'asset_id'}}) if $Object;
+		$variable{error} .= $Album->save({thumbnail_id=>$param{asset_id}});
+		$variable{error} .= $Object->save({thumbnail_id=>$param{asset_id}}) if $Object and exists $$Object{thumbnail_id};
 	} elsif ( $param{'action'} eq 'add' ) {
 		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
 $log->debug("$id , $filename ");
@@ -322,8 +322,10 @@ sub _photo_actions {
 	} # end if function
 } # end sub _photo_actions
 sub photos {
+	_photos();
 } # end sub photos
 sub _photos {
+	ssi::save_params( '/photo_albums/photos.html', ( 'company_id','user_id' ) );
 } # end sub _photos
 
 1;

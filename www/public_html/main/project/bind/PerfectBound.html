@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="/javascripts/service.js"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -6,79 +6,91 @@
 	$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
-<div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+<div class="Service <?ServiceTypeID?>">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<p>
+			<ul>
+			<li>
 				<label>Spine width</label>
-				<input type="number" name="txtCalliper" onkeyup="calc(this.form.name);" /> inches
-				<input type="checkbox" id="OverrideSpineWidth" name="chkOverrideCalliper" value="Y" <? echo ( $$variable{'chkOverrideCalliper'} eq 'Y' ? 'checked="checked"' : '' ) ?> />	
-				<label class="radio" for="OverrideSpineWidth">Override</label>
-			</p>
+<? echo (
+	my $html;
+	$html = ssi::input( type=>'float', name=>'txtCalliper', onkeyup=>'calc(this.form.name);' ) . ' inches';
+	$html .= ssi::write_override( 'OverrideCalliper', $$variable{OverrideCalliper}, '', 'calc(this.form.name);' );
+	return $html;
+) ?>
+			</li>
 <? eval ( 
 	@{$$variable{'GlueTypes'}} = openprint::Material->find('category'=>'PerfectBound Glue');
 ) ?>
 <? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
-		<p>
+		<li>
 			<label>Glue Type</label>
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
 			</select>
-			<input type="checkbox" id="override_glue_id" name="override_glue_id" value="Y" onclick="if(!this.checked)calc(this.form);" <? echo ( $$variable{'override_glue_id'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="label" for="override_glue_id">Override</label>
+<? echo ( ssi::write_override( 'override_glue_id', $$variable{'override_glue_id'}, '', 'calc(this.form);' ); ) ?>
 <? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 	<input type="hidden" name="glue_id" value="<?glue_id?>" />
 <? endif ( @{$$variable{'GlueTypes'}} > 1 ) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Signatures</label>
-			<!-- The rest is done for each qty -->
-			<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-			<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-			<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<span class="<?Columns?>Columns">
-<? echo ( 
-	my $html = '';
-	foreach my $page ( 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
-		$html .= sprintf('<input name="txtSignatureQty%1$dPage-%2$d" value="%3$d" type="text" onkeyup="calc(this.form.name);" %4$s /> %1$d Page Signature(s)<br/>', $page, $$variable{'QTYIndex'}, $$variable{'txtSignatureQty'.$page.'Page-'.$$variable{'QTYIndex'}}, sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"' );
-	} # end foreach
-	return $html;
-) ?>
-				<input name="txtSignatureQtyGateFolded-<?QTYIndex?>" value="<? echo ( $$variable{"txtSignatureQtyGateFolded-$$variable{'QTYIndex'}"} ) ?>" type="text" onkeyup="calc(this.form.name);" <? echo ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ? '' : 'readonly="readonly"' ) ?> />
-				Gate Folded Signature(s)<br/>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-				<input type="checkbox" id="OverridePockets<?QTYIndex?>" name="OverridePockets<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverridePockets'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="OverridePockets<?QTYIndex?>">Override</label>
-<? else ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-	<? if ( $$variable{'OverridePockets'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
-				<input type="hidden" name="OverridePockets<?QTYIndex?>" value="Y" />Overriden
-	<? endif ( $$variable{'OverridePockets'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-			</span>
-			<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-			<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-			</p>
+				<? echo (
+					my $html;
+					foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			
+						$html .= '<span class="'.$$variable{Columns}.'Columns">';
+						foreach my $page ( 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
+							$html .= ssi::input( 
+								name	=>	"txtSignatureQty${page}Page-${qty_index}", 
+								value	=>	$$variable{"txtSignatureQty${page}Page-${qty_index}"},
+								type	=>	'cardinal',
+								onkeyup	=>	'calc(this.form.name);', 
+								readonly=>	!sets::isin( $session{user_type}, ['A','E'] ),
+								);
+							$html .= $page . ' Page Signature(s)<br/>';
+						} # end foreach page
+						$html .= ssi::input(
+							name	=>	"txtSignatureQtyGateFolded-$qty_index", 
+							value	=>	$$variable{"txtSignatureQtyGateFolded-$qty_index"},
+							type	=>	'cardinal', onkeyup=>'calc(this.form.name);',
+							readonly	=>	!sets::isin( $session{user_type}, ['A','E'] ),
+							);
+						$html .= 'Gate Folded Signature(s)<br/>';
+						if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+							$html .= ssi::write_override('OverridePockets'.$qty_index, $$variable{'OverridePockets'.$qty_index}, '', 'calc(this.form.name);' ) . ' Override';
+						} else {
+							if ( $$variable{'OverridePockets'.$qty_index} eq 'Y' ) {
+								$html .= ssi::input( type=>'hidden', name=>"OverridePockets$qty_index", value=>'Y' ).' Overriden';
+							} # end if
+						} # end if
+						$html .= '</span>';
+					} # end foreach qty_index
+					return $html;
+				) ?>
+			</li>
+			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
-		<p>
+			<ul>
+		<li>
 			<label>Imposition</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<span class="<?Columns?>Columns">
-			<input type="number" name="Imposition<?QTYIndex?>" value="<? echo ( $$variable{'Imposition'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" />out
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-<input type="checkbox" id="OverrideImposition<?QTYIndex?>" name="OverrideImposition<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverrideImposition'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-<label class="radio" for="OverrideImposition<?QTYIndex?>">Override</label>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-		</p>
+			<? echo (
+				my $html;
+				foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= ssi::input( type=>'cardinal', name=>'Imposition'.$qty_index, value=>$$variable{'Imposition'.$qty_index}, onkeyup=>'calc(this.form.name);' ).' out';
 
+					if ( sets::isin( $session{user_type}, ['A','E'] ) ) {
+						$html .= ssi::write_override( 'OverrideImposition'.$qty_index, $$variable{'OverrideImposition'.$qty_index}, '', 'calc(this.form.name)' );	
+					} # end if
+					$html .= '</span>';
+				} # end foreach $qty_index
+				return $html;
+			) ?>
+		</li>
         <!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+		</ul>
 		</fieldset>
 		<hr/>
 

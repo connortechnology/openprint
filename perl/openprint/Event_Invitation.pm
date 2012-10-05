@@ -21,5 +21,9 @@ $table = 'event_invitations';
 	'created_on'	=>	q`'NOW()'`,
 );
 
+sub User {
+	new openprint::User($_[0]{user_id});
+} # end sub User
+
 1;
 __END__

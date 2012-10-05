@@ -28,9 +28,11 @@ my @variables = (
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
-	'LaminationType',
+	'TypeFront','TypeBack',
 );
 
 sub variables {
@@ -40,6 +42,7 @@ sub variables {
 my @outputs = (
 	'txtFinalWidth','txtFinalHeight',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 	'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 	'alert', 'Status',
@@ -54,31 +57,33 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 	if ( $$specs{'chkOverrideDimensions'} ne 'Y' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} # end if
 
-	if ( ! 
-			( $$specs{'LaminationType'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} )
-	   ) {
-		$$specs{'txtPrice1'} = '';
-		$$specs{'txtPrice2'} = '';
-		$$specs{'txtPrice3'} = '';
-		$$specs{'txtUnitPrice1'} = '';
-		$$specs{'txtUnitPrice2'} = '';
-		$$specs{'txtUnitPrice3'} = '';
+	if ( $$specs{LaminationType} ) {
+		$$specs{TypeFront} = $$specs{TypeBack} = $$specs{LaminationType};
+	} # end if
+
+	$$specs{alert} = '';
+	$$specs{alert} .= 'Please select lamination type for front.<br/>' if ! $$specs{'TypeFront'};
+	$$specs{alert} .= 'Please select lamination type for back.<br/>' if ! $$specs{'TypeBack'};
+	$$specs{alert} .= 'Please enter object width.<br/>' if ! $$specs{'txtFinalWidth'};
+	$$specs{alert} .= 'Please enter object height.<br/>' if ! $$specs{'txtFinalHeight'};
+
+	if ( $$specs{alert} ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			$$specs{'txtPrice'.$qty_index} = '';
+			$$specs{'MPrice'.$qty_index} = '';
+			$$specs{'txtUnitPrice'.$qty_index} = '';
+		} # end foreach qty_index
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
-
-	my %MaterialPrice;
-	if ( my @Materials = openprint::Material->find( 'name'=>$$specs{'LaminationType'} ) ) {
-		%MaterialPrice = $Materials[0]->get_price( undef, undef );
-	} # en if
 
    my @possible_equipment;
    my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
@@ -124,6 +129,12 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
+			if ( ( $$specs{TypeFront} eq 'None' ) or ( $$specs{TypeBack} eq 'None' ) and ( $Equipment->specification('Laminating Sides') eq 'Both' ) ) {
+				if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+					$$specs{alert} .= 'The chosen laminator must do both sides.  You have chosen no lamination for one of the sides.<br/>';
+				} # end if
+				next;
+			} # end if
 			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s Width: %s<br/>', $Equipment->name(), $maximum_sheet_width );
 
@@ -142,48 +153,86 @@ sub calc {
 			} else {
 				# doesn't fit?
 			} # end if
+			my $area;
+			if ( $$imposition{'ImageOrientation'} eq 'Vertical' ) {
+				$area = $item_height * $imposition->rows();
+			} else {
+				$area = $item_width * $imposition->rows();
+			} # end if
+			if ( $maximum_sheet_width ) {
+				$area = $area * $maximum_sheet_width;
+			} else {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("No Maximum Sheet Width set for %s<br/>", $Equipment->strid() );
+			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Items across: ( %s x %s ) %d<br/>', $item_width, $item_height, $imposition->columns() );
 			my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
 			my $price = $SetupPrice{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{'Price'});
 
+			my $MPrice = 0;
+
 			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
 			if ( %ServicePrice ) {
-				if ( $ServicePrice{'units'} eq 'Per M' ) {
+				if ( $ServicePrice{'units'} eq 'per m' ) {
 					my $serviceprice = ($ServicePrice{'Price'} * $qty)/1000;
 					$price += $serviceprice;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
+					$MPrice += $serviceprice;
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{'units'}) for $$specs{'ServiceType'}<br/>";
 				} # end if
 			} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{'ServiceType'}<br/>";
+				$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{'ServiceType'}<br/>";
 			} # end if
-			if ( $MaterialPrice{'units'} eq 'per square foot' ) {
-				my $area;
-				if ( $$imposition{'ImageOrientation'} eq 'Vertical' ) {
-					$area = $item_height * $imposition->rows();
-				} else {
-					$area = $item_width * $imposition->rows();
-				} # end if
-				if ( $maximum_sheet_width ) {
-					$area = ($area * $maximum_sheet_width) / 144;
-				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("No Maximum Sheet Width set for %s<br/>", $Equipment->strid() );
-				} # end if
+			if ( $$specs{TypeFront} ne 'None' ) {
+				my %FrontMaterialPrice;
+				if ( my $FrontMaterial = openprint::Material->find_one( 'name'=>$$specs{TypeFront} ) ) {
+					%FrontMaterialPrice = $FrontMaterial->get_price( $area, $Equipment );
+					if ( ! %FrontMaterialPrice ) {
+						if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+							$$specs{alert} .= "There is no price for $$FrontMaterial{description} on $$Equipment{name}.<br/>";
+						} # end if
 
-				# have to reload price to get one with quantity discounts
-				if ( my @Materials = openprint::Material->find( 'name'=>$$specs{'LaminationType'} ) ) {
-					%MaterialPrice = $Materials[0]->get_price( $area, $Equipment );
-				} # en if
-				my $materialprice = $MaterialPrice{Price} * $area;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f %s * %.2f square feet = $%.2f<br/>', @MaterialPrice{'Price','units'}, $area, $materialprice );
-				$price += $materialprice;
-			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: unknown units: (%s)<br/>', $MaterialPrice{'units'} );
-			} # end if
+						next;
+					} # end if
+					if ( $FrontMaterialPrice{units} eq 'per square foot' ) {
+						$FrontMaterialPrice{Total} = $FrontMaterialPrice{Price} * $area / 144;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @FrontMaterialPrice{'Price','units','Total'}, $area/144 );
+						$price += $FrontMaterialPrice{Total};
+						$MPrice += ( 1000 / $imposition->imposition() ) * $FrontMaterialPrice{Total};
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $FrontMaterialPrice{units} );
+					} # end if
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Front: (%s)<br/>', $$specs{TypeFront} );
+				} # end if Material Found
+			} # end if TypeFront
+			if ( $$specs{TypeBack} ne 'None' ) {
+				my %BackMaterialPrice;
+				if ( my $BackMaterial = openprint::Material->find_one( 'name'=>$$specs{TypeBack} ) ) {
+					%BackMaterialPrice = $BackMaterial->get_price( $area, $Equipment );
+					if ( ! %BackMaterialPrice ) {
+						if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
+							$$specs{alert} .= "There is no price for $$BackMaterial{description} on $$Equipment{name}.<br/>";
+						} # end if
+						next;
+					} # end if
+					if ( $BackMaterialPrice{units} eq 'per square foot' ) {
+						$BackMaterialPrice{Total} = $BackMaterialPrice{Price} * $area / 144;
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Back: $%1$.2f %2$s * %4$.2f square feet = $%3$.2f<br/>', @BackMaterialPrice{'Price','units','Total'}, $area/144 );
+						$price += $BackMaterialPrice{Total};
+						$MPrice += ( 1000 / $imposition->imposition() ) * $BackMaterialPrice{Total};
+					} else {
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material on Front: unknown units: (%s)<br/>', $BackMaterialPrice{units} );
+					} # end if
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('No Material found for Back: (%s)<br/>', $$specs{TypeBack} );
+				} # end if Material Found
+			} # end if TypeFront
+
 			if ( ( ! $bestPrice{'Price'} ) or $bestPrice{'Price'} > $price ) {
 				$bestPrice{'Price'} = $price;
+				$bestPrice{'MPrice'} = $MPrice;
 				$bestPrice{'Equipment'} = $Equipment;
 			} # end if
 		} # end foreach equipment
@@ -196,15 +245,17 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'MPrice'} * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 sub display {
-	my ( $log, $dbh, $variable ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
+	my $Project = new openprint::Project( $project_index );
 
 	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
-	foreach my $qty_index ( 1 .. 3 ) {	
+	foreach my $qty_index ( $Project->quantity_indexes() ) {	
 	$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index
 } # end sub display

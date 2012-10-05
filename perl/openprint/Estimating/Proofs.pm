@@ -268,10 +268,10 @@ sub signature_calc {
 		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{'units'};
 
 		$Results{'Breakdown'} .= "Proof: $proof_index: Quantity: $quantity, Type: $type ";
-		if ( lc $price{'units'} eq 'per square inch' ) {
+		if ( $price{'units'} eq 'per square inch' ) {
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity;
 		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
-		} elsif ( lc $price{'units'} eq 'per square foot' ) {
+		} elsif ( $price{'units'} eq 'per square foot' ) {
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} / 144 * $quantity;
 		$Results{'Breakdown'} .= sprintf('MR: %.2f + %d * %sx%s * $%.2f%s=$%.2f<br/>', $MakeReady{Price}, $quantity, $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"},$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"}, @price{'Price','units','Total'} );
 		} else {

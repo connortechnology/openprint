@@ -26,4 +26,4 @@ CREATE TABLE Assets (
 	height		INTEGER,
 	PRIMARY KEY (id)
 );
-alter table Users add foreign key (asset_Id) REFERENCES assets (Id);
+alter table Users add foreign key (asset_id) REFERENCES assets (id);

@@ -9,6 +9,7 @@ CREATE TABLE tbl_Equipment (
 	strName				TEXT,
 	strDescription		TEXT,
 	strCategory			TEXT,
+	category_id			INTEGER[],
 	strSupplier			TEXT,
 	image				TEXT, /* Relative to /images/equipment */
 	useinscheduling		boolean,

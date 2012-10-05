@@ -27,7 +27,7 @@ $dst_db = 'point-one' if ! $dst_db;
 
 if ( ! $path ) {
 	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
-	$path = "/media/Storage/Backups/database/$src_db/$year-$month-$day.sql.bz2";
+	$path = "/media/ARCHIVE/Backups/database/$src_db/$year-$month-$day.sql.bz2";
 
 	if ( ! -e $path ) {
 		die "No db dump $path";
@@ -77,14 +77,6 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
 
-foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
-	foreach my $Price ( $Service->prices() ) {
-		if ( $Price->units() eq 'Per Page' ) {
-			$Price->units('Per Imposition');
-			$Price->save();
-		} # end if
-	} # end foreach
-} # end foreach
 
 if ( 0 ) {
 sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
@@ -392,25 +384,11 @@ These terms and conditions shall be interpreted under and governed by the laws i
 	sql::insert( undef, undef, 'configuration', 'name', 'RegistrationRequiredFields','value',
 'company_name,firstname,lastname,email,Captcha,address1,country,state,city,postalcode,phone,password,verifypassword',
 'category','Required Fields', 'description', 'Comma-separated list of fields on the registration page which must be filled in.');
-	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Standard Run Speed'], 'strname','Run Speed' );
-	sql::execute( undef, undef, "delete from tbl_equipment_specifications WHERE lngequipmentindex=28 and strname='Press Additional Run Speed'" );
-	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname','Run Speed' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
-	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0, 'strunits', 'Calliper' );
+
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 'NOW()', 'backup', 0 );
-	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category->find('name'=>'Printing');
-	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category->find('name'=>'Coatings');
-	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>3}) if ! openprint::ServiceType_Category->find('name'=>'Prepress');
-	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>4}) if ! openprint::ServiceType_Category->find('name'=>'Bindery');
-	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>5}) if ! openprint::ServiceType_Category->find('name'=>'Specialty');
-	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>6}) if ! openprint::ServiceType_Category->find('name'=>'Packaging');
-	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>7}) if ! openprint::ServiceType_Category->find('name'=>'Shipping');
-	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
-	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category->find('name'=>'Custom Services');
+
+
 
 	if ( my $STC = openprint::ServiceType_Category->find_one( 'name'=>'Printing','sorting'=>undef ) ) {
 		$STC->save({'sorting'=>1}) if ! $STC->sorting();
@@ -488,7 +466,17 @@ if ( ! openprint::ServiceType_Default->find_one('name'=>'MatchGrain1') ) {
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain2', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
     (new openprint::ServiceType_Default())->save({'name'=>'MatchGrain3', 'value'=>'Y', 'servicetype'=>'Signature','projecttype'=>'MultiPage'});
 } # end if
+foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), '7 days') ) ) ) {
+	my @qtys = $Project->quantities();
+	$Project->recalculate();
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( ($Project->quantity($qty_index) < $qtys[$qty_index-1]-10) or ( $Project->quantity($qty_index)>$qtys[$qty_index-1]+10) ) {
+			print 'Project: '.$Project->id().' has changed by more than $10'."\n";
+		} # end if
+	} # end foreach qty_index
+} # end foreach Project
 $dbh->disconnect();
-`/etc/init.d/postgresql restart`;
+`/etc/init.d/postgresql reload`;
+#`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
 0;
 __END__
