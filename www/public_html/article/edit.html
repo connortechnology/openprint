@@ -5,7 +5,8 @@
 	tinyMCE.init({
 		relative_urls : false,
 		convert_urls : false,
-		mode : "textareas",
+		mode : "specific_textareas",
+		editor_selector : "mce",
 		theme : "advanced",
 		plugins: "paste,advimage,advlink",
 		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,formatselect,fontselect,fontsizeselect,sub,sup,justifyleft,justifycenter,justifyright,justifyfull,separator,anchor,link,unlink,image,cleanup,code",
@@ -98,11 +99,11 @@
 					</li>
 					<li>
 						<label for="summary">Summary</label>
-						<textarea id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{Article}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->summary() ); ) ?></textarea>
+						<textarea class="mce" id="summary" name="summary" rows="<? echo ( ssi::count_lines( $variable{Article}->summary() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->summary() ); ) ?></textarea>
 					</li>
 					<li>
 						<label for="body">Body</label>
-						<textarea id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->body() ) ) ?></textarea>
+						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->body() ) ) ?></textarea>
 					</li>
 				</ul>
 			<p class="buttons">
