@@ -71,7 +71,7 @@ foreach my $session ( @$session_ids ) {
 @$session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
-if ( 1 ) {
+if ( openprint::Project->find_one() ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project->find(
 			'predefined'	=>	0,
@@ -150,9 +150,8 @@ if ( 1 ) {
 			last if $dbh->errstr();
 		} # end foreach
 	} # end if Projects
-} # end if 1
-if ( 1 ) {
-	# THis sucks RAM like a MOFO
+	if ( openprint::CIP3_PPF->find_one() ) {
+# THis sucks RAM like a MOFO
 		my @CIPS = openprint::CIP3_PPF->find('data is null'=>0,'limit'=>100,'order'=>'id DESC');
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
@@ -161,16 +160,18 @@ if ( 1 ) {
 			$_ = $CIP->save({'data'=>undef,'data_length'=>0});
 			$log->error($_) if $_;
 		} # end foreach CIP
-}
+	}
+} # end if has projects
 
-if ( 1 ) {
+if ( openprint::Order->find_one() ) {
 # Clean out unfinished Orders
 	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
 	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
-
+} # end if
+if ( openprint::Quote->find_one() ) {
 	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
 	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
