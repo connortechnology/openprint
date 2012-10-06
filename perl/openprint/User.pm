@@ -1,17 +1,8 @@
 use strict;
 package openprint::User;
 our @ISA = qw( openprint::Object );
-use Text::Unaccent ();
-use MIME::QuotedPrint ();
-use Carp qw( cluck );
 
 require openprint::Company;
-require openprint::logs;
-require openprint::UserGroup;
-require openprint::User_Notification;
-require openprint::Asset;
-require openprint::User_Profile;
-require openprint::Blocklist;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
@@ -107,6 +98,7 @@ $debug = 1;
 # We do this for efficiency's sake.	
 sub save {
 	my ( $self, $params ) = @_;
+	require MIME::QuotedPrint;
 
 	if ( exists $$params{password} and $$params{password} eq '' ) {
 		delete $$params{password};
@@ -312,6 +304,7 @@ sub csr_ids {
 } # end sub
 
 sub Groups {
+	require openprint::UserGroup;
 	if ( $_[0]{'id'} ) {
 		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
 	} # end if
@@ -321,6 +314,7 @@ sub Groups {
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
 	
+	require openprint::User_Notification;
 	if ( $notifications_hash ) {
 		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
 		my $ac = sql::start_transaction( $dbh );
@@ -374,6 +368,7 @@ sub po_limit {
 
 sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
+		require openprint::Asset;
 		if ( $_[0]{'asset_id'} ) {
 			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
 		} else {
@@ -404,6 +399,7 @@ sub Asset {
 
 sub Profile {
 	if ( ! exists $_[0]{'Profile'} ) {
+		require openprint::User_Profile;
 		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
 	} # end if
 	return $_[0]{'Profile'};
@@ -533,10 +529,9 @@ sub can_view {
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
-	my $Block = openprint::Blocklist->find_one('blockee in'=>[$openprint::session{user_id},$_[0]{id}]);
-	return 0 if $Block;
-	my $Block = openprint::Blocklist->find_one('blocker in'=>[$openprint::session{user_id},$_[0]{id}]);
-	return 0 if $Block;
+	require openprint::Blocklist;
+	return 0 if openprint::Blocklist->find_one('blockee in'=>[$openprint::session{user_id},$_[0]{id}]);
+	return 0 if openprint::Blocklist->find_one('blocker in'=>[$openprint::session{user_id},$_[0]{id}]);
 	return 1;
 } # end sub can_view
 

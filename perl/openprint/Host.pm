@@ -1,9 +1,5 @@
 use strict;
 require openprint::Object;
-require openprint::Object_Asset;
-use Net::ARP ();
-use Net::Ping ();
-use IO::Interface::Simple ();
 
 package openprint::Host_Notification;
 our @ISA = qw( openprint::Object );
@@ -100,6 +96,7 @@ sub get_mac {
 
 	my $use_iface;
 
+	require IO::Interface::Simple;
 	foreach my $iface ( IO::Interface::Simple->interfaces ) {
 $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . $subnet );
 		if ( $iface->address =~ /^$subnet\.\d+$/ ) {
@@ -108,6 +105,7 @@ $openprint::log->debug("Looking at $iface. " . $iface->address . ', subnet: ' . 
 	}
 
 	if ( $use_iface ) {
+		require Net::ARP;
 		my $mac = Net::ARP::arp_lookup( $use_iface, $$self{'ip'} );
 		$openprint::log->debug("Mac: $mac");
 		return $mac;
@@ -127,6 +125,7 @@ sub destroy {
 } # end sub destroy
 
 sub ping {
+	require Net::Ping;
 	my $p = Net::Ping->new();
 	my $rc = $p->ping($_[0]{'ip'});
 	$p->close();
@@ -154,6 +153,7 @@ sub type {
 } # end sub type
 
 sub Assets {
+	require openprint::Object_Asset;
     if ( $_[1] ) {
         $_[1]{'object_id'} = $_[0]{'id'};
         $_[1]{'object_type'} = 'openprint::Host';

@@ -2,9 +2,8 @@ use strict;
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use Carp qw( cluck );
-require Lingua::EN::Inflect;
 
-use openprint ();
+require openprint;
 require sets;
 require openprint::Opinion;
 require openprint::Opinion_Type;
@@ -995,6 +994,7 @@ sub opinions {
 		$html = 'No one has an opinion on this yet.';
 		$html .= '  Be the first!' if $session{'user_id'};
 	} else {
+		require Lingua::EN::Inflect;
 		foreach my $opinion_type_id ( keys %Opinions ) {
 			my $Opinion_Type = new openprint::Opinion_Type( $opinion_type_id );
 			if ( @{$Opinions{$opinion_type_id}} == 1 ) {
