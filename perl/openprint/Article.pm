@@ -1,5 +1,4 @@
 use strict;
-require openprint::Comment;
 require openprint::Article_Asset;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
@@ -124,21 +123,6 @@ sub category {
 sub Category {
 	return new openprint::Article_Category( $_[0]{'category_id'} );
 } # end sub Category
-
-sub Comments {
-	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = 'openprint::Article';
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
-
-		return openprint::Comment->find($_[1]);
-	} # end if
-
-	if ( ! defined $_[0]{'Comments'} ) {
-		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>'openprint::Article', 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
-	} # end if
-	return @{$_[0]{'Comments'}};
-} # end sub Comments
 
 sub summary {
 	if ( @_ > 1 ) {
