@@ -706,23 +706,30 @@ sub credit_application {
 
 sub view {
 	$variable{'Me'} = new openprint::User( $session{'user_id'} );
-	$variable{'User'} = new openprint::User( $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
-	my $View = openprint::View->find_one('object_type'=>'openprint::User', 'object_id'=>$variable{'User'}->id(), 'user_id'=>$session{'user_id'} );
-	if ( ! $View ) {
-		$View = new openprint::View();
-		$View->save({'object_type'=>'openprint::User', 'object_id'=>$variable{'User'}->id(), 'user_id'=>$session{'user_id'}});
-	} # end if
-	if ( exists $param{'relationship_type_id'} ) {
-		if ( $variable{'User'}->id() == $variable{'Me'}->id() ) {
-			$variable{'error'} .= "We already know you love yourself.  Frequently.";
-			return;
-		} # endif
-		my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id() );
-		if ( ! $Relationship ) {
-			$Relationship = new openprint::User_Relationship();
-			$Relationship->set({'user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id()});
+	$variable{User} = new openprint::User( $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
+	if ( ! $variable{User}->can_view() ) {
+		$variable{User} = new openprint::User();
+		$variable{error} .= 'You cannot view this user.';
+	} else {
+		if ( $variable{User}->id() and $session{user_id} ) {
+			my $View = openprint::View->find_one(object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id} );
+			if ( ! $View ) {
+				$View = new openprint::View();
+				$View->save({object_type=>'openprint::User', object_id=>$variable{User}->id(), user_id=>$session{user_id}});
+			} # end if
 		} # end if
-		$variable{'error'} .= $Relationship->save({'type_id'=>$param{'relationship_type_id'}});
+		if ( exists $param{'relationship_type_id'} ) {
+			if ( $variable{'User'}->id() == $variable{'Me'}->id() ) {
+				$variable{'error'} .= "We already know you love yourself.  Frequently.";
+				return;
+			} # endif
+			my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id() );
+			if ( ! $Relationship ) {
+				$Relationship = new openprint::User_Relationship();
+				$Relationship->set({'user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id()});
+			} # end if
+			$variable{'error'} .= $Relationship->save({'type_id'=>$param{'relationship_type_id'}});
+		} # end if
 	} # end if
 } # end sub view
 
@@ -751,6 +758,23 @@ sub search {
 		} else {
 			$variable{'error'} .= 'You do not have rights to delete this profile.';
 		} # end if
+	} elsif ( $param{action} eq 'Block' ) {
+		my $User = new openprint::User( $param{user_id} );
+		if ( ! $$User{id} ) {
+			$variable{error} .= 'Invalid user specified.  Nobody blocked.';
+			return;
+		} # end if
+		if ( openprint::Blocklist->find_one('blockee'=>[$session{user_id},$$User{id}]) ) {
+			$variable{error} .= 'User already blocked.';
+			return;
+		} # end if
+		if ( openprint::Blocklist->find_one('blocker'=>[$session{user_id},$$User{id}]) ) {
+			$variable{error} .= 'User already blocked you.';
+			return;
+		} # end if
+		my $Block = new openprint::Blocklist();
+		$variable{error} .= $Block->save({blockee=>$$User{id},blocker=>$session{user_id}});
+		$variable{information} .= 'User blocked.' if ! $variable{error};
 	} # end if
 	_search();
 	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );

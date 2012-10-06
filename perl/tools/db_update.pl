@@ -2856,6 +2856,10 @@ if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Bitcoin_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'blocklist', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Blocklist.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;
