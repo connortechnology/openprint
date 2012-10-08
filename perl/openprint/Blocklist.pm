@@ -13,13 +13,19 @@ $table = 'blocklist';
 %fields = (
 	blockee	=>	'blockee',
 	blocker	=>	'blocker',
+	reason	=>	'reason',
+	unblock	=>	'unblock',
 	created_on	=>	'created_on',	
 );
 %find_fields = (
 	user_id	=>	[ 'blockee', 'blocoker' ],
 );
+%transforms = (
+    reason => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 %defaults = (
 	created_on	=>	q`'NOW()'`,
+	unblock		=>	0,
 );
 
 sub Blockee {

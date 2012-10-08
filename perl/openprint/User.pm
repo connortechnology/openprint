@@ -62,6 +62,7 @@ $debug = 1;
 );
 
 %transforms = (
+	id					=>	[ 's/\D//g' ],
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'wage'				=>	[ 's/[^\d\.]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],

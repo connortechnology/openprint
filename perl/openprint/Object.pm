@@ -186,6 +186,8 @@ $log->debug("No serial") if $debug;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $local_dbh->errstr;
+			} elsif ( $debug ) {
+				$log->debug("SQL succesful DELETE FROM $table WHERE $where");
 			} # end if
 			$insert = 1;
 		} else {
