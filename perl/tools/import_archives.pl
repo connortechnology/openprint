@@ -42,18 +42,19 @@ sub get_files {
 			get_files( $archive, $path.'/'.$file );
 		} elsif ( my ($docket) = $file =~ /^(\d+).+\.bkf$/ ) {
 			next if ! $docket;
-			my $Project = openprint::Project->find_one( 'docket' => $docket );
+			my $Project = openprint::Project->find_one( docket=>$docket );
 			if ( $Project ) {
-				next if openprint::File->find_one('project_id'=>$Project->id(),filename    =>  $path.'/'.$file,archive=>$archive );
+				next if openprint::File->find_one( project_id=>$Project->id(), filename=>$path.'/'.$file, archive=>$archive );
 
 				my $File = new openprint::File();
-				$File->save({
+				$_ = $File->save({
 					project_id	=>	$Project->id(),
 					filename	=>	$path.'/'.$file,
 					archive		=>	$archive,
 				});
-			} else {
-				$log->error("No project found for docket $docket!");
+				$log->error($_) if $_;
+			#} else {
+				#$log->error("No project found for docket $docket!");
 			} # end if Project
 		} # end if
 	} # end foreach file

@@ -382,8 +382,12 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
 		} # end if
-		if ( ( ! $param{po_id} ) and ( ! $variable{error} ) ) {
-			$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();
+		if ( ! $variable{error} ) {
+			if ( ! $param{po_id} ) {
+				$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();
+			} else {
+				$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
