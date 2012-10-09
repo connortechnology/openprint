@@ -38,13 +38,14 @@ sub Blocker {
 sub is_blocked {
 	my ( $user_id1, $user_id2 ) = @_;
 	if ( ! exists $block_cache{$user_id1} ) {
-		@{$block_cache{$user_id1}} = map { $$_{blockee} } openprint::Blocklist->find(blocker=>$user_id1);
+		@{$block_cache{$user_id1}} = map { $_->blockee() } openprint::Blocklist->find(blocker=>$user_id1);
 	} # end if
 	return 1 if sets::isin( $user_id2, $block_cache{$user_id1} );
 	if ( ! exists $block_cache{$user_id2} ) {
-		@{$block_cache{$user_id2}} = map { $$_{blockee} } openprint::Blocklist->find(blocker=>$user_id2);
+		@{$block_cache{$user_id2}} = map { $_->blockee() } openprint::Blocklist->find(blocker=>$user_id2);
 	} # end if
 	return 1 if sets::isin( $user_id1, $block_cache{$user_id2} );
+$openprint::log->debug("Not blocked " . new openprint::User($user_id1)->name(). ' ' . new openprint::User( $user_id2)->name());
 	return 0;
 } # end sub is_blocked
 1;
