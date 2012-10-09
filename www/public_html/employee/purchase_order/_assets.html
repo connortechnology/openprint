@@ -35,7 +35,7 @@ return $html;
 		<tr class="unprintable">
 			<td class="Name"><input type="text" id="name" name="name"/></td>
 			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
-			<td><? echo ( ssi::button( 'Upload', { onclick=>"f1.action='view.html';f1.btnFunction.value='Attach';f1.submit();" } ); ) ?></td>
+			<td><? echo ( ssi::button( 'Upload', { onclick=>q`f1.btnFunction.value='Attach';f1.submit();` } ); ) ?></td>
 		</tr>
 	</tbody>
 </table>

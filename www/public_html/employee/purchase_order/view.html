@@ -22,6 +22,11 @@
 		} else {
 			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
 		} # end if
+		if ( $$variable{'PurchaseOrder'}->cancelled() eq '1' ) {
+			$html .= ssi::button( 'UnCancel', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Uncancelling...';f1.btnFunction.value='UnCancel';f1.submit();" } );
+		} elsif ( $$variable{'PurchaseOrder'}->cancelled() eq '0' ) {
+			$html .= ssi::button( 'Cancel', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Cancelling...';f1.btnFunction.value='Cancel';f1.submit();" } );
+		} # end if
 	} # end if can edit
 	$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
 	return $html;
