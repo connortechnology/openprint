@@ -2859,6 +2859,14 @@ if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
 if ( ! sets::isin( 'blocklist', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Blocklist.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='blocklist'", 'column_name');
+	if ( ! exists $$data{reason} ) {
+		$dbh->do('ALTER TABLE blocklist ADD reason TEXT');
+	}
+	if ( ! exists $$data{unblock} ) {
+		$dbh->do('ALTER TABLE blocklist ADD unblock BOOLEAN NOT NULL DEFAULT false');
+	}
 } # end if
 $dbh->disconnect();
 print "Finished\n";

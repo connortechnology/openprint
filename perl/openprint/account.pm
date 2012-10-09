@@ -20,6 +20,7 @@ require openprint::Video_Album;
 require openprint::Event;
 require openprint::User_Relationship;
 require openprint::Wall;
+require openprint::Blocklist;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -739,7 +740,7 @@ sub couple_search {
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
-} # end sub search
+} # end sub couple_search
 
 sub _couple_search {
 	ssi::save_params( '/account/couple_search.html', ( 
@@ -749,7 +750,7 @@ sub _couple_search {
 				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
 				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
 				) );
-} # end sub _search
+} # end sub _couple_search
 sub search {
 	if ( $param{'action'} eq 'Delete' ) {
 		my $User = new openprint::User( $param{'user_id'} );
@@ -764,11 +765,11 @@ sub search {
 			$variable{error} .= 'Invalid user specified.  Nobody blocked.';
 			return;
 		} # end if
-		if ( openprint::Blocklist->find_one('blockee'=>[$session{user_id},$$User{id}]) ) {
+		if ( openprint::Blocklist->find_one(blockee=>$session{user_id},blocker=>$$User{id}) ) {
 			$variable{error} .= 'User already blocked.';
 			return;
 		} # end if
-		if ( openprint::Blocklist->find_one('blocker'=>[$session{user_id},$$User{id}]) ) {
+		if ( openprint::Blocklist->find_one(blocker=>$session{user_id},blockee=>$$User{id}) ) {
 			$variable{error} .= 'User already blocked you.';
 			return;
 		} # end if
@@ -893,6 +894,44 @@ sub couple_view {
 	my $Company = $variable{'Company'} = new openprint::Company( $param{'company_id'} );
 	$variable{'Me'} = new openprint::User( $session{'user_id'} );
 } # end sub couple_view
+
+sub _block_popup {
+	$param{user_id} = openprint::User->transform( 'id', $param{user_id} ) if $param{user_id};
+	$variable{User} = new openprint::User( $param{user_id} );
+} # end sub _block_popup
+
+sub blocklist {
+} # end sub blocklist 
+
+sub _blocklist_unblocked {
+} # end sub _blocklist_unblocked
+sub _blocklist_blocked {
+} # end sub _blocklist_blocked
+
+sub _blocklist_actions {
+	if ( $param{action} eq 'unblock' ) {
+		if ( $param{blockee} ) {
+			my $Block = openprint::Blocklist->find_one( blockee=>$param{blockee}, blocker=>$session{user_id} );
+			if ( $Block ) {
+				if ( $$Block{unblock} ) {
+					$variable{error} .= 'You have already requested to remove this bloock.  The other person must accept before the block will be removed.';
+				} else {
+					$variable{error} .= $Block->save({'unblock'=>1});
+				} # end if
+			} else {
+				$variable{error} .= 'Block not found.';
+			} # end if
+		} elsif ( $param{blocker} ) {
+			my $Block = openprint::Blocklist->find_one( blocker=>$param{blocker}, blockee=>$session{user_id}, unblock=>1 );
+			$variable{error} .= $Block->destroy();
+		} else {
+			$log->error("Attempt to unblock with no blockee or blocker");
+		} # end if
+	} elsif ( $param{action} eq 'reinstate' ) {
+		my $Block = openprint::Blocklist->find_one( blockee=>$param{blockee}, blocker=>$session{user_id} );
+		$variable{error} .= $Block->save({unblock=>0});
+	} # end if
+} # end sub _blocklist_actions
 
 1;
 __END__

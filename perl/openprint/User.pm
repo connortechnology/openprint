@@ -62,6 +62,7 @@ $debug = 1;
 );
 
 %transforms = (
+	id					=>	[ 's/\D//g' ],
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'wage'				=>	[ 's/[^\d\.]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
@@ -530,8 +531,7 @@ sub can_view {
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	require openprint::Blocklist;
-	return 0 if openprint::Blocklist->find_one('blockee in'=>[$openprint::session{user_id},$_[0]{id}]);
-	return 0 if openprint::Blocklist->find_one('blocker in'=>[$openprint::session{user_id},$_[0]{id}]);
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
 	return 1;
 } # end sub can_view
 

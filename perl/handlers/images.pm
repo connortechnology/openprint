@@ -27,10 +27,10 @@ sub cleanup {
     if ( $r->connection->aborted( ) ) {
 $log->debug("Was aborted");
     } else {
-$log->debug("cleanup");
+#$log->debug("cleanup");
     } # end if
     if ( $dbh ) {
-        $session{'lastupdated'} = time;
+        $session{lastupdated} = time;
         untie %session;
         $dbh->disconnect();
     } # end if
