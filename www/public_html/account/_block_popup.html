@@ -11,7 +11,7 @@
 		<p class="buttons">
 			<? echo ( join("\n",
 				ssi::button( 'Block', { href=>"/account/search.html?action=Block&amp;user_id=$$variable{User}{id}", text=>'Block' } ),
-				ssi::button( 'CancelBlock', { onclick='popupWin.close();', text=>'Cancel' } ),
+				ssi::button( 'CancelBlock', { onclick=>'popupWin.close();', text=>'Cancel' } ),
 			); ) ?>
 		</p>
 	</fieldset>

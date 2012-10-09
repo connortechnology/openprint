@@ -740,7 +740,7 @@ sub couple_search {
 	ssi::setup_date_select( '/account/couple_search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_start', '' );
 	ssi::setup_date_select( '/account/couple_search.html', 'last_online_end', '' );
-} # end sub search
+} # end sub couple_search
 
 sub _couple_search {
 	ssi::save_params( '/account/couple_search.html', ( 
@@ -750,7 +750,7 @@ sub _couple_search {
 				'last_online_end_year','last_online_end_month','last_online_end_day', 'distance',
 				map { 'field-'.$_->id() } openprint::Company_Profile_Field->find('order'=>'sort,name') 
 				) );
-} # end sub _search
+} # end sub _couple_search
 sub search {
 	if ( $param{'action'} eq 'Delete' ) {
 		my $User = new openprint::User( $param{'user_id'} );
@@ -765,11 +765,11 @@ sub search {
 			$variable{error} .= 'Invalid user specified.  Nobody blocked.';
 			return;
 		} # end if
-		if ( openprint::Blocklist->find_one('blockee'=>[$session{user_id},$$User{id}]) ) {
+		if ( openprint::Blocklist->find_one(blockee=>$session{user_id},blocker=>$$User{id}) ) {
 			$variable{error} .= 'User already blocked.';
 			return;
 		} # end if
-		if ( openprint::Blocklist->find_one('blocker'=>[$session{user_id},$$User{id}]) ) {
+		if ( openprint::Blocklist->find_one(blocker=>$session{user_id},blockee=>$$User{id}) ) {
 			$variable{error} .= 'User already blocked you.';
 			return;
 		} # end if

@@ -10,6 +10,7 @@
 			$html .= sprintf(q`<li id="_%1$d" class="Company"><span class="information">Everyone in %s</span></li>`, $Company->id(), $Company->name() );
 		} # end if
 		foreach my $User ( @Users ) {
+			next if ! $User->can_view();
 			my $Asset = $User->Asset();
 			my $thumbnail_url = $Asset->thumbnail_url();
 
@@ -25,6 +26,7 @@
 
 	my @Users = openprint::User->find('name ilike'=>$param{'user_name'}.'%','limit'=>10, 'id not in'=>[ $session{'user_id'}, @user_ids ] );
 	foreach my $User (@Users) {
+		next if ! $User->can_view();
 		my $Asset = $User->Asset();
 		my $thumbnail_url = $Asset->thumbnail_url();
 
