@@ -60,7 +60,7 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	( $company_id ? ('company_id'=>$company_id) : () ),
 	),
 	'limit'=>$projects_count ) ) {
-$log->warn("Updating rpoject $$Project{id}");
+#$log->warn("Updating rpoject $$Project{id}");
 	my $services = $Project->services();
 
 	if ( ! $$services{''} ) {
