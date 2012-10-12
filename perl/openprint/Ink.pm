@@ -12,27 +12,29 @@ $table = 'inks';
 $serial = 'inks_id_seq';
 
 %fields = (
-	'id'		=>	'id',
-	'pmsid'		=>	'pmsid',
-	'name'		=>	'strcolourname',
-	'service_id'=>	'service_id',
-	'material_id'	=>	'material_id',
-	'washups'	=>	'washups',
+	id			=>	'id',
+	pmsid		=>	'pmsid',
+	name		=>	'strcolourname',
+	service_id	=>	'service_id',
+	material_id	=>	'material_id',
+	washups		=>	'washups',
 );
 
 %defaults = (
-	'washups'	=>	undef,
+	washups	=>	undef,
+	service_id	=>	undef,
+	material_id	=>	undef,
 );
 
 %transforms = (
-	'washups'	=> [ 's/\D//g' ],
+	washups	=> [ 's/\D//g' ],
 );
 
 sub Material {
-	return new openprint::Material( $_[0]{'material_id'} );
+	return new openprint::Material( $_[0]{material_id} );
 } # end sub Material
 sub Service {
-	return new openprint::Service( $_[0]{'service_id'} );
+	return new openprint::Service( $_[0]{service_id} );
 } # end sub Service
 1;
 __END__

@@ -13,15 +13,15 @@
 			@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
 		 ) ?>
 		<table class="List">
-			<tr><th align="left" width="75">PMS #</th><th width="100" align="left">Name</th><th align="left">Material</th><th align="left">Service</th><th width="75" align="left">Washups</th><th width="20"><input type="checkbox" onclick="select_all($('f1'), 'colours', this.checked );"/></th></tr>
+			<tr><th class="pms">PMS #</th><th class="name">Name</th><th class="material">Material</th><th class="service">Service</th><th class="washups">Washups</th><th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'colours', this.checked );"/></th></tr>
 			<? echo ( 
 				my $html;
 				my $rowclass;
 				foreach my $Ink ( openprint::Ink->find('order'=>'pmsid') ) {
 					$html .= sprintf(q`<tr%6$s>
-						<td><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
-						<td><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
-						<td><a href="/administrator/materials/edit.html?ddmMaterial=%4$d">%5$s</a><br/>
+						<td class="pms"><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
+						<td class="name"><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
+						<td class="material"><a href="/administrator/materials/edit.html?ddmMaterial=%4$d">%5$s</a><br/>
 					`, $Ink->id(), $Ink->pmsid(), $Ink->name(), $Ink->material_id(), $Ink->Material()->name(), $rowclass );
 					if ( $Ink->material_id() ) {
 						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
@@ -32,7 +32,7 @@
 							} # end foreach Price
 						} # end foreach Pricelist
 					} # end if
-					$html .= sprintf(q`</td><td><a href="/administrator/services/edit.html?ddmService=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
+					$html .= sprintf(q`</td><td class="service"><a href="/administrator/services/edit.html?ddmService=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
 					if ( $Ink->service_id() ) {
 						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
 							$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
@@ -42,23 +42,26 @@
 							} # end foreach Price
 						} # end foreach Pricelist
 					} # end if
-					$html .= sprintf(q`</td><td>%2$s</td><td><input type="checkbox" name="colours" value="%1$d"/></td></tr>`, $Ink->id(), $Ink->washups() );
+					$html .= sprintf(q`</td><td class="washups">%2$s</td><td class="checkbox"><input type="checkbox" name="colours" value="%1$d"/></td></tr>`, $Ink->id(), $Ink->washups() );
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach Ink
 				return $html;
 			) ?>
+<!--
 			<tr class="totals">
-				<td><input type="text" name="pmsid-New" value=""/></td>
-				<td><select name="material_id-New"><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
-				<td><select name="service_id-New"><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
-				<td><input type="text" name="washups-New" value=""/></td>
-				<td>&nbsp;</td>
+				<td class="pms"><input type="text" name="pmsid-New" value="" placeholder="pms" /></td>
+				<td class="name"><input type="text" name="name-New" value="" placeholder="name" /></td>
+				<td class="material"><select name="material_id-New"><option value="">No Material</option><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
+				<td class="service"><select name="service_id-New"><option value="">No Service</option><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
+				<td class="washups"><? echo ( ssi::input(type=>'cardinal', name=>'washups-New', placeholder=>'washes' ); ) ?></td>
+				<td class="checkbox">&nbsp;</td>
 			</tr>
+-->
 		</table>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+				ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
+				ssi::button( 'New', { href=>'ink.html' } ),
 				); ) ?>
 		</p>
 	</fieldset>

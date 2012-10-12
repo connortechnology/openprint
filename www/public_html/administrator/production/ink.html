@@ -4,21 +4,21 @@
 			<label>Ink:</label>
 			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select an Ink</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{'Ink'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{Ink}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','<<');
-				$html .= ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>');
-				$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New');
-				$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
-				if ( $$variable{'Ink'}->id() ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy');
-					$html .= ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+				$html .= ssi::button( 'Prev1', { onclick=>"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);", text=>'<<' } );
+				$html .= ssi::button( 'Next1', { onclick=>"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);", text=>'>>' } );
+				$html .= ssi::button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } );
+				$html .= ssi::button( 'Save1', { onclick=>"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", text=>'Save' } );
+				if ( $$variable{Ink}->id() ) {
+					$html .= ssi::button( 'Copy1', { onclick=>"f1.btnFunction.value='Copy';fmCheck(f1);", text=>'Copy' } );
+					$html .= ssi::button( 'Delete1', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", text=>'Delete' } );
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+				$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 				return $html;
 			) ?>
 		</p>
@@ -26,34 +26,34 @@
 	<fieldset><legend>Ink Information</legend>
 		<p> 
 			<label>PMS ID:</label>
-			<input type="text" name="pmsid" value="<? echo ( $$variable{'Ink'}->pimsid(); ) ?>" />
+			<input type="text" name="pmsid" value="<? echo ( $$variable{Ink}->pmsid(); ) ?>" />
 		</p>
 		<p> 
 			<label>Name:</label>
-			<input type="text" name="name" value="<? echo ( $$variable{'Ink'}->name(); ) ?>" />
+			<input type="text" name="name" value="<? echo ( $$variable{Ink}->name(); ) ?>" />
 		</p>
 		<p> 
 			<label>Material:</label>
 			<select name="material_id">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)') ], $$variable{'Ink'}->material_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)') ], $$variable{Ink}->material_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Service:</label>
 			<select name="service_id">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{'Ink'}->service_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{Ink}->service_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Washups:</label>
-			<input type="text" name="washups" value="<? echo ( $$variable{'Ink'}->washups(); ) ?>" />
+			<? echo ( ssi::input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
 		</p>
 	</fieldset>
 	<br class="spacer"/>
-	<? if ( $$variable{'Ink'}->id() ) ?>
+	<? if ( $$variable{Ink}->id() ) ?>
 		<!--#include virtual="_ink_prices.html"-->
-	<? endif ( $$variable{'Ink'}->id() ) ?>
+	<? endif ( $$variable{Ink}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

@@ -53,6 +53,16 @@ sub colour_import_export {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+        my $ac = sql::start_transaction( $dbh );
+        foreach my $id ( ref $param{colours} eq 'ARRAY' ? @{$param{colours}} : $param{colours} ) {
+            my $Ink = new openprint::Ink( $id );
+            if ( ! $Ink->id() ) {
+                $variable{error} .= "Error deleting ink $id : not found.<br/>";
+                next;
+            } # end if
+            $Ink->delete();
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
 
 	} elsif ( $param{'btnFunction'} eq 'Import Colours' ) {
 		if ( $param{'fileColour'} ) {
@@ -246,7 +256,19 @@ $log->error( $variable{'error'} );
 } # end sub inks
 
 sub ink {
-	$variable{'Ink'} = new openprint::Ink( $param{'ink_id'} );
+	my $Ink = $variable{Ink} = new openprint::Ink( $param{ink_id} );
+	if ( $param{btnFunction} eq 'Save' ) {
+		$variable{error} .= $Ink->save({
+			name	=>	$param{name},
+			pmsid	=>	$param{pmsid},
+			washups	=>	$param{washups},
+			service_id	=>	$param{service_id},
+			material_id	=>	$param{material_id},
+		});
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/production/colours_import_export.html';
+		} # end if
+	} # end if
 } # end sub ink
 
 sub _material_id_ddm {
