@@ -43,7 +43,7 @@ sub amount {
 		if ( $self->charge() ) {
 			$$self{'amount'} = $self->Expense()->amount() * ($$self{'rate'}/100);
 		} # end if
-		$$self{'amount'} = Math::Round::neartest(0.01, $$self{amount} );
+		$$self{'amount'} = Math::Round::nearest(0.01, $$self{amount} );
 	} # end if
 	return $$self{'amount'};
 } # end sub amount
