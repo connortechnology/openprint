@@ -5,7 +5,7 @@
 		$(type+'_id-'+ink_id).onclick="";
 	} // end function load_ddm
 </script>
-<form id="f1" name="f1" method="post" action="colour_import_export.html" enctype="multipart/form-data">
+<form id="f1" name="f1" method="post" action="inks.html" enctype="multipart/form-data">
 	<fieldset><legend>Colour Definitions:</legend>
 		<? eval ( 
 			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material::find('order'=>'lower(name)');
@@ -88,8 +88,8 @@
 		</p>
 		<p class="buttons">
 			<script type="text/javascript">
-				writeButton('Import','import.gif',"f1.action='colour_import_export.html';f1.btnFunction.value='Import Colours';f1.submit();", '', 'Import' );
-				writeButton('Export','export.gif',"f1.action='colour_import_export.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", '', 'Export' );
+				writeButton('Import','import.gif',"f1.action='inks.html';f1.btnFunction.value='Import Colours';f1.submit();", '', 'Import' );
+				writeButton('Export','export.gif',"f1.action='inks.html?Download';f1.btnFunction.value='Export Colours';f1.submit();", '', 'Export' );
 			</script>
 		</p>
 	</fieldset>

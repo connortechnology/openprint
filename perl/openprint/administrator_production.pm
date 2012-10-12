@@ -27,7 +27,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *config = \%openprint::config;
 
 # Colour Definitions Import/Export
-sub colour_import_export {
+sub inks {
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -266,7 +266,7 @@ sub ink {
 			material_id	=>	$param{material_id},
 		});
 		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/administrator/production/colours_import_export.html';
+			$variable{ExternalRedirect} = '/administrator/production/inks.html';
 		} # end if
 	} # end if
 } # end sub ink
