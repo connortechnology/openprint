@@ -7,7 +7,7 @@ use vars qw( $log $dbh %variable %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*config = \%config;
+*config = \%openprint::config;
 
 require sql;
 require openprint::Equipment;
@@ -24,12 +24,43 @@ sub update_late_jobs {
 sub set_duedate {
 	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
 	my $Job = new openprint::ScheduledJob( $schedule_id );
+	if ( ! $$Job{id} ) {
+		$log->error("Job $schedule_id not found in set_duedate");
+		return;
+	} # end if	
 	if ( $$Job{'project_id'} ) {
 		my $Project = $Job->Project();
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
-	} # end if
+		if ( ! $$Project{id} ) {
+			$log->error("Project $$Project{id} not found in set_duedate");
+			return;
+		} # end if
+
+		if ( $Project->due_date() ne $date ) {
+			$Project->due_date( $date );
+			$Project->save();
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
+
+			my $Me = new openprint::User($openprint::session{user_id});
+			my $CSR = $Project->Company()->CSR();
+			if ( $CSR->id() ) {
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template,
+						{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a>.`}
+						);
+				my $Mail = new openprint::Email();
+
+				$_ = $Mail->send(
+						FROM		=>	$Me,
+#TO      => $CSR,
+						TO			=>  'iconnor@penultima.org',
+						SUBJECT		=>	'Due Date for Docket '. $Project->docket() . ' has been changed.',
+						ATTACHMENTS =>  [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
+						);
+			} # end if email to CSR
+
+
+		} # end if date has changed
+	} # end if project_id
 } # end sub set_duedate
 
 sub insert {

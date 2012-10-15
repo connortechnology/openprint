@@ -738,7 +738,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @button_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max', 'placeholder' );
 
 sub input {
 	my %options = @_;
@@ -770,7 +770,7 @@ sub input {
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
 
-	foreach (@button_options) {
+	foreach (@input_options) {
 		$html .= qq` $_="$options{$_}"` if $options{$_};
 	} # end foreach
 	#if ( my @unsupported = sets::exclude( [ @button_options, 'required','readonly','value' ], [ keys %options ] ) ) {
