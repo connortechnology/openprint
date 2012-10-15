@@ -1,7 +1,8 @@
-<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="ink.html">
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" method="post" action="ink.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p> 
-			<label>Ink:</label>
+			<label>Ink</label>
 			<select name="ink_id" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select an Ink</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->pmsid() . ' : ' . $_->name() } openprint::Ink->find('order'=>'pmsid') ], $$variable{Ink}->id() ); ) ?>
@@ -24,36 +25,42 @@
 		</p>
 	</fieldset>
 	<fieldset><legend>Ink Information</legend>
-		<p> 
-			<label>PMS ID:</label>
-			<input type="text" name="pmsid" value="<? echo ( $$variable{Ink}->pmsid(); ) ?>" />
-		</p>
-		<p> 
-			<label>Name:</label>
-			<input type="text" name="name" value="<? echo ( $$variable{Ink}->name(); ) ?>" />
-		</p>
-		<p> 
-			<label>Material:</label>
-			<select name="material_id">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)') ], $$variable{Ink}->material_id() ); ) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Service:</label>
-			<select name="service_id">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)') ], $$variable{Ink}->service_id() ); ) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Washups:</label>
-			<? echo ( ssi::input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
-		</p>
+		<ul>
+			<li> 
+				<label>PMS ID</label>
+				<input type="text" name="pmsid" value="<? echo ( $$variable{Ink}->pmsid(); ) ?>" />
+			</li>
+			<li>
+				<label>Name</label>
+				<input type="text" name="name" value="<? echo ( $$variable{Ink}->name(); ) ?>" />
+			</li>
+			<li>
+				<label>Material</label>
+				<select name="material_id">
+					<option value="">none</option>
+					<? echo ( ssi::make_drop_down( openprint::Material->dropdown('order'=>'lower(name)'), $$variable{Ink}->material_id() ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Service</label>
+				<select name="service_id">
+					<option value="">none</option>
+					<? echo ( ssi::make_drop_down( openprint::Service->dropdown('order'=>'lower(name)'), $$variable{Ink}->service_id() ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Washups</label>
+				<? echo ( ssi::input( type=>'cardinal', name=>'washups', value=>$$variable{Ink}->washups() ); ) ?>
+			</li>
+			<li><label>Stock Grades</label>
+				<select id="grades" name="grades" multiple="multiple">
+				<? echo (
+						my @options = ( 1,'Gloss-coated paper',2,'Matte-coated paper',3,'Gloss-coated, web paper', 4, 'Uncoated, white paper', 5, 'Uncoated, yellow paper' );
+						return ssi::make_drop_down( \@options, $$variable{Ink}->grades() );
+						) ?>
+				</select>
+			</li>
+		</ul>
 	</fieldset>
-	<br class="spacer"/>
-	<? if ( $$variable{Ink}->id() ) ?>
-		<!--#include virtual="_ink_prices.html"-->
-	<? endif ( $$variable{Ink}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

@@ -19,3 +19,7 @@
 .colours {
 	width: 20px;
 }
+.grades {
+	width: 125px;
+	text-align: left;
+}

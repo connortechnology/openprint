@@ -18,12 +18,14 @@ $serial = 'inks_id_seq';
 	service_id	=>	'service_id',
 	material_id	=>	'material_id',
 	washups		=>	'washups',
+	grades		=>	'grades',
 );
 
 %defaults = (
-	washups	=>	undef,
+	washups		=>	undef,
 	service_id	=>	undef,
 	material_id	=>	undef,
+	grades		=>	undef,
 );
 
 %transforms = (

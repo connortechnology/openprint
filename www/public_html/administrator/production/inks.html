@@ -4,60 +4,36 @@
 		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
 		$(type+'_id-'+ink_id).onclick="";
 	} // end function load_ddm
+	function load_results() {
+		$('Results').innerHTML = 'Loading... please wait.';
+		new Ajax.Updater('Results','_inks.html', { parameters: $('f2').serialize() } );
+	}
 </script>
+<div class="PageTitle">
+<h1>Inks</h1>
+</div>
+<form id="f2" name="f2" method="post" action="inks.html">
+	<fieldset class="filters"><legend></legend>
+		<div class="content">
+		<ul>
+			<li><label>PMS</label><input type="text" name="pmsid" onkeydown="if(event.keyCode==13){load_results();}" value="<? echo ( $session{'/administrator/production/inks.html?pmsid'} ) ?>" /></li>
+			<li><label>Name</label><input type="text" name="name" onkeydown="if(event.keyCode==13){load_results();}" value="<? echo ( $session{'/administrator/production/inks.html?name'} ) ?>"/></li>
+			<li><label>Grade</label>
+				<select id="grade" name="grade" size="1" onchange="load_results();">
+				<? echo (
+						my @options = ( '', 'select one',1,'Gloss-coated',2,'Matte-coated',3,'Gloss-coated, web', 4, 'Uncoated, white', 5, 'Uncoated, yellow' );
+						return ssi::make_drop_down( \@options, $session{'/administrator/production/inks.html'} );
+						) ?>
+				</select>
+			</li>
+		</ul>
+		</div>
+	</fieldset>
+</form>
 <form id="f1" name="f1" method="post" action="inks.html" enctype="multipart/form-data">
-	<fieldset><legend>Colour Definitions:</legend>
-		<? eval ( 
-			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material::find('order'=>'lower(name)');
-			@{$$variable{'Services'}} = map { $_->id(), $_->name() } openprint::Service::find('order'=>'lower(name)');
-			@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
-		 ) ?>
-		<table class="List">
-			<tr><th class="pms">PMS #</th><th class="name">Name</th><th class="material">Material</th><th class="service">Service</th><th class="washups">Washups</th><th class="checkbox"><input type="checkbox" onclick="select_all($('f1'), 'colours', this.checked );"/></th></tr>
-			<? echo ( 
-				my $html;
-				my $rowclass;
-				foreach my $Ink ( openprint::Ink->find('order'=>'pmsid') ) {
-					$html .= sprintf(q`<tr%6$s>
-						<td class="pms"><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
-						<td class="name"><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
-						<td class="material"><a href="/administrator/materials/edit.html?ddmMaterial=%4$d">%5$s</a><br/>
-					`, $Ink->id(), $Ink->pmsid(), $Ink->name(), $Ink->material_id(), $Ink->Material()->name(), $rowclass );
-					if ( $Ink->material_id() ) {
-						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
-							$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
-							foreach my $Price ( openprint::MaterialPrice->find('pricelist_id'=>$Pricelist->id(), 'material_id'=>$Ink->material_id() ) ) {
-								$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
-								$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
-							} # end foreach Price
-						} # end foreach Pricelist
-					} # end if
-					$html .= sprintf(q`</td><td class="service"><a href="/administrator/services/edit.html?ddmService=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
-					if ( $Ink->service_id() ) {
-						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
-							$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
-							foreach my $Price ( openprint::ServicePrice->find('pricelist_id'=>$Pricelist->id(), 'service_id'=>$Ink->service_id() ) ) {
-								$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
-								$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
-							} # end foreach Price
-						} # end foreach Pricelist
-					} # end if
-					$html .= sprintf(q`</td><td class="washups">%2$s</td><td class="checkbox"><input type="checkbox" name="colours" value="%1$d"/></td></tr>`, $Ink->id(), $Ink->washups() );
-					$rowclass = $rowclass ? '' : ' class="colRow"';
-				} # end foreach Ink
-				return $html;
-			) ?>
-<!--
-			<tr class="totals">
-				<td class="pms"><input type="text" name="pmsid-New" value="" placeholder="pms" /></td>
-				<td class="name"><input type="text" name="name-New" value="" placeholder="name" /></td>
-				<td class="material"><select name="material_id-New"><option value="">No Material</option><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
-				<td class="service"><select name="service_id-New"><option value="">No Service</option><? echo ( ssi::make_drop_down( $$variable{'Services'} ); ) ?></select></td>
-				<td class="washups"><? echo ( ssi::input(type=>'cardinal', name=>'washups-New', placeholder=>'washes' ); ) ?></td>
-				<td class="checkbox">&nbsp;</td>
-			</tr>
--->
-		</table>
+	<fieldset>
+		<div id="Results"><!--#include virtual="_inks.html"-->
+		</div>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Checked' } ),
