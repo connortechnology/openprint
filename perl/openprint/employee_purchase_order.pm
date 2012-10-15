@@ -258,7 +258,7 @@ sub view {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
-		$variable{'error'} .= $Asset->save( \%param );
+		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
@@ -402,7 +402,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		$variable{'error'} .= $PO->save( \%param );
 
 		my $Asset = new openprint::Asset();
-		$variable{'error'} .= $Asset->save( \%param );
+		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
