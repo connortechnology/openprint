@@ -7,7 +7,7 @@ use vars qw( $log $dbh %variable %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*config = \%config;
+*config = \%openprint::config;
 
 require sql;
 require openprint::Equipment;
@@ -43,11 +43,9 @@ sub set_duedate {
 			my $Me = new openprint::User($openprint::session{user_id});
 			my $CSR = $Project->Company()->CSR();
 			if ( $CSR->id() ) {
-				my %data = (
-						);
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template,
-						{ PageContent => $Me->name() . qq` has changed the due for Project <a href="/employee/project/view.html?project_id=$$Project{id}">$$Project{id}</a>.`}
+						{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a>.`}
 						);
 				my $Mail = new openprint::Email();
 
