@@ -51,8 +51,8 @@ sub set_duedate {
 
 				$_ = $Mail->send(
 						FROM		=>	$Me,
-#TO      => $CSR,
-						TO			=>  'iconnor@penultima.org',
+						TO      => $CSR,
+						#TO			=>  'iconnor@penultima.org',
 						SUBJECT		=>	'Due Date for Docket '. $Project->docket() . ' has been changed.',
 						ATTACHMENTS =>  [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
