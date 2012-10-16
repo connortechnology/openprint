@@ -59,7 +59,7 @@ my @no_outputs = (
 
 sub has_overrides {
     my ( $Project, $service_id, $specs ) = @_;
-    my $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
     my @v;
     foreach my $s_s_id ( $Project->signatures() ) {

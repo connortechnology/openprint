@@ -3,11 +3,12 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config %param $dbh %variable );
+use vars qw( %config %param $dbh %variable %session );
 *config = \%openprint::config;
 *param = \%openprint::param;
 *dbh = \%openprint::dbh;
 *variable = \%openprint::variable;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -490,6 +491,7 @@ if ( 0 ) {
 		$Company = new openprint::Company( $index );
 
 		if ( $index > 0 ) {
+			my $ac = sql::start_transaction( $dbh );
 # Otherwise Error!
 # Customer Categories
 # I was trying to do this the hard way.  Then it occurred to me: Just delete them all from the table, and add back in the ones we want.  
@@ -512,12 +514,35 @@ if ( 0 ) {
 
 			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
 
+			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
 				my $Credit = new openprint::Company_Credit( {'company_id'=>$index, 'supplier_id'=>$Supplier->id() } );
 
-				$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
-					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+                if (
+                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+                        ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+                        ) {
+                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
+					$variable{'error'} .= $Credit->save( { 'company_id'=>$index, 'supplier_id'=>$Supplier->id(), 
+							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays', 'limit', 'hold', 'downpayment', 'cod' ) } );
+                    $note .= '<br/>new credit: ' . $Credit->to_string();
+                    $variable{'error'} .= (new openprint::logRecord())->save( {
+                            action_type =>  105,
+                            object_id   =>  $index,
+                            user_id     =>  $session{user_id},
+                            company_id  =>  $session{company_id},
+                            note        =>  $note,
+							});
+                } else {
+                    $variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+                } # end if
 			} # end foreach Supplier
+			sql::end_transaction( $dbh, $ac );
 		} # end if $index
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
 		$index = $Company->next();

@@ -19,15 +19,19 @@ $serial = 'purchaseorder_items_id_seq';
 	'description'	=>	'description',
 	'price'			=>	'price',
 	'product'		=>	'product',
+	created_on		=>	'created_on',
+	updated_on		=>	'updated_on',
 );
 
 %transforms = (
-	'name'	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
-	'product'	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
-	'price'	=>	[ 's/[^\d\.\-]//g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
+	product	=>	[ 's/^\s+//', 's/\s+$//', 's/ \s+/ /g' ],
+	price	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
-	'price'	=>	undef,
+	price	=>	undef,
+	created_on	=>	'NOW()',
+	updated_on	=>	'NOW()',
 );
 
 sub Vendor {

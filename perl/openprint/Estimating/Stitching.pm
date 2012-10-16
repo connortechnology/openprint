@@ -138,19 +138,19 @@ sub signature_calc {
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
 		if ( ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 ) and ( $$I{'Folder'}->id() == $$I{'Press'}->id() ) ) {
 			$imposition = 1;
-			$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd';
+			$results{'alert'} .= 'Setting imposition to 1 cuz Folding imposition is odd<br/>';
 		} elsif ( ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 ) ) {
 			$imposition = 1;
-			$results{'alert'} .= 'Setting imposition to 1 cuz W&T and impo is not divisiable by 4';
+			$results{'alert'} .= 'Setting imposition to 1 due to W&T and impo is not divisiable by 4<br/>';
 		} elsif ( $$I{'image_orientation'} eq 'Vertical' ) {
 			if ( $$I{'rows'} % 2 ) {
 				$imposition = 1;
-				$results{'alert'} .= 'Setting imposition to 1 cuz Vertical and rows odd';
+				$results{'alert'} .= 'Setting imposition to 1 due to Vertical and rows odd<br/>';
 			} # end if
 		} elsif ( $$I{'image_orientation'} eq 'Horizontal' ) {
 			if ( $$I{'columns'} % 2 ) {
 				$imposition = 1;
-				$results{'alert'} .= 'Setting imposition to 1 cuz Horizontal and cols odd';
+				$results{'alert'} .= 'Setting imposition to 1 due to Horizontal and cols odd<br/>';
 			} # end i
 		} # end if
 	} # end foreach

@@ -437,7 +437,7 @@ sub Layout {
 	if ( $version == 1.3 ) {
 		$Layout->setAttribute('PartIDKeys','SignatureName SheetName');
 
-		my $Paper = $Imposition->paper();
+		my $Paper = $Imposition->Paper();
 		if ( $Paper->width() > $Paper->height() ) {
 			$Layout->setAttribute('SurfaceContentsBox',join(' ', 0, 0, $Paper->width()*72, $Paper->height()*72) );
 		} else {
@@ -592,15 +592,16 @@ sub JDF_ImpositionIntent {
 	$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
 
 	my $ResourcePool = $ImpositionIntent->appendChild( $doc->createElement('ResourcePool') );
-
+	my $ResourceLinkPool = $ImpositionIntent->appendChild( $doc->createElement('ResourceLinkPool') );
 # Layout
 	my $Layout = openprint::JDF::getNode( $doc, 'Layout','ID'=>'Layout'.$Project->id() );
-	my $LayoutSignature = $Layout->appendChild( openprint::JDF::Layout_Signature( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) );
+	if ( $Layout ) {
+		my $LayoutSignature = $Layout->appendChild( openprint::JDF::Layout_Signature( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) );
 
-	my $ResourceLinkPool = $ImpositionIntent->appendChild( $doc->createElement('ResourceLinkPool') );
-	my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
-	$LayoutLink->setAttribute('Usage','Input');
-	$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
+		my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
+		$LayoutLink->setAttribute('Usage','Input');
+		$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
+	} # end if Layout
 
 	my $Pages = $$sig_specs{'txtSignatureSpreadQuantity'.$Project->ordered_quantity_index()}*$$sig_specs{'txtSpreadSize'};
 	$Pages = 2 if ! $Pages;
@@ -644,21 +645,21 @@ sub JDF_ImpositionIntent {
 		$RunListLink->setAttribute('rRef','RLMarks'.$$sig_specs{'SignatureIndex'} );
 	}
 
-		my $RunList = $ResourcePool->appendChild( $doc->createElement('RunList') );
-		$RunList->setAttribute('ID','RLOut'.$$sig_specs{'SignatureIndex'} );
-		$RunList->setAttribute('Class','Parameter');
-		$RunList->setAttribute('PartIDKeys','Run');
-		$RunList->setAttribute('Status','Available');
-		my $RunListRun = $RunList->appendChild( $doc->createElement('RunList') );
-		$RunListRun->setAttribute('Status','Unavailable');
-		$RunListRun->setAttribute('Pages','0~'.($Pages-1));
-		$RunListRun->setAttribute('Run','0');
-		my $LayoutElement = $RunListRun->appendChild( $doc->createElement('LayoutElement') );
-		$LayoutElement->setAttribute('IsBlank','true');
+	my $RunList = $ResourcePool->appendChild( $doc->createElement('RunList') );
+	$RunList->setAttribute('ID','RLOut'.$$sig_specs{'SignatureIndex'} );
+	$RunList->setAttribute('Class','Parameter');
+	$RunList->setAttribute('PartIDKeys','Run');
+	$RunList->setAttribute('Status','Available');
+	my $RunListRun = $RunList->appendChild( $doc->createElement('RunList') );
+	$RunListRun->setAttribute('Status','Unavailable');
+	$RunListRun->setAttribute('Pages','0~'.($Pages-1));
+	$RunListRun->setAttribute('Run','0');
+	my $LayoutElement = $RunListRun->appendChild( $doc->createElement('LayoutElement') );
+	$LayoutElement->setAttribute('IsBlank','true');
 
-		my $OutputRunListLink = $ResourceLinkPool->appendChild( $doc->createElement('RunListLink') );
-		$OutputRunListLink->setAttribute('Usage','Output');
-		$OutputRunListLink->setAttribute('rRef','RLOut'.$$sig_specs{'SignatureIndex'} );
+	my $OutputRunListLink = $ResourceLinkPool->appendChild( $doc->createElement('RunListLink') );
+	$OutputRunListLink->setAttribute('Usage','Output');
+	$OutputRunListLink->setAttribute('rRef','RLOut'.$$sig_specs{'SignatureIndex'} );
 
 	return $ImpositionIntent;
 } # end sub JDF_ImpositionIntent
@@ -699,7 +700,7 @@ if ( 1 ) {
 	$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
 
 	my $Layout = openprint::JDF::getNode( $doc, 'Layout' );
-	my $LayoutSignature = $Layout->appendChild( Layout_Signature( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) );
+	my $LayoutSignature = $Layout->appendChild( Layout_Signature( $doc, $Project, $sig_id, $sig_specs, $Imposition, $version ) ) if $Layout;
 	#my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
 	#$LayoutLink->setAttribute('Usage','Input');
 	#$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
@@ -892,14 +893,16 @@ $openprint::log->debug("Start JDF_PrintingGreyBox");
 	$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
 
 	my $Layout = openprint::JDF::getNode( $doc, 'Layout', 'ID'=>'Layout'.$Project->id() );
-	my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
-	$LayoutLink->setAttribute('Usage','Input');
-	$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
-	if ( $version == 1.3 ) {
-		my $Part = $LayoutLink->appendChild( $doc->createElement('Part'));
-		$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
-		$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
-	} # end if
+	if ( $Layout ) {
+		my $LayoutLink = $ResourceLinkPool->appendChild( $doc->createElement('LayoutLink') );
+		$LayoutLink->setAttribute('Usage','Input');
+		$LayoutLink->setAttribute('rRef',$Layout->getAttribute('ID') );
+		if ( $version == 1.3 ) {
+			my $Part = $LayoutLink->appendChild( $doc->createElement('Part'));
+			$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
+			$Part->setAttribute('SignatureName','Sig#'.$$sig_specs{'SignatureIndex'});
+		} # end if
+	} # end if Layout
 	return $project;
 } # end sub JDF_PrintingGreyBox
 

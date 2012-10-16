@@ -1,8 +1,30 @@
 <script type="text/javascript">
-<!--
+	tinyMCE.init( {
+            mode: "none",
+            plugins: "paste",
+            theme : "advanced",
+            theme_advanced_buttons1 : "bold,italic,underline,strikethrough,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontsizeselect,bullist,numlist,outdent,indent,cleanup,html",
+            theme_advanced_buttons2 : '',
+            theme_advanced_buttons3 : '',
+        });
+	var current_editor;
+	function tinymce_on( id ) {
+		if ( current_editor ) {
+			tinymce.execCommand('mceToggleEditor',false,current_editor);
+		} // end if
+		current_editor=id;
+		tinymce.execCommand('mceToggleEditor', true, id );
+	} // end function tinymce_on
 	function job_popup( job_id ) {
-		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525} );
+		popup_window( '/employee/production/_job_popup.html', 'schedule_id='+job_id, {width:575, height:525,closeCallback: job_popup_close} );
 	} // end function job_popup
+	function job_popup_close() {
+		tinymce.EditorManager.execCommand('mceRemoveControl',true,'comment');
+		tinymce.EditorManager.execCommand('mceRemoveControl',true,'stock');
+		current_editor=null;
+		return true;
+	} // end function job_popup_close
+
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
@@ -44,15 +66,6 @@
 		};
 	}
 
-	function jump_to_date( date ) {
-		var form = date.params.inputField.form;
-		var name = date.params.inputField.name;
-		var reg = /ScheduleDate-(\d*)/;
-		var ar = reg.exec( name );
-		form.ServiceIndex.value = ar[1];
-		form.btnFunction.value='JumpToDate';
-		form.submit();
-	}
 	function setduedate( date ) {
 		var form = date.params.inputField.form;
 		var name = date.params.inputField.name;
@@ -73,18 +86,28 @@ function textarea_init() {
     tinyMCE.init( content_description_options );
 }
 
+	function approve_job( ul_id, job_id ) {
+		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'approve'}, evalScripts: true } );
+	} // end function approve_job(job_id)
+	function remove_job( job_id ) {
+		if(confirm('Are you sure?')){
+			new Ajax.Request('_li_change.json', {parameters: {schedule_id:job_id, action: 'RemoveJob'}, evalScripts: true } );
+		} // end if
+	} // end function remove_job
+	function split_job( ul_id, job_id ) {
+		new Ajax.Updater( ul_id, '_ul.html', { parameters: { schedule_id: job_id, action:'split'}, evalScripts: true } );
+	} // end function split_job
+	function start_job( job_id ) {
+		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'start' } } );
+	} // end function start_job
+	function stop_job( job_id ) {
+		new Ajax.Request('_li_change.json', { parameters: { schedule_id: job_id, action: 'stop' } } );
+	} // end function stop_job
+	function up_job( job_id ) {
+		new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:job_id, action: 'Up' }, evalScripts: true } );
+	} // end function up_job
 -->
 </script>
-<div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );" action="">
-		<input type="hidden" name="schedule_id" />
-		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
-		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel5', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
-		</span>
-	</form>
-</div>
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
@@ -126,17 +149,17 @@ function textarea_init() {
 		<ul>
 			<li>
 				<label>Category:</label>
-				<select name="category" id="category" onchange="f1.submit();">
+				<select name="category_id" id="category_id" onchange="f1.submit();">
 					<option value="">All</option>
 				<? echo (
-	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/print_overview.html?category'} );
+	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/print_overview.html?category_id'} );
 	) ?>
 				</select>
 			</li>
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/print_overview.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+	my @presses = openprint::Equipment->find('category_id'=>$session{'/employee/production/print_overview.html?category_id'},'useinscheduling'=>1,'order'=>'sorting,lower(strname)');
 
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
@@ -164,7 +187,7 @@ function textarea_init() {
 						my $html = ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
 	'/employee/production/print_overview.html?schedule_start_month',
 	'/employee/production/print_overview.html?schedule_start_day'} ] );
-						$html .= ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', '', 'T' ); 
+						$html .= ssi::button( 'Today_start', { onclick=>'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', text=>'T' } ); 
 					) ?>
 				&nbsp;to&nbsp;
 				</span>
@@ -173,7 +196,7 @@ function textarea_init() {
 						my $html = ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
 	'/employee/production/print_overview.html?schedule_end_month',
 	'/employee/production/print_overview.html?schedule_end_day'} ] );
-						$html .= ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' );
+						$html .= ssi::button( 'Today_end', { onclick=>'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', text=>'T' } );
 						return $html;
 					) ?>
 				</span>
@@ -194,13 +217,16 @@ function textarea_init() {
 				</select>
 			</li>
 			<li>
-				<label>Quick Views:</label>
+				<label>Views:</label>
 				<? echo (
-					my $html = ssi::writeButton( $log, $dbh, 'Today', 'today.gif', '', '/employee/production/print_overview.html?action=Today', 'Today' );
-					$html .= ssi::writeButton( $log, $dbh, 'twoday', '2day.gif', '', '/employee/production/print_overview.html?action=2day', '2day' );
-					$html .= ssi::writeButton( $log, $dbh, 'threeday', '3day.gif', '', '/employee/production/print_overview.html?action=3day', '3day' );
-					$html .= ssi::writeButton( $log, $dbh, '1week', '1week.gif', '', '/employee/production/print_overview.html?action=1week', '1week' );
+					my $html = ssi::button( 'Today', { onclick=>'', href=>'/employee/production/print_overview.html?action=Today', text=>'Today' } );
+					$html .= ssi::button( 'twoday', { onclick=>'', href=>'/employee/production/print_overview.html?action=2day', text=>'2day' } );
+					$html .= ssi::button( 'threeday', { onclick=>'', href=>'/employee/production/print_overview.html?action=3day', text=>'3day' } );
+					$html .= ssi::button( '1week', { onclick=>'', href=>'/employee/production/print_overview.html?action=1week', text=>'1week' } );
 				) ?>
+			</li>
+			<li><label>Show Production</label>
+			<? echo ( ssi::radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/print_overview.html?show_feedback'} ); ) ?>
 			</li>
 			</ul>
 		</div>
@@ -219,14 +245,14 @@ function textarea_init() {
 			</ul>
 		</div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
+			<? echo ( ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
+			<? echo ( ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddDocket', 'add.gif', "ajax_window('_add_docket.html', 600, 400 );", '', 'Add Docket' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddMaintenance', 'add.gif', "ajax_window('_add_maintenance.html', 600, 400 );", '', 'Add Maintenance' ); ) ?>
+			<? echo ( ssi::button( 'AddDocket', { onclick=>"ajax_window('_add_docket.html', 600, 400 );", text=>'Add Docket' } ); ) ?>
+			<? echo ( ssi::button( 'AddMaintenance', { onclick=>"ajax_window('_add_maintenance.html', 600, 400 );", text=>'Add Maintenance' } ); ) ?>
 			<? echo (
 				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', '/employee/production/print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
+					return ssi::button( 'ReFlow', { href=>'/employee/production/print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', text=>'Reflow Jobs' } );
 				} # end if
 				return;
 			) ?>
@@ -252,26 +278,26 @@ function textarea_init() {
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
+<table class="schedule"><thead>
+<tr>
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
+			$html .= '<th class="PressColumn ' . join(' ', $E->categories() ) . '"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
+				$html .= ssi::button('Edit'.$E->id(), { onclick=>q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, text=>'E', title=>'Edit' } );
 			} # end if
-			$html .= '<br/><span id="message'.$E->id().'" class="message">';
+			$html .= '<br/><div id="message'.$E->id().'" class="message">';
 			$html .= $E->message();
-			$html .= '</span>';
 			$html .= '</div>';
+			$html .= '</th>';
 		} # end foreach
-		return $html;
-		) ?>
-	<hr style="clear: both;"/>
-	<? echo (
+		$html .= '</tr></thead><tbody><tr>';
 		@{$$variable{'drops'}} = ();
-		my $html;
+
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<td class="PressColumn ' . join(' ', $E->categories() ). '">';
+
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -306,6 +332,11 @@ function textarea_init() {
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Shift::get_Shifts( $E, $st, $et, @Equipment_Shifts );
 			} # end if
+			if ( ! @Shifts ) {
+				$html .= 'No Shifts defined.</div>';
+				next;
+			} # end if
+
 
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
@@ -344,19 +375,20 @@ $log->debug("Setp 2" . $ES->to_string());
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
 
-			$html .= '</div>';
+			$html .= '</td>';
+			#$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= '</tr></tbody></table>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
-		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= '</tr></table></div>';
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
-		$html .= '</div></div>';
+		$html .= '</tr></table></div>';
 		return $html;
 	) ?>
 </form>
 <br class="spacer"/>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
 // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");

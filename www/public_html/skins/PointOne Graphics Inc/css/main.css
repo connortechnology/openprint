@@ -1,7 +1,7 @@
-div.Service div.templates {
+.Service .templates {
     padding-right: 0px;
 }
-div.Service div.templates:after {
+.Service .templates:after {
     content: ".";
     display: block;
     height: 0;
@@ -9,7 +9,7 @@ div.Service div.templates:after {
     visibility: hidden;
 }
 
-div.Service div.templates p {
+.Service .templates p {
 	float: left;
 	width: 165px;
 	height: 180px;
@@ -17,12 +17,12 @@ div.Service div.templates p {
 	margin: 0px 5px 10px 5px;
 	padding: 0px;
 }
-div.Service div.templates p label {
+.Service .templates p label {
 	clear: none;
 	float: none;
 	margin: 0px;
 }
-div.Service div.templates p img {
+.Service .templates p img {
     clear: both;
     width: 130px;
     height: 130px;
@@ -56,7 +56,7 @@ div.Service div.templates p img {
 	p\osition: relative;
 }
 
-div.Service div.row {
+.Service div.row {
     margin: 0px;
     margin-bottom: 10px;
 	margin-right: 20px;
@@ -68,7 +68,7 @@ div.Service div.row {
     width: auto;
 	max-width: 310px;
 }
-div.Service div.row:after {
+.Service div.row:after {
     content: ".";
     display: block;
     height: 0;
@@ -77,7 +77,7 @@ div.Service div.row:after {
     visibility: hidden;
 }
 
-div.Service div.row .required {
+.Service div.row .required {
 	display: none;
     width: 10px;
     float:left;
@@ -86,7 +86,7 @@ div.Service div.row .required {
     height: 100%;
 }
 
-div.Service div.row span.label {
+.Service div.row span.label {
     width: auto;
     text-align: left;
     float: left;
@@ -97,7 +97,7 @@ div.Service div.row span.label {
 	margin-right: 10px;
 }
 
-div.Service div.row span.value {
+.Service div.row span.value {
     margin: 0px;
     padding: 0px;
     margin-left: 10px;
@@ -107,7 +107,7 @@ div.Service div.row span.value {
     p\osition: relative;
     clear: none;
 }
-div.Service div.row span.input {
+.Service div.row span.input {
     width: 390px;
     margin: 0px;
     margin-right: -400px;
@@ -120,86 +120,83 @@ div.Service div.row span.input {
     background-color:#BBA971;
    color: #22275E;
 }
-div.Service fieldset {
+.Service fieldset {
 }
-div.Service fieldset p {
+.Service fieldset p {
 	padding-left: 130px;
 }
-div.Service fieldset p label {
+.Service fieldset p label {
 	width: 125px;
 	margin-left: -130px;
 	text-align: left;
 }
-div.Service fieldset p label.radio {
+.Service fieldset p label.radio {
 	width: auto;
 	float: none;
 	margin: 0px;
 }
-div.Service fieldset p select, div.Service fieldset p input {
+.Service fieldset p select, .Service fieldset p input {
 	width: auto;
 }
 
-div.Registration {
+.Registration {
    padding-right: 20px;
 }
-div.Registration fieldset {
+.Registration fieldset {
 	float: left;
 	width: 100%;
 	max-width: 750px;
 }
-div.Registration fieldset p select {
+.Registration fieldset p select {
    width: auto;
 }
 
 /* Help Desk Styles */ 
 
-div.HelpDesk
-{
+.HelpDesk {
    width: 500px;
    padding-right: 20px;
    float: left; 
 }
 
 /* Company Profile Styles */
-div.CompanyProfile fieldset p select {
+.CompanyProfile fieldset p select {
    width: auto;
 }
 
 /* User Profile styles */
-div.UserProfile fieldset select {
+.UserProfile fieldset select {
    width: auto;
 }
 
 /* Credit Application styles */
-div.CreditApplication fieldset select {
+.CreditApplication fieldset select {
    width: auto;
 }
 
 /* Reseller Application styles */
-div.ResellerApplication fieldset select {
+.ResellerApplication fieldset select {
    width: auto;
 }
 
 /* Create Stage1 styles */
-div.ReprintOptions fieldset select
-{
+.ReprintOptions fieldset select {
    width: auto;
 }
 
 /* Order history styles */
 
 /* Quote History styles */
-div.QuoteHistory fieldset label
-{
+.QuoteHistory fieldset label {
    width: 100px;
 }
 
-div.ProjectCreateEdit ul {
+.ProjectCreateEdit ul {
 	list-style: none;
 	padding: 0px;
 	margin: 0px;
 }
-div.ProjectCreateEdit ul:after {
+.ProjectCreateEdit ul:after {
     content: ".";
     display: block;
     height: 0;
@@ -208,38 +205,38 @@ div.ProjectCreateEdit ul:after {
     visibility: hidden;
 
 }
-div.ProjectCreateEdit fieldset ul li {
+.ProjectCreateEdit fieldset li {
     float: left;
     width: 32%;
     padding: 0px;
     text-align: left;
 }
-div.ProjectCreateEdit fieldset ul li label {
+.ProjectCreateEdit fieldset li label {
     float: none;
     margin: 0px;
     width: auto;
 }
 
-div.ProjectCreateEdit fieldset p label {
+.ProjectCreateEdit fieldset p label {
 	width: 33%;
 	padding-right: 5px;
 }
-div.ProjectCreateEdit fieldset p textarea {
+.ProjectCreateEdit fieldset p textarea {
 	width: 80%;
 	
 }
-div.Project div.Reuse div.quantities ul li {
+.Project .Reuse .quantities li {
     width: 100px;
     float: left;
 }
-div.Project div.Reuse div.quantities ul li input[type="text"] {
+.Project .Reuse .quantities ul input[type="text"] {
 	width: 92%;
 }
 
-div.ProjectSummary {
+.ProjectSummary {
 }
 
-div.ProjectSummary div.row {
+.ProjectSummary .row {
 	width: 100%;
 	p\osition: relative;
 	clear: both;

@@ -40,7 +40,7 @@ display: none;
 </style>
 <script type="text/javascript">
 	function load( form ) {
-		new Ajax.Updater('Label','_'+ form.type_id[form.type_id.selectedIndex].text + '.html', { method: 'get', parameters: Form.serialize( form ), evalScripts: true});
+		new Ajax.Updater('Label','_'+ form.type_id[form.type_id.selectedIndex].text + '.html', { parameters: Form.serialize( form ), evalScripts: true});
 	} // end function load(form)
 </script>
 <form id="f1" name="f1">
@@ -50,9 +50,9 @@ display: none;
 		<label>Label:</label>
 		<select id="type_id" name="type_id" size="1" onchange="load(this.form);">
 			<option value=""> select </option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType::find('order'=>'lower(name)') ] ); ) ?>
+			<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)') ); ) ?>
 		</select>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Refresh','refresh.gif', q{load( $('f1') );}, '', 'Refresh' ); ) ?>
+		<? echo ( ssi::button( 'Refresh', { onclick=>q`load( $('f1') );` } ); ) ?>
 	</p>
 </fieldset>
 </form>

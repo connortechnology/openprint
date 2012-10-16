@@ -28,9 +28,11 @@ function set_item(index) {
 		item.value += type.options[type.selectedIndex].value + ' ';
 	} // end if
 	item.value += $('name-'+index).value;
-	ddm_select_by_text_case_insensitive( $('item_id-'+index), trim(item.value), 0 );
-}
+} // end function set_item(index)
 
+function filter_items( index, type_id ) {
+	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: $('item-'+index).value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+}
 
 function calc_price( element ) {
 	var re = /(.*)-(.*)/

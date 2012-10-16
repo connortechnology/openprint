@@ -1,22 +1,22 @@
-<table class="List" style="table-layout: auto;">
+<table class="List">
 	<tr><th class="Date">Created</th>
 		<th align="left">Type</th>
 		<th align="left">Reference</th>
-		<th style="width:70px;">&nbsp;</th>
+		<th class="buttons">&nbsp;</th>
 	</tr>
 <? echo ( 
 	require openprint::Label;
 	my $html = '';
 	my @Labels = openprint::Label->find('docket'=>$$variable{'Project'}->docket(),'order'=>'id');
 	foreach my $Label ( @Labels ) {
-		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td>%7$s</td></tr>', 
+		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td class="buttons">%7$s</td></tr>', 
 			$Label->id(), $$variable{'Project'}->id(), 
-			Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Label->created_on() ) ), 
-			Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Label->created_on() ) ), 
+			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
+			Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Label->created_on() ) ), 
 			$Label->Type()->name(), $Label->reference(),
 			join('',
-				ssi::writeButton( $log, $dbh, 'delete'.$Label->id(), '',qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { method:'get', parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'X' ),
-				ssi::writeButton( $log, $dbh, 'copy'.$Label->id(), '',qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { method:'get', parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'C' ),
+				ssi::button( 'delete'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, text=>'X', title=>'Delete' } ),
+				ssi::button( 'copy'.$Label->id(), { onclick=>qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, text=>'C', title=>'Copy' } ),
 			)
 		 );
 		$html .= "\n";
@@ -28,12 +28,12 @@
 		<td>
 			<select id="new_label_type_id" name="type_id">
 				<option value="">select</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType::find('order'=>'lower(name)') ] ); ) ?>
+			<? echo ( ssi::make_drop_down( openprint::LabelType->dropdown('order'=>'lower(name)') ); ) ?>
 			</select>
 		</td>
 		<td><input type="text" name="reference" id="reference" /></td>	
-		<td>
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddLabel', 'add.gif', q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, '', 'Add' ); ) ?>
+		<td class="buttons">
+			<? echo ( ssi::button( 'AddLabel', { onclick=> q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, text=>'Add' } ); ) ?>
 		</td>
 	</tr>
 </table>

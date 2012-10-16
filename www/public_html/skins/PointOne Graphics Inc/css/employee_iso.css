@@ -42,3 +42,6 @@ table .Description {
 		display: none;
 	}
 }
+#company_id {
+	width: 100%;
+}

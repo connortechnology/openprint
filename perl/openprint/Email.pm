@@ -14,7 +14,7 @@ use vars qw( $table $serial %fields %transforms %defaults $log %session %config 
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-$debug = 1;
+$debug = 0;
 $table = 'mailbox';
 
 %fields = (

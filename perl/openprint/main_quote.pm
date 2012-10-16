@@ -359,6 +359,9 @@ sub overview {
 sub _quote_list {
 } # end sub _quote_list
 
+sub _view_log {
+} # end sub _view_log
+
 1;
 
 __END__

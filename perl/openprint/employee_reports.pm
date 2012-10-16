@@ -487,5 +487,7 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+sub prepress_productivity {
+} # end sub prepress_productivity
 1;
 __END__

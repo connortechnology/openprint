@@ -21,7 +21,7 @@
 			$html .= $Paper->units();
 			$html .= '</td>';
 			$html .= '<td class="Allocated">';
-			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$Paper->id() ) ) {
+			foreach my $Allocation ( openprint::PaperAllocation->find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$Paper->id() ) ) {
 				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
 			} # end foreach Allocation
 			$html .= '</td>';

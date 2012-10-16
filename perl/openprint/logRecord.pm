@@ -21,8 +21,10 @@ $serial = 'log_id_seq';
 	'action_type'	=>	'action_type',
 	'host_id'		=>	'host_id',
 	'note'			=>	'note',
+	'object_id'		=>	'object_id',
 );
 %defaults = (
+	'object_id'		=>	undef,
 	'user_id'		=>	undef,
 	'company_id'	=>	undef,
 	'host_id'		=>	undef,
@@ -31,6 +33,8 @@ $serial = 'log_id_seq';
 
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::logRecord';
+	shift @_ if ref $_[0] eq 'openprint::logRecord';
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT ';
@@ -46,6 +50,10 @@ sub find {
             $sql .= q{ AND id=?};
             push @values, $params{'id'};
         } # end if
+	} # end if
+	if ( $params{'object_id'} ) {
+		$sql .= ' AND object_id=?';
+		push @values, $params{'object_id'};
 	} # end if
 	if ( $params{'user_id'} ) {
 		$sql .= ' AND user_id=?';

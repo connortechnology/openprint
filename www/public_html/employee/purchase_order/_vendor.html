@@ -2,14 +2,14 @@
 	<fieldset><legend>VENDOR:</legend>
 		<p><label>Select:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
-			<select name="supplier_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
+			<select id="supplier_id" name="supplier_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_vendor.json', { parameters: { supplier_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
 			</select>
 		</p>
 		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ) ?>:</label>
  
-			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
+			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', { parameters: { contact_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->supplier_id() ) {
@@ -74,9 +74,9 @@
 					   return 'Zip/Postal Code:';
 				   } # end if
 				) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
-		<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
-		<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
-		<p><label for="vendor_sms">SMS:</label><input type="text" name="vendor_sms" id="vendor_sms" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_sms() ) ?>" /></p>
-		<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
+		<p><label for="vendor_phone">Phone:</label><input type="tel" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
+		<p><label for="vendor_fax">Fax:</label><input type="tel" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
+		<p><label for="vendor_sms">SMS:</label><input type="tel" name="vendor_sms" id="vendor_sms" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_sms() ) ?>" /></p>
+		<p><label for="vendor_email">Email:</label><input type="email" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
 	</fieldset>
 </div>

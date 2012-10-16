@@ -368,7 +368,7 @@ sub format_bytes {
 	if ( $_[0] > 1048576 ) {
 		return sprintf( "%$_[1]f MB", $_[0] / 1048576 );
 	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%$_[1]f KB', $_[0] / 1024 );
+		return sprintf( "%$_[1]f KB", $_[0] / 1024 );
 	} else {
 		return $_[0].' B';
 	} # end if

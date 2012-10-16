@@ -1,31 +1,12 @@
-<? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
-<table width="100%" border="0">
-	<tr>
-		<th width="40">&nbsp;</th>
-		<th align="left">Project #</th>
-		<!--<th>Order #</th>-->
-		<th align="right">Submit</th>
-		<th width="20">&nbsp;</th>
-	</tr><tr>
-		<td width="20">&nbsp;</td>
-		<td align="left"><img src="/barcode.png?code=P<?ProjectIndex?>+&amp;NoText=1&amp;Height=20" alt=""/></td>
-		<!--
-		<img src="/barcode.png?code=D<?DocketNumber?>+"/>&nbsp;</td>-->
-		<!--<td align="center"><img src="/barcode.png?code=O<?OrderId?>+"/></td>-->
-		<td align="right"><img src="/barcode.png?Code=S10000+&amp;NoText=1&amp;Height=20" alt=""/></td>
-		<td width="20">&nbsp;</td>
-	</tr>
-</table>
-<? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr> 
-		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 				<td width="50%" class="headerText" valign="top"><b>Date:</b></td>
 				<td width="50%" class="docketText">&nbsp;<?OrderedDate?></td>
 				</tr>
 			</table></td>
-		<td colspan="6" width="60%" valign="top">
+		<td colspan="2" width="60%" valign="top">
 			<table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="16%" class="headerText"><b>Company Name:</b></td>
@@ -35,7 +16,7 @@
 				</tr>
 			</table>
 		</td>
-		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="50%" class="headerText" valign="top"><b>Customer PO#:</b></td>
 					<td width="50%" align="right" class="docketText">&nbsp;<?PONum?></td>
@@ -43,44 +24,47 @@
 			</table></td>
 	</tr>
 	<tr>
-		<td colspan="2" width="20%" valign="top">
+		<td width="20%" valign="top">
 			<span style="float:left;" class="headerText"><b>Docket #:</b></span>
 			<span style="float: right;" class="docketText"><?DocketNumber?></span>
 			<br class="spacer"/>
 			<span style="float: left;" class="headerText"><b>Order #:</b></span>
 			<span style="float: right;" class="docketText">&nbsp;<?order_id?></span>
 		</td>
-		<td colspan="6" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+		<td colspan="2" width="60%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
 					<td width="16%" class="headerText" valign="top"><b>Project Reference:</b></td>
 					<td width="84%" class="docketText"><? hecho ( $$variable{'ProjectReference'} ) ?></td>
 				</tr>
 			</table></td>
-		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="50%" class="headerText" valign="top"><b>COD?:</b></td>
-					<td width="50%" class="docketText">&nbsp;</td>
+					<td width="50%" class="docketText"><? echo ( 
+					my $cod = $$variable{Project}->Company()->Credit($config{Owner})->cod();
+					return $cod ? $cod . '%' : 'NO';
+					) ?></td>
 				</tr>
 			</table></td>
 	</tr>
 	<tr> 
-		<td colspan="2" width="20%" valign="top">
+		<td width="20%" valign="top">
 			<span style="float:left;" class="headerText"><b>Project #:</b></span>
 			<span style="float:right;" class="docketText"><?ProjectIndex?></span>
 		</td>
-		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
+		<td width="30%" valign="top"><table cellspacing="0" cellpadding="1" border="0" width="100%">
 				<tr>
 				<td width="33%" class="headerText"><b>Contact:</b></td>
 				<td width="66%" class="docketText"><?OrderSalutation?>&nbsp;<?OrderFirstName?>&nbsp;<?OrderLastName?></td>
 				</tr>
 			</table></td>
-		<td colspan="3" width="30%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<td width="30%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 				<td width="33%" class="headerText"><b>Phone:</b></td>
 				<td width="66%" class="docketText">&nbsp;<?OrderPhone?> <? if ( $$variable{'OrderExtension'} ne '' ) ?> &nbsp;ext: <?OrderExtension?> <? endif ( $$variable{'OrderExtension'} ne '' ) ?></td>
 				</tr>
 			</table></td>
-		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<td width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
 				<tr>
 					<td width="50%" class="headerText"><b>Quantity:</b></td>
 					<td width="50%" class="docketText">&nbsp;<?OrderedQuantity?></td>
@@ -168,9 +152,6 @@
 				$html .= 'Web';
 			} else {
 				$html .= $$sig_specs{'UsePress'};
-			} # end if
-			if ( $config{'Barcodes Enabled'} ne 'N' ) {
-				$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&amp;NoText=1&amp;Height=20"/>';
 			} # end if
 			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
 			$html .= '</td><td class="docketText"> ';
@@ -340,20 +321,6 @@ $inkCoverage{$colour} = 100;
 	} # end while service_index
 	return $html;
 ) ?>
-			<? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
-	<tr>
-		<td align="center">
-<img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&amp;NoText=1&amp;Height=20"/>
-</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-		<td><br/><br/><br/></td>
-	</tr>
-			<? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 </table>
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" style="table-layout: fixed;">

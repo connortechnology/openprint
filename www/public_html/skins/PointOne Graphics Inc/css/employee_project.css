@@ -16,6 +16,10 @@ text-align: right;
 	width: 75px;
 	text-align: left;
 }
+#ProductionLog .quantity {
+	text-align: right;
+	padding-right: 5px;
+}
 .subtotal .service,
 .tax .service,
 .total .service,
@@ -32,4 +36,30 @@ text-align: right;
 .downpayment .service:after,
 .cod .service:after {
 	content: ":";
+}
+
+#Labels .Date {
+	text-align: left;
+}
+#Labels .buttons,
+#Files .buttons {
+	width: 75px;
+	text-align: right;
+}
+#Files .filename {
+	text-align: left;
+}
+.filters .docket, .filters .project_id {
+	float: left;
+	width: 50%;
+	padding: 0;
+}
+.filters .docket label, .filters .project_id label {
+	margin: 0;
+	padding: 0 5px 0 0;
+	vertical-align: middle;
+	width: 60px;
+}
+#project_id {
+	width: 60px;
 }

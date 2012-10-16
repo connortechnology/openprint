@@ -184,12 +184,12 @@ sub get_specifications_pairs {
 
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
-	if ( (! $p_id ) or (! $s_id) ) {
-		cluck("********* Called get_specs_ref with Project Index or Service Index ****************");
-		return;
-	} # end if
 	if ( ref $p_id eq 'openprint::Project' ) {
 		$p_id = $p_id->id();
+	} # end if
+	if ( (! $p_id ) or (! $s_id) ) {
+		cluck("********* Called get_specs_ref with Project Index($p_id) or Service Index($s_id) ****************");
+		return;
 	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
 		%{$specs_cache{$s_id}} = sql::execute( undef, undef, 
@@ -432,11 +432,14 @@ sub external_calc {
 	} # end if
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
-	@vars = keys %specs if ! @vars;
+	if ( ! @vars ) {
+		#$log->warn("No outputs for $service_type");
+		@vars = keys %specs;
+	} # end if
 
 	my @no_outputs = eval( 'return openprint::Estimating::'.$service_type.'::no_outputs( @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
+	push @no_outputs, ( 'ProjectIndex', 'ServiceIndex', 'ServiceType' );
 
-$log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @vars ) {

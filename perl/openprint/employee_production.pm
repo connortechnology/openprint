@@ -16,6 +16,7 @@ require openprint::order;
 require openprint::project;
 require openprint::service;
 require openprint::Equipment;
+require openprint::Equipment_Category;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
@@ -32,6 +33,7 @@ require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
+require openprint::SignatureCapture;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -45,11 +47,11 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category_id', 'show_feedback' ) );
 		} # end if
 		if ( $param{'action'} eq 'Today' ) {
 			@session{'/employee/production/print_overview.html?schedule_start_year',
@@ -81,17 +83,14 @@ sub print_overview {
 '/employee/production/print_overview.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > DAY ) {
-		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category_id', 'show_feedback' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
+	$session{'/employee/production/print_overview.html?show_feedback'} = 0 if ! exists $session{'/employee/production/print_overview.html?show_feedback'};
 	$variable{'referer'} = '/employee/production/print_overview.html';
 
-	press_schedule();
-} # end sub print_overview
-
-sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
 		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
@@ -110,7 +109,6 @@ sub press_schedule {
 
 		if ( $param{'company_id'} ) {
 			my $Project = new openprint::Project();
-			$Project->save();
 			$Project->company_id( $param{'company_id'} );
 			$Project->reference( 'Dummy Docket' );
 			$Project->status( 'Approved' );
@@ -134,6 +132,7 @@ sub press_schedule {
 			} # end foreach
 			$Job->project_id( $Project->id() );
 			$Job->service_id( \@services );
+			$Job->pertains_id( \@services );
 		} # end if
 
 		if ( $param{'starttime_year'} ) {
@@ -159,16 +158,36 @@ sub press_schedule {
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
+			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->pertains_id()};
 			if ( ( ! $Job->delete() ) and $$Job{'project_id'} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from print schedule.' );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, $Job->ServiceType()->name() . ' for form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from schedule.' );
 			} # end if
 		} else {
-			$variable{'error'} .= 'No job given to delete...';
+			$variable{error} .= 'No job given to delete...';
 		} # end if
 	} # end if
-	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
-} # end sub press_schedule
+
+	# Add missing Jobs to Schedule
+	if ( $config{'Smart Schedule'} ne 'Y') {
+		$log->debug("Not add lost jobs due to Smart Scheduling being turned off.");
+		return;
+	} # end if
+
+	# This looks expensive, but isn't due to the index on status... 
+	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE strStatus='Approved' AND Index NOT IN (SELECT ProjectIndex FROM Schedule)} );
+	foreach my $project_id ( @missing_jobs ) {
+		my $Project = new openprint::Project( $project_id );
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			if ( ! $$sig_specs{'UsePress'} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+			} # end if
+			if ( my $Equipment = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'}) ) {
+				openprint::employee_schedule::insert( $log, $dbh, $project_id, $signature_service_index, $Equipment->id() );
+			} # end if
+		} # end foreach signature
+	} # end foreach
+} # end sub print_overview
 
 sub bindery_overview {
 
@@ -207,24 +226,20 @@ sub bindery_overview {
 		} # end if
 	} # end foreach
 
-	$_ = "SELECT tbl_Projects.Index, Orders.Index, tbl_Projects.lngDocketNumber, (SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex)";
-	$_ .= ", intQuantityIndex, due_date, tbl_Projects.strStatus\n";
-	$_ .=" FROM tbl_Projects, Order_Contents, Orders";
-	$_ .= " WHERE tbl_Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
-	$_ .= " AND Orders.Index=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
-	$_ .= " AND tbl_Projects.Index = Order_Contents.lngProjectIndex";
-	$_ .= " AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}'";
-	$_ .= " AND Orders.lngEmployeeID=".$r->param('ddmSalesRep') if $r->param('ddmSalesRep');
-	$_ .= " ORDER BY due_date";
-	my @projects = sql::execute( $log, $dbh, $_ );
-
 	@{$variable{'Projects'}} = ();
-	while ( my ( $project_index, $order_id, $docket, $company, $qty_index, $date_required, $status ) = splice @projects, 0, 7 ) {
+	my @Projects = openprint::Project->find(order=>'due_date',
+			'status'			=>	\@statuses,
+			'due_date_start'	=>	$variable{'StartDate'},
+			'due_date_end'		=>	$variable{'EndDate'},
+			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
+			);
+	foreach my $Project ( @Projects ) {
+		my $qty_index = $Project->ordered_qty_index();
+		
 		my %times;
 
-		my $Project = new openprint::Project( $project_index );
 		my %service_indices = $Project->get_services();
-		my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index );
+		my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$Project{id} );
 		my $complete = 1;
 		foreach my $service_type ( sets::intersection( @Services, keys %service_indices ) ) {
 			if ( sets::isin( $service_type, ['LoopStitching', 'SaddleStitching'] ) ) {
@@ -232,7 +247,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Stitch'} = 'done';
 					} else {
-						my ( $runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ( $runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Stitch'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -242,7 +257,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Fold, Perf, Score'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Fold, Perf, Score'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -252,7 +267,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Cut'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Cut'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -262,7 +277,7 @@ sub bindery_overview {
 					if ( $statuses{$service_index} eq 'Complete' ) {
 						$times{'Drill'} = 'done';
 					} else {
-						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'txtRunTime'.$qty_index );
+						my ($runtime) = openprint::service::get_specifications( $log, $dbh, $$Project{id}, $service_index, 'txtRunTime'.$qty_index );
 						$times{'Drill'} += int $runtime;
 						$complete = 0;
 					} # end if
@@ -272,10 +287,10 @@ sub bindery_overview {
         next if $complete;
 
 #my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_indices{''} );
-		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
+		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{id}, openprint::project::get_project_type_service_index( $log, $dbh, $$Project{id} ) );
 
 		my @BinderyServices = ();
-		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery') ) {
+		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$Project{id}, 'Bindery') ) {
 			$_ = 'SELECT name FROM Service_Types WHERE id IN ( ' . join(',', @bindery_services{keys %bindery_services} ) . ')';
 			@BinderyServices = sql::execute( $log, $dbh, $_ );
 		} # end if
@@ -330,7 +345,7 @@ sub bindery_overview {
 		} # end if
 
 		if ( sets::intersection( @Services, keys %service_indices ) ) {
-			push @{$variable{'Projects'}}, $project_index, $order_id, $docket, $company, $description,$date_required;
+			push @{$variable{'Projects'}}, $Project, $description;
 			foreach my $service_type ( @{$variable{'Services'}} ) {
 				if ( defined $times{$service_type} ) {
 					if ( $times{$service_type} ne 'done' ) {
@@ -345,14 +360,14 @@ sub bindery_overview {
 	} # end while
 
 	if ( $r->param('btnFunction') eq 'Download in CSV format' ) {
-		my @header = ('Docket #','Company Name', 'Description', 'Date Required');
+		my @header = ('Docket #','Company Name', 'Description', 'Due Date');
 		foreach my $service_type ( @{$variable{'Services'}} ) {
 			push @header, $service_type;
 		} # end foreach
 		my @data;
 		while ( @{$variable{'Projects'}} ) {
-			my ( $project_index, $order_id, $docket, $company, $description, $date_required ) = splice @{$variable{'Projects'}}, 0, 6;
-			push @data, $docket, $company, $description, $date_required;
+			my ( $Project, $description ) = splice @{$variable{'Projects'}}, 0, 2;
+			push @data, $Project->docket(), $Project->Company()->name(), $description, $Project->due_date();
 			foreach my $service_type ( @{$variable{'Services'}} ) {
 				push @data, shift @{$variable{'Projects'}};
 			} # end foreach
@@ -393,7 +408,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} elsif ( $param{'order_id'} ) {
@@ -406,7 +421,7 @@ sub projects {
 			$order_id = $projects[0]->order_id();
 			$variable{'Redirect'} = '/employee/project/view.html';
 			$param{'OrderID'} = $order_id;
-			$param{'ProjectIndex'} = @projects[0]->id();
+			$param{'ProjectIndex'} = $projects[0]->id();
 			return;
 		} # end if
 	} # end if
@@ -573,7 +588,7 @@ sub send_duedate_change_notification {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Project = new openprint::Project( $project_index );
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
+	$info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
 
 	my $User = new openprint::User( $session{'user_id'} );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
@@ -693,7 +708,7 @@ sub barcode {
 		$param{$param} =~ s/\D//g;
 	} # end foreach param
 
-	@param{'Order'} = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
+	$param{'Order'} = sql::execute( $log, $dbh, q{SELECT  MAX(OrderIndex) FROM Order_Contents WHERE lngProjectIndex=?}, $param{'Project'} ) if ( ! $param{'Order'} ) and $param{'Project'};
 	my %operators = sql::execute( $log, $dbh, q{SELECT Index, strFirstName || ' ' || strLastName FROM Users WHERE chrType IN ('E','A')} );
 
 	if ( $param{'Project'} or $param{'Action'} or $param{'Operator'} ) {
@@ -870,8 +885,6 @@ $log->error("No service_id in service for project $project_id, $service_id: " . 
 	my $ac = sql::start_transaction( $dbh );
 	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
-
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
 	foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
 		$Job->delete();
@@ -937,7 +950,6 @@ sub _bump_job {
 sub _pending_approved {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
-$log->debug("REFERRER ($referer)");
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
@@ -947,13 +959,11 @@ $log->debug("REFERRER ($referer)");
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
 	} # end if
-$log->debug("Equipment: @{$variable{'Equipment'}}");
 } # end sub _pending_approved
 
 sub _pending {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
-$log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {
@@ -964,16 +974,27 @@ $log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	} # end if
 } # end sub _pending
 
-sub _ul {
-	if ( $param{'action'} eq 'approve' ) {
-		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		$variable{'error'} .= $Job->approve();
-	} elsif ( $param{'action'} eq 'split' ) {
-		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		$Job->split( $param{'new_form_count'} );
-		$variable{'Shift'} = $Job->Shift();
+sub _ul_div {
+	if ( $param{'ul_id'} ) {
+		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+		if ( ! $variable{'Shift'} ) {
+			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+		} # end if
+	} else {
+		$variable{'error'} .= "No id given for shift";
 	} # end if
-	if ( $param{'shift_id'} ) {
+} # end sub _ul_div
+
+sub _ul {
+	if ( $param{action} eq 'approve' ) {
+		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+		$variable{error} .= $Job->approve();
+		$variable{Shift} = $Job->Shift();
+	} elsif ( $param{action} eq 'split' ) {
+		my $Job = new openprint::ScheduledJob( $param{schedule_id} );
+		$Job->split( $param{new_form_count} );
+		$variable{Shift} = $Job->Shift();
+	} elsif ( $param{'shift_id'} ) {
 		$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
 	} elsif ( $param{'ul_id'} ) {
 		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
@@ -1014,15 +1035,15 @@ sub _drop {
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
 				next if ! $Job->project_id(); # Maintenance work, etc
-				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+				if ( sets::isin( 'Bindery', [$Equipment->categories()] ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
-$log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
+#$log->debug("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
 					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
 					my @service_type_ids = sets::union( map { $_->servicetype_id() } @PS );
-$log->error("ProjectServices in Project st: " . join(',', @service_type_ids ) );
+#$log->debug("ProjectServices in Project st: " . join(',', @service_type_ids ) );
 					@service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, @service_type_ids );
-$log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
+#$log->debug("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
 					if ( ! @service_type_ids ) {
 						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 							my $ST = new openprint::ServiceType( $servicetype_id );
@@ -1042,12 +1063,12 @@ $log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { n
 		} # end if param{'action'} ne 'add_services'
 
 		# Coalesce Jobs
-$log->debug("Order before coalesce: @order");
+#$log->debug("Order before coalesce: @order");
 		my $previous;
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( $Job->project_id() and ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+			if ( $Job->project_id() and sets::isin( 'Bindery', [$Equipment->categories()] ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 				my @Jobs;
 				my $Project = $Job->Project();
 				if ( $param{'action'} eq 'add_services' ) {
@@ -1056,7 +1077,7 @@ $log->debug("Order before coalesce: @order");
 						my $service_id = $Project->add_service( new openprint::ServiceType( $servicetype_id ) );
 					} # end foreach servicetype_id
 				} # end if add_services
-$log->debug("Bindery:, servicetypes different");
+#$log->debug("Bindery:, servicetypes different");
 				my $services = $Project->services();
 				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 					my $ST = new openprint::ServiceType( $servicetype_id );
@@ -1268,26 +1289,26 @@ sub reorder_jobs {
 	} # end foreach Job
 
 	my $start_time = time;
-$log->debug("Reordering from $start_time");
+#$log->debug("Reordering from $start_time");
 	my $row = $order[0];
 	push @{$variable{'changed'}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
-$log->debug("Running job,moving up starttime");
+#$log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
-$log->debug("Grab all");
+#$log->debug("Grab all");
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
 			'equipment_id'	=>	$$row{'equipment_id'},
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
 			'order'			=>	'starttime',
 			);
-foreach my $S ( @Shifts ) {
-$log->debug("Shifts: " . $S->to_string() );
-last;
-} # end foreach S
+#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts: " . $S->to_string() );
+#last;
+#} # end foreach S
 	if ( ! @Shifts ) {
 $log->debug("No shifts");
 		# First, grab most recent shift, this will give us the last equipment shift.
@@ -1418,9 +1439,9 @@ $log->debug(" NO NEXT ES: "  );
 } # end sub reorder_jobs
 
 sub _li_change {
-	my $Job = new openprint::ScheduledJob($param{'schedule_id'});
+	my $Job = new openprint::ScheduledJob($param{schedule_id});
 	if ( ! $Job->id() ) {
-		$variable{'alert'} .= 'Unable to load job.  It must have been removed from the schedule.';
+		$variable{alert} .= 'Unable to load job.  It must have been removed from the schedule.';
 		return;
 	} # end if
 	my $Equipment = $Job->Equipment();
@@ -1446,57 +1467,69 @@ sub _li_change {
 		} # end if
 	} elsif ( $param{'action'} eq 'stop' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-		$variable{'error'} .= $Job->stop();
+		$variable{error} .= $Job->stop();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob::find('starttime_null'=>0,equipment_id=>$$Job{equipment_id},order=>'starttime')
+					);
 		} else {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
-	} elsif ( $param{'action'} eq 'SaveJob' ) {
+	} elsif ( $param{action} eq 'SaveJob' ) {
 
 		my %sql;
 
-		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
-			my @service_ids = @{$$Job{'service_id'}};
-			if ( $Job->forms() > $param{'forms'} ) {
-				my @new_service_ids = splice @service_ids, 0, $param{'forms'};
-				$sql{'service_id'} = \@new_service_ids;
-				$Job->Project()->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
-					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ );	
+		# Job->forms uses pertains_id, param{forms} is a simple count.  
+		if ( (exists $param{forms}) and ( $param{forms} != $Job->forms() ) ) {
+			my $Project = $Job->Project();
+
+			my @service_ids = $$Job{pertains_id} ? @{$$Job{pertains_id}} : ();
+			if ( $Job->forms() > $param{forms} ) {
+				my @new_service_ids = splice @service_ids, 0, $param{forms};
+				$sql{pertains_id} = \@new_service_ids;
+				if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
+					# Is a printing service, so service_id==pertains_id, so update service_id as well.
+					$sql{service_id} = \@new_service_ids;
+				} # end if
+				$Project->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );	
 					$$sig_specs{'SignatureIndex'};
 					} @service_ids ) . ' from press schedule.' );
-			} elsif ( $Job->forms() < $param{'forms'} ) {
-				if ( $param{'forms'} > 100 ) {
-					$variable{'error'} .= 'Cant add that many forms.';
+			} elsif ( $Job->forms() < $param{forms} ) {
+				if ( $param{forms} > 100 ) {
+					$variable{error} .= 'Cant add that many forms.';
 				} else {
-					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{'forms'} - @service_ids )." for press schedule");
-					while ( @service_ids < $param{'forms'} ) {
-						push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
-								'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $service_ids[0] );
+					$Project->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} " . ( $param{forms} - @service_ids ).' for press schedule');
+					while ( @service_ids < $param{forms} ) {
+						push @service_ids, $Project->copy_signature( $sig_specs, { 
+								'txtPrice'.$Project->ordered_quantity_index()   => 0,
 								}, 'Ordered' );
-					} # end while	
+					} # end while
+					$sql{pertains_id} = \@service_ids;
+					if ( sets::union( @{$$Job{pertains_id}}, @{$$Job{service_id}} ) == @{$$Job{pertains_id}} ) {
+						# Is a printing service, so service_id==pertains_id, so update service_id as well.
+						$sql{service_id} = \@service_ids;
+					} # end if
 				} # end if
-				$sql{'service_id'} = \@service_ids;
 			} # end if
 		} # end if
-		if ( $param{'runtime'} ne $Job->runtime() ) {
-			$param{'runtime'} =~ s/[^\d:]//g;
+		if ( $param{runtime} ne $Job->runtime() ) {
+			$param{runtime} =~ s/[^\d:]//g;
 			my ( $h, $m, $s );
-			if ( $param{'runtime'} =~ /(\d+):(\d+):(\d+)/ ) {
+			if ( $param{runtime} =~ /(\d+):(\d+):(\d+)/ ) {
 				( $h, $m, $s ) = ( $1, $2, $3 );
-			} elsif ( $param{'runtime'} =~ /(\d+):(\d+)/ ) {
+			} elsif ( $param{runtime} =~ /(\d+):(\d+)/ ) {
 				( $h, $m ) = ( $1, $2 );
-			} elsif ( $param{'runtime'} =~ /(\d+)/ ) {
+			} elsif ( $param{runtime} =~ /(\d+)/ ) {
 				( $h ) = ( $1 );
 			} # end if
 			if ( $h or $m or $s ) {
-				$param{'runtime'} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
+				$param{runtime} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
 			} else {
-				$param{'runtime'} = undef;
+				$param{runtime} = undef;
 			} # end if
-			$sql{'runtime'} = $param{'runtime'};
+			$sql{runtime} = $param{runtime};
 		} # end if
 		if ( exists $param{'starttime_year'} ) {
 			my $old_starttime = $Job->starttime_seconds();
@@ -1506,17 +1539,16 @@ sub _li_change {
 			} # end if
 		} # end if
 		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
-		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
+		$sql{'comment'} = $param{'comment'} if (exists $param{comment}) and ( $param{'comment'} ne $Job->comment() );
 		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
 		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 		$sql{'stock_verified'} = $param{'stock_verified'} if exists $param{'stock_verified'} and $param{'stock_verified'} != $$Job{'stock_verified'};
 		$sql{'stock'} = $param{'stock'} if exists $param{'stock'} and $param{'stock'} ne $$Job{'stock'};
 		$sql{'tentative'} = $param{'tentative'} if ( exists $param{'tentative'} ) and ( $param{'tentative'} != $$Job{'tentative'} );
 		if ( keys %sql ) {
-			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-			$Job->service_id( $sql{'service_id'} ) if $sql{'service_id'}; # needed for impressions calculation
-			$variable{'error'} .= $Job->save(\%sql);
-			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+			push @{$variable{changed}}, $Job->Shift()->ul_id();
+			$variable{error} .= $Job->save(\%sql);
+			push @{$variable{changed}}, $Job->Shift()->ul_id();
 		} # end if
 
 		if ( $Equipment->smartscheduling() ) {
@@ -1542,14 +1574,14 @@ sub _li_change {
 						my $J = openprint::ScheduledJob::find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
 						if ( ! $J ) {
 							$J = new openprint::ScheduledJob();
-							$J->save({
+							$variable{error} .= $J->save({
 								'project_id'		=>	$Service->project_id(),
 								'service_id'		=>	[$Service->service_id()],
 								'equipment_id'		=>	$param{'equipment_id'},
 								'servicetype_id'	=>	$Service->servicetype_id(),
 							});
 						} # end if
-						$variable{'error'} .= $J->bump( $param{'equipment_id'} );
+						$variable{error} .= $J->bump( $param{'equipment_id'} );
 					} # end foreach Service
 				} # end if project_id
 			} # end foreach servicetype_id
@@ -1715,7 +1747,7 @@ sub _shift_change {
 
 sub operator_schedule {
 	if ( $param{'func'} eq 'Reset' ) {
-		foreach my $param ( 'category', 'equipment_id' ) {
+		foreach my $param ( 'category_id', 'equipment_id' ) {
 			delete $session{$r->uri().'?'.$param};
 		} # end if
 	} elsif ( $param{'func'} eq 'save' ) {
@@ -1746,7 +1778,7 @@ sub operator_schedule {
 			$variable{'error'} .= $NewShift->save();
 		} # end foreach Equipment
 	} else {
-		ssi::save_params( $r->uri(), ( 'category', 'equipment_id' ) );
+		ssi::save_params( $r->uri(), ( 'category_id', 'equipment_id' ) );
 	} # end if
 
 } # end sub operator_schedule
@@ -1851,6 +1883,96 @@ sub _add_docket {
 
 sub _stock_allocations {
 } # end sub _stock_allocations
+
+sub datacollection {
+	if ( $param{action} eq 'Submit' ) {
+		$param{docket} =~ s/\D//g;
+		$param{form} =~ s/\D//g;
+		if ( ! $param{docket} ) {
+			$variable{error} .= 'Please enter a docket.<br/>';
+			return;
+		} # end if
+		my @Projects = openprint::Project->find(docket=>$param{docket});
+		if ( ! @Projects ) {
+			$variable{error} .= 'Docket not found.';
+			return;
+		} # end if
+		$param{signature} = URI::Escape::uri_unescape( $param{signature} ) if $param{signature};
+		# In case there is more than 1 project in the docket, it will get saved to both.
+		foreach my $Project ( @Projects ) {
+			if ( $param{form} ) {
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $Service = $Project->Service($sig_id);
+					my $sig_specs = $Service->specs();
+					if ( $$sig_specs{'SignatureIndex'} == $param{'form'} ) {
+						$param{'service_id'} = $sig_id;
+						last;
+					} # end if
+				} # end foreach signature
+				if ( ! $param{service_id} ) {
+					$param{service_id} = $Project->add_signature( $param{form}, 'Ordered' );
+				} # end if
+			} # end if
+
+			if ( openprint::ProductionFeedback->find_one(
+					project_id	=>	$Project->id(),
+					service_id	=>	$param{service_id},
+					user_id		=>	( $param{user_id} ? $param{user_id} : $session{user_id} ),
+					starting_on	=>	$param{starting_on},
+					ending_on		=>	$param{ending_on},
+					comment		=>	$param{comment},
+					version		=>	$param{version},
+					($param{signature} ? ( signature	=>	$param{signature} ) : () ),
+					equipment_id	=>	$param{equipment_id},
+					quantity		=>	$param{quantity},
+			) ) {
+				$variable{'error'} .= 'Duplicate feedback detected.';
+				return;
+			} # end if already saved
+			
+			my $Signature = new openprint::SignatureCapture();
+			if ( $param{'signature'} ) {
+				$Signature->save({
+					'image_data'	=>	URI::Escape::uri_unescape($param{'signature'}),
+					'type'			=>	'path',
+					'project_id'	=>	$Project->id(),
+					'service_id'	=>	$param{'service_id'},
+				});
+			} # end if
+				
+			my $PF = new openprint::ProductionFeedback();
+			$variable{'error'} .= $PF->save({
+					project_id	=>	$Project->id(),
+					service_id	=>	$param{service_id},
+					user_id		=>	( $param{user_id} ? $param{user_id} : $session{user_id} ),
+					starting_on	=>	$param{starting_on},
+					ending_on		=>	$param{ending_on},
+					comment		=>	$param{comment},
+					version		=>	$param{version},
+					signature_id	=>	($Signature ? $Signature->id() : ()),
+					equipment_id	=>	$param{equipment_id},
+					quantity		=>	$param{quantity},
+				});
+			
+		} # end foreach Project
+		$variable{'ExternalRedirect'} = '/employee/production/datacollection.html';
+
+		ssi::save_params( '/employee/production/datacollection.html', ( 'user_id', 'equipment_id', 'category_id' ) );
+		
+	} # end if Submit
+} # end sub datacollection
+
+sub _datacollection {
+	ssi::save_params( '/employee/production/datacollection.html', ( 
+				( map { 'when_start_'.$_ } ('year','month','day') ),
+				'equipment_id', 'employee_id', 'company_id', 'quantity_start', 'quantity_end', 'limit',
+				) );
+	$session{'/employee/production/datacollection.html?limit'} = 100 if ! exists $session{'/employee/production/datacollection.html?limit'};
+} # end sub _datacollection
+
+sub _signature_popup {
+	$variable{Signature} = new openprint::SignatureCapture( $param{signature_id} );
+} # end sub _signature_popup
 
 1;
 __END__

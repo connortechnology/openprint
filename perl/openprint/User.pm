@@ -9,16 +9,16 @@ require openprint::logs;
 require openprint::User_Notification;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param );
+use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-my $debug = 1;
+$debug = 1;
 
-my %fields = (
+%fields = (
 	'company_id'		=>	'companyindex',
 	'salutation'		=>	'strsalutation',
 	'title'				=>	'strtitle',
@@ -49,7 +49,7 @@ my %fields = (
 	'notes'						=>	'notes',
 ); # end %fields
 
-my %transforms = (
+%transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
 	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -59,7 +59,7 @@ my %transforms = (
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
-my %defaults = (
+%defaults = (
 	'web_active'	=>	'N',
 	'ftp_active'	=>	'0',
 	'created_on'	=>	'NOW()',
@@ -309,6 +309,8 @@ sub id {
 } # end sub id
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -317,10 +319,15 @@ sub find_one {
 
 sub find {
 	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
 
+	if ( $param{'id !='} ) {
+		$sql .= q{ AND index!=?};
+		push @values, $param{'id !='};
+	} # end if
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
 			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
@@ -430,8 +437,12 @@ sub assistant_ids {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	} # end if
+	return @{$$self{assistant_ids}};
 } # end sub
 sub csr_ids {
 	my $self = shift;
@@ -442,8 +453,12 @@ sub csr_ids {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	} # end if
+	return @{$$self{csr_ids}};
 } # end sub
 
 sub notifications {

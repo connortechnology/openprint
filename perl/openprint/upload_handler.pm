@@ -13,6 +13,7 @@ use Apache::Session::Postgres;
 use Date::Calc qw(Add_Delta_Days);
 use MIME::QuotedPrint;
 use MIME::Base64;
+require Encode;
 
 use strict;
 
@@ -245,7 +246,7 @@ sub upload_files {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+				foreach my $File ( openprint::File->find( ('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef), 'filename'=>$destdir.$filename) ) {
 					$File->delete();
 				} # end foreach
 				my $File = new openprint::File();
@@ -296,7 +297,7 @@ sub upload_files {
 						TO		=> \@to,
 						#BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+						ATTACHMENTS	=>	[ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 				   );
 
 		# Send transcript to uploader
@@ -323,7 +324,7 @@ sub upload_files {
                         FROM    => $from,
                         TO      => \@to,
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-						ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+						ATTACHMENT => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 				);
 	} # end if
 } # end sub upload_files

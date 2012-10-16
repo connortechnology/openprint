@@ -54,5 +54,11 @@ sub _privacy_users {
 	} # end if
 }
 
+sub _users {
+} # end sub _users
+
+sub _equipment {
+} # end sub _equipment
+
 1;
 __END__

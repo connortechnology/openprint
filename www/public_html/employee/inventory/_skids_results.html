@@ -95,7 +95,7 @@
 			my $total_sheets;
 			my $total_value;
 			my %Allocations;
-			foreach my $Allocation ( openprint::PaperAllocation::find() ) {
+			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
 					push @{$Allocations{$Skid->id()}}, $Allocation;
 				} # end 

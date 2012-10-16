@@ -504,7 +504,8 @@ sub _yearly_sales {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'salesrep_id' );
 } # end sub _yearly_sales
+sub bindery {
+} # end sub bindery
 
 1;
-
 __END__
