@@ -511,7 +511,7 @@ sub find_operators {
 				push @{$results{' &&'}}, 
 					$k.' &&',
 					$f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', 
-					@{$$params{$k.' <@'}};
+					@{$$params{$k.' &&'}};
 			} # end if
 		} else {
 			push @{$results{' &&'}}, 

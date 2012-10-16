@@ -61,7 +61,7 @@
 -->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="prepress_schedule.html">
+<form id="f1" name="f1" method="post" action="prepress_schedule.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters"><legend>Display Criteria</legend>
@@ -70,7 +70,7 @@
 			<label>Presses</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category any'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
 	} # end foreach press
@@ -130,8 +130,10 @@
 			</li></ul>
 		</div>
 		<p class="buttons">
-			<? echo ( ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ); ) ?>
-			<? echo ( ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ); ) ?>
+			<? echo ( join("\n",
+						ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+						ssi::button( 'Reset', { onclick=>"f1.btnFunction.value='Reset';f1.submit();", text=>'Reset' } ),
+				); ) ?>
 		</p>
 	</fieldset>
 	<div class="unprintable">

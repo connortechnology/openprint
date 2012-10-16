@@ -7,7 +7,7 @@ use vars qw( $log $dbh %variable %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*config = \%config;
+*config = \%openprint::config;
 
 require sql;
 require openprint::Equipment;
@@ -20,7 +20,6 @@ sub update_late_jobs {
 		$Job->save({'starttime_seconds'=>time});
 	} # end while
 } # end sub update_late_jobs
-
 
 sub insert {
 	my ( $log, $dbh, $project_index, $service_index, $equipment_id ) = @_;

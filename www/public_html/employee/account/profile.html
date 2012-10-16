@@ -1,7 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <div class="UserProfile">
-	<form name="f1" method="post" action="profile.html">
+	<form id="f1" name="f1" method="post" action="profile.html">
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 		<fieldset class="filters"><legend>Choose User</legend>
 			<ul>

@@ -21,7 +21,7 @@ require openprint::employee_project;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';
@@ -188,21 +188,21 @@ sub stock {
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
 		my $Stock;
-		my @PA = openprint::PaperAllocation->find('project_id'=>$$self{'project_id'});
-		if ( @PA ) {
-			$Stock = $PA[0]->Paper();
+		my $PA = openprint::PaperAllocation->find_one('project_id'=>$$self{'project_id'});
+		if ( $PA ) {
+			$Stock = $PA->Paper();
 		} else {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
 		} # end if
 		if ( $Equipment->smartscheduling() ) {
 			if ( $Stock ) {
-				$$self{'stock'} .= join(' ', ( $Stock->name(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
+				$$self{'stock'} .= join(' ', ( $Stock->brand(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
 				$$self{'stock'} .= ' FSC:' . $$Stock{'fsc_code'} if $$Stock{'fsc_code'};
 			} else {
 				$$self{'stock'} .= ' not allocated.';
 			} # end if
-			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find('docket'=>$Project->docket()) ) ) {
+			if ( ( ! $PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find('docket'=>$Project->docket()) ) ) {
 				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
 			} else {
 				$$self{'stock'} .= ' not ordered.';

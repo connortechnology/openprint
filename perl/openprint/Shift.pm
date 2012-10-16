@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %session $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,7 +19,7 @@ require openprint::Equipment_Shift;
 require openprint::User;
 require openprint::ScheduledJob;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -106,9 +106,13 @@ sub schedule {
 
 sub Schedule {
 	return openprint::ScheduledJob->find( 
-			'starttime is null'	=>	$_[0]{'starttime'} ? 0 : 1,
+		( $_[0]{'starttime'} ? 
+			( 
 			'starttime >='		=>	$_[0]{'starttime'}, 
 			'starttime <'		=>	$_[0]{'endtime'}, 
+			) : (
+			'starttime is null'	=>	$_[0]{'starttime'} ? 0 : 1,
+			) ),
 			'equipment_id'		=>	$_[0]{'equipment_id'},
 			'order'				=>	'starttime,projectindex,service_id',
 			);
@@ -206,7 +210,7 @@ sub get_ul {
 	my @Jobs = $Shift->Schedule();
 	foreach my $Job ( @Jobs ) {
 		if ( $filters ) {
-			if ( $$filters{'Status'} ) {
+			if ( $$filters{Status} ) {
 				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
 			} # end if
 		} # end if

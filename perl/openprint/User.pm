@@ -11,7 +11,7 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
-$table = 'Users';
+$table = 'users';
 $serial = 'users_id_seq';
 
 $debug = 1;
