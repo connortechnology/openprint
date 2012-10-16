@@ -1,6 +1,6 @@
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
- function calc() {
+function calc() {
 LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );
 }
 </script>
@@ -10,7 +10,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
         <div class="leftColumn">
             <p>
                 <label>Owner</label>
-                <select name="Owner" size="1" onchange="f1.submit();">
+                <select name="owner_id" size="1" onchange="f1.submit();">
                 <option value=""> All </option>
                 <? echo ( 
                     make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
@@ -50,119 +50,83 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
         <br class="spacer"/>
         <hr/>
         <div class="leftColumn">
-        <p>
-            <label>Manufacturer</label>
-            <select id="Manufacturer" name="Manufacturer" size="1" onchange="Manufacturer_onChange(this,'');">
-                <option value="">Please select one</option>
-            <? echo (
-                    my %data;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-							'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
-                        $data{$Stock->manufacturer()} = $Stock->manufacturer_id();
-                    } # end foreach
-                    return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/reports/stock.html?Manufacturer'} );
-                ) ?>
-            </select>
-        </p>
-        <p>
-            <label>Brand</label>
-            <select name="Name" size="1" onchange="Name_onChange(this,'');">
-                <option value="">Please select one</option>
-            <? echo ( 
-                    my %names;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
-                        $names{$Stock->name()} = $Stock->name_id();
-                    } # end foreach
-                    return ssi::make_drop_down( [map { $names{$_}, $_ } sort keys %names ], $session{'/employee/reports/stock.html?Name'} );
-                ) ?>
-            </select>
-        </p>
-        <p>
-            <label>Finish</label>
-            <select name="Finish" size="1" onchange="Finish_onChange(this,'');">
-                <option value="">Please select one</option>
-            <? echo (
-                    my %finishes;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            'name_id'=>$session{'/employee/reports/stock.html?Name'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
-                        $finishes{$Stock->finish()} = $Stock->finish_id();
-                    } # end foreach
-                    return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/employee/reports/stock.html?Finish'} );
-                ) ?>
-            </select>
-        </p>
-        <p>
-            <label>Colour</label>
-            <select name="Colour" size="1" onchange="Colour_onChange(this,'');">
-                <option value="">Please select one</option>
-            <? echo (
-                    my %data;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            'name_id'=>$session{'/employee/reports/stock.html?Name'},
-                            'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
-                        $data{$Stock->colour()} = $Stock->colour_id();
-                    } # end foreach
-                    return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/reports/stock.html?Colour'} );
-                ) ?>
-            </select>
-        </p>
-        <p>
-            <label>Weight</label>
-            <select name="Weight" size="1" onchange="Weight_onChange(this,'');">
-                <option value="">Please select one</option>
-            <? echo (
-                    my %data;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            'name_id'=>$session{'/employee/reports/stock.html?Name'},
-                            'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
-                            'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
-                        $data{$Stock->weight()} = $Stock->weight_id();
-                    } # end foreach
-                    return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/reports/stock.html?Colour'} );
-                ) ?>
-            </select>
-        </p>
+<ul>
+<? echo (
+    my $html;
+
+    my %find = (
+			( $session{'/employee/reports/stock.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+    );
+	if ( $session{'/employee/reports/stock.html?owner_id'} ) {
+		if ( $session{'/employee/reports/stock.html?owner_id_exclude'} ) {
+			$find{'owner_id !='} = $session{'/employee/reports/stock.html?owner_id'};
+		} else {
+			$find{'owner_id'} = $session{'/employee/reports/stock.html?owner_id'};
+		} # end if
+	} # end if
+
+    my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
+
+    my @Papers = openprint::Paper->find( %find );
+	my %filter_validations;
+	openprint::Manufacturer->find();
+	openprint::StockBrand->find();
+	openprint::StockFinish->find();
+	openprint::StockColour->find();
+	openprint::StockWeight->find();
+	openprint::StockQuality->find();
+	openprint::StockMaterial->find();
+
+	my %filters;
+	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
+		my $Stock = $Papers[$stock_index];
+		next if ! $Stock->in_stock();
+
+		foreach my $option ( @StockOptions ) {
+			my ( $lower_option, $option_id ) = ( lc $option, lc $option.'_id' );
+
+			# Load up the filter
+			$filters{$option}{$Stock->$lower_option()} = $$Stock{$option_id} if $$Stock{$option_id};
+
+			if ( $session{'/employee/reports/stock.html?'.$option_id} ) {
+				if ( $$Stock{$option_id} eq $session{'/employee/reports/stock.html?'.$option_id} ) {
+					$filter_validations{$option} = 1;
+				} else {
+					splice @Papers, $stock_index, 1;
+					$stock_index -= 1;
+					last;
+				} # end if
+			} # end if
+		} # end foreach option
+	} # end foreach $Stock
+
+    foreach my $option ( @StockOptions ) {
+		next if ! $filters{$option};
+        my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
+
+		# Don't do this because even if there is only 1 entry, papers can be unassigned.
+		#$session{'/employee/reports/stock.html?'.$option} = $options[0] if ( @options == 2 );
+
+        $html .= sprintf(q`<li><label>%1$s</label>
+                <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
+                <option value=""> All </option> %4$s </select>
+            </li>`, $option, lc $option, $$variable{'Signature'},
+            ssi::make_drop_down( \@options, $session{'/employee/reports/stock.html?'.$option} ),
+        );
+    } # end foreach option
+	$$variable{'Paper'} = \@Papers;
+    return $html;
+) ?>
+</ul>
         </div>
         <div class="rightColumn">
         <p>
             <label>Size</label>
             <select name="width" size="1" onchange="" >
                 <option value="">All</option>
-            <? echo ( 
+				<? echo ( 
                     my %data;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            'name_id'=>$session{'/employee/reports/stock.html?Name'},
-                            'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
-                            'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
-                            'weight_id'=>$session{'/employee/reports/stock.html?Weight'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-							'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
+                    foreach my $Stock ( @{$$variable{'Paper'}} ) {
                         $data{$Stock->width()} = $Stock->width();
                     } # end foreach
                     return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?width'} );
@@ -170,18 +134,9 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </select> x
             <select name="height" size="1" onchange="" >
                 <option value="">All</option>
-            <? echo ( 
-                my %data;
-                    foreach my $Stock ( openprint::Paper->find(
-                            'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
-                            'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
-                            'name_id'=>$session{'/employee/reports/stock.html?Name'},
-                            'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
-                            'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
-                            'weight_id'=>$session{'/employee/reports/stock.html?Weight'},
-                            #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
-                            ) ) {
+				<? echo ( 
+					my %data;
+                    foreach my $Stock ( @{$$variable{'Paper'}} ) {
                         $data{$Stock->height()} = $Stock->height();
                     } # end foreach
                     return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/reports/stock.html?height'} );
@@ -197,10 +152,11 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             <label>Location</label>
             <select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
                 <? echo ( 
-                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
+					my @Locations = openprint::Location->find(parent_id=>undef, order=>'lower(name)');
+                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } @Locations);
                     my @selected = split(',', $session{'/employee/reports/stock.html?location_id'} );
                     if ( ! @selected ) {
-                        foreach my $L ( openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+                        foreach my $L ( @Locations ) {
                             next if $L->name() eq 'Missing';
                             push @selected, $L->id();
                         } # end foreach $L
@@ -214,8 +170,8 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 		<br class="spacer"/>
         <p class="buttons">
             <? echo ( join('',
-                ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );", '', 'Show Results' ),
-                ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+                ssi::button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.serialize() );", href=>'', text=>'Show Results' } ),
+                ssi::button( 'Reset', { onclick=> 'f1.reset();' } ),
                 ); ) ?>
         </p>
     </fieldset>

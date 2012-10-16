@@ -261,7 +261,7 @@ sub stock {
 } # end sub stock
 
 sub _stock {
-	ssi::save_params('/employee/reports/stock.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
+	ssi::save_params('/employee/reports/stock.html', 'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
 } # end sub _stock
 
 sub stock_usage {
@@ -275,15 +275,14 @@ sub _stock_usage {
 	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day','ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
 } # end sub _stock_usage
 
-sub prepress_productivity {
-} # end sub
-
 sub delivery {
 } # end sub delivery
 sub efficiency {
 } # end sub efficiency
 sub prepress_overview {
 } # end sub prepress_overview
+sub _prepress_project_list {
+} # end sub _prepress_project_list
 
 sub delivery {
 } # end sub delivery
@@ -514,5 +513,6 @@ sub _customer_performance {
 } # end sub _customer_performance
 sub prepress_productivity {
 } # end sub prepress_productivity
+
 1;
 __END__

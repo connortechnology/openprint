@@ -46,12 +46,9 @@ Please select a Paper to view/edit.<br>
 		} # end if
 	} # end if
 
-use Time::HiRes qw{ time gettimeofday tv_interval };
-my $starttime = gettimeofday();
     my @StockOptions = ( 'Manufacturer','Brand','Finish','Colour','Weight','Quality','Material','Group' );
 
     my @Papers = openprint::Paper->find( %find );
-	$openprint::log->debug( 'Loading paper: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 	my %filter_validations;
 	openprint::Manufacturer->find();
 	openprint::StockBrand->find();
@@ -82,7 +79,6 @@ my $starttime = gettimeofday();
 			} # end if
 		} # end foreach option
 	} # end foreach $Stock
-	$openprint::log->debug( 'Filtering paper: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
