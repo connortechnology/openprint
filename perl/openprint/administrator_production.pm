@@ -236,8 +236,8 @@ $log->error( $variable{'error'} );
 			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Colours' ) {
-		my @header = ( 'PMSId', 'Serivce ID', 'Material ID', 'Colour Name' );
-		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), washups, strColourName FROM Inks";
+		my @header = ( 'PMSId', 'Serivce ID', 'Material ID', 'Colour Name', 'Washups' );
+		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), strColourName, washups FROM Inks";
 		my @data = sql::execute( $log, $dbh, $_ );
 		misc::export_csv( $r, $log, \%variable, 'colours.csv', \@header, \@data );
 		# Add record to audit log - action "Export Colour Definitions".
