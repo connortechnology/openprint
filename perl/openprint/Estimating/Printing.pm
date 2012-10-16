@@ -2644,11 +2644,13 @@ $$specs{'Runspeed'} = $run_speed;
 			} # end foreach
 			next if ! $Ink;
 
+if ( 0 ) {
 			if ( ! $mixed_colours{$real_colour} ) {
 				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'MetallicInkMix',undef,$Press);
 				$price{'Ink Mix Charge'} += $mix_price{'Price'};
 				$mixed_colours{$real_colour} = 1;
 			} # end if
+} # end if
 
 #$openprint::log->debug("Washed color: $real_colour " . $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) if $$Imposition{runstyle} eq 'Perfecting';
 # Washed_colours contains each colour used in the other signatures
@@ -2662,6 +2664,7 @@ $$specs{'Runspeed'} = $run_speed;
 			$InkMaterial = new openprint::Material( $Ink->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} elsif ( ! sets::isin( $real_colour, \@process_colours ) ) {
+$openprint::log->debug("$real_colour needs mixing");
 			# PMS?
 			if ( ! $mixed_colours{$real_colour} ) {
 				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'PMSInkMix',undef,$Press);
