@@ -61,6 +61,7 @@ $serial = 'articles_id_seq';
 	'user_type'		=>	undef,
 	'created_by'	=>	undef,
 	anonymous		=>	0,
+	published		=>	0,
 );
 
 sub name {
