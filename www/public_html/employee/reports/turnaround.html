@@ -4,8 +4,7 @@
 </div>
 <script type="text/javascript">
 	function load_projects( form ) {
-		//LoadContent('Results','/employee/reports/_turnaround_results.html', Serialize( form ) );
-        new Ajax.Updater('Results','/employee/reports/_turnaround_results.html', {method:'get',
+        new Ajax.Updater('Results','/employee/reports/_turnaround.html', {
                 onLoading:function(){ $('Results').innerHTML='Loading...'; },
                 onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
                 parameters:Form.serialize(form)});
@@ -14,7 +13,8 @@
 </script>
 <form id="f1" name="f1" method="post" action="turnaround.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>CSR</label>
 			<select name="CSR" size="1" onchange="load_projects(this.form);">
 			<? echo ( 
@@ -24,15 +24,20 @@
 			 ) ?>
 			
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Due Date</label>
-			<? echo ( ssi::date_select( 'duedate_start' ); ) ?>
+			<span class="DateSelectorT">
+			<? echo ( ssi::date_select_session( '/employee/reports/turnaround.html', 'due_date_start', { with_today=>1 } ); ) ?>
+			</span>
 			to 
-			<? echo ( ssi::date_select( 'duedate_end' ); ) ?>
-		</p>
+			<span class="DateSelectorT">
+			<? echo ( ssi::date_select_session( '/employee/reports/turnaround.html', 'due_date_end', { with_today=>1 } ); ) ?>
+			</span>
+		</li>
+		</ul>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Show Results' ); ) ?>
+			<? echo ( ssi::button( 'Go', { onclick=> q{load_projects(f1);}, text=> 'Show Results' } ); ) ?>
 		</p>
 	</fieldset>
 </form>

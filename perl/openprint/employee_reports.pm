@@ -31,7 +31,7 @@ sub _project_history_results {
 	my %parameters; 
 	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
 		$parameters{'SalesPerson'} = $session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
+		$parameters{'or'} = "company_id=(SELECT company_id FROM Users WHERE id=$session{user_id})";
 	} elsif ( $param{'CSR'} ) {
 		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
@@ -45,10 +45,11 @@ sub _project_history_results {
 				'status' =>
 				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
 				) : () ),
-			'value_start' => $param{'value_start'},
-			'value_end' => $param{'value_end'},
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-			'order' => 'index',
+			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+			( $param{'value_end'} ? ( 'value_end' => $param{'value_end'} ) : () ),
+			( $param{Estimator} ? (
+			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
+			'order' => 'id',
 );
 	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
 		$filters{'company_id'} = $param{'company_id'};
@@ -263,8 +264,6 @@ sub _stock {
 	ssi::save_params('/employee/reports/stock.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
 } # end sub _stock
 
-sub turnaround {
-}
 sub stock_usage {
 	_stock_usage();
 
@@ -290,10 +289,17 @@ sub delivery {
 } # end sub delivery
 
 sub turnaround {
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'duedate_start', -31 );
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'duedate_end', '' );
+	_turnaround_results();
 }# end sub turnaround
 
-sub _turnaround_results {
-} # end sub _turnaround_results
+sub _turnaround {
+	ssi::save_params('/employee/reports/turnaround.html', 
+			( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
+	);
+} # end sub _turnaround
 
 sub job_size {
 	if ( ! %param ) {

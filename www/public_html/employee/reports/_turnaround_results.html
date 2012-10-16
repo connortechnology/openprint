@@ -1,10 +1,8 @@
 <? eval (
-	$param{'duedate_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'duedate_start_year','duedate_start_month','duedate_start_day'} ) );
-	$param{'duedate_end'} =	sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'duedate_end_year','duedate_end_month','duedate_end_day'} ) );
 
 	my %sql = (
-		'due_date_start'	=>	$param{'duedate_start'},
-		'due_date_end'		=>	$param{'duedate_end'},
+		ssi::date_filter( 'due_date_end', 'due_date >=' ),
+		ssi::date_filter( 'due_date_start', 'due_date >=' ),
 		'status'			=>	['Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Picked Up','Shipped','Complete','Waiting For Pickup'],
 		'order'				=>	'lngdocketnumber',
 	);
