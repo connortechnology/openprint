@@ -1,6 +1,6 @@
-package openprint::Service;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Service;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
@@ -117,6 +117,8 @@ sub prices {
 } # end sub prices
 
 sub find {
+	shift @_ if ref $_[0] eq 'openprint::Service';
+	shift @_ if $_[0] eq 'openprint::Service';
 	my %params = @_;
 	my $sql = 'SELECT * FROM Services WHERE 1>0';
 	my @values;
