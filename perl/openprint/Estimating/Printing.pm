@@ -856,6 +856,35 @@ $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' 
 		push @{$special_colours{$$C{pmsid}}}, $C;
 	} # end foreach C
 
+	# Make sure all our colours are in the special colours hash
+	foreach my $real_colour ( @filtered_colours ) {
+		my $colour;
+		if ( $real_colour =~ /Varnish/ ) {
+			next;
+		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
+			$colour = $1;
+		} elsif ( $real_colour =~ /PMS/ ) {
+			$colour = 'PMS';
+		} else { 
+			$colour = $real_colour;
+		} # end if
+
+		if ( ! $special_colours{$colour} ) {
+
+			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+			my $Ink = new openprint::Ink();
+			$$Ink{pmsid} = $colour;
+			if ( ! sets::isin( $colour, \@process_colours ) ) {
+				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
+				$$Ink{service_id} = $Service->id();
+				$$Ink{washups} = 1;
+				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+				$$Ink{material_id} = $Material->id();
+			} # end if
+			@{$special_colours{$colour}} = ( $Ink );
+		} # end if
+	} # end foreach
+
 	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
 	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
@@ -2630,8 +2659,7 @@ $$specs{'Runspeed'} = $run_speed;
 		my $Ink;
 		my $key = $real_colour.'-'.$Press->id().'-'.$qty_index;
 
-		#if ( $special_colours{$real_colour} ) {
-		foreach my $C ( @{$special_colours{$real_colour}} ) {
+		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
 				$Ink = $C;
 				last;
@@ -2639,6 +2667,7 @@ $$specs{'Runspeed'} = $run_speed;
 		} # end foreach
 
 		if ( ! $Ink ) {
+			$openprint::log->error("Didnt find ink in colours hash, must be a grade problem");
 			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 			$Ink = new openprint::Ink();
 			$$Ink{pmsid} = $real_colour;
@@ -2657,9 +2686,9 @@ $$specs{'Runspeed'} = $run_speed;
 				( ! $$washed_colours{$key} ) or 
 				( 
 				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
+				 ( $$washed_colours{$key} < 2 ) and
 				 sets::isin( $real_colour, $side_one_colours ) and 
-				 sets::isin( $real_colour, $side_two_colours ) and 
-				 ( $$washed_colours{$key} < 2 )
+				 sets::isin( $real_colour, $side_two_colours ) 
 				)
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
@@ -2672,21 +2701,15 @@ $$specs{'Runspeed'} = $run_speed;
 			%ink_price = $InkMaterial->get_price( undef, $Press );
 		} # end if
 
-$openprint::log->debug("$real_colour needs mixing");
+#$openprint::log->debug("$real_colour needs mixing");
 		if ( $$Ink{service_id} ) {
 			if ( ! $mixed_colours{$real_colour} ) {
-				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $Ink->Service()->name(),undef,$Press);
+				my %mix_price = $Ink->Service()->get_price(undef,$Press);
 				$price{'Ink Mix Charge'} += $mix_price{'Price'};
 				$mixed_colours{$real_colour} = 1;
 			} # end if
 		} # end if
 
-		if ( ! %ink_price ) {
-#$openprint::log->debug("Getting price for $colour Ink");
-			if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
-				%ink_price = $materials[0]->get_price( undef, $Press );
-			} # end if
-		} # end if
 		next if ! %ink_price;
 		my $area = $Imposition->object_area() * $impressions * ($$inkCoverage{$real_colour}/100);
 
