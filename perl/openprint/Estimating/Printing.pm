@@ -1547,25 +1547,25 @@ sub breakdown {
 	$breakdown .= sprintf('%s Colour Bar %s %s, Bleed: %s<br/>', ( $$price{'Press'} ? $$price{'Press'}->strid() : '' ), $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation(), $$Imposition{'bleed_size'} );
 	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{'Roll2SheetMakeReady'};
-	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
-	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
-	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
-	$breakdown .= sprintf("\tAqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
-	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
-	$breakdown .= sprintf("\tInline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
-	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
+	$breakdown .= sprintf("Imposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
+	$breakdown .= sprintf("Runstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
+	$breakdown .= sprintf("Work & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
+	$breakdown .= sprintf("Aqueous Setup:\t\$%.2f<br/>", $$Aqueous{'Setup'}) if $$Aqueous{'Setup'};
+	$breakdown .= sprintf("Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
+	$breakdown .= sprintf("Inline Varnish Setup Charge: \$%.2f<br/>", $$Varnish{'Setup'} ) if $$Varnish{'Setup'};
+	$breakdown .= sprintf("Press Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
-	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
+	$breakdown .= sprintf("Setup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
-	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
+	$breakdown .= sprintf("Inline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
 	if ( %$Aqueous ) {
-	$breakdown .= sprintf("\tAqueous Front Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideOne Run Cost','SideOne Units','SideOne Quantity','SideOne Total'} );
-	$breakdown .= sprintf("\tAqueous Back Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideTwo Run Cost','SideTwo Units','SideTwo Quantity','SideTwo Total'} );
+	$breakdown .= sprintf("Aqueous Front Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideOne Run Cost','SideOne Units','SideOne Quantity','SideOne Total'} );
+	$breakdown .= sprintf("Aqueous Back Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideTwo Run Cost','SideTwo Units','SideTwo Quantity','SideTwo Total'} );
 	} # end if
-	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} == $$price{'Run Total'};
-	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
+	$breakdown .= sprintf("Minimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} ) if $$price{'Minimum Run Charge'} == $$price{'Run Total'};
+	$breakdown .= sprintf("Run Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
 	my $plate_costs = $$price{'Plate Costs'};
 	$breakdown .= sprintf( 'Plates: %1$d %4$s * $%2$.2f per plate = $%3$.2f<br/>', @$price{'txtPlateQuantity','Plate Cost','Plate Price'}, $$plate_costs{'Plate ID'} );
@@ -2576,7 +2576,6 @@ $$specs{'Runspeed'} = $run_speed;
 	my %RunStylePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $$Imposition{runstyle}.'Setup','',$Press );
 	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
 
-	#$price{'Ink Mix Charge'} = $$pms_prices{'Ink Mix Charge'};
 	my $setup_cost = $price{'Imposition Total'} + $price{'WorkTurn Dry Charge'} + $aqueous{'Setup'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Runstyle Charge'} + $varnish_price{'Setup'} + $price{'Plate Total'};
 	$price{'Comparison Cost'} += $setup_cost;
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
@@ -2604,18 +2603,14 @@ $$specs{'Runspeed'} = $run_speed;
 		$run_cost = $price{'Minimum Run Charge'};
 	} # end if
 	$price{'Run Total'} = $run_cost;
-
-
 	$price{'Comparison Cost'} += $run_cost;
-	#nreturn \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Run Cost' );
-
 	$price{'Ink Price'} = 0;
 
 	my %mixed_colours = %$mixed_colours;
 
 	# Sheet work has the colours twice.
-	$impressions /= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work'] ));
-	my $grade = $Imposition->Paper()->grade();
+	$impressions /= $$project{print_sides} if $$Imposition{runstyle} eq 'Sheet Work';
+	my $grade = $Paper->grade();
 	$grade = 4 if ! $grade;
 
 	foreach my $real_colour ( @colours ) {
@@ -2635,51 +2630,57 @@ $$specs{'Runspeed'} = $run_speed;
 		my $Ink;
 		my $key = $real_colour.'-'.$Press->id().'-'.$qty_index;
 
-		if ( $special_colours{$real_colour} ) {
-			foreach my $C ( @{$special_colours{$real_colour}} ) {
-				if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
-					$Ink = $C;
-					last;
-				} # end if
-			} # end foreach
-			next if ! $Ink;
-
-if ( 0 ) {
-			if ( ! $mixed_colours{$real_colour} ) {
-				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'MetallicInkMix',undef,$Press);
-				$price{'Ink Mix Charge'} += $mix_price{'Price'};
-				$mixed_colours{$real_colour} = 1;
+		#if ( $special_colours{$real_colour} ) {
+		foreach my $C ( @{$special_colours{$real_colour}} ) {
+			if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
+				$Ink = $C;
+				last;
 			} # end if
-} # end if
+		} # end foreach
+
+		if ( ! $Ink ) {
+			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+			$Ink = new openprint::Ink();
+			$$Ink{pmsid} = $real_colour;
+			if ( ! sets::isin( $real_colour, \@process_colours ) ) {
+				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
+				$$Ink{service_id} = $Service->id();
+				$$Ink{washups} = 1;
+				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+				$$Ink{material_id} = $Material->id();
+			} # end if
+		} # end if
 
 #$openprint::log->debug("Washed color: $real_colour " . $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) if $$Imposition{runstyle} eq 'Perfecting';
 # Washed_colours contains each colour used in the other signatures
-			if ( ( ! $$washed_colours{$key} ) or ( ( $$Imposition{runstyle} eq 'Perfecting' ) and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$key} < 2 )
-			   ) {
-				$price{'Press Washes'} += $$Ink{washups};
+		if ( 
+				( ! $$washed_colours{$key} ) or 
+				( 
+				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
+				 sets::isin( $real_colour, $side_one_colours ) and 
+				 sets::isin( $real_colour, $side_two_colours ) and 
+				 ( $$washed_colours{$key} < 2 )
+				)
+		   ) {
+			$price{'Press Washes'} += $$Ink{washups};
 #$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$special_colours{$real_colour}{washups} );
-			} # end if
+		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
+		if ( $$Ink{material_id} ) {
 			$InkMaterial = new openprint::Material( $Ink->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
-		} elsif ( ! sets::isin( $real_colour, \@process_colours ) ) {
+		} # end if
+
 $openprint::log->debug("$real_colour needs mixing");
-			# PMS?
+		if ( $$Ink{service_id} ) {
 			if ( ! $mixed_colours{$real_colour} ) {
-				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'PMSInkMix',undef,$Press);
+				my %mix_price = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, $Ink->Service()->name(),undef,$Press);
 				$price{'Ink Mix Charge'} += $mix_price{'Price'};
 				$mixed_colours{$real_colour} = 1;
 			} # end if
-
-#$openprint::log->debug("Washed color: $real_colour " . $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) if $$Imposition{runstyle} eq 'Perfecting';
-			if ( ( ! $$washed_colours{$key} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$key} < 2 )
-			   ) {
-				$price{'Press Washes'} += 1;
-				$$washed_colours{$key} += 1;
-$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour " );
-			} # end if
 		} # end if
+
 		if ( ! %ink_price ) {
 #$openprint::log->debug("Getting price for $colour Ink");
 			if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
@@ -2693,9 +2694,6 @@ $openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colou
 			
 			if ( sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) ) {
 				$area /= 2;
-			} # end if
-			if ( (! $InkMaterial ) and my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
-				$InkMaterial = $materials[0];
 			} # end if
 			if ( $InkMaterial ) {
 				my $coverage = $InkMaterial->specification('Coverage', $grade);
@@ -2717,7 +2715,7 @@ $openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colou
 			my $sheets_per_ink_unit = 750000;
 			my $p = $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'};
 			$price{'Ink Price'} += $p;
-			$price{'Ink breakdown'} .= sprintf('%s breakdown: %.2f sq feet * %s%s / %d sheets per unit = $%.2f<br/>', $real_colour, $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
+			$price{'Ink breakdown'} .= sprintf('%s breakdown: %.2f sq feet * $%.2f%s / %d sheets per unit = $%.2f<br/>', $real_colour, $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
 		} elsif ( lc $ink_price{'units'} eq 'per square inch' ) {
 			my $p = $ink_price{'Price'} * $area;
 			$price{'Ink Price'} += $p;
