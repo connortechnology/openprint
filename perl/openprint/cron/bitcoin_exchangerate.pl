@@ -9,22 +9,11 @@ use JSON ();
 use LWP::UserAgent ();
 use HTTP::Request ();
 
-use Data::Dumper;
 require configuration;
 require sql;
-require ssi;
-require misc;
-require openprint::Company;
-require openprint::User;
-require Email::Valid;
-require openprint::Email;
-require openprint::User_Notification;
 require logger;
-require openprint::Article;
-require openprint::Feed;
-require Date::Parse;
-require Date::Format;
-use openprint ();
+require openprint::Currency;
+require openprint;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -33,10 +22,6 @@ use vars qw( $log $dbh %config );
 
 use File::Basename qw(basename);
 use Getopt::Long;
-use Mail::Sendmail;
-use MIME::QuotedPrint;
-use Time::HiRes qw(usleep);
-use Encode qw(encode);
 
 my $program = basename($0);
 

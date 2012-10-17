@@ -224,7 +224,7 @@ sub _invitation_users {
 		my %old = map { $_->user_id(), $_ } $Event->Invitations();
 		my @user_ids;
 		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
-			my ( $company_id, $user_id ) = $id =~ /^(\d+)_(\d*)$/;
+			my ( $user_id, $company_id ) = $id =~ /^(\d+)_(\d*)$/;
 			if ( $company_id and ! $user_id ) {
 				push @user_ids, map { $_->id() } ( new openprint::Company( $company_id )->Users() );
 			} else {
@@ -247,7 +247,7 @@ sub _invitation_users {
 		$variable{'error'} .= $Privacy->save({user_id=>$privacy_users});
 	} elsif ( $param{'action'} eq 'add' ) {
 		my @user_ids;
-		my ( $company_id, $user_id ) = $param{user_id} =~ /^(\d+)_(\d*)$/;
+		my ( $user_id, $company_id ) = $param{user_id} =~ /^(\d+)_(\d*)$/;
 		if ( $company_id and ! $user_id ) {
 			@user_ids = map { $_->id() } ( new openprint::Company( $company_id )->Users() );
 		} else {

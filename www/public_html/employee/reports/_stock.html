@@ -18,15 +18,24 @@
 		} # end foreach
 
 		my ( $sign, $last_seen ) = $session{'/employee/reports/stock.html?last_seen'} =~ /^([\+\-])(\d+)$/;
-		my @Papers = openprint::Paper->find( 
-			'owner_id'			=>	$session{'/employee/reports/stock.html?Owner'},
-			'manufacturer_id'	=>	$session{'/employee/reports/stock.html?Manufacturer'},
-			'name_id'			=>	$session{'/employee/reports/stock.html?Name'},
-			'finish_id'			=>	$session{'/employee/reports/stock.html?Finish'},
-			'colour_id'			=>	$session{'/employee/reports/stock.html?Colour'},
-			'weight_id'			=>	$session{'/employee/reports/stock.html?Weight'},
+		my @Papers = sort {
+            $_ = lc $a->manufacturer cmp lc $b->manufacturer;
+            return $_ if $_;
+            $_ = lc $a->brand cmp lc $b->brand;
+            return $_ if $_;
+            $_ = lc $a->finish cmp lc $b->finish;
+            return $_ if $_;
+            $_ = $a->weight <=> $b->weight;
+            return $_ if $_;
+            $_ = $$a{width} <=> $$b{width};
+            return $_ if $_;
+            $_ = $$a{height} <=> $$b{height};
+            return $_ if $_;
+		} openprint::Paper->find( 
+			( map { $session{'/employee/reports/stock.html?'.$_} ? ( $_ => $session{'/employee/reports/stock.html?'.$_} ) : () }
+		('owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id') ),
 			( $session{'/employee/reports/stock.html?Type'} ? ( 'type' => [ split(',', $session{'/employee/reports/stock.html?Type'} ) ] ) : () ),
-			'order'=>'name,finish,colour,weight' );
+		);
 
 		foreach my $Paper ( @Papers ) {
 			next if ! $Paper->in_stock();

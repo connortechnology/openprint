@@ -14,7 +14,6 @@
 		<th class="plate_type">Plate Type</th>
 		<th class="Price plate_cost">Plate Cost</th>
 		<th class="Price plate_price">Plate Price</th>
-		<th class="plate_units">Plate Units</th>
 		<th class="Price plate_total">Plate Total</th>
 		<th class="impressions">Impressions</th>
 		<th class="status">Status</th>
@@ -49,8 +48,7 @@
 					<td class="plate_count"><a href="/employee/order/view.html?order_id=%2$d">%11$s</a></td>
 					<td class="plate_type"><a href="/employee/order/view.html?order_id=%2$d">%12$s</a></td>
 					<td class="Price plate_cost"><a href="/employee/order/view.html?order_id=%2$d">%13$s</a></td>
-					<td class="Price plate_price"><a href="/employee/order/view.html?order_id=%2$d">%14$s</a></td>
-					<td class="Price plate_units"><a href="/employee/order/view.html?order_id=%2$d">%15$s</a></td>
+					<td class="Price plate_price"><a href="/employee/order/view.html?order_id=%2$d">%14$s %15$s</a></td>
 					<td class="Price plate_total"><a href="/employee/order/view.html?order_id=%2$d">%16$s</a></td>
 					<td class="impressions"><a href="/employee/order/view.html?order_id=%2$d">%17$s</a></td>
 					<td><a href="/employee/order/view.html?order_id=%2$d">%18$s</a></td>
@@ -69,7 +67,7 @@
 		$html .= sprintf(q`<tr class="totals">
 			<td>Count</td>
 			<td>%d</td>
-			<td colspan="14">Total</td>
+			<td colspan="13">Total</td>
 			<td class="Price">%s</td>
 			<td class="Price">%s</td>
 		</tr>`, $lines, 

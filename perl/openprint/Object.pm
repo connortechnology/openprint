@@ -41,7 +41,6 @@ sub init_cache {
 	} # end if
 } # end sub init_cache
 
-
 sub debug {
 	$log->debug("Dumping Object cache");
 	foreach my $o ( keys %cache ) {
@@ -510,14 +509,14 @@ sub find_operators {
 			if ( @{$$params{$k.' &&'}} ) {
 				push @{$results{' &&'}}, 
 					$k.' &&',
-					$f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', 
-					@{$$params{$k.' <@'}};
+					$f . ' && ?',
+					$$params{$k.' &&'};
 			} # end if
 		} else {
 			push @{$results{' &&'}}, 
 				 $k.' &&', 
 				 "$f && ?", 
-				 $$params{$k.' &&'};
+				 [ $$params{$k.' &&'} ];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' <@'} ) {
@@ -525,14 +524,14 @@ sub find_operators {
 			if ( @{$$params{$k.' <@'}} ) {
 				push @{$results{' <@'}}, 
 					$k.' <@',
-					$f . ' <@ ARRAY['. join(',', map { '?' } @{$$params{$k.' <@'}} ).']',
-					@{$$params{$k.' <@'}};
+					$f . ' <@ ?',
+					$$params{$k.' <@'};
 			} # end if
 		} else {
 			push @{$results{' <@'}}, 
 				 $k.' <@', 
 				 "$f <@ ?", 
-				 $$params{$k.' <@'};
+				 [ $$params{$k.' <@'} ];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' @>'} ) {
@@ -540,14 +539,14 @@ sub find_operators {
 			if ( @{$$params{$k.' @>'}} ) {
 				push @{$results{' @>'}}, 
 					$k.' @>',
-					$f . ' @> ARRAY['. join(',', map { '?' } @{$$params{$k.' @>'}} ).']', 
-					@{$$params{$k.' @>'}};
+					$f . ' @> ?',
+					$$params{$k.' @>'};
 			} # end if
 		} else {
 			push @{$results{' @>'}}, 
 				 $k.' @>', 
 				 "$f @> ?", 
-				 $$params{$k.' @>'};
+				 [$$params{$k.' @>'}];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' in'} ) {

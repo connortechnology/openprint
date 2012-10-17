@@ -9,11 +9,9 @@ use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %trans
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-require openprint::Currency;
 require openprint::ProjectType;
 require openprint::Company;
 require openprint::Order;
-require openprint::logs;
 require openprint::print;
 
 require sql;
@@ -135,8 +133,12 @@ sub Type {
 	if ( @_ > 1 ) {
 		$_[0]{'type_id'} = $_[1]->id();	
 	} # end nif
-	return new openprint::ProjectType( $_[0]{'type_id'} );
+	return new openprint::ProjectType( $_[0]{type_id} );
 } # end sub Type
+
+sub type {
+	return new openprint::ProjectType( $_[0]{type_id} );
+} # end sub type
 
 sub get_project_type_service_index {
 	my ( $self ) = @_;
@@ -701,10 +703,6 @@ sub copy {
 	return $new;
 } # end sub copy
 
-sub type {
-	my $self = shift;
-	return new openprint::ProjectType( $$self{'type_id'} );
-} # end sub type
 
 sub add_to_log {
 	my ( $self, $cust_id, $user_id, $text ) = @_;
@@ -862,12 +860,10 @@ sub summary {
 } # end sub summary
 
 sub company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub company
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub company
 
 sub requested_date {

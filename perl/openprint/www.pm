@@ -37,12 +37,13 @@ sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 $log->debug("Was aborted");
 	} else {
-$log->debug("cleanup");
 	} # end if
 	if ( $dbh ) {
-		$session{'lastupdated'} = time;
+		$session{lastupdated} = time;
 		untie %session;
 		$dbh->disconnect();
+	} else {
+$log->debug("No dbh at cleanup");
 	} # end if
 } # end sub cleanup
 
@@ -254,7 +255,7 @@ sub handler {
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
+			$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if

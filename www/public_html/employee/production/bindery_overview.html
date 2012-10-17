@@ -11,7 +11,7 @@
 			<select name="ddmSalesRep" size="1">
 				<option value="">All Employees</option>
 				 <? echo ( 
-						 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['A','E'],'usergroups'=>['Sales'],'order'=>'lower(strfirstname),lower(strlastname)' ) ], $param{'ddmSalesRep'} );
+						 ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(type=>['A','E'],'usergroup any'=>['Sales'],'order'=>'lower(firstname),lower(lastname)' ) ], $param{'ddmSalesRep'} );
 					) ?>
 			</select>
 		</p>

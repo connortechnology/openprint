@@ -18,10 +18,6 @@
 <? if ( @{$$variable{'Articles'}} == 0 ) ?>
 	There are no articles which match your search criteria. 
 <? else ( @{$$variable{'Articles'}} == 0 ) ?>
-	<div class="unprintable">
-		Please click on a <b>Article ID #</b> to view article details.<br/>
-		To delete articles from search check the appropriate article(s) and click delete.<br/>
-	</div>
 	<table class="List">
 		<tr> 
 <? if ( $session{user_type} eq 'A' ) ?>

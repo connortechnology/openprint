@@ -95,7 +95,7 @@ Results for <? echo (
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ;
 			$$variable{'DocketCount'} += 1;
 		) ?>
-		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime'} = splice @{$$variable{'PROJECTS'}},0,6; ) ?>
+		<? endwhile ( @$variable{'OrderID','index', 'docket','duedate', 'status','readytime','shippedtime'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
 		<tr class="totals"><td>Totals</td><td colspan="2">Selected Dockets: <?DocketCount?></td><td>Late:<?LateCount?></td><td colspan="2">Late percentage: <? echo ( sprintf('%.0f%',($$variable{'LateCount'}/$$variable{'DocketCount'})*100) ) ?></td></tr>
 	</table>
 	<p class="buttons">

@@ -17,7 +17,7 @@
 				<label>Recipient</label>
 				<select name="recipient_id" id="recipient_id" onchange="load_payments(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down([ map { $_->id(), $_->name() } openprint::Company->find('supplier'=>'Y','offers_credit'=>1,'order'=>'lower(name)') ], $session{'/payment/history.html?recipient_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down([ map { $_->id(), $_->name() } openprint::Company->find(supplier=>'Y',order=>'lower(name)') ], $session{'/payment/history.html?recipient_id'} ); ) ?>
 				</select>
 			</li>
 			<li>

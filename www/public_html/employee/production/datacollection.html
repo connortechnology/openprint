@@ -55,7 +55,7 @@ function category_onchange(ddm) {
 			</li>
 			<li><label>Company</label><span id="company_name"><? echo ( 
 				if ( $param{docket} ) {
-					my $Order = openprint::Order->find_one('docket'=>$param{docket});
+					my $Order = openprint::Order->find_one(docket=>$param{docket});
 					return $Order->Company()->name() if $Order;
 				} # end if
 				return '';
@@ -64,12 +64,12 @@ function category_onchange(ddm) {
 			<select name="category_id" id="category_id" onchange="category_onchange(this);">
 				<option value="">All</option>
 <? echo (
-	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
+	return ssi::make_drop_down( openprint::Equipment_Category->dropdown(order=>'lower(name)'), $session{'/employee/production/datacollection.html?category_id'} );
 ) ?>
 			</select>
 			</li>		
 			<li><label>Operator</label><select name="user_id" id="user_id"><option value="">select</option>
-				<? echo ( ssi::make_drop_down( openprint::User->dropdown('order'=>'lower(strfirstname),lower(strlastname)','type'=>['E','A'] ), 
+				<? echo ( ssi::make_drop_down( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>['E','A'] ), 
 $session{'/employee/production/datacollection.html?user_id'} ? $session{'/employee/production/datacollection.html?user_id'} : $session{user_id} ); ) ?>
 				</select>
 			</li>
@@ -129,7 +129,7 @@ $ipoo = 0;
 </form>
 <br class="spacer"/>
 <form id="LogForm" name="LogForm" action="">
-<fieldset><legend>Log</legend>
+<fieldset class="filters"><legend>Log</legend>
 	<ul>
 		<li><label>When</label>
 			<span class="DateselectorT">
@@ -161,7 +161,7 @@ $ipoo = 0;
 			<select name="employee_id" size="1" onchange="load_log();">
 				<option value="">All Employees</option>
 	<? echo (
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'] ) ],
+		ssi::make_drop_down( openprint::User->dropdown( order=>'lower(firstname),lower(lastname)', type=>['E','A'] ),
 		$session{'/employee/production/datacollection.html?employee_id'} );
 	)?>
 			</select>

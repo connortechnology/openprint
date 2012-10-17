@@ -2598,6 +2598,11 @@ if ( ! sets::isin('user_notifications',\@tables ) ) {
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Claims.sql}) );
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='claims'", 'column_name');
+	if ( ! exists $$data{cancelled_on} ) {
+		$dbh->do('ALTER TABLE claims add cancelled_on TIMESTAMP WITH TIME ZONE');
+	} # end if
 } # end if
 if ( ! sets::isin( 'claim_contenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Claim_ContentTypes.sql}) );
