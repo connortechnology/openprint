@@ -2,34 +2,31 @@
 <form id="f2" name="f2" action="/employee/project/view.html" method="post">
 <fieldset class="filters">
 	<ul>
-<li class="docket"><label>Docket #</label>
-<? echo ( join('',
-			ssi::input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{Docket}),
-			ssi::button( 'Go1', { onclick=>'f2.submit();', text=>'Go' } ),
-); ) ?>
-</li>
-
-<li class="project_id"><label>Project #</label>
-<? echo ( join('',
-			ssi::input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{project_id} ),
-			ssi::button( 'Go2', { onclick=>'f2.submit();', text=>'Go' } ),
-); ) ?>
-</li>
-</ul>
+		<li class="docket"><label>Docket #</label>
+		<? echo ( join('',
+					ssi::input( type=>'cardinal', name=>'Docket', id=>'Docket', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{Docket}),
+					ssi::button( 'Go1', { onclick=>'f2.submit();', text=>'Go' } ),
+		); ) ?>
+		</li>
+		<li class="project_id"><label>Project #</label>
+		<? echo ( join('',
+					ssi::input( type=>'cardinal', name=>'project_id', id=>'project_id', onchange=>'change_handler(this);', onkeypress=>'return input_handler(this,event);', onkeydown=>'if(event.keyCode==13){f2.submit(f1);}', value=>$param{project_id} ),
+					ssi::button( 'Go2', { onclick=>'f2.submit();', text=>'Go' } ),
+		); ) ?>
+		</li>
+	</ul>
 </fieldset>
 </form>
 </div>
 <div class="PageTitle">
-<h1>PRODUCTION</h1>
-<h2>View Docket</h2>
+	<h1>PRODUCTION</h1>
+	<h2>View Docket</h2>
 </div>
 <br class="spacer"/>
 <script type="text/javascript">
-<!--
 function open_window( page ) {
 	window.open(page,'label','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
--->
 function dearchive(file_id) {
 	var action = $('action-'+file_id);
 	action.show();
@@ -51,18 +48,19 @@ function dearchive(file_id) {
 				$html .= ssi::button( 'HideAllSignatures', { href=>'/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', text=>'Hide All Signatures' } );
 		} # end if
 	} # end if
+	$$variable{checkboxes} = ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{user_id} );
 	return $html;
 ) ?>
 </div>
 <div class="Project">
-<!--#include virtual="/includes/project_header.html" -->
+	<!--#include virtual="/includes/project_header.html" -->
 <br/>
 <form id="f1" name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
-			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<th class="checkbox unprintable">&nbsp;</th>
-			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<th class="checkbox">&nbsp;</th>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<th class="Service">Service</th>
 			<th class="Price">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -81,26 +79,24 @@ function dearchive(file_id) {
 	my $qty_index = $Project->ordered_quantity_index();
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
+
+
     foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
         if ( $ServiceCategory->name() eq 'Printing' ) {
-			$html .= qq`<tr$rowclass>\n<td class="checkbox unprintable">`;
-			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
-				$html .= sprintf(q`<input type="checkbox" name="chkDelete-%1$d" />`, $$services{''}[0] );
-			} # end if
-			$html .= '</td>';
+			$html .= "<tr$rowclass>\n";
+			$html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $$services{''}[0] ) if $$variable{checkboxes};
 			if ( $Project->Type()->url() ) {
 				$html .= sprintf('<td class="Service"><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $Project->Type()->url(), $Project->id(), $$services{''}[0],
 				( $$services{'Signature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
 				);
 			} else {
-				$html .= '<td><b>Printing</b></a></td>'; 
+				$html .= '<td class="Service"><b>Printing</b></a></td>'; 
 			} # end if
 
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			my @totals;
 
-			$html .= '<td class="Price">&nbsp;</td>';
-			$html .= '<td class="status">&nbsp;</td>';
+			$html .= '<td class="Price">&nbsp;</td><td class="status">&nbsp;</td>';
 			$html .= "</tr>\n";
 			my @sigs = $Project->signatures();
 			while (@sigs) {
@@ -130,12 +126,8 @@ function dearchive(file_id) {
 					} # end if
 				} # end for
 				$html .= "<tr$rowclass>";
-				if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
-					$html .= sprintf(q`<td class="unprintable"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $ss_id );
-				} else {
-					$html .= '<td class="unprintable">&nbsp;</td>';
-				} # end if
-				$html .= sprintf('<td><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+				$html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $ss_id ) if $$variable{checkboxes};
+				$html .= sprintf('<td class="Service"><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 						openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 						);
 				$html .= sprintf('<td class="Price"><b>%s</b><br/>%s</td>', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
@@ -144,8 +136,7 @@ function dearchive(file_id) {
 				$$variable{'index'} = $ss_id;
 				$$variable{'status'} = $statuses{$ss_id};
 				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/project/_status.html' );
-				$html .= '</td>';
-				$html .= "</tr>\n";
+				$html .= "</td></tr>\n";
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end while sigs
 
@@ -157,21 +148,17 @@ function dearchive(file_id) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 
                     $html .= "<tr$rowclass>\n";
-					if ( openprint::usergroup::is_user_in( ['Sales Admin', 'PrepressManager'], $session{'user_id'} ) ) {
-						$html .= sprintf(q`<td class="unprintable"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id );
-					} else {
-						$html .= '<td class="unprintable">&nbsp;</td>';
-					} # end if
+					$html .= sprintf(q`<td class="checkbox"><input type="checkbox" name="chkDelete-%1$d" /></td>`, $service_id ) if $$variable{checkboxes};
 					$html .= sprintf( (
 								$ServiceType->url() ?
-								q`<td><a href="/employee/proj/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a></td>` :
-								q`<td><b>%4$s</b>%5$s<br/>%6$s</td>` ),
+								q`<td class="Service"><a href="/employee/proj/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a></td>` :
+								q`<td class="Service"><b>%4$s</b>%5$s<br/>%6$s</td>` ),
 							$ServiceType->url(), $Project->id(), $service_id, 
 							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
 							openprint::service::summary( $Project->id(), $service_id ),
 							);
-					$html .= '<td class="price">';
+					$html .= '<td class="Price">';
 					if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
 						$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 					} # end if
@@ -186,8 +173,7 @@ function dearchive(file_id) {
 					$$variable{'status'} = $statuses{$service_id};
 					$$variable{'index'} = $service_id;
 					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/project/_status.html' );
-					$html .= '</td>';
-                    $html .= "</tr>\n";
+                    $html .= "</td></tr>\n";
                     $rowclass = $rowclass ? '' : ' class="colRow"';
                 } # end foreach service_id
             } # end foreach ServiceType
@@ -215,7 +201,6 @@ function dearchive(file_id) {
 
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			my $string = $Paper->to_string();
-$log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			
 			if ( $Paper->type() eq 'Roll' ) {
 				$Paper->height( $$sig_specs{'CutOff'.$qty_index} );
@@ -243,10 +228,10 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 
 		if ( keys %totals ) {
 			$html .= '<tr class="totals">';
-			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
-				$html .= '<td class="unprintable">&nbsp;</td>';
+			if ( $$variable{checkboxes} ) {
+				$html .= '<td class="checkboxes">&nbsp;</td>';
 			} # end if
-			$html .= '<td><b>Stock</b><br/>';
+			$html .= '<td class="Service"><b>Stock</b><br/>';
 			foreach my $string ( sort keys %totals ) {
 				$html .= $string . '<br/>';
 			} # end foreach string
@@ -265,41 +250,40 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 				$html .= $prices{$string};
 				$html .= '<br/>';
 			} # end foreach key
-			$html .= '</td>';
-			$html .= '</tr>';
+			$html .= '</td></tr>';
 		} # end if
 	} # end if $$services{Paper}
 	return $html;
 ) ?>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress','InventoryManager'], $session{'user_id'} ) ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+	<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td colspan="2">Add Service<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td>
 			<? echo ( ssi::button( 'AddServiceType', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", text=>'Add Service' } ); ) ?></td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','PrepressManager'], $session{'user_id'} ) ) ?>
+
 		<tr id="CustomService" class="unprintable" style="display: none;">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
 			<td class="checkbox">&nbsp;</td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service"><input type="text" name="txtServiceName" /></td>
 			<td class="Price"><input type="number" name="txtPrice" /></td>
 			<td>
 			<? echo ( ssi::button( 'AddToProject', { onclick=>"f1.btnFunction.value='Add Service';f1.submit();", text=>'Add Custom Service' } ); ) ?>
 			</td>
 		</tr>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+	<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+	<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="totals subtotal">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="checkbox unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox">&nbsp;</td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">Subtotal</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td class="status"></td>
@@ -308,39 +292,39 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 		<? echo (
 			my $html;
 			foreach my $Tax ( openprint::Order_Tax->find('order_id'=>$$variable{'Project'}->Order()->id() ) ) {
+				$html .= '<tr class="tax">';
+				$html .= '<td class="checkbox"></td>' if $$variable{checkboxes};
 				$html .= sprintf(q`
-		<tr class="tax">
-			<td class="checkbox unprintable"></td>
 			<td class="service">%s</td>
 			<td class="Price">%s</td>
 			<td class="status"></td>
 		</tr>`, $Tax->Tax()->name(), openprint::Currency::format($Tax->amount()) );
 			} # end foreach Tax
 			return $html;
-			) ?>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+		) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
 		<tr class="total">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="checkbox unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">Total</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->total() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 
 		<tr class="paid">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="checkbox unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">Paid</td>
 			<td class="Price"><? echo ( openprint::Currency::format( 1*$$variable{'Project'}->Order()->paid() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 		<? if ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
 		<tr class="downpayment">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="checkbox unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">Downpayment Owing</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Order()->downpayment_owing() ); ) ?></td>
 			<td class="status"></td>
@@ -348,9 +332,9 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 		<? endif ( $$variable{'Project'}->Order()->downpayment_owing() ) ?>
 		<? if ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 		<tr class="cod">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="checkbox unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">COD Owing</td>
 			<td class="Price"><? echo ( 
 					if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) {
@@ -364,20 +348,20 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 		<? endif ( $$variable{'Project'}->Order()->cod_owing() ) ?>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service">Originally Ordered Price</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td class="status"></td>
 		</tr>
 <? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
-		<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+	<? else ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
-			<td class="unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling','PrepressManager'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{checkboxes} ) ?>
+			<td class="checkbox"></td>
+			<? endif ( $$variable{checkboxes} ) ?>
 			<td class="service"><b>Value for shipping</b></td>
 			<td class="Price"><? echo ( 
 				my $price = $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index());
@@ -392,7 +376,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 			<td class="status"></td>
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Shipping'], $session{'user_id'} ) ) ?>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
+	<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Accounting','PrepressManager'], $session{'user_id'} ) ) ?>
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	<? if ( $$variable{'Project'}->currency_id() != $session{'Currency_id'} ) ?>
@@ -539,7 +523,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend onclick="AjaxToggleContent( 'ProductionLog', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
+<fieldset><legend onclick="toggleContent( 'ProductionLog', '/employee/project/_production_log.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Production Log (click to hide/show)</legend>
 <? if ( $session{'/employee/project/view.html?production_log'} ) ?>
 <div id="ProductionLog">
 <!--#include virtual="_production_log.html"-->
@@ -549,7 +533,7 @@ $log->debug("Impressions $impressions Paper area: " . $Paper->area() );
 </div>
 </fieldset>
 <br class="spacer"/>
-<fieldset><legend onclick="AjaxToggleContent( 'ModificationHistory', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
+<fieldset><legend onclick="toggleContent( 'ModificationHistory', '/employee/project/_modification_history.html?project_id=<? echo ( $$variable{Project}->id() ) ?>', null, null );">Modification History (click to hide/show)</legend>
 <div id="ModificationHistory" style="display: none;"></div>
 </fieldset>
 </div></div>

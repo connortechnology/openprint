@@ -94,7 +94,7 @@
 				<td class="Date"><a href="view.html?claim_id=%1$d">%7$s</a></td>
 				<td class="Docket" rowspan="2"><a href="view.html?claim_id=%1$d">%9$s</a></td>
 				<td class="Price" rowspan="2">%10$s</td>
-			</tr><tr%12$s id="tr-%1$d-2" onmouseover="$('tr-%1$d-1').addClassName('highlightOn');$('tr-%1$d-2').addClassName('highlightOn');" onmouseout="$('tr-%1$d-1').removeClassName('highlightOn');$('tr-%1$d-2').removeClassName('highlightOn');">
+			</tr><tr%12$s id="tr-%1$d-2">
 				<td class="Date"><a href="view.html?claim_id=%1$d">%11$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%8$s</a></td>
@@ -124,7 +124,7 @@
 		<? echo (
 			my $html;
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';f2.submit();", '', 'Delete Selected' );
+				$html .= ssi::button( 'Delete', { onclick=>"f2.btnFunction.value='Delete';f2.submit();", href=>'', text=>'Delete Selected' };
 			} # end if
 			return $html;
 		) ?>

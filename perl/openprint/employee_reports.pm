@@ -261,7 +261,7 @@ sub stock {
 } # end sub stock
 
 sub _stock {
-	ssi::save_params('/employee/reports/stock.html', 'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
+	ssi::save_params('/employee/reports/stock.html', 'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
 } # end sub _stock
 
 sub stock_usage {
@@ -272,7 +272,11 @@ sub stock_usage {
 } # end sub stock_usage
 
 sub _stock_usage {
-	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day','ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
+	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 
+			( map { 'ordered_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
+			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
+			'type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
 } # end sub _stock_usage
 
 sub delivery {
@@ -288,8 +292,8 @@ sub delivery {
 } # end sub delivery
 
 sub turnaround {
-	ssi::setup_date_select( '/employee/reports/turnaround.html', 'duedate_start', -31 );
-	ssi::setup_date_select( '/employee/reports/turnaround.html', 'duedate_end', '' );
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_start', -31 );
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_end', '' );
 	_turnaround_results();
 }# end sub turnaround
 
@@ -316,8 +320,8 @@ sub job_size {
 
 sub _job_size {
 	ssi::save_params('/employee/reports/job_size.html', 'company_id', 
-			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
-			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			( map { 'ordered_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_end_'.$_ } ( 'year','month','day' ) ),
 			'press_id', 'csr_id', 'reprint',

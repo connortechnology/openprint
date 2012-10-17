@@ -1310,7 +1310,9 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 					return new openprint::Paper();
 				} # end if
 			
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height(); # force recalc
+				if ( $Paper->width() and $Paper->height() and $Paper->start_width() and $Paper->start_height() ) {
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height())));
+				} # end if
 			} # end if
 		} # end if
 	} # end if
@@ -1474,5 +1476,15 @@ sub start_height {
 	} 
 	return $_[0]{'start_height'};
 } # end sub start_height
+
+sub init_cache {
+	openprint::Manufacturer->find();
+    openprint::StockBrand->find();
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+    openprint::StockMaterial->find();
+}
 1;
 __END__

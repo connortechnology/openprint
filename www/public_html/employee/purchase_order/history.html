@@ -120,7 +120,7 @@
 				<label class="radio" for="cancelled">Both</label>
 			</li>
 			<li><label>Department:</label>
-				<select name="department_id" onchange="page_load('Results',\$('f1'));">
+				<select name="department_id" onchange="page_load('Results',$('f1'));">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( openprint::PurchaseOrder_Department->dropdown('order'=>'lower(name)'), $session{'/employee/purchase_order/history.html?department_id'} ); ) ?>
 				</select>
@@ -132,7 +132,8 @@
 					foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
 						$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
 					} # end foreach Type
-					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
+					$html .= sprintf(q`<input type="checkbox" id="types" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types">%2$s</label>`, 
+						' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] ) or ! exists $session{'/employee/purchase_order/history.html?types'} ) );
 					return $html;
 				) ?>
 			</li>

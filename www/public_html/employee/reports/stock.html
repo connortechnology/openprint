@@ -37,15 +37,14 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             </p>
         </div>
         <div class="rightColumn">
-            <p><label>Type</label>
-    <? eval (
-        $session{'/employee/reports/stock.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock.html?Type'};
+			<ul>
+            <li><label>Type</label>
+    <? echo (
+        $session{'/employee/reports/stock.html?type'} = 'Roll' if ! $session{'/employee/reports/stock.html?type'};
+		return ssi::checkboxes( 'type', [ 'Sheet', 'Sheet', 'Roll', 'Roll' ], [split( ',', $session{'/employee/reports/stock.html?type'} )], { onclick=>'f1.submit();' } );
     ) ?>
-                <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( sets::isin( 'Sheet', split( ',', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
-                <label class="radio" for="TypeSheet">Sheet</label>
-                <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( sets::isin( 'Roll', split( ',', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
-                <label class="radio" for="TypeRoll">Roll</label>
-            </p>
+            </li>
+			</ul>
         </div>
         <br class="spacer"/>
         <hr/>
@@ -53,15 +52,14 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 <ul>
 <? echo (
     my $html;
-
     my %find = (
-			( $session{'/employee/reports/stock.html?type'} ? ( type => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
+			( $session{'/employee/reports/stock.html?type'} ? ( type => [ split( ',', $session{'/employee/reports/stock.html?type'} ) ] ) : () ),
     );
 	if ( $session{'/employee/reports/stock.html?owner_id'} ) {
 		if ( $session{'/employee/reports/stock.html?owner_id_exclude'} ) {
 			$find{'owner_id !='} = $session{'/employee/reports/stock.html?owner_id'};
 		} else {
-			$find{'owner_id'} = $session{'/employee/reports/stock.html?owner_id'};
+			$find{owner_id} = $session{'/employee/reports/stock.html?owner_id'};
 		} # end if
 	} # end if
 
@@ -69,13 +67,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 
     my @Papers = openprint::Paper->find( %find );
 	my %filter_validations;
-	openprint::Manufacturer->find();
-	openprint::StockBrand->find();
-	openprint::StockFinish->find();
-	openprint::StockColour->find();
-	openprint::StockWeight->find();
-	openprint::StockQuality->find();
-	openprint::StockMaterial->find();
+	openprint::Paper::init_cache();
 
 	my %filters;
 	for ( my $stock_index = 0; $stock_index < @Papers; $stock_index += 1 ) {
@@ -92,8 +84,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
 				if ( $$Stock{$option_id} eq $session{'/employee/reports/stock.html?'.$option_id} ) {
 					$filter_validations{$option} = 1;
 				} else {
-					splice @Papers, $stock_index, 1;
-					$stock_index -= 1;
+					splice @Papers, $stock_index, 1; $stock_index -= 1;
 					last;
 				} # end if
 			} # end if
@@ -103,10 +94,6 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
     foreach my $option ( @StockOptions ) {
 		next if ! $filters{$option};
         my @options = map { $filters{$option}{$_}, $_ } ( sort keys %{$filters{$option}} );
-
-		# Don't do this because even if there is only 1 entry, papers can be unassigned.
-		#$session{'/employee/reports/stock.html?'.$option} = $options[0] if ( @options == 2 );
-
         $html .= sprintf(q`<li><label>%1$s</label>
                 <select name="%2$s_id%3$s" id="%2$s_id%3$s" size="1" onchange="filter_onChange(this,'');">
                 <option value=""> All </option> %4$s </select>
@@ -114,7 +101,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             ssi::make_drop_down( \@options, $session{'/employee/reports/stock.html?'.$option} ),
         );
     } # end foreach option
-	$$variable{'Paper'} = \@Papers;
+	$$variable{Paper} = \@Papers;
     return $html;
 ) ?>
 </ul>
