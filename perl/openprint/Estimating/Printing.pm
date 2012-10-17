@@ -35,6 +35,8 @@ my $use_filtered_imposition_cache = 0;
 my %stitching_cache;
 my %price_cache;
 
+my $PaperServiceType;
+
 #use warnings;
 use POSIX qw(ceil);
 use openprint ();
@@ -442,14 +444,14 @@ sub setup_project {
 	# Make sure all our colours are in the special colours hash
 	foreach my $real_colour ( @filtered_colours ) {
 		my $colour;
-		if ( $real_colour =~ /Varnish/ ) {
+		if ( $$real_colour{name} =~ /Varnish/ ) {
 			next;
-		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
+		} elsif ( $$real_colour{name} =~ /(\w*) Spot Colour/ ) {
 			$colour = $1;
-		} elsif ( $real_colour =~ /PMS/ ) {
+		} elsif ( $$real_colour{name} =~ /PMS/ ) {
 			$colour = 'PMS';
 		} else { 
-			$colour = $real_colour;
+			$colour = $$real_colour{name};
 		} # end if
 
 		if ( ! $special_colours{$colour} ) {
@@ -1764,6 +1766,8 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
 
 # First, clean up all inputs
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -3109,7 +3113,7 @@ $openprint::log->debug($Paper->id_string());
 					$$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
-			} elsif ( ! openprint::ServiceType->find_one('name'=>'Paper') ) {
+			} elsif ( ! $PaperServiceType ) {
 				my $paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
 				$$paper_price{'Total'} = Math::Round::nearest(.01, $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
 				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @$paper_price{'100lb Cost', '100lb Price', 'Total'};
