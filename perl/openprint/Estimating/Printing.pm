@@ -459,10 +459,10 @@ sub setup_project {
 			$$Ink{pmsid} = $colour;
 			if ( ! sets::isin( $colour, \@process_colours ) ) {
 				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
-				$$Ink{service_id} = $Service->id();
+				$$Ink{service_id} = $Service->id() if $Service;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$$Ink{material_id} = $Material->id();
+				$$Ink{material_id} = $Material->id() if $Material;
 			} # end if
 			@{$special_colours{$colour}} = ( $Ink );
 		} # end if
