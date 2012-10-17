@@ -36,7 +36,6 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 $log->debug("Was aborted");
-	} else {
 	} # end if
 	if ( $dbh ) {
 		$session{lastupdated} = time;

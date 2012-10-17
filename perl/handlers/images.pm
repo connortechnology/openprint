@@ -33,6 +33,8 @@ $log->debug("Was aborted");
         $session{lastupdated} = time;
         untie %session;
         $dbh->disconnect();
+	} else {
+$log->error("No dbh in cleanup");
     } # end if
 } # end sub cleanup
 
@@ -100,7 +102,6 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
-eval {
 					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 					if ( $path eq 'thumbnails' ) {
 						$r->sendfile( $Asset->thumbnail_path() );
@@ -110,8 +111,6 @@ eval {
 # No album means has to be an article image, or a generic site image.
 						$r->sendfile( $Asset->on_disk_path() );
 					} # end if
-};
-$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 				} # end if
 			} else {
 $log->error("NOT FOUND");
