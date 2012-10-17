@@ -124,7 +124,7 @@
 		<? echo (
 			my $html;
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= ssi::button( 'Delete', { onclick=>"f2.btnFunction.value='Delete';f2.submit();", href=>'', text=>'Delete Selected' };
+				$html .= ssi::button( 'Delete', { onclick=>"f2.btnFunction.value='Delete';f2.submit();", text=>'Delete Selected' } );
 			} # end if
 			return $html;
 		) ?>
