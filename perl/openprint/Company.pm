@@ -3,7 +3,7 @@ package openprint::Company;
 our @ISA = qw( openprint::Object );
 require Text::Unaccent;
 
-use vars qw( %fields %defaults %transforms );
+use vars qw( $debug %fields %defaults %transforms );
 use openprint ();
 
 require sql;
@@ -77,7 +77,7 @@ require openprint::Company_Credit;
 	'offers_credit'	=>	0,
 );
 
-my $debug = 1;
+$debug = 1;
 
 # Returns a paper object specified by the parameters
 sub find {

@@ -9,7 +9,7 @@ require openprint::logs;
 require openprint::User_Notification;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults );
+use vars qw( $debug $log $dbh %config %variable %param %fields %transforms %defaults  );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
