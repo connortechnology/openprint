@@ -37,6 +37,7 @@
 	<div class="PO">
 		<div class="Header">
 			<div class="Logo">
+				<? echo ( ssi::include( $config{SkinPath}.'/includes/logo.html'); ) ?>
 				<table class="HeaderText">
 					<tr>
 						<td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
