@@ -1,14 +1,12 @@
+use strict;
 package openprint::Tax;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
-use openprint ();
 use vars qw($debug $table $serial %fields %transforms %defaults );
 
-
-$debug = 0;
-$table = 'Taxes';
+$debug = 1;
+$table = 'taxes';
 $serial = 'taxes_id_seq';
 
 %fields = (
