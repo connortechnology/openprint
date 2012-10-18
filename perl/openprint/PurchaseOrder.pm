@@ -32,6 +32,7 @@ $serial = 'purchaseorders_id_seq';
 %fields = (
 	'id'				=>	'id',
 	'company_id'		=>	'company_id',
+	contact_id			=>	'contact_id',
 	'currency_id'		=>	'currency_id',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
@@ -40,7 +41,7 @@ $serial = 'purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
-	'delivered_on_switch'		=>	'delivered_on_switch',
+	delivered_on_switch	=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'deleted'			=>	'deleted',
@@ -85,14 +86,16 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'deleted'		=>	0,
-	'currency_id'	=> q`$session{'Currency_id'}`,
-	'total'			=>	0,
-	'subtotal'		=>	0,
-	'manifest_id'	=>	undef,
-	'cancelled'		=>	0,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	deleted		=>	0,
+	currency_id	=> q`$session{'Currency_id'}`,
+	total			=>	0,
+	subtotal		=>	0,
+	manifest_id	=>	undef,
+	cancelled		=>	0,
+	supplier_id		=>	undef,
+	contact_id		=>	undef,
 );
 
 sub save {

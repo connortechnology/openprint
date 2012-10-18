@@ -98,6 +98,9 @@ BEGIN {
 	use	openprint::Location ();
 	use	openprint::Affiliate ();
 
+	use countries;
+	use provinces;
+
 }
 
 1;
