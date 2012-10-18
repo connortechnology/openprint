@@ -9,16 +9,16 @@ require openprint::logs;
 require openprint::User_Notification;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param );
+use vars qw( $debug $log $dbh %config %variable %param %fields %transforms %defaults  );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-my $debug = 1;
+$debug = 1;
 
-my %fields = (
+%fields = (
 	'company_id'		=>	'companyindex',
 	'salutation'		=>	'strsalutation',
 	'title'				=>	'strtitle',
@@ -49,7 +49,7 @@ my %fields = (
 	'notes'						=>	'notes',
 ); # end %fields
 
-my %transforms = (
+%transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
 	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -59,7 +59,7 @@ my %transforms = (
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
-my %defaults = (
+%defaults = (
 	'web_active'	=>	'N',
 	'ftp_active'	=>	'0',
 	'created_on'	=>	'NOW()',
