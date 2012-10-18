@@ -1456,7 +1456,7 @@ foreach my $E ( openprint::Equipment->find() ) {
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql}) );
 } else {
-	my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorders'", 'column_name');
 	if ( $data ) {
 		my $ac = sql::start_transaction( $dbh );
 		if ( ! exists $$data{'federaltax_charge'} ) {
