@@ -62,7 +62,7 @@ foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smt
 	}
 } # end foreach required-param
 foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
-	$config{$param} = $$opts{$param} if $$opts{$param};
+	$config{$param} = $$opts{$param} if exists $$opts{$param};
 } # end foreach non-requiredp aram
 if ( $config{'site_url'} ) {
 	$config{'siteURL'} = $config{'site_url'};
@@ -211,6 +211,7 @@ if (open($fifoh, "< $config{fifo}")) {
 					);
 			die 'Error opening db' if ! $dbh;
 			configuration::init( \%config );
+			configuration::from_file('/etc/ftp_monitor.conf');
 		} # end if
 	} # end while <input>
 
@@ -223,7 +224,7 @@ if ( $config{'pid_file'} ) {
 } # end if
 
 sub check_scoreboard {
-	my $scoreboard = get_scoreboard( $config{'scoreboard'} );
+	my $scoreboard = get_scoreboard( $config{scoreboard} );
 	my @users = map { $$_{'user'} } @$scoreboard;
 	#$log->debug( "Users: @users in scoreboard\n" );
 
