@@ -21,8 +21,8 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-my $debug = 0;
-my $debug_all = 0;
+my $debug = 1;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -65,9 +65,8 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id") if $debug;
+#$log->debug("loading $parent $id") if $debug or $debug_all;
 			$self->load( $data );
-			#$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {
@@ -120,16 +119,17 @@ sub load {
 		if ( @identified_by ) {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
-			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
+			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} else {
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
+			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{id} );
 		} # end if
 		if ( ! $data ) {
 			if ( $d->errstr ) {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
-		} elsif ( $debug ) {
+		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if

@@ -18,7 +18,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub save_supplier {
 	my ( $p ) = @_;
-	my @Companies = openprint::Company::find( 'name'=> openprint::Company->transform('name', $$p{'vendor_name'} ) );
+	my @Companies = openprint::Company->find( name => openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {
 		my $C = new openprint::Company();
 		$C->save({
@@ -45,7 +45,7 @@ sub save_supplier {
 		} # end foreach
 		if ( ! $Company ) {
 			$Company = $Companies[0];
-			$Company->save( {'supplier'=>'Y'} );
+			$Company->save( {supplier=>'Y'} );
 		} # end if
 		return $Company->id();
 	} # end if
@@ -54,7 +54,7 @@ sub save_supplier {
 
 sub save_contact {
 	my ( $p ) = @_;
-	my $User = openprint::User::find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
+	my $User = openprint::User->find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
 	if ( ! $User ) {
 		$User = new openprint::User();
 		my ( $first, $last ) = $$p{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
@@ -145,7 +145,7 @@ sub save_contents {
 
 		$types{$C->Type()->name()} = 1;
 		if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-			foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+			foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
 				$P->add_to_log( @session{'company_id','user_id'}, 
 						sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
 							$PO->id(), $C->qty(), $C->units(), $C->description() ) );
@@ -331,8 +331,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $Me->company_id() } );
 		} # end if
 
-		$param{supplier_id} = save_supplier( \%param ) if ( ( ! $param{'supplier_id'} ) and $param{'vendor_name'} );
-		$param{contact_id} = save_contact( \%param ) if ! $param{contact_id};
+		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{'supplier_id'} ) and $param{vendor_name};
+		$param{contact_id} = save_contact( \%param ) if $param{'supplier_id'} and ( ! $param{contact_id} ) and $param{contact_name};
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
