@@ -10,24 +10,24 @@ $table = 'taxes';
 $serial = 'taxes_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'rate'			=>	'rate',
-	'state'			=>	'state',
-	'country'		=>	'country',
-	'period_start'	=>	'period_start',
-	'period_end'	=>	'period_end',
-	'name'			=>	'name',
+	id				=>	'id',
+	rate			=>	'rate',
+	state			=>	'state',
+	country			=>	'country',
+	period_start	=>	'period_start',
+	period_end		=>	'period_end',
+	name			=>	'name',
 );
 
 %transforms = (
-	'id'		=>	[ 's/\D//g' ],
-	'rate'		=>	[ 's/[^\d\.]//g' ],
+	id		=>	[ 's/\D//g' ],
+	rate	=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
-	'rate'			=>	undef,
-	'period_start'	=>	undef,
-	'period_end'	=>	undef,
+	rate			=>	undef,
+	period_start	=>	undef,
+	period_end		=>	undef,
 );
 
 1;
