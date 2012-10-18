@@ -18,21 +18,21 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub save_supplier {
 	my ( $p ) = @_;
-	my @Companies = openprint::Company::find( 'name'=>$$p{'vendor_name'} );
+	my @Companies = openprint::Company::find( 'name'=> openprint::Company->transform('name', $$p{'vendor_name'} ) );
 	if ( ! @Companies ) {
 		my $C = new openprint::Company();
 		$C->save({
-				'supplier'		=> 'Y',
-				'name'			=> $$p{'vendor_name'},
-				'business_name'	=> $$p{'vendor_name'},
-				'address1'		=> $$p{'vendor_address1'},
-				'address2'		=> $$p{'vendor_address2'},
-				'city'			=> $$p{'vendor_city'},
-				'state'			=> $$p{'vendor_state'},
-				'country'		=> $$p{'vendor_country'},
-				'postalcode'	=> $$p{'vendor_postalcode'},
-				'phone'			=> $$p{'vendor_phone'},
-				'fax'			=> $$p{'vendor_fax'},
+				supplier		=> 'Y',
+				name			=> $$p{vendor_name},
+				business_name	=> $$p{vendor_name},
+				address1		=> $$p{vendor_address1},
+				address2		=> $$p{vendor_address2},
+				city			=> $$p{vendor_city},
+				state			=> $$p{vendor_state},
+				country			=> $$p{vendor_country},
+				postalcode		=> $$p{vendor_postalcode},
+				phone			=> $$p{vendor_phone},
+				fax				=> $$p{vendor_fax},
 				} );
 		return $C->id();
 	} else {
@@ -80,7 +80,7 @@ sub save_contents {
 	my %types;
 
 	foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
-		next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
+		next if ( $content_id eq 'new' ) and ! $param{'qty-'.$content_id};
 		my $Item;
 		if ( $$p{'item-'.$content_id} ) {
 			$Item = new openprint::PurchaseOrder_Item( $$p{'item_id-'.$content_id} );
@@ -292,13 +292,12 @@ sub edit {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 
 	if ( $param{'btnFunction'} eq 'New' ) {
-$log->debug("Creating PO from label");
 		my $Label = new openprint::Label( $param{'label_id'} );
 		$log->debug("Creating PO from label $$Label{id}");
 		my $C = $Me->Company();
 		$variable{'error'} .= $PO->save( {
 				'created_by'	=>	$session{'user_id'}, 
-				'company_id'=>$Me->company_id(),
+				'company_id'	=>	$Me->company_id(),
 				'currency_id'		=>	openprint::Currency::get_current()->id(),
 				'created_by'		=>	$Me->id(),
 				'shipto_contact'	=>	$Me->name(),
@@ -328,29 +327,31 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
             });
 	
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( ! $param{'po_id'} ) {
-			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
+		if ( ! $param{po_id} ) {
+			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $Me->company_id() } );
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ( ! $param{'supplier_id'} ) and $param{'vendor_name'} );
 		$param{contact_id} = save_contact( \%param ) if ! $param{contact_id};
 		my %types = save_contents( $PO, \%param );
-		foreach my $Tax ( $PO->Taxes() ) {
-			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
-			$Tax->amount(undef);
-			$Tax->save();
-		} # end foreach
 
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
 			$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
-		if ( ( $param{'vendor_country'} ne $PO->vendor_country() ) or ( $param{'vendor_state'} ne $PO->vendor_state() ) ) {
-			$PO->Taxes(1);
-		} # end if need to change taxes
+
+		# Theoretically, the taxes in params are up to date, because any change in country would update them.
+		# This must happen before saving because charging or not for a tax alters the total.
+		foreach my $Tax ( $PO->Taxes() ) {
+			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach
+		# Save will recalc taxes as well.
 		$variable{'error'} .= $PO->save( \%param );
+if ( 0 ) {
 		if ( ! $PO->authorized() ) {
 			if ( $PO->total() < $Me->purchasing_limit() ) {
 				$variable{'error'} .= $PO->save({
@@ -362,6 +363,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 				$PO->send_approval_required_notification();
 			} # end if
 		} # end if
+}
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
@@ -581,10 +583,10 @@ sub _po_select_vendor {
 }
 
 sub _update_taxes {
-	if ( $param{'po_id'} ) {
+	if ( $param{po_id} ) {
 		# Save incoming data because we may have changed suppliers
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} .= $PO->save( \%param );
+		my $PO = new openprint::PurchaseOrder( $param{po_id} );
+		$variable{error} .= $PO->save( \%param );
 	} # end if
 } # end sub _update_taxes
 
