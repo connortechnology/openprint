@@ -14,6 +14,7 @@
 <h2>User Profile</h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{User}->id() ) ?>
 	<div class="disclaimer"><? echo ( $config{'UserProfileDisclaimer'} ) ?></div>
 	<div class="UserProfile">
 		<p class="buttons">
@@ -23,6 +24,13 @@
 					$html .= ssi::button( 'Delete', { href=>"/account/search.html?action=Delete&amp;user_id=$$variable{User}{'id'}", text=>'Delete Profile' } );
 					$html .= ssi::button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}->id() } );
 				} # end if
+				# Can assume if we are viewing this that we are not blocked.
+				if ( $$variable{User}->id() == $session{user_id} ) {
+					$html .= ssi::button( 'Blocklist', { href=>'/account/blocklist.html' } );
+				} else {
+					$html .= ssi::button( 'Block', { onclick=>qq`popup_window('_block_popup.html?user_id=$$variable{User}{id}' );`, text=>'Block' } );
+				} # end if
+
 				if ( $$variable{User}->id() and ( $session{user_id} != $$variable{User}->id() ) ) {
 					$html .= ssi::button( 'Message', { href=>'/messaging/view.html?to_id='.$$variable{User}->id() } );
 				} # end if
@@ -130,3 +138,4 @@
 		</div>
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 	</div><!--UserProfile-->
+<? endif ( $$variable{User}->id() ) ?>

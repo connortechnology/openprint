@@ -311,7 +311,15 @@ sub category {
 
 sub view {
 	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
+	
+	if ( $Article->id() and $session{user_id} ) {
+		my $View = openprint::View->find_one(object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id} );
+		if ( ! $View ) {
+			$View = new openprint::View();
+			$View->save({object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id}});
+		} # end if
+	} # end if
 	$Article->set( \%param );
 	$Article->View();
 } # end sub view

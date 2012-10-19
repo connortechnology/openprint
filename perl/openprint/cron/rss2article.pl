@@ -15,15 +15,12 @@ require ssi;
 require misc;
 require openprint::Company;
 require openprint::User;
-require Email::Valid;
-require openprint::Email;
-require openprint::User_Notification;
 require logger;
 require openprint::Article;
 require openprint::Feed;
 require Date::Parse;
 require Date::Format;
-use openprint ();
+require openprint;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;

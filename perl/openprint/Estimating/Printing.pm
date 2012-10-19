@@ -20,6 +20,7 @@ my $threading = 0;
 #use threads;
 use constant DEBUG => 0;
 my $master_time;
+my %special_colours;
 
 my %folding_cache;
 my %Papers;
@@ -33,6 +34,8 @@ my $use_filtered_imposition_cache = 0;
 
 my %stitching_cache;
 my %price_cache;
+
+my $PaperServiceType;
 
 #use warnings;
 use POSIX qw(ceil);
@@ -63,6 +66,7 @@ require openprint::Estimating::Proofs;
 require openprint::Equipment;
 require openprint::Material;
 require openprint::ServiceCategory;
+require openprint::Ink;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 my @process_colours = ( 'Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Yellow Spot Colour','Magenta Spot Colour','Black Spot Colour' );
@@ -434,9 +438,38 @@ sub setup_project {
 	$project{'washed_colours'} = \%washed_colours;
 	$project{'filtered_colours'} = \@filtered_colours;
 
-	my $s = $openprint::dbh->selectall_arrayref(q{SELECT * FROM Inks}, { Slice => {} } );
-	my %special_colours = map { $_->{pmsid}, $_ } @$s;
-	$project{'special_colours'} = \%special_colours;
+	foreach my $C ( openprint::Ink->find() ) {
+		push @{$special_colours{$$C{pmsid}}}, $C;
+	} # end foreach C
+	# Make sure all our colours are in the special colours hash
+	foreach my $real_colour ( @filtered_colours ) {
+		my $colour;
+		if ( $$real_colour{name} =~ /Varnish/ ) {
+			next;
+		} elsif ( $$real_colour{name} =~ /(\w*) Spot Colour/ ) {
+			$colour = $1;
+		} elsif ( $$real_colour{name} =~ /PMS/ ) {
+			$colour = 'PMS';
+		} else { 
+			$colour = $$real_colour{name};
+		} # end if
+
+		if ( ! $special_colours{$colour} ) {
+
+			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+			my $Ink = new openprint::Ink();
+			$$Ink{pmsid} = $colour;
+			if ( ! sets::isin( $colour, \@process_colours ) ) {
+				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
+				$$Ink{service_id} = $Service->id() if $Service;
+				$$Ink{washups} = 1;
+				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+				$$Ink{material_id} = $Material->id() if $Material;
+			} # end if
+			@{$special_colours{$colour}} = ( $Ink );
+		} # end if
+	} # end foreach
+	$project{special_colours} = \%special_colours;
 
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
 		if ( $$services{$service} and @{$$services{$service}} ) {
@@ -1734,6 +1767,8 @@ sub calc {
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
+$PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
+
 # First, clean up all inputs
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $$specs{"txtQuantity$qty_index"};
@@ -1870,6 +1905,8 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 		push @available_printingtypes, $Press->specification('Printing Type');
 	} # end foreach
 	@available_printingtypes = sets::union( @available_printingtypes );
+
+
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
@@ -2096,8 +2133,6 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 			next;
 		} # end if
 		my $best_price = $prices{$qty_index};
-		#my %best_price = %{$b_price};
-		#*best_price = $b_price;
 
 		my $Imposition = $$best_price{'Imposition'};
 		if ( ! $Imposition ) {
@@ -3078,7 +3113,7 @@ $openprint::log->debug($Paper->id_string());
 					$$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
-			} elsif ( ! openprint::ServiceType->find_one('name'=>'Paper') ) {
+			} elsif ( ! $PaperServiceType ) {
 				my $paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
 				$$paper_price{'Total'} = Math::Round::nearest(.01, $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
 				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @$paper_price{'100lb Cost', '100lb Price', 'Total'};
@@ -3503,30 +3538,6 @@ sub calc_price {
 	} # end if
 #$openprint::log->debug("Initial Runspeed: $run_speed, standard: $$std_speed{value}$$std_speed{units}");
 
-if ( 0 ) {
-	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-	if ( ! $run_speed ) {
-		my $RunSpeed = $Press->Specification('Runspeed', $Paper->gsm() );
-		if ( $RunSpeed and ( $$RunSpeed{'units'} =~ /^Per (.+) Per Hour$/ ) ) {
-$openprint::log->debug("Have runspeed");
-			my $unit = $1;
-			if ( $unit =~ /([\d\.]+)x([\d\.]+)/ ) {
-$openprint::log->debug("Have unit $1 $2");
-				my $area = $1*$2;
-				$run_speed = int( $$RunSpeed{'value'} * $area/($$specs{'txtWidth'} * $$specs{'txtHeight'}) );
-$openprint::log->debug("Have runspeed $$RunSpeed{'value'}, area: $area, $run_speed");
-			} else {
-$openprint::log->warn("Unknown Per setting $unit");
-			} # end if
-		} else {
-			$openprint::log->debug("No RunSpeed setting");
-		} # end if
-	} # end if
-	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
-#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-	$run_speed = $speed_mod if $speed_mod;
-}
-
 	my %folding_results;
 
 # Has to be NEED because they always leave folding out, and it chooses dumb impositions
@@ -3769,6 +3780,8 @@ $openprint::log->debug("Using cached folding");
 		#} # end if
 
 		$price{'Ink breakdown'} .= $real_colour;
+		my $grade = $Paper->grade();
+		$grade = 4 if ! $grade;
 
 		if ( $real_colour =~ /Varnish/ ) {
 			#$price{'Press Washes'} += 1;
@@ -3799,14 +3812,14 @@ $openprint::log->debug("Using cached folding");
 		} else { 
 			$colour = $real_colour . 'Ink';
 		} # end if
-		my $washed_index = $real_colour.'-'.$$Press{'strid'}.'-'.$qty_index;
-		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$washed_index} ) {
+		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
+		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$key} ) {
 		} else {
 			$plate_count += 1;
 		} # end if
 
 # Each Ink/Coating has MakeReady, Mix, Material, Service
-		if ( ! ( $real_colour =~ /Varnish/ and $washed_colours{$washed_index} ) ) {
+		if ( ! ( $real_colour =~ /Varnish/ and $washed_colours{$key} ) ) {
 			my %InkMakeReady = openprint::service::get_price_object( $real_colour.' MakeReady', undef, $Press );
 			if ( %InkMakeReady ) {
 				$price{'Ink breakdown'} .= sprintf(' MR: %.2f', $InkMakeReady{'Price'} );
@@ -3828,67 +3841,60 @@ $openprint::log->debug("Using cached folding");
 
 		my %ink_price;
 		my $InkMaterial;
+		my $Ink;
 
-		# Special colours is a hash of all the defined colours in the db
-		if ( $$project{'special_colours'}{$real_colour} ) {
-
-			if ( $$project{'special_colours'}{$real_colour}{service_id} and ! $mixed_colours{$real_colour} ) {
-				my $Service = new openprint::Service( $$project{'special_colours'}{$real_colour}{service_id} );
-				my %mix_price = $Service->get_price(undef,$Press);
-				$price{'Ink Mix Charge'} += $mix_price{'Price'};
-				$mixed_colours{$real_colour} = 1;
+		foreach my $C ( @{$special_colours{$real_colour}} ) {
+			if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
+				$Ink = $C;
+				last;
 			} # end if
+		} # end foreach
+
+		if ( ! $Ink ) {
+			$openprint::log->error("Didnt find ink in colours hash, must be a grade problem");
+			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
+			$Ink = new openprint::Ink();
+			$$Ink{pmsid} = $real_colour;
+			if ( ! sets::isin( $real_colour, \@process_colours ) ) {
+				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
+				$$Ink{service_id} = $Service->id();
+				$$Ink{washups} = 1;
+				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
+				$$Ink{material_id} = $Material->id();
+			} # end if
+		} # end if
 
 # Washed_colours contains each colour used in the other signatures
-			if ( ! $washed_colours{$washed_index} ) {
-				# Perfecting uses another set of units, but the second side won't add because of the colour already being washed
-				if (
-						sets::isin( $$Imposition{'runstyle'}, ['Web','Perfecting'] ) and 
-						sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and 
-						sets::isin( $real_colour, $$project{'side_two_colour_names'} ) 
-				   ) {
-					$price{'Press Washes'} += $$project{'special_colours'}{$real_colour}{washups};
-				} # end if
-				$price{'Press Washes'} += $$project{'special_colours'}{$real_colour}{washups};
-				$washed_colours{$washed_index} = 1;
-			} # end if
+		if ( 
+				( ! $washed_colours{$key} ) or 
+				( 
+				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
+				 ( $washed_colours{$key} < 2 ) and
+				 sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and 
+				 sets::isin( $real_colour, $$project{'side_two_colour_names'} ) 
+				)
+		   ) {
+			$price{'Press Washes'} += $$Ink{washups};
+#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$special_colours{$real_colour}{washups} );
+		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
-			$InkMaterial = new openprint::Material( $$project{'special_colours'}{$real_colour}->{material_id} );
+		if ( $$Ink{material_id} ) {
+			$InkMaterial = new openprint::Material( $Ink->{material_id} );
 			%ink_price = $InkMaterial->get_price( undef, $Press );
-		} elsif ( ! sets::isin( $real_colour, \@process_colours ) ) {
-			$non_process_colours += 1;
-#$openprint::log->debug("Colour: $real_colour : " .  $washed_colours{$real_colour.'-'.$$Press{'strid'}.'-'.$qty_index} );
-			# PMS or Varnish ?
-			if ( ( ! ($real_colour =~ /Varnish/) ) and ! $mixed_colours{$real_colour} ) {
-			#if ( ! $mixed_colours{$real_colour} ) {
-				my %mix_price = openprint::service::get_price_object( 'PMSInkMix',undef,$Press);
+		} # end if
+
+#$openprint::log->debug("$real_colour needs mixing");
+		if ( $$Ink{service_id} ) {
+			if ( ! $mixed_colours{$real_colour} ) {
+				my %mix_price = $Ink->Service()->get_price(undef,$Press);
 				$price{'Ink Mix Charge'} += $mix_price{'Price'};
 				$mixed_colours{$real_colour} = 1;
 			} # end if
-
-			if ( ! $washed_colours{$washed_index} ) {
-				if ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) and sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {
-					$price{'Press Washes'} += 1;
-				} # end if
-				$price{'Press Washes'} += 1;
-				$washed_colours{$washed_index} = 1;
-			} # end if
-		} # end if
-		if ( ! %ink_price ) {
-			if ( $InkMaterial = openprint::Material->find_one('name'=>$colour) ) {
-				%ink_price = $InkMaterial->get_price( undef, $Press );
-			} # end if
-		} # end if
-		if ( ! ( $InkMaterial and %ink_price ) ) {
-			$price{'Ink breakdown'} .= 'No price<br/>';
-			next;
 		} # end if
 
+		next if ! %ink_price;
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
-		$area /= 2 if $$Imposition{'runstyle'} eq 'Sheet Work' and $$specs{'sides_the_same'} ne 'Y';
-		my $grade = $$Paper{'grade'};
-		$grade = 4 if ! $grade;
 
 		if ( $ink_price{'units'} eq 'per cartridge' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and sets::isin( $real_colour, $$project{'side_two_colour_names'} ) ) {

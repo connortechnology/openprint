@@ -36,13 +36,18 @@ use vars qw( $r %variable %session %param %config $log $dbh %page_settings $star
 sub cleanup {
 	if ( $r->connection->aborted( ) ) {
 $log->debug("Was aborted");
-	} else {
-$log->debug("cleanup");
 	} # end if
+	%variable = ();
+	%param = ();
 	if ( $dbh ) {
-		$session{'lastupdated'} = time;
+		openprint::pricing::clear_cache();
+		openprint::service::init_cache();
+		openprint::Object::init_cache();
+		$session{lastupdated} = time;
 		untie %session;
 		$dbh->disconnect();
+	} else {
+$log->debug("No dbh at cleanup");
 	} # end if
 } # end sub cleanup
 
@@ -249,7 +254,7 @@ sub handler {
 			} # end if
 		} # end if _
 		if ( $template ) {
-			$log->debug("parsing template! $template");
+			#$log->debug("parsing template! $template");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
@@ -261,11 +266,6 @@ sub handler {
 
 	$log->debug( 'Elapsed seconds: ' . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
-	openprint::pricing::clear_cache();
-	openprint::service::init_cache();
-	openprint::Object::init_cache();
-	%variable = ();
-	%param = ();
 	return Apache2::Const::OK;
 } # end sub handler
 

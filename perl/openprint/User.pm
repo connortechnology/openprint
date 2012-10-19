@@ -1,16 +1,8 @@
 use strict;
 package openprint::User;
 our @ISA = qw( openprint::Object );
-use Text::Unaccent ();
-use MIME::QuotedPrint ();
-use Carp qw( cluck );
 
 require openprint::Company;
-require openprint::logs;
-require openprint::UserGroup;
-require openprint::User_Notification;
-require openprint::Asset;
-require openprint::User_Profile;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
@@ -19,10 +11,10 @@ use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %tra
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
-$table = 'Users';
+$table = 'users';
 $serial = 'users_id_seq';
 
-$debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -70,15 +62,16 @@ $debug = 0;
 );
 
 %transforms = (
-	'commission'		=>	[ 's/[^\d\.\-]//g' ],
-	'wage'				=>	[ 's/[^\d\.]//g' ],
-	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
-	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
-	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
-	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
-	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=>	[ 's/.*//g' ],
-	'updated_on'		=>	[ 's/.*//g' ],
+	id				=>	[ 's/\D//g' ],
+	commission		=>	[ 's/[^\d\.\-]//g' ],
+	wage				=>	[ 's/[^\d\.]//g' ],
+	email				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
+	password			=>	[ 's/^\s+//', 's/\s+$//' ],
+	purchasing_limit	=>	[ 's/[^\d\.\-]//g' ],
+	purchasing_total_limit	=>	[ 's/[^\d\.\-]//g' ],
+	email				=>	[ 'tr/[A-Z]/[a-z]/' ],
+	created_on		=>	[ 's/.*//g' ],
+	updated_on		=>	[ 's/.*//g' ],
 );
 
 %defaults = (
@@ -106,6 +99,7 @@ $debug = 0;
 # We do this for efficiency's sake.	
 sub save {
 	my ( $self, $params ) = @_;
+	require MIME::QuotedPrint;
 
 	if ( exists $$params{password} and $$params{password} eq '' ) {
 		delete $$params{password};
@@ -311,6 +305,7 @@ sub csr_ids {
 } # end sub
 
 sub Groups {
+	require openprint::UserGroup;
 	if ( $_[0]{'id'} ) {
 		return openprint::UserGroup->find('user_id any'=>$_[0]{id} );
 	} # end if
@@ -320,6 +315,7 @@ sub Groups {
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
 	
+	require openprint::User_Notification;
 	if ( $notifications_hash ) {
 		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
 		my $ac = sql::start_transaction( $dbh );
@@ -373,6 +369,7 @@ sub po_limit {
 
 sub Asset {
 	if ( ! $_[0]{'Asset'} ) {
+		require openprint::Asset;
 		if ( $_[0]{'asset_id'} ) {
 			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
 		} else {
@@ -403,6 +400,7 @@ sub Asset {
 
 sub Profile {
 	if ( ! exists $_[0]{'Profile'} ) {
+		require openprint::User_Profile;
 		$_[0]{'Profile'} = new openprint::User_Profile( $_[0]{'id'} );
 	} # end if
 	return $_[0]{'Profile'};
@@ -524,6 +522,18 @@ sub can_edit {
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
 	return 0;
 } # end sub can_edit
+
+sub can_view {
+	return 1 if $openprint::session{'user_id'} == $_[0]{id};
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+	my $Company = new openprint::Company( $_[0]{'company_id'} );
+	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	require openprint::Blocklist;
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{id});
+	return 1;
+} # end sub can_view
 
 sub Location {
 	if ( ! $_[0]{'Location'} ) {

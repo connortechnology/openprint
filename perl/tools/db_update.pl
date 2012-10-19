@@ -1456,7 +1456,7 @@ foreach my $E ( openprint::Equipment->find() ) {
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql}) );
 } else {
-	my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorders'", 'column_name');
 	if ( $data ) {
 		my $ac = sql::start_transaction( $dbh );
 		if ( ! exists $$data{'federaltax_charge'} ) {
@@ -1478,6 +1478,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		if ( ! exists $$data{'manifest_id'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
+		} # end if
+		if ( ! exists $$data{contact_id} ) {
+			$dbh->do('ALTER TABLE purchaseorders add contact_id INTEGER');
+			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (contact_id) REFERENCES Users (id)');
 		} # end if
 		$dbh->do('ALTER TABLE PurchaseOrders ALTER delivered_on DROP NOT NULL');
 		sql::end_transaction( $dbh, $ac );
@@ -2598,6 +2602,11 @@ if ( ! sets::isin('user_notifications',\@tables ) ) {
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Claims.sql}) );
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='claims'", 'column_name');
+	if ( ! exists $$data{cancelled_on} ) {
+		$dbh->do('ALTER TABLE claims add cancelled_on TIMESTAMP WITH TIME ZONE');
+	} # end if
 } # end if
 if ( ! sets::isin( 'claim_contenttypes', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Claim_ContentTypes.sql}) );
@@ -2855,6 +2864,18 @@ if ( ! sets::isin( 'companies_in_marketing_categories', \@tables ) ) {
 if ( ! sets::isin( 'bitcoin_addresses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Bitcoin_Addresses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'blocklist', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Blocklist.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='blocklist'", 'column_name');
+	if ( ! exists $$data{reason} ) {
+		$dbh->do('ALTER TABLE blocklist ADD reason TEXT');
+	}
+	if ( ! exists $$data{unblock} ) {
+		$dbh->do('ALTER TABLE blocklist ADD unblock BOOLEAN NOT NULL DEFAULT false');
+	}
 } # end if
 $dbh->disconnect();
 print "Finished\n";

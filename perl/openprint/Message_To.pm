@@ -9,17 +9,17 @@ $debug = 1;
 $table = 'message_to';
 @identified_by = ( 'message_id', 'user_id' );
 %fields = (
-	'message_id'	=>	'message_id',
-	'user_id'	=>	'user_id',
-	'viewed'	=>	'viewed',
-	'deleted'	=>	'deleted',
+	message_id	=>	'message_id',
+	user_id		=>	'user_id',
+	viewed		=>	'viewed',
+	deleted		=>	'deleted',
 );
 %find_fields = (
-	'created_on'	=>	'(SELECT created_on FROM messages WHERE messages.id=message_id)',
+	created_on	=>	'(SELECT created_on FROM messages WHERE messages.id=message_id)',
 );
 %defaults = (
-	'viewed'	=>	0,
-	'deleted'	=>	0,
+	viewed	=>	0,
+	deleted	=>	0,
 );
 
 sub Message {

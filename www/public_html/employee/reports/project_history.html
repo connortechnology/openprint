@@ -10,15 +10,16 @@
 </div>
 <form id="f1" name="f1" method="post" action="/employee/reports/project_history.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
-		<p>
+		<ul>
+		<li>
 			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id">
 				<option value="">All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_history.html?company_id'} ); ) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Estimator</label>
 			<select name="Estimator" size="1">
 			<? echo (
@@ -27,8 +28,8 @@
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_history.html?Estimator'} );
 					) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Current Status</label>
 			<select name="status" multiple="multiple" size="4" >
 			<? echo (
@@ -38,8 +39,8 @@
 				return ssi::make_drop_down( $$variable{options}, \@selected );
 			) ?>
 			</select>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Previous Status</label>
 			<select name="previous_status" multiple="multiple" size="4" >
 			<? echo (
@@ -50,19 +51,19 @@
 			</select>
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Created On</label>
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Value</label>
 			<input type="number" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" /> to
 			<input type="number" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" />
-		</p>
+		</li>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-		<p>
+		<li>
 			<label>CSR</label>
 			<select name="CSR" size="1">
 			<? echo (
@@ -71,15 +72,16 @@
 					return ssi::make_drop_down( \@options, $session{'/employee/reports/project_history.html?CSR'} );
 					) ?>
 			 </select>
-		</p>
+		</li>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-		<p><label>Reprint</label>
+		<li><label>Reprint</label>
 			<? echo (
 				return ssi::radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{'/employee/reports/project_history.html?reprint'} );
 			) ?>
-		</p>
+		</li>
+		</ul>
 		 <p class="buttons">
-			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
+			 <? echo ( ssi::button( 'Go', { onclick=>'load_contents(f1);', text=>'Show Results' } ); ) ?>
 		 </p>
 	</fieldset>
 </form>

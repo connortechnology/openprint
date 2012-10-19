@@ -13,7 +13,7 @@
 		return;
 	} 
 	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'Signature','Cutting','Folding','SaddleStitching','LoopStitching' ] ) ) {
-		if ( my $Job = openprint::ScheduledJob->find_one('service_id &&'=>\@service_ids) ) {
+		if ( my $Job = openprint::ScheduledJob->find_one('service_id @>'=> \@service_ids ) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';
 			} else {

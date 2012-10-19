@@ -32,11 +32,9 @@
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
+				if ( $session{'/employee/reports/stock_usage.html?type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?type'} ) ) ) {
 $log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
-} else {
-$log->debug("Write type");
 				}
 
 				if ( $session{'/employee/reports/stock_usage.html?mweight'} ) {
@@ -71,35 +69,35 @@ or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?bas
 					} # end if
 				} # end if
 				$Stocks{$Stock->to_string()} = $Stock;
-				if ( $session{'/employee/reports/stock_usage.html?Manufacturer'} ) {
-					if ( $Stock->manufacturer_id() ne $session{'/employee/reports/stock_usage.html?Manufacturer'} ) {
-						$log->debug("Different Manufacturer: $$Stock{'manufacturer_id'} != $session{'/employee/reports/stock_usage.html?Manufacturer'}");
+				if ( $session{'/employee/reports/stock_usage.html?manufacturer_id'} ) {
+					if ( $Stock->manufacturer_id() ne $session{'/employee/reports/stock_usage.html?manufacturer_id'} ) {
+						$log->debug("Different manufacturer_id: $$Stock{'manufacturer_id'} != $session{'/employee/reports/stock_usage.html?manufacturer_id'}");
 						next;
 					} # end if
 				} # end if
-				if ( $session{'/employee/reports/stock_usage.html?Brand'} ) {
-					my $StockBrand = new openprint::StockBrand( $session{'/employee/reports/stock_usage.html?Brand'} );
+				if ( $session{'/employee/reports/stock_usage.html?brand_id'} ) {
+					my $StockBrand = new openprint::StockBrand( $session{'/employee/reports/stock_usage.html?brand_id'} );
 					if ( lc $Stock->brand() ne lc $StockBrand->name() ) {
 						$log->debug("Different Brand: $$Stock{'brand'} != $$StockBrand{'name'}");
 						next;
 					} # end if
 				} # end if
-				if ( $session{'/employee/reports/stock_usage.html?Finish'} ) {
-					my $StockFinish = new openprint::StockFinish( $session{'/employee/reports/stock_usage.html?Finish'} );
+				if ( $session{'/employee/reports/stock_usage.html?finish_id'} ) {
+					my $StockFinish = new openprint::StockFinish( $session{'/employee/reports/stock_usage.html?finish_id'} );
 					if ( lc $Stock->finish() ne lc $StockFinish->name() ) {
 $log->debug("Different Finish: $$Stock{'finish'} != $$StockFinish{'name'}");
 						next;
 					} # end if
 				} # end if
-				if ( $session{'/employee/reports/stock_usage.html?Weight'} ) {
-					my $StockWeight = new openprint::StockWeight( $session{'/employee/reports/stock_usage.html?Weight'} );
+				if ( $session{'/employee/reports/stock_usage.html?weight_id'} ) {
+					my $StockWeight = new openprint::StockWeight( $session{'/employee/reports/stock_usage.html?weight_id'} );
 					if ( lc $Stock->weight() ne lc $StockWeight->name() ) {
 $log->debug("Different Weight: $$Stock{'weight'} != $$StockWeight{'name'}");
 						next;
 					} # end if
 				} # end if
-				if ( $session{'/employee/reports/stock_usage.html?Colour'} ) {
-					my $StockColour = new openprint::StockColour( $session{'/employee/reports/stock_usage.html?Colour'} );
+				if ( $session{'/employee/reports/stock_usage.html?colour_id'} ) {
+					my $StockColour = new openprint::StockColour( $session{'/employee/reports/stock_usage.html?colour_id'} );
 					if ( lc $Stock->colour() ne lc $StockColour->name() ) {
 $log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'name'}");
 						next;

@@ -1208,7 +1208,9 @@ function LoadContent( divID, page, parameters, message ) {
 	} // end if
 	var method = 'get';
 	//alert( typeof parameters );
-	if ( typeof parameters == 'object' ) {
+	if ( ! parameters ) { 
+		parameters = '';
+	} else if ( typeof parameters == 'object' ) {
 		parameters = parameters.serialize();
 	} 
 	if ( parameters.length > 8190 ) 

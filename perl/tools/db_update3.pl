@@ -963,8 +963,11 @@ if ( ! sets::isin('products', \@tables ) ) {
 	} # end if
 	
 } # end if
-
+if ( ! sets::isin('tbl_material_prices',\@tables) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Prices.sql}) );
+} else {
 $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
+}
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
 $dbh->disconnect();

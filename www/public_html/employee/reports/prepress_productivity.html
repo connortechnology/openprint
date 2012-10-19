@@ -1,56 +1,44 @@
 <form name="f1" method="post" action="/employee/reports/prepress_productivity.html">
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
-	<p>
+	<ul>
+	<li>
 		<label>Employee</label>
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
-				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<option value="All" <? echo ( 'selected="selected"' if $param{ddmEmployee} eq 'All' ) ?>>All Employees</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( type=>['E','A'], order=>'lower(firstname),lower(lastname)') ], $param{ddmEmployee} ); ) ?>
 			</select>
-	</p>
-	<? eval (
-		my @time = localtime(time);
-		if ( $r->param('ddmStartYear') ) {
-			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $r->param('ddmStartYear'), $r->param('ddmStartMonth'),$r->param('ddmStartDay') );
-		} else {
-			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
-		} # end if
-		if ( $r->param('ddmEndYear') ) {
-			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $r->param('ddmEndYear'), $r->param('ddmEndMonth'),$r->param('ddmEndDay') );
-		} else {
-			@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
-		} # end if
-) ?>
-
-	<p>
+	</li>
+	<li>
 		<label>Ordered Date</label>
-			<select name="ddmStartYear"> <?StartYears?> </select>
-			<select name="ddmStartMonth"> <?StartMonths?> </select>
-			<select name="ddmStartDay"> <?StartDays?> </select>
+		<span class="DateSelector">
+		<? echo ( ssi::date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_start' ); ) ?>
+		</span>
 		to
-			<select name="ddmEndYear"><?EndYears?></select>
-			<select name="ddmEndMonth"><?EndMonths?></select>
-			<select name="ddmEndDay"> <?EndDays?></select>
-	</p>
+		<span class="DateSelector">
+		<? echo ( ssi::date_select_session( '/employee/reports/prepress_productivity.html', 'ordered_on_end' ); ) ?>
+		</span>
+	</li>
+	</ul>
 	<p class="buttons">
 		<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-); ) ?>
+				ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+				); ) ?>
 	</p>
 </fieldset>
 <? eval ( 
-		my %params = ( 'type'=>['E','A'], 'order'=>'lower(lastname),lower(firstname)' );
-		if ( $param{'ddmEmployee'} eq 'Prepress' or ! $param{'ddmEmployee'} ) {
-			$params{'usergroup'} = 'Prepress';
-		} elsif ( $param{'ddmEmployee'} ne 'All' ) {
-			$params{'id'} = $param{'ddmEmployee'};
+		my %sql = ( type=>['E','A'], order=>'lower(lastname),lower(firstname)' );
+		if ( $param{ddmEmployee} eq 'Prepress' or ! $param{ddmEmployee} ) {
+			$sql{'usergroup any'} = 'Prepress';
+		} elsif ( $param{ddmEmployee} ne 'All' ) {
+			$sql{id} = $param{ddmEmployee};
 		} # end if
-		@{$$variable{'Results'}} = openprint::User->find( %params );
+		@{$$variable{'Results'}} = openprint::User->find( %sql );
 		@{$$variable{'Projects'}} = openprint::Project->find( 
-			'ordered_on >='	=>	"$$variable{'Start'} 00:00:00", 
-			'ordered_on_<='	=>	"$$variable{'End'} 23:59:59"
+			ssi::date_filter( 'ordered_on_end', 'ordered_on <=', \%param ),
+			ssi::date_filter( 'ordered_on_start', 'ordered_on >=', \%param ),
 			);
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
@@ -102,7 +90,7 @@
 			} # end foreach signature
 			$$variable{$operator_id}->{'OrderValue'} += $Project->ordered_price();
 		} # end foreach Project
-		) ?>
+	) ?>
 <table>
 	<tr>
 		<th align="left">Employee</th>
@@ -130,10 +118,10 @@
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'ProjectCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'PlateCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'DigitalDyluxCount'} ) ?></td>
-		<td align="right"><? echo ( sprintf('%.2f', $$variable{$$variable{'User'}->id()}->{'DigitalDyluxArea'} ) ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{$$variable{'User'}->id()}->{'DigitalDyluxArea'} ) ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{$$variable{'User'}->id()}->{'EpsonProofCount'} ) ?></td>
-		<td align="right"><? echo ( sprintf('%.2f', $$variable{$$variable{'User'}->id()}->{'EpsonProofArea'} ) ) ?></td>
-		<td align="right"><? echo ( sprintf('$ %.2f', $$variable{$$variable{'User'}->id()}->{'OrderValue'} ) ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{$$variable{'User'}->id()}->{'EpsonProofArea'} ) ) ?></td>
+		<td align="right"><? echo ( openprint::Currency::format( $$variable{$$variable{'User'}->id()}->{'OrderValue'} ); ) ?></td>
 	</tr>
 <? endwhile ( $$variable{'User'} = shift @{$$variable{'Results'}}; ) ?>
 <? if ( $$variable{''}->{'ProjectCount'} ) ?>
@@ -143,10 +131,10 @@
 		<td align="right"><? echo ( 1*$$variable{''}->{'ProjectCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{''}->{'PlateCount'} ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{''}->{'DigitalDyluxCount'} ) ?></td>
-		<td align="right"><? echo ( sprintf('%.2f', $$variable{''}->{'DigitalDyluxArea'} ) ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{''}->{'DigitalDyluxArea'} ); ) ?></td>
 		<td align="right"><? echo ( 1*$$variable{''}->{'EpsonProofCount'} ) ?></td>
-		<td align="right"><? echo ( sprintf('%.2f', $$variable{''}->{'EpsonProofArea'} ) ) ?></td>
-		<td align="right"><? echo ( sprintf('$ %.2f', $$variable{''}->{'OrderValue'} ) ) ?></td>
+		<td align="right"><? echo ( Math::Round::nearest( 0.01, $$variable{''}->{'EpsonProofArea'} ); ) ?></td>
+		<td align="right"><? echo ( openprint::Currency::format( $$variable{''}->{'OrderValue'} ); ) ?></td>
 	</tr>
 <? endif ( $$variable{''}->{'ProjectCount'} ) ?>
 	<tr><td colspan="8"><hr/></td></tr>

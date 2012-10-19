@@ -1225,8 +1225,10 @@ sub rfidscanners {
 			$variable{'error'} .= $RFIDScanner->delete();
 		} # end if
 	} # end if
+	_rfidscanners();
 } # end sub rfidscanners
 sub _rfidscanners {
+	ssi::save_params( '/employee/inventory/rfidscanners.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','assigned','notassigned','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day' ) );
 } # end sub _rfidscanners
 
 sub rfidscanner_details {

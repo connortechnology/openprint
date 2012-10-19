@@ -181,7 +181,7 @@ sub print_overview {
 			if ( ! $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 			} # end if
-			if ( my $Equipment = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'}) ) {
+			if ( my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'}) ) {
 				openprint::employee_schedule::insert( $log, $dbh, $project_id, $signature_service_index, $Equipment->id() );
 			} # end if
 		} # end foreach signature
@@ -233,7 +233,7 @@ sub bindery_overview {
 			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
 			);
 	foreach my $Project ( @Projects ) {
-		my $qty_index = $Project->ordered_qty_index();
+		my $qty_index = $Project->ordered_quantity_index();
 		
 		my %times;
 
@@ -1439,13 +1439,37 @@ sub _li_change {
 	if ( $param{'action'} eq 'setduedate' ) {
 		if ( $$Job{'project_id'} ) {
 			my $Project = $Job->Project();
-			$Project->due_date( $param{duedate} );
-			if ( ! ( $variable{'error'} = $Project->save() ) ) {
-				$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+			if ( ! $$Project{id} ) {
+				$log->error("Project $$Project{id} not found in set_duedate");
+				return;
 			} # end if
-		} else {
-			$variable{'error'} .= 'Cant set duedate without project.';
-		} # end if
+
+			if ( $Project->due_date() ne $param{duedate} ) {
+				$Project->due_date( $param{duedate} );
+				$Project->save();
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $param{duedate}" );
+
+				my $Me = new openprint::User($openprint::session{user_id});
+				my $CSR = $Project->Company()->CSR();
+				if ( $CSR->id() ) {
+					my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+					my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template,
+							{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a>.`}
+							);
+					my $Mail = new openprint::Email();
+
+					$_ = $Mail->send(
+							FROM	=>	$Me,
+							TO      => $CSR,
+#TO			=>  'iconnor@penultima.org',
+							SUBJECT		=>	'Due Date for Docket '. $Project->docket() . ' has been changed.',
+							ATTACHMENTS =>  [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
+							);
+				} # end if email to CSR
+
+
+			} # end if date has changed
+		} # end if project_id
 	} elsif ( $param{'action'} eq 'start' ) {
 
 		# Stop any currently running jobs, which will be the first job on the schedule, right?
