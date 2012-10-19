@@ -16,6 +16,7 @@ require openprint::User_Notification;
 require logger;
 require openprint::Upload;
 require openprint;
+require openprint::File;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;

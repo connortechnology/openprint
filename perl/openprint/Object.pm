@@ -21,8 +21,8 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-my $debug = 1;
-my $debug_all = 1;
+my $debug = 0;
+my $debug_all = 0;
 $no_cache = 0;
 
 sub init_cache {
