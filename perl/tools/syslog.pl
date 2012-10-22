@@ -65,13 +65,16 @@ if ( $config{'pid_file'} ) {
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 $log->info("Opening SQL connection");
 $dbh = sql::open_sql( $log,
-	'host'		=> $config{'db_host'},
-	'database'	=> $config{'db_name'},
-	'driver'	=> 'Pg',
-	'login'	 => $config{'db_user'},
-	'password'	=> $config{'db_pass'},
+	host		=> $config{db_host},
+	database	=> $config{db_name},
+	driver		=> 'Pg',
+	login	 	=> $config{db_user},
+	password	=> $config{db_pass},
 );
-die if ! $dbh;
+die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
+configuration::init( \%config );
+configuration::from_file('/etc/openprint-syslog.conf');
+configuration::merge($opts);
 
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
@@ -88,7 +91,7 @@ my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because not listed in AllowUsers$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User \w+ from ([0-9.]+) not allowed because account is locked$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \([0-9]+\) exceeded, connection refused$',
-		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user fround from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
+		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- USER [\.\-A-Za-z0-9]+: no such user found from [0-9.]+\[[0-9.]+\] to [.:a-zA-Z0-9]+$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ dovecot: pop3-login: Disconnected \(auth failed, 1 attempts\): user=<[a-zA-Z@\.0-9]*>, method=PLAIN, rip=([\.0-9]+), lip=[\.0-9]+(, session=<[^>]+)?$',
 		q`^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ named\[[0-9]+\]: client ([0-9.]+)#[0-9]+: query \(cache\) '\./NS/IN' denied$`,
@@ -104,7 +107,6 @@ my $MAXLEN = 1524;
 # Start Listening on UDP port 514
 my $sock = IO::Socket::INET->new(LocalPort => $config{port}, Proto => 'udp')||die("Socket: $@");
 
-my $rin = '';
 my $buf;
 do{
 	if ( ! $dbh->ping() ) {
@@ -120,6 +122,9 @@ do{
 			sleep(10);
 			next;
 		} # end if
+		configuration::init( \%config );
+		configuration::from_file('/etc/openprint-syslog.conf');
+		configuration::merge($opts);
 	} # end if
 	
 	my %host_counts;
@@ -134,7 +139,7 @@ do{
 		# If a blacklist is specified, update it on start
 		if ( $opts->{blacklist} ) {
 			if ( ! open( FH, '>'.$opts->{blacklist} ) ) {
-				die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
+				die 'Unable to open blacklist: ' . $opts->{blacklist} . "\n";
 			} else {
 				foreach my $Host ( openprint::Host->find( blacklist => 1,'order'=>'ip') ) {
 					my $macs = $Host->mac();
@@ -150,38 +155,42 @@ do{
 				close(FH);
 			} # end if
 			`/etc/init.d/shorewall restart`;
-		} else {
-			foreach my $Host ( openprint::Host->find('blacklist'=>1,order=>'ip',whitelist=>0) ) {
+		} elsif ( 0 ) {
+			foreach my $Host ( openprint::Host->find( blacklist=>1, order=>'ip', whitelist=>0 ) ) {
 				my $macs = $Host->mac();
 				if ( $macs and @{$macs} ) {
 					foreach my $mac ( @{$macs} ) {
 						$mac =~ s/:/\-/g;
 						`shorewall drop ~$mac`;
+						$log->debug("Dropping !~$mac") if $config{debug};
 					} # end foreach mac
 				} elsif ( $Host->ip() ) {
 					`shorewall drop $$Host{ip}`;
+					$log->debug("Dropping $$$Host{ip}") if $config{debug};
 				} # end if
 			} # end foreach Host
 		} # end if
+		$log->debug("Done updating shorewall.") if $config{debug};
 	} # end if do update
 
 	$sock->recv($buf, $MAXLEN);
 	my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 	my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
+	$log->debug($buf) if $config{debug};
 	# Without the multiline flag, will do one line at a time, nice.
-	$buf=~/<(\d+)>(.*?):(.*)/;
+	my ( $thing1, $line ) = $buf =~ /<(\d+)>(.*)/;
+$log->debug("Thing1: $1, thing3: $line ");
 	foreach my $re ( @re ) {
 
-		$log->debug("Line: $re") if $opts->{debug};
+		$log->debug("Checking Line: $re") if $config{debug};
 
-
-		if ( $buf =~ /$re/ ) {
+		if ( $line =~ /$re/ ) {
 			my ($when, $source) = ( $1, $2 );
-			$log->debug( "match for $source") if $opts->{debug};
+			$log->debug( "match for $source") if $config{debug};
 			my ( $ip, $hostname );
 			if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 # Is an IP
-				$log->debug( "$source is an ip" ) if $opts->{debug};
+				$log->debug( "$source is an ip" ) if $config{debug};
 				$ip = $source;
 			} else {
 # is a hostname
@@ -189,15 +198,15 @@ do{
 				$ip = gethostbyname($source);
 				if ( defined $ip ) {
 					$ip = Socket::inet_ntoa($ip);
-					$log->debug( "Got $ip for $source" ) if $opts->{debug};
+					$log->debug( "Got $ip for $source" ) if $config{debug};
 				} # end if
 			} # end if
 
 			if ( $ip and $whitelist{$ip} ) {
-				$log->debug( "$ip is whitelisted" ) if $opts->{debug};
+				$log->debug( "$ip is whitelisted" ) if $config{debug};
 			} # end if
 			if ( ! $ip ) {
-				$log->debug( "No ip for $source" ) if $opts->{debug};
+				$log->debug( "No ip for $source" ) if $config{debug};
 				next;
 			} # end if
 
@@ -211,18 +220,17 @@ do{
 					$host_counts{$ip}->hostname( $hostname );
 				} # end if
 			} # end if
-			my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip} and $host_counts{$ip}{updated_on};;
+			my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip}{updated_on};
 			my $occurrence = Date::Parse::str2time( $when );
 #$log->warn("Last: $host_counts{$ip}{updated_on} => $last_seen, $when => $occurrence") if $host_counts{$ip};
 			if ( (!$last_seen) or ($last_seen < $occurrence) ) {
-				$host_counts{$ip}{'count'} += 1;
-				$host_counts{$ip}{'update'} = 1;
+				$host_counts{$ip}{count} += 1;
+				$host_counts{$ip}{update} = 1;
 			} else {
-				$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" ) if $opts->{debug};
+				$log->debug( "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" ) if $config{debug};
 			} # end if
-			last;
+			last; # re
 		} # end if line matches re
-
 	} # end foreach re
 
 	foreach my $ip ( sort keys %host_counts ) {
@@ -232,9 +240,10 @@ do{
 		} # end if
 		$_ = $host_counts{$ip}->save();
 		if ( $_ ) {
-			print $_ . "\n";
+			$log->error( $_ );
 		} # end if
 		$log->debug( "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}" ) if $opts->{debug};
+		`shorewall drop $ip` if $host_counts{$ip}{blacklist};
 	} # end foreach ip
 
 } while(1);
