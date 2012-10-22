@@ -353,7 +353,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		# Save will recalc taxes as well.
 		$variable{'error'} .= $PO->save( \%param );
 if ( 0 ) {
-		if ( ! $PO->authorized() ) {
+		if ( $PO->total() and ! $PO->authorized() ) {
 			if ( $PO->total() < $Me->purchasing_limit() ) {
 				$variable{'error'} .= $PO->save({
 						'authorized'	=> 1,
