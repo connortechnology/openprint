@@ -139,7 +139,6 @@ sub send_reprint_request_notification {
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 	my %info = (
 			'CAR'   =>  $self,
-			'To'    =>  $To,
 			'From'  =>  $From,
 			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_reprint_request.html\"-->",
 			);
@@ -186,7 +185,6 @@ sub send_changed_notification {
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 	my %info = (
 			'CAR'   =>  $self,
-			'To'    =>  $To,
 			'From'  =>  $From,
 			'ReplacementText' => "<!--#include virtual=\"/email_content/iso_car_changed_notification.html\"-->",
 			);

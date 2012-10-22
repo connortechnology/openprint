@@ -22,6 +22,11 @@
 		$Message->From()->icon(), $Message->From()->name(), $Message->body(),
 		ssi::button( 'delete', { 'onclick'=>"new Ajax.Request('_view.json', { parameters: { message_id: $$Message{id}, action: 'Delete Message' } } );", 'text'=>'X', 'title'=>'Delete' } ),
 );
+		my $To = openprint::Message_To->find_one(message_id=>$$Message{id}, user_id=>$session{user_id} );
+		if ( ! $To ) {
+			$log->error("Invaluid message to!!!!");
+		}
+		$To->save({viewed=>1}) if ! $To->viewed();
 		$variable{'Message'} = $Message;
 
 	} # end foreach Message

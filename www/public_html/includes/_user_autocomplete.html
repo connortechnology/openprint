@@ -1,20 +1,21 @@
 <ul>
 <? echo ( 
 	my $html;
-	s/^\s+//, s/\s+$// for $param{'user_name'};
-	my @Companies = openprint::Company->find('name ilike'=>$param{'user_name'}.'%','limit'=>10,'id not in'=>$session{company_id});
+	s/^\s+//, s/\s+$// for $param{user_name};
+	my @Companies = openprint::Company->find('name ilike'=>$param{user_name}.'%','limit'=>10,'id not in'=>$session{company_id});
 	my @user_ids = map { $_->id() } openprint::User->find('company_id in'=>[ map { $_->id() } @Companies ] ) if @Companies;
 	foreach my $Company (@Companies) {
 		my @Users = $Company->Users();
 		if ( @Users > 1 ) {
-			$html .= sprintf(q`<li id="%1$d" class="Company"><span class="information">Everyone in %s</span></li>`, $Company->id(), $Company->name() );
+			$html .= sprintf(q`<li id="_%1$d" class="Company"><span class="information">Everyone in %s</span></li>`, $Company->id(), $Company->name() );
 		} # end if
 		foreach my $User ( @Users ) {
+			next if ! $User->can_view();
 			my $Asset = $User->Asset();
 			my $thumbnail_url = $Asset->thumbnail_url();
 
 			return sprintf(q`
-				<li id="%1$d_%2$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
+				<li id="%2$d_%1$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
 				$Company->id(), 
 				$User->id(), $User->name(),
 				( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',
@@ -25,11 +26,12 @@
 
 	my @Users = openprint::User->find('name ilike'=>$param{'user_name'}.'%','limit'=>10, 'id not in'=>[ $session{'user_id'}, @user_ids ] );
 	foreach my $User (@Users) {
+		next if ! $User->can_view();
 		my $Asset = $User->Asset();
 		my $thumbnail_url = $Asset->thumbnail_url();
 
 		return sprintf(q`
-			<li id="%1$d_%2$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
+			<li id="%2$d_%1$d" class="User"><span class="thumbnail informal"><img src="%4$s" alt="%5$s" /></span>%3$s</li>`,
 			$User->company_id(),
 			$User->id(), $User->name(),
 			( $thumbnail_url ? $thumbnail_url : '/images/no_image.gif' ), '',

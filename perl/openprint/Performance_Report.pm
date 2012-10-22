@@ -7,13 +7,12 @@ require openprint::Performance_Record;
 package openprint::Performance_Report;
 our @ISA = qw( openprint::Object );
 
-
 # A performanceReport appliedsto a shift + operator
 # It is a collection of PerformanceRecords
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'performance_reports';
 $serial = 'performance_reports_id_seq';
 %fields = (

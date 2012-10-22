@@ -141,7 +141,7 @@ sub can_edit {
 } # end sub can_edit
 
 sub can_view {
-	return 1 if ! $_[0]{'id'};
+	return 1 if ! $_[0]{id};
 	my $User;
 	if ( @_ > 1 ) {
 		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User($_[1]);
@@ -150,8 +150,9 @@ sub can_view {
 	} # end if
 	return 1 if $$User{type} eq 'A';
 	return 1 if $_[0]{created_by} == $$User{id};
+	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
 	my $Privacy = $_[0]->Privacy();
-	return 1 if ! $$Privacy{'id'};
+	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});
 } # end sub can_view
 

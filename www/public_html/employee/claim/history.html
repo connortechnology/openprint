@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	function load( div, form ) {
 		new Ajax.Updater( div, '_history.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
@@ -19,7 +18,6 @@
 			popup_window('_po_decline_popup.html?po_id='+claim_ids.join(','), '', { width: 400 } );
 		} // end if
 	} // end function open_decline_window()
--->
 </script>
 	<!--#include virtual="/includes/error_reporting.html"-->
 <div class="Claims"><div class="History">
@@ -27,11 +25,11 @@
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<p><label>CLAIM #</label>
 			<input type="text" id="claim_id" name="claim_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
+			<? echo ( ssi::button( 'Go3', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ); ) ?>
 		</p>
 		<p><label>Manifest</label>
 			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
+			<? echo ( ssi::button( 'Go2', { onclick=>"load('Results', \$('f1'));", text=>'Go' } ); ) ?>
 		</p>
 		<hr/>
 		<p><label>Created By</label>
@@ -89,9 +87,9 @@
 		</p>
 		<p class="buttons">
 				<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/employee/claim/edit.html', 'Add New' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=> 'Show Results' } ),
+				ssi::button( 'Add', { href=>'/employee/claim/edit.html', text=>'Add New' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 		</p>
 	</fieldset>

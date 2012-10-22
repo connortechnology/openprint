@@ -1,21 +1,13 @@
-package openprint::RFIDTagType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+package openprint::RFIDTagType;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
 
-require sql;
-require ssi;
-require misc;
+use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 1;
+$table = 'rfidtagtypes';
+$serial = 'rfidtagtypes_id_seq';
 
 %fields = (
 	'id'		=>	'id',

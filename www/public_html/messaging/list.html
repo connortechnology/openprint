@@ -23,11 +23,11 @@
 					<li>
 						<label>When</label>
 						<span class="DateSelector">
-		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
+						<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_start', {onchange=>'load_messages(this.form);'} ); ) ?>
 						</span>
 							to 
 						<span class="DateSelector">
-		<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
+						<? echo ( ssi::date_select_session( '/messaging/list.html', 'starting_on_end', {onchange=>'load_messages(this.form);'} ); ) ?>
 						</span>
 					</li>
 					<li>
@@ -38,13 +38,13 @@
 				<br class="spacer"/>
 				<p class="buttons">
 					<? echo ( join('',
-						ssi::button( 'ShowResults', { 'onclick'=>'load_messages(f1);', 'text'=>'Show Results' } ),
-						ssi::button( 'Reset', { 'href'=>'/messaging/list.html?action=reset', 'text'=>'Reset' } ),
-						ssi::button( 'New', { 'href'=>'/messaging/view.html', 'text'=>'New Message' } ),
+						ssi::button( 'ShowResults', { onclick=>'load_messages(f1);', text=>'Show Results' } ),
+						ssi::button( 'Reset', { href=>'/messaging/list.html?action=reset', text=>'Reset' } ),
+						ssi::button( 'New', { href=>'/messaging/view.html', text=>'New Message' } ),
 						); ) ?>
 				</p>
 			</fieldset>
-			<div id="MessageList"><!--#include virtual="_list.html"--></div>
+			<div id="MessageList"><!--#include virtual="/messaging/_list.html"--></div>
 		</fieldset>
 	</form>
 	</div>

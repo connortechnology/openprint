@@ -1,7 +1,7 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 use lib '/var/www/testing/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require sets;
 require sql;

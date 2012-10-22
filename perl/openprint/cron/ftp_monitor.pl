@@ -16,6 +16,7 @@ require openprint::User_Notification;
 require logger;
 require openprint::Upload;
 require openprint;
+require openprint::File;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -62,7 +63,7 @@ foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smt
 	}
 } # end foreach required-param
 foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
-	$config{$param} = $$opts{$param} if $$opts{$param};
+	$config{$param} = $$opts{$param} if exists $$opts{$param};
 } # end foreach non-requiredp aram
 if ( $config{'site_url'} ) {
 	$config{'siteURL'} = $config{'site_url'};
@@ -210,7 +211,8 @@ if (open($fifoh, "< $config{fifo}")) {
 					'password'	=> $config{'db_pass'},
 					);
 			die 'Error opening db' if ! $dbh;
-			configuration::init_cache( \%config );
+			configuration::init( \%config );
+			configuration::from_file('/etc/ftp_monitor.conf');
 		} # end if
 	} # end while <input>
 
@@ -223,14 +225,13 @@ if ( $config{'pid_file'} ) {
 } # end if
 
 sub check_scoreboard {
-	my $scoreboard = get_scoreboard( $config{'scoreboard'} );
+	my $scoreboard = get_scoreboard( $config{scoreboard} );
 	my @users = map { $$_{'user'} } @$scoreboard;
 	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $username ( keys %uploads ) {
 		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! $Users{$username};
 		my $User = $Users{$username};
-
 
 		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and @{$uploads{$username}} > $config{'max_files'} ) ) {
 			$log->debug( "Sending mail for $username\n" );

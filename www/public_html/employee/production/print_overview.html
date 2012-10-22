@@ -376,10 +376,10 @@ $log->debug("Setp 2" . $ES->to_string());
 			#$html .= '</div>';
 		} # end foreach press
 		$html .= '</tr></tbody></table>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</tr></table></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent('Pending','/employee/production/_pending.html');">Pending (click to hide/unhide):</h3><table class="Pending"><tr id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
 		$html .= '</tr></table></div>';
 		return $html;

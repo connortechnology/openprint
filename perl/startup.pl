@@ -26,7 +26,7 @@ BEGIN {
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape ();
-	use HTML::Strip ();
+	#use HTML::Strip ();
 	use HTML::Entities ();
 	use Data::Dumper ();
 
@@ -97,6 +97,9 @@ BEGIN {
 	use Lingua::EN::Inflect ();
 	use	openprint::Location ();
 	use	openprint::Affiliate ();
+
+	use countries;
+	use provinces;
 
 }
 

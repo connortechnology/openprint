@@ -27,7 +27,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *config = \%openprint::config;
 
 # Colour Definitions Import/Export
-sub colour_import_export {
+sub inks {
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -53,6 +53,16 @@ sub colour_import_export {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+        my $ac = sql::start_transaction( $dbh );
+        foreach my $id ( ref $param{colours} eq 'ARRAY' ? @{$param{colours}} : $param{colours} ) {
+            my $Ink = new openprint::Ink( $id );
+            if ( ! $Ink->id() ) {
+                $variable{error} .= "Error deleting ink $id : not found.<br/>";
+                next;
+            } # end if
+            $Ink->delete();
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
 
 	} elsif ( $param{'btnFunction'} eq 'Import Colours' ) {
 		if ( $param{'fileColour'} ) {
@@ -236,24 +246,48 @@ $log->error( $variable{'error'} );
 			$log->warn( "No file given to upload." );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export Colours' ) {
-		my @header = ( 'PMSId', 'Serivce ID', 'Material ID', 'Colour Name' );
+		my @header = ( 'PMSId', 'Service ID', 'Material ID', 'Colour Name' );
 		$_ = "SELECT PMSID, (SELECT name FROM Services WHERE id=service_id), (SELECT name FROM Materials WHERE id=Material_ID), washups, strColourName FROM Inks";
 		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, \%variable, 'colours.csv', \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, 'inks.csv', \@header, \@data );
 		# Add record to audit log - action "Export Colour Definitions".
 		logs::insertLogRecord('57',);
 	} # end if
+
+	_inks();
 } # end sub inks
 
+sub _inks {
+	ssi::save_params( '/administrator/production/inks.html', ( 'pmsid','name','grade' ) );
+} # end sub _inks
+
 sub ink {
-	$variable{'Ink'} = new openprint::Ink( $param{'ink_id'} );
+	my $Ink = $variable{Ink} = new openprint::Ink($param{ink_id});
+	if ( $param{btnFunction} eq 'Save' ) {
+		$variable{error} .= $Ink->save({
+			name	=>	$param{name},
+			pmsid	=>	$param{pmsid},
+			washups	=>	$param{washups},
+			service_id	=>	$param{service_id},
+			material_id	=>	$param{material_id},
+			grades		=>	( ref $param{grades} eq 'ARRAY' ? $param{grades} : [ $param{grades} ] ),
+		});
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/production/inks.html';
+		} # end if
+	} elsif ( $param{btnFunction} eq 'Copy' ) {
+		$Ink = $Ink->copy();
+		$variable{error} .= $Ink->save({name=>'Copy of ' . $Ink->name});
+		$variable{Ink} = $Ink;
+		$variable{ExternalRedirect} = '/administrator/production/ink.html?ink_id='.$Ink->id();
+	} # end if
 } # end sub ink
 
 sub _material_id_ddm {
-	$variable{'Ink'} = new openprint::Ink( $param{'ink_id'} );
+	$variable{Ink} = new openprint::Ink( $param{'ink_id'} );
 } # end sub _material_id_ddm
 sub _service_id_ddm {
-	$variable{'Ink'} = new openprint::Ink( $param{'ink_id'} );
+	$variable{Ink} = new openprint::Ink( $param{'ink_id'} );
 } # end sub _service_id_ddm
 
 
