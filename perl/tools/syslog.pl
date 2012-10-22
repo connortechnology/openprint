@@ -11,6 +11,7 @@ require misc;
 require logger;
 require openprint;
 require openprint::Host;
+require Date::Parse;
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -182,7 +183,7 @@ do{
 $log->debug("Thing1: $1, thing3: $line ");
 	foreach my $re ( @re ) {
 
-		$log->debug("Checking Line: $re") if $config{debug};
+		#$log->debug("Checking Line: $re") if $config{debug};
 
 		if ( $line =~ /$re/ ) {
 			my ($when, $source) = ( $1, $2 );
