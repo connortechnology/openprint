@@ -4,14 +4,17 @@
 	} // end function
 </script>
 
-<form name="f1" method="post" action="prepress_overview.html">
+<form id="f1" name="f1" method="post" action="prepress_overview.html">
 	<fieldset class="filters">
 		<legend>Select By Docket #</legend>
 		<p>
 			<label>Docket #:</label>
-			<input type="text" name="StartDocket" value="<?StartDocket?>" size="13"  />
-			- <input type="text" name="EndDocket" value="<?EndDocket?>" size="13"  />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_projects( document.f1 );", '', 'Go' );) ?>
+			<? echo ( my $html;
+				$html .= ssi::input( type=>'cardinal', name=>'StartDocket', value=>$variable{StartDocket} );
+				$html .= ssi::input( type=>'cardinal', name=>'EndDocket', value=>$variable{EndDocket} );
+				$html .= ssi::button( 'Go', { onclick=>'load_projects( document.f1 );' } );
+				return $html;
+			) ?>
 		</p>
 	</fieldset><fieldset class="filters"><legend>Or Select From the Following</legend>
 		<p>
@@ -19,7 +22,7 @@
 				<input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4" />
 				<select name="ddmCustomer" onchange="load_projects(this.form);">
 					<option value="">All</option>
-					<? echo ( openprint::Company::get_dropdown( $openprint::param{'company_id'} ); ) ?>
+					<? echo ( openprint::Company::get_dropdown( $param{'company_id'} ); ) ?>
 				</select>
 		</p>
 		<p>
@@ -27,7 +30,7 @@
 				<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 					<option value="">All Employees</option>
 	<? echo (
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strFirstName),lower(strlastname)' ) ], $openprint::param{'ddmEmployee'} );
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strFirstName),lower(strlastname)' ) ], $param{'ddmEmployee'} );
 	)?>
 				</select>
 		</p>
@@ -36,22 +39,22 @@
 			<select name="ddmPress">
 				<option value="">All Presses</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $openprint::param{'ddmPress'} );
+	ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $param{'ddmPress'} );
 ) ?>
 			</select>
 		</p>
 	<? eval (
-		if ( ! $openprint::param{'TakeOverStartYear'} ) {
-			@openprint::param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'} = Date::Calc::Today();
+		if ( ! $param{'TakeOverStartYear'} ) {
+			@param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'} = Date::Calc::Today();
 		} # end if
 		@$variable{'TakeOverStartYears','TakeOverStartMonths','TakeOverStartDays','TakeOverStart'} = ssi::get_dates( $log, $dbh,
-			@openprint::param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'} );
+			@param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'} );
 
-		if ( ! $openprint::param{'TakeOverEndYear'} ) {
-			@openprint::param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} = Date::Calc::Today();
+		if ( ! $param{'TakeOverEndYear'} ) {
+			@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} = Date::Calc::Today();
 		} # end if
 		@$variable{'TakeOverEndYears','TakeOverEndMonths','TakeOverEndDays','TakeOverEnd'} = ssi::get_dates( $log, $dbh,
-			@openprint::param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} );
+			@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'} );
 	) ?>
 		<p>
 			<label>Take Over Date:</label>

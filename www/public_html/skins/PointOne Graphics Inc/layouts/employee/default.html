@@ -11,7 +11,13 @@
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<? if ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<? endif ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
 <? echo (
+	$session{menuoff} = $param{menuoff} if exists $param{menuoff};
 	my @html;
 	my $css = $$variable{'uri'};
 	$css =~ s/^\///;
@@ -33,9 +39,6 @@
 		push @html, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /print_overview/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
-	} # end if
-	if ( $$variable{'uri'} =~ /bindery_schedule2/ ) {
 		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /operator_schedule/ ) {
@@ -76,7 +79,7 @@
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 	</head>
-	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" id="body">
 		<div id="Header"<? if ( $session{'menuoff'} ) ?> style="display:none;"<? endif ( $session{'menuoff'} ) ?>>
 			<div id="Logo">
 				<table><tr>
@@ -85,7 +88,7 @@
 				</tr></table>
 			</div>
 			<div id="CurrencySelection">
-				Currently selected currency:
+				Currency:
 				<form name="SelectCurrency" action="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { } ); ) ?>" method="post">
 					<select name="select_currency_id" onchange="this.form.submit();">
 					<? echo (
@@ -105,7 +108,11 @@
 							<ul>
 <? if ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/logout.html">&raquo; Logout</a></li>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 								<li><a href="/employee/account/profile.html">&raquo; User Profiles</a></li>
+<? else ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/account/profile.html">&raquo; Profile</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 <? else ( $session{'user_id'} ) ?>
 								<li><a href="/employee/account/login.html">&raquo; Login</a></li>
 <? endif ( $session{'user_id'} ) ?>
@@ -118,7 +125,7 @@
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
 								<li><a href="/employee/production/prepress_overview.html;NOSSL">&raquo; PrePress Overview</a></li>
 								<li><a href="/employee/production/prepress_schedule.html;NOSSL">&raquo; PrePress Schedule</a></li>
-								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
+								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Production Schedule</a></li>
 								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
 								<li><a href="/employee/production/operator_schedule.html;NOSSL">&raquo; Operator Schedule</a></li>
 <!--
@@ -133,6 +140,7 @@
 								<li><a href="/employee/performance/setup.html;NOSSL">&raquo; Performance Setup</a></li>
 								<li><a href="/employee/performance/history.html;NOSSL">&raquo; Performance History</a></li>
 								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/production/datacollection.html;NOSSL">&raquo; Data Collection</a></li>
 							</ul>
 						</li>
 						<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
@@ -232,8 +240,8 @@
 <? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
 					<li class="off"><a href="/session.html">SESSION</a></li>
 <? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
-<li class="off"><a href="#" onclick="$('Header').hide();$('ShowMenu').show();$('Content').setStyle('margin-left: 0;');new Ajax.Request('/menu.json?menuoff=1' );">HIDE MENU</a></li>
 <? endif ( $session{'user_id'} ) ?>
+<li class="off"><a href="#" onclick="$('Header').hide();$('ShowMenu').show();$('Content').setStyle('margin-left: 0;');new Ajax.Request('/menu.json?menuoff=1' );">HIDE MENU</a></li>
 					</ul>
 				</div><!-- Menu -->
 			</div><!-- Header -->

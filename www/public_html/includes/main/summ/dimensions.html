@@ -2,7 +2,7 @@
 	<span class="label">Dimensions:</span>
 <? echo ( 
 	my $html;
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+	foreach my $qty_index ( @{$$variable{quantity_indexes}} ) {
 		$html .= sprintf('<span class="value">%s x %s<span class="smTbl">(W x H)</span></span>', @$variable{'txtWidth','txtHeight'} );
 	} # end foreach
 	return $html;

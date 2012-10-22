@@ -2,3 +2,9 @@
 	width: 50%;
 	float: left;
 }
+.Credit label:after {
+	content: ':';
+}
+.Credit label.radio:after {
+	content: '';
+}

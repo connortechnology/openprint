@@ -6,6 +6,7 @@ require MIME::QuotedPrint;
 require openprint::Company_Credit;
 require openprint::order;
 require openprint::Order;
+require openprint::Payment;
 require misc;
 require sql;
 
@@ -62,32 +63,48 @@ sub details {
 	if ( $param{'btnFunction'} eq 'Send' ) {
 		openprint::order::send_sales_order( $r, $log, $dbh, $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		my $payment_index = $param{'PaymentIndex'};
-		$payment_index =~ s/\D//g;
-		if ( $payment_index ) {
-			sql::execute( $log, $dbh, "DELETE FROM Payments WHERE id=$payment_index" );
+		my $Payment = new openprint::Payment( $param{payment_id} );
+		if ( $Payment->id() ) {
+			$variable{'error'} .= $Payment->delete();
 		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
-		$Order->pay();
+		$variable{'error'} .= $Order->pay();
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Invoice' ) {
 		$Order->invoice_id( $param{'invoice_id'} );
 		$Order->invoiced_on( 'NOW()' );
 		$Order->save();
+	} elsif ( $param{'btnFunction'} eq 'ChangeSupplier' ) {
+		if ( ! $param{'supplier_id'} ) {
+			$variable{'error'} .= 'No supplier specified.  No change made.<br/>';
+		} elsif ( $Order->supplier_id() == $param{'supplier_id'} ) {
+			$variable{'error'} .= 'Supplier is already ' . $Order->Supplier()->name().'. No change made.<br/>';
+		} else {
+			$Order->add_log( "Supplier changed from " . $Order->Supplier()->name() . ' to ' . (new openprint::Company($param{supplier_id}))->name() );
+			$variable{'error'} .= $Order->save({supplier_id=>$param{supplier_id}});
+		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id() if ! $variable{'error'};
     } elsif ( $param{'btnFunction'} eq 'Save' ) {
 		
-		if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
-			return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
-		} # end if
+		my $error;
+		$error .= 'Please enter a valid monetary amount.<br/>' if ( ! $param{'amount'} ) or $param{'amount'} =~ /[^-\$\d\.]/;
+		$error .= 'Please enter a valid received on date.<br/>' if ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} );
 
-		my $error = sql::insert( $log, $dbh, 'Payments',
-			'Order_Id',		$order_id,
-			'Company_Id',	$Order->company_id(),
-			'curAmount',	$param{'Amount'},
-			'dtmDate',		'NOW()',
-			'strMethod',	'Manual',
-			'currency_id',	$Order->currency_id(),
-			'strDescription',	$param{'Description'},
-		);
+		return misc::error( $log, $dbh, \%variable, 'Payment errors', $error ) if $error;
+
+		my $Payment = new openprint::Payment();
+		$error = $Payment->save({
+			'order_id'			=>	$order_id,
+			'recipient_id'		=>	$Order->supplier_id(),
+			'payor_id'			=>	$Order->company_id(),
+			'amount'			=>	$param{'amount'},
+			'received_on'		=>  join('-', @param{'received_on_year','received_on_month','received_on_day'} ),
+			'method'			=>	$param{'method'},
+			'currency_id'		=>	$Order->currency_id(),
+			'memo'				=>	$param{'memo'},
+			'transaction_id'	=>	$param{'transaction_id'},
+		});
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
 		} # end if
@@ -111,6 +128,7 @@ sub details {
 			} # end if
 			$Order->save();
 		} # end if
+		$variable{'ExternalRedirect'} = '/employee/accounting/details.html?order_id='.$Order->id();
 		#openprint::order::send_invoice( $r, $log, $dbh, $order_id );
     } elsif ( $param{'btnFunction'} eq 'Cancel' ) {
        openprint::order::cancel_order( $log, $dbh, $order_id );
@@ -125,9 +143,6 @@ sub details {
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-
-	$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
-	@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
 	$variable{'Order'} = $Order;
 } # end sub details
 
@@ -161,17 +176,41 @@ sub credit {
 		if ( ! $company_id ) {
 			$variable{'error'} .= 'No customer specified.<br/>';
 		} else {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Company_Credit IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 			foreach my $Supplier ( openprint::Company->find('offers_credit'=>1) ) {
 				my $Credit = new openprint::Company_Credit( {'company_id'=>$company_id, 'supplier_id'=>$Supplier->id() } );
 
-				$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
-					map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+                if (
+                        ( $Credit->denydays() != openprint::Company_Credit->transform('denydays', $param{'denydays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->warndays() != openprint::Company_Credit->transform('warndays', $param{'warndays-'.$$Supplier{id}} ) ) or
+                        ( $Credit->limit() != openprint::Company_Credit->transform('limit', $param{'limit-'.$$Supplier{id}} ) ) or
+                        ( $Credit->hold() ne openprint::Company_Credit->transform('hold', $param{'hold-'.$$Supplier{id}} ) ) or
+                        ( $Credit->downpayment() != openprint::Company_Credit->transform('downpayment', $param{'downpayment-'.$$Supplier{id}} ) ) or
+                        ( $Credit->cod() != openprint::Company_Credit->transform('cod', $param{'cod-'.$$Supplier{id}} ) )
+                        ) {
+                    my $note = 'Old credit: ' . $Credit->to_string() if $Credit->supplier_id();
+					$variable{'error'} .= $Credit->save( { 'company_id'=>$company_id, 'supplier_id'=>$Supplier->id(), 
+							map { $_ => $param{$_.'-'.$Supplier->id()} } ( 'denydays','warndays','limit','hold','downpayment','cod' ) } );
+                    $note .= '<br/>new credit: ' . $Credit->to_string();
+                    $variable{'error'} .= (new openprint::logRecord())->save( {
+							action_type	=>	105,
+							object_id	=>	$company_id,
+							user_id		=>	$session{user_id},
+							company_id	=>	$session{company_id},
+							note		=>	$note,
+});
+                } else {
+                    $variable{'information'} .= 'Credit unchanged for ' . $Supplier->name() . '<br/>';
+                } # end if
 			} # end foreach Supplier
+			sql::end_transaction( $dbh, $ac );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Creditor', 'Company Internal Name','Legal Name', 'Warn After Days', 'Deny After Days', 'Limit', 
 				'Hold', 'Downpayment', 'COD', 'Balance', 'Remaining', 'Note' );
 		my @data;
+		openprint::Company->find();
 		foreach my $Credit ( openprint::Company_Credit->find() ) {
 			push @data, ( $Credit->Supplier()->name(), $Credit->Company()->name(), $Credit->Company()->business_name(),
 				 $Credit->warndays(), $Credit->denydays(), $Credit->limit(), 

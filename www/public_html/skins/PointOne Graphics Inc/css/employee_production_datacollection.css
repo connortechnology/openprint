@@ -1,8 +1,29 @@
+#Button1, #Button2, #Button3,
+#Button4, #Button5, #Button6,
+#Button7, #Button8, #Button9,
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+#Button0, #ButtonRefresh, #ButtonD {
+	width: 25px;
+	height: 25px;
+}
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide {
+	background-color: #000088;
+}
+#ButtonC,#ButtonD {
+	background-color: #008800;
+}
+#ButtonEquals {
+	background-color: #ffb4da;
+}
 @media only screen and (max-device-width: 480px) {
 	#Button1, #Button2, #Button3,
 	#Button4, #Button5, #Button6,
 	#Button7, #Button8, #Button9,
-	#Button0, #ButtonS, #ButtonD {
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+	#Button0, #ButtonRefresh, #ButtonD {
 		width: 50px;
 		height: 50px;
 	}
@@ -14,14 +35,16 @@
 	#Button1, #Button2, #Button3,
 	#Button4, #Button5, #Button6,
 	#Button7, #Button8, #Button9,
-	#Button0, #ButtonS, #ButtonD {
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+	#Button0, #ButtonRefresh, #ButtonD {
 		width: 75px;
 		height: 75px;
 	}
 	#Button1 .c, #Button2 .c, #Button3 .c,
 	#Button4 .c, #Button5 .c, #Button6 .c,
 	#Button7 .c, #Button8 .c, #Button9 .c,
-	#Button0 .c, #ButtonS .c, #ButtonD .c {
+	#Button0 .c, #ButtonRefresh .c, #ButtonD .c {
 	font-size: 60px;
 
 	}
@@ -75,4 +98,12 @@ box-sizing: border-box;
 
 label:after {
 	content: ':';
+}
+#signature {
+	width: 100%;
+	height: 200px;
+	background-color: white;
+}
+.Focused {
+	background-color: yellow;
 }

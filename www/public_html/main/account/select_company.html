@@ -58,6 +58,12 @@
 					$Log->company_id(), $Log->Company()->name(),
 				);
 			} # end foreach
+			my $User = new openprint::User($session{user_id});
+			if ( ! sets::isin( $User->company_id(), \@companies ) ) {
+				$html .= sprintf('<a href="/main/account/select_company.html?ddmCompany=%d&amp;btnFunction=SelectCompany">%s</a><br/>',
+					$User->company_id(), $User->Company()->name(),
+				);
+			} # end if
 			return $html;
 			) ?>
 			</p>

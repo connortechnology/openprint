@@ -6,11 +6,11 @@
 	my $created_on = $PO->created_on();
 	$created_on = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	my @new_taxes = openprint::Tax->find(
-                #'period_start_null_or_<='   =>  $created_on,
-                #'period_end_null_or_>='     =>  $created_on,
-                'country'   =>  $param{'vendor_country'},
-                'state'     =>  $param{'vendor_state'},
-           );
+				#'period_start_null_or_<='	=>	$created_on,
+				#'period_end_null_or_>='	 =>	$created_on,
+				country	=>	$param{'vendor_country'},
+				state	=>	$param{'vendor_state'},
+			);
 	my @old_taxes = $PO->Taxes();
 
 	my @taxes_to_remove;
@@ -30,8 +30,8 @@
 			my $T = new openprint::PurchaseOrder_Tax();
 			$T->save({
 					'purchaseorder_id'	=>	$PO->id(),
-					'tax_id'            =>  $$Tax{'id'},
-					'rate'              =>  $$Tax{'rate'},
+					'tax_id'			=>	$$Tax{'id'},
+					'rate'				=>	$$Tax{'rate'},
 					});
 			push @taxes_to_add, $T;
 		} # end if

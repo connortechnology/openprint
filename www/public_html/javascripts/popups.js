@@ -71,12 +71,13 @@ function AjaxToggleContent( divID, show_url, inputs, hide_url ) {
 
 
 	if ( div.style.display == 'none' ) {
+		div.innerHTML = 'Loading....';
 		div.show();
-		new Ajax.Updater( divID, show_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+		new Ajax.Updater( divID, show_url, { parameters: params.join('&'), evalScripts: true } );
 	} else {
 		div.hide();
 		if ( hide_url )
-			new Ajax.Updater( divID, hide_url, { method: 'get', parameters: params.join('&'), evalScripts: true } );
+			new Ajax.Updater( divID, hide_url, { parameters: params.join('&'), evalScripts: true } );
 	} // end if
 } // end function AjaxToggleContent
 
@@ -188,14 +189,21 @@ className:"alphacube", width:width, height:height
 }
 var popupWin;
 function popup_window( url, parameters, options ) {
+
 	if ( ! popupWin ) {
-		var width = 400;
-		var height = 400;
-		if ( options ) {
-			if ( options.width ) width = options.width;
-			if ( options.height ) height = options.height;
-		} // end if
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
+		var defaults = {
+			maximizable: false, 
+			 resizable: true, 
+			 hideEffect:Element.hide, 
+			 showEffect:Element.show, 
+			 destroyOnClose: true, 
+			 className:"alphacube", 
+			 width:400,
+			 height:400, recenterAuto:false
+		}
+			
+		Object.extend( defaults, options );
+		popupWin = new Window(defaults);
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

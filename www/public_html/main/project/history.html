@@ -37,11 +37,13 @@
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="ProjectHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
-			<div style="float: left; width: 48%;">
+			<div class="leftColumn">
 			<p>
 				<label>Project #:</label>
-				<input type="text" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
+				<? echo ( join("\n",
+					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
+					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
+				); ) ?>
 			</p>
 			<p>
 				<label>Reference:</label>
@@ -52,7 +54,7 @@
 				<select name="ddmStatus" onchange="load_projects( this.form );">
 					<option value="">All</option>
 <? echo ( 
-		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};
+		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
 		ssi::make_drop_down( [sql::execute( $log, $dbh, $_ )], $session{'/main/project/history.html?ddmStatus'} );
 ) ?>
 				</select>

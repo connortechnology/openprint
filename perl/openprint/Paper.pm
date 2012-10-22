@@ -265,7 +265,7 @@ sub prices {
 	my ( $self, $list_id ) = @_;
 	$list_id = openprint::pricing::get_pricelist_id( ) if ! $list_id;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>$list_id );
+		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>$list_id, order=>'lngmin NULLS FIRST' );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -709,7 +709,7 @@ sub add_inventory {
 } # end sub add_inventory
 
 sub allocate {
-    my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
+    my ( $self, $skid_id, $project_id, $quantity, $units, $condition_id ) = @_;
 
 	my $skids;
 	if ( ref $skid_id eq 'openprint::Skid' ) {
@@ -720,15 +720,15 @@ sub allocate {
 		$skids = $skid_id;
 	} # end if
 
-	my $PA;
-	$PA = new openprint::PaperAllocation();
+	my $PA = new openprint::PaperAllocation();
 	$PA->save( {
-			'paper_id'		=>	$$self{'id'},
-			'skid_ids'		=>	$skids,
-			'quantity'		=>	$quantity,
-			'units'			=>	$units ? $units : $self->units(),
-			'project_id'	=>	$project_id,
-			'operator_id'	=>	$openprint::session{'user_id'},
+			paper_id		=>	$$self{'id'},
+			skid_ids		=>	$skids,
+			quantity		=>	$quantity,
+			units			=>	$units ? $units : $self->units(),
+			project_id		=>	$project_id,
+			operator_id		=>	$openprint::session{'user_id'},
+			condition_id	=>	$condition_id,
 			} );
 	if ( $project_id ) {
 		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
@@ -803,8 +803,7 @@ sub available {
 		$$self{available} = 0;
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			next if $SkidContent->quality() eq 'Damaged';
-			next if $SkidContent->quality() eq 'Used';
+			next if sets::isin( $SkidContent->condition(), ['Damaged', 'Used' ] );
 			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 		$$self{'available'} -= $self->allocated();
@@ -1012,7 +1011,7 @@ sub wpsi {
 
 sub Prices {
 	my $self = shift;
-	return openprint::PaperPrice::find('paper_id'=>$$self{'id'}, @_ );
+	return openprint::PaperPrice::find(order=>'lngmin NULLS FIRST','paper_id'=>$$self{'id'}, @_ );
 } # end sub Prices
 
 sub JDF_Media {

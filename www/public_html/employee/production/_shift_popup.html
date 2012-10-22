@@ -24,7 +24,7 @@
 				<label>Operator:</label>
 				<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
 				<? echo ( 
-				   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>$$variable{'Shift'}->Equipment()->category(),'order'=>'lower(strfirstname)' ) ], $$variable{'Shift'}->operator_id() );
+				   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>$$variable{Shift}->Equipment()->categories(),'order'=>'lower(strfirstname)' ) ], $$variable{Shift}->operator_id() );
 				   ) ?>
 				</select>
 			</li>
@@ -33,9 +33,9 @@
 	<p class="buttons">
 		<? echo ( 
 			join('', 
-				ssi::writeButton( $log, $dbh, 'DeleteShift', 'delete.gif', q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Delete' ),
-				ssi::writeButton( $log, $dbh, 'SaveShift', 'save.gif', q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ),
-				ssi::writeButton( $log, $dbh, 'CancelShift', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ),
+				ssi::button( 'DeleteShift', { onclick=>q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Delete' } ),
+				ssi::button( 'SaveShift', { onclick=>q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, text=>'Save' } ),
+				ssi::button( 'CancelShift', { onclick=>"popupWin.destroy();", text=>'Cancel' } ),
 			);
 		) ?>
 	</p>

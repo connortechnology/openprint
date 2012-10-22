@@ -359,6 +359,11 @@ sub find {
 					push @values, $params{$k.'_ilike'};
 					delete $params{$k.'_ilike'};
 				}
+				if ( exists $params{$k.' ilike'} ) {
+					$sql .= " AND $$f{$k} ILIKE ?";
+					push @values, $params{$k.' ilike'};
+					delete $params{$k.' ilike'};
+				}
 				if ( exists $params{$k.'_start'} ) {
 					$sql .= " AND $$f{$k} >= ?";
 					push @values, $params{$k.'_start'};
@@ -428,6 +433,17 @@ sub find {
 					} # end if
 					delete $params{$k.' in'};
 				} # end if
+				if ( exists $params{$k.' not in'} ) {
+					if ( ref $params{$k.' not in'} eq 'ARRAY' ) {
+						$sql .= ' AND ' . $$f{$k}. ' NOT IN ('.join(',', map {'?'} @{$params{$k.' not in'}} ) . ')';
+						push @values, @{$params{$k.' not in'}};
+					} else {
+						$sql .= " AND ? NOT IN $$f{$k}";
+						push @values, $params{$k.' not in'};
+					} # end if
+					delete $params{$k.' not in'};
+				} # end if
+
 				if ( exists $params{$k.' !='} ) {
 					$sql .= " AND $$f{$k} != ?";
 					push @values, $params{$k.' !='};

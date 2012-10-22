@@ -1,16 +1,16 @@
-package openprint::ProductionFeedback;
-@ISA = qw(openprint::Object);
-
 use strict;
+require openprint::SignatureCapture;
+require openprint::User;
+require openprint::Project;
+require openprint::Equipment;
+require openprint::Project_Service;
 
-require sql;
-require openprint::Object;
-use openprint ();
+package openprint::ProductionFeedback;
+our @ISA = qw(openprint::Object);
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+$debug = 1;
 $table = 'ProductionFeedback';
 $serial = 'ProductionFeedback_id_seq';
 %fields = (
@@ -21,46 +21,56 @@ $serial = 'ProductionFeedback_id_seq';
 	'ending_on'		=>	'ending_on',
 	'user_id'		=>	'user_id',
 	'comment'		=>	'comment',
+	'version'		=>	'version',
+	'signature_id'	=>	'signature_id',
+	'equipment_id'	=>	'equipment_id',
+	'quantity'		=>	'quantity',
+);
+%find_fields = (
+	'company_id'	=>	'(SELECT companyindex FROM tbl_Projects WHERE index=project_id)',
+	'signature'		=>	'(SELECT image_data FROM signaturecapture WHERE signaturecapture.id=signature_id)',
 );
 %defaults = (
 	'user_id'		=>	undef,
+	'service_id'	=>	undef,
+	'signature_id'	=>	undef,
+	'equipment_id'	=>	undef,
+	'starting_on'	=>	'NOW()',
+	'ending_on'		=>	'NOW()',
+	'quantity'		=>	undef,
 );
 %transforms = (
-	'project_id'	=> [ 's/\D//g' ],
-	'service_id'	=> [ 's/\D//g' ],
-	'user_id'		=> [ 's/\D//g' ],
+	'equipment_id'	=>	[ 's/\D//g' ],
+	'project_id'	=>	[ 's/\D//g' ],
+	'service_id'	=>	[ 's/\D//g' ],
+	'user_id'		=>	[ 's/\D//g' ],
+	'signature_id'	=>	[ 's/\D//g' ],
+	'quantity'		=>	[ 's/[^\-\.\d]//g' ],
 );
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM ProductionFeedback WHERE 1>0';
-	my @values;
-
-	if ( $params{'project_id'} ) {
-		$sql .= ' AND project_id=?';
-		push @values, $params{'project_id'};
-	} # end if
-
-	if ( $params{'service_id'} ) {
-		$sql .= ' AND service_id=?';
-		push @values, $params{'service_id'};
-	} # end if
-
-	$sql .= " ORDER BY $params{order}" if $params{'order'};
-	$sql .= " LIMIT $params{limit}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("openprint::ProductionFeedback::find( $sql)" . $openprint::dbh->errstr);
-	} else {
-		return map { new openprint::ProductionFeedback( $_->{id}, $_ ); } @$data;
-	} # end if
-} # end sub find
 
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
 
-1;
+sub Signature {
+	return new openprint::SignatureCapture( $_[0]{signature_id} );
+} # end sub Signature
 
+sub Project {
+	return new openprint::Project( $_[0]{project_id} );
+} # end sub Project
+
+sub Equipment {
+	return new openprint::Equipment( $_[0]{equipment_id} );
+} # end sub Equipment
+
+sub Service {
+    if ( $_[0]{project_id} and $_[0]{service_id} ) {
+    return new openprint::Project_Service( { project_id=>$_[0]{project_id}, service_id=>$_[0]{service_id} } );
+    } else {
+    return new openprint::Project_Service();
+    } # end if
+} # end sub Service
+
+1;
 __END__
-~       

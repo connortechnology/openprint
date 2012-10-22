@@ -1,4 +1,5 @@
 package openprint::employee_schedule;
+use strict;
 
 use Date::Calc qw(Add_Delta_Days);
 use openprint ();
@@ -6,35 +7,12 @@ use vars qw( $log $dbh %variable %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *variable = \%openprint::variable;
-*config = \%config;
+*config = \%openprint::config;
 
 require sql;
 require openprint::Equipment;
 require openprint::service;
-require openprint::Shift;
 require openprint::ScheduledJob;
-
-use strict;
-
-sub add_missing_jobs_to_schedule {
-	if ( $config{'Smart Schedule'} ne 'Y') {
-		$log->debug("Not add lost jobs due to Smart Scheduling being turned off.");
-		return;
-	} # end if
-	my @missing_jobs = sql::execute( $log, $dbh, q{SELECT Index FROM tbl_Projects WHERE strStatus='Approved' AND Index NOT IN (SELECT ProjectIndex FROM Schedule)} );
-	foreach my $project_id ( @missing_jobs ) {
-		my $Project = new openprint::Project( $project_id );
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			if ( ! $$sig_specs{'UsePress'} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
-			} # end if
-			if ( my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ) ) {
-				openprint::employee_schedule::insert( $log, $dbh, $project_id, $signature_service_index, $equipment[0]->id() );
-			} # end if
-		} # end foreach signature
-	} # end foreach
-} # end sub add_missing_jobs_to_schedule
 
 sub update_late_jobs {
 	# Make sure that we don't lose any jobs to the past.
@@ -46,12 +24,43 @@ sub update_late_jobs {
 sub set_duedate {
 	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
 	my $Job = new openprint::ScheduledJob( $schedule_id );
+	if ( ! $$Job{id} ) {
+		$log->error("Job $schedule_id not found in set_duedate");
+		return;
+	} # end if	
 	if ( $$Job{'project_id'} ) {
 		my $Project = $Job->Project();
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
-	} # end if
+		if ( ! $$Project{id} ) {
+			$log->error("Project $$Project{id} not found in set_duedate");
+			return;
+		} # end if
+
+		if ( $Project->due_date() ne $date ) {
+			$Project->due_date( $date );
+			$Project->save();
+			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
+
+			my $Me = new openprint::User($openprint::session{user_id});
+			my $CSR = $Project->Company()->CSR();
+			if ( $CSR->id() ) {
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template,
+						{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a>.`}
+						);
+				my $Mail = new openprint::Email();
+
+				$_ = $Mail->send(
+						FROM		=>	$Me,
+						TO      => $CSR,
+						#TO			=>  'iconnor@penultima.org',
+						SUBJECT		=>	'Due Date for Docket '. $Project->docket() . ' has been changed.',
+						ATTACHMENTS =>  [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
+						);
+			} # end if email to CSR
+
+
+		} # end if date has changed
+	} # end if project_id
 } # end sub set_duedate
 
 sub insert {
@@ -69,6 +78,7 @@ sub insert {
 	$Job->save({
 			'project_id'		=>	$project_index,
 			'service_id'		=>	[ $service_index ],
+			'pertains_id'		=>	[ $service_index ],
 			'equipment_id'		=>	$equipment_id,
 			'starttime'			=>	$start_time,
 			'runtime_seconds'	=>	$runtime,

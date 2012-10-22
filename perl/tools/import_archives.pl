@@ -16,7 +16,7 @@ use vars qw( $log $dbh %config %session );
 *config = \%openprint::config;
 *session = \%openprint::session;
 
-$log = new logger( 'debug' );
+$log = new logger( 'warn' );
 
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'database') );
@@ -42,18 +42,19 @@ sub get_files {
 			get_files( $archive, $path.'/'.$file );
 		} elsif ( my ($docket) = $file =~ /^(\d+).+\.bkf$/ ) {
 			next if ! $docket;
-			my $Project = openprint::Project->find_one( 'docket' => $docket );
+			my $Project = openprint::Project->find_one( docket=>$docket );
 			if ( $Project ) {
-				next if openprint::File->find_one('project_id'=>$Project->id(),filename    =>  $path.'/'.$file,archive=>$archive );
+				next if openprint::File->find_one( project_id=>$Project->id(), filename=>$path.'/'.$file, archive=>$archive );
 
 				my $File = new openprint::File();
-				$File->save({
+				$_ = $File->save({
 					project_id	=>	$Project->id(),
 					filename	=>	$path.'/'.$file,
 					archive		=>	$archive,
 				});
-			} else {
-				$log->error("No project found for docket $docket!");
+				$log->error($_) if $_;
+			#} else {
+				#$log->error("No project found for docket $docket!");
 			} # end if Project
 		} # end if
 	} # end foreach file

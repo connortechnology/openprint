@@ -254,7 +254,7 @@ p.buttons {
 }
 
 fieldset p,
-fieldset ul li {
+fieldset li {
 	margin: 0;
 	margin-top: .4em;
 	padding: 0 0 0 185px;
@@ -286,7 +286,7 @@ fieldset p select {
     width: 70%;
 	vertical-align: top;
 }
-fieldset p textarea, fieldset ul li textarea {
+fieldset p textarea, fieldset li textarea {
     width: 70%;
 }
 fieldset p option {
@@ -326,7 +326,7 @@ fieldset ul:after {
     clear: both; 
     visibility: hidden;
 }
-fieldset ul li:after {
+fieldset li:after {
     content: "."; 
     display: block; 
     height: 0; 
@@ -335,13 +335,13 @@ fieldset ul li:after {
     visibility: hidden;
 }
 
-fieldset ul li label {
+fieldset li label {
 	width: 180px;
 	margin: 0px 0px 0px -185px;
 	float: left;
 	text-align: right;
 }
-fieldset ul li label.radio {
+fieldset li label.radio {
 	vertical-align: middle;
 	width: auto;
 	margin: 0px;
@@ -358,7 +358,8 @@ fieldset ul li input[type="text"] {
 	margin-left: -80px;
 	width: 75px;
 }
-.dialog input,
+.dialog input[type="text"],
+.dialog input[type="number"],
 .dialog textarea {
 	width: 100%;
 	box-sizing: border-box;
@@ -372,7 +373,7 @@ table input[type="text"], table input[type="number"] {
 	-webkit-box-sizing: border-box;
 }
 
-fieldset.filters {
+.filters {
 	margin-left: 0px;
 	margin-right: 0px;
 	padding: 0px;
@@ -390,7 +391,7 @@ fieldset.filters {
     }
 }
 @media screen {
-fieldset.filters:after {
+.filters:after {
     content: ".";
     display: block;
     height: 0;
@@ -400,21 +401,21 @@ fieldset.filters:after {
 
 }
 
-fieldset.filters p {
+.filters p {
 	padding-left: 135px;
 }
-fieldset.filters p label {
+.filters p label {
 	width: 130px;
 	margin-left: -135px;
 }
-fieldset.filters p label.radio {
-	margin: 0px;
+.filters p label.radio {
+	margin: 0;
 	width: auto;
 }
-fieldset.filters p input, fieldset.filters ul li input {
+.filters input[type="text"], .filters input[type="text"] {
 	width: auto;
 }
-fieldset.filters p select {
+.filters p select {
 	width: auto;
 	max-width: 100%;
 }
@@ -581,15 +582,15 @@ td.Cost, th.Cost {
 	width: 130px;
 	text-align: right;
 }
-span.DateSelector {
+.DateSelector {
 	float: left;
 	width: 275px;
 }
-span.DateSelectorC {
+.DateSelectorC {
 	float: left;
 	width: 275px;
 }
-span.DateSelectorCT {
+.DateSelectorCT {
 	min-width: 300px;
 	display: inline-block;
 }
@@ -601,9 +602,7 @@ span.DateSelectorCT {
 	width: auto;
 	max-width: none;
 }
-span.DateSelector select option {
-}
-span.time {
+.time {
 	margin-left: 5px;
 }
 
@@ -679,7 +678,7 @@ form.inplaceeditor-form a { /* The cancel link */
     background-color: yellow;
 }
 
-input.filter, fieldset p input.filter, fieldset ul li input.filter {
+input[type="text"].filter, fieldset p input.filter, fieldset li input.filter {
 	width: 40px;
 }
 

@@ -796,8 +796,17 @@ sub delete_service {
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index );
-	$Job->save( { 'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ] } ) if $Job;
+	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index ) ) {
+		$Job->save( { 
+				'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
+				'pertains_id' => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'pertains_id'=>$service_index ) ) {
+		$Job->save( { 
+				'pertains_id' => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
 	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
@@ -940,13 +949,14 @@ sub calc {
 				@specs{'txtFinalWidth','txtFinalHeight'} = sql::execute( $log, $dbh, $_, @args );
 				@specs{'txtWidth','txtHeight'} = ($width, $height);
 				if ( ! $specs{'txtFinalWidth'} ) {
-					if ( ( my ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) ) {
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} * 1000 / $folds)/1000 );
+					my ( $pages, $folds );
+					if ( ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) {
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth} * 1000 / $folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'} / (($pages/2)/$folds);
-					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
+					} elsif ( ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) {
 						#$folds =~ s/\D//g;
 						#$folds += 1;
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'}*1000/$folds)/1000 );
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth}*1000/$folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 					} # end if
 				} # end if

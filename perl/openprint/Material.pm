@@ -1,6 +1,6 @@
-package openprint::Material;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Material;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
@@ -166,6 +166,8 @@ sub Specifications {
 } # end sub Specifications
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Material';
+	shift @_ if ref $_[0] eq 'openprint::Material';
 	my @results = find( @_, 'limit', 1 );
 	if ( @results > 1 ) {
 		$openprint::log->error('Material::find_one more than 1 result!');
@@ -176,6 +178,8 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::Material';
+	shift @_ if ref $_[0] eq 'openprint::Material';
 	my %params = @_;
 	my $sql = 'SELECT * FROM Materials WHERE 1>0';
 	my @values;
@@ -197,6 +201,10 @@ sub find {
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
 		push @values, $params{'category_id'};
+	} # end if
+	if ( $params{equipment_id} ) {
+		$sql .= ' AND id IN (SELECT lngmaterialindex FROM tbl_Material_Prices WHERE lngequipmentindex=?)';
+		push @values, $params{equipment_id};
 	} # end if
 	if ( $params{'category'} ) {
 		$sql .= ' AND category_id=(SELECT id FROM Material_Categories WHERE name=?)';
@@ -268,7 +276,6 @@ sub Previous {
 	my ($self, $params) = shift;
 	return new openprint::Material( $self->prev($params) );
 } # end sub Next
-
 
 1;
 __END__

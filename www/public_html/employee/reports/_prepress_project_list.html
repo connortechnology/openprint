@@ -1,5 +1,5 @@
 <? eval (
-	if ( $openprint::param{'StartDocket'} and $openprint::param{'EndDocket'}) {
+	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
 		my $sql = "SELECT Order_Contents.OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber, SUBSTR(strProjectReference,0,50),".
 			"(SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),".
 			"(SELECT strFirstName FROM Users WHERE Index=operator_id),".
@@ -8,12 +8,12 @@
 			"FROM Order_Contents, tbl_Projects, tbl_Project_Contents WHERE Order_Contents.lngProjectIndex = tbl_Projects.Index".
 			" AND tbl_Project_Contents.lngProjectIndex = tbl_Projects.Index";
 		if (
-			( $openprint::session{'user_type'} ne 'A' )
-			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $openprint::session{'user_id'} ) )
+			( $session{'user_type'} ne 'A' )
+			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $session{'user_id'} ) )
 		   ) {
-		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$openprint::session{'user_id'})";
+		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$session{'user_id'})";
 		} # end if
-		$sql .= " AND lngDocketNumber BETWEEN $openprint::param{'StartDocket'} AND $openprint::param{'EndDocket'}";
+		$sql .= " AND lngDocketNumber BETWEEN $param{'StartDocket'} AND $param{'EndDocket'}";
 		$sql .= " ORDER BY lngDocketNumber";
 		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 	} elsif ( $$variable{'StartDocket'} ) {
@@ -25,17 +25,17 @@
 		"FROM Order_Contents, tbl_Projects, tbl_Project_Contents WHERE Order_Contents.lngProjectIndex = tbl_Projects.Index".
 		" AND tbl_Project_Contents.lngProjectIndex = tbl_Projects.Index";
 		if (
-			( $openprint::session{'user_type'} ne 'A' )
-			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $openprint::session{'user_id'} ) )
+			( $session{'user_type'} ne 'A' )
+			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $session{'user_id'} ) )
 		   ) {
-		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$openprint::session{'user_id'})";
+		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$session{'user_id'})";
 		} # end if
-		$sql .= " AND lngDocketNumber LIKE '$openprint::param{'StartDocket'}\%'";
+		$sql .= " AND lngDocketNumber LIKE '$param{'StartDocket'}\%'";
 		$sql .= " ORDER BY lngDocketNumber";
 		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 	} else {
-		$$variable{'TakeOverStart'} = join( '-', ssi::fix_date(@openprint::param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'}) );
-		$$variable{'TakeOverEnd'} = join( '-', ssi::fix_date(@openprint::param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'}) );
+		$$variable{'TakeOverStart'} = join( '-', ssi::fix_date(@param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'}) );
+		$$variable{'TakeOverEnd'} = join( '-', ssi::fix_date(@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'}) );
 			my $sql = "SELECT Orders.Index, tbl_Projects.Index, tbl_Projects.lngDocketNumber, SUBSTR(strProjectReference,0,50),".
 			"(SELECT strName FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex),".
 			"(SELECT strFirstName FROM Users WHERE Index=operator_id),".
@@ -43,14 +43,14 @@
 			"to_char(tbl_Project_Contents.starttime, 'MM/DD/YYYY'), tbl_Projects.strStatus ".
 			"FROM Order_Contents, Orders, tbl_Projects, tbl_Project_Contents WHERE 1>0";
 		if (
-			( $openprint::session{'user_type'} ne 'A' )
-			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $openprint::session{'user_id'} ) )
+			( $session{'user_type'} ne 'A' )
+			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $session{'user_id'} ) )
 		   ) {
-		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$openprint::session{'user_id'})";
+		$sql .= " AND tbl_Projects.CompanyIndex IN (SELECT Index FROM Company WHERE lngSalesPerson=$session{'user_id'})";
 		} # end if
 		$sql .= " AND (starttime BETWEEN '$$variable{'TakeOverStart'}' AND '$$variable{'TakeOverEnd'}' )";
 		$sql .= " AND tbl_Projects.Index = tbl_Project_Contents.lngProjectIndex ";
-		$sql .= " AND Orders.CompanyIndex=$openprint::param{'ddmCustomer'}" if $openprint::param{'ddmCustomer'};
+		$sql .= " AND Orders.CompanyIndex=$param{'ddmCustomer'}" if $param{'ddmCustomer'};
 		$sql .= " AND Orders.Index=Order_Contents.OrderIndex";
 		$sql .= " AND Orders.strStatus IN ('In Production','Complete','Re-Opened','Shipped','Waiting For Pickup','Picked Up')";
 		$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
@@ -65,12 +65,12 @@
 			<th width="190" align="left">ID</th>
 			<th width="80">Start Date</th>
 			<th align="left">Company</th>
-			<th width="80" align="left">Flat</th>
-			<th width="80" align="left">Finished</th>
+			<th width="100" align="left">Flat</th>
+			<th width="100" align="left">Finished</th>
 			<th width="100" align="left">Runstyle</th>
 			<th width="50" align="left">Impo</th>
 			<th width="65" align="left">Colours</th>
-			<th width="65" align="left">Paper</th>
+			<th width="105" align="left">Paper</th>
 			<th width="45" align="right">Press</th>
 		</tr>
 		<? echo (
