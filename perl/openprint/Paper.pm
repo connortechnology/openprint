@@ -355,6 +355,33 @@ sub delete {
 	
 } # end sub delete
 
+sub id_string {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'id_string'} = $_[0];
+	} # end if
+	if ( ! $$self{'id_string'} ) {
+		my $string = join(' ', ( $self->manufacturer(), $self->brand(), $self->finish(), $self->colour(), $self->weight() ) );
+		if ( $self->type() eq 'Roll' ) {
+			$string .= ' ' . $self->width.'"' if $self->width();
+			$string .= ' Roll ';
+		} else {
+			if ( $self->start_width() and ( ( $self->width() != $self->start_width() ) or ( $self->height() != $self->start_height() ) ) ) {
+				$string .= ' ' . $self->start_width().'x'.$self->start_height() . ' => '. $self->width().'x'.$self->height() . ' ';
+			} else {
+				$string .= ' ' . $self->width().'x'.$self->height() . ' ';
+			} # end if
+			#$string .= $self->mweight().'M ' if $self->mweight();
+		} # end if
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= $self->gsm().'gsm ' if $self->gsm();
+		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+		$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
+		$$self{'id_string'} = $string;
+	} # end if
+	return $$self{'id_string'};
+} # end sub id_string
+
 sub to_string {
 	my $self = shift;
 	if ( @_ ) {
@@ -1283,7 +1310,9 @@ $log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty
 					return new openprint::Paper();
 				} # end if
 			
-				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->width() and $Paper->height(); # force recalc
+				if ( $Paper->width() and $Paper->height() and $Paper->start_width() and $Paper->start_height() ) {
+				$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height())));
+				} # end if
 			} # end if
 		} # end if
 	} # end if
@@ -1447,5 +1476,15 @@ sub start_height {
 	} 
 	return $_[0]{'start_height'};
 } # end sub start_height
+
+sub init_cache {
+	openprint::Manufacturer->find();
+    openprint::StockBrand->find();
+    openprint::StockFinish->find();
+    openprint::StockColour->find();
+    openprint::StockWeight->find();
+    openprint::StockQuality->find();
+    openprint::StockMaterial->find();
+}
 1;
 __END__

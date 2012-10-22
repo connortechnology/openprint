@@ -1,19 +1,15 @@
 use strict;
 package openprint::Company;
 our @ISA = qw( openprint::Object );
-require Text::Unaccent;
 
 use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
-use openprint ();
+require openprint;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
 require sql;
 require openprint::Object;
 require openprint::User;
-require openprint::address;
-require openprint::Company_Profile;
-require openprint::Company_Credit;
 
 $debug = 0;
 $table = 'companies';
@@ -145,6 +141,7 @@ sub destroy {
 sub save {
     my ($self, $param) = @_;
 	
+	require Text::Unaccent;
 	$self->set( $param );
 	my %sql;
 	foreach my $k ( keys %fields ) {
@@ -240,6 +237,7 @@ sub save_tradereferences {
 sub Credit {
 	my $supplier = $_[1] ? $_[1] : $openprint::config{'owner_id'};;
 
+	require openprint::Company_Credit;
 	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
@@ -320,6 +318,7 @@ sub AccountingContacts {
 sub get_shipping_address {
 	my $self = shift;
 
+	require openprint::address;
 	my ( $address_index ) = sql::execute( undef,undef, 'SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=?', $$self{id} );
 	my $Address = new openprint::address( $log, $dbh, $address_index, $$self{id} );
 	return $Address;
@@ -340,6 +339,7 @@ sub load_shipping {
 } # end sub save_shipping
 
 sub Profile {
+	require openprint::Company_Profile;
 	return new openprint::Company_Profile( $_[0]{'id'} );
 }
 

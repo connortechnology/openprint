@@ -177,11 +177,11 @@ sub send {
 	# campaign/user, or add one as necessary
 	#
 	my $body = $self->{email_text} ? $$self{email_text} : $$self{email_html};
-	foreach my $user_index ( @mail_user_ids ) {
+	foreach my $user_id ( @mail_user_ids ) {
 		# de we need to send this email?
 
 		my ( $interval_expired, $num_email_sent );
-		$replacements{'User'} = new openprint::User( $user_index );
+		$replacements{User} = new openprint::User( $user_id );
 
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
@@ -189,8 +189,8 @@ sub send {
 			next;
 		} # end if
 
-		if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+		if ( ! Email::Valid->address( $replacements{User}->email() ) ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
 		} else {
 			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
 			$self->send_email( \%replacements );

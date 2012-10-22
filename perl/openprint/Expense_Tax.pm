@@ -6,6 +6,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require openprint::Expense;
 require openprint::Tax;
+require Math::Round;
 
 $debug = 0;
 
@@ -42,7 +43,7 @@ sub amount {
 		if ( $self->charge() ) {
 			$$self{'amount'} = $self->Expense()->amount() * ($$self{'rate'}/100);
 		} # end if
-		$$self{'amount'} = sprintf('%.2f', $$self{'amount'} );
+		$$self{'amount'} = Math::Round::nearest(0.01, $$self{amount} );
 	} # end if
 	return $$self{'amount'};
 } # end sub amount

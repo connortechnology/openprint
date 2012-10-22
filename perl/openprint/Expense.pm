@@ -1,5 +1,6 @@
 require openprint::Object;
 require openprint::Expense_Tax;
+require Math::Round;
 use strict;
 
 package openprint::Expense_Category;
@@ -237,12 +238,15 @@ sub total {
         foreach my $Tax ( $_[0]->Taxes() ) {
             $_[0]{'total'} += $Tax->amount();
         } # end foreach Tax
-		$_[0]{'total'} = sprintf('%.2f', $_[0]{'total'} );
+		$_[0]{'total'} = Math::Round::nearest( 0.01, $_[0]{'total'} );
 	} # end if
 	return $_[0]{'total'};
 } # end sub total
 sub Tax {
-    my $result = openprint::Expense_Tax->find_one('expense_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() ) if $_[0]{'id'};
+	foreach my $T ( $_[0]->Taxes() ) {
+		return $T if $$T{tax_id} == $_[1]->id();
+	} # end foreach
+    my $result = openprint::Expense_Tax->find_one(expense_id=>$_[0]{id}, tax_id=>$_[1]->id() ) if $_[0]{id};
     if ( ! $result ) {
         $result = new openprint::Expense_Tax();
 		$result->set({
@@ -258,7 +262,7 @@ sub business_use_amount {
 		$_[0]{'business_use_amount'} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{'business_use_amount'} ) {
-		$_[0]{'business_use_amount'} = Math::Round::nearest( .01, $_[0]{'amount'} * ( $_[0]{'business_use'} / 100 ) );
+		$_[0]{'business_use_amount'} = Math::Round::nearest( 0.01, $_[0]{'amount'} * ( $_[0]{'business_use'} / 100 ) );
 	} # end if
 	return $_[0]{'business_use_amount'};
 } # end sub business_use_amount

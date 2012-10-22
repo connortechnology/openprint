@@ -2,9 +2,8 @@ use strict;
 package openprint::Object;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use Carp qw( cluck );
-require Lingua::EN::Inflect;
 
-use openprint ();
+require openprint;
 require sets;
 require openprint::Opinion;
 require openprint::Opinion_Type;
@@ -42,7 +41,6 @@ sub init_cache {
 	} # end if
 } # end sub init_cache
 
-
 sub debug {
 	$log->debug("Dumping Object cache");
 	foreach my $o ( keys %cache ) {
@@ -67,9 +65,8 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
-#$log->debug("loading $parent $id") if $debug;
+#$log->debug("loading $parent $id") if $debug or $debug_all;
 			$self->load( $data );
-			#$log->debug("loading $parent $id" . $self->to_string()) if $$self{'name'} eq 'Run Speed';
 		} # end if
 		if ( ! $no_cache ) {
 			if ( $$self{'id'} ) {
@@ -122,16 +119,17 @@ sub load {
 		if ( @identified_by ) {
 			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
-			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
+			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} else {
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
+			$log->debug("SELECT * FROM $table WHERE $$fields{id}=$$self{id}" ) if $debug;
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{id} );
 		} # end if
 		if ( ! $data ) {
 			if ( $d->errstr ) {
 				$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 				Carp::cluck( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr );
 			} # end if
-		} elsif ( $debug ) {
+		#} elsif ( $debug ) {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
@@ -187,6 +185,8 @@ $log->debug("No serial") if $debug;
 				$local_dbh->rollback();
 				sql::end_transaction( $local_dbh, $ac );
 				return $local_dbh->errstr;
+			} elsif ( $debug ) {
+				$log->debug("SQL succesful DELETE FROM $table WHERE $where");
 			} # end if
 			$insert = 1;
 		} else {
@@ -509,14 +509,14 @@ sub find_operators {
 			if ( @{$$params{$k.' &&'}} ) {
 				push @{$results{' &&'}}, 
 					$k.' &&',
-					$f . ' && ARRAY['. join(',', map { '?' } @{$$params{$k.' &&'}} ).']', 
-					@{$$params{$k.' <@'}};
+					$f . ' && ?',
+					$$params{$k.' &&'};
 			} # end if
 		} else {
 			push @{$results{' &&'}}, 
 				 $k.' &&', 
 				 "$f && ?", 
-				 $$params{$k.' &&'};
+				 [ $$params{$k.' &&'} ];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' <@'} ) {
@@ -524,14 +524,14 @@ sub find_operators {
 			if ( @{$$params{$k.' <@'}} ) {
 				push @{$results{' <@'}}, 
 					$k.' <@',
-					$f . ' <@ ARRAY['. join(',', map { '?' } @{$$params{$k.' <@'}} ).']',
-					@{$$params{$k.' <@'}};
+					$f . ' <@ ?',
+					$$params{$k.' <@'};
 			} # end if
 		} else {
 			push @{$results{' <@'}}, 
 				 $k.' <@', 
 				 "$f <@ ?", 
-				 $$params{$k.' <@'};
+				 [ $$params{$k.' <@'} ];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' @>'} ) {
@@ -539,14 +539,14 @@ sub find_operators {
 			if ( @{$$params{$k.' @>'}} ) {
 				push @{$results{' @>'}}, 
 					$k.' @>',
-					$f . ' @> ARRAY['. join(',', map { '?' } @{$$params{$k.' @>'}} ).']', 
-					@{$$params{$k.' @>'}};
+					$f . ' @> ?',
+					$$params{$k.' @>'};
 			} # end if
 		} else {
 			push @{$results{' @>'}}, 
 				 $k.' @>', 
 				 "$f @> ?", 
-				 $$params{$k.' @>'};
+				 [$$params{$k.' @>'}];
 		} # end if
 	} # end if
 	if ( exists $$params{$k.' in'} ) {
@@ -995,6 +995,7 @@ sub opinions {
 		$html = 'No one has an opinion on this yet.';
 		$html .= '  Be the first!' if $session{'user_id'};
 	} else {
+		require Lingua::EN::Inflect;
 		foreach my $opinion_type_id ( keys %Opinions ) {
 			my $Opinion_Type = new openprint::Opinion_Type( $opinion_type_id );
 			if ( @{$Opinions{$opinion_type_id}} == 1 ) {

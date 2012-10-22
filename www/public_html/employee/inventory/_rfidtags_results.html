@@ -6,37 +6,13 @@
 		@{$$variable{'RFIDTags'}} = openprint::RFIDTag->find( 'id_like'	=> '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id');
 	} else {
 		foreach my $RFIDTag ( openprint::RFIDTag->find( 
-			'owner_id'	=>	( defined $session{'/employee/inventory/rfidtags.html?Owner'} ? $session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
-			'created_on_start'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?created_on_start_year',
-				'/employee/inventory/rfidtags.html?created_on_start_month',
-				'/employee/inventory/rfidtags.html?created_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-				'/employee/inventory/rfidtags.html?created_on_start_year',
-				'/employee/inventory/rfidtags.html?created_on_start_month',
-				'/employee/inventory/rfidtags.html?created_on_start_day'} ) : undef,
-			'created_on_end'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?created_on_end_year',
-				'/employee/inventory/rfidtags.html?created_on_end_month',
-				'/employee/inventory/rfidtags.html?created_on_end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-				'/employee/inventory/rfidtags.html?created_on_end_year',
-				'/employee/inventory/rfidtags.html?created_on_end_month',
-				'/employee/inventory/rfidtags.html?created_on_end_day'} ) : undef,
-			'updated_on_start'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?updated_on_start_year',
-				'/employee/inventory/rfidtags.html?updated_on_start_month',
-				'/employee/inventory/rfidtags.html?updated_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-				'/employee/inventory/rfidtags.html?updated_on_start_year',
-				'/employee/inventory/rfidtags.html?updated_on_start_month',
-				'/employee/inventory/rfidtags.html?updated_on_start_day'} ) : undef,
-			'updated_on_end'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/rfidtags.html?updated_on_end_year',
-				'/employee/inventory/rfidtags.html?updated_on_end_month',
-				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-				'/employee/inventory/rfidtags.html?updated_on_end_year',
-				'/employee/inventory/rfidtags.html?updated_on_end_month',
-				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) : undef,
-			'type_id'			=> $session{'/employee/inventory/rfidtags.html?Type'} ? $session{'/employee/inventory/rfidtags.html?Type'} : undef,
-			'valid'				=> $session{'/employee/inventory/rfidtags.html?valid'},
+			( $session{'/employee/inventory/rfidtags.html?owner_id'} ? ( owner_id => $session{'/employee/inventory/rfidtags.html?Owner'} ) : () ),
+			ssi::date_filter( '/employee/inventory/rfidtags.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/inventory/rfidtags.html?created_on_end', 'created_on_end' ),
+			ssi::date_filter( '/employee/inventory/rfidtags.html?updated_on_start', 'updated_on_start' ),
+			ssi::date_filter( '/employee/inventory/rfidtags.html?updated_on_end', 'updated_on_end' ),
+			( $session{'/employee/inventory/rfidtags.html?Type'} ? ( type_id => $session{'/employee/inventory/rfidtags.html?Type'} ) : () ),
+			( $session{'/employee/inventory/rfidtags.html?valid'} ? ( valid	=> $session{'/employee/inventory/rfidtags.html?valid'} ) : () ),
 			( $session{'/employee/inventory/rfidtags.html?location_id'} ? ( 'location_id'=>$session{'/employee/inventory/rfidtags.html?location_id'} ) : () ),
 			'order'		=>	'id',
 			) ) {

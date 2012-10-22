@@ -42,8 +42,8 @@
 		 <p class="buttons">
 			<? echo ( 
 				my $html;
-				$html .= ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results','_customer_performance.html', f1.serialize() );", '', 'Show Results' );
-				$html .= ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='customer_performance.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' );
+				$html .= ssi::button( 'Go', { onclick=>"LoadContent('Results','_customer_performance.html', f1.serialize() );", href=>'', text=>'Show Results' };
+				$html .= ssi::button( 'DownloadCSV', { onclick=>"f1.action='customer_performance.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' };
 				return $html;
 			) ?>
 		 </p>

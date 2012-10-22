@@ -1,14 +1,14 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
-	my @To = $$variable{'Conversation'}->To();
+	my @To = $$variable{Conversation}->To();
 	if ( @To ) {
 		$html .= '<ul>';
 		foreach my $To ( $$variable{'Conversation'}->To() ) {
 			next if $$To{user_id} == $session{user_id};
 			my $User = $To->User();
 			$html .= sprintf('<li id="to_id-%1$d"><input type="hidden" name="to_id" value="%1$d">%2$s<span class="buttons">%3$s</span></li>',
-				$User->id(), $User->icon(), button( 'X'.$User->id(), { 'onclick'=>"delete_to($$User{id});", 'text'=>'X', 'title'=>'Remove' } ) );
+				$User->id(), $User->icon(), button( 'X'.$User->id(), { onclick=>"delete_to($$User{id});", text=>'X', title=>'Remove' } ) );
 		} # end foreach user
 		$html .= '</ul>';
 	} # end if @To

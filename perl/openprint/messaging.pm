@@ -201,14 +201,33 @@ $log->debug("Delete to but $To[$to_index]{user_id} != $session{user_id}");
 	} # end if
 } # end sub _view
 
+# to_id is [user_id]_[company_id]
+# user-id is optional
 sub _to {
 	my $Conversation = $variable{'Conversation'} = new openprint::Conversation( $param{'conversation_id'} );
 	if ( $param{'action'} eq 'add' ) {
 		my @ids = sets::exclude([''], [ sets::union(
-			$param{'to_id'} ? ( ref $param{'to_id'} eq 'ARRAY' ? @{$param{to_id}} : ( $param{to_id} ) ) : (),
-			$param{'user_id'} ) ] );
+			$param{to_id} ? ( ref $param{to_id} eq 'ARRAY' ? @{$param{to_id}} : ( $param{to_id} ) ) : (),
+			$param{user_id} ) ] );
+		my @user_ids;
+$log->debug("Ids: @ids");
+		foreach my $to_id ( @ids ) {
+			my ( $user_id, $company_id );
+			if ( ($user_id,$company_id ) = $to_id =~ /^(\d*)_(\d*)$/ ) {
+			} else {
+				$user_id = $to_id;
+			} # end if
 
-		my @To = map { my $MTo = new openprint::Message_To(); $$MTo{user_id} = $_; $MTo } @ids;
+			if ( $user_id ) {
+				push @user_ids, $user_id;
+			} elsif ( $company_id ) {
+				push @user_ids, map { $_->id() } openprint::User->find(company_id=>$company_id);
+			} # end if
+			#FIXME need to add block list checking
+		} # end foreach
+$log->debug("Got user_ids @user_ids ");
+
+		my @To = map { my $MTo = new openprint::Message_To(); $$MTo{user_id} = $_; $MTo } @user_ids;
 		$Conversation->To( \@To );
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my @ids = sets::exclude(['', $param{'user_id'} ], [ sets::union(

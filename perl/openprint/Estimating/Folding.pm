@@ -1019,13 +1019,13 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					$totalPrice += $setupPrice{'Total'};
 
 					my %FoldMakeReady = openprint::service::get_price_object( 'FoldingFoldMakeReady', undef, $Equipment );
-					if ( $FoldMakeReady{'units'} eq 'Per Fold' ) {
+					if ( $FoldMakeReady{'units'} eq 'per fold' ) {
 						$FoldMakeReady{'Total'} = $FoldMakeReady{'Price'} * ($width_folds);
 						$totalPrice += $FoldMakeReady{'Total'};
 					} # end if
 
 					my %AngleMakeReady = openprint::service::get_price_object( 'FoldingAngleMakeReady', undef, $Equipment );
-					if ( $AngleMakeReady{'units'} eq 'Per Angle' ) {
+					if ( $AngleMakeReady{'units'} eq 'per angle' ) {
 						$AngleMakeReady{'Total'} = $AngleMakeReady{'Price'} * ($height_folds);
 						$totalPrice += $AngleMakeReady{'Total'};
 					} # end if

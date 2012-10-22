@@ -1,13 +1,7 @@
 <? eval (
 	@{$$variable{'PARs'}} = openprint::PAR->find( 
-	( Date::Calc::check_date( @session{'/employee/iso/pars.html?issued_on_start_year','/employee/iso/pars.html?issued_on_start_month','/employee/iso/pars.html?issued_on_start_day'} ) ? ( 'issued_on_start'	=>	sprintf('%.4d-%.2d-%.2d', @session{
-			'/employee/iso/pars.html?issued_on_start_year',
-			'/employee/iso/pars.html?issued_on_start_month',
-			'/employee/iso/pars.html?issued_on_start_day'} ) ) : () ),
-	( Date::Calc::check_date( @session{'/employee/iso/pars.html?issued_on_end_year','/employee/iso/pars.html?issued_on_end_month','/employee/iso/pars.html?issued_on_end_day'} ) ? ( 'issued_on_end'	=>	sprintf('%.4d-%.2d-%.2d', @session{
-			'/employee/iso/pars.html?issued_on_end_year',
-			'/employee/iso/pars.html?issued_on_end_month',
-			'/employee/iso/pars.html?issued_on_end_day'} ) ) : () ),
+		ssi::date_filter( '/employee/iso/pars.html?issued_on_start', 'issued_on_start' ),
+		ssi::date_filter( '/employee/iso/pars.html?issued_on_end', 'issued_on_end' ),
 		( $session{'/employee/iso/pars.html/docket'} ? ( 'docket'	=>	$session{'/employee/iso/pars.html/docket'} ) : () ),
 		'order'		=>	'id',
 		'deleted'	=>	0,

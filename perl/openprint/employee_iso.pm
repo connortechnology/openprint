@@ -226,15 +226,16 @@ sub pars {
 		
 		misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
 	} # end if
+	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_start', -365 );
+	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_end', '' );
+	_par_results();
+} # end sub pars
+sub _par_results {
 	ssi::save_params( '/employee/iso/pars.html', ( 
 				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
 				'issued_on_end_year','issued_on_end_month','issued_on_end_day', 'status',
 				'docket',
 				) );
-	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_start', -365 );
-	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_end', '' );
-} # end sub pars
-sub _par_results {
 } # end sub _par_results
 
 sub par {

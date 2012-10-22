@@ -7,7 +7,7 @@
 	} # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<? eval ( @{$$variable{'tempSignatureGroups'}} = @{$$variable{'SignatureGroups'}} ) ?>
 			<? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
@@ -17,19 +17,20 @@
 					<? endif ( $$variable{'Reference'} ne '' ) ?>
 					<p>
 						<label>Score Quantity</label>
-						<input name="txtVerticalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} ) ?>" type="number" onkeyup="calc(this.form.name);" />
+						<? echo ( ssi::input( name=>'txtVerticalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 						Vertical +
-						<input name="txtHorizontalQty-<?SignatureIndex?>" value="<? echo ( $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>" type="number" onkeyup="calc(this.form.name);" />
+						<? echo ( ssi::input( name=>'txtHorizontalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 						Horizontal
-			<input type="checkbox" id="chkOverrideQty-<?SignatureIndex?>" name="chkOverrideQty-<?SignatureIndex?>" value="Y" <? echo ( $$variable{"chkOverrideQty-$$variable{'SignatureIndex'}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="chkOverrideQty-<?SignatureIndex?>">Override</label>
+<? echo ( ssi::write_override( 'chkOverrideQty-'.$$variable{SignatureIndex}, $$variable{'chkOverrideQty-'.$$variable{SignatureIndex}}, '', "calc('f1');" ); ) ?>
 					</p>
 				</div>
 			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<ul>
 		<!--#include virtual="/includes/main/proj/scoring_results.html"-->
 		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="btnFunction" value="Save Service"/>

@@ -13,8 +13,7 @@
 		<div class="PO">
 			<div class="Header">
 				<div class="Logo">
-					<a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/>
-						<span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+					<? echo ( ssi::include( $config{SkinPath}.'/includes/logo.html' ); ) ?>
 					<table class="HeaderText">
 						<tr>
 							<td colspan="2">
@@ -108,7 +107,6 @@
 		return $html;
 		) ?>
 		<tr>
-<<<<<<< HEAD
 			<td colspan="5" class="totals">SUBTOTAL</td>
 			<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 		</tr>

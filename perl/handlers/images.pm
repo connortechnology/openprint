@@ -23,6 +23,21 @@ use vars qw( $r %session %config $log $dbh );
 
 use constant DEBUG => 0;
 
+sub cleanup {
+    if ( $r->connection->aborted( ) ) {
+$log->debug("Was aborted");
+    } else {
+#$log->debug("cleanup");
+    } # end if
+    if ( $dbh ) {
+        $session{lastupdated} = time;
+        untie %session;
+        $dbh->disconnect();
+	} else {
+$log->error("No dbh in cleanup");
+    } # end if
+} # end sub cleanup
+
 sub handler {
 
 	my $request = $_[0];
@@ -31,6 +46,7 @@ sub handler {
 	#$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
+	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $r->dir_config('db_name'),
@@ -86,7 +102,6 @@ $log->error("FORBIDDEN");
 						$return_code = Apache2::Const::HTTP_FORBIDDEN;
 					} # end if
 				} else {
-eval {
 					$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 					if ( $path eq 'thumbnails' ) {
 						$r->sendfile( $Asset->thumbnail_path() );
@@ -96,8 +111,6 @@ eval {
 # No album means has to be an article image, or a generic site image.
 						$r->sendfile( $Asset->on_disk_path() );
 					} # end if
-};
-$log->error( "Eval error sending image Reason: " . $@ ) if $@;
 				} # end if
 			} else {
 $log->error("NOT FOUND");
