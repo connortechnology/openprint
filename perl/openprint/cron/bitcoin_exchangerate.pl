@@ -86,6 +86,11 @@ if ($res->is_success) {
 			$log->error("NULL 30d rate for $cur");
 			next;
 		} # end if
+		my $rate = $$rates{$cur}{'30d'};
+		if ( ! $rate ) {
+			$log->error("NULL 30d rate for $rate");
+			next;
+		} # end if
 		my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id}, period_end=>undef);
 		if ( ! $Conversion ) {
 			$Conversion = new openprint::Currency_Conversion();

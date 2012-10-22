@@ -233,7 +233,6 @@ sub check_scoreboard {
 		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! $Users{$username};
 		my $User = $Users{$username};
 
-
 		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and @{$uploads{$username}} > $config{'max_files'} ) ) {
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
