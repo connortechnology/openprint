@@ -73,7 +73,7 @@ $dbh = sql::open_sql( $log,
 );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
 configuration::init( \%config );
-configuration::from_file('/etc/openprint-syslog.conf');
+configuration::from_file('/etc/openprint/syslog.conf');
 configuration::merge($opts);
 
 my @re = (
@@ -123,7 +123,7 @@ do{
 			next;
 		} # end if
 		configuration::init( \%config );
-		configuration::from_file('/etc/openprint-syslog.conf');
+		configuration::from_file('/etc/openprint/syslog.conf');
 		configuration::merge($opts);
 	} # end if
 	
