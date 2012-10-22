@@ -1,0 +1,16 @@
+<fieldset><legend>Email Settings</legend>
+	<ul>
+		<li>
+			<label>Password</label>
+			<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
+		</li>
+		<li>
+			<label>Verify Password</label>
+			<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
+		</li>
+		<li>
+			<label>Forwards<br/>(One per line)</label>
+			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
+		</li>
+	</ul>
+</fieldset>

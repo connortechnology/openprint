@@ -384,6 +384,7 @@ sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
 } # end sub Manifest
 
+# We don't make any db changes here.  That only happens on PO saving
 sub Taxes {
 	my ( $self ) = @_;
 	@{$$self{Taxes}} = openprint::PurchaseOrder_Tax->find(purchaseorder_id=>$$self{id}) if $$self{id} and ! $$self{Taxes};
@@ -405,9 +406,9 @@ sub Taxes {
 				'tax_id'			=>	$$Tax{'id'},
 				'rate'				=>	$$Tax{'rate'},
 			});
-			if ( $$self{'id'} ) {
-				$T->save({'purchaseorder_id'	=>	$$self{'id'}});
-			} # end if
+			#if ( $$self{'id'} ) {
+				#$T->save({'purchaseorder_id'	=>	$$self{'id'}});
+			#} # end if
 			push @{$$self{'Taxes'}}, $T;
 		} # end foreach Tax
 	} # end if
@@ -423,7 +424,7 @@ sub Taxes {
 		for ( my $i = 0; $i < @{$$self{Taxes}}; $i += 1 ) {
 			my $Tax = $$self{Taxes}[$i];
 			if ( ! sets::isin( $Tax->tax_id(), [ map { $_->id() } @new_taxes ] ) ) {
-				$Tax->delete();
+				#$Tax->delete();
 				splice @{$$self{Taxes}}, $i, 1; $i -= 1;
 			} # end if
 		} # end foreach old Tax
@@ -433,10 +434,10 @@ sub Taxes {
 			foreach my $Tax ( @new_taxes ) {
 				if ( ! sets::isin( $Tax->id(), \@tax_ids ) ) {
 					my $T = new openprint::PurchaseOrder_Tax();
-					$T->save({
-							purchaseorder_id	=>	$$self{id},
-							tax_id				=>	$$Tax{id},
-							rate				=>	$$Tax{rate},
+					$T->set({
+							PurchaseOrder	=>	$self,
+							tax_id			=>	$$Tax{id},
+							rate			=>	$$Tax{rate},
 							});
 					push @{$$self{Taxes}}, $T;
 				} # end if

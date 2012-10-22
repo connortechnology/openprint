@@ -202,37 +202,12 @@
 		<? echo ( $$variable{'User'}->password_changed_on() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'User'}->password_changed_on() ) ) : 'never' ) ?>
 		</p>
 	</fieldset>
-	<fieldset><legend>Email Settings:</legend>
-		<p>
-			<label>Password:</label>
-			<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
-		</p>
-		<p>
-			<label>Verify Password:</label>
-			<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
-		</p>
-		<p>
-			<label>Forwards:<br/>(One per line)</label>
-			<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
-		</p>
-	</fieldset>
-	<fieldset><legend>Vacation Auto-Responder Settings:</legend>
-		<p>
-			<label>Subject:</label>
-			<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-		</p>
-		<p>
-			<label>Message:</label>
-			<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( my $rows = scalar split("\n",$$variable{'VacationMessage'}); return $rows ? $rows + 1 : 2 ) ?>"><?VacationMessage?></textarea>
-		</p>
-		<p>
-			<label>Vacation Status:</label>
-			<input type="radio" id="VacationState1" name="VacationState" <? echo ( 'checked' if $$variable{'VacationState'} ) ?> value="1"/>
-			<label class="radio" for="VacationState1">Enabled</label>
-			<input type="radio" id="VacationState0" name="VacationState" <? echo ( 'checked' if ! $$variable{'VacationState'} ) ?> value="0"/>
-			<label class="radio" for="VacationState0">Disabled</label>
-		</p>
-	</fieldset>
+	<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
+	<? if ( $$variable{'User'}->can_edit() ) ?>
+	<!--#include virtual="/includes/_email_settings.html"-->
+	<!--#include virtual="/includes/_vacation_settings.html"-->
+	<? endif ( $$variable{'User'}->can_edit() ) ?>
+	<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 <? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
