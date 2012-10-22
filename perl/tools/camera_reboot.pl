@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use utf8;
 use lib '/var/www/point-one/perl';
 use strict;
