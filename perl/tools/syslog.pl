@@ -38,7 +38,7 @@ if ($opts->{help}) {
 
 $log = new logger('level'=>'debug');
 # Get our configuration information
-if (my $err = configuration::from_file('/etc/openprint-syslog.conf')) {
+if (my $err = configuration::from_file('/etc/openprint/syslog.conf')) {
 	die $err;
 } # end if
 
