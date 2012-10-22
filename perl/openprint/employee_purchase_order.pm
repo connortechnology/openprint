@@ -19,7 +19,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub save_supplier {
 	my ( $p ) = @_;
-	my @Companies = openprint::Company::find( 'name'=> openprint::Company->transform('name', $$p{'vendor_name'} ) );
+	my @Companies = openprint::Company::find( 'name lc'=> lc openprint::Company->transform('name', $$p{vendor_name} ) );
 	if ( ! @Companies ) {
 		my $C = new openprint::Company();
 		$C->save({
@@ -346,9 +346,9 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		# This must happen before saving because charging or not for a tax alters the total.
 		foreach my $Tax ( $PO->Taxes() ) {
 			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
-			$Tax->amount(undef);
-			$Tax->save();
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
+			#$Tax->amount(undef);
+			#$Tax->save();
 		} # end foreach
 		# Save will recalc taxes as well.
 		$variable{'error'} .= $PO->save( \%param );
@@ -584,11 +584,11 @@ sub _po_select_vendor {
 }
 
 sub _update_taxes {
-	if ( $param{po_id} ) {
-		# Save incoming data because we may have changed suppliers
-		my $PO = new openprint::PurchaseOrder( $param{po_id} );
-		$variable{error} .= $PO->save( \%param );
-	} # end if
+	# Set incoming data because we may have changed suppliers, do not save though!
+	my $PO = $variable{PO} = new openprint::PurchaseOrder( $param{po_id} );
+	$variable{error} .= $PO->set( \%param );
+	# Reload $PO->Taxes() with current set
+	$PO->Taxes(1);
 } # end sub _update_taxes
 
 sub _similar_pos {

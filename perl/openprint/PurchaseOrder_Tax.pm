@@ -31,15 +31,15 @@ sub name {
 
 sub amount {
 	if ( @_ > 1 ) {
-		$_[0]{'amount'} = $_[1];
+		$_[0]{amount} = $_[1];
 	} # end if
-	if ( ! defined $_[0]{'amount'} ) {
+	if ( ! defined $_[0]{amount} ) {
 #$openprint::log->debug("caculating amount: $_[0]{purchaseorder_id}" .$_[0]->PurchaseOrder()->subtotal().' charge: ' . $_[0]->charge() );
 		if ( $_[0]->charge() ) {
-			$_[0]{'amount'} = sprintf('%.2f', ($_[0]{'rate'}/100) * $_[0]->PurchaseOrder()->subtotal() );
+			$_[0]{amount} = Math::Round::nearest( 0.01, ($_[0]{'rate'}/100) * $_[0]->PurchaseOrder()->subtotal() );
 		} # end if
 	} # end if
-	return $_[0]{'amount'};
+	return $_[0]{amount};
 } # end sub amount
 
 sub charge {
