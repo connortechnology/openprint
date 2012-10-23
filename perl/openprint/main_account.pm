@@ -335,7 +335,7 @@ sub user_profile {
     if ( exists $param{'ddmUser'} ) {
         $User = openprint::User->find_one('id'=>$param{'ddmUser'} );
     } else {
-        $User = new openprint::User();
+        $User = $Me;
     } # end if
 
 
