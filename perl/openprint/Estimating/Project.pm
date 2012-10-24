@@ -511,6 +511,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 	} # end if printing (actually looks for txtTotalPageQut
 
+	$log->debug("DROPPING LOCK");
 	sql::end_transaction( $dbh, $ac );
 
 	if ( ! $$specs{'txtQuantity1'} ) {
@@ -525,7 +526,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end if
 
 # Force a reload
-	$services = $Project->services();
+	$services = $Project->services(1);
 
 #$log->debug("Adding Required Services");
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
