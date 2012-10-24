@@ -520,6 +520,7 @@ sub can_edit {
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{'user_id'} );
 	return 0;
 } # end sub can_edit
 

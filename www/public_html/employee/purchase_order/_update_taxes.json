@@ -1,18 +1,15 @@
 <? echo ( 
-	my $PO = new openprint::PurchaseOrder( $param{po_id} );
-	return if ! $PO->id();
+	my $PO = $variable{PO};
 
-	# The PO has been saved already, updating the taxes.
-	
 	my $html = '<ul>';
 	foreach my $Tax ( $PO->Taxes() ) {
-		$html .= sprintf(q`<li id="tax-%1$d"><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%) <input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</label>%4$s<span id="tax_amount-%1$d">%5$.2f</span></li>`, $Tax->id(),
+		$html .= sprintf(q`<li id="tax-%1$d"><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%) <input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</label>%4$s<span id="tax_amount-%1$d">%5$.2f</span></li>`, $Tax->tax_id(),
 						$Tax->name(), $Tax->rate(), $PO->Currency()->symbol(), $Tax->amount(),
 						ssi::checked( $Tax->charge() ),
 						);
 	} # end foreach Tax
 	$html .= '</ul>';
-	my @tax_ids = map { $_->id() } $PO->Taxes();
+	my @tax_ids = map { $_->tax_id() } $PO->Taxes();
 
 	return qq`\$('Taxes').innerHTML = '$html';
 tax_ids = [@tax_ids];

@@ -52,28 +52,34 @@ sub profile {
 		$variable{'error'} .= $User->save( \%param );
 		return if $variable{'error'};
 
-		if ( $config{mail_db_name} and $param{'email'} =~ /(.*)\@point\-one\.com/ ) {
-			if ( $param{'VacationState'} ) {
-				email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
-			} else {
-				email::stop_vacation( $param{'email'} );
-			} # end if
-			if ( $param{'EmailPassword'} ) {
-				if ( ! $param{'VerifyEmailPassword'} ) {
-					$variable{'warning'} .= 'Verify Email password left blank, password not changed.<br/>';
-				} elsif ( $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-					email::set_password( @param{'email','EmailPassword'} );
+		if ( $config{mail_db_name} ) {
+			my @domains = email::domains();
+			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+			if ( sets::isin( $domain, \@domains ) ) {
+
+
+				if ( $param{'VacationState'} ) {
+					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
 				} else {
-					$variable{'error'} .= 'Email Password fields do not match.<br/>';
+					email::stop_vacation( $param{'email'} );
 				} # end if
+				if ( $param{'EmailPassword'} ) {
+					if ( ! $param{'VerifyEmailPassword'} ) {
+						$variable{'warning'} .= 'Verify Email password left blank, password not changed.<br/>';
+					} elsif ( $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
+						email::set_password( @param{'email','EmailPassword'} );
+					} else {
+						$variable{'error'} .= 'Email Password fields do not match.<br/>';
+					} # end if
+				} # end if
+				my @aliases = ();
+				foreach my $alias ( split "\r\n", $param{'aliases'} ) {
+					next if ! $alias;
+					push @aliases, $alias;
+				} # end foreach
+				push @aliases, $User->email() if ! @aliases;
+				email::aliases( $User->email(), @aliases );
 			} # end if
-			my @aliases = ();
-			foreach my $alias ( split "\r\n", $param{'aliases'} ) {
-				next if ! $alias;
-				push @aliases, $alias;
-			} # end foreach
-			push @aliases, $User->email() if ! @aliases;
-			email::aliases( $User->email(), @aliases );
 		} # end if
 
 		if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
@@ -100,13 +106,15 @@ sub profile {
 		$variable{'information'} = 'Record saved successfully.<br/>';
 	} # end if
 	$variable{'User'} = $User;
-	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
-		@{$variable{'Aliases'}} = email::aliases( $User->email() );
-	} else {
-		@{$variable{'Aliases'}} = ();
-	} # end if
-
+    if ( $config{mail_db_name} ) {
+        my @domains = email::domains();
+        my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
+        if ( sets::isin( $domain, \@domains ) ) {
+            $variable{'DoEmail'} = 1;
+            @variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+            @{$variable{'Aliases'}} = email::aliases( $User->email() );
+        } # end if
+    } # end if
 } # end sub profile
 
 sub login {
