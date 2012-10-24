@@ -32,6 +32,8 @@ $serial = 'project_types_id_seq';
 );
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::ProjectType';
+	shift @_ if ref $_[0] eq 'openprint::ProjectType';
     my @results = find( @_, 'limit', 1 );
     if ( @results > 1 ) {
         $openprint::log->error('ProjectType::find_one more than 1 result!');
@@ -42,6 +44,8 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::ProjectType';
+	shift @_ if ref $_[0] eq 'openprint::ProjectType';
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Project_Types WHERE 1>0};

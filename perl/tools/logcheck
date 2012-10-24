@@ -102,7 +102,7 @@ foreach my $log_file ( @log_files ) {
 					} # end if
 					next if sets::isin( $ip, \@whitelist );
 					if ( ! $ip ) {
-						print "No ip for $source\n";
+						$log->debug( "No ip for $source" );
 					} else {
 						if ( ! $host_counts{$ip} ) {
 							$host_counts{$ip} = $openprint::dbh->selectrow_hashref( 'SELECT * FROM blacklist WHERE ip=?', {}, $ip );
@@ -127,11 +127,11 @@ foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
 	if ( $host_counts{$ip}{'ip'} ) {
 		if ( my $e = sql::update( undef, undef, 'blacklist',['ip=?',$ip], ['updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
+			$log->error($e);
 		} # end if
 	} else {
 		if ( my $e = sql::insert( undef, undef, 'blacklist',['ip',$ip, 'updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
+			$log->error($e);
 		} # end if
 	} # end if
 	#print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n";

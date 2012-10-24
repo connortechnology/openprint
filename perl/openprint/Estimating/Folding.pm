@@ -1001,15 +1001,14 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 						$AngleMakeReady{'Total'} = $AngleMakeReady{'Price'} * ($height_folds);
 						$totalPrice += $AngleMakeReady{'Total'};
 					} # end if
-					$Breakdown .= sprintf( ' + FMR: ($%1$.2f%2$s=$%3$.2f)+ AMR: ($%4$.2f%5$s=$%6$.2f)', @FoldMakeReady{'Price','units','Total'}, @AngleMakeReady{'Price','units','Total'} );
-					$Breakdown .= sprintf( ' = $%.2f<br/>', $totalPrice );
+					$Breakdown .= sprintf( ' + FMR: ($%1$.2f%2$s=$%3$.2f)+ AMR: ($%4$.2f%5$s=$%6$.2f) = $%7$.2f<br/>', @FoldMakeReady{'Price','units','Total'}, @AngleMakeReady{'Price','units','Total'}, $totalPrice );
 				} else {
 					$Breakdown .= 'No Makeready<br/>';
 				} # end if
 
 				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
 #$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
-					last;
+					#last;
 				} # end if
 
 # In hours
@@ -1019,7 +1018,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					$Breakdown .= "No runspeed for $fold_type(".$Fold->name().") on " . $Equipment->name() .'<br/>';
 					last;
 				} else {
-					$runTime = sprintf( '%.4f', $run_qty / $runspeed ); # in hours
+					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 #$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );

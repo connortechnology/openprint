@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 0;
+my $debug = 1;
 
 require openprint::project;
 require openprint::Equipment;
@@ -506,7 +506,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			} # end if
 			return $$specs{'Status'};
 		} # end if
-		$$specs{'hdnBreakdown'.$qty_index} .= qq{# of Pockets needed: $$specs{"txtPockets$qty_index"}<br/>};
+		$$specs{'hdnBreakdown'.$qty_index} .= qq`# of Pockets needed: $$specs{"txtPockets$qty_index"}<br/>`;
 
 		my $bestEquipment;
 		my $bestPrice;
@@ -546,8 +546,8 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
 			} # end if
-			if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $$sig_specs{'PrintingType'.$qty_index} ne 'Digital' ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Not printed digital.<br/>' );
+			if ( ( $Equipment->specification('Stitching Capable') eq 'When Digital' ) and ( $$sig_specs{'PrintingType'.$qty_index} ne 'Digital' ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Not printed digital.<br/>';
 				next;
 			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
@@ -586,6 +586,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );
 				#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
+				$$specs{'hdnBreakdown'.$qty_index} .= "$folding_results{Breakdown}<br/>";
 				} # end foreach sig
 				$$price{'ComparisonPrice'} += $folding_cost;
 				$$specs{'hdnBreakdown'.$qty_index} .= "Folding cost: $folding_cost<br/>";
@@ -831,7 +832,7 @@ sub get_price {
 		$price{'MPrice'} *= ( 1 - $price{'SpineLength Discount'}/100);
 	} # end if
 
-	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
+	$price{'txtPrice'} = Math::Round::nearest(0.01,$price{'MakeReady'} + $price{'Service'} + $price{'Insert'});
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$ServiceType{'name'} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;
 	return \%price;
 } # end sub get_price

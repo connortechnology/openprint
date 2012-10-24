@@ -18,6 +18,8 @@ $serial = 'ProjectType_Categories_id_seq';
 );
 
 sub find {
+	shift @_ if $_[0] eq 'openprint::ProjectTypeCategory';
+	shift @_ if ref $_[0] eq 'openprint::ProjectTypeCategory';
 	my %params = @_;
 	my $sql = q{SELECT * FROM ProjectType_Categories WHERE 1>0};
 	my @values;
