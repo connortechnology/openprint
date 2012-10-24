@@ -324,7 +324,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions ) = @_;
 	if ( ! $SignatureImposition->imposition() ) {
 	Carp::cluck( 'Invalid Imposition');
 		       my %results = (
@@ -338,6 +338,8 @@ sub signature_calc {
         return %results;
 
 	} # end if
+
+	my $Paper = $SignatureImposition->Paper();
 
 	my $services = $Project->services();
 	my $Press = $SignatureImposition->Press();
@@ -446,13 +448,13 @@ sub signature_calc {
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
 
-	foreach my $ss_id ( $Project->signatures() ) {
-		next if $signature_service_index and ($ss_id > $signature_service_index);
-		next if $ss_id >= $signature_service_index;
-		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+	#foreach my $ss_id ( $Project->signatures() ) {
+	# We assume that Signature_Impositions is all impos that come before
+	foreach my $SigImpo ( @{$Signature_Impositions} ) {
+		my $s_specs = $$SigImpo{specs};
 		foreach my $fold_index ( 1 .. 4 ) {
-			if ( $$specs{"FoldQty-$$s_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
-				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{'SignatureIndex'}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{'SignatureIndex'}-$qty_index-$fold_index"};
+			if ( $$specs{"FoldQty-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} ) {
+				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"};
 			} # end if
 		} # end foreach fold_index
 	} # end foreach signature
@@ -1100,7 +1102,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, $Signature_Impositions );
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, [ @$Signature_Impositions, $SignatureImposition ] );
 					if ( ! $$results{'Equipment'} ) {
 						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
 						next;
@@ -1277,7 +1279,7 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				my $Imposition = new openprint::Imposition;
 				$Imposition->load( $sig_specs, $qty_index );
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Price'};
