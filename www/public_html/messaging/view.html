@@ -1,10 +1,17 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
 
 <script type="text/javascript">
-<!--
 	tinyMCE.init({
-		mode : "textareas",
-		theme : "simple"
+		relative_urls : false,
+		convert_urls : false,
+		mode : "specific_textareas",
+		editor_selector : "mce",
+		theme : "advanced",
+		plugins: "paste,advimage,advlink",
+		theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,formatselect,fontselect,fontsizeselect,sub,sup,justifyleft,justifycenter,justifyright,justifyfull,separator,anchor,link,unlink,image,cleanup,code",
+		
+		theme_advanced_buttons2 : "forecolor,backcolor,forecolorpicker,backcolorpicker,bullist,numlist,separator,outdent,indent,separator,undo,redo,separator,pastetext,pasteword,selectall,pastetext,charmap",
+		theme_advanced_buttons3 : ""
 	});
 	function add_to_id( input, query ) {
 		var to_id = get_form_element_array( $('f1'), 'to_id' );
@@ -41,7 +48,6 @@
 
 		new Ajax.Request( '_view.json', { parameters: params } );
 	} // end function reply_to
--->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Conversation"><div class="View">
@@ -66,7 +72,7 @@
 					<input type="text" id="subject" name="subject" value="<? echo ( $param{'subject'} ) ?>" placeholder="Subject" />
 				</div>
 <? endif ( ! $$variable{'Conversation'}->id() ) ?>
-				<textarea id="body" name="body" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>
+				<textarea id="body" name="body" class="mce" onkeyup="textarea_resize(this);" placeholder="<? echo ( $$variable{'Conversation'}->id() ? 'Reply' : 'Type your message here.' ) ?>"><? echo ( $param{'body'} ) ?></textarea>
 				<span class="buttons">
 				<? echo (
 if ( $$variable{'Conversation'}->id() ) {
