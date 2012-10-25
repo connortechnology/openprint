@@ -345,7 +345,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions, $calc_hash ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions, $calc_hash ) = @_;
 	if ( ! $SignatureImposition->imposition() ) {
 	Carp::cluck( 'Invalid Imposition');
 		       my %results = (
@@ -359,6 +359,8 @@ sub signature_calc {
         return %results;
 
 	} # end if
+
+	my $Paper = $SignatureImposition->Paper();
 
 	my $services = $Project->services();
 	my $Press = $SignatureImposition->Press();
@@ -475,13 +477,13 @@ sub signature_calc {
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
 
-	foreach my $ss_id ( $Project->signatures() ) {
-		next if $signature_service_index and ($ss_id > $signature_service_index);
-		next if $ss_id >= $signature_service_index;
-		my $s_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+	#foreach my $ss_id ( $Project->signatures() ) {
+	# We assume that Signature_Impositions is all impos that come before
+	foreach my $SigImpo ( @{$Signature_Impositions} ) {
+		my $s_specs = $$SigImpo{specs};
 		foreach my $fold_index ( 1 .. 4 ) {
-			if ( $$specs{"FoldQty-$$s_specs{'SignatureIndex'}-$qty_index-$fold_index"} ) {
-				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{'SignatureIndex'}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{'SignatureIndex'}-$qty_index-$fold_index"};
+			if ( $$specs{"FoldQty-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} ) {
+				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"};
 			} # end if
 		} # end foreach fold_index
 	} # end foreach signature
@@ -1029,15 +1031,9 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 						$AngleMakeReady{'Total'} = $AngleMakeReady{'Price'} * ($height_folds);
 						$totalPrice += $AngleMakeReady{'Total'};
 					} # end if
-					$Breakdown .= sprintf( ' + FMR: ($%1$.2f%2$s=$%3$.2f)+ AMR: ($%4$.2f%5$s=$%6$.2f)', @FoldMakeReady{'Price','units','Total'}, @AngleMakeReady{'Price','units','Total'} );
-					$Breakdown .= sprintf( ' = $%.2f<br/>', $totalPrice );
+					$Breakdown .= sprintf( ' + FMR: ($%1$.2f%2$s=$%3$.2f)+ AMR: ($%4$.2f%5$s=$%6$.2f) = $%7$.2f<br/>', @FoldMakeReady{'Price','units','Total'}, @AngleMakeReady{'Price','units','Total'}, $totalPrice );
 				} else {
 					$Breakdown .= 'No Makeready<br/>';
-				} # end if
-
-				if ( defined $bestPrice and $totalPrice > $bestPrice ) {
-$openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
-					last;
 				} # end if
 
 # In hours
@@ -1047,7 +1043,7 @@ $openprint::log->debug("Already have a better price $bestPrice < $totalPrice");
 					$Breakdown .= "No runspeed for $fold_type(".$$Fold{'name'}.") on " . $$Equipment{'name'} .'<br/>';
 					last;
 				} else {
-					$runTime = sprintf( '%.4f', $run_qty / $runspeed ); # in hours
+					$runTime = Math::Round::nearest( 0.0001, $run_qty / $runspeed ); # in hours
 					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() ) if DEBUG;
@@ -1128,7 +1124,7 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 # Add in stitching estimate, based on if the folder is this piece of equipment
 					$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
 					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, $Signature_Impositions, $calc_hash );
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, [ @$Signature_Impositions, $SignatureImposition ], $calc_hash );
 					if ( ! $$results{'Equipment'} ) {
 						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
 						next;
@@ -1309,7 +1305,7 @@ sub calc {
 			if ( ( ! exists $$sig_specs{'PageQuantity'.$qty_index} ) or $$sig_specs{'PageQuantity'.$qty_index} ) {
 				my $Imposition = new openprint::Imposition;
 				$Imposition->load( $sig_specs, $qty_index );
-				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );
+				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition, $uv_specs, $aq_specs, {}, \@Signature_Impositions, $calc_hash );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
 				$$specs{"Price-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Price'};
