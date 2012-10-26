@@ -484,7 +484,7 @@ sub history_details {
 					'recipient_id'	=> new openprint::User( $session{'user_id'} )->company_id(),
 					'amount'		=> $param{amount},
 					'method'		=> 'Manual',
-					'currency_id'	=> $Order->currency_id(),
+					'currency_id'	=> ( $param{payment_currency_id} ? $param{payment_currency_id} : $Order->currency_id() ),
 					'memo'			=> $param{'memo'},
 					'completed'		=> 1,
 					} );

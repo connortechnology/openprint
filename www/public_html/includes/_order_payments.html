@@ -47,7 +47,7 @@
             <td class="actions">%s</td>
         </tr></tbody>`,
 ssi::date_select('received_on', [ Date::Calc::Today() ] ),
-ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $session{Currency_id}, { name=>'payment_currency_id' } ),
+ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $variable{Order}->currency_id(), { name=>'payment_currency_id' } ),
 ssi::input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
 ssi::button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", href=>'', text=>'Add' } ),
 );

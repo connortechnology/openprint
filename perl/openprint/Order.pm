@@ -73,7 +73,6 @@ sub save {
 	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
 	my %sql;
 	foreach my $key ( keys %fields ) {
-		next if $key eq 'paid';
 		$$self{$key} = undef if $$self{$key} eq '';
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
