@@ -18,7 +18,7 @@ use strict;
 package openprint::Estimating::Printing;
 my $threading = 0;
 #use threads;
-use constant DEBUG => 1;
+use constant DEBUG => 0;
 my $master_time;
 my %special_colours;
 
@@ -2563,7 +2563,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 		foreach my $imp ( @results ) {
 			my $add = 1;
 			my $Paper = $imp->Paper();
-$imp->display('Filtering:');
+#$imp->display('Filtering:');
 
 			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
@@ -3266,8 +3266,6 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					} # end if Has Stocks
 				} # end if has other sigs
 			} # end if Group == 1
-} else {
-$log->debug("Recursing $recursion_depth");
 } # end if ! recursion_depth
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
@@ -3803,14 +3801,14 @@ $openprint::log->debug("Using cached folding");
 			} else {
 				$colour =~ s/ ?Overall ?//;
 			} # end if
-		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
-			$colour = $1.'Ink';
+		} elsif ( $real_colour =~ /^(\w+) Spot Colour$/ ) {
+			$colour = $1;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = 'PMSInk';
 		} elsif ( $real_colour =~ /Metallic/i ) {
 			$colour = 'MetallicInk';
 		} else { 
-			$colour = $real_colour . 'Ink';
+			$colour = $real_colour;
 		} # end if
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
 		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$key} ) {
@@ -3843,7 +3841,7 @@ $openprint::log->debug("Using cached folding");
 		my $InkMaterial;
 		my $Ink;
 
-		foreach my $C ( @{$special_colours{$real_colour}} ) {
+		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
 				$Ink = $C;
 				last;
@@ -3851,7 +3849,10 @@ $openprint::log->debug("Using cached folding");
 		} # end foreach
 
 		if ( ! $Ink ) {
-			$openprint::log->error("Didnt find ink in colours hash, must be a grade problem");
+			$openprint::log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
+			foreach my $C ( @{$special_colours{$colour}} ) {
+				$openprint::log->error($C->to_string() );
+			} # end foreach C
 			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 			$Ink = new openprint::Ink();
 			$$Ink{pmsid} = $real_colour;
@@ -3986,39 +3987,39 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{'side_one_colours'}} and @{$$project{'side_two_colours'}} ) {
-			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( $$press_setup_front{units} ne 'Total' ) {
-				my $back_press_setup = press_setup_cost( $Press, 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 				$press_setup += $$back_press_setup{'Total'};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $$back_press_setup{'Plate Total'};
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{'side_one_colours'}} ) {
-			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $$press_setup_front{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{'side_two_colours'}} ) {
-			my $press_setup_back = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_back = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $$press_setup_back{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
-		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'combined_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'combined_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'filtered_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'filtered_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -4549,7 +4550,8 @@ sub get_run_price {
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
-	my ( $Press, $plate_change_qty, $plate_runs, $colours, $calliper, $specs, $qty_index, $service_index, $Imposition ) = @_;
+	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition ) = @_;
+	my $Press = $Imposition->Press();
 
 	# These are pre-filtered in setup_project now
 	my $setup_count = @$colours;
@@ -4560,9 +4562,10 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
 	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'per form' ) {
+		my $specs = $$Imposition{specs};
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} elsif ( $Price{'units'} eq 'total' ) {
