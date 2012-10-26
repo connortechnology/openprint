@@ -106,7 +106,7 @@ if ( $BrochureType ) {
 	$log->error("No Brochures");
 	die;
 }
-if ( 0 ) {
+if ( 1 ) {
 new openprint::ProjectType_Template()->save({
 	'projecttype_id'	=>	1,
 	'type'				=>	'Unbound',
@@ -434,10 +434,10 @@ if ( ! $ServiceType ) {
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
 	$SD->save({	
-			'name'			=>	$Default->name(),
-			'value'			=>	$Default->value(),
-			'projecttype_id'=>	$Default->projecttype_id(),
-			'servicetype_id'	=>	$ServiceType->id(),
+			name			=>	$Default->name(),
+			value			=>	$Default->value(),
+			projecttype_id	=>	$Default->projecttype_id(),
+			servicetype_id	=>	$ServiceType->id(),
 			} );
 	$Default->destroy();
 } # end foreach
