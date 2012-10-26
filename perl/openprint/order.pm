@@ -1,8 +1,9 @@
 use strict;
 package openprint::order;
 
-use Email::Valid ();
-use Date::Calc ();
+require Email::Valid;
+require Date::Calc;
+require Math::Round;
 
 use openprint ();
 use vars qw( %param %variable %config %session $log $dbh );
@@ -505,15 +506,15 @@ sub get_misc {
 	$log->debug("********* START OF Get Misc **************");
 	$$variable{'Order'} = $Order;
 
-	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
+	@$variable{'Downpayment','TOTAL', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
 
 	if ( $Order->status() ne 'Cancelled' ) {
-		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $Order->total() - $Order->paid() );
-		$$variable{'DepositDue'} = sprintf( '%.2f', $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{'AmountOutstanding'} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
+		$$variable{'DepositDue'} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
 	} # end if
 
-	$$variable{'AmountPaid'} = sprintf( '%.2f', $Order->paid() );
+	$$variable{'AmountPaid'} = Math::Round::nearest( 0.01, $Order->paid() );
 } # end sub get_misc
 
 sub display_order {

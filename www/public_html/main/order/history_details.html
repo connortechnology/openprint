@@ -28,7 +28,7 @@
 			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
 				$html .= ssi::button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= ssi::button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", href=>'', text=>'ReOrder' } ); 
-				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'Order'}->status() ne 'Cancelled'; 
+				$html .= ssi::button( 'Resend', { href=>"/main/order/history_details.html?OrderID=$$variable{OrderID}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
 					$html .= ssi::button( 'ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", href=>'', text=>'ReOpen' } );
 					$html .= ssi::button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } ) if $$variable{'Order'}->status() ne 'Cancelled';

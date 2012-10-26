@@ -465,7 +465,9 @@ sub history_details {
 		$Order->pay();
 	} elsif ( $param{'btnFunction'} eq 'Save Payment' ) {
 
-		if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
+		$param{amount} = openprint::Payment->transform('amount', $param{amount} );
+
+		if ( ! $param{'amount'} ) {
 			$variable{'error'} .= 'Invalid Amount<br/>';
 			$variable{'information'} .= 'Please enter a valid monetary amount.';
 		} # end if
@@ -480,10 +482,10 @@ sub history_details {
 					'order_id'		=> $order_id,
 					'payor_id'		=> $Order->company_id(),
 					'recipient_id'	=> new openprint::User( $session{'user_id'} )->company_id(),
-					'amount'		=> $param{'Amount'},
+					'amount'		=> $param{amount},
 					'method'		=> 'Manual',
 					'currency_id'	=> $Order->currency_id(),
-					'description'	=> $param{'Description'},
+					'memo'			=> $param{'memo'},
 					'completed'		=> 1,
 					} );
 			if ( $error ) {
@@ -509,6 +511,7 @@ sub history_details {
 				} # end if
 				$Order->save();
 			} # end if no error
+			$variable{ExternalRedirect} = '/main/order/history_details.html?order_id='.$Order->id();
         } # end if btnFunction
 	} elsif ( $param{'btnFunction'} eq 'Delete Payment' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );

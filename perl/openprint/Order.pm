@@ -558,7 +558,7 @@ sub send_sales_order {
 } # end sub send_sales_order
 
 sub owing {
-	return $_[0]{'total'} - $_[0]{'paid'};
+	return $_[0]{'total'} - $_[0]->paid();
 } # end sub owing
 
 sub Taxes {
@@ -601,7 +601,7 @@ sub Tax {
 sub paid {
 	$_[0]{'paid'} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{'paid'} = misc::sum( map { $_->amount() } openprint::Payment->find('order_id'=>$_[0]{'id'}) );
+		$_[0]{'paid'} = misc::sum( map { $_->amount() } openprint::Payment->find(order_id=>$_[0]{id}) );
 	} # end if
 	return $_[0]{'paid'};
 } # end sub paid

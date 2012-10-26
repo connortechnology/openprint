@@ -110,5 +110,15 @@ sub send_receipt {
 	return $results;
 	
 } # end sub send_receipt
+
+sub save {
+    my ( $self, $data ) = @_;
+    my $error = $self->SUPER::save( $data );
+	if ( (! $error) and $$self{order_id} ) {
+		$self->Order()->paid(undef);
+	} # end if
+	return $error;
+} # end sub save
+
 1;
 __END__
