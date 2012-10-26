@@ -475,6 +475,12 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 		} # end if
 	} # end foreach qty_index
 } # end foreach Project
+foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersLandscape' ) ) {
+	$Template->save({type=>'Landscape'});
+}
+foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersPortrait' ) ) {
+	$Template->save({type=>'Portrait'});
+}
 $dbh->disconnect();
 `/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;
