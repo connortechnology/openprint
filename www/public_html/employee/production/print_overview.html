@@ -359,8 +359,8 @@ $log->debug("Setp 2" . $ES->to_string());
 					splice @Shifts,$shift_index, 0, $NewShift;
 				} else {
 					$openprint::log->error("SOmething else wrong");
-					$openprint::log->debug( $Shifts[$shift_index]->to_string() );
-					$openprint::log->debug( $ES->Next()->to_string() );
+					$openprint::log->error( $Shifts[$shift_index]->to_string() );
+					$openprint::log->error( $ES->Next()->to_string() );
 
 				} # end if need shiftsadded
 				$ES = $ES->Next();

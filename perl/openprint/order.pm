@@ -1286,6 +1286,7 @@ sub get_projects {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 	my $order_id = $openprint::param{'OrderID'};
+	$order_id = $openprint::param{order_id} if $openprint::param{order_id};
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $openprint::param{'btnFunction'} eq 'AcceptTerms' ) {
