@@ -60,6 +60,9 @@
 				} # end if
 				return $html;
 			) ?>
+			<? if ( $session{user_type} eq 'A' ) ?>
+			<span class="buttons"><? echo ( ssi::button( 'UploadPhoto', { href=>'/photo_albums/upload.html', text=>'Upload Photo' } ); ) ?></span>
+			<? endif ( $session{user_type} eq 'A' ) ?>
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
 			<fieldset><legend>Photos/Videos</legend>

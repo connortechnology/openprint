@@ -15,6 +15,16 @@ $serial = 'photos_in_albums_id_seq';
 	'keywords'	=>	undef,
 );
 
+
+sub thumbnail_img {
+	my $Asset = $_[0]->Asset();
+	return sprintf('<img src="%s" class="thumbnail %s" alt="%s"/>',
+			$Asset->thumbnail_url(),
+			$Asset->layout(), 
+			$Asset->caption(), 
+			);
+} # end sub thumbnail_img
+
 sub thumbnail_html {
 	my $Asset = $_[0]->Asset();
 	return sprintf('<a class="thumbnail %s" href="/photo_albums/view_photo.html?asset_id=%d&amp;album_id=%d" title="%s"><img src="%s" alt=""/></a>',

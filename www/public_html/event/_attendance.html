@@ -1,6 +1,8 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
 	my $html .= $$variable{Event}->attendance( $variable{User} );
+	return $html if ! $$variable{User}->id();
+
 	my $myAttendance = openprint::Event_Attendance->find_one( { event_id=>$$variable{Event}{id}, user_id=>$variable{User}->id() } );
 	if ( $myAttendance ) {
 		if ( $$myAttendance{attending} eq '1' ) {
