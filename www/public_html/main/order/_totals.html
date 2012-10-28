@@ -23,7 +23,7 @@
 		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 		<li>
 			<label>Amount Paid</label>
-            <? echo ( openprint::Currency::format( $$variable{'AmountPaid'} ); ) ?>
+            <? echo ( openprint::Currency::format( $variable{Order}->paid() ); ) ?>
 		</li>
         <? if ( $$variable{'DepositDue'} ) ?>
         <li>
@@ -31,12 +31,12 @@
             <? echo ( openprint::Currency::format( $$variable{'DepositDue'} ); ) ?>
         </li>
         <? endif ( $$variable{'DepositDue'} ) ?>
-        <? if ( $$variable{'AmountOutstanding'} ) ?>
+        <? if ( $$variable{Order}->owing() ) ?>
         <li>
             <label>Amount Owing</label>
-            <? echo ( openprint::Currency::format( $$variable{'AmountOutstanding'} ); ) ?>
+            <? echo ( openprint::Currency::format( $$variable{Order}->owing() ); ) ?>
         </li>
-        <? endif ( $$variable{'AmountOutstanding'} ) ?>
+        <? endif ( $$variable{Order}i->owing() ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 	</ul>
 	</div>

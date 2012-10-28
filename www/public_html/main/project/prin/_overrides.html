@@ -20,22 +20,17 @@
 		<label>Press</label>
 		<select name="ddmPress<?Signature?>" size="1">
 			<option value="">Auto</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)') ], $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category any'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)') ], $$variable{"ddmPress$$variable{Signature}"} ); ) ?>
 		</select>
 	</p>
-<? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
-<p>
-    <label>Printing type</label>
-    <select name="PrintingTypeOverride<?Signature?>" size="1">
-			<option value="">Auto</option>
-        <? echo (
-            my $html;
-
-            ssi::make_drop_down( [
-sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{"PrintingType$$variable{Signature}"} );
-        ) ?>
-    </select>
-</p>
-<? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<? echo ( my $html;
+	my @PrintingTypes = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} );
+	if ( @PrintingTypes > 1 ) {
+		$html .= '<p><label>Printing type</label>';
+		$html .= ssi::select( [ '', 'Auto', map { $_, $_ } @PrintingTypes ], $$variable{"PrintingType$$variable{Signature}"}, { name=>"PrintingType$$variable{Signature}", size=>1 } );
+		$html .= '</p>';
+	} # end if
+	return $html;
+) ?>
 </fieldset>
 </div>

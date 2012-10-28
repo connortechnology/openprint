@@ -30,7 +30,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::MultiPage;
 require openprint::logs;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 use vars qw( %specs_cache );
 
@@ -182,7 +182,10 @@ sub insert_service_spec {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
-	return if $specs_cache{$service_index}{$name} eq $value;
+	if ( $specs_cache{$service_index}{$name} eq $value ) {
+		$log->debug("insert_service_spec: return because no change in value: ($name)($value)") if DEBUG;
+		return;
+	} # end if
 
 	#if ( exists $specs_cache{$service_index}{$name} ) {
 		#sql::update( $log, $dbh, 'tbl_Service_Specifications', ['lngProjectIndex=? AND lngServiceIndex=? AND strName=?',$project_index, $service_index, $name],
@@ -196,7 +199,7 @@ sub insert_service_spec {
 					'lngProjectIndex',	$project_index,
 					'lngServiceIndex',	$service_index,
 					'strName',			$name,
-					'strValue',			$value] );
+					'strValue',			$value] ) if $value;
 	#} # end if
 	$specs_cache{$service_index}{$name} = $value;
 } # end sub
@@ -480,7 +483,7 @@ sub internal_calc {
 		status( $project_index, $service_index, $status );
 
 		foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
-			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
+			$log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if DEBUG;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $specs{$key} );
 		} # end foreach
 	} else {

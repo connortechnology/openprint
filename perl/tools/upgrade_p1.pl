@@ -106,7 +106,7 @@ if ( $BrochureType ) {
 	$log->error("No Brochures");
 	die;
 }
-if ( 0 ) {
+if ( 1 ) {
 new openprint::ProjectType_Template()->save({
 	'projecttype_id'	=>	1,
 	'type'				=>	'Unbound',
@@ -434,10 +434,10 @@ if ( ! $ServiceType ) {
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
 	$SD->save({	
-			'name'			=>	$Default->name(),
-			'value'			=>	$Default->value(),
-			'projecttype_id'=>	$Default->projecttype_id(),
-			'servicetype_id'	=>	$ServiceType->id(),
+			name			=>	$Default->name(),
+			value			=>	$Default->value(),
+			projecttype_id	=>	$Default->projecttype_id(),
+			servicetype_id	=>	$ServiceType->id(),
 			} );
 	$Default->destroy();
 } # end foreach
@@ -475,6 +475,12 @@ foreach my $Project ( openprint::Project->find('created_on >'=>sprintf('%.4d-%.2
 		} # end if
 	} # end foreach qty_index
 } # end foreach Project
+foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersLandscape' ) ) {
+	$Template->save({type=>'Landscape'});
+}
+foreach my $Template ( openprint::ProjectType_Template->find(projecttype=>'Posters',type=>'PostersPortrait' ) ) {
+	$Template->save({type=>'Portrait'});
+}
 $dbh->disconnect();
 `/etc/init.d/postgresql restart`;
 #`su postgres -c /usr/lib/postgresql/9.1/bin/vacuumdb`;

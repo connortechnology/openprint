@@ -287,7 +287,7 @@ sub impositions {
 	my $services = $Project->services();
 	my $Paper = $Imposition->Paper();
 
-	my $Fold = $Imposition->Equipment()->Fold({
+	my %find = (
 			'pages'				=>	$Imposition->pages(),
 			'page_columns'		=>	$Imposition->page_columns(),
 			'page_rows'			=>	$Imposition->page_rows(),
@@ -300,23 +300,14 @@ sub impositions {
 			'gsm'				=>	$Paper->gsm(),
 			'imposition'		=>	$$Imposition{'imposition'},
 			'calliper'			=>	$$Paper{'calliper'},
-			});
+	);
+
+	my $Fold = $Imposition->Press()->Fold(\%find);
 	return @imps if $Fold;
+	delete $find{page_width};
 
 # Now look it up without the width
-	$Fold = $Imposition->Equipment()->Fold({
-			'pages'				=>	$Imposition->pages(),
-			'page_columns'		=>	$Imposition->page_columns(),
-			'page_rows'			=>	$Imposition->page_rows(),
-			'page_height'		=>	$Imposition->page_height(),
-			'spine_direction'	=>	$$Imposition{'image_orientation'},
-			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-			'gsm'				=>	$Paper->gsm(),
-			'imposition'		=>	$$Imposition{'imposition'},
-			'calliper'			=>	$$Paper{'calliper'},
-			});
+	$Fold = $Imposition->Press()->Fold(\%find);
 	return @imps if ! $Fold;
 
 	if ( $Fold->min_width() and $Fold->min_width() > ( $$Imposition{'image_orientation'} eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
@@ -336,8 +327,8 @@ sub impositions {
 			$I->image_height( $Fold->min_width() );
 		} # end if
 
-		return @imps if ( $I->Paper()->start_width() and $I->Paper()->start_width() < $I->used_width() );
-		$I->Paper()->width( $I->used_width() ) if ! $I->Paper()->start_width();
+		return @imps if ( $Paper->start_width() and $Paper->start_width() < $I->used_width() );
+		$Paper->width( $I->used_width() ) if ! $Paper->start_width();
 		push @imps, $I;
 	} # end if
 	return @imps;
