@@ -368,10 +368,10 @@ sub po_limit {
 } # end sub po_limit
 
 sub Asset {
-	if ( ! $_[0]{'Asset'} ) {
+	if ( ! $_[0]{Asset} ) {
 		require openprint::Asset;
-		if ( $_[0]{'asset_id'} ) {
-			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
+		if ( $_[0]{asset_id} ) {
+			$_[0]{Asset} = new openprint::Asset( $_[0]{asset_id} );
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
 				#$openprint::log->debug("Loading by gender");
