@@ -336,6 +336,13 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
 } # end if
+if ( sets::isin( 'article_assets', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Assets.sql' ) );
+	die if $dbh->errstr();
+} # end if
+
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
