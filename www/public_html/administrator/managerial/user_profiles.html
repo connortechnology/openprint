@@ -59,8 +59,8 @@ Please select a company or user to obtain login information.<br/>
 					<? echo (
 						if ( $$variable{User}->company_id() ) {
 							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$$variable{User}->company_id(), text=>'Company Information' } );
-						} elsif ( $param{'ddmCustomer'} ) {
-							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{'ddmCustomer'}, text=>'Company Information' } );
+						} elsif ( $param{ddmCustomer} ) {
+							return ssi::button( 'CompanyInfo1', { href=>'company_profiles.html?ddmCustomer='.$param{ddmCustomer}, text=>'Company Information' } );
 						}
 						return;
 					) ?>
