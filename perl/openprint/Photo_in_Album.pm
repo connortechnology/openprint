@@ -9,10 +9,14 @@ $debug = 0;
 $table = 'photos_in_albums';
 $serial = 'photos_in_albums_id_seq';
 %fields = (
-	'id'		=>	'id',
-	'album_id'	=>	'album_id',
-	'asset_id'	=>	'asset_id',
-	'keywords'	=>	undef,
+	id			=>	'id',
+	album_id	=>	'album_id',
+	asset_id	=>	'asset_id',
+	keywords	=>	undef,
+);
+%defaults = (
+	album_id	=>	undef,
+	asset_id	=>	undef,
 );
 
 
