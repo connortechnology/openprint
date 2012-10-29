@@ -4,14 +4,14 @@
 		my $html;
 
 		# Load all relationships at once, parse them out later.  The company stuff is to show all of the couples friends.
-		my @ids = ( $$variable{'Company'} ? map { $_->id() } openprint::User->find('company_id'=>$$variable{'Company'}->id()) : $$variable{'User'}{id} );
+		my @ids = ( $$variable{Company} ? map { $_->id() } openprint::User->find(company_id=>$$variable{Company}->id()) : $$variable{User}{id} );
 		if ( ! @ids ) {
-			$log->error("No ids?");
+			$log->error('No ids?');
 			return;
 		} # end if
 		my @Relationships = openprint::User_Relationship->find({ 
 			'custom'=>['user_id1 IN ('.join(',',map { '?' } @ids ).') OR user_id2 IN ('.join(',', map { '?' } @ids ).')',@ids,@ids],
-			} );
+			});
 		if ( $$variable{'User'} == $session{'user_id'} and ! @Relationships ) {
 			return q`You have no relationships.  Visit another user's profile to request a relationship with them.`;
 		} # end if
@@ -61,8 +61,8 @@
 			$html .= '</div>';
 		} # end if %Approved
 
-if ( ! $$variable{'Company'} ) {
-		if ( sets::isin( $session{'user_id'}, \@ids ) ) {
+if ( ! $$variable{Company} ) {
+		if ( sets::isin( $session{user_id}, \@ids ) ) {
 			$html .= '<div id="Unapproved">';
 			if ( %Other_Requests ) {
 				foreach my $Type ( @Types ) {
@@ -105,7 +105,7 @@ if ( ! $$variable{'Company'} ) {
 			} # end if %My_Requests
 			$html .= '</div>';
 		} else { # if ( $session{'user_id'} != $$variable{'User'}->id() ) 
-			@Relationships = map { sets::isin( $session{'user_id'}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
+			@Relationships = map { sets::isin( $session{user_id}, [ $_->user_id1(), $_->user_id2() ] ) ? $_ : () } @Relationships;
 			$html .= sprintf(q`<div class="add">You want to be <select name="relationship_type_id" id="relationship_type_id"><option value="">select</option>%1$s</select>%2$s<p class="buttons">%3$s</p></div>`,
 				ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'sort,lower(name)', 'id not in'=>[ map { $_->type_id() } @Relationships ] ) ),
 				$$variable{'User'}->name(),

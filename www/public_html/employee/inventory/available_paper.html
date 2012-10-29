@@ -4,7 +4,7 @@
 	var allocateWin;
 	function allocate_window( paper_id ) {
 		if ( allocateWin == null ) {
-			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
+			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:400,height:400} );
 			allocateWin.setHTMLContent('Loading... please wait');
 			allocateWin.showCenter();
 			// Set up a windows observer, check ou debug window to get messages
@@ -205,7 +205,7 @@ $session{'/employee/inventory/available_paper.html?'.$option}, [ map { $$_{$opti
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "calc('f1');", '', 'Show Results' ),
+				ssi::button( 'ShowResults', { onclick=>"calc('f1');", href=>'', text=>'Show Results' } ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 				); ) ?>
 		</p>

@@ -10,7 +10,7 @@
 			$param{'who'} ? ( 'to_id any'	=>	\@who_id ) : () ),
 				 #map { ( 'to_id any' => $$_{'id'} ) } @Who ) : 
 		);
-	my @Conversations = openprint::Conversation->find('id'=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
+	my @Conversations = openprint::Conversation->find(order=>'id DESC', id=>[ sets::union( map { $$_{conversation_id} ? $$_{conversation_id} : () } @Messages ) ] ) if @Messages;
 	@{$$variable{'Conversations'}} = @Conversations;
 ) ?>
 
@@ -22,7 +22,7 @@
 			foreach my $Conversation ( @{$$variable{'Conversations'}} ) {
 
 				# Get last message
-				my $Message = openprint::Message->find_one('conversation_id'=>$$Conversation{'id'},'to_id any'=>$session{'user_id'}, 'order'=>'sent_on DESC');
+				my $Message = openprint::Message->find_one(conversation_id=>$$Conversation{id},'to_id any'=>$session{user_id}, order=>'sent_on DESC');
 				next if ! $Message;
 				$html .= sprintf(q` 
 					<div class="Conversation"> 

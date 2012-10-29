@@ -1,16 +1,10 @@
 
-DROP TABLE IF EXISTS PurchaseOrder_Taxes;
-DROP TABLE IF EXISTS PurchaseOrder_Logs;
-DROP TABLE IF EXISTS PurchaseOrder_Notifications;
-DROP TABLE IF EXISTS PurchaseOrder_Contents;
-DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
-DROP TABLE IF EXISTS PurchaseOrders;
-
 CREATE TABLE PurchaseOrders (
 	id	SERIAL NOT NULL,
 	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	company_id	INTEGER,
-	supplier_id	INTEGER,
+	supplier_id	INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
+	contact_id	INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (id),
 	total		float,
 	created_by	INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
@@ -46,30 +40,8 @@ CREATE TABLE PurchaseOrders (
 	shipto_fax			text,
 	shipto_sms			text,
 	shipto_email		text,
-	manifest_id			INTEGER, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),
+	manifest_id			INTEGER,
 	cancelled			BOOLEAN NOT NULL default false,
-	PRIMARY KEY (id)
-);
-
-
-CREATE TABLE PurchaseOrder_ContentTypes (
-	id SERIAL NOT NULL,
-	name	TEXT,
-	PRIMARY KEY (id)
-);
-
-CREATE TABLE PurchaseOrder_Contents (
-	id SERIAL NOT NULL,
-	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-	type_id	INTEGER, FOREIGN KEY (type_id) REFERENCES PurchaseOrder_ContentTypes (id),
-	qty		float,
-	price	float,
-	units	TEXT,
-	total	float,
-	item	text,
-	item_id	INTEGER, FOREIGN KEY (item_id) REFERENCES PurchaseOrder_Items (id),
-	docket	text,
-	description	text,
 	PRIMARY KEY (id)
 );
 

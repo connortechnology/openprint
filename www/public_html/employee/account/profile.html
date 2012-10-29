@@ -1,7 +1,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
 <div class="UserProfile">
-	<form name="f1" method="post" action="profile.html">
+	<form id="f1" name="f1" method="post" action="profile.html">
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 		<fieldset class="filters"><legend>Choose User</legend>
 			<ul>
@@ -12,7 +12,7 @@
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
 				</select>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+				<? echo ( ssi::button( 'Go1', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			<li>
 				<label>User</label>
@@ -28,7 +28,7 @@
 						} # end if
 						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} ); ) ?>
 				</select>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
+				<? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';f1.submit();", text=>'Go' } ); ) ?>
 			</li>
 			</ul>
 		</fieldset>
@@ -36,19 +36,19 @@
 		<fieldset>
 			<p class="buttons">
 				<? echo ( 
-						my $html;
-						if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
-							$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
-						} # end if
-						$html .= ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save');
-						$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset');
-						return $html;
-						) ?>
+					my $html;
+					if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
+						$html .= ssi::button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } ),
+					} # end if
+					$html .= ssi::button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
+					$html .= ssi::button( 'Reset1', { onclick=>"f1.reset();", text=>'Reset' } );
+					return $html;
+				) ?>
 			</p>
 		</fieldset>
 	<p class="required"> denotes required information.<br/></p>
 	<div class="column">
-		<fieldset><legend>User Information</legend>
+		<fieldset><legend>User Information for user #<? echo ( $$variable{User}->id() ) ?></legend>
 		<ul>
 			<? if ( $$variable{'User'}->Company()->notes() ) ?>
 			<li><label>Company Notes</label>
@@ -167,42 +167,10 @@
 				</li>
 			</ul>
 		</fieldset>
-		<fieldset><legend>Email Settings</legend>
-			<ul>
-				<li>
-					<label>Password</label>
-					<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
-				</li>
-				<li>
-					<label>Verify Password</label>
-					<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
-				</li>
-				<li>
-					<label>Forwards<br/>(One per line)</label>
-					<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
-				</li>
-			</ul>
-		</fieldset>
-		<fieldset><legend>Vacation Auto-Responder Settings</legend>
-			<ul>
-				<li>
-					<label>Subject</label>
-					<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-				</li>
-				<li>
-					<label>Message</label>
-					<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( my $rows = scalar split("\n",$$variable{'VacationMessage'}); return $rows ? $rows + 1 : 2 ) ?>"><?VacationMessage?></textarea>
-				</li>
-				<li>
-					<label>Vacation Status</label>
-					<input type="radio" id="VacationState1" name="VacationState" <? echo ( 'checked' if $$variable{'VacationState'} ) ?> value="1"/>
-					<label class="radio" for="VacationState1">Enabled</label>
-					<input type="radio" id="VacationState0" name="VacationState" <? echo ( 'checked' if ! $$variable{'VacationState'} ) ?> value="0"/>
-					<label class="radio" for="VacationState0">Disabled</label>
-				</li>
-			</ul>
-		</fieldset>
-<? if ( $config{'RADIUS Support'} ) ?>
+		<? if ($variable{DoEmail}) ?> 
+		<!--#include virtual="/account/_email_settings.html"-->
+		<? if ($variable{DoEmail}) ?> 
+<? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>
     <? echo ( 
@@ -228,7 +196,7 @@
     ) ?>
         </ul>
     </fieldset>
-<? endif ( $config{'RADIUS Support'} ) ?>
+<? endif ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
 
 		</div>
 	<br class="spacer"/>
@@ -238,15 +206,15 @@
 			<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 			<li> 
 				<label>Commission Rate</label>
-				<input type="number" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />%
+				<? echo ( ssi::input( type=>'float', name=>'commission', value=>$$variable{User}->commission() ); ) ?>%
 			</li>
 			<li> 
 				<label>Purchasing Limit (per PO)</label>
-				<input type="number" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<? echo ( ssi::input( type=>'float', name=>'purchasing_limit', value=>$$variable{User}->purchasing_limit() ); ) ?>
 			</li>
 			<li> 
 				<label>Purchasing Limit (Total)</label>
-				<input type="number" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<? echo ( ssi::input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
 			</li>
 			<li>
 				<label>Assistant to</label>

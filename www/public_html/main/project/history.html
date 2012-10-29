@@ -45,8 +45,10 @@
 			<div class="leftColumn">
 			<p>
 				<label>Project #</label>
-				<input type="number" id="ProjectID" name="ProjectID" onkeydown="if(event.keyCode == 13){load_projects( this.form );}" onkeyup="integerize(this);" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
+				<? echo ( join("\n",
+					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
+					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
+				); ) ?>
 			</p>
 			<p>
 				<label>Reference</label>

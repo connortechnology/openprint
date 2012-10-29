@@ -1,20 +1,18 @@
 use strict;
 package openprint::PaperAllocation;
 our @ISA = qw(openprint::Object);
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 
 use openprint ();
-use vars qw(%session %variable $dbh $log $debug $table $serial %fields %transforms %defaults );
+use vars qw($debug %session %variable $dbh $log $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
 
-
 require sql;
 require ssi;
 require misc;
-require configuration;
 require openprint::Skid;
 require openprint::User;
 require openprint::Project;
@@ -22,8 +20,9 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 require openprint::Email;
+require openprint::InventoryCondition;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -38,67 +37,20 @@ $serial = 'paper_allocation_id_seq';
 	'units'			=>	'units',
 	'quantity'		=>	'quantity',
 	'skid_ids'		=>	'skid_ids',
+	'condition_id'	=>	'condition_id',
+);
+%find_fields = (
+	docket	=>	'(SELECT lngdocketnumber FROM tbl_Projects WHERE index=project_id)',
 );
 
 %transforms = (
 );
 
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
+	created_on		=>	q`'NOW()'`,
+	project_id		=>	undef,
+	condition_id	=>	undef,
 );
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM Paper_Allocations WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-
-	if ( exists $params{'skid_id'} ) {
-		$sql .= ' AND ? = ANY(skid_ids)';
-		push @values, $params{'skid_id'};
-	} # end if
-	if ( exists $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
-	} # end if
-	if ( exists $params{'project_id'} ) {
-		$sql .= ' AND project_id=?';
-		push @values, $params{'project_id'};
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading paper allocations SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No paper allocations loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded paper allocations ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::PaperAllocation( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub delete {
 	if ( $_[0]{'id'} ) {
@@ -118,13 +70,13 @@ sub delete {
 	} # end if
 } # end sub delete
 
+sub Condition {
+	return new openprint::InventoryCondition( $_[0]{condition_id} );
+} # end sub Condition
+
 sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
-sub Skid {
-	$log->error("Use of deprectated PaperAllocation::SKid");
-	return new openprint::Skid( $_[0]{'skid_id'} );
-} # end sub Skid
 sub Skids {
 	if ( $_[0]{'skid_ids'} and @{$_[0]{'skid_ids'}} ) {
 		return map { new openprint::Skid( $_); } @{$_[0]{'skid_ids'}};
@@ -153,6 +105,10 @@ sub old_Skids {
 
 sub send_notification {
 	my ( $self ) = @_;
+
+	my $Me = new openprint::User( $session{user_id} );
+	return if $Me->email() =~ /iconnor/;
+
 	my %info;
 	$info{'Allocation'} = $self;
 	my $Project = $info{'Project'} = $self->Project();
@@ -200,7 +156,7 @@ sub send_notification {
 			'TO'		=>	\@recipients, 
 			#'TO'		=>	'iconnor@point-one.com',
 			'SUBJECT' 	=> 'Stock allocated for docket ' . $Project->docket(),
-			'FROM'		=>	new openprint::User( $session{'user_id'} ),
+			'FROM'		=>	$Me,
 			'ATTACHMENTS'	=>	\@body,
 			);
 

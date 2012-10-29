@@ -25,26 +25,18 @@
 						</select>
 					</li>
 -->
+<input type="hidden" name="type_id" value="<? echo ( if( $_ = openprint::Location_Type->find_one(name=>'place') ) { return $_->id(); } ) ?>" />
 					<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>"/></li>
 				</ul>
 			</div>
 			<div class="rightColumn">
 				<ul>
-					<li><label>Country</label>
-					<select id="country_id" name="country_id" onchange="Location_onchange( this, 'country' );"><option value=""> All </option>
-					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'country'), $session{'/location/search.html?country_id'} ); ) ?>
-					</select>
-					</li>
-					<li><label>State/Province</label>
-					<select id="state_id" name="state_id" onchange="Location_onchange( this, 'state' );"><option value=""> All </option>
-					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'state'), $session{'/location/search.html?state_id'} ); ) ?>
-					</select>
-					</li>
-					<li><label>City</label>
-					<select id="city_id" name="city_id" onchange=""><option value=""> All </option>
-					<? echo ( ssi::make_drop_down( openprint::Location->dropdown('order'=>'lower(name)','type'=>'city'), $session{'/location/search.html?city_id'} ); ) ?>
-					</select>
-					</li>
+<? echo (
+	openprint::Location::filters('',[
+@session{'/location/search.html?country_id',
+'/location/search.html?state_id',
+'/location/search.html?city_id'}], { onSuccess=>'load_locations(f1);'} );
+) ?>
 				</ul>
 			</div>
 			</div>

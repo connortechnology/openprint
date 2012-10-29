@@ -31,12 +31,12 @@ sub _project_history_results {
 	my %parameters; 
 	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
 		$parameters{'SalesPerson'} = $session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
+		$parameters{'or'} = "company_id=(SELECT company_id FROM Users WHERE id=$session{user_id})";
 	} elsif ( $param{'CSR'} ) {
 		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
-	my @Companies = openprint::Company::find( %parameters );
+	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	my %filters = (
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
@@ -45,10 +45,11 @@ sub _project_history_results {
 				'status' =>
 				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
 				) : () ),
-			'value_start' => $param{'value_start'},
-			'value_end' => $param{'value_end'},
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-			'order' => 'index',
+			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+			( $param{'value_end'} ? ( 'value_end' => $param{'value_end'} ) : () ),
+			( $param{Estimator} ? (
+			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
+			'order' => 'id',
 );
 	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
 		$filters{'company_id'} = $param{'company_id'};
@@ -57,7 +58,7 @@ sub _project_history_results {
 
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
-		foreach my $Project ( openprint::Project::find( %filters ) ) {
+		foreach my $Project ( openprint::Project->find( %filters ) ) {
 			if ( $param{'previous_status'} and (
 						Date::Calc::check_date( @param{'status_on_start_year','status_on_start_month','status_on_start_day'} ) or 
 						Date::Calc::check_date( @param{'status_on_end_year','status_on_end_month','status_on_end_day'} )
@@ -260,11 +261,9 @@ sub stock {
 } # end sub stock
 
 sub _stock {
-	ssi::save_params('/employee/reports/stock.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
+	ssi::save_params('/employee/reports/stock.html', 'owner_id', 'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id', 'type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
 } # end sub _stock
 
-sub turnaround {
-}
 sub stock_usage {
 	_stock_usage();
 
@@ -273,11 +272,12 @@ sub stock_usage {
 } # end sub stock_usage
 
 sub _stock_usage {
-	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day','ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
+	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 
+			( map { 'ordered_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
+			'manufacturer_id', 'brand_id', 'finish_id', 'colour_id', 'weight_id',
+			'type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
 } # end sub _stock_usage
-
-sub prepress_productivity {
-} # end sub
 
 sub delivery {
 } # end sub delivery
@@ -285,15 +285,24 @@ sub efficiency {
 } # end sub efficiency
 sub prepress_overview {
 } # end sub prepress_overview
+sub _prepress_project_list {
+} # end sub _prepress_project_list
 
 sub delivery {
 } # end sub delivery
 
 sub turnaround {
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_start', -31 );
+	ssi::setup_date_select( '/employee/reports/turnaround.html', 'due_date_end', '' );
+	_turnaround_results();
 }# end sub turnaround
 
-sub _turnaround_results {
-} # end sub _turnaround_results
+sub _turnaround {
+	ssi::save_params('/employee/reports/turnaround.html', 
+			( map { 'due_date_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'due_date_end_'.$_ } ( 'year','month','day' ) ),
+	);
+} # end sub _turnaround
 
 sub job_size {
 	if ( ! %param ) {
@@ -311,8 +320,8 @@ sub job_size {
 
 sub _job_size {
 	ssi::save_params('/employee/reports/job_size.html', 'company_id', 
-			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
-			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			( map { 'ordered_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'ordered_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'completed_on_end_'.$_ } ( 'year','month','day' ) ),
 			'press_id', 'csr_id', 'reprint',
@@ -506,5 +515,8 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+sub prepress_productivity {
+} # end sub prepress_productivity
+
 1;
 __END__

@@ -45,6 +45,7 @@ $serial = 'payments_id_seq';
 	'completed'		=>	1,
 	'deleted'		=>	0,
 	'owner_id'		=>	q`$openprint::config{'Owner'}`,
+	'amount'		=>	undef,
 );
 
 sub destroy {
@@ -82,5 +83,42 @@ sub remaining {
 sub Type {
 	return new openprint::PaymentType( $_[0]{'type_id'} );
 } # end sub Type
+
+sub send_receipt {
+	my ( $self ) = @_;
+
+	my %data;
+	$data{Payment} = $self;
+	$data{uri} = 'payment';
+	$data{User} = new openprint::User($openprint::session{user_id});
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my @attachments;
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/payment_receipt.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+
+	my $Email = new openprint::Email();
+	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+	my $results = $Email->send(
+		#BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
+		TO			=>	new openprint::User( $openprint::session{'user_id'} ),
+		#TO			=>	[map { $_->User() } $self->Payor()->AccountingContacts()],
+		FROM			=>	$data{User},
+		#'ATTACHMENTS'	=>	\@attachments,
+		SUBJECT		=>	'Thank you for your payment!',
+	);
+	$self->add_to_log( $results );
+	return $results;
+	
+} # end sub send_receipt
+
+sub save {
+    my ( $self, $data ) = @_;
+    my $error = $self->SUPER::save( $data );
+	if ( (! $error) and $$self{order_id} ) {
+		$self->Order()->paid(undef);
+	} # end if
+	return $error;
+} # end sub save
+
 1;
 __END__

@@ -21,7 +21,7 @@
 		</p>
 		<p>
 			<label>Status</label>
-			<select name="status" multiple size="4" >
+			<select name="status" multiple="multiple" size="4" >
 			<? echo (
 					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
 					return ssi::make_drop_down( \@options, $param{'status'} ? $param{'status'} : \@options);
@@ -47,7 +47,7 @@
 			<label>Press</label>
 			<select id="press_id" name="press_id">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment->find('category any'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
 			</select>
 		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) ?>

@@ -1,8 +1,7 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
-<script type="text/javascript" src="/javascripts/printing.js?version=1.4"></script>
+<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="/javascripts/proj/paper.js"></script>
+<script type="text/javascript" src="/javascripts/printing.js"></script>
 <script type="text/javascript">
-<!--
 	function calc( formName, force ) {
 		var form = getFormObj( formName );
 		if ( gettingNewPrice && ! force ) {
@@ -40,7 +39,7 @@
 				next;
 			} // end if
 			if ( ! $('SignatureGroup'+group_id) ) {
-				new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+				new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
 						parameters: { 
 							'project_id' : form.ProjectIndex.value,
 							'group_id' : group_id, },
@@ -52,7 +51,7 @@
 
 if ( 0 ) {
 		if ( ( form.remaining_pages.value > 0 ) && ! $('SignatureGroup'+form.next_group_id.value) ) {
-			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', { method: 'get', 
+			new Ajax.Updater( 'alert', '/main/project/prin/_signature.html', {
 					parameters: { 'next_group_id' : form.next_group_id.value, },
 					onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);if($('SignatureGroup'+form.next_group_id.value)){calc(form.name);}}
 					//onSuccess: function(response){new Insertion.Bottom($('SignatureGroups'), response.responseText);}
@@ -74,7 +73,6 @@ if ( 0 ) {
 
 		return 1;
 	} // end function
--->
 </script>
 <!--#include virtual="/main/project/prin/_templates.html"-->
 <div class="Service">
@@ -96,7 +94,7 @@ if ( 0 ) {
 				<div id="PagesCover">
 				<p>
 					<label>Total pages</label>
-					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="number" onkeyup="calc(this.form.name);" />
+					<? echo ( ssi::input( name=>'txtTotalPageQuantity', value=>$$variable{txtTotalPageQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 				</p>
 				<p>
 					<label>Cover</label>
@@ -109,22 +107,22 @@ if ( 0 ) {
 				<div id="GateInsert">
 				<p>
 					<label><? echo ( ssi::writeTip( 'Gate Folded' ); ) ?> pages</label>
-					<input name="txtGateFoldedSpreadQuantity" value="<?txtGateFoldedSpreadQuantity?>" type="number" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+					<? echo ( ssi::input( name=>'txtGateFoldedSpreadQuantity', value=>$$variable{txtGateFoldedSpreadQuantity},  type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 				</p>
 				<p>
 					<label>Supplied Inserts</label>
-					<input type="number" name="txtInsertQuantity" value="<?txtInsertQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<? echo ( ssi::input( name=>'txtInsertQuantity', value=>$$variable{txtInsertQuantity},  type=>'cardinal' ); ) ?>
 				</p>
 			<? if ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins</label>
-					<input type="number" name="TippingQuantity" value="<?TippingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<? echo ( ssi::input( name=>'TippingQuantity', value=>$$variable{TippingQuantity},  type=>'cardinal' ); ) ?>
 				</p>
 			<? endif ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
 			<? if ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				<p>
 					<label># of blow-ins</label>
-					<input type="number" name="BlowingQuantity" value="<?BlowingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+					<? echo ( ssi::input( name=>'BlowingQuantity', value=>$$variable{BlowingQuantity},  type=>'cardinal' ); ) ?>
 				</p>
 			<? endif ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				</div>
@@ -134,7 +132,6 @@ if ( 0 ) {
 			<div id="SignatureGroups">
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
-$log->debug("Groups: (" . join(',', @Groups ) . ')' );
 				my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 
 				if ( ! sets::isin( 1, \@Groups ) ) {

@@ -19,17 +19,17 @@ require openprint::Article_Asset;
 require XML::RSS;
 
 sub save_article {
-	my $Article = new openprint::Article( $param{'article_id'} );
+	my $Article = new openprint::Article( $param{article_id} );
 	if ( ! $Article->can_edit() ) {
-		$variable{'error'} .= 'You do not have rights to edit this article.';
+		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
-	$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+	$param{company_id} = $session{company_id} if ! $param{company_id};
 
 	if ( Date::Calc::check_date( @param{'published_on_year','published_on_month','published_on_day'} ) ) {
-		$param{'published_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
+		$param{published_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'published_on_year','published_on_month','published_on_day','published_on_hour','published_on_minute'} );
 	} else {
-		delete $param{'published_on'};
+		delete $param{published_on};
 		$variable{'warning'} = 'Invalid date published_on_date.  Published On Date not changed.';
 	} # end if
 	if ( $param{'category_id'} ) {
@@ -184,10 +184,54 @@ sub _history {
 	} # end if
 } # end sub _history
 
+sub search {
+	_search();
+
+	if ( ( ! $session{'/article/search.html?lastupdated'} ) or ( time - $session{'/article/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/article/search.html', 'published_on_start', -31 );
+		ssi::setup_date_select( '/article/search.html', 'published_on_end', '' );
+		ssi::setup_date_select( '/article/search.html', 'created_on_start', -31 );
+		ssi::setup_date_select( '/article/search.html', 'created_on_end', '' );
+	} # end if
+
+} # end sub history
+
+sub _search {
+	if ( ! $param{'func'} ) {
+		ssi::save_params( '/article/search.html', ( 
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
+				'published','company_id', 'category_id', 'author_id' ) );
+	} 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->delete();
+		} # end foreach id
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
+			my $Article = new openprint::Article($id);
+			if ( ! $Article->can_edit() ) {
+				$variable{'error'} .= 'You do not have rights to destroy this article.';
+				next;
+			} # end if
+			$variable{'error'} .= $Article->destroy();
+		} # end foreach id
+	} # end if
+} # end sub _search
+
 sub edit {
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
+
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
 	if ( ! $Article->can_edit() ) {
-		$variable{'error'} .= 'You do not have rights to edit this article.';
+		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
 	if ( $param{'func'} eq 'Save' ) {
@@ -195,6 +239,7 @@ sub edit {
 		if ( $variable{'error'} or $variable{'warning'} ) {
 		} else {
 			%param = ();
+			$param{'article_id'} = $Article->id();
 			$variable{'ExternalRedirect'} = $session{'/article/edit.html?referer'} ? $session{'/article/edit.html?referer'} : '/article/history.html';
 		} # end if
 	} elsif ( sets::isin( $param{'func'}, [ 'delete','destroy','undelete' ] ) ) {
@@ -265,12 +310,22 @@ sub category {
 } # end sub category
 
 sub view {
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
+	
+	if ( $Article->id() and $session{user_id} ) {
+		my $View = openprint::View->find_one(object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id} );
+		if ( ! $View ) {
+			$View = new openprint::View();
+			$View->save({object_type=>'openprint::Article', object_id=>$Article->id(), user_id=>$session{user_id}});
+		} # end if
+	} # end if
 	$Article->set( \%param );
 	$Article->View();
 } # end sub view
 
 sub _comments {
+	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
 	if ( $param{'text'} ) {
 		if ( ! openprint::Comment->find_one(

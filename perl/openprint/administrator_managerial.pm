@@ -123,31 +123,73 @@ sub taxes {
 } # end sub taxes 
 
 sub currency {
-
 	if ( $param{'btnFunction'} eq 'Save' ) {
-
 		# Add record to audit log - action "Update Currency".
-		openprint::logs::insertLogRecord('76',);
+		(new openprint::Log())->save({action=>'Update Currency'});
 
-		if ( $param{'strName'} ) {
+		if ( $param{name} ) {
 			my $Currency = new openprint::Currency();
-			$Currency->name($param{'strName'});
-			$Currency->short($param{'strShort'});
-			$Currency->symbol($param{'strSymbol'});
-			$Currency->save();
+			$variable{error} .= $Currency->save({
+				name	=>	$param{name},
+				short	=>	$param{short},
+				symbol	=>	$param{symbol},
+				});
 		} # end if
 
 		foreach my $Currency ( openprint::Currency->find() ) {
-			if ( $param{'strName'.$Currency->id()} ) {
-				$Currency->name($param{'strName'.$Currency->id()});
-				$Currency->short($param{'strShort'.$Currency->id()});
-				$Currency->symbol($param{'strSymbol'.$Currency->id()});
-				$Currency->save();
+			if ( $param{'name-'.$Currency->id()} ) {
+				$variable{error} .= $Currency->save({
+						name	=>	$param{'name-'.$$Currency{id}},
+						short	=>	$param{'short-'.$$Currency{id}},
+						symbol	=>	$param{'symbol-'.$$Currency{id}},
+						});
 			} # end if
 		} # end foreach
 	} # end if
 
-} # end sub currency_edit
+} # end sub currency
+
+sub _currency_conversions {
+	$variable{Currency} = new openprint::Currency( $param{currency_id} );
+	if ( $param{btnFunction} eq 'Add' ) {
+
+		my $now = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
+		# Find current
+        my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$param{currency_id}, to_id=>$param{to_id}, period_end=>undef);
+        if ( ! $Conversion ) {
+            $Conversion = new openprint::Currency_Conversion();
+            $variable{error} .= $Conversion->save({
+					from_id	=>	$param{currency_id}, 
+					to_id	=>	$param{to_id},
+					rate	=>	$param{amount},
+					});
+        } elsif (Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, $param{amount} ) ) {
+            $variable{error} .= $Conversion->save({period_end=>$now});
+            $variable{error} .= $Conversion->save({id=>undef,
+					period_start=>$now,
+					period_end	=>	undef,
+					rate=>$param{amount}});
+        } # end if
+
+        $Conversion = openprint::Currency_Conversion->find_one(to_id=>$param{currency_id}, from_id=>$param{to_id}, period_end=>undef);
+        if ( ! $Conversion ) {
+            $Conversion = new openprint::Currency_Conversion();
+            $variable{error} .= $Conversion->save({
+					to_id	=>	$param{currency_id},
+					from_id	=>	$param{to_id},
+					rate	=>	Math::Round::nearest(0.0001,1/$param{amount}),
+					});
+        } elsif ( $Conversion->rate() != Math::Round::nearest(0.0001, 1/$param{amount}) ) {
+            $variable{error} .= $Conversion->save({period_end=>$now});
+            $variable{error} .= $Conversion->save({
+					id			=>	undef,
+					period_start=>	$now,
+					period_end	=>	undef,
+					rate		=>	Math::Round::nearest(0.0001,1/$param{amount}),
+					});
+        } # end if
+	} # end if
+} # end sub currency_conversions
 
 sub user_profiles {
 
@@ -659,7 +701,7 @@ sub _user_fields_tbody {
 } # end sub _user_fields_tbody
 
 sub company_profile_fields {
-	if ( $param{'action'} eq 'Save' ) {
+	if ( $param{action} eq 'Save' ) {
 		foreach my $Field ( openprint::Company_Profile_Field->find() ) {
 			$variable{'error'} .= $Field->save({
 				'name'	=>	$param{'name-'.$Field->id()},
@@ -668,13 +710,17 @@ sub company_profile_fields {
 				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
 				'required'	=>	$param{'required-'.$Field->id()},
 				'searchable'	=>	$param{'searchable-'.$Field->id()},
+				search_default	=>	$param{'search_default-'.$Field->id()},
+				match			=>	$param{'match-'.$Field->id()},
+				on_registration	=>	$param{'on_registration-'.$Field->id()},
+				viewable		=>	$param{'viewable-'.$Field->id()},
 			});
 		} # end foreach Field
 	} # end if
 } # end sub company_profile_fields
 
 sub _company_fields_tbody {
-	if ( $param{'action'} eq 'up' ) {
+	if ( $param{action} eq 'up' ) {
 		my @Fields = openprint::Company_Profile_Field->find('order'=>'sort');
 		my $i = 0;
 		while ( $i < @Fields ) {
@@ -691,12 +737,12 @@ sub _company_fields_tbody {
 				$i += 1;
 			} # end foreach Field
 		} # end if
-	} elsif ( $param{'update'} ) {
-		$param{'update'} =~ s/fields\[\]=//g;
+	} elsif ( $param{update} ) {
+		$param{update} =~ s/fields\[\]=//g;
 		my $i = 0;
-		foreach my $field_id ( split('&', $param{'update'} ) ) {
+		foreach my $field_id ( split('&', $param{update} ) ) {
 			my $Field = new openprint::Company_Profile_Field( $field_id );
-			$Field->save({'sort'=>$i});
+			$Field->save({sort=>$i});
 			$i += 1;
 		} # end foreach $feild_id
 	} # end if
@@ -801,6 +847,9 @@ sub _logs {
 		$Log->delete();
 	} # end if
 } # end sub _logs
+
+sub bitcoin {
+} # end sub bitcoin
 
 1;
 __END__

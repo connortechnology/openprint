@@ -185,12 +185,12 @@ sub calc {
 				next;
 			} # end if
 			my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
-			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' ) ) {
+			if ( sets::isin( $servicePrice{'units'}, 'per m', 'per 1000' ) ) {
 				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 
 				$servicePrice{'Total'} = $runs * $qty * ($servicePrice{Price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{'Price'}/1000, @servicePrice{'units','Total'} );
-			} elsif ( sets::isin( lc $servicePrice{'units'}, [ 'per lift', 'per drill' ] ) ) {
+			} elsif ( sets::isin( $servicePrice{'units'}, [ 'per lift', 'per drill' ] ) ) {
 				if ( $items_per_lift ) {
 					$runs *= ceil($qty/$items_per_lift);
 					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_lift Items per lift = $runs lifts.<br/>";

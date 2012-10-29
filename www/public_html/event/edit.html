@@ -2,19 +2,17 @@
 <script type="text/javascript" src="/javascripts/location.js"></script>
 
 <script type="text/javascript">
-<!--
 	tinyMCE.init({
 		mode : "textareas",
 		theme : "advanced"
 	});
--->
 </script>
 <div class="Event"><div class="Edit">
 	<form name="f1" id="f1" action="/event/view.html" method="post" enctype="multipart/form-data">
-		<fieldset><legend>Editing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
-			<? if ( $$variable{'Event'}->deleted() ) ?>
+		<fieldset><legend>Editing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{Event}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{Event}->deleted() ) ?>
 			<span class="warning">This event has been deleted</span>
-			<? endif ( $$variable{'Event'}->deleted() ) ?>
+			<? endif ( $$variable{Event}->deleted() ) ?>
 			
 			<input type="hidden" name="event_id" value="<? echo ( $param{'event_id'} ) ?>" />
 			<p class="buttons">
@@ -22,9 +20,9 @@
 					my $html = '';
 					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 					
-					if ( $$variable{'Event'}->id() ) {
+					if ( $$variable{Event}->id() ) {
 						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
-						if ( $$variable{'Event'}->deleted() ) {
+						if ( $$variable{Event}->deleted() ) {
 							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
 						} else {
 							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
@@ -44,9 +42,8 @@
                         <select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: this.value } } );">
                             <option value=""> select </option>
                             <? echo ( 
-my $company_id = $$variable{'Event'}->company_id();
-$company_id = $$variable{'Event'}->Created_By()->company_id() if (!$company_id) and $$variable{'Event'}->created_by();
-$company_id = $session{'company_id'} if (!$company_id);
+my $company_id = $$variable{Event}->Created_By()->company_id() if $$variable{Event}->created_by();
+$company_id = $session{company_id} if !$company_id;
 
 return openprint::Company::get_dropdown( $company_id ); ) ?>
                         </select>
@@ -55,36 +52,35 @@ return openprint::Company::get_dropdown( $company_id ); ) ?>
                         <select id="created_by" name="created_by">
                             <option value=""> select </option>
                             <? echo (
-my $company_id = $$variable{'Event'}->company_id();
-$company_id = $$variable{'Event'}->Created_By()->company_id() if (!$company_id) and $$variable{'Event'}->created_by();
-$company_id = $session{'company_id'} if (!$company_id);
- ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
+my $company_id = $$variable{Event}->Created_By()->company_id() if $$variable{Event}->created_by();
+$company_id = $session{company_id} if (!$company_id);
+ ssi::make_drop_down( openprint::User->dropdown(
                                 'company_id'=> $company_id,
-                                'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Event'}->created_by() ? $$variable{'Event'}->created_by() : $session{'user_id'} ); ) ?>
+                                'order'=>'lower(firstname),lower(lastname)'), $$variable{Event}->created_by() ? $$variable{Event}->created_by() : $session{'user_id'} ); ) ?>
                         </select>
                     </li>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 						<li>
 							<label>All day</label>
-							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
+							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{Event}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated0">Yes</label>
-							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
+							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
 							<label class="radio" for="time_associated1">No</label>
 						</li>
 						<li><label>Start</label>
-							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{'Event'}->starting_on(),
+							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{Event}->starting_on(),
 										{
 										'onchange'	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
-										'with_time'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+										'with_time'	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
 										'with_today'	=>	1,
 										} ); ) ?>
 							</span>
 						</li>
 						<li><label>End</label>
-							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{'Event'}->ending_on(), 
+							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{Event}->ending_on(), 
 										{
 											'onchange'	=>	q`update_duration(this.form,'starting_on','ending_on');`,
-											'with_time'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+											'with_time'	=>	sets::isin( $$variable{Event}->time_associated(), [ '', 1 ] ),
 											'with_today'	=>	1,
 							} ); ) ?>
 							</span>
@@ -100,7 +96,7 @@ $company_id = $session{'company_id'} if (!$company_id);
 							<select name="category_id" id="category_id" onchange="$('category').value='';">
 								<option value="">select</option>
 								<? echo (
-									return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Event_Category->find('order'=>'lower(name)') ], $$variable{'Event'}->category_id() );
+									return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Event_Category->find('order'=>'lower(name)') ], $$variable{Event}->category_id() );
 								) ?>
 							</select>
 						</li>
@@ -109,26 +105,30 @@ $company_id = $session{'company_id'} if (!$company_id);
 							<select name="category_id" id="category_id">
 								<option value="">select</option>
 								<? echo (
-									return ssi::make_drop_down( openprint::Event_Category->dropdown('order'=>'lower(name)'), $$variable{'Event'}->category_id() );
+									return ssi::make_drop_down( openprint::Event_Category->dropdown('order'=>'lower(name)'), $$variable{Event}->category_id() );
 								) ?>
 							</select>
 						</li>
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 						<li><label>Name</label>
-							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Event'}->name() ) ?>" />
+							<input type="text" id="name" name="name" value="<? echo ( $$variable{Event}->name() ) ?>" />
 						</li>
 						<li>
 							<label for="info">More info</label>
-							<textarea id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{'Event'}->info()); ) ?></textarea>
+							<textarea id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{Event}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Event}->info()); ) ?></textarea>
 						</li>
-						<? eval ( $$variable{'Privacy'} = $$variable{'Event'}->Privacy(); ) ?>
+						<li><label>URL</label>
+							<input type="url" id="url" name="url" value="<? echo ( $$variable{Event}->url() ) ?>" />
+						</li>
+						
+						<? eval ( $$variable{'Privacy'} = $$variable{Event}->Privacy(); ) ?>
 						<!--#include virtual="/includes/_privacy_widget.html"-->
 					</ul>
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
 <? echo ( 
-	$$variable{'Location'} = $$variable{'Event'}->Location();
+	$$variable{'Location'} = $$variable{Event}->Location();
 	return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/location/_location_fields.html' );
 ) ?>
 			</fieldset>

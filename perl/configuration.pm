@@ -12,9 +12,7 @@ sub init {
 	
 	%config = ();
 	if ( $openprint::dbh ) {
-		#my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration' );
 		my $data = $openprint::dbh->selectall_arrayref( 'SELECT name, value FROM Configuration', {Slice=>{}} );
-		#%config = @{$data};
 		foreach (@{$data}) {
 			$config{$$_{name}} = $$_{value};
 		} # end foreach
@@ -24,7 +22,6 @@ sub init {
 	if ( @_ ) {
 		@config{ keys %{$_[0]}} = values %{$_[0]};
 	} # end if
-	#return %config;
 } # end sub init
 
 sub get_values {
@@ -95,12 +92,16 @@ sub from_file {
 # Check for errors
 	if ($@) {
 		$openprint::log->error( "ERROR: Failure compiling '$file' - $@" );
+	return "ERROR: Failure compiling '$file' - $@";;
 	} elsif (! defined($rc)) {
 		$openprint::log->error( "ERROR: Failure reading '$file' - $!" );
+		return "ERROR: Failure reading '$file' - $!";
 	} elsif (! $rc) {
 		$openprint::log->error( "ERROR: Failure processing '$file'" );
+		return "ERROR: Failure processing '$file'";
 	}
 	@config{keys %Config} = values %Config;
+	return;
 } # end sub from_file
 
 sub from_db {

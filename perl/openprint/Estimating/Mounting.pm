@@ -79,8 +79,8 @@ sub calc {
 
 	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 	my %MaterialPrice;
-	if ( my @Materials = openprint::Material->find('name'=>$$specs{'MountingType'}) ) {
-		%MaterialPrice = $Materials[0]->get_price( undef, undef );
+	if ( my $Material = openprint::Material->find_one('name'=>$$specs{'MountingType'}) ) {
+		%MaterialPrice = $Material->get_price( undef, undef );
 	} # end if
 
 	# So we can do multiple items at once, as many as will fit in the wiwdth of the laminator.  We need a certain amount of space between the items.  I suspect that this should be an input, not a fixed value, but for now we will make it fixed.
@@ -98,11 +98,11 @@ sub calc {
 		my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, undef );
 
 		my $price = $SetupPrice{'Price'};
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tSetup: \$ %.2f\n", $SetupPrice{'Price'});
-		if ( $ServicePrice{'units'} eq 'Per M' ) {
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $ %.2f<br/>', $SetupPrice{'Price'});
+		if ( $ServicePrice{'units'} eq 'per m' ) {
 			my $serviceprice = ($ServicePrice{Price} * $qty)/1000;
 			$price += $serviceprice;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\tService: \$ %.2f \%s * \%f = \$ %.2f\n", @ServicePrice{'Price','units'}, $qty, $serviceprice );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $ %.2f %s * %f = $ %.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
 		} # end if
 		if ( $MaterialPrice{'units'} eq 'per square foot' ) {
 			my $area = $$specs{'txtFinalWidth'} * $$specs{'txtFinalHeight'};

@@ -27,7 +27,9 @@ $serial = 'emailcampaigns_id_seq';
 	'timeofday'		=>	'timeofday',
 	'email_subject'	=>	'email_subject',
 	'email_from'	=>	'email_from',
+	'email_to'		=>	'email_to',
 	'email_text'	=>	'email_text',
+	'email_html'	=>	'email_html',
 	'attachments'	=>	'attachments',
 	'lastrun'		=>	'lastrun',
 	'nextrun'		=>	'nextrun',
@@ -119,7 +121,7 @@ sub send_email {
 	my $Email = new openprint::Email();
 	my $rc = $Email->send(
 			FROM	=> $self->{'email_from'} ? $self->{'email_from'} : sprintf('"%s" <%s>', @$replacements{'REPNAME','REPEMAIL'} ),
-			TO		=> $$replacements{'User'},
+			TO		=> ( $$self{email_to} ? $$self{email_to} : $$replacements{'User'} ),
 			SUBJECT => $$self{'email_subject'},
 			ATTACHMENTS =>	[ @body, @attachments ],
 		);
@@ -138,7 +140,6 @@ sub send {
 	my $results = '';
 
 	my %replacements;
-	my $body = $self->{'email_text'};
 
 	# Find the email and company name for all accounts that match
 	# this campaign
@@ -175,20 +176,21 @@ sub send {
 	# If an email is sent, update the row in emailcampaigsent for this
 	# campaign/user, or add one as necessary
 	#
-	foreach my $user_index ( @mail_user_ids ) {
+	my $body = $self->{email_text} ? $$self{email_text} : $$self{email_html};
+	foreach my $user_id ( @mail_user_ids ) {
 		# de we need to send this email?
 
 		my ( $interval_expired, $num_email_sent );
-		$replacements{'User'} = new openprint::User( $user_index );
+		$replacements{User} = new openprint::User( $user_id );
 
 		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
-			$results .= 'No body.  Not sending.<br/>';
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
 			next;
 		} # end if
 
-		if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
+		if ( ! Email::Valid->address( $replacements{User}->email() ) ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
 		} else {
 			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
 			$self->send_email( \%replacements );

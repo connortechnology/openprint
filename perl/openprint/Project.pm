@@ -9,11 +9,9 @@ use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %trans
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-require openprint::Currency;
 require openprint::ProjectType;
 require openprint::Company;
 require openprint::Order;
-require openprint::logs;
 require openprint::print;
 
 require sql;
@@ -27,7 +25,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -135,8 +133,12 @@ sub Type {
 	if ( @_ > 1 ) {
 		$_[0]{'type_id'} = $_[1]->id();	
 	} # end nif
-	return new openprint::ProjectType( $_[0]{'type_id'} );
+	return new openprint::ProjectType( $_[0]{type_id} );
 } # end sub Type
+
+sub type {
+	return new openprint::ProjectType( $_[0]{type_id} );
+} # end sub type
 
 sub get_project_type_service_index {
 	my ( $self ) = @_;
@@ -173,33 +175,24 @@ sub jdf {
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
-	my $project = $doc->appendChild($doc->createElement('JDF'));
-	$project->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
-	$project->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
-	$project->setAttribute('xsi:type','Product');
-	$project->setAttribute('Status','Waiting');
-	$project->setAttribute('Version', $version );
-	$project->setAttribute('MaxVersion', $version );
-	$project->setAttribute('JobID',$self->docket());
-	$project->setAttribute('JobPartID',$self->id());
-	$project->setAttribute('Type', 'Product' );
-	$project->setAttribute('ID', 'Docket'.$self->docket() );
-	$project->setAttribute('DescriptiveName', $self->summary() );
-#my $FinalResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
-#my $FinalResourceLinkPool = $Product->appendChild( $doc->createElement('ResourceLinkPool') );
+	my $Product = $doc->appendChild($doc->createElement('JDF'));
+	$Product->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
+	$Product->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
+	$Product->setAttribute('xsi:type','Product');
+	$Product->setAttribute('Status','Waiting');
+	$Product->setAttribute('Version', $version );
+	$Product->setAttribute('MaxVersion', $version );
+	$Product->setAttribute('JobID',$self->docket());
+	$Product->setAttribute('JobPartID',$self->id());
+	$Product->setAttribute('Type', 'Product' );
+	$Product->setAttribute('ID', 'Docket'.$self->docket() );
+	$Product->setAttribute('DescriptiveName', $self->summary() );
+	#my $FinalResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
+	#my $FinalResourceLinkPool = $Product->appendChild( $doc->createElement('ResourceLinkPool') );
 
-	my $Product = $project;
-
-	if ( $ppi ) {
-		$project->setAttribute('xmlns:ppi','http://www.ppimedia.de/namespaces/printbase');
-		my $ppiOrderInfo = $Product->appendChild( $doc->createElement('ppi:OrderInfo') );
-		$ppiOrderInfo->setAttribute( 'OrderType', $self->docket() ? 'Order' : 'Offer' );
-		$ppiOrderInfo->setAttribute( 'Handling', 'Normal' ); # RushOrder, StockOrder
-		$ppiOrderInfo->setAttribute( 'Client', $self->Company()->name() );
-	} # end if
-#my $Product = $project->appendChild($doc->createElement('JDF'));
-#$Product->setAttribute('Status','Waiting');
-#$Product->setAttribute('ID', 'Product'.$self->id() );
+	#my $Product = $project->appendChild($doc->createElement('JDF'));
+	#$Product->setAttribute('Status','Waiting');
+	#$Product->setAttribute('ID', 'Product'.$self->id() );
 	my $ProductResourcePool = $Product->appendChild( $doc->createElement('ResourcePool') );
 	my $ProductResourceLinkPool = $Product->appendChild( $doc->createElement('ResourceLinkPool') );
 
@@ -220,7 +213,8 @@ sub jdf {
 				72*openprint::print::get_finished_calliper( $$self{'id'} )
 				));
 
-	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
+	# Later on, this is accessed the getNode, 1.3 does not list this node in it's examples. This makes no sense without signature data
+	#my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	
 	#$Component->setAttribute('ReaderPageCount','2');
 
@@ -252,7 +246,7 @@ sub jdf {
 
 # Each part of a project is a signature, and has it's own Product Node
 	foreach my $sig_id ( $self->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
 
 		my $Component = $ProductResourcePool->appendChild( $doc->createElement('Component') );
 		$Component->setAttribute('Class', 'Quantity');
@@ -356,7 +350,7 @@ if ( 1 ) {
 		$CustomerInfoLink->setAttribute('Usage','Input');
 		$CustomerInfoLink->setAttribute('rRef','CustInfo');
 	} else {
-		$CustomerInfo = $project->appendChild( $doc->createElement('CustomerInfo') );
+		$CustomerInfo = $Product->appendChild( $doc->createElement('CustomerInfo') );
 	} # end if
 	$CustomerInfo->setAttribute('CustomerID',$self->Company->id() );
 	#$CustomerInfo->setAttribute('Class', 'Parameter' );
@@ -387,7 +381,7 @@ if ( 1 ) {
 	} # end if
 } # end if
 
-	my $AuditPool = $project->appendChild( $doc->createElement('AuditPool') );
+	my $AuditPool = $Product->appendChild( $doc->createElement('AuditPool') );
 	my $Created = $AuditPool->appendChild( $doc->createElement('Created') );
 	$Created->setAttribute('Author', 'IntelligentQuote' );
 	my @gmtime = gmtime(time);
@@ -709,10 +703,6 @@ sub copy {
 	return $new;
 } # end sub copy
 
-sub type {
-	my $self = shift;
-	return new openprint::ProjectType( $$self{'type_id'} );
-} # end sub type
 
 sub add_to_log {
 	my ( $self, $cust_id, $user_id, $text ) = @_;
@@ -753,7 +743,12 @@ sub ServiceType {
 } # end sub ServiceType
 
 sub services {
-	my ( $self, $name ) = shift;
+	my $self = $_[0];
+
+	if ( @_ > 1 ) {
+		delete $$self{'Services'};
+	} # end if
+	
 	if ( $$self{'id'} and ! exists $$self{'Services'} ) {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
@@ -761,14 +756,6 @@ sub services {
 			push @{$results{$id}}, $index;
 		} # end while
 		$$self{'Services'} = \%results;
-	} # end if
-	if ( $name ) {
-$openprint::log->debug("looking for $name in Project::services");
-		if ( $$self{'Services'}{$name} ) {
-$openprint::log->debug("looking for $name in Project::services: foudn it");
-			return @{$$self{'Services'}{$name}};
-		} # end if
-		return;
 	} # end if
 	return $$self{'Services'};
 } # end sub services
@@ -783,7 +770,7 @@ sub summary {
 		my $summary = $self->Type()->description() . ' ';
 
 		my $services = $self->services();
-		if ( $$services{''} ) {
+		if ( $$services{''} and @{$$services{''}} ) {
 			my $printing_specs = openprint::service::get_specs_ref( $self, $$services{''}[0] );
 			if ( $$printing_specs{'Versions'} ) {
 				$summary .= $$printing_specs{'Versions'} .= ' versions ';
@@ -870,12 +857,10 @@ sub summary {
 } # end sub summary
 
 sub company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub company
 sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
+	return new openprint::Company( $_[0]{company_id} );
 } # end sub company
 
 sub requested_date {

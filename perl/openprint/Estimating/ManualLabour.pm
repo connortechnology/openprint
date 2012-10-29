@@ -61,11 +61,11 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		my $price;
-		if ( $$specs{'Units'} eq 'Flat' ) {
+		if ( lc $$specs{'Units'} eq 'flat' ) {
 			$price = $$specs{'Price'.$qty_index};
-		} elsif ( $$specs{'Units'} eq 'Per Item' ) {
+		} elsif ( lc $$specs{'Units'} eq 'per item' ) {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index);
-		} elsif ( $$specs{'Units'} eq 'Per M' ) {
+		} elsif ( lc $$specs{'Units'} eq 'per m' ) {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index)/1000;
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {

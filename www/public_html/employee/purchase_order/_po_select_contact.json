@@ -1,6 +1,5 @@
 <? echo (
-	$r->content_type('text/javascript');
-	my $User = new openprint::User( $param{'contact_id'} );
+	my $User = new openprint::User( $param{contact_id} );
 	my $html = '';
 	$html .= "
 		\$('vendor_contact').value = '$$User{firstname} $$User{lastname}';

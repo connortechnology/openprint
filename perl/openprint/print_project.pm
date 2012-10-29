@@ -102,7 +102,7 @@ sub create_edit_display {
 
 	@{$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
-	@variable{'SelectedProjectType'} = $Project->Type()->name();
+	$variable{'SelectedProjectType'} = $Project->Type()->name();
 
 	@variable{'txtProjectReference','ddmDesign','txtComments','txtQuantity1','txtQuantity2','txtQuantity3','rdbMode','chkPrograms','txtOtherPrograms'} = (
 		$Project->reference(), $Project->design(), $Project->comments(), $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->mode(), $Project->programs(), $Project->other_programs() 
@@ -720,9 +720,18 @@ sub delete_service {
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id any'=>$service_index );
-	$Job->save( { 'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ] } ) if $Job;
-	sql::end_transaction( $openprint::dbh, $ac );
+	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'service_id any'=>$service_index ) ) {
+		$Job->save( { 
+				service_id	=> [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
+				pertains_id	=> [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'pertains_id any'=>$service_index ) ) {
+		$Job->save( { 
+				pertains_id => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
 

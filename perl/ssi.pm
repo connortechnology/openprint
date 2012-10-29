@@ -1,17 +1,12 @@
 use strict;
 package ssi;
 
-use countries;
-use states;
-use provinces;
-
 use Date::Calc qw(Days_in_Month Month_to_Text);
-use HTML::Entities qw(encode_entities);
 
 require sets;
 require sql;
 
-use openprint ();
+require openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -78,6 +73,7 @@ sub do_new_substitution {
 		return variable_substitution( $text, $variable );
 	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval($1);
+#$log->warn("eval of $1: $! $@");
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
@@ -221,8 +217,9 @@ sub encode_html {
 } # end sub encode_html
 
 sub make_drop_down {
+	require HTML::Entities;
 	my ( $search_data, $checkval, $length ) = @_;
-	my $check_array; 
+	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
 		$check_array = $checkval;
 	} else {
@@ -231,8 +228,8 @@ sub make_drop_down {
 
 	my $temp = '';
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
-		$temp .= sprintf('<option value="%s"%s>%s</option>', 
-			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])), 
+		$temp .= sprintf('<option value="%s"%s>%s</option>',
+			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
 			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
 	} # end for
@@ -255,6 +252,8 @@ sub fill_select {
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
+	require provinces;
+	require states;
 	my @states_and_provinces = ();
 	push @states_and_provinces, @states::states;
 	push @states_and_provinces, @provinces::provinces;
@@ -262,14 +261,17 @@ sub return_states_and_provinces {
 } # end sub return_states_and_provinces
 
 sub return_states {
+	require states;
 	return make_drop_down( \@states::states, shift );
 } # end sub return_states
 
 sub return_provinces {
+	require provinces;
 	return make_drop_down( \@provinces::provinces, shift );
 } # end sub return_provinces
 
 sub return_countries {
+	require countries;
 	return make_drop_down( \@countries::countries, [@_] );
 } # end sub return_countries
 
@@ -773,7 +775,7 @@ sub date_filter {
 	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
 
-my @button_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max' );
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max', 'placeholder' );
 
 sub input {
 	my %options = @_;
@@ -805,7 +807,7 @@ sub input {
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
 
-	foreach (@button_options) {
+	foreach (@input_options) {
 		$html .= qq` $_="$options{$_}"` if $options{$_};
 	} # end foreach
 	$html .= ' required' if $options{required};
@@ -813,6 +815,7 @@ sub input {
 	$html .= '/>';
 	return $html;
 } # end sub input
+
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
@@ -822,7 +825,7 @@ sub select( $$$ ) {
 	$html .= '>';
 	$html .= make_drop_down( $data, $selected );
 	$html .= '</select>';
-}
+} # end sub select($$$)
 
 1;
 __END__

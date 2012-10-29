@@ -16,6 +16,145 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+sub save_supplier {
+	my ( $p ) = @_;
+	my @Companies = openprint::Company->find( 'name lc' => lc openprint::Company->transform('name', $$p{vendor_name} ) );
+	if ( ! @Companies ) {
+		my $C = new openprint::Company();
+		$C->save({
+				supplier		=> 'Y',
+				name			=> $$p{vendor_name},
+				business_name	=> $$p{vendor_name},
+				address1		=> $$p{vendor_address1},
+				address2		=> $$p{vendor_address2},
+				city			=> $$p{vendor_city},
+				state			=> $$p{vendor_state},
+				country			=> $$p{vendor_country},
+				postalcode		=> $$p{vendor_postalcode},
+				phone			=> $$p{vendor_phone},
+				fax				=> $$p{vendor_fax},
+				} );
+		return $C->id();
+	} else {
+		my $Company;
+		foreach my $C ( @Companies ) {
+			if ( $C->supplier() eq 'Y' ) {
+				$Company = $C;
+				last;
+			} # end if
+		} # end foreach
+		if ( ! $Company ) {
+			$Company = $Companies[0];
+			$Company->save( {supplier=>'Y'} );
+		} # end if
+		return $Company->id();
+	} # end if
+	return;
+} # end sub save_supplier
+
+sub save_contact {
+	my ( $p ) = @_;
+	my $User = openprint::User->find_one( company_id=>$$p{supplier_id}, email => openprint::User->transform('email', $$p{vendor_email} ) );
+	if ( ! $User ) {
+		$User = new openprint::User();
+		my ( $first, $last ) = $$p{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
+		$User->save( {
+				'company_id'=>	$$p{'supplier_id'},
+				'email'		=>	$$p{'vendor_email'},
+				'firstname'	=>	$first,
+				'lastname'	=>	$last,
+				'phone'		=>	$$p{'vendor_phone'},
+				'fax'		=>	$$p{'vendor_fax'},
+				'sms'		=>	$$p{'vendor_sms'},
+				'change_password'	=>	'N',
+				'administrator'	=>	'N',
+				'ftp_active'	=>	0,
+				'web_active'	=>	0,
+				} );
+	} # end if
+	return $$User{id};
+} # end sub save_contact
+
+sub save_contents {
+	my ( $PO, $p ) = @_;
+	my %types;
+
+	foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
+		next if ( $content_id eq 'new' ) and ! $param{'qty-'.$content_id};
+		my $Item;
+		if ( $$p{'item-'.$content_id} ) {
+			$Item = new openprint::PurchaseOrder_Item( $$p{'item_id-'.$content_id} );
+			if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
+				$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
+				$Item = openprint::PurchaseOrder_Item->find_one(
+						'company_id'	=>	$PO->company_id(),
+						'vendor_id'		=>	$$p{'supplier_id'},
+						'type_id'		=>	$$p{'type_id-'.$content_id},
+						'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
+						'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
+						);
+				if ( ! $Item ) {
+					$Item = new openprint::PurchaseOrder_Item();
+					$Item->save({
+							'company_id'	=>	$PO->company_id(),
+							'vendor_id'		=>	$$p{'supplier_id'},
+							'type_id'		=>	$$p{'type_id-'.$content_id},
+							'name'			=>	$$p{'item-'.$content_id}, 
+							'price'			=>	$$p{'price-'.$content_id},
+							'product'		=>	$$p{'product-'.$content_id},
+							});
+				} # end if
+			} else {
+				$log->debug("Item is " . $Item->name() );
+			} # end if
+			if ( $Item->price() != $$p{'price-'.$content_id} ) {
+# Update the latest price
+				$Item->save({'price'=>$$p{'price-'.$content_id}});
+			} # end if
+		} else {
+			$log->debug("No item for $content_id");
+		} # end if
+
+		my $Dept;
+		if ( ( $$p{'dept_id-'.$content_id} eq 'new' ) or ! $$p{'dept_id-'.$content_id} ) {
+			$Dept = openprint::PurchaseOrder_Department->find_one( 
+					'name lc' => lc openprint::PurchaseOrder_Department->transform('name',$$p{'dept-'.$content_id}),
+					);
+			if ( ! $Dept ) {
+				$Dept = new openprint::PurchaseOrder_Department();
+				$Dept->save({'name'=>$$p{'dept-'.$content_id}});
+			} # end if
+		} else {
+			$Dept = new openprint::PurchaseOrder_Department( $$p{'dept_id-'.$content_id} );
+		} # end if
+
+		my $C = new openprint::PurchaseOrder_Content( $content_id );
+
+		$variable{'error'} .= $C->save( {
+				'po_id'         =>  $PO->id(),
+				'qty'           =>  $$p{'qty-'.$content_id},
+				'product'		=>	$$p{'product-'.$content_id},
+				'item_id'       =>  $$Item{'id'},
+				'description'   =>  $$p{'description-'.$content_id},
+				'docket'        =>  $$p{'docket-'.$content_id},
+				'price'         =>  $$p{'price-'.$content_id},
+				'total'         =>  $$p{'total-'.$content_id},
+				'type_id'		=>	$$p{'type_id-'.$content_id},
+				( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
+				});
+
+		$types{$C->Type()->name()} = 1;
+		if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
+			foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
+				$P->add_to_log( @session{'company_id','user_id'}, 
+						sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
+							$PO->id(), $C->qty(), $C->units(), $C->description() ) );
+			} # end foreach Project
+		} # end if docket
+	} # end foreach Content id
+	return %types;
+} # end sub save_contents
+
 sub view {
 
 	my $Me = new openprint::User( $session{'user_id'} );
@@ -116,188 +255,9 @@ sub view {
 				$PO->send_approval_required_notification();
 			} # end if
 		} # end if
-	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( ! $param{'po_id'} ) {
-			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
-		} # end if
-
-		if ( ! $param{'supplier_id'} ) {
-			my @Companies = openprint::Company->find( 'name'=>$param{'vendor_name'} );
-			if ( ! @Companies ) {
-				my $C = new openprint::Company();
-				$C->save({
-						'supplier'		=> 'Y',
-						'name'			=> $param{'vendor_name'},
-						'business_name'	=> $param{'vendor_name'},
-						'address1'		=> $param{'vendor_address1'},
-						'address2'		=> $param{'vendor_address2'},
-						'city'			=> $param{'vendor_city'},
-						'state'			=> $param{'vendor_state'},
-						'country'		=> $param{'vendor_country'},
-						'postalcode'	=> $param{'vendor_postalcode'},
-						'phone'			=> $param{'vendor_phone'},
-						'fax'			=> $param{'vendor_fax'},
-						} );
-				$param{'supplier_id'} = $C->id();
-			} else {
-				my $Company;
-				foreach my $C ( @Companies ) {
-					if ( $C->supplier() eq 'Y' ) {
-						$Company = $C;
-						last;
-					} # end if
-				} # end foreach
-				if ( ! $Company ) {
-					$Company = $Companies[0];
-					$Company->save( {'supplier'=>'Y'} );
-				} # end if
-				$param{'supplier_id'} = $Company->id();
-			} # end if
-		} # end if
-		if ( ! $param{'contact_id'} ) {
-			my @Users = openprint::User->find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
-			if ( ! @Users ) {
-				my $User = new openprint::User();
-				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
-				$User->save( {
-						'company_id'=>	$param{'supplier_id'},
-						'email'		=>	$param{'vendor_email'},
-						'firstname'	=>	$first,
-						'lastname'	=>	$last,
-						'phone'		=>	$param{'vendor_phone'},
-						'fax'		=>	$param{'vendor_fax'},
-						'sms'		=>	$param{'vendor_sms'},
-						'change_password'	=>	'N',
-						'administrator'	=>	'N',
-						'ftp_active'	=>	0,
-						'web_active'	=>	0,
-					} );
-			} # end if
-		} # end if
-		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
-			$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
-		} else {
-			$param{'delivered_on'} = undef;
-		} # end if
-		if ( ( $param{'vendor_country'} ne $PO->vendor_country() ) or ( $param{'vendor_state'} ne $PO->vendor_state() ) ) {
-			$PO->Taxes(1);
-		} # end if need to change taxes
-
-		# Used to get a list of the types in this PO, so we can add automatic notifications
-		my %types;
-		foreach my $content_id ( ( map { $_->id() } $PO->Contents() ), 'new' ) {
-			next if ( $content_id eq 'new' and ! $param{'qty-'.$content_id} );
-			my $Item;
-			if ( $param{'item-'.$content_id} ) {
-				$Item = new openprint::PurchaseOrder_Item( $param{'item_id-'.$content_id} );
-				if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $param{'item-'.$content_id}) ) ) {
-					$log->debug("Looking up (" . $param{'item-'.$content_id}.') (' . $Item->name() );
-					$Item = openprint::PurchaseOrder_Item->find_one(
-							'company_id'	=>	$PO->company_id(),
-							'vendor_id'		=>	$param{'supplier_id'},
-							'type_id'		=>	$param{'type_id-'.$content_id},
-							'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$param{'item-'.$content_id}),
-							'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$param{'product-'.$content_id}),
-							);
-					if ( ! $Item ) {
-						$Item = new openprint::PurchaseOrder_Item();
-						$Item->save({
-								'company_id'	=>	$PO->company_id(),
-								'vendor_id'		=>	$param{'supplier_id'},
-								'type_id'		=>	$param{'type_id-'.$content_id},
-								'name'			=>	$param{'item-'.$content_id}, 
-								'price'			=>	$param{'price-'.$content_id},
-								'product'		=>	$param{'product-'.$content_id},
-								});
-					} # end if
-				} else {
-					$log->debug("Item is " . $Item->name() );
-				} # end if
-				if ( $Item->price() != $param{'price-'.$content_id} ) {
-# Update the latest price
-					$Item->save({'price'=>$param{'price-'.$content_id}});
-				} # end if
-			} else {
-				$log->debug("No item for $content_id");
-			} # end if
-
-			my $Dept;
-			if ( ( $param{'dept_id-'.$content_id} eq 'new' ) or ! $param{'dept_id-'.$content_id} ) {
-				$Dept = openprint::PurchaseOrder_Department->find_one( 
-						'name lc' => lc openprint::PurchaseOrder_Department->transform('name',$param{'dept-'.$content_id}),
-						);
-				if ( ! $Dept ) {
-					$Dept = new openprint::PurchaseOrder_Department();
-					$Dept->save({'name'=>$param{'dept-'.$content_id}});
-				} # end if
-			} else {
-				$Dept = new openprint::PurchaseOrder_Department( $param{'dept_id-'.$content_id} );
-			} # end if
-
-			my $C = new openprint::PurchaseOrder_Content( $content_id );
-			
-			$variable{'error'} .= $C->save( {
-					'po_id'         =>  $PO->id(),
-					'qty'           =>  $param{'qty-'.$content_id},
-					'product'		=>	$param{'product-'.$content_id},
-					'item_id'       =>  $$Item{'id'},
-					'description'   =>  $param{'description-'.$content_id},
-					'docket'        =>  $param{'docket-'.$content_id},
-					'price'         =>  $param{'price-'.$content_id},
-					'total'         =>  $param{'total-'.$content_id},
-					'type_id'		=>	$param{'type_id-'.$content_id},
-					( $Dept ? ( 'department_id'	=>	$Dept->id() ) : ( ) ),
-					});
-
-			$types{$C->Type()->name()} = 1;
-			if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
-				foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
-					$P->add_to_log( @session{'company_id','user_id'}, 
-							sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
-								$PO->id(), $C->qty(), $C->units(), $C->description() ) );
-				} # end foreach Project
-			} # end if docket
-		} # end foreach Content id
-		foreach my $Tax ( $PO->Taxes() ) {
-			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
-			$Tax->amount(undef);
-			$Tax->save();
-		} # end foreach
-		$variable{'error'} .= $PO->save( \%param );
-		if ( ! $PO->authorized() ) {
-			if ( $PO->total() < $Me->purchasing_limit() ) {
-				$variable{'error'} .= $PO->save({
-						'authorized'	=> 1,
-						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
-						});
-			} else {
-				$PO->send_approval_required_notification();
-			} # end if
-		} # end if
-		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
-			my $L = new openprint::PurchaseOrder_Log();
-			$L->save({
-				'user_id'	=>	$session{'user_id'},
-				'po_id'		=>	$PO->id(),
-				'reason'	=>	$param{'reason'},
-				});
-		} # end if
-		my @notifications = $PO->notifications(); # returns user_ids
-		my @new_notifications = @notifications;
-		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
-		} # end if
-		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
-		} # end foreach
-		if ( scalar @notifications != scalar @new_notifications ) {
-			$PO->notifications(\@new_notifications);
-		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
-		$variable{'error'} .= $Asset->save( \%param );
+		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
 		if ( ! $variable{'error'} ) {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
@@ -316,6 +276,9 @@ sub view {
 		if ( $Asset->id() ) {
 			my $PO_Asset = new openprint::Object_Asset();
 			$variable{'error'} .= $PO_Asset->save({'object_id'=>$param{'po_id'},'object_type'=>'openprint::PurchaseOrder','asset_id'=>$Asset->id()});
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+			} # end if
 		} # end if
 		%param = ();
 	} # end if btnFunction
@@ -329,13 +292,12 @@ sub edit {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 
 	if ( $param{'btnFunction'} eq 'New' ) {
-$log->debug("Creating PO from label");
 		my $Label = new openprint::Label( $param{'label_id'} );
 		$log->debug("Creating PO from label $$Label{id}");
 		my $C = $Me->Company();
 		$variable{'error'} .= $PO->save( {
 				'created_by'	=>	$session{'user_id'}, 
-				'company_id'=>$Me->company_id(),
+				'company_id'	=>	$Me->company_id(),
 				'currency_id'		=>	openprint::Currency::get_current()->id(),
 				'created_by'		=>	$Me->id(),
 				'shipto_contact'	=>	$Me->name(),
@@ -365,68 +327,107 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
             });
 	
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		if ( ! $param{'po_id'} ) {
-			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
+		if ( ! $param{po_id} ) {
+			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $Me->company_id() } );
 		} # end if
-		if ( ( ! $param{'supplier_id'} ) and $param{'vendor_name'} ) {
-			my @Companies = openprint::Company->find( 'name'=>$param{'vendor_name'} );
-			if ( ! @Companies ) {
-				my $C = new openprint::Company();
-				$C->save({
-						'supplier'		=> 'Y',
-						'name'			=> $param{'vendor_name'},
-						'business_name'	=> $param{'vendor_name'},
-						'address1'		=> $param{'vendor_address1'},
-						'address2'		=> $param{'vendor_address2'},
-						'city'			=> $param{'vendor_city'},
-						'state'			=> $param{'vendor_state'},
-						'country'		=> $param{'vendor_country'},
-						'postalcode'	=> $param{'vendor_postalcode'},
-						'phone'			=> $param{'vendor_phone'},
-						'fax'			=> $param{'vendor_fax'},
-						} );
-				$param{'supplier_id'} = $C->id();
-			} else {
-				my $Company;
-				foreach my $C ( @Companies ) {
-					if ( $C->supplier() eq 'Y' ) {
-						$Company = $C;
-						last;
-					} # end if
-				} # end foreach
-				if ( ! $Company ) {
-					$Company = $Companies[0];
-					$Company->save( {'supplier'=>'Y'} );
-				} # end if
-				$param{'supplier_id'} = $Company->id();
-			} # end if
-		} # end if
-		if ( ! $param{'contact_id'} ) {
-			my @Users = openprint::User->find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
-			if ( ! @Users ) {
-				my $User = new openprint::User();
-				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
-				$User->save( {
-						'company_id'=>	$param{'supplier_id'},
-						'email'		=>	$param{'vendor_email'},
-						'firstname'	=>	$first,
-						'lastname'	=>	$last,
-						'phone'		=>	$param{'vendor_phone'},
-						'fax'		=>	$param{'vendor_fax'},
-						'sms'		=>	$param{'vendor_sms'},
-						'change_password'	=>	'N',
-						'administrator'	=>	'N',
-						'ftp_active'	=>	0,
-						'web_active'	=>	0,
-					} );
-			} # end if
-		} # end if
+
+		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{'supplier_id'} ) and $param{vendor_name};
+		$param{contact_id} = save_contact( \%param ) if $param{'supplier_id'} and ( ! $param{contact_id} ) and $param{contact_name};
+		my %types = save_contents( $PO, \%param );
+
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
 			$param{'delivered_on'} = sprintf('%.4d-%.2d-%.2d', @param{'delivered_on_year','delivered_on_month','delivered_on_day'}) if ! $param{'delivered_on'};
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
+
+		# Theoretically, the taxes in params are up to date, because any change in country would update them.
+		# This must happen before saving because charging or not for a tax alters the total.
+		foreach my $Tax ( $PO->Taxes() ) {
+			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
+			#$Tax->amount(undef);
+			#$Tax->save();
+		} # end foreach
+		# Save will recalc taxes as well.
 		$variable{'error'} .= $PO->save( \%param );
+if ( 0 ) {
+		if ( $PO->total() and ! $PO->authorized() ) {
+			if ( $PO->total() < $Me->purchasing_limit() ) {
+				$variable{'error'} .= $PO->save({
+						'authorized'	=> 1,
+						'authorized_on'	=> 'NOW()',
+						'authorized_by'	=> $session{'user_id'},
+						});
+			} else {
+				$PO->send_approval_required_notification();
+			} # end if
+		} # end if
+}
+		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+				'user_id'	=>	$session{'user_id'},
+				'po_id'		=>	$PO->id(),
+				'reason'	=>	$param{'reason'},
+				});
+		} # end if
+		my @notifications = $PO->notifications(); # returns user_ids
+		my @new_notifications = @notifications;
+		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
+		} # end if
+		foreach my $type ( keys %types ) {
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
+		} # end foreach
+		if ( scalar @notifications != scalar @new_notifications ) {
+			$PO->notifications(\@new_notifications);
+		} # end if
+		if ( ! $variable{error} ) {
+			if ( ! $param{po_id} ) {
+				$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();
+			} else {
+				$variable{ExternalRedirect} = '/employee/purchase_order/view.html?po_id='.$PO->id();
+			} # end if
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
+		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
+		$param{contact_id} = save_contact( \%param ) if ! $param{contact_id};
+		my %types = save_contents( $PO, \%param );
+		foreach my $Tax ( $PO->Taxes() ) {
+			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach
+		$variable{'error'} .= $PO->save( \%param );
+
+		my $Asset = new openprint::Asset();
+		$variable{'error'} .= $Asset->save({ 'name'	=>	$param{asset_name}, 'filename' => $param{filename} } );
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= 'Information successfully stored.<br/>';
+		} # end if
+		if ( $param{'filename'} ) {
+			my $upload = $r->upload('filename');
+			if ( ! $upload ) {
+				$Asset->save({'filename'=>''});
+				$variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+			} elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+				$variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+				$Asset->save({'filename'=>''});
+			} else {
+				$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+			} # end if
+		} # end if
+		if ( $Asset->id() ) {
+			my $PO_Asset = new openprint::Object_Asset();
+			$variable{'error'} .= $PO_Asset->save({'object_id'=>$param{'po_id'},'object_type'=>'openprint::PurchaseOrder','asset_id'=>$Asset->id()});
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/purchase_order/edit.html?po_id='.$PO->id();
+			} # end if
+        } # end if
+        %param = ();
+
 	} # end if btnFunction
 
 	if ( ! $PO->id() ) {
@@ -582,11 +583,11 @@ sub _po_select_vendor {
 }
 
 sub _update_taxes {
-	if ( $param{'po_id'} ) {
-		# Save incoming data because we may have changed suppliers
-		my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
-		$variable{'error'} .= $PO->save( \%param );
-	} # end if
+	# Set incoming data because we may have changed suppliers, do not save though!
+	my $PO = $variable{PO} = new openprint::PurchaseOrder( $param{po_id} );
+	$variable{error} .= $PO->set( \%param );
+	# Reload $PO->Taxes() with current set
+	$PO->Taxes(1);
 } # end sub _update_taxes
 
 sub _similar_pos {
@@ -675,5 +676,8 @@ sub _assets {
 		} # end if
 	} # end if
 } # end sub _assets
+
+sub _items_dropdown {
+} # end sub _items_dropdown
 1;
 __END__

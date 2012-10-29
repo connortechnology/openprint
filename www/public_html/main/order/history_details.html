@@ -28,7 +28,7 @@
 			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
 				$html .= ssi::button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= ssi::button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", href=>'', text=>'ReOrder' } ); 
-				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'Order'}->status() ne 'Cancelled'; 
+				$html .= ssi::button( 'Resend', { href=>"/main/order/history_details.html?OrderID=$$variable{OrderID}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
 					$html .= ssi::button( 'ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", href=>'', text=>'ReOpen' } );
 					$html .= ssi::button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } ) if $$variable{'Order'}->status() ne 'Cancelled';
@@ -51,9 +51,8 @@
 		) ?>
 	</p>
 <b>Attention</b> <br/>
-Projects listed in red have changed price from the time this order was originally generated.<br/>
+Items listed in red have changed price from the time this order was originally generated.<br/>
 <br/>
-<<<<<<< HEAD
 	<div class="Order"><div class="View">
 		<!--#include virtual="/includes/order_header.html" -->
 		<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
@@ -76,60 +75,6 @@ Projects listed in red have changed price from the time this order was originall
 		<div class="Disclaimer">
 	<? echo (
 		my $html = $config{'OrderViewDisclaimer'};
-=======
-<!--#include virtual="/includes/order_header.html" -->
-<br class="spacer"/>
-<!--#include virtual="/includes/order_project_list.html" -->
-<!--#include virtual="_product_list.html" -->
-<span style="float: left;">
-	<br/>
-	<? if ( $$variable{'AdministratorName'} ) ?>
-	<b>Representative:</b> <?AdministratorName?><br/>
-	<? endif ( $$variable{'AdministratorName'} ) ?>
-	<? if ( $$variable{'AdministratorComments'} ) ?>
-	<b>Representative Comments:</b> <?AdministratorComments?><br/>
-	<? endif ( $$variable{'AdministratorComments'} ) ?>
-</span>
-<div style="float: right; text-align: right;">
-	<!--#include virtual="/includes/order_totals.html" -->
-<? if ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
-	<table width="250" border="0" cellspacing="0" cellpadding="0" cols="2">
-		<tr> 
-			<td height="0" width="175">&nbsp;</td>
-			<td height="0" width="75">&nbsp;</td>
-		</tr>
-		<tr> 
-			<td align="right"><b>Amount Paid:</b></td>
-			<td align="right"><?CurrencySymbol?><?AmountPaid?></td>
-		</tr>
-		<? if ( $$variable{'DepositDue'} ) ?>
-		<tr> 
-			<td align="right"><b>Deposit Due:</b></td>
-			<td align="right"><?CurrencySymbol?><?DepositDue?></td>
-		</tr>
-		<? endif ( $$variable{'DepositDue'} ) ?>
-		<? if ( $$variable{'Order'}->cod_owing() ) ?>
-		<tr class="cod_owing"> 
-			<td><label>COD Owing</label></td>
-			<td><? echo ( openprint::Currency::format( $$variable{'Order'}->cod_owing() ); ) ?></td>
-		</tr>
-		<? endif ( $$variable{'Order'}->cod_owing() ) ?>
-		<? if ( $$variable{'AmountOutstanding'} ) ?>
-		<tr> 
-			<td align="right"><b>Amount Owing:</b></td>
-			<td align="right"><?CurrencySymbol?><?AmountOutstanding?></td>
-		</tr>
-		<? endif ( $$variable{'AmountOutstanding'} ) ?>
-	</table>
-<? endif ( ($session{user_type} eq 'A') or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) or ($config{'ShowAccountingOnOrder'} ne 'N') ) ?>
-</div>
-<br class="spacer"/>
-	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
-<br class="spacer"/><br/>
-	<form name="f1" method="post" action="history_details.html">
-	<? echo ( 
-		my $html = ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html');
->>>>>>> 9b5783caf17d6fb68c21e2d8efb0fb0b72629823
 		if ( $html ) {
 			$html .= '<div class="AcceptTerms">';
 			if ( $$variable{'Order'}->terms_accepted() ) {

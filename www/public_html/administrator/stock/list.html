@@ -80,26 +80,26 @@
 			<select id="group_id" name="group_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?Group'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Groups'}} ], $session{'/administrator/stock/list.html?group_id'} );
 					) ?>
 			</select>
 		</li>
 <? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)') ) ?>
 		<li>
 			<label>Manufacturer</label>
-			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
+			<select id="manufacturer_id" name="manufacturer_id" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?Manufacturer'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Manufacturer->find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?manufacturer_id'} );
 					) ?>
 			</select>
 		</li>
 		<li>
 			<label>Brand</label>
-			<select name="Brand" onchange="filter_onChange(this,'');">
+			<select id="brand_id" name="brand_id" onchange="filter_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/stock/list.html?Brand'} );
+					return ssi::make_drop_down( openprint::StockBrand->dropdown('order'=>'lower(name)'), $session{'/administrator/stock/list.html?brand_id'} );
 					) ?>
 			</select>
 		</li>
@@ -107,9 +107,9 @@
 	my $html;
 	my @options = ('Finish','Colour','Weight','Quality','Material');
 	my %find = (
-		($session{'/administrator/stock/list.html?Brand'}?('brand_id'=>$session{'/administrator/stock/list.html?Brand'}) : ()),
-		($session{'/administrator/stock/list.html?Manufacturer'}?('manufacturer_id'=>$session{'/administrator/stock/list.html?Manufacturer'}):()),
-		($session{'/administrator/stock/list.html?Group'}?('group_id'=>$session{'/administrator/stock/list.html?Group'}):())
+		($session{'/administrator/stock/list.html?brand_id'}?('brand_id'=>$session{'/administrator/stock/list.html?brand_id'}) : ()),
+		($session{'/administrator/stock/list.html?manufacturer_id'}?('manufacturer_id'=>$session{'/administrator/stock/list.html?manufacturer_id'}):()),
+		($session{'/administrator/stock/list.html?group_id'}?('group_id'=>$session{'/administrator/stock/list.html?group_id'}):())
 	);
 	my %results;
 	my @Stocks = openprint::Paper->find(\%find);
@@ -128,9 +128,9 @@
 		$html .= sprintf(q`	
 		<li> 
 			<label>%1$s</label>
-			<select id="%1$s" name="%1$s" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
-		</li>`, $option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$option} ) );
-		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$option} if $session{'/administrator/stock/list.html?'.$option};
+			<select id="%1$s_id" name="%1$s_id" size="1" onchange="filter_onChange(this,'');"><option value=""> select one </option>%2$s</select>
+		</li>`, $lc_option, ssi::make_drop_down( [map { $_->id(), $_->name() } @sorted ], $session{'/administrator/stock/list.html?'.$lc_option.'_id'} ) );
+		$find{$lc_option.'_id'} = $session{'/administrator/stock/list.html?'.$lc_option.'_id'} if $session{'/administrator/stock/list.html?'.$lc_option.'_id'};
 	}# end foreach option
 	return $html;
 ) ?>
@@ -147,8 +147,8 @@
 		</li>
 		<li>
 			<label>Size</label>
-			<input type="number" name="width" id="width" value="<? echo ( $session{'/administrator/stock/list.html?width'} ) ?>" onclick="calc(this.form.name);" />x
-			<input type="number" name="height" id="height" value="<? echo ( $session{'/administrator/stock/list.html?height'} ) ?>" onclick="calc(this.form.name);" />
+			<? echo ( ssi::input( type=>'float', name=>'width', id=>'width', value=>$session{'/administrator/stock/list.html?width'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
+			<? echo ( ssi::input( type=>'float', name=>'height', id=>'height', value=>$session{'/administrator/stock/list.html?height'}, onkeyup=>'calc(this.form.name);' ); ) ?>x
 		</li>
 		<li>
 			<label>Recommendations</label>
@@ -167,6 +167,10 @@
 			<label>Inventory Code</label>
 			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
+		</li>
+		<li>
+			<label>Digital</label>
+			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
 		</li>
 		</ul>
 		</div><br class="spacer"/>

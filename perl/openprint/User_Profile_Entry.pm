@@ -4,7 +4,7 @@ package openprint::User_Profile_Entry;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'user_profiles';
 @identified_by = ( 'user_id', 'field_id' );
 %fields = (
@@ -20,12 +20,12 @@ $table = 'user_profiles';
 
 sub Field {
 	if ( @_ > 1 ) {
-		$_[0]{'Field'} = $_[1];
+		$_[0]{Field} = $_[1];
 	} # end if
-	if ( ! $_[0]{'Field'} ) {
-		$_[0]{'Field'} = new openprint::User_Profile_Field( $_[0]{'field_id'} );
+	if ( ! $_[0]{Field} ) {
+		$_[0]{Field} = new openprint::User_Profile_Field( $_[0]{field_id} );
 	} # end if
-	return $_[0]{'Field'};
+	return $_[0]{Field};
 } # end sub Field
 
 sub field {
@@ -33,7 +33,7 @@ sub field {
 } # end sub field
 
 sub html {
-	return $_[0]->Field()->html( $_[0]{'value'} );
+	return $_[0]->Field()->html( $_[0]{value} );
 } # end sub html
 
 1;

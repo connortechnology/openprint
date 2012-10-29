@@ -1,8 +1,9 @@
 use strict;
 package openprint::order;
 
-use Email::Valid ();
-use Date::Calc ();
+require Email::Valid;
+require Date::Calc;
+require Math::Round;
 
 use openprint ();
 use vars qw( %param %variable %config %session $log $dbh );
@@ -333,6 +334,8 @@ sub make_order {
 } # end sub make_order
 
 # Now takes an OrderedProject or Product object
+# Need to document what exactly this should be saving.
+# For projects with multiple quantities, it should save the quantity selection
 sub save_project_information {
 	my ( $order_id, $OP ) = @_;
 
@@ -342,7 +345,8 @@ sub save_project_information {
 
 	if ( $param{"rdbQuantity$project_index"} ) {
 		$OP->quantity_index( $param{"rdbQuantity$project_index"} );
-	} elsif ( ! $Project->ordered_quantity_index() ) {
+	} elsif ( ! $OP->quantity_index() ) {
+		# Ordered Products don't have quantity_index field, so this is a NOP
 		my @qtys = $Project->quantity_indexes();
 		if ( 1 == scalar @qtys ) {
 			$OP->quantity_index( $qtys[0] );
@@ -357,13 +361,13 @@ sub save_project_information {
 		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
 	} # end if
 
-	my $services = $Project->services();
 
+	my $shipping_cost = 0;
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
 		my $quantity_shipped = $Project->ordered_quantity();
-
 		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
+		my $services = $Project->services();
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
@@ -414,6 +418,7 @@ sub save_project_information {
 
 				my $specs = openprint::service::internal_calc( $log, $dbh, \%variable, $project_index, $service_id, $ShippingType->name() );
 				$quantity_shipped -= $$specs{'txtQuantity'.$Project->ordered_quantity_index()};
+				$shipping_cost += $$specs{'txtPrice'.$OP->quantity_index()};
 				$log->warn($$specs{'alert'}) if $$specs{'alert'};
 			} # end foreach service_id
 		} # end foreach ShippingType
@@ -427,11 +432,17 @@ sub save_project_information {
 	} # end if
 
 	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
+	if ( ref $OP eq 'openprint::OrderedProject' ) {
 	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
 	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
+	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+	#$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+	} else {
+		$log->error('Unknown type of Ordered item!');
+	} # end if
 	$error .= $OP->save();
 	return $error;
-
 } # end foreach save_project_information
 
 # comes here on the transition from orde_info to orde_info_cred_card or order_info_digi_cheq
@@ -495,15 +506,15 @@ sub get_misc {
 	$log->debug("********* START OF Get Misc **************");
 	$$variable{'Order'} = $Order;
 
-	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
+	@$variable{'Downpayment','TOTAL', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
 
 	if ( $Order->status() ne 'Cancelled' ) {
-		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $Order->total() - $Order->paid() );
-		$$variable{'DepositDue'} = sprintf( '%.2f', $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{'AmountOutstanding'} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
+		$$variable{'DepositDue'} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
 	} # end if
 
-	$$variable{'AmountPaid'} = sprintf( '%.2f', $Order->paid() );
+	$$variable{'AmountPaid'} = Math::Round::nearest( 0.01, $Order->paid() );
 } # end sub get_misc
 
 sub display_order {

@@ -48,7 +48,7 @@ $serial = 'locations_id_seq';
 	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
     'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
     'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'postalcode'	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'postalcode'	=> [ 's/\s*//' ],
 	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
 	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
 );
@@ -63,6 +63,7 @@ $serial = 'locations_id_seq';
 	'asset_id'		=>	undef,
 	'album_id'		=>	undef,
 	'deleted'		=>	'0',
+	'name'			=>	undef,
 );
 
 sub children {
@@ -458,6 +459,7 @@ sub googlemap_html {
 
 sub from_ip {
 	my $gi = Geo::IP->open("/var/lib/geoip/GeoLiteCity.dat");
+	return if ! $gi;
 	my $record = $gi->record_by_name(@_ ? $_[0] : $ENV{'REMOTE_ADDR'});
 	return if ! $record;
 
@@ -493,5 +495,73 @@ sub upload {
 	} # end if
 	return $Album->upload( @_ );
 } # end sub upload
+
+sub filters {
+	my ( $prefix, $selected, $options ) = @_;
+
+	my $option_string;
+	if ( $$options{onSuccess} ) {
+		$option_string = 'onSuccess: function(){' . $$options{onSuccess}.'}';
+	} # end if
+	if ( $option_string ) {
+		$option_string = ',{'.$option_string.'}';
+	} # end if
+
+	my ( $country_id, $state_id, $city_id );
+	if ( ref $selected eq 'openprint::Location' ) {
+		$_ = $selected->ancestor('country');
+		$country_id = $_->id() if $_;
+		$_ = $selected->ancestor('state');
+		$state_id = $_->id() if $_;
+		$_ = $selected->ancestor('city');
+		$city_id = $_->id() if $_;
+	} elsif ( ref $selected eq 'HASH' ) {
+		( $country_id, $state_id, $city_id ) = @$selected{'country','state','city'};
+	} elsif ( ref $selected eq 'ARRAY' ) {
+		( $country_id, $state_id, $city_id ) = @$selected;
+	} # end if	
+    my $html = '<li><label>Country</label>';
+    my @Countries = openprint::Location->find(order=>'lower(name)',type=>'country');
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Countries ], $country_id, { name=>'country_id', id=>'country_id', onchange=>qq`Location_onchange( this, 'country'$option_string );` } );
+
+    $html .= '</li><li><label>';
+	my $Country = new openprint::Location($country_id);
+	if ( $Country->name() eq 'Canada' ) {
+		$html .= 'Province';
+	} elsif ( $Country->name() eq 'United States' ) {
+		$html .= 'State';
+	} else {
+		$html .= 'State/Province';
+	} # end if
+	$html .= '</label>';
+    my @States = openprint::Location->find(order=>'lower(name)',type=>'state',
+			( sets::isin( $country_id, [ map { $_->id() } @Countries ] ) ? ( 'parent_id'=>$country_id ) : () ),
+			);
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @States ], $state_id, { name=>'state_id', id=>'state_id', onchange=>qq`Location_onchange( this, 'state'$option_string );"` } );
+
+    $html .= '</li><li><label>City</label>';
+    my @Cities = openprint::Location->find('order'=>'lower(name)','type'=>'city',
+        ( sets::isin( $state_id, [ map { $_->id() } @States ] ) ? ( 'parent_id'=>$state_id ) : () ),
+    );
+    $html .= ssi::select( [ '', 'All', map { $_->id(), $_->name() } @Cities ], $city_id, { name=>'city_id', id=>'city_id', onchange=>qq`Location_onchange( this, 'city'$option_string );` } );
+	$html .= '</li>';
+
+    return $html;
+} # end sub filters
+sub html {
+	my $self = $_[0];
+	my $html = sprintf(q`
+			<div class="Location">
+				<div class="Assets"><a class="medium %4$s" href="/event/view.html?event_id=%1$d"><img alt="" src="%5$s"/></a></div>
+				<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+				<div class="Where">%3$s</div>
+			</div>
+			`, $self->id(), ssi::html_escape($self->name()), 
+			$self->where(),
+			$self->Asset()->layout(),
+			$self->Asset()->medium_url(),
+			);
+	return $html;
+} # end  sub html
 1;
 __END__

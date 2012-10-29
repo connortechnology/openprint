@@ -70,7 +70,9 @@ sub Order {
 } # end sub Order
 
 sub Project {
-	return openprint::Project->find_one('docket'=>$_[0]{'docket'});
+	$_ = openprint::Project->find_one(docket=>$_[0]{docket});
+	$_ = new openprint::Project() if ! $_;
+	return $_;
 } # end sub Project
 
 sub Type {

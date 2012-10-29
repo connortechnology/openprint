@@ -1,50 +1,27 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
-	my @Attending = $$variable{'Event'}->Attendance();
-	my ( @yes, @no, @maybe );
-	foreach my $A ( @Attending ) {
-		next if ! defined $$A{'attending'};
-		if ( $$A{'attending'} ) {
-			push @yes, $A;
-		} elsif ( ! defined $$A{'attending'} ) {
-			push @maybe, $A;
+	my $html .= $$variable{Event}->attendance( $variable{User} );
+	return $html if ! $$variable{User}->id();
+
+	my $myAttendance = openprint::Event_Attendance->find_one( { event_id=>$$variable{Event}{id}, user_id=>$variable{User}->id() } );
+	if ( $myAttendance ) {
+		if ( $$myAttendance{attending} eq '1' ) {
+			# IF we are the only person, there will already be a message saying that we are attending.
+			if ( $$variable{Event}->Attendance() != 1 ) {
+				$html .= 'You are attending.';
+			} # end if
+		} elsif ( $$myAttendance{attending} eq '0' ) {
+			$html .= 'You are not attending.';
 		} else {
-			push @no, $A;
+			$html .= 'You might attend.';
 		} # end if
-	} # end foreach
-	my $html = '';
-	if ( @yes == 0 ) {
-		$html .= 'No one is attending (yet). ';
-	} elsif ( @yes == 1 ) {
-		if ( $yes[0]{'user_id'} == $session{user_id} ) {
-			$html .= 'You are the only person attending.(so far). ';
-		} else {
-			$html .= '1 person is attending.(so far). ';
-		} # end if
-	} else {
-		$html = @yes . ' people are attending. ';
-	} # end if
-	if ( @maybe == 1 ) {
-		if ( $maybe[0]{'user_id'} == $session{user_id} ) {
-			$html .= 'you might attend.';
-		} else {
-			$html .= '1 person might attend.';
-		} # end if
-	} elsif ( @maybe ) {
-		$html .= @maybe. ' people might attend';
-	} # end if
-	my $myAttendance = new openprint::Event_Attendance( { event_id=>$$variable{Event}{id}, user_id=>$session{user_id} } );
-	if ( $$myAttendance{'attending'} eq '1' ) {
-		$html .= 'You are attending.';
-	} elsif ( $$myAttendance{'attending'} eq '0' ) {
-		$html .= 'You are not attending.';
-	} elsif ( $$myAttendance{event_id} ) {
-		$html .= 'You might attend.';
+		$html .= ssi::radio( 'attending', [ '1', 'Yes', undef, 'Maybe', '0', 'No' ], $$myAttendance{attending}, 
+			{ onclick=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ), user_id: $variable{User}{id} } } );` } );
 	} else {
 		$html .= 'Attending: ';
+		$html .= ssi::radio( 'attending', [ '1', 'Yes', '', 'Maybe', '0', 'No' ], undef,
+			{ onclick=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ), user_id: $variable{User}{id} } } );` } );
 	} # end if
 	
-	$html .= ssi::radio( 'attending', [ '1', 'Yes', '', 'Maybe', '0', 'No' ], $$myAttendance{'attending'}, 
-			{ 'onclick'=>qq`new Ajax.Updater( 'Attendance', '_attendance.html', { parameters: { event_id: $$variable{Event}{id}, attending: get_rdb_value( \$('f1').attending ) } } );` } );
 	return $html;
 ) ?>

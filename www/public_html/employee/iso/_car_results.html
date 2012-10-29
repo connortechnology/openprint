@@ -1,7 +1,7 @@
 <? eval (
 	@{$$variable{'CARs'}} = openprint::CAR->find( 
-		ssi::date_filter( 'issued_on_start', 'issued_on >=' ),
 		ssi::date_filter( 'issued_on_end', 'issued_on <=' ),
+		ssi::date_filter( 'issued_on_start', 'issued_on >=' ),
 		( $session{'/employee/iso/cars.html?docket'} ? ( 'docket'	=>	$session{'/employee/iso/cars.html?docket'} ) : () ),
 		'order'		=>	'id DESC',
 		'deleted'	=>	0,

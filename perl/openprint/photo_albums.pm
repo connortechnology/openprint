@@ -118,8 +118,8 @@ sub _album_photos {
 	} # end if
 
 	if ( $param{'action'} eq 'set as album thumbnail' ) {
-		$variable{'error'} .= $Album->save({'thumbnail_id'=>$param{'asset_id'}});
-		$variable{'error'} .= $Object->save({'thumbnail_id'=>$param{'asset_id'}}) if $Object;
+		$variable{error} .= $Album->save({thumbnail_id=>$param{asset_id}});
+		$variable{error} .= $Object->save({thumbnail_id=>$param{asset_id}}) if $Object and exists $$Object{thumbnail_id};
 	} elsif ( $param{'action'} eq 'add' ) {
 		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
 $log->debug("$id , $filename ");
@@ -133,10 +133,14 @@ $log->debug("$id , $filename ");
 		if ( $Asset ) {
 			if ( sets::isin( $Asset->id(), [ map { $_->asset_id() } $Album->Photos() ] ) ) {
 				$variable{'error'} .= 'Asset already in album.';
-			} else {
+			} elsif ( $$Album{id} ) {
 				my $Photo = new openprint::Photo_in_Album();
 				$variable{'error'} .= $Photo->save({'album_id'=>$$Album{id}, 'asset_id'=>$Asset->id()});
 				$Album->Photos(undef);
+			} else {
+				my $Photo = new openprint::Photo_in_Album();
+				$Photo->set({'asset_id'=>$Asset->id()});
+				$Album->Photos($Photo);
 			} # end if
 		} else {
 			$variable{'error'} .= 'Asset not found.';
@@ -327,6 +331,12 @@ sub photos {
 sub _photos {
 	ssi::save_params( '/photo_albums/photos.html', ( 'company_id','user_id' ) );
 } # end sub _photos
+
+sub upload {
+	$variable{Album} = new openprint::Photo_Album();
+	if ( $param{action} eq 'Upload' ) {
+	} # end if
+} # end sub upload
 
 1;
 __END__

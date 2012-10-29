@@ -30,15 +30,15 @@
 			
 			my @Equipment = openprint::Equipment->find(
 					'useinscheduling'=>1,
-					( $Type->category() ? ( 'category'=>$Type->category() ) : () ), 
-					'order'=>'strcategory,lower(strid)');
+					( $Type->category() ? ( 'category any'=>$Type->category() ) : () ), 
+					'order'=>'lower(strid)');
 			$html .= sprintf('<fieldset id="type-%d"><legend>%s</legend><p class="buttons">%s</p>', $Type->id(), $Type->name(),
 					ssi::button( 'delete'.$Type->id(), { 'text'=>'Delete', 'onclick'=>qq`delete_type( $$Type{id} );` } ),
 				);
 			$html .= '
 		<table class="List">
 			<tr>
-				<th>Press</th><th>Point Value</th><th>Units</th><th>Maximum</th>
+				<th class="Equipment">Equipment</th><th class="value">Point Value</th><th class="units">Units</th><th class="max">Maximum</th>
 			</tr>
 ';
 			foreach my $Equipment ( @Equipment ) {

@@ -1,14 +1,14 @@
-package openprint::ProjectType;
-@ISA = qw(openprint::Object);
 use strict;
+package openprint::ProjectType;
+our @ISA = qw(openprint::Object);
+
 require openprint::Object;
 require openprint::Log;
 require openprint::ProjectType_Template;
-use openprint ();
+require openprint;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'Project_Types';
 $serial = 'project_types_id_seq';
 
@@ -34,13 +34,11 @@ $serial = 'project_types_id_seq';
 
 sub save {
 	my ( $self, $params ) = @_;
-
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
-		$self->required_services( $$params{'required_services'} );
 		# self->equired_services is guaranteed to populate $$self{'erquired_services'}
-
+		$self->required_services( $$params{required_services} );
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		# The union gets rid of duplicates
 		foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
@@ -70,14 +68,13 @@ sub prev {
 
 sub required_services {
 	my $self = shift;
-
 	if ( @_ > 1 ) {
 		@{$$self{'required_services'}} = @_;
 	} elsif ( @_ ) {
 		if ( ref $_[0] eq 'ARRAY' ) {
-			@{$$self{'required_services'}} = @{$_[0]};
+			$$self{'required_services'} = $_[0];
 		} elsif ( $_[0] ) {
-			@{$$self{'required_services'}} = ($_[0]);
+			$$self{'required_services'} = [$_[0]];
 		} # end if
 	} # end if
 	if ( ! $$self{'required_services'} ) {
@@ -91,21 +88,20 @@ sub required_services {
 } # end sub required_services
 
 sub required_ServiceTypes {
-	my $self = shift;
-	return map { new openprint::ServiceType( $_ ); } $self->required_services();
+	return map { new openprint::ServiceType( $_ ); } $_[0]->required_services();
 }
 
 sub delete {
 	my $self = shift;
 
-	my $ac = sql::start_transaction( $dbh );
+	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{DELETE FROM projecttype_defaults WHERE projecttype_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM ProjectTemplate WHERE projecttype_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_Id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'Projects', ['type_id=?',$$self{'id'}], 'type_id', undef );
 	sql::execute( undef, undef, q{DELETE FROM Project_Types WHERE Id=?}, $$self{'id'} );
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
 	new openprint::Log()->save({'action'=>'Delete Project Type', 'note' => "Project Type ID: $$self{id} Project Type: $$self{name}"});

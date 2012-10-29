@@ -89,8 +89,11 @@
 					while (endContainer.nodeType != 3 && endContainer.firstChild)
 						endContainer = endContainer.firstChild;
 
-					r.setStart(endContainer, 0);
-					r.setEnd(endContainer, endContainer.nodeValue.length);
+					// Move range to text node
+					if (endContainer.nodeType == 3) {
+						r.setStart(endContainer, 0);
+						r.setEnd(endContainer, endContainer.nodeValue.length);
+					}
 				}
 
 				if (r.endOffset == 1)
@@ -145,6 +148,7 @@
 				ed.selection.setRng(r);
 				tinyMCE.execCommand('createlink',false, matches[1] + matches[2]);
 				ed.selection.moveToBookmark(bookmark);
+				ed.nodeChanged();
 
 				// TODO: Determine if this is still needed.
 				if (tinyMCE.isWebKit) {

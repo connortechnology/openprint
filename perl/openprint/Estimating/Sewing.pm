@@ -130,13 +130,13 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 		if ( ! %servicePrice ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'No service price.<br/>' );
 		} else {
-			if ( sets::isin( $servicePrice{'units'}, ['', 'Per M', 'Per 1000'] ) ) {
+			if ( sets::isin( $servicePrice{'units'}, ['', 'per m', 'per 1000'] ) ) {
 				$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
-			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch'] ) ) {
+			} elsif ( sets::isin( $servicePrice{'units'}, ['per inch'] ) ) {
 				$servicePrice{'Total'} = $qty * $servicePrice{'Price'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$dinches * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, @$specs{'Quantity','txtQuantity'.$qty_index} );
-			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per foot'] ) ) {
+			} elsif ( sets::isin( $servicePrice{'units'}, ['per foot'] ) ) {
 				$servicePrice{'Total'} = $qty/12 * $servicePrice{'Price'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$.2ffeet * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $$specs{'Quantity'}/12,$$specs{'txtQuantity'.$qty_index} );
 			} else {
@@ -180,7 +180,6 @@ sub summary {
 
 sub save {
 	my ( $project_id, $service_id, $specs ) = @_;
-$openprint::log->debug("In sewing sae");
 	my $Project = new openprint::Project( $project_id );
 	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 	my $services = $Project->services();

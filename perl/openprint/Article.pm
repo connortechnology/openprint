@@ -1,5 +1,4 @@
 use strict;
-require openprint::Comment;
 require openprint::Article_Asset;
 package openprint::Article;
 our @ISA = qw(openprint::Object);
@@ -47,6 +46,7 @@ $serial = 'articles_id_seq';
 	'summary'			=>	'summary',
 	'user_type'			=>	'user_type',
 	'keywords'			=>	'keywords',
+	anonymous			=>	'anonymous',
 );
 
 %transforms = (
@@ -60,6 +60,8 @@ $serial = 'articles_id_seq';
 	'category_id'	=>	undef,
 	'user_type'		=>	undef,
 	'created_by'	=>	undef,
+	anonymous		=>	0,
+	published		=>	0,
 );
 
 sub name {
@@ -123,21 +125,6 @@ sub Category {
 	return new openprint::Article_Category( $_[0]{'category_id'} );
 } # end sub Category
 
-sub Comments {
-	if ( $_[1] ) {
-		$_[1]{'object_id'} = $_[0]{'id'};
-		$_[1]{'object_type'} = 'openprint::Article';
-		$_[1]{'order'} = 'created_on' if ! $_[1]{'order'};
-
-		return openprint::Comment->find($_[1]);
-	} # end if
-
-	if ( ! defined $_[0]{'Comments'} ) {
-		@{$_[0]{'Comments'}} = openprint::Comment->find({'object_type'=>'openprint::Article', 'object_id'=>$_[0]{'id'}, 'order'=>'created_on'});
-	} # end if
-	return @{$_[0]{'Comments'}};
-} # end sub Comments
-
 sub summary {
 	if ( @_ > 1 ) {
 		$_[0]{'summary'} = $_[1];
@@ -147,8 +134,15 @@ sub summary {
 
 sub can_view {
 	return 1 if ! $_[0]{'id'};
-	return 1 if $session{'user_type'} eq 'A';
-	return 1 if ( $session{'user_id'} == $_[0]{'created_by'} );
+	my $User;
+	if ( @_ > 1 ) {
+		$User = ref $_[1] eq 'openprint::User' ? $_[1] : new openprint::User( $_[1] );
+	} else {
+		$User = new openprint::User( $openprint::session{user_id} );
+	} # end if
+
+	return 1 if $$User{type} eq 'A';
+	return 1 if ( $$User{id} == $_[0]{created_by} );
 	if ( $_[0]{'published'} ) {
 #$openprint::log->debug("Is published");
 		if ( ! $_[0]{'user_type'} ) {
@@ -158,8 +152,8 @@ sub can_view {
 		} else {
 #$openprint::log->debug("usertype is ($_[0]{user_type})");
 			# Don't have to test for admin, cuz we did it above
-			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $session{'user_type'}, ['E','C'] );
-			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $session{'user_type'}, ['E'] );
+			return 1 if $_[0]{'user_type'} eq 'C' and sets::isin( $$User{type}, ['E','C'] );
+			return 1 if $_[0]{'user_type'} eq 'E' and sets::isin( $$User{type}, ['E'] );
 		} # end if
 	#} else {
 #$openprint::log->debug("not published");
@@ -182,15 +176,16 @@ sub html {
 			<div class="Article">
 			<div class="Assets">%8$s</div>
 			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
-			Posted on %7$s by <a href="/account/view.html?user_id=%5$d">%6$s</a><br/>
+			%6$s
+			Posted on %7$s by %5$s<br/>
 			<div class="source_content">%3$s</div>
 			<div class="summary">%4$s</div>
 			`, $Article->id(),
 			ssi::escape_quotes($Article->title()),
 			$Article->source_content(),
 			($Article->summary() ? $Article->summary() : $Article->body() ),
-			$Article->created_by(),
-			ssi::escape_quotes( $Article->Author()->alias() ),
+			($Article->anonymous() ? 'Anonymous Sexy Contributor' : $Article->Author()->link() ),
+			($Article->anonymous() ? '' : $Article->Author()->thumbnail_html() ),
 			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
 
@@ -207,6 +202,31 @@ sub html {
 } # end  sub html
 
 sub summary_html {
+	my $Article = $_[0];
+	my @Comments = $Article->Comments();
+	my @Assets = $Article->Assets();
+	my $html = sprintf(q`
+			<div class="Article">
+			<div class="Assets">%7$s</div>
+			<h1><a href="/article/view.html?article_id=%1$d">%2$s</a></h1>
+			<div class="source_content">%3$s</div>
+			<div class="summary">%4$s</div>
+			`, $Article->id(),
+			ssi::escape_quotes($Article->title()),
+			$Article->source_content(),
+			($Article->summary() ? $Article->summary() : $Article->body() ),
+			( $Article->published() ? Date::Format::time2str($openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+			join('',map { $_->thumbnail_html() } ( @Assets ? $Assets[0] : () ) ),
+    );
+	if ( $Article->source() ) {
+		$html .= sprintf('<a class="source" href="%1$s" target="_blank" title="Original Article">%1$s</a>', $Article->source() );
+	} # end if
+	if ( $Article->summary() and $Article->summary() ne $Article->body() ) {
+		$html .= sprintf('<a class="readmore" href="/article/view.html?article_id=%1$d">Read more...</a><br/>', $Article->id() );
+	} # end if
+	$html .= sprintf(q`<div class="comments">This article has %s.</div>`, ( @Comments == 1 ? '1 comment' : @Comments . ' comments' ) );
+	$html .= '</div>';
+	return $html;
 } # end sub summary_html
 
 sub view_url {

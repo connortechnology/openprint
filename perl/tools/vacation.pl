@@ -19,7 +19,7 @@ use DBI;
 use strict;
 
 my $db_type = 'Pg';
-my @db_host = ( 'www4' );
+my @db_host = ( 'database' );
 my $db_user = 'postfix';
 my $db_pass = 'postfix';
 my $db_name = 'mail';
@@ -42,7 +42,7 @@ my $loopcount=0;
 sub do_query {
    my ($query, @params ) = @_;
    my $sth = $dbh->prepare($query) or die "Can't prepare $query: $dbh->errstr\n";
-   $sth->execute(@params) or die "Can't execute the query: $sth->errstr";
+   $sth->execute(@params) or die "Can't execute the query: $sth->errstr @params";
    return $sth;
 }
 
@@ -100,20 +100,18 @@ sub do_mail {
 sub find_real_address {
    my ($email) = @_;
 
-   my $query = qq{SELECT email FROM vacation WHERE email='$email' and active=true};
-   my $sth = do_query ($query);
+   my $sth = do_query('SELECT email FROM vacation WHERE email=? and active=true', $email );
 
    # Recipient has vacation
    if ($sth->rows == 1) {
 	   return ( 1, $email );
    } elsif ( $vacation_for_aliases ) {
-      $sth = do_query ( qq{SELECT goto FROM alias WHERE address='$email'} );
+      $sth = do_query( 'SELECT goto FROM alias WHERE address=?', $email );
       # Recipient is an alias, check if mailbox has vacation
       if ($sth->rows == 1) { 
          my @row = $sth->fetchrow_array;
          my $alias = $row[0];
-         $query = qq{SELECT email FROM vacation WHERE email='$alias' and active=true};
-         $sth = do_query ($query);
+         $sth = do_query('SELECT email FROM vacation WHERE email=? and active=true', $alias );
 
          # Alias has vacation
          if ($sth->rows == 1) {
@@ -126,9 +124,9 @@ sub find_real_address {
 sub send_vacation_email {
 	my ($email, $orig_subject, $orig_from, $orig_to, $orig_messageid) = @_;
 
-	if (do_cache ($email, $orig_from)) { return; }
+	if (do_cache($email, $orig_from)) { return; }
 
-	my $sth = do_query ( qq{SELECT subject,body FROM vacation WHERE email=?}, $email );
+	my $sth = do_query( qq{SELECT subject,body FROM vacation WHERE email=?}, $email );
 	if ($sth->rows == 1) {
 		my @row = $sth->fetchrow_array;
 		if ( $row[0] or $row[1] ) {

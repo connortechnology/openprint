@@ -5,7 +5,7 @@ require openprint::Object;
 require openprint::ServiceType_Category;
 require openprint::ServiceType_Default;
 
-use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
+use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults $cache_field );
 
 $debug = 0;
 $table = 'service_types';
@@ -35,6 +35,7 @@ $serial = 'service_types_id_seq';
 sub cache_field {
 	return 'name';
 }
+$cache_field = 'name';
 
 sub next {
 	my $self = shift;

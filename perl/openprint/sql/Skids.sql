@@ -1,17 +1,11 @@
-DROP TABLE IF EXISTS Skid_verifications;
-DROP TABLE IF EXISTS Skid_Contents;
-DROP TABLE IF EXISTS Skids;
-DROP SEQUENCE IF EXISTS Skid_id_seq;
-
-CREATE SEQUENCE Skid_id_seq;
 CREATE TABLE Skids (
 	id	SERIAL NOT NULL,
 	location	TEXT,
 	rfidtag_id	TEXT,
 	created_on	timestamp with time zone default NOW(),
 	updated_on	timestamp with time zone default NOW(),
-	created_by_id	INTEGER NOT NULL,  FOREIGN KEY (created_by_id) REFERENCES Users (Id),
-	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (Id),
+	created_by_id	INTEGER NOT NULL, FOREIGN KEY (created_by_id) REFERENCES users (id),
+	owner_id		INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES companies (id),
 	type			TEXT,
 	deleted			BOOLEAN NOT NULL DEFAULT false,
 	PRIMARY KEY (id)
@@ -26,7 +20,7 @@ CREATE TABLE Skid_Contents (
 CREATE TABLE skid_verifications (
 	id SERIAL NOT NULL,
 	skid_id	INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
-	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (index),
+	user_id	INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
 	code	TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	PRIMARY KEY (id)

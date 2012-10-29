@@ -1,11 +1,10 @@
 use strict;
 package openprint::ProjectTypeCategory;
 our @ISA = qw( openprint::Object );
-require openprint::ProjectType;
 
 use vars qw( $debug %fields %transforms %defaults $table $serial );
 
-$debug = 1;
+$debug = 0;
 $table =  'projecttype_categories';
 $serial = 'projecttype_categories_id_seq';
 %fields = (
@@ -21,6 +20,7 @@ $serial = 'projecttype_categories_id_seq';
 );
 
 sub ProjectTypes {
+	require openprint::ProjectType;
 	my $self = shift;
 	
 	if ( @_ ) {

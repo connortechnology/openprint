@@ -267,7 +267,7 @@ sub change_password {
 
 	if ( my $reason = check_password( $openprint::param{'txtNewPassword'} ) ) {
 		$variable{'error'} = "The new password you entered was not good enough: $reason.<br/>";
-		$variable{'Redirect'} = '/main/account/change_password.html';
+		$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 	

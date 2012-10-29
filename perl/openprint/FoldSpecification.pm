@@ -7,7 +7,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 0;
 $table = 'fold_specifications';
-$serial = 'foldspecification_id_seq';
+$serial = 'fold_specifications_id_seq';
 
 %fields = (
 	'id'			=>	'id',

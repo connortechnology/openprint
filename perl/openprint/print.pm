@@ -32,7 +32,6 @@ sub save_service {
 	} else {
 		openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 	} # end if service_type_id
-	my $Service = $Project->Service( $service_index );
 	$Service->save({'status'=>($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
 
 	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
@@ -315,7 +314,7 @@ sub multipage_signatures {
 	my %specified_pages;
 
 	foreach my $k ( keys %$param ) {
-		if ( $k =~ /txtSignatureType(\d*)/ ) {
+		if ( $k =~ /^txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
 $log->debug("special group $group_id");
 
@@ -341,7 +340,7 @@ $log->debug("special group $group_id");
 	$openprint::log->debug("Max group: $max_group");
 
 foreach my $k ( keys %specified_pages ) {
-$openprint::log->debug("$k => $specified_pages{$k}" );
+$openprint::log->debug("Specified Pages: $k => $specified_pages{$k}" );
 } # end foreach
 
 	if ( $$param{'rdbCover'} eq 'Different' ) {
@@ -409,12 +408,12 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 			next;
 		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		my $type = $$sig_specs{'Group'};
-		if ( $type == 1 ) {
+		my $group_id = $$sig_specs{'Group'};
+		if ( $group_id == 1 ) {
 			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
-			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-				if ( my @ProjectTypes = openprint::ProjectType->find('name'=>'PresentationFolders') ) {
-					foreach my $ServiceType ( $ProjectTypes[0]->required_ServiceTypes() ) {
+			if ( sets::isin( $$param{'rdbTemplateType'.$group_id}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
+				if ( my $ProjectType = openprint::ProjectType->find_one('name'=>'PresentationFolders') ) {
+					foreach my $ServiceType ( $ProjectType->required_ServiceTypes() ) {
 						if ( ! $$services{$ServiceType->name()} ) {
 							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );
 						} # end if
@@ -433,7 +432,6 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'CustomSheetDoubleSided', 'CustomStockPrice','txtCustomMWeight','txtStockGSM','CustomStockPriceUnits',
 				'basis_width','basis_height','basis_mweight','StockGrade',
 
-				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
 				'CyanSpotSideOneCoverage', 'MagentaSpotSideOneCoverage', 'YellowSpotSideOneCoverage', 'BlackSpotSideOneCoverage',
 				'CyanSideOneCoverage', 'MagentaSideOneCoverage', 'YellowSideOneCoverage', 'BlackSideOneCoverage',
 				'CyanSpotSideTwoCoverage', 'MagentaSpotSideTwoCoverage', 'YellowSpotSideTwoCoverage', 'BlackSpotSideTwoCoverage',
@@ -448,7 +446,6 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'chkColourCoating8SideOne', 'ColourCoatingType8SideOne', 'ColourCoatingColour8SideOne','ColourCoatingCoverage8SideOne',
 				'chkColourCoating9SideOne', 'ColourCoatingType9SideOne', 'ColourCoatingColour9SideOne','ColourCoatingCoverage9SideOne',
 
-				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
 				'chkColourCoating1SideTwo', 'ColourCoatingType1SideTwo', 'ColourCoatingColour1SideTwo','ColourCoatingCoverage1SideTwo',
 				'chkColourCoating2SideTwo', 'ColourCoatingType2SideTwo', 'ColourCoatingColour2SideTwo','ColourCoatingCoverage2SideTwo',
 				'chkColourCoating3SideTwo', 'ColourCoatingType3SideTwo', 'ColourCoatingColour3SideTwo','ColourCoatingCoverage3SideTwo',
@@ -463,15 +460,21 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
-#$log->debug("Group $type : $spec " .$$param{$spec.$type});
+#$log->debug("Group $type : $spec " .$$param{$spec.$group_id});
 			
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} ) if exists $$param{$spec.$type};
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} ) if exists $$param{$spec.$group_id};
+		} # end foreach spec
+		foreach my $spec ( 
+				'chkCyanSideOne','chkMagentaSideOne','chkYellowSideOne','chkBlackSideOne', 'chkProcessColourSideOne',
+				'chkCyanSideTwo','chkMagentaSideTwo','chkYellowSideTwo','chkBlackSideTwo', 'chkProcessColourSideTwo',
+		) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$group_id} );
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
-			next if ! exists $$param{'ddm'.$spec.$type};
+			next if ! exists $$param{'ddm'.$spec.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{'ddm'.$spec.$type} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$type} );
+				if ( $$param{'ddm'.$spec.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddm'.$spec.$qty_index, $$param{'ddm'.$spec.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverride'.$spec.$qty_index, '' );
@@ -479,10 +482,10 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 			} # end foreach qty_index
 		} # end foreach spec
 		foreach my $spec ( 'PrintingType','StockType' ) {
-			next if ! exists $$param{$spec.'Override'.$type};
+			next if ! exists $$param{$spec.'Override'.$group_id};
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
-				if ( $$param{$spec.'Override'.$type} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'Override'.$type} );
+				if ( $$param{$spec.'Override'.$group_id} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec.$qty_index, $$param{$spec.'Override'.$group_id} );
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, 'Y' );
 				} else {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'Override'.$spec.$qty_index, '' );

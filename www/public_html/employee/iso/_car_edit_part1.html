@@ -61,10 +61,10 @@
 	</tr>
 	<tr>
 		<td colspan="1">Docket No</td>
-		<td colspan="1"><input type="number" name="docket" value="<? echo ( $$variable{'CAR'}->docket() ) ?>" onkeyup="integerize(this);new Ajax.Request('_select_customer_from_docket.json', {parameters: {docket:this.value}} );" /></td>
+		<td colspan="1"><? echo ( ssi::input( type=>'cardinal', name=>'docket', value=>$$variable{'CAR'}->docket(), onkeyup=>q`new Ajax.Request('_select_customer_from_docket.json', { parameters: {docket:this.value}} );` ); ) ?></td>
 		<td colspan="1">Customer</td>
 		<td colspan="7">
-<select id="company_id" name="company_id" style="width: 100%;">
+<select id="company_id" name="company_id">
 <? echo ( openprint::Company::get_dropdown( $$variable{'CAR'}->company_id() ) ) ?>
 </select>
 		</td>
@@ -187,15 +187,15 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 <? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 	<tr>
 		<td>Reprint Quantity</td>
-		<td><input type="number" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
+		<td><? echo ( ssi::input( type=>'cardinal', name=>'reprint_quantity', id=>'reprint_quantity', value=>$$variable{'CAR'}->reprint_quantity() ); ) ?></td>
 		<td>Reprint Value (CAD)</td>
-		<td><input type="number" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
+		<td><? echo ( ssi::input( type=>'float', name=>'reprint_value', id=>'reprint_value', value=>$$variable{'CAR'}->reprint_value() ); ) ?></td>
 	</tr>
 <? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Reprint Approvals'], $session{'user_id'} ) ) ?>
 	<tr>
 		<td>Approved by</td>
 		<td>
-			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(strfirstname),lower(strlastname)') ], $session{'user_id'} ); ) ?></select>
+			<select name="approved_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'usergroup'=>'Reprint Approvals','order'=>'lower(firstname),lower(lastname)') ], $session{user_id} ); ) ?></select>
 		</td>
 		<td>Approved on:</td>
 		<td>

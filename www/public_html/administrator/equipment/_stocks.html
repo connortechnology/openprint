@@ -18,18 +18,18 @@
 	} # end foreach
 ) ?>
 <? if ( @{$$variable{'Stocks'}} ) ?>
-	<table class="List sortable" style="table-layout: auto;">
+	<table class="List sortable">
 		<thead>
 			<tr>
-				<th align="left">Description</th>
-				<th align="left" width="50">&nbsp;</th>
+				<th class="description">Description</th>
+				<th class="buttons">&nbsp;</th>
 			</tr>
 		</thead>
 		<tbody>
 <? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
 	<tr id="stock_<? echo ( $$variable{'Stock'}->id() ) ?>">
-		<td><? echo ( $$variable{'Stock'}->to_string() ) ?></td>
-		<td><? echo ( ssi::writeButton($log,$dbh,'add_stock_setting_'.$$variable{'Stock'}->id(), 'add.gif', "add_stock_setting( $$variable{Stock}{id} );", '', 'Add' ); ) ?></td>
+		<td class="description"><? echo ( $$variable{'Stock'}->to_string() ) ?></td>
+		<td class="buttons"><? echo ( ssi::writeButton($log,$dbh,'add_stock_setting_'.$$variable{'Stock'}->id(), 'add.gif', "add_stock_setting( $$variable{Stock}{id} );", '', 'Add' ); ) ?></td>
 	</tr>
 <? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
 		</tbody>

@@ -1,21 +1,23 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<? if ( $$variable{'Event'}->id() ) ?>
+<? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
 	function invite_by_email(input) {
-		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	} // end function invite_by_email
+
+	// li.id is actually company_id _ user_id
     function invitation_set_users(input, li) {
         var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
         user_ids.push(li.id);
 
         if ( li.id ) {
-            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
         } // end if
     }
     function invitation_remove_user( user_id ) {
         var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
         user_ids = user_ids.without( user_id );
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{'Event'}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
     }
     // adds the currently selected users, so that we can filter them out of returned results
     function invitation_add_user_ids( input, query ) {
@@ -27,53 +29,55 @@
         new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	}
 </script>
-<? endif ( $$variable{'Event'}->id() ) ?>
-<? if ( $$variable{'Event'}->can_view() ) ?>
+<? endif ( $$variable{Event}->id() ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{Event}->can_view($param{user_id}) ) ?>
 <div class="Event"><div class="View">
-	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{'Event'}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="action"/>
 	<fieldset>
 		<? if ( $session{'user_type'} eq 'A' ) ?>
-		<legend>Viewing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+		<legend>Viewing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
 		<? endif ( $session{'user_type'} eq 'A' ) ?>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				if ( $$variable{'Event'}->id() ) {
-					if ( $$variable{'Event'}->can_edit() ) {
-						if ( $$variable{'Event'}->deleted() ) {
+				if ( $$variable{Event}->id() ) {
+					if ( $$variable{Event}->can_edit() ) {
+						if ( $$variable{Event}->deleted() ) {
 						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
 						} else {
 						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
 						} # end if
-						$html .= ssi::button( 'Edit', { 'href'=>'edit.html?event_id='.$$variable{'Event'}->id() } );
+						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
+						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
-						$html .= ssi::button( 'Send', { href=>'view.html?function=Send&amp;event_id='.$$variable{Event}->id() } );
+						$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
 				} # end if
 				return $html;
 			) ?>
 		</p>
-		<h1><? echo ( $$variable{'Event'}->name() ) ?></h1>
-		<? if ( $$variable{'Event'}->deleted() ) ?>
+		<h1><? echo ( $$variable{Event}->name() ) ?></h1>
+		<? if ( $$variable{Event}->deleted() ) ?>
 		<span class="warning">This event has been deleted</span>
-		<? endif ( $$variable{'Event'}->deleted() ) ?>
+		<? endif ( $$variable{Event}->deleted() ) ?>
 <br class="spacer"/>
 		<div class="rightColumn">
 		<? echo (
 			my $html;
-			my $Asset = $$variable{'Event'}->Asset();
+			my $Asset = $$variable{Event}->Asset();
 
 			if ( $Asset->id() ) {
-				my $Album = $$variable{'Event'}->Album();
+				my $Album = $$variable{Event}->Album();
 				$html .= sprintf(q`<a class="Asset" href="#" onclick="photo_popup(%d, %d);">%s</a>`,
 #popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d', '', { width: window.innerWidth-100, height: window.innerHeight-100 } );">%s</a>`, 
 				##$html .= sprintf('<a class="Asset" href="/photo_albums/view_photo.html?asset_id=%1$d&amp;album_id=%2$d" onclick="popup_window('/photo_albums/_view_photo.html?asset_id=%d&amp;album_id=%d');">%s</a>', 
 					$Asset->id(), $Album->id(), $Asset->html() );
-				#$html .= $$variable{'Event'}->Asset()->html();
+				#$html .= $$variable{Event}->Asset()->html();
 			} # end if
-			my $Location = $$variable{'Event'}->Location();
+			my $Location = $$variable{Event}->Location();
 			if ( $Location ) {
 				if ( ! ( $Location->latitude() and $Location->longitude() ) ) {
 					$Location->get_latitude_and_longitude();
@@ -89,13 +93,16 @@
 		<fieldset><legend>All about it</legend>
 			<div class="content">
 				<ul>
-					<li class="createdby"><label>Created By</label><? echo ( sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{'Event'}->created_by(), $$variable{'Event'}->Created_By()->name() ); ) ?></li>
-					<li class="when"><label>When</label><? echo ( $$variable{'Event'}->time_string(); ) ?></li>
-					<li class="category"><label>Category</label><? echo ( $$variable{'Event'}->Category()->name() ) ?></li>
+					<li class="createdby"><label>Created By</label><? echo ( sprintf('<a href="/account/view.html?user_id=%d">%s</a>', $$variable{Event}->created_by(), $$variable{'Event'}->Created_By()->name() ); ) ?></li>
+					<li class="when"><label>When</label><? echo ( $$variable{Event}->time_string(); ) ?></li>
+					<li class="category"><label>Category</label><? echo ( $$variable{Event}->Category()->name() ) ?></li>
 					<li class="info">
 						<label for="info">More info</label>
-						<? echo ( $$variable{'Event'}->info() ) ?>
+						<? echo ( $$variable{Event}->info() ) ?>
 					</li>
+					<? if ( $$variable{Event}->url() ) ?>
+					<li class="url"><label>Website</label><? echo ( sprintf('<a href="%1$s" target="_blank">%1$s</a>',$$variable{Event}->url() ); ) ?></li>
+					<? endif ( $$variable{Event}->url() ) ?>
 				</ul>
 			</div>
 		</fieldset>
@@ -104,14 +111,17 @@
 				<ul>
 					<li><label>Location</label>
 						<? echo ( 
-								my $html .= $$variable{'Event'}->where();
-								if ( $session{'user_id'} ) {
+								my $html .= $$variable{Event}->where();
+								if ( $session{user_id} ) {
 									my $MyLocation = new openprint::User($session{'user_id'})->Location();
+$log->debug("My location is " . $MyLocation->to_string() );
 									if ( ! ( $MyLocation->latitude() and $MyLocation->longitude() ) ) {
+$log->debug('getting coords');
+$log->debug("My location is " . $MyLocation->to_string() );
 										$MyLocation->get_latitude_and_longitude();
 									} # end if
 
-									my $Location = $$variable{'Event'}->Location();
+									my $Location = $$variable{Event}->Location();
 									if ( $Location and $MyLocation and $Location->latitude() and $Location->longitude() and $MyLocation->latitude() and $MyLocation->longitude() ) {
 										my $distance = openprint::Location::distance( @$MyLocation{'latitude','longitude'}, @$Location{'latitude','longitude'}, 'K' ) ;
 										$html .= '<br/>'.int($distance).'km from you.' if $distance;
@@ -125,18 +135,19 @@
 		</fieldset>
 	</div>
 	<br class="spacer"/>
-	<? if ( $session{'user_id'} ) ?>
-	<div id="Opinions"><? echo ( $$variable{'Event'}->opinions('Opinions') ) ?></div>
+	<? if ( $variable{User}->id() ) ?>
+	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
 	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
+	<? endif ( $variable{User}->id() ) ?>
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
-	<? endif ( $session{'user_id'} ) ?>
-<? if ( $$variable{'Event'}->id() ) ?>
-	<? eval ( $$variable{'Object'} = $$variable{'Album'} = $$variable{'Event'};
+
+<? if ( $$variable{Event}->id() ) ?>
+	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};
 	 ) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
 	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
 	
-<? endif ( $$variable{'Event'}->id() ) ?>
+<? endif ( $$variable{Event}->id() ) ?>
 	</fieldset>
 	</form>
 </div></div>
@@ -148,6 +159,6 @@
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
   })();
 </script>
-<? else ( $$variable{'Event'}->can_view() ) ?>
+<? else ( $$variable{Event}->can_view($param{user_id}) ) ?>
 You can't view this event.
-<? endif ( $$variable{'Event'}->can_view() ) ?>
+<? endif ( $$variable{Event}->can_view($param{user_id}) ) ?>

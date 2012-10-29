@@ -9,7 +9,6 @@ use vars qw($debug $log $dbh %find_fields %fields %transforms %defaults $table $
 *dbh = \$openprint::dbh;
 
 require sql;
-
 require openprint::RFIDTagType;
 require openprint::Location;
 
@@ -25,7 +24,8 @@ $serial = 'rfidtags_id_seq';
 	'valid'			=>	'valid',
 );
 %find_fields = (
-	'skid_id'	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
+	skid_id	=>	'(SELECT skid_id FROM skids WHERE skids.rfidtag_id=rfidtags.id)',
+	type		=>	'(SELECT name FROM RFIDTagTypes WHERE RFIDTagTypes.id=type_id)',
 );
 
 %transforms = (
@@ -38,92 +38,6 @@ $serial = 'rfidtags_id_seq';
 	'type_id'		=>	undef,
 	'valid'			=>	0,
 );
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM RFIDTags WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'type'} ) {
-		$sql .= ' AND type_id=(SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?))';
-		push @values, $params{'type'};
-	} # end if
-	
-	if ( ( exists $params{'valid'} ) and ( $params{'valid'} ne '' ) ) {
-		$sql .= ' AND valid=?';
-		push @values, $params{'valid'};
-	} # end if
-	if ( $params{'location_id'} ) {
-		$sql .= ' AND location_id=?';
-		push @values, $params{'location_id'};
-	} # end if
-	if ( $params{'type_id'} ) {
-		$sql .= ' AND type_id=?';
-		push @values, $params{'type_id'};
-	} # end if
-	if ( $params{'location_id'} ) {
-		$sql .= ' AND location_id=?';
-		push @values, $params{'location_id'};
-	} # end if
-	if ( $params{'id_like'} ) {
-		$sql .= ' AND id LIKE ?';
-		push @values, $params{id_like};
-	} # end if
-	if ( $params{'short_id'} ) {
-		$sql .= ' AND id = ?';
-		push @values, sprintf('%.15d', $params{'short_id'} );
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( exists $params{'skid_id exists'} ) {
-	if ( $params{'skid_id exists'} ) {
-		$sql .= ' AND EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
-	} else {
-		$sql .= ' AND NOT EXISTS (SELECT id FROM skids WHERE skids.rfidtag_id=rfidtags.id)';
-	} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->error("Error loading RFIDTag SQL($sql)" . DBI->errstr );
-	} elsif ( $debug and ! @$data ) {
-		$log->debug('No RFIDTag loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded RFIDTag ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::RFIDTag( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub save {
 	my ( $self, $hash ) = @_;

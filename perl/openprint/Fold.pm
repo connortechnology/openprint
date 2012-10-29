@@ -13,7 +13,7 @@ use vars qw( $table $serial $log $dbh %fields %transforms %defaults );
 *dbh = \$openprint::dbh;
 
 $table = 'folds';
-$serial= 'fold_id_seq';
+$serial= 'folds_id_seq';
 
 %fields = (
 	'id'					=>	'id',
@@ -199,7 +199,7 @@ $log->debug("Couldn't find maximum") if DEBUG;
     } elsif ( $$x{interpolate} ) {
         my $S = $x->copy();
         $$S{min_weight} = $$S{max_weight} = $range;
-        $$S{runspeed} = $$x{runspeed} + int($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight});
+        $$S{runspeed} = $$x{runspeed} + ($range - $$x{min_weight})*($$y{runspeed}-$$x{runspeed})/($$y{min_weight}-$$x{min_weight});
         return $S;
     } # end if
 
@@ -207,26 +207,27 @@ $log->debug("Couldn't find maximum") if DEBUG;
 
 sub RunSpeed {
 	my ( $self, $gsm ) = @_;
-	if ( ! exists $$self{'runspeed_cache'} ) {
-		$$self{'runspeed_cache'} = {};
+	if ( ! exists $$self{runspeed_cache} ) {
+		$$self{runspeed_cache} = {};
 	} # end if
-	if ( ! exists $$self{'runspeed_cache'}{$gsm} ) {
-		my $Spec = $self->Specification( $gsm );
-		$$self{'runspeed_cache'}{$gsm} = $Spec;
+	if ( ! exists $$self{runspeed_cache}{$gsm} ) {
+		$$self{runspeed_cache}{$gsm} = $self->Specification( $gsm );
 	} # end if
-	return $$self{'runspeed_cache'}{$gsm};
+	return $$self{runspeed_cache}{$gsm};
 } # end sub RunSpeed
 
 sub runspeed {
 	my $RunSpeed = $_[0]->RunSpeed($_[1]);
 	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
 } # end sub runspeed
+
 sub Imposition {
 	if ( @_ > 1 ) {
 		$_[0]{'Imposition'} = $_[1];
 	} # end if
 	return $_[0]{'Imposition'};
 } # end sub Imposition
+
 sub imposition {
 	if ( @_ > 1 ) {
 		$_[0]{'imposition'} = $_[1];

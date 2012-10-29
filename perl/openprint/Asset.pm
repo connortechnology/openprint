@@ -114,6 +114,10 @@ sub sized_url {
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large Asset Width'};
 				} # end if
+				if ( ! $width ) {
+					$openprint::log->error("No asset size in config for $size");
+					return '/assets/'.$filename;
+				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
 				if ( system(qq`convert -adaptive-resize ${width}x "$src" "$dest"`) ) {
 					$openprint::log->error("ERror creating sized image. Reason: $1");
@@ -132,6 +136,10 @@ sub sized_url {
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large Asset Width'};
 				} # end if
+				if ( ! $width ) {
+					$openprint::log->error("No asset size in config for $size");
+					return '/assets/'.$blah.'.jpg';
+				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
 				
 				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
@@ -258,6 +266,12 @@ sub large_path {
 	$url =~ s/^\/assets//;
 	return $openprint::config{'AssetPath'}.$url;
 } # end sub medium_path
+
+sub sized_path {
+	my $url = $_[0]->sized_url($_[1]);
+	$url =~ s/^\/assets//;
+	return $openprint::config{'AssetPath'}.$url;
+} # end sub sized_path
 
 sub md5 {
 	if ( @_ > 1 ) {

@@ -4,15 +4,13 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $log $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
 
 require openprint::Manifest;
 require openprint::Paper;
 require openprint::PurchaseOrder_Content;
+require Math::Round;
 
 $debug = 1;
 
@@ -67,11 +65,17 @@ sub PurchaseOrder_Content {
 				$log->debug('POC desc: ' . $POC->item());
 				next if $POC->type() ne $Paper->type().' Stock';
 				my ( $weight ) = $POC->item() =~ /(\d+)lb/i;
-				if ( $weight and $Paper->basis_mweight() and ( $Paper->basis_mweight() != $weight*2 ) ) {
-					$log->debug("Wrong weight: $weight != " . $Paper->basis_mweight() );
-					next;
+				if ( $weight and $Paper->basis_mweight() ) {
+					$weight = Math::Round::nearest(1,$weight*2);
+					my $basis_weight = Math::Round::nearest(1,$Paper->basis_mweight());
+					if ( $weight != $basis_weight ) {
+						$log->debug("Wrong weight: 2*$weight != " . $basis_weight );
+						next;
+					} else {
+						$log->debug("Right weight: $weight == " . $basis_weight );
+					} 
 				} else {
-					$log->debug("Right weight: $weight == " . $Paper->basis_mweight() );
+					$log->debug("Indeterminate weight: $weight == " . $Paper->basis_mweight() );
 				} # end if
 				my ( $width ) = $POC->item() =~ /([\.\d]+)in/i;
 				if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {

@@ -1,7 +1,6 @@
 <script type="text/javascript">
-<!--
 	var dropfunction = function(el){
-		new Ajax.Request( '_operator_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_operator_drop.json', { parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
     var drops = new Array();
     function setup_drops( ) {
@@ -11,7 +10,6 @@
             } // end if
         } // end foreach id in drops
     } // end function setup_drops
--->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="operator_schedule.html">
@@ -20,10 +18,10 @@
 		<div class="leftColumn">
 		<p>
 			<label>Equipment Category</label>
-			<select name="category" id="category" onchange="f1.submit();">
+			<select name="category_id" id="category_id" onchange="f1.submit();">
 				<option value="">All</option>
 			<? echo (
-return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() } openprint::Equipment->find('useinscheduling'=>1) ) ], $session{'/employee/production/operator_schedule.html?category'} );
+return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/operator_schedule.html?category_id'} );
 ) ?>
 			</select>
 		</p>
@@ -33,7 +31,7 @@ return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() }
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find(
-		( $session{'/employee/production/operator_schedule.html?category'} ? ( 'category'=>$session{'/employee/production/operator_schedule.html?category'} ) : () ),
+		( $session{'/employee/production/operator_schedule.html?category_id'} ? ( 'category_id'=>$session{'/employee/production/operator_schedule.html?category_id'} ) : () ),
 		,'useinscheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?equipment_id'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/operator_schedule.html?equipment_id'} ) ] );
@@ -64,19 +62,20 @@ return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() }
 			); ) ?>
 		</p>
 	</fieldset>
+	<table><thead><tr>
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/operator_schedule.html?equipment_id='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<td class="PressColumn" style="width:'.int(100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/operator_schedule.html?equipment_id='.$E->id().'">'.$E->name().'</a></td>';
 		} # end foreach Equipment
 		return $html;
 	) ?>
-	<hr style="clear: both;"/>
+	</tr></thead><tbody><tr>
 	<? echo (
 		my $html;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/production/_operator_shift_li.html' );
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Equipment'}})).'%;"><ul>';
+			$html .= '<td class="PressColumn"><ul>';
 
 			my @OperatorShifts = openprint::Equipment_Shift->find( 'equipment_id'=>$E->id(), 'order'=>'starttime_seconds' );
 			foreach my $Shift ( @OperatorShifts ) {	
@@ -84,8 +83,9 @@ return ssi::make_drop_down( [ map { $_, $_ } sets::union( map { $_->category() }
 				$html .= ssi::variable_substitution( \$content, $variable );
 			} # end foreach Shift
 
-			$html .= '</ul></div>';
+			$html .= '</ul></td>';
 		} # end foreach press
 		return $html;
 	) ?>
+	</tr></tbody></table>
 </form>

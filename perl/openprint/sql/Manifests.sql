@@ -6,7 +6,7 @@ CREATE TABLE Manifests (
 	created_on	timestamp with time zone NOT NULL default NOW(),
 	PRIMARY KEY (id)
 );
-
+ALTER TABLE PurchaseOrders ADD FOREIGN KEY (manifest_id) REFERENCES Manifests (id);
 CREATE TABLE ManifestContents (
 	id	SERIAL NOT NULL,
 	manifest_id	INTEGER NOT NULL, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),

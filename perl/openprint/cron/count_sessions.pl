@@ -1,7 +1,7 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 use lib '/var/www/testing/perl';
 use strict;
-use warnings;
+#use warnings;
 
 require sets;
 require sql;
@@ -68,6 +68,8 @@ foreach my $session_id ( @$session_ids ) {
 		next if $Host->hostname() =~ /googlebot/;
 		next if $Host->hostname() =~ /baidu/;
 		next if $Host->hostname() =~ /search/;
+		next if $Host->hostname() =~ /Yandex/;
+
 		} # end if
 		push @online, $session_id;
 	} # end if

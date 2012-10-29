@@ -84,9 +84,7 @@
 	} # end foreach option
 
 	$param{'callback'} = 'cbStockFillResults' if ! $param{'callback'};
-#foreach my $k ( keys %specs ) {
-#$log->debug("$k => $specs{$k}");
-#}
 	my $json = JSON->new;
+$log->debug($json->encode( \%specs ));
 	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
 ) ?>
