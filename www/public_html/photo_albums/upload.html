@@ -33,7 +33,8 @@
 						<ul>
 							<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
 							<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
-							<!--#include virtual="/includes/_privacy_widget.html"-->
+							<? eval ( $$variable{Privacy} = $variable{Album}->Privacy(); ) ?>
+<!--#include virtual="/includes/_privacy_widget.html"-->
 						</ul>
 					</div>
 				</fieldset>
