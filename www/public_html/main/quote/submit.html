@@ -14,7 +14,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	</p>
 		<div class="Header">
 			<!--#include virtual="/includes/quote_header.html"-->
-<br class="spacer"/>
+			<br class="spacer"/>
 			<!--#include virtual="/includes/quote_information.html"-->
 		</div>
 		<!--#include virtual="_projects.html"-->
@@ -35,17 +35,16 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 			Prices are subject to applicable taxes.<br/>
 		</div>
 		<br class="spacer"/>
-		<? if ( ! sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
-		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
-		<? endif ( ! sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
+		<? echo ( ! sets::isin( $session{'user_type'}, ['A', 'E'] ) ? $config{'QuoteViewDisclaimer'} : '' ) ?>
 	</div></div><!--Quote-->
 <? echo (
 	my $html = '';
 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 		foreach my $Project ( $$variable{'Quote'}->Quoted_Projects() ) {
 			$html .= 'Include detailed project description for the following project:';
-			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d1" value="1" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"/><label class="radio" for="include_description%1$d1">Yes</label>`, $Project->id(), ssi::checked( $Project->included_in_quote() ), $$variable{'Quote'}->id() );
-			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d0" value="0" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"/><label class="radio" for="include_description%1$d0">No</label>`, $Project->id(), ssi::checked( ! $Project->included_in_quote() ) );
+			$html .= ssi::radio( 'include_detailed'.$Project->project_id(), [ 1, 'Yes', 0, 'No' ], $Project->include_detailed(), {
+			onclick	=>	sprintf(q`new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );`, $Project->id(), $$variable{Quote}->id() );,
+			} );
 			$html .= sprintf( '<div id="QuotedProject_%1$d">', $Project->id() );
 			$$variable{'QuotedProject'} = $Project;
 			my $template = ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template.html', $variable );

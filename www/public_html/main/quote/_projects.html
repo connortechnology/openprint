@@ -25,7 +25,7 @@
 				<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="5">
 				<table>`, $rowclass, $Project->id(), 
-				( $Project->references() ? ssi::htmlize( $Project->references() ) . '<br/>' : '' ),
+				( $Project->reference() ? ssi::htmlize( $Project->reference() ) . '<br/>' : '' ),
 				$Project->summary(),
 				);
 
