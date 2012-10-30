@@ -30,7 +30,7 @@ my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
-my $use_filtered_imposition_cache = 0;
+my $use_filtered_imposition_cache = 1;
 
 my %stitching_cache;
 my %price_cache;
@@ -2488,7 +2488,7 @@ $imp->display("Grain override next");
 			} # end if
 
 			if ( ( $$imp{'runstyle'} eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-				$openprint::log->debug('No Web 4 U');
+				$openprint::log->debug('No Web 4 U') if DEBUG;
 				next;
 			} # end if
 
@@ -2499,7 +2499,7 @@ $imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $$Pape
 
 			if ( $SpreadLayout > 0 ) {
 				if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $$imp{'imposition'} ) ) {
-$imp->display("Previous Imposition");
+$imp->display("Previous Imposition") if DEBUG;
 					next;
 				} # end if
 				if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -3156,13 +3156,16 @@ $openprint::log->debug($Paper->id_string());
 				# other_impositions is all previous impositions, not including cover, and ones in a different group
 				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
 				my $results;
-				#my $starttime = gettimeofday();
+				my $starttime;
+				if ( DEBUG ) {
+					$starttime = gettimeofday();
 				#if ( $stitching_cache{scalar @all_impositions} ) {
 					#$openprint::log->debug("Using Stitching cache for " . scalar @all_impositions . ' sigs' );
 					#$results = $stitching_cache{scalar @all_impositions};
 				#} else {
 
-					#$openprint::log->debug("Stitching::signature_calc");
+				
+					$openprint::log->debug("Stitching::signature_calc") if DEBUG;
 					#if ( $$price{'Impositions'} ) {
 					#foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
 					#$I->display( "before stitch" );
@@ -3189,10 +3192,10 @@ $openprint::log->debug($Paper->id_string());
 #$stitching_cache{scalar @all_impositions} = $results;
 					#$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'}");
 				} # end if
-				#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+				$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) ) if DEBUG;
 
 			} elsif ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages') {
-$openprint::log->debug("Doing perfect bound");
+$openprint::log->debug("Doing perfect bound") if DEBUG;
 #my $starttime = gettimeofday();
 				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
 
@@ -3540,14 +3543,14 @@ sub calc_price {
 
 # Has to be NEED because they always leave folding out, and it chooses dumb impositions
 	if ( $$project{'NeedFolding'} ) {
-		my $time = gettimeofday();
+		my $time = gettimeofday() if DEBUG;
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
 $openprint::log->debug("Using cached folding");
 		} else {
 			#my @all_impositions = ( @{$other_impositions}, $Imposition );
 			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
-			#$$Imposition{'folding_results'} = \%folding_results;
+			$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
 		delete $$Imposition{'Folder'};
@@ -3579,7 +3582,7 @@ $openprint::log->debug("Using cached folding");
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 			} # end if
 		} # end if
-		if ( 0 and DEBUG and tv_interval([$time])*1000 > 10 ) {
+		if ( DEBUG and tv_interval([$time])*1000 > 10 ) {
 			$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 			$Imposition->display('Slow Folding');
 			$openprint::log->debug( $folding_results{'Breakdown'} );
@@ -3706,7 +3709,7 @@ $openprint::log->debug("Using cached folding");
 # Cutting has to go up here, because it adds overs.ABut we will calculate pre-press stock cutting afterwards
 	if ( $$project{'HasCutting'} ) {
 #my $time = gettimeofday();
-		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
+		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
@@ -3764,7 +3767,7 @@ $openprint::log->debug("Using cached folding");
 	my %mixed_colours = %{$$project{'mixed_colours'}};
 	my %washed_colours = %{$$project{'washed_colours'}};
 	my @left_over_colours;
-	my $colourstarttime = gettimeofday();
+	my $colourstarttime = gettimeofday() if DEBUG;
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( @colours ) {
 		my $real_colour = $$Colour{'name'};
@@ -4114,7 +4117,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	if ( $$project{'HasCutting'} ) {
 		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
 #my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
+			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}

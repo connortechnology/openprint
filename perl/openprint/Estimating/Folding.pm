@@ -1107,7 +1107,7 @@ $openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment
 			} # end foreach fold_type
 			my %cutting_results;
 			if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {
-				%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $$services{'Cutting'}[0], $sig_specs, $$calc_hash{'cutting_specs'}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
+				%cutting_results = openprint::Estimating::Cutting::signature_calc_folding_cutting( $Project, $sig_specs, $$calc_hash{'cutting_specs'}, $qty_index, $Paper, $SignatureImposition, \%fold_specs, $calc_hash );
 			} # end if
 			my $stitching_part;
 			if ( $stitching_service_index ) {

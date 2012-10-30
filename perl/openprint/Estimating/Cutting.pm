@@ -168,7 +168,7 @@ sub neccessary {
 } # end sub neccessary
 
 sub signature_calc_stock_cutting {
-	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash ) = @_;
+	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $calc_hash ) = @_;
 
 	if ( ! $Paper->cuttable() ) {
 		$$specs{'alert'} = 'Stock is not cuttable.';
@@ -218,12 +218,6 @@ $openprint::log->warn("No clac_hash? $calc_hash");
 	if ( ! $calliper ) {
 		$results{'alert'} .= "Calliper is unknown for signature $signature_index.";
 		$results{'Status'} = 'uncalculated';
-		return %results;
-	} # end if
-	if ( ! $$Imposition{'imposition'} ) {
-		$results{'Breakdown'} .= 'No Imposition:<br/>';
-		$results{'alert'} .= "No imposition for signature $signature_index";	
-		$results{'Status'} = 'calculated';
 		return %results;
 	} # end if
 
@@ -321,7 +315,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 } # end sub signature_calc_stock_cutting
 
 sub signature_calc_folding_cutting {
-	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
+	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs, $calc_hash ) = @_;
 
 	my %results = (
 			'Status'	=> 'calculated',
@@ -420,7 +414,7 @@ sub signature_calc_folding_cutting {
 } # end sub signature_calc_folding_cutting
 
 sub signature_calc {
-	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash ) = @_;
+	my ( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash ) = @_;
 
 	if ( ! $Paper->cuttable() ) {
 		$$specs{'alert'} = $Paper->to_string() . ': Stock is not cuttable.';
@@ -929,7 +923,7 @@ sub calc {
 						)	);
 
 			if ( ( $$sig_specs{'StockType'.$qty_index} ne 'Roll' ) and ( $$sig_specs{"hdnSuppliedStockWidth$qty_index"} != $$sig_specs{'StockWidth'.$qty_index} or $$sig_specs{"hdnSuppliedStockHeight$qty_index"} != $$sig_specs{'StockHeight'.$qty_index} ) ) {
-				my %results = signature_calc_stock_cutting( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+				my %results = signature_calc_stock_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $calc_hash );
 				$$specs{"ddmStockCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtStockCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
@@ -941,7 +935,7 @@ sub calc {
 
 			# Folding
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-				my %results = signature_calc_folding_cutting( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+				my %results = signature_calc_folding_cutting( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
@@ -952,7 +946,7 @@ sub calc {
 #$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 			} # end if
 
-			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
+			my %results = signature_calc( $Project, $sig_specs, $specs, $qty_index, $Paper, $Imposition, $calc_hash );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
 			$$specs{'alert'} .= $results{'alert'};
 			$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
