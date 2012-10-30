@@ -55,8 +55,7 @@
 		<input type="hidden" id="last_message_id" value="" />
 		<fieldset>
 <? if ( $$variable{'Conversation'}->id() ) ?>
-<legend>Viewing Conversation</legend>
-<h2><? echo ( $$variable{'Conversation'}->subject() ) ?></h2>
+<legend>Viewing Conversation: <? echo ( $$variable{'Conversation'}->subject() ) ?></legend>
 <? else ( $$variable{'Conversation'}->id() ) ?>
 <legend>Start a New Conversation</legend>
 <? endif ( $$variable{'Conversation'}->id() ) ?>
