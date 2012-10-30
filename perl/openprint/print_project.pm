@@ -785,8 +785,8 @@ $openprint::log->debug("reusing $project_index");
 		$NewProject->status('Unordered');
 	} # end if
 	$NewProject->company_id( $param{'ddmCompany'} ) if $param{'ddmCompany'};
-	$NewProject->save();
-	$session{'project_id'} = $NewProject->id();
+	$variable{error} .= $NewProject->save();
+	$session{project_id} = $NewProject->id();
 
 	$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
