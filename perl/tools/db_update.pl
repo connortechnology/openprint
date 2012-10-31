@@ -1480,10 +1480,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'authorized'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
-			$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+			$dbh->do('UPDATE purchaseorders set authorized=true WHERE authorized_on IS NOT NULL');
 		} # end if
 		if ( ! exists $$data{'manifest_id'} ) {
-			$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
+			$dbh->do('ALTER TABLE purchaseorders add manifest_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
 		} # end if
 		if ( ! exists $$data{contact_id} ) {
@@ -2257,16 +2257,15 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
 			$dbh->do('ALTER TABLE Payments drop column dtmdate');
 		} # end if
-	} elsif ( ! exists $$data{'received_on'} ) {
-		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
-	} # end if
-	if ( exists $$data{'date'} ) {
+	} elsif ( exists $$data{'date'} ) {
 		if ( ! exists $$data{received_on} ) {
 			$dbh->do('ALTER TABLE Payments rename column date to received_on');
 		} else {
 			$dbh->do('UPDATE Payments SET received_on=date WHERE received_on IS NULL') or die $dbh->errstr();
 			$dbh->do('ALTER TABLE Payments DROP COLUMN date') or die $dbh->errstr();
 		} # end if
+	} elsif ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
 	if ( ! exists $$data{'received_on'} ) {

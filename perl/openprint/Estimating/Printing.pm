@@ -2279,7 +2279,7 @@ if ( 0 ) {
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
-$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
 $openprint::log->debug("Leaving Printing::calc status: $$specs{'Status'}");
 	return $$specs{'Status'};
@@ -2823,7 +2823,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 				} # end if
 				next;
 			} # end if
-			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 				if ( DEBUG ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
 					if ( $$sig_specs{'Impositions'} ) {
@@ -2936,7 +2936,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 
 					my $sig_price = {};
 					if ( $recursion_depth >= 3 ) {
-						$imp->display('Recursion Depth :' . $recursion_depth ) if ( DEBUG );
+						$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
 						$$sig_price{'complete'} = 0;
 					} else {
 						# Check to see if we actually should bother recursing
@@ -3005,7 +3005,7 @@ if ( DEBUG or 0 ) {
 				if ( $$project{'HasProofs'} ) {
 					#my $proofs_time = gettimeofday();
 # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
-					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $service_index, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
 				#$openprint::log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
 					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
@@ -3047,7 +3047,7 @@ if ( 1 ) {
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
-			if ( 1 == @paper_strings and $Paper->id_string() ne $paper_strings[0] ) {
+			if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
 			} elsif ( DEBUG ) {
 $log->warn("Paper Counts");
@@ -3156,9 +3156,7 @@ $openprint::log->debug($Paper->id_string());
 				# other_impositions is all previous impositions, not including cover, and ones in a different group
 				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
 				my $results;
-				my $starttime;
-				if ( DEBUG ) {
-					$starttime = gettimeofday();
+				my $starttime = gettimeofday() if DEBUG;
 				#if ( $stitching_cache{scalar @all_impositions} ) {
 					#$openprint::log->debug("Using Stitching cache for " . scalar @all_impositions . ' sigs' );
 					#$results = $stitching_cache{scalar @all_impositions};
