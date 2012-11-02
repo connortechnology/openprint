@@ -50,9 +50,9 @@ if ( ! $path ) {
 	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
 	print "Loading db... directly";
-	`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
+	#`su postgres -c "bunzip2 < $path | pg_restore -Fc -d $dst_db"`;
 	#if ( $src_host ) {
-		#`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
+		`su postgres -c "ssh $path pg_dump point-one | psql $dst_db"`;
 	#} else {
 		#`su postgres -c "pg_dump $src_db | psql $dst_db"`;
 	#} # end if

@@ -5,7 +5,7 @@ require openprint::Object;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projecttemplate';
 $serial = 'projecttemplate_id_seq';
@@ -22,7 +22,7 @@ $serial = 'projecttemplate_id_seq';
 );
 
 %find_fields = (
-	projecttype		=>	'(SELECT name FROM projecttypes WHERE projecttypes.id=projecttype_id)',
+	projecttype		=>	'(SELECT name FROM project_types WHERE project_types.id=projecttype_id)',
 );
 
 %transforms = (
