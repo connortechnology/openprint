@@ -1034,16 +1034,16 @@ sub get_impositions {
 
 	# Don't need to exclude coatings because they have already been cut out.
 	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour' ], [ map { $$_{'name'} } ( @{$$project{'side_one_colours'}}, @{$$project{'side_two_colours'}} ) ] );
+$openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 
-	if ( $$project{print_sides} == 2 ) {
-		# We will be considering W&T, so we will need the coatings array
-	} # end if
 	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
 	} else {
 		$variables{'PrintingType'.$qty_index} = [ sets::union( 'output', @{$variables{'PrintingType'.$qty_index}} ) ];
 	} # end if
 	$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
+	my $ProjectTypeName = $Project->Type()->name();
+	$$project{'Quantity'} = $qty;
 
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
@@ -1104,7 +1104,6 @@ sub get_impositions {
 			} # end if
 		} # end if
 
-		my $ProjectTypeName = $Project->Type()->name();
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
 			$$project{'Grip'} = $Press->specification('Grip');
@@ -1150,7 +1149,6 @@ sub get_impositions {
 		$$project{'Orientation'} = $Press->specification('Orientation');
 		$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
-		$$project{'Quantity'} = $qty;
 
 		my @impositions;
 
@@ -1320,7 +1318,7 @@ sub get_impositions {
 		my %imps;
 		my %dutches;
 		if ( DEBUG or 0 ) {
-			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions');	
+			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');	
 			foreach my $i ( @impositions ) {
 				$i->display();
 			}
@@ -1469,7 +1467,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		if ( DEBUG or 0 ) {
-			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions );
+			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions . ' ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Price'} );
 			} # end foreach
@@ -1747,7 +1745,7 @@ sub calc {
 	# Must clear these
 	%converted_imposition_cache = ();
 	%filtered_imposition_cache = ();
-	my $master_time = gettimeofday();
+	$master_time = gettimeofday();
 #$openprint::log->debug("Starting Printing::calc");
 
 	if ( ! $project_index or ! $service_index ) {
