@@ -333,11 +333,10 @@ sub user_profile {
     my $User;
 # IF it's empty, then we are adding a new user! Otherwise editing one
     if ( exists $param{'ddmUser'} ) {
-        $User = openprint::User->find_one('id'=>$param{'ddmUser'} );
+        $User = new openprint::User($param{ddmUser});
     } else {
-        $User = new openprint::User();
+        $User = $Me;
     } # end if
-
 
 	if ( $User->can_edit() ) {
 		if ( $param{'btnFunction'} eq '<<' ) {
@@ -360,8 +359,6 @@ sub user_profile {
 			} # end if
 			$error .= "First Name cannot be blank.<br/>" if ! $param{'firstname'};
 			$error .= "Last Name cannot be blank.<br/>" if ! $param{'lastname'};
-			$error .= "Salutation cannot be blank.<br/>" if ! $param{'salutation'};
-			$error .= "Phone cannot be blank.<br/>" if ! $param{'phone'};
 			$error .= "Email Cannot be blank.<br/>" if ! $param{'email'};
 			if ( $error ne '' ) {
 				return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );

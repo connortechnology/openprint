@@ -516,6 +516,7 @@ sub po_limit {
 } # end sub po_limit
 
 sub can_edit {
+	return 1 if ! $_[0]{id};
     return 1 if $openprint::session{'user_id'} == $_[0]{id};
     return 1 if $openprint::session{'user_type'} eq 'A';
     my $Me = new openprint::User( $openprint::session{'user_id'} );

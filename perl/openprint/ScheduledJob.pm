@@ -22,7 +22,7 @@ require openprint::employee_project;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
-$debug = 1;
+$debug = 0;
 $table = 'schedule';
 $serial = 'schedule_id_seq';
 

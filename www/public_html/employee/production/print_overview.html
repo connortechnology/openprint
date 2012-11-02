@@ -311,6 +311,9 @@ function textarea_init() {
 				'/employee/production/print_overview.html?schedule_end_day'}
 				) + 1;
 
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 			# When its time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = $E->Operator_Shifts();
 
@@ -356,8 +359,8 @@ $log->debug("Setp 2" . $ES->to_string());
 					splice @Shifts,$shift_index, 0, $NewShift;
 				} else {
 					$openprint::log->error("SOmething else wrong");
-					$openprint::log->debug( $Shifts[$shift_index]->to_string() );
-					$openprint::log->debug( $ES->Next()->to_string() );
+					$openprint::log->error( $Shifts[$shift_index]->to_string() );
+					$openprint::log->error( $ES->Next()->to_string() );
 
 				} # end if need shiftsadded
 				$ES = $ES->Next();
@@ -374,9 +377,9 @@ $log->debug("Setp 2" . $ES->to_string());
 				push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 				$html .= $Shift->get_ul( );
 			} # end foreach Shift
+			sql::end_transaction( $dbh, $ac );
 
 			$html .= '</td>';
-			#$html .= '</div>';
 		} # end foreach press
 		$html .= '</tr></tbody></table>';
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><table class="PendingApproved"><tr id="PendingApproved">`;
