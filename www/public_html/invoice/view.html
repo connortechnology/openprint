@@ -143,7 +143,7 @@
     </fieldset>
 </div>
 <? if ( $$variable{Invoice}->owing() ) ?>
-Payment can be made by <? echo (
+<? echo (
 	my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
 	my $html;
 	$html .= 'Cash ' if $Types{Cash};
@@ -154,6 +154,7 @@ Payment can be made by <? echo (
 			$Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
 		} # end if
 	} # end if
+	return 'Payment can be made by ' . $html;
 ) ?>
 <? endif ( $$variable{Invoice}->owing() ) ?>
 <!--#include virtual="_totals.html"-->

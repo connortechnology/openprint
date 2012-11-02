@@ -444,25 +444,26 @@ sub feed {
 	my $Owner = new openprint::Company( $config{'owner_id'} );
 	$rss->channel(
 		title	=>	substr($config{'SiteTitle'},0,100),
-		'link'	=>	$config{'ExternalSiteURL'},
+		link	=>	$config{'ExternalSiteURL'},
 		description	=>	'Hedonistic Yet Discerning',
 		language	=>	'en',
 		copyright	=>	'Copyright ' . $y.' ' . $Owner->name(),
 		generator	=>	'IntelligentQuote',
 	);
 	foreach my $Article ( openprint::Article->find(
-			'published'			=>	1,
-			#'category_id'		=>	$session{'/article/list.html?category_id'},
-			'order'				=> 'published_on DESC',
-			'limit'				=>	100,
+			published			=>	1,
+			#category_id		=>	$session{'/article/list.html?category_id'},
+			order				=> 'published_on DESC',
+			limit				=>	100,
 		) ) {
+		next if $Article->user_type();
 		$rss->add_item(
 			title	=>	$Article->name(),
 			description	=>	substr($Article->summary(),0,500),
-			'link'	=>	'http://www.pleasurablethings.ca/article/view.html?article_id='.$Article->id(),
-			'pubDate'	=>	$Article->published_on(),
-			'guid'	=>	$Article->id(),
-			'author'	=>	$Article->Author()->name(),
+			link	=>	'http://www.pleasurablethings.ca/article/view.html?article_id='.$Article->id(),
+			pubDate	=>	$Article->published_on(),
+			guid	=>	$Article->id(),
+			author	=>	$Article->Author()->name(),
 			category	=>	$Article->category(),
 		);
 	} # end foreach
