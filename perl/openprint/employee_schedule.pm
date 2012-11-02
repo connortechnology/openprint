@@ -36,6 +36,7 @@ sub set_duedate {
 		} # end if
 
 		if ( $Project->due_date() ne $date ) {
+			my $old_date = $Project->due_date();
 			$Project->due_date( $date );
 			$Project->save();
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
@@ -45,19 +46,17 @@ sub set_duedate {
 			if ( $CSR->id() ) {
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template,
-						{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a>.`}
+						{ ReplacementText => $Me->name() . qq` has changed the due date for Docket <a href="$config{InternalSiteURL}/employee/project/view.html?docket=$$Project{docket}">$$Project{docket}</a> from $old_date to $$Project{due_date}.`}
 						);
 				my $Mail = new openprint::Email();
 
 				$_ = $Mail->send(
 						FROM		=>	$Me,
-						TO      => $CSR,
-						#TO			=>  'iconnor@penultima.org',
+						TO     		=>	$CSR,
 						SUBJECT		=>	'Due Date for Docket '. $Project->docket() . ' has been changed.',
 						ATTACHMENTS =>  [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ],
 						);
 			} # end if email to CSR
-
 
 		} # end if date has changed
 	} # end if project_id
