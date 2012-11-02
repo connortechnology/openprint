@@ -48,6 +48,7 @@ $debug = 0;
 	'servicetype_id'	=>	'servicetype_id',
 	'sorting'			=>	'sorting',
 	'message'			=>	'message',
+	deleted				=>	'deleted',
 );
 %find_fields = (
 	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
@@ -56,6 +57,7 @@ $debug = 0;
 %transforms = (
 );
 %defaults = (
+	deleted			=>	0,
 	location_id		=>	undef,
 	servicetype_id	=>	undef,
 	sorting			=>	undef,
@@ -332,23 +334,33 @@ sub copy {
 	return $new;
 } # end sub copy
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Equipment'}{$$self{id}} if $openprint::Object::cache{'openprint::Equipment'};
+	my $error;
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Schedule WHERE equipment_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
-	sql::end_transaction( $openprint::dbh, $ac );
+	foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
+		$error .= $ES->delete();
+		last if $error;
+	} # end foreach ES
+	if ( ! $error ) {
+		foreach my $S ( openprint::Shift->find(equipment_id=>$$self{id}) ) {
+			$error .= $S->delete();
+			last if $error;
+		} # end foreach ES
+	} # end if error
+    sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
+    sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
-} # end sub delete
+	return $error;
+} # end sub destroy
 
 sub update_schedule {
 	my $self = shift;
