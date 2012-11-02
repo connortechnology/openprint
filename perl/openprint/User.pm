@@ -514,12 +514,22 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub can_edit {
+<<<<<<< HEAD
 	return 1 if $openprint::session{'user_id'} == $_[0]{id};
 	return 1 if $openprint::session{'user_type'} eq 'A';
 	my $Me = new openprint::User( $openprint::session{'user_id'} );
 	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
 	my $Company = new openprint::Company( $_[0]{'company_id'} );
 	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+=======
+	return 1 if ! $_[0]{id};
+    return 1 if $openprint::session{'user_id'} == $_[0]{id};
+    return 1 if $openprint::session{'user_type'} eq 'A';
+    my $Me = new openprint::User( $openprint::session{'user_id'} );
+    return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+    my $Company = new openprint::Company( $_[0]{'company_id'} );
+    return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+>>>>>>> 0f3f3563301037d04ce85c357e07d9b282a4feee
 	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{'user_id'} );
 	return 0;
 } # end sub can_edit
