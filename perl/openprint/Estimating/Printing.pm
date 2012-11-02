@@ -2905,7 +2905,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 				if ( $$project{'HasProofs'} ) {
 					#my $proofs_time = gettimeofday();
 # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
-					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $service_index, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
 				#$openprint::log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
 					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
@@ -3824,6 +3824,7 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 		} # end if
 
+if ( 0 ) {
 		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
 		if ( %InkService ) {
 			if ( $InkService{'units'} eq 'per m' ) {
@@ -3835,6 +3836,7 @@ $openprint::log->debug("Using cached folding");
 			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
 			$price{'Ink Price'} += $InkService{'Total'};
 		} # end if
+	} # end if
 
 		my %ink_price;
 		my $InkMaterial;
@@ -3857,10 +3859,10 @@ $openprint::log->debug("Using cached folding");
 			$$Ink{pmsid} = $real_colour;
 			if ( ! sets::isin( $real_colour, \@process_colours ) ) {
 				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
-				$$Ink{service_id} = $Service->id();
+				$$Ink{service_id} = $Service->id() if $Service;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$$Ink{material_id} = $Material->id();
+				$$Ink{material_id} = $Material->id() if $Material;
 			} # end if
 		} # end if
 
@@ -3893,7 +3895,10 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 		} # end if
 
-		next if ! %ink_price;
+		if ( ! %ink_price ) {
+			$price{'Ink breakdown'} .= ' no price<br/>';
+			next;
+		}	
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
 
 		if ( $ink_price{'units'} eq 'per cartridge' ) {
@@ -3919,7 +3924,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
 			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
 			$price{'Ink Price'} += $ink_price{'Total'};
-			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, 1*$ink_price{Price}, @ink_price{'units','Total'});
 		} elsif ( $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
 			$ink_price{'Total'} = $ink_price{'Price'} * $area;
