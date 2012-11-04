@@ -49,7 +49,7 @@
 			</p>
 			<div class="content leftColumn">
 				<ul>
-					<li><label for="company_id">Company</label>
+					<li><label for="company_id"><? echo ( translate('Company') ) ?></label>
 						<select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: this.value } } );">
 							<option value=""> select </option>
 							<? echo ( openprint::Company::get_dropdown( $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{'company_id'} ); ) ?>

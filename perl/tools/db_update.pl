@@ -2883,6 +2883,10 @@ if ( ! sets::isin( 'blocklist', \@tables ) ) {
 		$dbh->do('ALTER TABLE blocklist ADD unblock BOOLEAN NOT NULL DEFAULT false');
 	}
 } # end if
+if ( ! sets::isin( 'lexicon', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Lexicon.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;
