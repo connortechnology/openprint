@@ -3903,7 +3903,8 @@ if ( 0 ) {
 				)
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
-#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
+			$$washed_colours{$key} += $$Ink{washups};
+$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
