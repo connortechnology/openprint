@@ -470,13 +470,10 @@ sub signature_calc {
 
 	#foreach my $ss_id ( $Project->signatures() ) {
 	# We assume that Signature_Impositions is all impos that come before
-$SignatureImposition->display('Calcing folding for');
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
 		if ( $$SigImpo{folding_results} ) {
-$SigImpo->display('have folding results');
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			foreach my $key ( keys %$Folds ) {
-$openprint::log->debug($key);
 				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
 			} # end foreach
