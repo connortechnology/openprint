@@ -81,10 +81,6 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/AnnualSales.sql}) );
 } # end if
-if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
@@ -177,6 +173,11 @@ if ( $data ) {
 	} # end if
 } else {
 	die  'No Companies found.' . $dbh->errstr();
+} # end if
+
+if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
@@ -684,8 +685,8 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
 	} # end if
 	if ( ! exists $$data{deleted} ) {
-		$dbh->do('ALTER TABLE tbl_equipment add deleted BOOLEAN NOT NULL DEFAULT FALSE');
-	} # end i
+		$dbh->do(q`ALTER TABLE tbl_equipment ADD deleted BOOLEAN NOT NULL DEFAULT false`);
+	} # end if
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/Equipment.sql} )) or die;
 } # end if
@@ -1011,24 +1012,6 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 	$version = 1898;
 } # end if
 
-if ( $version < 1900 ) {
-	print "Updating to version 1900\n";
-	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_log LIMIT 1', {} );
-	if ( ! $blah ) {
-	$dbh->do(q{
-			CREATE TABLE Quote_Log (
-				quote_id    INTeger NOT NULL, FOREIGN KEY(quote_Id) REFERENCES tbl_Quotes (index),
-				Company_id  INTeger NOT NULL, FOREIGN KEY(company_id) REFERENCES Companies (id),
-				User_id     INTeger NOT NULL, FOREIGN KEY(user_id) REFERENCES Users (id),
-				dtmwhen     timestamp with time zone NOT NULL default(NOW()),
-				Description         TEXT,
-				PRIMARY KEY (quote_Id,dtmwhen)
-				)
-			});
-	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
-	$version = 1900;
-} # end if
 if ( ! sets::isin( 'pricelists', \@tables ) ) {
 	$dbh->do(misc::load_file( $dbh, '../openprint/sql/Pricelists.sql' ) );
 	die if $dbh->errstr();
@@ -2885,6 +2868,14 @@ if ( ! sets::isin( 'blocklist', \@tables ) ) {
 	if ( ! exists $$data{unblock} ) {
 		$dbh->do('ALTER TABLE blocklist ADD unblock BOOLEAN NOT NULL DEFAULT false');
 	}
+} # end if
+if ( ! sets::isin( 'lexicon', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Lexicon.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'assistants', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Assistants.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 $dbh->disconnect();
 print "Finished\n";

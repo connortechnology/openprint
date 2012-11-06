@@ -816,6 +816,7 @@ sub input {
 	return $html;
 } # end sub input
 
+
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
@@ -827,5 +828,13 @@ sub select( $$$ ) {
 	$html .= '</select>';
 } # end sub select($$$)
 
+my %Lexicon;
+sub translate($) {
+	if ( ! %Lexicon ) {
+		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
+	} # end if
+	return $Lexicon{$_[0]} if $Lexicon{$_[0]};
+	return $_[0];
+} # end sub translate
 1;
 __END__

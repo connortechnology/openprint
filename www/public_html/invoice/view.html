@@ -142,22 +142,29 @@
         </table>
     </fieldset>
 </div>
+<!--#include virtual="_totals.html"-->
 <? if ( $$variable{Invoice}->owing() ) ?>
+<div class="PaymentOptions">
 <? echo (
 	my %Types = map { $_->name(), $_ } openprint::PaymentType->find();
+	my @options;
 	my $html;
-	$html .= 'Cash ' if $Types{Cash};
-	$html .= 'Cheque' if $Types{Cheque};
+	push @options, 'Cash' if $Types{Cash};
+	push @options, 'Cheque' if $Types{Cheque};
 	if ( $Types{Bitcoin} ) {
 		my $Address = openprint::Bitcoin_Address->find_one(object_id=>$$variable{Invoice}{id},object_type=>'openprint::Invoice');
 		if ( ! $Address ) {
 			$Address = openprint::Bitcoin_Address->generate( $$variable{Invoice} );
 		} # end if
+		push @options, 'Bitcoin at ' . $Address;
 	} # end if
-	return 'Payment can be made by ' . $html;
+	return if ! @options;
+	
+	my $last = pop @options;
+	return 'Payment can be made by ' . join(',', @options) . ' or ' . $last;
 ) ?>
+</div>
 <? endif ( $$variable{Invoice}->owing() ) ?>
-<!--#include virtual="_totals.html"-->
 <? if ( $$variable{'Invoice'}->Payments() ) ?>
 <div class="Payments">
 	<fieldset><legend>Payments</legend>
