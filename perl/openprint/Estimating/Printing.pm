@@ -2975,13 +2975,12 @@ if ( DEBUG or 0 ) {
 							$$imp{'Price'} = $$price{'Comparison Cost'};
 							if ( %best_price ) {
 								my %b;
-#= %best_price;
 								$b{'Comparison Cost'} = $best_price{'Comparison Cost'} - $$price{'Comparison Cost'};
 								$b{'Impositions'} = $best_price{'Impositions'};
 								$b{'Imposition'} = $best_price{'Imposition'};
 #$openprint::log->debug("recursing with reduce best price from $best_price{'Comparison Cost'} to $b{'Comparison Cost'}");	
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
-								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, [ @$other_impositions, @{$b{Impositions}}, @{$$price{Impositions}} ], \%b, $recursion_depth + 1 );
+								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, [ @$other_impositions, @{$$price{Impositions}} ], \%b, $recursion_depth + 1 );
 							} else {
 #$openprint::log->debug("recursing with no best price ");
 								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, [ @$other_impositions,@{$$price{Impositions}} ], undef, $recursion_depth + 1 );
@@ -3314,7 +3313,9 @@ if ( DEBUG and ! $recursion_depth ) {
 				
 					if ( $best_price{'Impositions'} ) {
 						$best_price{'AdditionalSignature Breakdown'} = '';
-						foreach my $I ( @{ $best_price{'Impositions'} } ) {
+					my @impositions = @{ $best_price{'Impositions'} };
+					shift @impositions;
+						foreach my $I ( @impositions ) {
 							$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
 							$best_price{'AdditionalSignature Breakdown'} .= breakdown( $$I{price}, $$I{specs} );
 						} # end foreach
@@ -3933,7 +3934,7 @@ if ( 0 ) {
 			my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
 		} elsif ( $ink_price{units} eq 'per kg' ) {
@@ -3946,12 +3947,12 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 }
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, 1*$ink_price{Price}, @ink_price{'units','Total'});
 		} elsif ( $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
-			$ink_price{'Total'} = $ink_price{'Price'} * $area;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units','Total'} );
 		} elsif ( $ink_price{'units'} eq 'per unit' ) {
@@ -3959,18 +3960,18 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 				$area /= 2;
 			} # end if
 			my $sheets_per_ink_unit = 750000;
-			my $p = $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'};
+			my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'} );
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
 		} elsif ( $ink_price{'units'} eq 'per square inch' ) {
-			my $p = $ink_price{'Price'} * $area;
+			my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
 		} elsif ( $ink_price{'units'} eq 'per m' ) {
-			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
+			$price{'Ink Price'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions/1000 );
 			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
 		} elsif ( $ink_price{'units'} eq 'per impression' ) {
-			$price{'Ink Price'} += $ink_price{'Price'} * $impressions;
+			$price{'Ink Price'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
 			$price{'Ink breakdown'} .= ' ' . $impressions . " * $ink_price{'Price'}$ink_price{'units'} = " . $ink_price{'Price'} * $impressions;
 		} else {
 			$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
@@ -4208,10 +4209,10 @@ $openprint::log->warn("Something wrong in AQ");
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $$Imposition{'pages'};
 		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
+			$price{'Imposition Total'} += Math::Round::nearest( 0.01, $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height() );
 		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->layout_area();
+			$price{'Imposition Total'} += Math::Round::nearest( 0.01, $ImpositionCharge{Price} * $Imposition->layout_area() );
 		} else {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$$Imposition{'imposition'},$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $$Imposition{'imposition'};

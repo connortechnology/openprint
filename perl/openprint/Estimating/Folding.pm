@@ -470,13 +470,13 @@ sub signature_calc {
 
 	#foreach my $ss_id ( $Project->signatures() ) {
 	# We assume that Signature_Impositions is all impos that come before
-#$SignatureImposition->display('Calcing folding for');
+$SignatureImposition->display('Calcing folding for') if $SignatureImposition->pages() == 48;;
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
 		if ( $$SigImpo{folding_results} ) {
-#$SigImpo->display('have folding results');
+$SigImpo->display('have folding results') if $SignatureImposition->pages() == 48;;
 			my $Folds = $$SigImpo{folding_results}{Folds};
 			foreach my $key ( keys %$Folds ) {
-#$openprint::log->debug($key);
+$openprint::log->debug($key) if $SignatureImposition->pages() == 48;;
 				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
 				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
 			} # end foreach
