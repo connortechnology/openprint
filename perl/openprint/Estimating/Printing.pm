@@ -2814,7 +2814,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			$imp = $imp->copy();
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
-			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, $other_impositions );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours,  $other_impositions );
 #$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if ! $recursion_depth;
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -2864,6 +2864,8 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			if ( ( $upq > 0 ) and $$imp{'pages'} ) {
 				my @signatures = @$signatures;
 				my $last_sig_price = int($$price{'Comparison Cost'});
+				my @other_impositions = @$other_impositions;
+
 				while ( $upq > 0 ) {
 					$imp = $imp->copy();
 					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key );
@@ -2876,7 +2878,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 						and ( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{'runstyle'}) )
 ) {
 
-						my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, $other_impositions );
+						my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, [ @$other_impositions, @{$$price{'Impositions'}} ] );
 						$$imp{price} = $sig_price;
 						$$sig_price{Imposition} = $imp;
 #$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
@@ -2979,10 +2981,10 @@ if ( DEBUG or 0 ) {
 								$b{'Imposition'} = $best_price{'Imposition'};
 #$openprint::log->debug("recursing with reduce best price from $best_price{'Comparison Cost'} to $b{'Comparison Cost'}");	
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
-								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, \%b, $recursion_depth + 1 );
+								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, [ @$other_impositions, @{$b{Impositions}}, @{$$price{Impositions}} ], \%b, $recursion_depth + 1 );
 							} else {
 #$openprint::log->debug("recursing with no best price ");
-								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, [ @$other_impositions,@{$$price{Impositions}} ], undef, $recursion_depth + 1 );
 							} # end if
 							$price_cache{$key} = $sig_price;
 						} # end if cache
@@ -3259,7 +3261,6 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 								if ( $$sig_price{'Imposition'} ) {
 		$openprint::log->debug("Calculating Additional Signatures for other group success");
 									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-									$$price{'Breakdown'} .= sprintf( ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
 									#$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 								} else {
 		$openprint::log->debug("Calculating Additional Signatures for other group failure");
@@ -3314,7 +3315,7 @@ if ( DEBUG and ! $recursion_depth ) {
 					if ( $best_price{'Impositions'} ) {
 						$best_price{'AdditionalSignature Breakdown'} = '';
 						foreach my $I ( @{ $best_price{'Impositions'} } ) {
-							$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages</b><br/>', $$I{pages} );
+							$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
 							$best_price{'AdditionalSignature Breakdown'} .= breakdown( $$I{price}, $$I{specs} );
 						} # end foreach
 					} # end if
@@ -3900,7 +3901,7 @@ if ( 0 ) {
 				)
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
-$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
+#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
