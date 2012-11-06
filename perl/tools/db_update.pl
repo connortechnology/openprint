@@ -683,6 +683,9 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 		} # end foreach category
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
 	} # end if
+	if ( ! exists $$data{deleted} ) {
+		$dbh->do('ALTER TABLE tbl_equipment add deleted BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end i
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/Equipment.sql} )) or die;
 } # end if
