@@ -1,6 +1,5 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
-<!--
 function calc( formName ) {
         if ( gettingNewPrice ) {
             if ( timeout ) {
@@ -35,7 +34,6 @@ function validate_data(formName) {
 	var text = '';
 	return true;
 } // end function
--->
 </script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
@@ -52,7 +50,7 @@ function validate_data(formName) {
 				<? echo ( my $html;
 					foreach my $qty_index ( $variable{Project}->quantity_indexes() ) {
 						$html .= '<span class="'.$$variable{Columns}.'Columns">';
-						$html .= ssi::input( type=>'cardinal', name=>'txtQuantity'.$qty_index, value=>$$variable{'txtQuantity'.$qty_index}, onkeyup='calc(this.form.name);' );
+						$html .= ssi::input( type=>'cardinal', name=>'txtQuantity'.$qty_index, value=>$$variable{'txtQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' );
 						$html .= '</span>';
 					} # end foraech
 					return $html;
@@ -64,7 +62,7 @@ function validate_data(formName) {
 				<? echo ( my $html;
 					foreach my $qty_index ( $variable{Project}->quantity_indexes() ) {
 						$html .= '<span class="'.$$variable{Columns}.'Columns">';
-						$html .= ssi::input( type=>'float', name=>'txtPrice'.$qty_index, value=>$$variable{'txtPrice'.$qty_index}, onkeyup='calc(this.form.name);',
+						$html .= ssi::input( type=>'float', name=>'txtPrice'.$qty_index, value=>$$variable{'txtPrice'.$qty_index}, onkeyup=>'calc(this.form.name);',
 							( sets::isin($session{'user_type'},['E','A']) ? ( readonly=>'readonly', onfocus=>'this.blur();' ) : () ) );
 						$html .= '</span>';
 					} # end foraech

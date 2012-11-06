@@ -231,7 +231,7 @@ sub approve {
 
 sub status {
 	my ( $self, $new_status ) = @_;
-	if ( defined $new_status and $$self{'status'} ne $new_status ) {
+	if ( ( defined $new_status ) and ( $$self{'status'} ne $new_status ) ) {
 		sql::update( $log, $dbh, 'Orders', ['id=?', $$self{'id'}], 'strStatus', $new_status );
 		$$self{'status'} = $new_status;
 		$self->add_log( "Changed Status to $new_status" );
