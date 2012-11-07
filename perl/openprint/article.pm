@@ -140,6 +140,11 @@ $log->debug("Found: pre: $pre, a: $a1, $a2, rem: $remainder");
 	} # end foreach  Link
 	} # end if links
 	undef $LX;
+
+	my $Privacy = $Article->Privacy();
+	$variable{'error'} .= $Privacy->save( {
+			map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+			} );
 } # end sub save_article
 
 sub history {
@@ -185,13 +190,17 @@ sub _history {
 } # end sub _history
 
 sub search {
+	if ( $param{action} eq 'Reset' ) {
+		ssi::reset_session('/article/search.htm');
+		return;
+	} # end if
 	_search();
 
 	if ( ( ! $session{'/article/search.html?lastupdated'} ) or ( time - $session{'/article/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/article/search.html', 'published_on_start', -31 );
 		ssi::setup_date_select( '/article/search.html', 'published_on_end', '' );
-		ssi::setup_date_select( '/article/search.html', 'created_on_start', -31 );
-		ssi::setup_date_select( '/article/search.html', 'created_on_end', '' );
+		#ssi::setup_date_select( '/article/search.html', 'created_on_start', -31 );
+		#ssi::setup_date_select( '/article/search.html', 'created_on_end', '' );
 	} # end if
 
 } # end sub history
@@ -199,11 +208,11 @@ sub search {
 sub _search {
 	if ( ! $param{'func'} ) {
 		ssi::save_params( '/article/search.html', ( 
-		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		#( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		#( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
-				'published','company_id', 'category_id', 'author_id' ) );
+				'published','company_id', 'category_id', 'author_id', 'title' ) );
 	} 
 	if ( $param{'action'} eq 'Delete' ) {
 		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
