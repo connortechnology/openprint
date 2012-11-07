@@ -158,6 +158,9 @@ sub can_view {
 	#} else {
 #$openprint::log->debug("not published");
 	} # end if
+	my $Privacy = $_[0]->Privacy();
+	return 1 if ! $$Privacy{id};
+	return $Privacy->can_view($$User{id});
 	return 0;
 } # end sub can_view
 sub can_edit {

@@ -49,7 +49,7 @@
 			</p>
 			<div class="content leftColumn">
 				<ul>
-					<li><label for="company_id"><? echo ( translate('Company') ) ?></label>
+					<li><label for="company_id"><? translate(company) ?></label>
 						<select id="company_id" name="company_id" onchange="new Ajax.Updater('created_by', '/includes/_users.html', { parameters: { company_id: this.value } } );">
 							<option value=""> select </option>
 							<? echo ( openprint::Company::get_dropdown( $$variable{Article}->company_id() ? $$variable{Article}->company_id() : $session{'company_id'} ); ) ?>
@@ -82,12 +82,6 @@
 					<li><label>Anonymous</label>
 						<? echo ( ssi::radio( 'anonymous', ['1', 'Yes', '0', 'No' ], 1*$$variable{Article}->anonymous() ); ) ?>
 					</li>
-					<li><label>Who</label>
-						<select name="user_type" id="user_type">
-							<option value=""> All </option>
-							<? echo ( ssi::make_drop_down( openprint::User_Type->dropdown(), $$variable{Article}->user_type() ); ) ?>
-						</select>
-					</li>
 					<li><label>Source</label>
 						<input type="text" id="source" name="source" value="<? echo ( $$variable{Article}->source() ) ?>" onchange="new Ajax.Updater( 'View', '_view.html', { parameters: f1.serialize() } );" />
 					</li>
@@ -105,6 +99,10 @@
 						<label for="body">Body</label>
 						<textarea class="mce" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{Article}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape( $$variable{Article}->body() ) ) ?></textarea>
 					</li>
+<? echo (
+	$$variable{Privacy} = $$variable{Article}->Privacy();
+	return ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/_privacy_widget.html' );
+) ?>
 				</ul>
 			<p class="buttons">
 				<? echo (

@@ -1,23 +1,22 @@
 <br/>
-You are currently representing <? echo ( new openprint::Company($session{'company_id'})->name(); ) ?>.<br/>
-To represent another company, please select it from the dropdown and click submit. <br/>
-Any orders or quotes you make will be recorded in the selected company's history.<br/>
+You are currently representing <? echo ( new openprint::Company($session{company_id})->name(); ) ?>.<br/>
+To represent another <? echo ( translate('company') ) ?>, please select it from the dropdown and click submit. <br/>
+Any actions you perform will be recorded in the selected <? echo ( translate('company') ) ?>'s history.<br/>
 <form id="f1" name="f1" action="select_company.html" method="post">
 	<fieldset class="SelectCompany">
 		<ul>
 		<li>
-			<label>Company</label>
+			<label><? echo ( translate('company') ) ?></label>
 			<input class="filter" name="CompanyFilter" type="text" onkeyup="filterDDM(this, f1.ddmCompany);" />
 			<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<option value="">Select a <? echo ( translate('Company') ) ?></option>
-				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{company_id} );) ?>
 			</select>
-			<? echo ( ssi::button( 'Submit', { 'onclick'=>'f1.submit();' } ); ) ?>
+			<? echo ( ssi::button( 'Submit', { onclick=>'f1.submit();' } ); ) ?>
 		</li>
 		<li><label>Last 10</label>
 	<? echo ( 
 		my $html = '';
-		my @Entries = openprint::Log->find('user_id'=>$session{'user_id'}, 'action'=>'Select Company', 'order'=>'date_time DESC','date_time >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 ) ) );
+		my @Entries = openprint::Log->find( user_id=>$session{'user_id'}, action=>'Select Company', order=>'date_time DESC','date_time >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -5 ) ) );
 		return if ! @Entries;
 		my @companies;
 		foreach my $Log ( sort { $a->Company()->name() cmp $b->Company()->name() }@Entries ) {

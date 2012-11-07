@@ -77,6 +77,11 @@ sub do_new_substitution {
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
+	} elsif ( $$command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
+		my $result = translate($1);
+$log->error("tranlsating  of $1: $result");
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -836,5 +841,15 @@ sub translate($) {
 	return $Lexicon{$_[0]} if $Lexicon{$_[0]};
 	return $_[0];
 } # end sub translate
+
+sub reset_session($) {
+	foreach my $k ( keys %openprint::session ) {
+		if ( $k =~ /^$_[0]/ ) {
+			delete $openprint::session{$k};
+		} #end if
+	} # end foreach
+	%param = ();
+	$variable{ExternalRedirect} = $_[0];
+} # end sub reset_session
 1;
 __END__
