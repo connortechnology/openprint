@@ -974,6 +974,7 @@ sub cut {
 	} # end if
 	$$self{'mweight'} /= 2;
 	delete $$self{'to_string'};
+	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
