@@ -1,6 +1,6 @@
+use strict;
 package ssi;
 
-use strict;
 use countries;
 use states;
 use provinces;
@@ -11,7 +11,7 @@ use HTML::Entities qw(encode_entities);
 require sets;
 require sql;
 
-use openprint;
+use openprint ();
 use vars qw( $r $log $dbh %config %session %param %variable );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -136,13 +136,16 @@ sub variable_substitution {
 	return do_include( $r, $log, $dbh, $text, $variable );
 } # end sub variable_substitution
 
+my %html_replacements = (
+	'&'	=>	'&amp;',
+	'"'	=>	'&quot;',
+	'<' =>	'&lt;',
+	'>' =>	'&gt;',
+);
+my $replacement_string = join '', keys %html_replacements;
 sub html_escape {
-    $_ = shift;
-    $_ =~ s/&/&amp;/mg;
-    $_ =~ s/"/&quot;/mg;
-    $_ =~ s/</&lt;/mg;
-    $_ =~ s/>/&gt;/mg;
-    return $_;
+	$_[0]=~ s/([\Q$replacement_string\E])/$html_replacements{$1}/g;
+	return $_[0];
 }
 
 sub escape_quotes {
@@ -191,12 +194,19 @@ sub encode_html {
 
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
-	my ( $temp, $checked );
+	my $check_array;
+	if ( ref $checkval eq 'ARRAY' ) {
+		$check_array = $checkval;
+	} else {
+		$check_array = [ $checkval ];
+	} # end if
 
-	$temp = '';
+	my $temp = '';
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
-		$checked = $checkval eq $$search_data[$n] ? ' selected="selected"' : '';
-		$temp .= sprintf('<option value="%s"%s>%s</option>', HTML::Entities::encode_entities($$search_data[$n]), $checked, HTML::Entities::encode_entities( $length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) );
+		$temp .= sprintf('<option value="%s"%s>%s</option>',
+			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
+			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
+			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -426,6 +436,9 @@ sub button {
 		##} # end if
 		$html .= $$options{'onclick'}."return false;\" ";
 	} # end if
+	if ( $$options{'ontouch'} ) {
+		$html .= 'ontouch="'.$$options{'ontouch'}.'" ';
+	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
@@ -435,7 +448,7 @@ sub button {
 		} # end if
 		$html .= "/>";
 	} else {
-		$html .= '<span class="l"></span><span class="c" id="'.$name.'c">' . $$options{'text'} .'</span><span class="r"></span>';
+		$html .= '<span class="l"></span><span class="c" id="'.$name.'c"' . ( $$options{title} ? ' title="'.$$options{title}.'"' : '' ) .'>' . $$options{'text'} .'</span><span class="r"></span>';
 	}
 	$html .= "</a>\n";
 	return $html;
@@ -537,10 +550,10 @@ $log->debug("$year-$month-$day");
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_clear'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+		$html .= ssi::button( $prefix.'_clear', { onclick=>q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'C',title=>'Clear' } );
 	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::button( $prefix.'_today', { onclick=>q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, text=>'T', title=>'Today' } );
 	} # end if
 	$html .= '</span>';
 	return $html;
@@ -657,7 +670,8 @@ sub write_override {
 
 sub count_lines {
 	if ( $_[0] ) {
-		return scalar split( "\n", $_[0] );
+		my @lines = split( "\n", $_[0] );
+		return scalar @lines;
 	} else {
 		return 2;
 	} # end if
@@ -693,23 +707,23 @@ sub checkboxes {
 } # end sub checkboxes
 
 sub date_filter {
-    my ( $field, $sql_field, $hash ) = @_;
-    $sql_field = $field if ! $sql_field;
-    if ( ! $hash ) {
-        $hash = \%openprint::session;
-        #$log->debug('ssi::date_filter: using session for hash');
-    } # end if
-        #foreach my $k ( keys %$hash ) {
-            #$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
-        #} # end foreach
-    if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	my ( $field, $sql_field, $hash ) = @_;
+	$sql_field = $field if ! $sql_field;
+	if ( ! $hash ) {
+		$hash = \%openprint::session;
+		#$log->debug('ssi::date_filter: using session for hash');
+	} # end if
+		#foreach my $k ( keys %$hash ) {
+			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
+		#} # end foreach
+	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
-        return ();
-    } # end if
-    my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
+		return ();
+	} # end if
+	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-    $month = 1 if ! $month;
-    $day = 1 if ! $day;
+	$month = 1 if ! $month;
+	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
@@ -721,20 +735,63 @@ sub date_filter {
 	} # end if
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
 
-    return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
+	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day, $hour, $minute, $second ) ) );
 } # end sub date_filter
+
+my @input_options = ( 'type','name','id','onblur','onfocus','onkeyup','onkeydown','onchange','class','pattern','ontouch','max', 'placeholder' );
 
 sub input {
 	my %options = @_;
 	my $html = '<input';
-	$html .= ' type="'.$options{type}.'"' if $options{type};
+	if ( $options{type} eq 'cardinal' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'integer' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'integerize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'float' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
-	$html .= ' name="'.$options{name}.'"' if $options{name};
-	$html .= ' id="'.$options{id}.'"' if $options{id};
-	$html .= ' onkeyup="'.$options{onkeyup}.'"' if $options{onkeyup};
+
+	foreach (@input_options) {
+		$html .= qq` $_="$options{$_}"` if $options{$_};
+	} # end foreach
+	#if ( my @unsupported = sets::exclude( [ @button_options, 'required','readonly','value' ], [ keys %options ] ) ) {
+#$log->error("ssi::button unsupported options @unsupported");
+	#} # end if
+	$html .= ' required' if $options{required};
+	$html .= ' readonly="readonly"' if $options{readonly};
 	$html .= '/>';
 	return $html;
 } # end sub input
+sub select( $$$ ) {
+	my ( $data, $selected, $options ) = @_;
+	my $html = '<select';
+	$html .= ' name="'.$$options{name}.'"' if $$options{name};
+	$html .= ' id="'.$$options{id}.'"' if $$options{id};
+	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
+	$html .= '>';
+	$html .= make_drop_down( $data, $selected );
+	$html .= '</select>';
+}
+
 
 1;
 __END__

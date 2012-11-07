@@ -1,4 +1,15 @@
 @media only screen and (max-device-width: 480px) {
+	body {
+		font-size:medium;
+	}
+}
+@media only screen and (max-device-width: 768px) {
+	body {
+		font-size:medium;
+	}
+	#menubar li a {
+		font-size:medium;
+	}
 }
 @media screen and (min-device-width: 481px) {
        body {
@@ -7,12 +18,27 @@
        } 
 }
 
-fieldset p, fieldset ul li {
+fieldset p, fieldset li {
 	padding-left: 140px;
 }
-fieldset p label, fieldset ul li label {
+fieldset p label, fieldset li label {
 	width: 140px;
 	margin-left: -140px;
+}
+
+.dialog fieldset p {
+	padding-left: 100px;
+}
+.dialog fieldset p label, .dialog fieldset li label {
+	width: 95px;
+	margin-left: -100px;
+}
+.dialog fieldset p label.radio, .dialog fieldset li label.radio {
+	width: auto;
+	margin: 0;
+}
+.dialog li p {
+	padding-left: 0;
 }
 
 div.PopupWindow fieldset p {
@@ -20,7 +46,7 @@ div.PopupWindow fieldset p {
 }
 div.PopupWindow fieldset p label {
 	width: 100%;
-	margin: 0px;
+	margin: 0;
 	text-align: left;
 }
 
@@ -43,9 +69,9 @@ div.PopupWindow fieldset p label {
 	margin-left: -95px;
 }
 
-#JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio {
+#JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio, .dialog fieldset li label.radio {
 	width: auto;
-	margin-left: 0px;
+	margin-left: 0;
 	vertical-align: middle;
 }
 #JobForm textarea {
@@ -55,7 +81,7 @@ div.PopupWindow fieldset p label {
 .Manifest #PurchaseOrders ul {
 	list-style: none;
 	padding: 0px;
-	margin: 0px;
+	margin: 0;
 }
 .Manifest table .InStock, .Manifest table .LastSeen {
 	text-align: right;
@@ -65,13 +91,13 @@ div.PopupWindow fieldset p label {
 .Signature .Previews img {
 	width: 100%;
 }
-td p {
-	margin: 0px;
+table.List td p {
+	margin: 0;
 	padding: 0px;
 }
-td p label {
+table.List td p label {
     width: auto;
-    margin-left: 0px;
+    margin-left: 0;
 }
 
 table tr .name {
@@ -107,4 +133,54 @@ table .Skid {
 	body #Header {
 	display: none;
 	}
+}
+input#StartDocket, input#EndDocket, input#Docket {
+	width: 50px;
+}
+table .invoice_id {
+	width: 90px;
+	text-align: left;
+}
+table .Project {
+	text-align: left;
+}
+table .AuthorizedBy {
+	width: 150px;
+	text-align: left;
+	float: none;
+}
+table .po_id {
+	width: 60px;
+	text-align: left;
+}
+/* Was 80, but project status needs 200 */
+table .status {
+	text-align: left;
+	padding-left: 7px;
+	width: 140px;
+}
+table .order_id {
+	text-align: left;
+	width: 80px;
+}
+table .docket {
+	text-align: left;
+	width: 60px;
+}
+table .form {
+	text-align: left;
+	width: 40px;
+}
+table .quantity {
+	text-align: left;
+	width: 80px;
+}
+table .Equipment {
+	text-align: left;
+}
+table .version {
+	text-align: left;
+}
+.Signature {
+	width: 100px;
 }

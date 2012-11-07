@@ -4,7 +4,7 @@
 	var allocateWin;
 	function allocate_window( paper_id ) {
 		if ( allocateWin == null ) {
-			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:300} );
+			allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube",width:400,height:400} );
 			allocateWin.setHTMLContent('Loading... please wait');
 			allocateWin.showCenter();
 			// Set up a windows observer, check ou debug window to get messages
@@ -94,6 +94,7 @@ Please select a Paper to view/edit.<br>
 				<? echo (
 					openprint::Manufacturer->find();
 					my %sql = (
+						'in_stock_start'=>1,
 						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 					);
@@ -104,7 +105,8 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql) ) {
+					@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$data{$Stock->manufacturer()} = $Stock->manufacturer_id();
 						$found = 1 if $Stock->manufacturer_id() == $session{'/employee/inventory/available_paper.html?Manufacturer'};
 					} # end foreach
@@ -119,19 +121,24 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 				<? echo ( 
 					openprint::StockName->find();
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+					if ( $session{'/employee/inventory/available_paper.html?Manufacturer'} ) {
+						my %sql = (
+							'in_stock_start'=>1,
+							'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
+							#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
+						);
+						if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+							$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} else {
+							$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} # end if
+						@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
 					} # end if
+					
 					my %names;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$names{$Stock->name()} = $Stock->name_id();
 						$found = 1 if $Stock->name_id() == $session{'/employee/inventory/available_paper.html?Name'};
 					} # end foreach
@@ -146,20 +153,24 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					openprint::StockFinish->find();
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-							'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+					if ( $session{'/employee/inventory/available_paper.html?Name'} ) {
+						my %sql = (
+							'in_stock_start'=>1,
+							'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+							#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
+								'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
+								'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
+						);
+						if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+							$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} else {
+							$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} # end if
+						@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
 					} # end if
 					my %finishes;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$finishes{$Stock->finish()} = $Stock->finish_id();
 						$found = 1 if $Stock->finish_id() == $session{'/employee/inventory/available_paper.html?Finish'};
 					} # end foreach
@@ -174,21 +185,24 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					openprint::StockColour->find();
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
-						'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+					if ( $session{'/employee/inventory/available_paper.html?Finish'} ) {
+						my %sql = (
+							'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+							#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
+							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
+							'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
+							'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
+						);
+						if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+							$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} else {
+							$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} # end if
+						@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$data{$Stock->colour()} = $Stock->colour_id();
 						$found = 1 if $Stock->colour_id() == $session{'/employee/inventory/available_paper.html?Colour'};
 					} # end foreach
@@ -203,27 +217,48 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					openprint::StockWeight->find();
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
-						'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
-						'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+					if ( $session{'/employee/inventory/available_paper.html?Colour'} ) {
+						my %sql = (
+							'in_stock_start'=>1,
+							'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+							#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
+							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
+							'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
+							'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
+							'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'},
+						);
+						if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+							$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} else {
+							$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} # end if
+						@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$data{$Stock->weight()} = $Stock->weight_id();
 						$found = 1 if $Stock->weight_id() == $session{'/employee/inventory/available_paper.html?Weight'};
 					} # end foreach
 					$session{'/employee/inventory/available_paper.html?Weight'} = undef if ! $found;
 					return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?Weight'} );
+				) ?>
+			</select>
+		</p>
+		<p>
+			<label>Quality:</label>
+			<select name="Quality" size="1">
+				<option value="">select</option>
+			<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockQuality->find('order'=>'lower(name)') ], $session{'/employee/inventory/paper.html?Quality'} );
+				) ?>
+			</select>
+		</p>
+		<p>
+			<label>Condition:</label>
+			<select name="condition_id"><option value="">select</option>
+			<? echo (
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::InventoryCondition->find('order'=>'lower(name)') ], $session{'/employee/inventory/paper.html?condition_id'} );
 				) ?>
 			</select>
 		</p>
@@ -234,23 +269,27 @@ Please select a Paper to view/edit.<br>
 			<select name="width" size="1" onchange="calc(this.form.name);" >
 				<option value="">All</option>
 			<? echo ( 
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
-						'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
-						'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'},
-						'weight_id'=>$session{'/employee/inventory/available_paper.html?Weight'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+					if ( $session{'/employee/inventory/available_paper.html?Weight'} ) {
+						my %sql = (
+							'in_stock_start'=>1,
+							'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+							#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
+							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
+							'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
+							'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
+							'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'},
+							'weight_id'=>$session{'/employee/inventory/available_paper.html?Weight'},
+						);
+						if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
+							$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} else {
+							$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
+						} # end if
+						@{$$variable{'Stock'}} = openprint::Paper::find(%sql);
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$data{$Stock->width()} = $Stock->width();
 						$found = 1 if $Stock->width() == $session{'/employee/inventory/available_paper.html?width'};
 					} # end foreach
@@ -261,23 +300,9 @@ Please select a Paper to view/edit.<br>
 			<select name="height" size="1" onchange="calc(this.form.name);" >
 				<option value="">All</option>
 			<? echo ( 
-					my %sql = (
-						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
-						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
-						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
-						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
-						'finish_id'=>$session{'/employee/inventory/available_paper.html?Finish'},
-						'colour_id'=>$session{'/employee/inventory/available_paper.html?Colour'},
-						'weight_id'=>$session{'/employee/inventory/available_paper.html?Weight'},
-					);
-					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
-						$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} else {
-						$sql{'owner_id'} = $session{'/employee/inventory/available_paper.html?Owner'};
-					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( @{$$variable{'Stock'}} ) {
 						$data{$Stock->height()} = $Stock->height();
 						$found = 1 if $Stock->height() == $session{'/employee/inventory/available_paper.html?height'};
 					} # end foreach

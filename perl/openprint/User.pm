@@ -4,21 +4,18 @@ our @ISA = qw( openprint::Object );
 use Text::Unaccent;
 use MIME::QuotedPrint;
 
-require openprint::Company;
-require openprint::logs;
-require openprint::User_Notification;
 
 use openprint ();
-use vars qw( $log $dbh %config %variable %param );
+use vars qw( $debug $log $dbh %config %variable %param %fields %transforms %defaults  );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
 
-my $debug = 1;
+$debug = 1;
 
-my %fields = (
+%fields = (
 	'company_id'		=>	'companyindex',
 	'salutation'		=>	'strsalutation',
 	'title'				=>	'strtitle',
@@ -49,7 +46,7 @@ my %fields = (
 	'notes'						=>	'notes',
 ); # end %fields
 
-my %transforms = (
+%transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
 	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
@@ -59,7 +56,7 @@ my %transforms = (
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
-my %defaults = (
+%defaults = (
 	'web_active'	=>	'N',
 	'ftp_active'	=>	'0',
 	'created_on'	=>	'NOW()',
@@ -231,6 +228,7 @@ sub destroy {
 
 	sql::end_transaction( $openprint::dbh, $ac );
 
+	require openprint::logs;
 	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
 } # end sub delete
 
@@ -283,6 +281,7 @@ sub Prev {
 } # end sub Nex
 
 sub Company {
+	require openprint::Company;
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub Company
@@ -309,6 +308,8 @@ sub id {
 } # end sub id
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -317,10 +318,15 @@ sub find_one {
 
 sub find {
 	shift @_ if $_[0] eq 'openprint::User';
+	shift @_ if ref $_[0] eq 'openprint::User';
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
 
+	if ( $param{'id !='} ) {
+		$sql .= q{ AND index!=?};
+		push @values, $param{'id !='};
+	} # end if
 	if ( $param{'id'} ) {
 		if ( ref $param{'id'} eq 'ARRAY' ) {
 			$sql .= q{ AND index IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
@@ -430,8 +436,12 @@ sub assistant_ids {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{assistant_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	if ( ! $$self{assistant_ids} ) {
+		 @{$$self{assistant_ids}} = sql::execute( undef, undef, 'SELECT assistant_id FROM Assistants WHERE csr_id=?', $$self{id} );
+	} # end if
+	return @{$$self{assistant_ids}};
 } # end sub
 sub csr_ids {
 	my $self = shift;
@@ -442,8 +452,12 @@ sub csr_ids {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
+		@{$$self{csr_ids}} = ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_;
 	} # end if
-	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	if ( ! $$self{csr_ids} ) {
+		@{$$self{csr_ids}} = sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
+	} # end if
+	return @{$$self{csr_ids}};
 } # end sub
 
 sub notifications {
@@ -499,6 +513,18 @@ sub po_limit {
 
 	return $$self{'po_limits'}{$type_id};
 } # end sub po_limit
+
+sub can_edit {
+	return 1 if ! $_[0]{id};
+    return 1 if $openprint::session{'user_id'} == $_[0]{id};
+    return 1 if $openprint::session{'user_type'} eq 'A';
+    my $Me = new openprint::User( $openprint::session{'user_id'} );
+    return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
+    my $Company = new openprint::Company( $_[0]{'company_id'} );
+    return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{'user_id'} );
+    return 0;
+} # end sub can_edit
 
 1;
 

@@ -1,6 +1,7 @@
 <div class="OrderHeader">
 	<fieldset id="OrderInformation"><legend>Order Information</legend>
 		<p><label>Order ID:</label><?OrderID?></p>
+		<p><label>Supplier:</label><? echo ( $$variable{Order}->Supplier()->name() ) ?></p>
 	<? if ( $$variable{'Order'}->docket() ) ?>
 		<p><label>Docket:</label><? echo ( $$variable{'Order'}->docket(); ) ?></p>
 	<? endif ( $$variable{'Order'}->docket() ) ?>

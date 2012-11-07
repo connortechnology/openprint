@@ -94,6 +94,20 @@ function same_as_billing( on, id ) {
 					<label>Purchase Order:</label>
 					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 				</p>
+				<? echo (
+					my $html;
+					my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'index');
+					if ( @Suppliers > 1 ) {
+						if ( sets::isin($session{user_type}, ['A','E'] ) ) {
+							$html .= '<p><label>Supplier:</label><select name="supplier_id">';
+							$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
+							$html .= '</select></p>';
+						} else {
+							$html .= ssi::input( type=>'hidden', name=>'supplier_id', value=>$Suppliers[0]->id() );
+						} # end if user_type
+					} # end if @Suppliers > 1 
+					return $html;
+				) ?>
 <? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 				<p>
 					<label>Company:</label>

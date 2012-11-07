@@ -1,6 +1,7 @@
+use strict;
+require openprint::Object_Asset;
 package openprint::Object;
 
-use strict;
 use openprint ();
 require sets;
 use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
@@ -47,8 +48,8 @@ sub new {
 		if ( $id and (!$data) ) {
 			if ( $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 				return $openprint::Object::cache{$parent}{$id};
-			} else {
-				$log->debug("Not loading from cache $id $parent ");
+			#} else {
+				#$log->debug("Not loading from cache $id $parent ");
 			} # end if
 		} # end if
 
@@ -70,23 +71,27 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+    no strict 'refs';
+    my $fields = \%{$type.'::fields'};
+    my $debug = ${$type.'::debug'};
+
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $d = eval '$'.$type.'::dbh';
 	$d = $dbh if ! $d;
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
-#$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=' . $$self{$_} } @identified_by ) ) if $debug;
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) ) if $debug;
 		} else {
-			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	@$self{keys %$fields} = @$data{values %$fields};
 } # end sub load
 
 sub save {
@@ -119,6 +124,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
 	delete $sql{'created_on'};
+	$sql{'created_by'} = $session{'user_id'} if exists $fields{'created_by'} and ! $sql{'created_by'};
 	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 	if ( $debug ) {
@@ -353,6 +359,11 @@ sub find {
 					push @values, $params{$k.'_ilike'};
 					delete $params{$k.'_ilike'};
 				}
+				if ( exists $params{$k.' ilike'} ) {
+					$sql .= " AND $$f{$k} ILIKE ?";
+					push @values, $params{$k.' ilike'};
+					delete $params{$k.' ilike'};
+				}
 				if ( exists $params{$k.'_start'} ) {
 					$sql .= " AND $$f{$k} >= ?";
 					push @values, $params{$k.'_start'};
@@ -422,6 +433,17 @@ sub find {
 					} # end if
 					delete $params{$k.' in'};
 				} # end if
+				if ( exists $params{$k.' not in'} ) {
+					if ( ref $params{$k.' not in'} eq 'ARRAY' ) {
+						$sql .= ' AND ' . $$f{$k}. ' NOT IN ('.join(',', map {'?'} @{$params{$k.' not in'}} ) . ')';
+						push @values, @{$params{$k.' not in'}};
+					} else {
+						$sql .= " AND ? NOT IN $$f{$k}";
+						push @values, $params{$k.' not in'};
+					} # end if
+					delete $params{$k.' not in'};
+				} # end if
+
 				if ( exists $params{$k.' !='} ) {
 					$sql .= " AND $$f{$k} != ?";
 					push @values, $params{$k.' !='};
@@ -499,7 +521,7 @@ sub find {
     if ( ! $data ) {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $local_dbh->errstr );
     } elsif ( ! @$data ) {
-        $openprint::log->debug("No $type ($sql) (@values) " );
+        $openprint::log->debug("No $type ($sql) (@values) " ) if $debug;
     } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
@@ -550,8 +572,8 @@ sub to_string {
 
 sub dropdown {
     my $type = shift;
-$log->debug("dropdown");
-    return [ map { $_->id(), $_->name() } eval($type.'->find(@_);') ];
+#$log->debug("dropdown $type");
+    return [ map { $_->id(), $_->name() } $type->find(@_) ];
 } # end sub dropdown
 
 sub transform {
@@ -574,6 +596,16 @@ sub transform {
 
 } # end sub transform
 
+sub Assets {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'object_id'} = $_[0]{'id'};
+	$param{'order'}	= 'asset_id' if ! $param{'order'};
+	$param{'object_type'} = ref $_[0];
+	my @Assets = openprint::Object_Asset->find(%param);	
+$openprint::log->debug("# of Assets: " . scalar @Assets );
+	return @Assets;
+} # end sub Assets
 
 1;
 __END__

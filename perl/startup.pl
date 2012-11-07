@@ -4,7 +4,7 @@ BEGIN {
 	use utf8;
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
-	use APR::URI;
+	use APR::URI ();
 	use Apache2::Const;
 	use Apache2::Log ();
 	use Apache2::ServerUtil ();
@@ -14,8 +14,9 @@ BEGIN {
 	use Apache2::Upload;
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
-	use URI::Escape;
-	use HTML::Entities;
+	use DBD::Pg;
+	use URI::Escape ();
+	use HTML::Entities ();
 #
 	use MIME::QuotedPrint;
 	use Mail::Sendmail;
@@ -59,7 +60,8 @@ BEGIN {
 	use openprint::JDF;
 	use Number::Format;
 	use openprint::Project_Service;
-	use Math::Round;
+	use Math::Round ();
+	use POSIX ();
 
 #use MapImage;
 

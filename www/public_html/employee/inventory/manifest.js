@@ -15,12 +15,12 @@ function gsm_to_mweight( form, type_id ) {
 
 function delete_content( c_id ) {
 	new Ajax.Request( '_manifest_content.html', {
-		method: 'get',
 		parameters: { content_id: c_id, action: 'Remove' },
 		onSuccess: function(transport){
 			var tr = $('tr-'+c_id);
-			new Insertion.After('tr-'+c_id, transport.responseText);
-			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
+			new Insertion.After(tr, transport.responseText);
+			//new Insertion.After('tr-'+c_id, transport.responseText);
+			if(!tr){alert('tr not found');}else{tr.remove();}
 		},
 		evalScripts: true
 	 } );
@@ -28,7 +28,6 @@ function delete_content( c_id ) {
 
 function add_content(form, type_id) {
 	new Ajax.Request( '_manifest_content.html', {
-			method: 'get', 
 			parameters: {
 				action:		'Add',
 				type_id:    type_id,
@@ -38,7 +37,12 @@ function add_content(form, type_id) {
 				docket:     $('docket-'+type_id+'-').value,
 				qty_lbs:    $('qty_lbs-'+type_id+'-').value
 			},
-			onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, 
+			onSuccess: function (transport) { 
+var tr = $('totals-'+type_id);
+if ( ! tr ) { alert('totals not found'); } else {
+new Insertion.Before('totals-'+type_id, transport.responseText);return true;
+}
+ }, 
 			evalScripts: true
 		}
 	);

@@ -17,7 +17,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 
 # Note: duration_seconds is 1 seconds less than duration
 
-$debug = 1;
+$debug = 0;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
@@ -90,12 +90,12 @@ sub endtime_seconds {
 # We presume that normally date_seconds is teh starttie + 1 of the previous shift
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
-	$log->debug("Emanantise: " . $self->to_string() );
+	#$log->debug("Emanantise: " . $self->to_string() );
 	my $parser = 'DateTime::Format::Pg';
 	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
 
 	my $requested_dt = DateTime->from_epoch( 'epoch'=>$date_seconds, 'time_zone'=>$TZ );
-	$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("Emanentise: Date: $date_seconds : " . $parser->format_datetime( $requested_dt ) );
 	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
 
 	my $shift_start_time_dt = DateTime::Duration->new( 'seconds' => $self->starttime_seconds() % DAY );
@@ -103,12 +103,12 @@ sub emanantise {
 	my $date_part_dt = $requested_dt->clone()->truncate('to'=>'day');
 
 	my $st = $date_part_dt + $shift_start_time_dt;
-	$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("initial st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	if ( $st < $requested_dt ) {
 		# Need to add a day
 		$st += DateTime::Duration->new( 'days'=>1 );
 	} # end if
-	$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
+	#$log->debug("final st: " . $parser->format_datetime( $st ) . ' requested: ' . $parser->format_datetime( $requested_dt ) );
 	my $et = $st + DateTime::Duration->new( 'seconds' => $self->duration_seconds() );
 
 	my $Shift;
@@ -193,15 +193,36 @@ sub Next {
 } # end sub Next
 
 sub delete {
-	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}) ) {
-#$log->debug("Delete shift " . $Shift->to_string() );
+	my $error;
+
+	my $TZ = DateTime::TimeZone->new( name => $openprint::config{'Timezone'} );
+	my $dt = DateTime->from_epoch( 'epoch'=>time, 'time_zone'=>$TZ );
+	my $now = DateTime::Format::Pg->format_datetime( $dt );
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+
+	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}, 'starttime <='=> $now ) ) {
 		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
-			$Shift->delete() 
+			$error .= $Shift->save({'shift_id'=>undef});
 		} else {
 			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
 		} # end if
+		last if $error;
 	} # end foreach
-	my $error = $_[0]->SUPER::delete();
+	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}, 'starttime >'=> $now ) ) {
+		if ( $$Shift{'shift_id'} == $_[0]{'id'} ) {
+			$error .= $Shift->delete() 
+		} else {
+			$openprint::log->error("Equipment_Shift::delete deleting a shift that isn't ours!");
+		} # end if
+		last if $error;
+	} # end foreach
+	$error .= $_[0]->SUPER::delete() if ! $error;
+	if ( $error ) {
+		$openprint::dbh->rollback();
+		return $error;
+	} # end if
+	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
 sub starttime_string {

@@ -240,30 +240,30 @@ sub make_order_from_quote {
 
 sub check_credit {
 	my ( $log, $dbh, $variable, $amount ) = @_;
-	my $credit = new openprint::customer_credit( $openprint::session{'company_id'} );
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$openprint::config{'Owner'} } );
 
-	if ( $credit->value('Hold') eq 'Y' ) {
+	if ( $Credit->hold() eq 'Y' ) {
 		return misc::error( $log, $dbh, $variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
 	if ( $openprint::config{'EnforceCredit'} eq 'Y' ) {
-		if ( ! $credit->value('DenyDays') ) {
-			if ( $credit->debt() > 0 ) {
+		if ( ! $Credit->denydays() ) {
+			if ( $Credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/main/account/credit_application.html">here</a> to apply for a credit account now.';
-				$error .= list_orders( $log, $dbh, $credit->denied_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->denied_orders() );
 				return misc::error( $log, $dbh, $variable, 'No Credit', $error );
 			} # end if
 		} else {
-			if ( my @orders = $credit->denied_orders() ) {
-				my $error = 'You have orders that are more than ' . $credit->value('DenyDays') . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
+			if ( my @orders = $Credit->denied_orders() ) {
+				my $error = 'You have orders that are more than ' . $Credit->denydays() . ' days overdue.	Please arrange payment before purchasing further.<br/><br/>The following orders are currently overdue:</br><br/>';
 				$error .=	list_orders( $log, $dbh, @orders );
 				return misc::error( $log, $dbh, $variable, 'Overdue Orders', $error );
 			} # end if
 
 # check if the price fits in their credit limit
-			if ( $credit->debt() + $amount > $credit->value('Limit') ) {
+			if ( $Credit->debt() + $amount > $Credit->limit() ) {
 				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/main/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
-				$error .= list_orders( $log, $dbh, $credit->outstanding_orders() );
+				$error .= list_orders( $log, $dbh, $Credit->outstanding_orders() );
 				return misc::error( $log, $dbh, $variable, 'Credit Exceeded', $error );
 			} # end if
 		} # end if
@@ -614,6 +614,7 @@ sub store_order_info {
 	$Order->alsonotify( $openprint::param{'txtAlsoNotify'} );
 	$Order->po( $openprint::param{'txtPurchaseOrder'} );
 	$Order->currency_id( openprint::Currency::get_current()->id() );
+	$Order->supplier_id( $openprint::param{supplier_id} ) if $openprint::param{supplier_id};
 	return $Order->save();
 } # end sub store_order_info
 
@@ -946,8 +947,8 @@ sub finalise_order {
 			$Product->save();
 		} # end foreach Product
 
-		my $customer_credit = new openprint::customer_credit( $openprint::session{'company_id'} );
-		my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
+		my $Credit = new openprint::Company_Credit( { 'company_id'=>$openprint::session{'company_id'}, 'supplier_id'=>$Order->supplier_id() } );
+		my ( $downpayment ) = $Credit->downpayment();
 		if ( $downpayment eq '' ) {
 			$downpayment = $openprint::config{'DefaultDownpayment'};
 		} # end if
@@ -1074,12 +1075,13 @@ sub send_invoice {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
 
+	my $Order = new openprint::Order($order_id);
 	get_invoice_to( $log, $dbh, \%order, $order_id );
 	get_misc( $log, $dbh, \%order, $order_id );
 	get_projects( $log, $dbh, \%order, $order_id );
 
-	my $credit = new openprint::customer_credit( $order{'CompanyIndex'} );
-	@order{$credit->fields()} = $credit->get($credit->fields());
+	my $Credit = new openprint::Company_Credit( { 'company_id'=>$order{'CompanyIndex'}, 'supplier_id'=>$Order->supplier_id() } );
+	@order{keys %openprint::Company_Credit::fields} = $Credit->get(keys %openprint::Company_Credit::fields);
 
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'txtCity','txtStateProvince','txtCountry'} );
 	$order{'OrderID'} = $order_id;
@@ -1112,18 +1114,17 @@ sub send_invoice {
 
 	get_projects( $log, $dbh, \%order, $order_id );
 
-	my @attachments = ();
+	@attachments = ();
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
+	@body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
 	if ( $_ ) {
 		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
-	my %mail = (
+	%mail = (
 		SMTP	=> $openprint::config{'Mail Server'},
 		FROM	=> $openprint::config{'AccountingEmail'},
 		TO		=> $openprint::config{'AccountingEmail'},
@@ -1195,14 +1196,13 @@ sub send_sales_order {
 		#BCC		=>	'iconnor@penultima.org',
 		SUBJECT => "Order $order_id",
 );
-	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
+	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	my @sales_order;
+	@body = ('', $_, 'text/html', 'quoted-printable');
+	@sales_order = ();
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
@@ -1225,10 +1225,10 @@ sub send_sales_order {
 	} # for each
 
 	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
-	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
+	@admin_emails = map { misc::trim(lc $_) } @admin_emails;
 
 	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
-	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+	@accounting_emails = map { misc::trim(lc $_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
@@ -1286,6 +1286,7 @@ sub get_projects {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 	my $order_id = $openprint::param{'OrderID'};
+	$order_id = $openprint::param{order_id} if $openprint::param{order_id};
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $openprint::param{'btnFunction'} eq 'AcceptTerms' ) {
@@ -1486,7 +1487,7 @@ sub cancel_order {
 		openprint::press_schedule::remove( $Project->id() );
 
 		# Free up any stock allocated to this project
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$Project->id()) ) {
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, qq`De-allocated $$PA{'quantity'}$$PA{'units'} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{'paper_id'}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
 			$PA->delete();
 		} # end foreach PA

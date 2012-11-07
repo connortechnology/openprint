@@ -26,19 +26,20 @@
 		<br/>
 	</div>
 	Projects highlighted in yellow are scheduled for printing.<br/>
+	<table><thead><tr>
 	<? echo (
 		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 		my $html;
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">'.$status.'</div>';
+			$html .= '<td class="PressColumn">'.$status.'</td>';
 		} # end foreach
 		return $html;
 		) ?>
-	<hr style="clear: both;"/>
+	</tr></thead><tbody><tr>
 	<? echo (
 		my $html;
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
+			$html .= '<td class="PressColumn">';
 			$html .= '<ul>';
 			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber',
 				( $param{'operator_id'} ? ( 'operator_id in' => $param{'operator_id'} ) : () ),
@@ -104,9 +105,9 @@
 				$html .= '<br/></li>';
 			} # end foreach Project
 			$html .= '</ul>';
-			$html .= '</div>';
+			$html .= '</td>';
 		} # end foreach press
 		return $html;
 	) ?>
+	</tr></tbody></table>
 </form>
-<br class="spacer"/>

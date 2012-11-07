@@ -417,9 +417,8 @@ sub yearly_sales {
 	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_start', -365 );
 	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_end', '' );
 
-
 	if ( exists $param{'Download'} ) {
-		my @header = ( 'CSR', 'Company Name' );
+		my @header = ( 'CSR', 'Company Name', 'Contact Name', 'Contact Phone', 'Contact Email' );
 		my @data;
 		my @csr_ids;
 		if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
@@ -440,6 +439,7 @@ sub yearly_sales {
 		foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
 			push @header, ( 'Orders ' . $year, 'Value ' . $year, 'Payment Cycle ' . $year );
 		} # end foreach year
+		push @header, 'Last Order';
 
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
@@ -447,8 +447,12 @@ sub yearly_sales {
 
 			my @Companies = openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)');
 			foreach my $Company ( @Companies ) {
+				my $Contact = openprint::User::find_one('company_id'=>$Company->id(), 'administrator'=>1, 'web_active'=>1,'order'=>'index');
+				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'web_active'=>1, 'order'=>'index') if ! $Contact;
+				$Contact = openprint::User::find_one('company_id'=>$Company->id(), 'order'=>'index') if ! $Contact;
+				$Contact = new openprint::User() if ! $Contact;
 
-				push @data, $CSR->name(), $Company->name();
+				push @data, $CSR->name(), $Company->name(), $Contact->name(), $Contact->phone(), $Contact->email();
 
 				foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
 					my $order_total;
@@ -475,12 +479,20 @@ sub yearly_sales {
 					$totals{$year}[1] += $order_total;
 					$totals{$year}[2] += $payment_cycle;
 				} # end foreach year
+				my $LastOrder = openprint::Order::find_one( 
+						'company_id' => $Company->id(),
+						'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						'order'	=>	$openprint::Order::fields{'id'}.' DESC',
+						);
+				push @data, $LastOrder?Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $LastOrder->created_on() ) ):'';
+				last if $dbh->errstr();
 			} # end foreach Company
 			
 			push @data, ( 'Totals:', '' );
 			foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
 				push @data, $totals{$year}[0], openprint::Currency::format($totals{$year}[1]), (@Companies ? int($totals{$year}[2]/@Companies) : 0). ' days';
 			} # end foreach year
+			push @data, '';
 
 		} # end foreach CSR
 		misc::export_csv( $r, $log, \%variable, 'yearly_sales.csv', \@header, \@data );
@@ -492,7 +504,8 @@ sub _yearly_sales {
 			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
 			'salesrep_id' );
 } # end sub _yearly_sales
+sub bindery {
+} # end sub bindery
 
 1;
-
 __END__

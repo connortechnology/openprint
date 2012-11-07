@@ -3,20 +3,21 @@
 	my @pageflips;
 	
 	my @files;
-	my $pageflipdir = '/media/ARCHIVE1/PageFlip';
-	if ( opendir( DIRHANDLE, $pageflipdir ) ) {
+	if ( opendir( DIRHANDLE, $config{'PageFlipDir'} ) ) {
 		@files = readdir DIRHANDLE;
 		closedir DIRHANDLE;
 	} else {
-		return '<div class="error">Unable to read directory</div>';
+		return '<div class="error">Unable to read directory: ' . $config{PageFileDir}.'</div>';
 	} # end if
 
 	foreach my $file ( @files ) {
 		next if $file =~ /^\./;
-		if ( ! -e $pageflipdir.'/'.$file ) {
-			$log->warn('files doesnt exist? ' . $pageflipdir.'/'.$file );
+		my $path = $config{PageFlipDir}.'/'.$file;
+
+		if ( ! -e $path ) {
+			$log->warn('files doesnt exist? ' . $path );
 		} 
-		next if ! -d $pageflipdir.'/'.$file;
+		next if ! -d $path;
 		push @pageflips, $file;
 	} # end foreach file
 

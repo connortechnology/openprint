@@ -39,20 +39,15 @@
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
+			next if $session{'/employee/purchase_order/history.html?vendor_category_id'} and $PO->Supplier()->category_id() != $session{'/employee/purchase_order/history.html?vendor_category_id'};
+
 			if ( $param{'contains'} ) {
 				my $next = 1;
 				foreach my $C ($PO->Contents()) {
 					if ( $C->description() =~ /$param{'contains'}/i ) {
 						$next = 0;
 						last;
-					} # end if
-				} # end foreach
-				next if $next;
-			} # end if
-			if ( $param{'item_contains'} ) {
-				my $next = 1;
-				foreach my $C ($PO->Contents()) {
-					if ( $C->item() =~ /$param{'item_contains'}/i ) {
+					} elsif ( $C->item() =~ /$param{'contains'}/i ) {
 						$next = 0;
 						last;
 					} # end if
@@ -64,6 +59,9 @@
 				next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
 			} else {
 				next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
+			} # end if
+			if ( $session{'/employee/purchase_order/history.html?department_id'} ) {
+				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
 			push @{$$variable{'PurchaseOrders'}}, $PO;
@@ -77,15 +75,15 @@
 <table class="List sortable">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
+		<th class="checkbox"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-		<th class="id">ID</th>
+		<th class="po_id">ID</th>
 		<th class="DateTime">Date</th>
-		<th style="text-align: left;">Supplier</th>
-		<th style="text-align: left;">Created By</th>
-		<th style="text-align: left;">Authorized/Declined By</th>
-		<th width="100" style="text-align: left;">Manifest</th>
-		<th width="100" style="text-align: left;">Docket</th>
+		<th class="Company">Supplier</th>
+		<th class="User">Created By</th>
+		<th class="AuthorizedBy">Authorized/Declined By</th>
+		<th class="manifest_id">Manifest</th>
+		<th class="Docket">Docket</th>
 		<th class="Price">Total</th>
 	</tr>
 	<? echo ( 
@@ -95,7 +93,7 @@
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $PO->id() );
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
+				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if
 			my $total = $PO->total();
 
@@ -106,13 +104,13 @@
 			} # end if
 
 			$html .= sprintf( q`
-				<td class="id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
+				<td class="po_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%1$d</a></td>
 				<td class="DateTime"><a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a></td>
-				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
-				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
-				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
-				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
-				<td><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
+				<td class="Company"><a href="/employee/purchase_order/view.html?po_id=%1$d">%3$s</a></td>
+				<td class="User"><a href="/employee/purchase_order/view.html?po_id=%1$d">%4$s</a></td>
+				<td class="AuthorizedBy"><a href="/employee/purchase_order/view.html?po_id=%1$d">%6$s</a></td>
+				<td class="manifest_id"><a href="/employee/purchase_order/view.html?po_id=%1$d">%7$s</a></td>
+				<td class="Docket"><a href="/employee/purchase_order/view.html?po_id=%1$d">%8$s</a></td>
 				<td class="Price">%5$s</td>
 			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), 
 				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
@@ -122,7 +120,7 @@
 				);
 			$report_total += $total;
 		} # end while
-		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '">Total (' . $Currency->name().') :</td><td class="Price">';
 		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
 		return $html;

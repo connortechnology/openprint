@@ -3,6 +3,7 @@ require sql;
 require openprint::CAR_Area;
 require openprint::CAR_Reason;
 require openprint::Email;
+require openprint::usergroup;
 
 package openprint::CAR;
 our @ISA = qw(openprint::Object);
@@ -59,6 +60,9 @@ $serial = 'car_id_seq';
 );
 
 %transforms = (
+	'reprint_quantity'	=>	[ 's/[^\d\.]//g' ],
+	'reprint_value'		=>	[ 's/[^\d\.]//g' ],
+	'docket'			=>	[ 's/[\D]//g' ],
 );
 %defaults = (
 	'issued_to_id'	=> undef,
@@ -229,6 +233,13 @@ sub Reason {
 sub issued_to {
 	return new openprint::User( $_[0]{issued_to_id} );
 } # end sub issued_to
+
+sub can_edit {
+	return 1 if $openprint::session{'user_type'} eq 'A';
+	return 1 if $openprint::session{'user_id'} == $_[0]{'issued_by_id'};
+	return 1 if openprint::usergroup::is_user_in( ['Reprint Approvals','Quality Control'], $openprint::session{'user_id'} );
+	return 0;
+} # end sub can_edit
 
 1;
 __END__

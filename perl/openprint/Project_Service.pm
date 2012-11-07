@@ -2,17 +2,15 @@ use strict;
 package openprint::Project_Service;
 our @ISA = qw(openprint::Object);
 
-use openprint ();
-
+require openprint;
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $log $debug %fields %transforms %defaults $table $serial @identified_by );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 %fields = (
 	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',
@@ -86,7 +84,6 @@ sub runtime {
 	my $Project = $self->Project();
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = $self->specs();
-$log->debug("Project Service runtime $$specs{'ServiceType'}");
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
 		return $$time{'Total'} if $time;
@@ -108,5 +105,24 @@ sub ordered_price {
 	return $$specs{'txtPrice'.$_[0]->Project()->ordered_quantity_index()};
 } # end sub ordered_price
 
+sub overrides {
+	my ( $self, $qty_index ) = @_;
+	my $module = 'openprint::Estimating::'.$_[0]->ServiceType()->name();
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::AdditionalSignature';
+	$module = 'openprint::Estimating::Printing' if $module eq 'openprint::Estimating::';
+	if ( my $function = $module->can( 'has_overrides' ) ) {
+		my $specs = $_[0]->specs();
+		my @o = $function->( $self->Project(), $$self{'service_id'}, $specs, $qty_index );
+		return @o;
+	} # end if
+	return ();
+} # end sub overrides
+
+sub delete {
+	my ( $self ) = @_;	
+	my $specs = $self->specs();
+	openprint::print_project::delete_service( $log, $openprint::dbh, @$self{'project_id','service_id'} );
+	$self->Project()->add_to_log( @openprint::session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+} # end sub delete
 1;
 __END__

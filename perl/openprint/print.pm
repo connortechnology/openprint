@@ -241,7 +241,7 @@ sub print_prices {
 
 	$$variable{'Mode'} = $Project->mode();
 
-	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+	@{$$variable{'ddmPressOptions'}} = map { $_->strid(), $_->name() } openprint::Equipment->find(useinestimating=>1,'category' => 'Printing', order=>'lower(strname)' );
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	load_template_sizes( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
@@ -514,7 +514,7 @@ sub publication_pages {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION *******************************");
 	
-	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+	@{$$variable{'ddmPressOptions'}} = map { $_->strid(), $_->name() } openprint::Equipment->find(useinestimating=>1,'category' => 'Printing', order=>'lower(strname)' );
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	load_template_sizes ( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
@@ -623,7 +623,7 @@ sub get_finished_weight {
 # Finished calliper for books will be calculated from the first qty.  All three should be the same.
 sub get_finished_calliper { 
 	my ( $project_index ) = @_; 
-	$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
+	#$openprint::log->debug("******************************* GETTING FINSIHED CALLIPER PROJECT TYPE *********************************");
 
 	my $Project = new openprint::Project( $project_index );
 	my %services = $Project->get_services();
@@ -638,7 +638,7 @@ sub get_finished_calliper {
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
 		my $calliper = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
-$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
+#$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
 			$finished_calliper += $calliper / 2;
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {

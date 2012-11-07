@@ -1,14 +1,14 @@
+use strict;
 package misc;
 require Exporter;
-@ISA = qw(Exporter);
-@EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
+our @ISA = qw(Exporter);
+our @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
 
-use Text::CSV_XS;
+use Text::CSV_XS ();
 
-use MIME::QuotedPrint;
-use Mail::Sendmail;
+#use MIME::QuotedPrint;
+use Mail::Sendmail ();
 
-use strict;
 use openprint ();
 
 sub send_email_with_attached_files {
@@ -67,7 +67,7 @@ sub send_email_with_attachment {
 
 	# Signal end of attachments
 	$$mail{BODY} .= "$boundary--\n\n";
-	sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
+	Mail::Sendmail::sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
 } # end sub send_email_with_attachment
 
 # Loads the specified file and returns it.  Returns undef on failure.
@@ -160,13 +160,13 @@ sub get_destination {
 	my ( $r, $log, $uri ) = @_;
 	my $dest = $uri ? $uri : $r->uri();
 	my @keys = $r->param();
-	if ( @keys ) {
-		$dest .= '?';
-		my @params;
-		foreach my $key ( @keys ) {
-			push @params, join( '=', ($key, $r->param($key)));
-		} # end foreach
-		$dest .=  join( '&', @params );
+	my @values;
+	foreach my $key ( @keys ) {
+		next if $key eq 'password';
+		push @values, map { $key.'='.$_ } ( ref $r->param($key) eq 'ARRAY' ? @{$r->param($key)} : $r->param($key) );
+	} # end ofreach     
+	if ( @values ) {
+		$dest .= '?' . join('&', @values );
 	} # end if
 	return $dest;
 } # end sub get_destination
@@ -368,7 +368,7 @@ sub format_bytes {
 	if ( $_[0] > 1048576 ) {
 		return sprintf( "%$_[1]f MB", $_[0] / 1048576 );
 	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%$_[1]f KB', $_[0] / 1024 );
+		return sprintf( "%$_[1]f KB", $_[0] / 1024 );
 	} else {
 		return $_[0].' B';
 	} # end if

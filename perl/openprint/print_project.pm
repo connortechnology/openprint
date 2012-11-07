@@ -154,7 +154,7 @@ sub get_incomplete_services_in_category {
 		my %services = $Project->get_services();
 
 		foreach my $index ( @{$services{'AdditionalSignature'}} ) {
-			if ( openprint::service::get_status( $log, $dbh, $index ) ne 'calculated' ) {
+			if ( openprint::service::get_status( $log, $dbh, $index, $project_index ) ne 'calculated' ) {
 				return $index;
 			} # end if
 		} # end foreach
@@ -196,7 +196,7 @@ sub choose_service {
 	$_ = "SELECT strValue, lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='ProjectType'";
 	my ( $project_type_id, $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
 
-	my $status = openprint::service::get_status( $log, $dbh, $service_index );
+	my $status = openprint::service::get_status( $log, $dbh, $service_index, $project_index );
 	
 	# if the printing service is unfinished, return it.
 	# the no url test will only occurr for the "no printing required" project type :)
@@ -717,6 +717,8 @@ sub create_edit_process {
 	$Project->programs( $r->param('chkPrograms') );
 	$Project->other_programs( $r->param('txtOtherPrograms') );
 	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
+	$Project->reprint( $openprint::param{'reprint'} );
+	$Project->reprint_reason( $openprint::param{'reprint_reason'} );
 
 # Handle ProjectType
 	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
@@ -794,8 +796,17 @@ sub delete_service {
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
-	my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index );
-	$Job->save( { 'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ] } ) if $Job;
+	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'service_id'=>$service_index ) ) {
+		$Job->save( { 
+				'service_id' => [ sets::exclude( [ $service_index ], $Job->service_id() ) ],
+				'pertains_id' => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
+	foreach my $Job ( openprint::ScheduledJob->find_one('project_id'=>$Project->id(), 'pertains_id'=>$service_index ) ) {
+		$Job->save( { 
+				'pertains_id' => [ sets::exclude( [ $service_index ], $Job->pertains_id() ) ],
+				} );
+	} # end foreach Job
 	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
@@ -938,13 +949,14 @@ sub calc {
 				@specs{'txtFinalWidth','txtFinalHeight'} = sql::execute( $log, $dbh, $_, @args );
 				@specs{'txtWidth','txtHeight'} = ($width, $height);
 				if ( ! $specs{'txtFinalWidth'} ) {
-					if ( ( my ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) ) {
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} * 1000 / $folds)/1000 );
+					my ( $pages, $folds );
+					if ( ( $pages, $folds ) = $specs{'FoldType'} =~ /^(\d+)pg(\d)Panel/ ) {
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth} * 1000 / $folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'} / (($pages/2)/$folds);
-					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
+					} elsif ( ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) {
 						#$folds =~ s/\D//g;
 						#$folds += 1;
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'}*1000/$folds)/1000 );
+						$specs{'txtFinalWidth'} = Math::Round::nearest(0.001, int($specs{txtWidth}*1000/$folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 					} # end if
 				} # end if
@@ -1292,7 +1304,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 
 		} # end if
 
-		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
+		if ( openprint::Estimating::Folding::neccessary( $project ) ) {
 			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {

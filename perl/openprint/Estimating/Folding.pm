@@ -18,7 +18,6 @@ package openprint::Estimating::Folding;
 use strict;
 
 require openprint::service;
-require sql;
 
 use vars qw( %fold_types );
 
@@ -32,6 +31,7 @@ my @variables = (
 		'MPrice1', 'MPrice2', 'MPrice3',
 		'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtRunTime1', 'txtRunTime2', 'txtRunTime3',
+		'alert',
 		);
 
 sub variables {
@@ -125,13 +125,12 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services( );
 
 	if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
         return 0;
     } # end if
 	if ( $$services{'MetalCoil'} ) {
@@ -156,9 +155,26 @@ sub neccessary {
 			return 1;
 		} # end if
 	} # end foreach
-	$log->debug("FOLDING NOT NEEDED! $$services{Folding}");
+	$openprint::log->debug("FOLDING NOT NEEDED! $$services{Folding}");
 	return 0;	
 } # end sub neccessary
+
+sub has_overrides {
+	my ( $Project, $service_id, $specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+	my @v;
+    foreach my $s_s_id ( $Project->signatures() ) {
+        my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+        foreach my $qty_index ( $Project->quantity_indexes() ) {
+            push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"};
+            push @v, "chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index" if $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"};
+        } # end foreach
+    } # end foreach
+
+	return @v;
+	
+} # end sub has_overrides
 
 # Finds the different ways to run the job, and returns different impositions
 sub impositions {
@@ -307,7 +323,7 @@ sub signature_calc {
 		} else {
 			if ( my @Press = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) ) {
 				my $Press = shift @Press;
-				if ( $Press->specification('Folding Capable') ) {
+				if ( $Press->specification('Folding Capable') eq 'When Printing' ) {
 					unshift @my_equipment, $Press;
 				} # end if
 			} # end if
@@ -328,6 +344,9 @@ sub signature_calc {
 		$$specs{'alert'} .= 'There is no Folding capable equipment.';
 		return;
 	} # end if
+#foreach my $E ( @my_equipment ) {
+#$openprint::log->debug("Equipment: $$E{strid}");
+#}
 
 	#$openprint::log->debug("Makereadies...");
 	my %makereadies;
@@ -588,10 +607,12 @@ sub calc {
 	my $status = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
 	#my @signature_service_indices = openprint::print::get_signature_indices( $log, $dbh, $project_index );
 	my $printing_specs = openprint::service::get_specs_ref( $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
 	@equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' );
+	@stitchers = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) if $$services{'SaddleStitching'};
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -653,13 +674,12 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'Y'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'When Printing'}, 'order'=>'lower(strname)' );
-	push @equipment, openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>'For Pocket Folders'}, 'order'=>'lower(strname)' ) if $Project->Type()->name() eq 'Presentation Folders';
+    my @folding_capable = ('Y','When Printing');
+    push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
+    push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
+    push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-		@equipment = sets::exclude( [ openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Stitching Capable'=>'Y'}, 'order'=>'lower(strname)' ) ], \@equipment );
-	} # end if
+	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 
 	@{$$variable{'Signatures'}} = ();
@@ -676,6 +696,21 @@ sub display {
 } # end sub display
 
 sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		foreach my $s_s_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+			if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+				return 'Overridden';
+			} # end if
+		} # end foreach
+	} else {
+		if ( $$specs{'alert'} ) {
+			return '<div class="warning">'.$$specs{'alert'}.'</span>';
+		} # end if
+	} # end if
+	
 	return '';
 } # end sub summary
 
@@ -685,24 +720,24 @@ sub runspeed {
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 	my $speed;
 	foreach my $type ( keys %fold_types ) {
-$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
+#$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
 		if ( $$specs{"$type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} ) {
 			$speed = $Equipment->specification( $type.'RunSpeed' );
 			last if $speed;
 		}# end if
 	}# end foreach
-$openprint::log->debug("Folding runspeed: ($speed)");
+#$openprint::log->debug("Folding runspeed: ($speed)");
 	if ( ! $speed ) {
 		my $Imposition = new openprint::Imposition;
 		$Imposition->load( $sig_specs, $qty_index );
-		$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
+		#$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
 		if ( $Imposition->pages() ) {
 			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
 		} # end if
 	} # end if
 	if ( ! $speed ) {
 		if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-			$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
+			#$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
 			$speed = $Equipment->specification( $$sig_specs{'rdbTemplateType'}.'PageSignatureFoldRunSpeed' );
 		}
 	} # end if

@@ -1,14 +1,14 @@
-package openprint::Company;
-@ISA = qw( openprint::Object );
 use strict;
-use Text::Unaccent;
+package openprint::Company;
+our @ISA = qw( openprint::Object );
+require Text::Unaccent;
 
-use vars qw( %fields %defaults %transforms );
+use vars qw( $debug %fields %defaults %transforms );
 use openprint ();
 
 require sql;
 require openprint::Object;
-require openprint::customer_credit;
+require openprint::Company_Credit;
 
 %fields = (
 		'id'						=>	'index',
@@ -57,6 +57,8 @@ require openprint::customer_credit;
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
+		'category_id'				=>	'category_id',
+		'offers_credit'				=>	'offers_credit',
 		);
 %transforms = (
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
@@ -71,9 +73,11 @@ require openprint::customer_credit;
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
 	'deleted'		=>	0,
+	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
-my $debug = 1;
+$debug = 1;
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -133,6 +137,14 @@ sub find {
 			$sql .= q{ AND lngSalesPerson=?};
 			push @values, $params{'salesrep_id'};
 		} # end if
+	} # end if
+	if ( $params{'offers_credit'} ) {
+		$sql .= q{ AND offers_credit=?};
+		push @values, $params{'offers_credit'};
+	} # end if
+	if ( $params{'category_id'} ) {
+		$sql .= q{ AND category_id=?};
+		push @values, $params{'category_id'};
 	} # end if
 	if ( $params{'marketing_category_id'} ) {
 		$sql .= q{ AND Index IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
@@ -336,9 +348,9 @@ sub start_year {
 } # end sub start_year
 
 sub Credit {
-	my ( $self, $supplier ) = @_;
-	
-	return new openprint::customer_credit( $$self{id}, $supplier );
+	my $supplier = $_[1] ? $_[1] : $openprint::config{'Owner'};;
+
+	return new openprint::Company_Credit( { 'company_id'=>$_[0]{id}, 'supplier_id'=>$supplier } );
 } # end sub Credit
 
 sub dropdown {
@@ -347,7 +359,7 @@ sub dropdown {
 	my $sql = 'SELECT Index, strName FROM Company WHERE (deleted=false or deleted IS NULL)';
 	my @values;
 
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
+	if ( $openprint::session{user_id} and ( $openprint::session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' AND Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
 	} # end if

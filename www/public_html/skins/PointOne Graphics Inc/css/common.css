@@ -39,6 +39,9 @@ body {
 	min-width: 880px;
 	max-width: 1280px;
 }
+input[type="radio"],input[type="checkbox"] {
+	vertical-align: middle;
+}
 input, select, textarea {
 	color: black;
 	font-size: small;
@@ -251,7 +254,7 @@ p.buttons {
 }
 
 fieldset p,
-fieldset ul li {
+fieldset li {
 	margin: 0;
 	margin-top: .4em;
 	padding: 0 0 0 185px;
@@ -283,7 +286,7 @@ fieldset p select {
     width: 70%;
 	vertical-align: top;
 }
-fieldset p textarea, fieldset ul li textarea {
+fieldset p textarea, fieldset li textarea {
     width: 70%;
 }
 fieldset p option {
@@ -323,7 +326,7 @@ fieldset ul:after {
     clear: both; 
     visibility: hidden;
 }
-fieldset ul li:after {
+fieldset li:after {
     content: "."; 
     display: block; 
     height: 0; 
@@ -332,13 +335,13 @@ fieldset ul li:after {
     visibility: hidden;
 }
 
-fieldset ul li label {
+fieldset li label {
 	width: 180px;
 	margin: 0px 0px 0px -185px;
 	float: left;
 	text-align: right;
 }
-fieldset ul li label.radio {
+fieldset li label.radio {
 	vertical-align: middle;
 	width: auto;
 	margin: 0px;
@@ -355,8 +358,22 @@ fieldset ul li input[type="text"] {
 	margin-left: -80px;
 	width: 75px;
 }
+.dialog input[type="text"],
+.dialog input[type="number"],
+.dialog textarea {
+	width: 100%;
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	resize: vertical;
+}
+table input[type="text"], table input[type="number"] {
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+}
 
-fieldset.filters {
+.filters {
 	margin-left: 0px;
 	margin-right: 0px;
 	padding: 0px;
@@ -374,7 +391,7 @@ fieldset.filters {
     }
 }
 @media screen {
-fieldset.filters:after {
+.filters:after {
     content: ".";
     display: block;
     height: 0;
@@ -384,25 +401,25 @@ fieldset.filters:after {
 
 }
 
-fieldset.filters p {
+.filters p {
 	padding-left: 135px;
 }
-fieldset.filters p label {
+.filters p label {
 	width: 130px;
 	margin-left: -135px;
 }
-fieldset.filters p label.radio {
-	margin: 0px;
+.filters p label.radio {
+	margin: 0;
 	width: auto;
 }
-fieldset.filters p input, fieldset.filters ul li input {
+.filters input[type="text"], .filters input[type="text"] {
 	width: auto;
 }
-fieldset.filters p select {
+.filters p select {
 	width: auto;
 	max-width: 100%;
 }
-
+}
 .row {
 /*
 	height: 29px;
@@ -447,7 +464,7 @@ hr {
         background-color: #000088;
 }
 
-.error, .warning {
+.error, .warning, .warning a {
         color: red;
 }
 
@@ -530,7 +547,7 @@ td.StockQuantity, th.StockQuantity, tr .StockQuality {
 	width: 100px;
 	text-align: right;
 }
-td.Quantity, th.Quantity {
+table .Quantity {
 	width: 40px;
 	text-align: right;
 }
@@ -547,8 +564,8 @@ td.Company, th.Company {
 	text-align: left;
 	overflow:hidden;
 }
-td.checkbox, th.checkbox {
-	width: 20px;
+table .checkbox {
+	width: 30px;
 	text-align: center;
 }
 td.Price, th.Price {
@@ -565,15 +582,15 @@ td.Cost, th.Cost {
 	width: 130px;
 	text-align: right;
 }
-span.DateSelector {
+.DateSelector {
 	float: left;
 	width: 275px;
 }
-span.DateSelectorC {
+.DateSelectorC {
 	float: left;
 	width: 275px;
 }
-span.DateSelectorCT {
+.DateSelectorCT {
 	min-width: 300px;
 	display: inline-block;
 }
@@ -585,9 +602,7 @@ span.DateSelectorCT {
 	width: auto;
 	max-width: none;
 }
-span.DateSelector select option {
-}
-span.time {
+.time {
 	margin-left: 5px;
 }
 
@@ -663,7 +678,7 @@ form.inplaceeditor-form a { /* The cancel link */
     background-color: yellow;
 }
 
-input.filter, fieldset p input.filter, fieldset ul li input.filter {
+input[type="text"].filter, fieldset p input.filter, fieldset li input.filter {
 	width: 40px;
 }
 
@@ -759,4 +774,20 @@ td p label {
 }
 #QuickLogin fieldset input {
 	width: 90%;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+table .project_id {
+	text-align: left;
+	width: 75px;
+}
+#trustlogo {
+    position: fixed;
+    right: 0;
+    bottom: 0;
 }

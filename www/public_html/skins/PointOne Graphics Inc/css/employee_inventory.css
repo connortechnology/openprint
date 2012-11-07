@@ -18,31 +18,70 @@ table .inventory {
 	text-align: left;
 	width: 200px;
 }
-table .buttons {
-	width: 40px;
+table .condition {
+	text-align: left;
+	width: 100px;
+}
+table.List .buttons {
+	width: 60px;
 }
 table .mweight, table .gsm {
 	text-align: right;
 	width: 50px;
 }
-table .on_order, table .allocated, table .in_stock {
+table .on_order, table .allocated, table .in_stock, table .Quantity, table .qty_lbs, table .qty_kgs {
 	text-align: right;
 	width: 90px;
+	padding-right: 5px;
 }
-table .location {
+table .Location {
 	text-align: left;
-	width: 100px;
 }
 table .Condition {
-	width: 100px;
 	text-align: left;
 }
 
 #SkidResults table .RFID,
+#Allocations table .RFID,
 #CurrentInventory table .RFID {
-	width: 60px;
+	width: 95px;
 }
 
 input#quantity {
+	width: 100%;
+}
+table .Employee, table .Comment {
+	text-align: left;
+}
+table .RFIDScanner {
+	width: 140px;
+	text-align: left;
+}
+#Allocate fieldset p {
+	padding: 0;
+}
+#Allocate fieldset li {
+padding-left: 100px;
+}
+#Allocate fieldset li label {
+	margin-left: -100px;
+	width: 100px;
+}
+#Allocate fieldset li label.radio {
+	margin-left: 0;
+	width: auto;
+}
+#Allocate input {
+	width: 60px;
+}
+.captcha input {
+	width: 40px;
+}
+.captcha img {
+	height: 24px;
+	vertical-align: middle;
+}
+
+.qty_lbs input, .qty_kgs input, .Docket input, .Skid input {
 	width: 100%;
 }

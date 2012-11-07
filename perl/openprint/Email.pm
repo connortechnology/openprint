@@ -4,7 +4,6 @@ package openprint::Email;
 our @ISA = qw( openprint::Object );
 
 use openprint ();
-require openprint::User;
 require email;
 require misc;
 require ssi;
@@ -14,7 +13,7 @@ use vars qw( $table $serial %fields %transforms %defaults $log %session %config 
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-$debug = 1;
+$debug = 0;
 $table = 'mailbox';
 
 %fields = (

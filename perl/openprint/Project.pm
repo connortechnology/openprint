@@ -99,22 +99,21 @@ sub jdf {
 	
 	my $doc = new XML::DOM::Document;
 	$doc->setXMLDecl( $doc->createXMLDecl( '1.0' ) );
-	my $project = $doc->appendChild($doc->createElement('JDF'));
-	$project->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
-	$project->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
-	$project->setAttribute('xsi:type','Product');
-	$project->setAttribute('Status','Waiting');
-	$project->setAttribute('Version', $version );
-	$project->setAttribute('MaxVersion', $version );
-	$project->setAttribute('JobID',$self->docket());
-	$project->setAttribute('JobPartID',$self->id());
-	$project->setAttribute('Type', 'Product' );
-	$project->setAttribute('ID', 'Docket'.$self->docket() );
-	$project->setAttribute('DescriptiveName', $self->summary() );
+	my $Product = $doc->appendChild($doc->createElement('JDF'));
+	$Product->setAttribute('xmlns','http://www.CIP4.org/JDFSchema_1_1');
+	$Product->setAttribute('xmlns:xsi','http://www.w3.org/2001/XMLSchema-instance');
+	$Product->setAttribute('xsi:type','Product');
+	$Product->setAttribute('Status','Waiting');
+	$Product->setAttribute('Version', $version );
+	$Product->setAttribute('MaxVersion', $version );
+	$Product->setAttribute('JobID',$self->docket());
+	$Product->setAttribute('JobPartID',$self->id());
+	$Product->setAttribute('Type', 'Product' );
+	$Product->setAttribute('ID', 'Docket'.$self->docket() );
+	$Product->setAttribute('DescriptiveName', $self->summary() );
 	#my $FinalResourcePool = $project->appendChild( $doc->createElement('ResourcePool') );
 	#my $FinalResourceLinkPool = $Product->appendChild( $doc->createElement('ResourceLinkPool') );
 
-	my $Product = $project;
 	#my $Product = $project->appendChild($doc->createElement('JDF'));
 	#$Product->setAttribute('Status','Waiting');
 	#$Product->setAttribute('ID', 'Product'.$self->id() );
@@ -135,7 +134,8 @@ sub jdf {
 				72*openprint::print::get_finished_calliper( $$self{'id'} )
 				));
 
-	my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
+	# Later on, this is accessed the getNode, 1.3 does not list this node in it's examples. This makes no sense without signature data
+	#my $Layout = $ProductResourcePool->appendChild( openprint::JDF::Layout( $doc, $self, undef, undef, undef, $version ) );
 	
 	#$Component->setAttribute('ReaderPageCount','2');
 
@@ -167,7 +167,7 @@ if ( 0 ) {
 
 	# Each part of a project is a signature, and has it's own Product Node
 	foreach my $sig_id ( $self->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $$self{'id'}, $sig_id );
+		my $sig_specs = openprint::service::get_specs_ref( $self, $sig_id );
 
 		my $Component = $ProductResourcePool->appendChild( $doc->createElement('Component') );
 		$Component->setAttribute('Class', 'Quantity');
@@ -271,7 +271,7 @@ if ( 1 ) {
 		$CustomerInfoLink->setAttribute('Usage','Input');
 		$CustomerInfoLink->setAttribute('rRef','CustInfo');
 	} else {
-		$CustomerInfo = $project->appendChild( $doc->createElement('CustomerInfo') );
+		$CustomerInfo = $Product->appendChild( $doc->createElement('CustomerInfo') );
 	} # end if
 	$CustomerInfo->setAttribute('CustomerID',$self->Company->id() );
 	#$CustomerInfo->setAttribute('Class', 'Parameter' );
@@ -302,7 +302,7 @@ if ( 1 ) {
 	} # end if
 } # end if
 
-	my $AuditPool = $project->appendChild( $doc->createElement('AuditPool') );
+	my $AuditPool = $Product->appendChild( $doc->createElement('AuditPool') );
 	my $Created = $AuditPool->appendChild( $doc->createElement('Created') );
 	$Created->setAttribute('Author', 'IntelligentQuote' );
 	my @gmtime = gmtime(time);
@@ -480,12 +480,16 @@ sub update_status {
 } # end sub update_project_status
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Project';
+	shift @_ if ref $_[0] eq 'openprint::Project';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
 	return $Results[0] if @Results;
 } # end sub find_one
 sub find {
+	shift @_ if $_[0] eq 'openprint::Project';
+	shift @_ if ref $_[0] eq 'openprint::Project';
 	my %params = @_;
 	my $sql = q{SELECT * FROM tbl_Projects WHERE 1>0};
 	my @values;
@@ -903,16 +907,17 @@ sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
 		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
+				q{SELECT *,daterequired, intquantityindex, cursalesprice FROM tbl_Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=Index WHERE Index=?}
 				, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
 		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+	} else {	
+	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/};
 	} # endif
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/};
 	return;
 } # end sub load
 
@@ -1178,7 +1183,7 @@ sub status_change {
 		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
@@ -1196,7 +1201,7 @@ sub status_change {
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 
@@ -1208,7 +1213,7 @@ sub status_change {
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 	} # end if
@@ -1223,7 +1228,7 @@ sub add_signature {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 	my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
-	openprint::service::status( $self->id(), $print_service_index, $status );
+	openprint::service::status( $self->id(), $print_service_index, $status ) if $status;
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 		( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );

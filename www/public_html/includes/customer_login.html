@@ -11,19 +11,19 @@
 			Please enter your e-mail address and password.<br /><br />
 			<p>
 				<label for="email">E-mail:</label>
-				<input type="text" id="email" name="email" value="<? echo ( $openprint::param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.Password );}" /><br/>
-				<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your email address.</span>
+				<input type="text" id="email" name="email" value="<? echo ( $param{'email'} ) ?>" onkeydown="if(event.keyCode == 13){checkLoginData( this, LoginForm.Password );}" /><br/>
+				<span id="missingLoginMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your email address.</span>
 			</p>
 			<p>
 				<label for="Password">Password:</label>
 				<input type="password" id="password" name="password" onkeydown="if(event.keyCode == 13){checkLoginData(LoginForm.email, this);}" /><br/>
-				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" border="0" width="12" height="8" /> Please enter your password.</span>
+				<span id="missingPasswordMessage" style="display: none;"><img src="/images/smallCurvedArrow.gif" alt="" width="12" height="8" /> Please enter your password.</span>
 			</p>
 			<p>
 				<label>Remember me:</label>
-				<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( $openprint::param{'rdbRememberMe'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+				<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" <? echo ( $param{'rdbRememberMe'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="rdbRememberMeY">Yes</label>
-				<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( $openprint::param{'rdbRememberMe'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+				<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" <? echo ( $param{'rdbRememberMe'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
 				<label class="radio" for="rdbRememberMeN">No</label>
 			</p>
 			<p class="buttons">

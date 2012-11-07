@@ -1,9 +1,9 @@
-package openprint::Order;
-@ISA=qw(openprint::Object);
-
 use strict;
+package openprint::Order;
+our @ISA=qw(openprint::Object);
+
 use openprint ();
-use vars qw( %session %config %variable $log $dbh %fields);
+use vars qw( $debug %session %config %variable $log $dbh %fields);
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -15,6 +15,7 @@ require openprint::logs;
 require openprint::OrderedProduct;
 require openprint::Payment;
 
+$debug = 1;
 %fields = (
 	'id'						=> 'index',
 	'company_id'				=> 'companyindex',
@@ -26,6 +27,8 @@ require openprint::Payment;
 	'harmonized_tax'			=> 'curharmtax',
 	'total'						=> 'curtotalsale',
 	'downpayment'				=> 'curdownpayment',
+	'cod_percent'				=>	'cod_percent',
+	'downpayment_percent'		=>	'downpayment_percent',
 	'created_on'				=> 'dtmorderdate',
 	'company_name'				=> 'strcompanyname',
 	'salutation'				=> 'strsalutation',
@@ -52,15 +55,22 @@ require openprint::Payment;
 	'invoiced_on'				=>	'invoiced_on',
 	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
+	'supplier_id'				=>	'supplier_id',
 	);
+
+sub find_one {
+	shift @_ if $_[0] eq 'openprint::Order';
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
-	if ( $_[0] eq 'openprint::Order' ) {
-		shift;
-	} # end if
+	shift @_ if $_[0] eq 'openprint::Order';
 #$openprint::log->debug("Order::find @_");
 	my %params = @_;
 	my @values;
-	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE 1>0';
+	my $sql = 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index) AS paid FROM Orders WHERE 1>0';
 	if ( $params{'id'} ) {
 		$sql .= ' AND index=?';
 		push @values, $params{'id'};
@@ -123,6 +133,15 @@ sub find {
 			push @values, $params{'status'};
 		} # end if
 	} # end if
+	if ( $params{'status not in'} ) {
+		if ( ref $params{'status not in'} eq 'ARRAY' ) {
+			$sql .= q{ AND strStatus NOT IN (} . join(',', map {'?'} @{$params{'status not in'}}). ')';
+			push @values, @{$params{'status not in'}};
+		} else {
+			$sql .= q{ AND (strStatus!=?)};
+			push @values, $params{'status not in'};
+		} # end if
+	} # end if
 	if ( $params{'salesrep_id'} ) {
 		$sql .= ' AND employeeindex=?';
 		push @values, $params{'salesrep_id'};
@@ -131,9 +150,13 @@ sub find {
 		$sql .= ' AND currencyindex=?';
 		push @values, $params{'currency_id'};
 	} # end if
+	if ( exists $params{'supplier_id'} ) {
+		$sql .= ' AND supplier_id=?';
+		push @values, $params{'supplier_id'};
+	} # end if
 	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND ( ((SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
-		push @values, @params{'owing_>','owing_>'};
+		$sql .= ' AND (curtotalsale - COALESCE((SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index),0) > ?) ';
+		push @values, $params{'owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
@@ -152,7 +175,7 @@ sub find {
 		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Orders: $sql @values");
 		return;
 	} else {
-		#$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
+		$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data) if $debug;
 		return map { new openprint::Order( $_->{index}, $_ ) } @$data;
 	} # end if
 } # end sub find
@@ -166,7 +189,7 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(curamount) FROM Payments WHERE deleted=false AND completed=true AND order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
 #$openprint::log->debug("Loaded order: " . $$self{'id'} );
 		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
 			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
@@ -396,8 +419,7 @@ sub projects {
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 } # end sub projects
 sub Projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $_[0]{'id'} );
 }
 
 sub Products {
@@ -442,22 +464,21 @@ sub Currency {
 
 sub pay {
 	my $self = shift;
-	$_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND order_id=Orders.Index) FROM Orders WHERE Index=?';
-	my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
-	if ( $amount - $paid <= 0 ) {
+	if ( $self->owing() <= 0 ) {
 		$self->update_status();
 		return "Order $$self{id} is already paid!<br/>";
 	} # end if
 
-	my ( $error ) = sql::insert( $openprint::log, $openprint::dbh, 'Payments',
-			'order_id',	 $$self{id},
-			'company_id',	$$self{company_id},
-			'curAmount',		$amount - $paid,
-			'dtmDate',			'NOW()',
-			'strMethod',		'Manual',
-			'currency_id',		$$self{currency_id},
-			'strDescription',	'Order marked paid',
-			);
+	my $error = (new openprint::Payment())->save({
+			'order_id'		=>	$$self{id},
+			'payor_id'		=>	$$self{company_id},
+			'recipient_id'	=>	$self->supplier_id(),
+			'amount'		=>	$self->owing(),
+			'method'		=>	'Manual',
+			'currency_id'	=>	$$self{currency_id},
+			'memo'			=>	'Order marked paid',
+			'received_on'	=>	'NOW()',
+			});
 	if ( ! $error ) {
 		$self->update_status();
 	} # end if
@@ -523,6 +544,62 @@ sub paid_on {
 	} # end if
 	return $Last_Payment->received_on();
 } # end sub paid_on
+
+sub downpayment_owing {
+	if ( ! exists $_[0]{'downpayment_owing'} ) {
+		$_[0]{'downpayment_owing'} = $_[0]->downpayment() - $_[0]->paid();
+		$_[0]{'downpayment_owing'} = 0 if $_[0]{'downpayment_owing'} < 0;
+	} # end if
+	return $_[0]{'downpayment_owing'};
+} # end sub downpayment_owing
+sub downpayment_percent {
+	if ( ! defined $_[0]{'downpayment_percent'} ) {
+		my $Credit = $_[0]->Company()->Credit();
+		$_[0]{'downpayment_percent'} = $Credit->downpayment();
+	} # end if
+	return $_[0]{'downpayment_percent'};
+} # end sub downpayment_percent
+sub cod_percent {
+	my $Credit = $_[0]->Company()->Credit();
+	return $Credit->cod();
+} # end sub cod_percent
+
+sub cod { 
+	return Math::Round::nearest( .01,$_[0]{'total'} * ($_[0]->cod_percent/100));
+} # end sub cod
+# Returns the remmaining amount to pay on delivery
+sub cod_owing {
+	if ( ! exists $_[0]{'cod_owing'} ) {
+		$_[0]{'cod_owing'} = $_[0]->cod() - $_[0]->paid();
+		$_[0]{'cod_owing'} = 0 if $_[0]{'cod_owing'} < 0;
+	} # end if
+	return $_[0]{'cod_owing'};
+} # end sub cod_owing
+sub cod_owing_percent {
+	my $cod_total = $_[0]->cod();
+	return 0 if ! $cod_total;
+	return 0 if (1*$_[0]->paid()) == (1*$cod_total);
+	return 0 if (1*$_[0]->paid()) eq (1*$cod_total);
+
+	my $owing = int($_[0]->paid()*100/$cod_total) if $cod_total;
+#$openprint::log->debug( "cod_toal $cod_total owing: $owing paid: " . $_[0]->paid() );
+
+	return 0 if $owing == 100;
+	return 100-$owing;
+	return 0;
+} # end sub cod_owing_percent
+sub supplier_id {
+	if ( @_ > 1 ) {
+		$_[0]{supplier_id} = $_[1];
+	} 
+	if ( ! $_[0]{supplier_id} ) {
+		$_[0]{supplier_id} = $openprint::config{'Owner'};
+	} # end if
+	return $_[0]{supplier_id};
+} # end sub supplier_id
+sub Supplier {
+	return new openprint::Company( $_[0]->supplier_id() );
+} # end sub Supplier
 
 1;
 __END__

@@ -288,7 +288,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 
 		$openprint::log->warn("Unspecified: for $$sig_specs{'txtSignatureType'} $unspecified_spreads");
 		if ( $unspecified_spreads == 0 ) {
-				if ( ! ( $$sig_specs{'txtSignatureSpreadQuantity1'}
+				if ( ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') and ! ( $$sig_specs{'txtSignatureSpreadQuantity1'}
 							or $$sig_specs{'txtSignatureSpreadQuantity2'}
 							or $$sig_specs{'txtSignatureSpreadQuantity3'} ) ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );

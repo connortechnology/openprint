@@ -1,9 +1,10 @@
-.company_name {
+.company_name, .contact_name, .contact_phone, .contact_email {
 	text-align: left;
 }
 .orders,
 .order_value,
 .Date,
+.last_order,
 .payment_cycle {
 	text-align: right;
 }

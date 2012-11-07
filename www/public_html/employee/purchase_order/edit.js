@@ -3,6 +3,20 @@ function load_content_type( index, type ) {
 	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
 
+function dept_onchange( element ) {
+	var re = /^dept_id-(\d+)$/
+	var matches = re.exec( element.name );
+	if ( matches ) {
+		var index = matches[1];
+		if ( element.getValue() == 'new' ) {
+			$('dept-'+index).show();
+		} else {
+			$('dept-'+index).hide();
+			$('dept-'+index).value = '';
+		} // end if
+	} // end if matches
+} // end function dept_onchange
+
 function set_item(index) {
 	var item = $('item-'+index);
 	item.value = '';
@@ -14,9 +28,11 @@ function set_item(index) {
 		item.value += type.options[type.selectedIndex].value + ' ';
 	} // end if
 	item.value += $('name-'+index).value;
-	ddm_select_by_text_case_insensitive( $('item_id-'+index), trim(item.value), 0 );
-}
+} // end function set_item(index)
 
+function filter_items( index, type_id ) {
+	new Ajax.Updater('item_id-'+index, '_items_dropdown.html', { parameters: { name_ilike: $('item-'+index).value, vendor_id: get_ddm_value($('supplier_id')), type_id: type_id } } );
+}
 
 function calc_price( element ) {
 	var re = /(.*)-(.*)/

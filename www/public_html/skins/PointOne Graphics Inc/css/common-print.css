@@ -58,6 +58,7 @@ display: none;
 }
 .filters,
 .Service div.templates,
-.ServerInfo {
+.ServerInfo ,
+#trustlogo {
 	display: none;
 }

@@ -32,31 +32,42 @@ sub variables {
     return @variables;
 } # end sub variables
 
+sub has_overrides {
+    my ( $Project, $service_id, $specs ) = @_;
+    $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+
+    my @v;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		push @v, "chkOverrideEquipment$qty_index" if $$specs{"chkOverrideEquipment$qty_index"};
+	} # end foreach
+
+    return @v;
+
+} # end sub has_overrides
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
-	if ( $services{'PerfectBound'} ) {
+	my $services = $Project->services();
+	if ( $$services{'PerfectBound'} ) {
 		return 0;
 	} # end if
-	if ( $services{'PlasticCoil'} ) {
+	if ( $$services{'PlasticCoil'} ) {
 		return 1;
 	} # end if
-	if ( $services{'MetalCoil'} ) {
+	if ( $$services{'MetalCoil'} ) {
 		return 1;
 	} # end if
-	if ( $services{'PlasticComb'} ) {
+	if ( $$services{'PlasticComb'} ) {
 		return 1;
 	} # end if
-	if ( $services{'Cerlox'} ) {
+	if ( $$services{'Cerlox'} ) {
 		return 1;
 	} # end if
-	if ( $services{'DoubleLoopWire'} ) {
+	if ( $$services{'DoubleLoopWire'} ) {
 		return 1;
 	} # end if
-	if ( $services{'CornerStitching'} ) {
+	if ( $$services{'CornerStitching'} ) {
 		return 1;
 	} # end if
 

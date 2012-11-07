@@ -4,7 +4,7 @@ use strict;
 require sql;
 require ssi;
 require misc;
-require openprint::customer_credit;
+require openprint::Company_Credit;
 require openprint::obj_customer;
 
 sub load_tradereferences {
@@ -150,19 +150,18 @@ sub load {
 	$$variable{'StateProvince'} = $$variable{'txtStateProvince'} = $$variable{'ddmStateProvince'};
 	$$variable{'txtBankAccountNumber'} = $$variable{'txtBankAccountNo'};
 
-	my $customer_credit = new openprint::customer_credit( $cust_id );
+	my $Credit = new openprint::Company_Credit({'company_id'=>$cust_id, 'supplier_id'=> $openprint::config{'Owner'}});
 	my %credit_fields = (
-			'txtWarnDays'		=>	'WarnDays',
-			'txtDenyDays'		=>	'DenyDays',
-			'txtCreditLimit'	=>	'Limit',
-			'rdbCreditHold'		=>	'Hold',
-			'txtDownpayment'	=>	'Downpayment',
+			'txtWarnDays'		=>	'warndays',
+			'txtDenyDays'		=>	'denydays',
+			'txtCreditLimit'	=>	'limit',
+			'rdbCreditHold'		=>	'hold',
+			'txtDownpayment'	=>	'downpayment',
+			'COD'				=>	'cod',
 			);
-	@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+	@$variable{ keys %credit_fields } = $Credit->get( values %credit_fields );
 
 } # end sub load
 
 1;
-
 __END__
-

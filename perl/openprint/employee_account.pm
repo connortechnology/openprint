@@ -119,6 +119,11 @@ sub logout {
 } # end sub logout
 
 sub login_confirmation {
+	if ( $openprint::param{'btnFunction'} eq 'Forgotten Password' ) {
+		openprint::login::forgotten_password();
+	} elsif ( $openprint::param{'btnFunction'} eq 'Login' ) {
+		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+	} # end if
 } # end sub login_confirmation
 
 sub password_confirmation {

@@ -7,23 +7,23 @@
 			<ul>
 				<li class="CompanyName">
 					<label for="tradereference<?index?>_companyname">Company Name: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" id="tradereference<?index?>_companyname" name="tradereference<?index?>_companyname" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?>" />
+					<input type="text" id="tradereference<?index?>_companyname" name="tradereference<?index?>_companyname" value="<? hecho ( $param{'tradereference'.$$variable{index}.'_companyname'} ? $param{'tradereference'.$$variable{index}.'_companyname'} : $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?>" />
 				</li>
 				<li class="Contact"> 
 					<label for="tradereference<?index?>_contact">Contact: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" id="tradereference<?index?>_contact" name="tradereference<?index?>_contact" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?>" />
+					<input type="text" id="tradereference<?index?>_contact" name="tradereference<?index?>_contact" value="<? hecho ( $param{'tradereference'.$$variable{index}.'_contact'} ? $param{'tradereference'.$$variable{index}.'_contact'} : $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?>" />
 				</li>
 				<li class="Phone"> 
 					<label for="tradereference<?index?>_phone">Phone: <span class="requiredFieldIndicator">*</span></label>
-					<input type="text" id="tradereference<?index?>_phone" name="tradereference<?index?>_phone" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?>" />
+					<input type="text" id="tradereference<?index?>_phone" name="tradereference<?index?>_phone" value="<? hecho ( $param{'tradereference'.$$variable{index}.'_phone'} ? $param{'tradereference'.$$variable{index}.'_phone'} : $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?>" />
 				</li>
 				<li class="Fax">
 					<label for="tradereference<?index?>_fax">Fax:&nbsp;&nbsp;&nbsp;</label>
-					<input type="text" id="tradereference<?index?>_fax" name="tradereference<?index?>_fax" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?>" />
+					<input type="text" id="tradereference<?index?>_fax" name="tradereference<?index?>_fax" value="<? hecho ( $param{'tradereference'.$$variable{index}.'_fax'} ? $param{'tradereference'.$$variable{index}.'_fax'} : $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?>" />
 				</li>
 				<li class="Email">
 					<label for="tradereference<?index?>_email">E-mail Address:&nbsp;&nbsp;&nbsp;</label>
-					<input type="text" id="tradereference<?index?>_email" name="tradereference<?index?>_email" value="<? hecho ( $$variable{'tradereference'.$$variable{index}.'_email'} ) ?>" />
+					<input type="text" id="tradereference<?index?>_email" name="tradereference<?index?>_email" value="<? hecho ( $param{'tradereference'.$$variable{index}.'_email'} ? $param{'tradereference'.$$variable{index}.'_email'} : $$variable{'tradereference'.$$variable{index}.'_email'} ) ?>" />
 				</li>
 			</ul>
 		</div>

@@ -12,7 +12,7 @@ use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 
 %fields = (
 	'id'			=>	'id',
@@ -35,6 +35,8 @@ $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::SkidContent';
+	shift @_ if ref $_[0] eq 'openprint::SkidContent';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
@@ -57,6 +59,10 @@ sub find {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'paper_id'};
 	} # end if
+	if ( $params{'condition_id'} ) {
+		$sql .= ' AND condition_id=?';
+		push @values, $params{'condition_id'};
+	} # end if
 	if ( $params{'Paper'} ) {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'Paper'}->id();
@@ -77,6 +83,10 @@ sub find {
 	} # end if
 	if ( exists $params{'allocated is not null'} ) {
 		$sql .= ' AND (SELECT SUM(quantity) FROM Paper_Allocations WHERE Paper_Allocations.skid_id=Skid_Contents.skid_id AND paper_allocations.paper_id=Skid_Contents.paper_id) IS NOT NULL';
+	} # end if
+	if ( $params{'manifestcontent_id'} ) {
+		$sql .= ' AND manifestcontent_id=?';
+		push @values, $params{'manifestcontent_id'};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -119,11 +129,14 @@ sub delete {
 	} # end if
 } # end sub delete
 sub allocateable {
-    my ( $self ) = @_;
-    return $self->quantity() - $self->allocation();
+	if ( ! exists $_[0]{'allocateable'} ) {
+		$_[0]{'allocateable'} = $_[0]->quantity() - $_[0]->allocated();
+		$_[0]{'allocateable'} = 0 if $_[0]{'allocateable'} < 0;
+	} # end if
+	return $_[0]{'allocateable'};
 } # end sub allocateable
 sub allocated {
-	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_id'=>$_[0]{'skid_id'});
+	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_ids any'=>$_[0]{'skid_id'});
 	return $PA->quantity() if $PA;
 	return 0;
 } # end sub allocated
@@ -144,6 +157,10 @@ sub condition {
     } # end if
     return $$self{'condition'};
 } # end sub condition
+
+sub Condition {
+	return new openprint::InventoryCondition( $_[0]{'condition_id'} );
+} # end sub Condition
 
 # Looks to find a PO matching this stock and pulls the value from it.
 sub cost {
@@ -167,7 +184,13 @@ sub cost {
 		} else {
 			my $POC = $MC->Type()->PurchaseOrder_Content();
 			return if ! $POC;
-			$$self{'cost'} = $POC->price();
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$$self{'cost'} = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$$self{'cost'} = $POC->price();
+			} # end if
 		} # end if
 	} # end if ! exists cost
     return $$self{'cost'};
@@ -196,7 +219,13 @@ sub value {
 		} else {
 			my $POC = $MC->Type()->PurchaseOrder_Content();
 			return if ! $POC;
-			$cost = $POC->price();
+			my $POCurrency = $POC->PurchaseOrder()->Currency();
+			if ( $POCurrency ) {
+				$cost = $POCurrency->convert_from( $POC->price() );
+			} else {
+				$log->error("No POCurrency");
+				$cost = $POC->price();
+			} # end if
 			$units = $POC->price_units();
 		} # end if
 		if ( (!$units) or sets::isin( $units, ['/100lbs', '', '/cwt' ] ) ) {

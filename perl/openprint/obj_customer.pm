@@ -50,6 +50,8 @@ my %fields = (
 	'Website'			=>	'strWebURL',	
 	'notes'				=>	'notes',
 	'deleted'			=>	'deleted',
+	'category_id'		=>	'category_id',
+	'offers_credit'		=>	'offers_credit',
 ); # end %fields
 
 my %transforms = (
@@ -74,6 +76,8 @@ my %defaults = (
 	'Reseller'	=>	'N',
 	'Supplier'	=>	'N',
 	'deleted'		=>	0,
+	'category_id'	=>	undef,
+	'offers_credit'	=>	0,
 );
 
 sub new {

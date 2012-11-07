@@ -77,16 +77,33 @@ There is no current project.
 			<td>
 				<? if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
 				<a href="/main/project/<?url?>?ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">
-				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( 
+					my $html = openprint::service::summary( @$variable{'ProjectIndex','index'} );;
+					my @service_ids = split(',', $$variable{'index'} );
+					my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+					if ( $Service->overrides() ) {
+						$html .= '<br/><b>With Overrides</b>'; 
+					} # end if
+					return $html;
+					 ) ?>
 </a>
 				<? else ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
-				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
+				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo (
+						my $html = openprint::service::summary( @$variable{'ProjectIndex','index'} );
+						my @service_ids = split(',', $$variable{'index'} );
+						my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+						if ( $Service->overrides() ) {
+							$html .= '<br/><b>With Overrides</b>'; 
+						} # end if
+						return $html;
+					) ?>
 				<? endif ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
 			</td>
 	<? echo ( 
 		my $html = '';
 		my @service_ids = split(',', $$variable{'index'} );
-		my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_ids[0] );
+		my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+		my $specs = $Service->specs();
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= qq`<td align="right">\n`;
 			if ( $$specs{"txtQuantity$qty_index"} and $$specs{"txtQuantity$qty_index"} != $$variable{"Quantity$qty_index"} ) {
@@ -112,6 +129,9 @@ There is no current project.
 				} # end if
 			} # end if
 			$html .= $summary;
+			if ( $Service->overrides( $qty_index ) ) {
+				$html .= '<br/><b>With Overrides</b>'; 
+			} # end if
 			$html .= "</td>\n";
 		} # end foreach qty_index
 		return $html;
@@ -185,7 +205,9 @@ There is no current project.
 <br class="spacer"/>
 <br/>
 <div style="float:left; p\osition: relative; height: 19px;">
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', "f1.action='/main/project/summary.html';f1.btnFunction.value='Project Summary';f1.submit();", '', 'Summary' ); ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<? if ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'EditProject', 'editProject.gif', "f1.action='/main/project/create_edit.html';f1.btnFunction.value='Edit Project';f1.submit();", '', 'Edit' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'DeleteProject', 'delete_project.gif', "if(confirm('Are you sure?')){f1.action='/main/project/history.html';f1.btnFunction.value='Delete Project';f1.submit();}", '', 'Delete' ); ) ?>

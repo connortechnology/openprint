@@ -34,7 +34,7 @@ sub User {
 
 sub Files {
 	my $self = shift;
-	return openprint::File::find('upload_id'=>$$self{id});
+	return openprint::File->find('upload_id'=>$$self{id});
 } # end sub
 
 sub total_text {

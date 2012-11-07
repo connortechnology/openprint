@@ -17,6 +17,7 @@ require openprint::PaperInventory;
 require openprint::CIP3_PPF;
 require openprint::logRecord;
 require openprint::Asset;
+require openprint::Claim_Content;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -42,10 +43,10 @@ $openprint::Object::no_cache = 1;
 configuration::init_cache( $log, $dbh );
 
 # Clear out old sessions
-my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @session_ids . " sessionsn in system");
+my $session_ids = $dbh->selectcol_arrayref( q{SELECT id FROM sessions} );
+$log->warn("Cleaning out sessions: " . @$session_ids . " sessionsn in system");
 my $deleted_session_count = 0;
-foreach my $session ( @session_ids ) {
+foreach my $session ( @$session_ids ) {
     $session =~ s/\s//g;
     my %session;
     if ( ! eval q`tie %session, 'Apache::Session::Postgres', $session, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
@@ -66,7 +67,7 @@ foreach my $session ( @session_ids ) {
 		undef %session;
 	} # end if
 } # end foreach
-@session_ids = ();
+@$session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
 if ( 1 ) {
@@ -80,7 +81,6 @@ if ( 1 ) {
 			'limit'		=>	1000,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of uncalculated projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'uncalculated' ) {
@@ -101,12 +101,11 @@ if ( 1 ) {
 			} # end if
 			$Project->delete();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 
 	@Projects = openprint::Project::find(
 			'status'=>'Unordered',
-			'order'=>'index',
+			'order'=>'index desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'limit'		=>	1000,
@@ -114,7 +113,6 @@ if ( 1 ) {
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
-		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
 				$log->error('Quoted!' . $Project->id());
@@ -134,7 +132,6 @@ if ( 1 ) {
 			} # end if
 			$Project->delete();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project::find(
 			'status'=>'Deleted','order'=>'index desc',
@@ -144,7 +141,6 @@ if ( 1 ) {
 			'quote_id exists'	=>	0,
 			);
 	if ( @Projects ) {
-		my $ac = sql::start_transaction( $dbh );
 		$log->warn("# of Deleted projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		foreach my $Project ( @Projects ) {
 			if ( $Project->status() ne 'Deleted' ) {
@@ -158,7 +154,6 @@ if ( 1 ) {
 			} # end if
 			$Project->destroy();
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
 } # end if 1
 if ( 1 ) {
@@ -310,6 +305,26 @@ foreach my $Asset ( openprint::Asset->find('md5 is null'=>1) ) {
 		last if $_;
 	} # end if
 } # end foreach Asset
+
+my $deleted_skids = 0;
+foreach my $Skid ( openprint::Skid->find(
+            'created_on <='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), (2*-365)+2 ) ),
+            'created_on >='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), 2*-365 ) ),
+            ) ) {
+    my $delete = 1;
+    my @Contents = $Skid->Contents();
+    foreach my $C ( @Contents ) {
+        $delete = 0 if $C->quantity();
+    }
+    $delete = 0 if openprint::Claim_Content->find('skid_id'=>$$Skid{id});
+    $delete = 0 if openprint::ManifestContent->find('skid_id'=>$$Skid{id});
+    if ( $delete ) {
+        $Skid->destroy();
+        $deleted_skids += 1;
+    } # end if
+} # end foreach Skid
+$log->warn("Deleted $deleted_skids skids");
+
 $dbh->disconnect();
 1;
 __END__

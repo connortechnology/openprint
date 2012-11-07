@@ -1,0 +1,109 @@
+#Button1, #Button2, #Button3,
+#Button4, #Button5, #Button6,
+#Button7, #Button8, #Button9,
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+#Button0, #ButtonRefresh, #ButtonD {
+	width: 25px;
+	height: 25px;
+}
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide {
+	background-color: #000088;
+}
+#ButtonC,#ButtonD {
+	background-color: #008800;
+}
+#ButtonEquals {
+	background-color: #ffb4da;
+}
+@media only screen and (max-device-width: 480px) {
+	#Button1, #Button2, #Button3,
+	#Button4, #Button5, #Button6,
+	#Button7, #Button8, #Button9,
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+	#Button0, #ButtonRefresh, #ButtonD {
+		width: 50px;
+		height: 50px;
+	}
+}
+@media only screen and (max-device-width: 768px) {
+	a.buttonImageOff .c {
+	font-size: 60px;
+}
+	#Button1, #Button2, #Button3,
+	#Button4, #Button5, #Button6,
+	#Button7, #Button8, #Button9,
+#ButtonPlus, #ButtonMinus, #ButtonMultiply,
+#ButtonDivide, #ButtonEquals, #ButtonC,
+	#Button0, #ButtonRefresh, #ButtonD {
+		width: 75px;
+		height: 75px;
+	}
+	#Button1 .c, #Button2 .c, #Button3 .c,
+	#Button4 .c, #Button5 .c, #Button6 .c,
+	#Button7 .c, #Button8 .c, #Button9 .c,
+	#Button0 .c, #ButtonRefresh .c, #ButtonD .c {
+	font-size: 60px;
+
+	}
+	.leftColumn {
+		width: 468px;
+	font-size: 30px;
+	}
+	.leftColumn input, .leftColumn textarea {
+	width: 100%;
+box-sizing: border-box;
+-moz-box-sizing: border-box;
+-webkit-box-sizing: border-box;
+	font-size: 30px;
+}
+	.leftColumn select {
+	width: 100%;
+		font-size: 20px;
+	}
+	.rightColumn {
+		width: 265px;
+	}
+	fieldset p, fieldset ul li {
+		padding-left: 150px;
+	}
+	fieldset p label, fieldset ul li label {
+		width: 150px;
+		margin-left: -150px;
+	}
+}
+.sigPad {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.sigPad input.error {
+  border-color: #f33;
+}
+
+.sig {
+  display: none;
+}
+
+.pad {
+	position: relative;
+	
+}
+
+.current .pad {
+}
+
+label:after {
+	content: ':';
+}
+#signature {
+	width: 100%;
+	height: 200px;
+	background-color: white;
+}
+.Focused {
+	background-color: yellow;
+}

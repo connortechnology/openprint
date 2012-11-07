@@ -1,5 +1,5 @@
 <? if ( $$variable{'PurchaseOrder'}->can_view() ) ?>
-<form id="f1" name="f1" action="history.html" method="post">
+<form id="f2" name="f2" action="history.html" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
@@ -8,25 +8,31 @@
 	my $html = '';
 	my $User = new openprint::User( $session{'user_id'} );
 	if ( ( ! $$variable{'PurchaseOrder'}->authorized() ) and ( $$variable{'PurchaseOrder'}->total() < $User->purchasing_limit() ) ) {
-		$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();" } );
+		$html .= ssi::button( 'Authorize', { 'onclick'=>"f2.btnFunction.value='Authorize';f1.submit();" } );
 	} # end if
 	$html .= ssi::button( 'Print', { 'onclick'=>'window.print();' } );
 	if ( $session{'user_type'} eq 'A' ) {
-		$html .= ssi::button( 'EmailToMe', { 'onclick'=>"f1.btnFunction.value='Email Me';f1.submit();", 'text'=>'Send Email to Me' } );
+		$html .= ssi::button( 'EmailToMe', { 'onclick'=>"f2.btnFunction.value='Email Me';f2.submit();", 'text'=>'Send Email to Me' } );
 	} # end if
 	if ( $$variable{'PurchaseOrder'}->can_edit() ) {
-		$html .= ssi::button( 'Email', { 'onclick'=>"f1.btnFunction.value='Email Vendor';f1.submit();", 'text'=>'Send Email' } );
+		$html .= ssi::button( 'Email', { 'onclick'=>"f2.btnFunction.value='Email Vendor';f2.submit();", 'text'=>'Send Email' } );
 		$html .= ssi::button( 'Edit', { 'href'=>'edit.html?po_id='.$$variable{'PurchaseOrder'}->id() } );
 		if ( $$variable{'PurchaseOrder'}->deleted() ) {
-			$html .= ssi::button( 'UnDelete', { 'onclick'=>"f1.btnFunction.value='Undelete';f1.submit();" } );
+			$html .= ssi::button( 'UnDelete', { 'onclick'=>"f2.btnFunction.value='Undelete';f2.submit();" } );
 		} else {
-			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}" } );
+			$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f2.btnFunction.value='Delete';f2.submit();}" } );
+		} # end if
+		if ( $$variable{'PurchaseOrder'}->cancelled() eq '1' ) {
+			$html .= ssi::button( 'UnCancel', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Uncancelling...';f2.btnFunction.value='UnCancel';f2.submit();" } );
+		} elsif ( $$variable{'PurchaseOrder'}->cancelled() eq '0' ) {
+			$html .= ssi::button( 'Cancel', { 'onclick'=>"\$('buttons').innerHTML='Please wait. Cancelling...';f2.btnFunction.value='Cancel';f2.submit();" } );
 		} # end if
 	} # end if can edit
-	$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();" } );
+	$html .= ssi::button( 'Copy', { 'onclick'=>"f2.action='view.html';f2.btnFunction.value='Copy';f2.submit();" } );
 	return $html;
 ) ?>
 	</p>
+</form>
 	<br class="spacer"/>
 	<div class="PO">
 		<div class="Header">
@@ -126,6 +132,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<th class="product">PRODUCT #</th>
 		<th class="description">ITEM / DESCRIPTION</th>
 		<th class="docket">DOCKET</th>
+		<th class="dept">DEPT</th>
 		<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 		<th class="price">UNIT PRICE</th>
 		<th class="total">LINE TOTAL</th>
@@ -151,7 +158,8 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<td class="product">%1$s</td>
 			<td class="description">%2$s<br/>%3$s</td>
 			<td class="docket"><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), 
+			<td class="dept">%5$s</td>
+			', $C->product(), $C->item(), ( $C->item() eq $C->description() ? '' : $C->description() ), $C->docket(), $C->department(), 
 			);
 
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
@@ -167,33 +175,37 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 	} # end foreach C
 	if ( $unseen ) {
 		if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) {
-		$html .= '<tr><td colspan="6">There are other items in this purchase order that you cannot see.</td></tr>';
+		$html .= '<tr><td colspan="7">There are other items in this purchase order that you cannot see.</td></tr>';
 		} else {
-		$html .= '<tr><td colspan="4">There are other items in this purchase order that you cannot see.</td></tr>';
+		$html .= '<tr><td colspan="5">There are other items in this purchase order that you cannot see.</td></tr>';
 		} # end if
 	} # end if $unseeen
 	return $html;
 ) ?>
 	<? if ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="5" class="totals">SUBTOTAL:</td>
-		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
+		<td colspan="6" class="totals">SUBTOTAL:</td>
+		<td class="total"><? echo ( openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-                <? echo ( 
-                    my $html;
-                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
-                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
-                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
-                            );
-                    } # end foreach Tax
-                    return $html;
-                ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+				$html .= sprintf('<tr class="tax"><td colspan="6" class="totals">%s (%d%):</td><td class="total">%s</td></tr>',
+					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
 	<tr>
-		<td colspan="5" class="totals">TOTAL:</td>
+		<td colspan="6" class="totals">TOTAL:</td>
 		<td class="total"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'PurchaseOrder'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin'], $session{'user_id'} ) ) ?>
 </table>
+<form id="f1" name="f1" action="view.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="btnFunction" />
+		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"--></div>
+</form>
 		<div class="leftColumn">
 			<ol>
 				<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
@@ -251,7 +263,6 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		</div>
 	</div><!--PO-->
 	<br class="spacer"/>
-</form>
 <? else ( $$variable{'PurchaseOrder'}->can_view() ) ?>
 You do not have the rights to view this PO.
 <? endif ( $$variable{'PurchaseOrder'}->can_view() ) ?>

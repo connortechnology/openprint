@@ -12,7 +12,7 @@ use vars qw( %config $log $dbh %session );
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 
-$debug = 0;
+$debug = 1;
 $table = 'payments';
 $serial = 'payments_id_seq';
 %fields = (
@@ -39,8 +39,9 @@ $serial = 'payments_id_seq';
 	'order_id'		=>	undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
-	'completed'		=>	0,
+	'completed'		=>	1,
 	'deleted'		=>	0,
+	'owner_id'		=>	q`$openprint::config{'Owner'}`,
 );
 
 sub destroy {

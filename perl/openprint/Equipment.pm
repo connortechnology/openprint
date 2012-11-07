@@ -1,6 +1,6 @@
-package openprint::Equipment;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Equipment;
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 use openprint ();
 require openprint::EquipmentSpecification;
@@ -8,18 +8,18 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 0;
 my %find_cache;
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'tbl_equipment';
 $serial= 'Equipment_Index_seq';
 %fields = (
 	'id'	=>	'lngindex',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
-	'description'	=>	'strdescription',
-	'category'	=>	'strcategory',
-	'supplier'	=>	'strsupplier',
+	'description'		=>	'strdescription',
+	'category_id'		=>	'category_id',
+	'supplier'			=>	'strsupplier',
 	'useinestimating'	=>	'useinestimating',
 	'useinscheduling'	=>	'useinscheduling',
 	'image'				=>	'image',
@@ -41,9 +41,10 @@ $serial= 'Equipment_Index_seq';
 );
 
 %defaults = (
-	'location_id'		=>	undef,
-	'servicetype_id'	=>	undef,
-	'sorting'			=>	undef,
+	location_id		=>	undef,
+	servicetype_id	=>	undef,
+	sorting			=>	undef,
+	category_id		=>	undef,
 );
 
 sub init_cache {
@@ -108,7 +109,7 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
-if ( exists $params{'servicetype_id'} ) {
+	if ( exists $params{'servicetype_id'} ) {
         if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
             $sql .= ' AND servicetype_id={?}';
             push @values, $params{'servicetype_id'};
@@ -117,7 +118,24 @@ if ( exists $params{'servicetype_id'} ) {
             push @values, $params{'servicetype_id'};
         } # end if
     } # end if
+	if ( exists $params{'category'} ) {
+		$sql .= ' AND (SELECT id FROM Equipment_Categories WHERE name=?) = ANY(category_id)';
+		push @values, $params{'category'};
+	} # end if
+	if ( $params{category_id} ) {
+		if ( ref $params{category_id} eq 'ARRAY' ) {
+			$sql .= ' AND category_id=?';
+			push @values, $params{'category_id'};
+		} else {
+			$sql .= ' AND ? = ANY(category_id)';
+			push @values, $params{'category_id'};
+		} # end if
+	} # end if
 
+	if ( $params{'useinestimating'} ) {
+		$sql .= ' AND useinestimating=?';
+		push @values, $params{'useinestimating'};
+	} # end if
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
 		push @values, 1;
@@ -141,10 +159,6 @@ if ( exists $params{'servicetype_id'} ) {
 	if ( $params{'cip3_monitor'} ) {
 		$sql .= ' AND cip3_monitor=?';
 		push @values, $params{'cip3_monitor'};
-	} # end if
-	if ( $params{'category'} ) {
-		$sql .= q{ AND strCategory=?};
-		push @values, $params{'category'};
 	} # end if
 
 	$sql .= " OR $params{'or'}" if $params{'or'};
@@ -328,7 +342,7 @@ if ( ! defined $range ) {
 	} # end if
 	return;
 } # end if
-#$openprint::log->debug("Looking for $name : $range") if $debug;
+$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	$range = 1*$range;
 	my $i = 0;
@@ -336,7 +350,7 @@ if ( ! defined $range ) {
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		return $Spec if ( (1*$$Spec{min}) == $range ) or ((1*$$Spec{max}) == $range );
 
 		return $Spec if ( 
@@ -354,7 +368,7 @@ if ( ! defined $range ) {
 		$i -= 1;
 		# back up
 		$x = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
 $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
@@ -365,7 +379,7 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		my $Spec = $$self{'Specifications'}{$name}[$i];
 		return $Spec if ( (1*$$Spec{min}) <= $range ) and ( ( (1*$$Spec{max}) >= $range ) or ! (1*$$Spec{max}) );
 
-	#$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+	$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		# first step, find one less than the min
 		last if ( ( (1*$$Spec{max}) > $range) or ( ! (1*$$Spec{max}) ) );
 	} # end foreach
@@ -543,8 +557,11 @@ sub ServiceTypes {
 
 sub Operator_Shifts {
 
-	my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$_[0]{'id'},'order'=>'starttime_seconds');
-# Setup Next and Previous links
+	my @Equipment_Shifts = openprint::Equipment_Shift->find(equipment_id=>$_[0]{id},order=>'starttime_seconds');
+	if ( ! @Equipment_Shifts ) {
+		return ();
+	} # end if
+	# Setup Next and Previous links, turns it into a doubly linked list
 	my $Last_ES;
 	for ( my $ES_index = 0; $ES_index < @Equipment_Shifts; $ES_index += 1 ) {
 		if ( $Last_ES ) {
@@ -556,5 +573,9 @@ sub Operator_Shifts {
 	$Last_ES->Next( $Equipment_Shifts[0] );
 	return @Equipment_Shifts;
 } # end sub Operator_Shifts
+
+sub categories {
+	return map { new openprint::Equipment_Category($_)->name() } ( $_[0]->category_id() ? @{$_[0]->category_id()} : () );
+} # end sub categories
 1;
 __END__
