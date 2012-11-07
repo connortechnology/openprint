@@ -38,9 +38,11 @@ $serial= 'Equipment_Index_seq';
 	'servicetype_id'	=>	'servicetype_id',
 	'sorting'			=>	'sorting',
 	'message'			=>	'message',
+	deleted				=>	'deleted',
 );
 
 %defaults = (
+	deleted			=>	0,
 	location_id		=>	undef,
 	servicetype_id	=>	undef,
 	sorting			=>	undef,
@@ -159,6 +161,19 @@ sub find {
 	if ( $params{'cip3_monitor'} ) {
 		$sql .= ' AND cip3_monitor=?';
 		push @values, $params{'cip3_monitor'};
+	} # end if
+
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
 	} # end if
 
 	$sql .= " OR $params{'or'}" if $params{'or'};
@@ -468,21 +483,32 @@ sub copy {
 	return $new;
 } # end sub copy
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Equipment'}{$$self{id}} if $openprint::Object::cache{'openprint::Equipment'};
+	my $error;
 
     my $ac = sql::start_transaction( $openprint::dbh );
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
+	foreach my $ES ( openprint::Equipment_Shift->find(equipment_id=>$$self{id}) ) {
+		$error .= $ES->delete();
+		last if $error;
+	} # end foreach ES
+	if ( ! $error ) {
+		foreach my $S ( openprint::Shift->find(equipment_id=>$$self{id}) ) {
+			$error .= $S->delete();
+			last if $error;
+		} # end foreach ES
+	} # end if error
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
     sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
-} # end sub delete
+	return $error;
+} # end sub destroy
 
 sub update_schedule {
 	my $self = shift;
