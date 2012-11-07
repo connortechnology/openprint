@@ -4,9 +4,6 @@ our @ISA = qw( openprint::Object );
 use Text::Unaccent;
 use MIME::QuotedPrint;
 
-require openprint::Company;
-require openprint::logs;
-require openprint::User_Notification;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param );
@@ -231,6 +228,7 @@ sub destroy {
 
 	sql::end_transaction( $openprint::dbh, $ac );
 
+	require openprint::logs;
 	openprint::logs::insertLogRecord('14', "User ID: " . $$self{'id'},);
 } # end sub delete
 
@@ -283,6 +281,7 @@ sub Prev {
 } # end sub Nex
 
 sub Company {
+	require openprint::Company;
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub Company
