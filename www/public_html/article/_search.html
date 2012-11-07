@@ -11,6 +11,7 @@
 		( $session{'/article/search.html?category_id'} ? ( 'category_id' => $session{'/article/search.html?category_id'} ) : () ),
 		'order'				=> 'published_on DESC',
 		) ) {
+		next if ! $Article->can_view();
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article
 ) ?>
