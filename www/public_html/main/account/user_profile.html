@@ -42,7 +42,7 @@
 </p>
 <? endif ( $$variable{'User'}->notes() ) ?>
    				<p> 
-   					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
+   					<label>Salutation:&nbsp;&nbsp;&nbsp;</label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
 					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
@@ -65,7 +65,7 @@
    					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
    				</p>
    				<p> 
-   					<label for="phone">Phone: <span class="requiredFieldIndicator">*</span></label>
+   					<label for="phone">Phone:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" style="width: auto;" size="15"/> ext:
    					<input type="text" id="extension" name="extension" value="<? echo ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
    				</p>
