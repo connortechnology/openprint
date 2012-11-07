@@ -18,9 +18,8 @@ package openprint::Estimating::PerfectBound;
 use strict;
 
 require openprint::service;
-require sql;
 
-my $debug = 0;
+use constant DEBUG => 0;
 
 my %variables = (
         'ProjectIndex'=>[],'ServiceIndex'=>[],
@@ -113,7 +112,7 @@ sub signature_calc {
 	} # end foreach signature
 	my $I = $Impositions[0];
 
-#$openprint::log->debug( "PerfectBind Impo: " . $imposition ) if $debug;
+#$openprint::log->debug( "PerfectBind Impo: " . $imposition ) if DEBUG;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$$specs{'alert'} .= "Can't perfectbind $$specs{'Imposition'.$qty_index} out";
@@ -124,7 +123,7 @@ sub signature_calc {
 
 	my $error;
 	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
-	my @possible_equipment = get_equipment( $specs, \$error );
+	my @possible_equipment = get_equipment( $specs, \$error, \@Impositions );
 
 	my @equipment = ();
 
@@ -177,7 +176,7 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '') . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
-#$openprint::log->debug( "PerfectBind Impo REsults: " . $results{'Imposition'} ) if $debug;
+#$openprint::log->debug( "PerfectBind Impo REsults: " . $results{'Imposition'} ) if DEBUG;
 	if ( $$bestPrice{'Imposition'} ) {
 		$results{'Status'} = 'calculated';
 		$results{'Price'} = $$bestPrice{'Price'};
@@ -188,28 +187,39 @@ $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_in
 } # end sub signature_calc
 
 sub get_equipment {
-	my ( $specs, $error ) = @_;
+	my ( $specs, $error, $Impositions ) = @_;
 
 	my @possible_equipment;
 	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
 
 	foreach my $Equipment ( @all_equipment ) {
-		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
+		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ': Too big.<br/>';
 			next;
 		} # end if
-		if ( $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $Equipment->specification('Minimum Spread Width') ) ) {
+		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too small.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $Equipment->specification('Maximum Calliper') ) ) {
+		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too thick.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $Equipment->specification('Minimum Calliper') ) ) {
+		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too thin.<br/>";
 			next;
+		} # end if
+		if ( $Equipment->specification('PerfectBound Capable') eq 'When Printing' ) {
+			my $flag = 0;
+			foreach my $I ( @{$Impositions} ) {
+				if ( $I->Press()->id() ne $Equipment->id() ) {
+					$flag = 1;
+					$$error .= "For " . $Equipment->name() . ": Project must also be printed on it.<br/>";
+					last;
+				} # end if
+			} # end foreach
+			next if $flag;
 		} # end if
 		push @possible_equipment, $Equipment;
 	} # end foreach equipment
@@ -282,6 +292,7 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
 		my $imposition = 2;
 
+
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $pages ( 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48 ) {
 				$$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index} = '';
@@ -350,8 +361,21 @@ sub calc {
 		} # end if
 	} # end foreach qty_index
 
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
+		my $qty = $$specs{'txtQuantity'.$qty_index};
+
+		my $bestPrice;
+		my @Impositions;
+		foreach my $signature_service_index ( @signatures ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index, $Project );
+			push @Impositions, $Imposition;
+		} # end foreach
+
 	my $error;
-	my @Equipment = get_equipment( $specs, \$error );
+	my @Equipment = get_equipment( $specs, \$error, \@Impositions );
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'We are unable to automatically provide a price for Perfect Binding.  You may enter your own price in the price fields, or contact your CSR for a quote.';
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -368,11 +392,6 @@ sub calc {
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 	
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		my $qty = $$specs{'txtQuantity'.$qty_index};
-
-		my $bestPrice;
 
 		foreach my $Equipment ( @Equipment ) {
 			my $Price = get_price( $Equipment, $specs, $qty_index );
@@ -436,9 +455,9 @@ sub get_price {
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition'));
 	if ( $Equipment->specification('Maximum Imposition') and ( $Equipment->specification('Maximum Imposition') < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{'Imposition'} = 1;
-		#$openprint::log->debug("Maximum Imposition: " . $Equipment->specification('Maximum Imposition')  ) if $debug;
+		#$openprint::log->debug("Maximum Imposition: " . $Equipment->specification('Maximum Imposition')  ) if DEBUG;
 	} elsif ( $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) and $Equipment->specification('Maximum Spine Length',$price{'Imposition'}) < $$specs{'Height'} ) {
-		#$openprint::log->debug("Maximum Spine Length: $$specs{'Height'} > " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'})  ) if $debug;
+		#$openprint::log->debug("Maximum Spine Length: $$specs{'Height'} > " . $Equipment->specification('Maximum Spine Length',$price{'Imposition'})  ) if DEBUG;
 		$price{'Imposition'} = 1;
 	} # end if
 
@@ -560,7 +579,7 @@ sub get_price {
 	} # end if
 
 	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
-#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
+#$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if DEBUG;
 	return \%price;
 } # end sub get_price
 

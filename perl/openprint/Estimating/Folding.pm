@@ -351,10 +351,6 @@ sub signature_calc {
 
 	} # end if
 
-	my $Paper = $SignatureImposition->Paper();
-
-	my $services = $Project->services();
-	my $Press = $SignatureImposition->Press();
 	if ( $$sig_specs{'txtSignatureType'} and ( $SignatureImposition->pages() == 2 ) ) {
 		# Does not need folding
 		my %results = (
@@ -367,6 +363,10 @@ sub signature_calc {
 				);
 		return %results;
 	} # end if
+
+	my $Paper = $SignatureImposition->Paper();
+	my $Press = $SignatureImposition->Press();
+	my $services = $Project->services();
 
 	my $bestM;
 	my $bestPrice;
@@ -471,12 +471,20 @@ sub signature_calc {
 	#foreach my $ss_id ( $Project->signatures() ) {
 	# We assume that Signature_Impositions is all impos that come before
 	foreach my $SigImpo ( @{$Signature_Impositions} ) {
-		my $s_specs = $$SigImpo{specs};
-		foreach my $fold_index ( 1 .. 4 ) {
-			if ( $$specs{"FoldQty-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} ) {
-				push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"};
-			} # end if
-		} # end foreach fold_index
+		if ( $$SigImpo{folding_results} ) {
+			my $Folds = $$SigImpo{folding_results}{Folds};
+			foreach my $key ( keys %$Folds ) {
+				my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
+				push @{$makereadies{$$SigImpo{folding_results}{Equipment}->id()}}, $fold_type;
+			} # end foreach
+		} else {
+			my $s_specs = $$SigImpo{specs};
+			foreach my $fold_index ( 1 .. 4 ) {
+				if ( $$specs{"FoldQty-$$s_specs{SignatureIndex}-$qty_index-$fold_index"} ) {
+					push @{$makereadies{$$specs{"ddmEquipment-$$s_specs{SignatureIndex}-$qty_index"}}}, $$specs{"FoldType-$$s_specs{SignatureIndex}-$qty_index-$fold_index"};
+				} # end if
+			} # end foreach fold_index
+		} # end nif
 	} # end foreach signature
 
 	# What we do is build a set of pieces of the imposition, all of which can be folded. We don't worry about optimality, just possibility.

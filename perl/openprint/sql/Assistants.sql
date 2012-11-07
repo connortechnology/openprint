@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Assistants;
-
 CREATE TABLE Assistants (
 	id SERIAL,
 	csr_id	INTEGER NOT NULL, FOREIGN KEY (csr_id) REFERENCES Users (id),
