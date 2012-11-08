@@ -7,7 +7,7 @@
 					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
 						<option value=""> All </option>
 						<? echo ( 
-								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $param{'search_category_id'} );
+								ssi::make_drop_down( openprint::ProjectTypeCategory->dropdown(order=>'lower(name)'), $param{search_category_id} );
 								) ?>
 					</select>
 				

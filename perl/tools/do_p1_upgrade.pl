@@ -2,7 +2,6 @@
 use strict;
 my $lib_path = '/var/www/testing/perl';
 use lib '/var/www/testing/perl';
-use Date::Calc;
 require sql;
 require logger;
 require openprint::Object;
@@ -10,6 +9,7 @@ require configuration;
 require openprint::Service;
 require openprint::Equipment;
 require openprint::ServiceType_Category;
+require openprint::ProjectType;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -18,40 +18,14 @@ use vars qw( $log $dbh %config );
 *config = \%openprint::config;
 
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 
 my ( $src_db, $dst_db, $path ) = @ARGV;
 $src_db = 'point-one' if ! $src_db;
 $dst_db = 'point-one' if ! $dst_db;
-`/etc/init.d/apache2 reload`;
 
-print "upgrading structures 1...\n";
-`$lib_path/tools/db_update.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading structures 2...\n";
-`$lib_path/tools/db_update2.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading structures 3...\n";
-`$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
-print "upgrading signatures...";
-`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
-print "done\n";
-
-if ( 0 ) {
-sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
-foreach my $E ( openprint::Equipment->find('strid'=>'Web1') ) {
-	foreach my $Spec ( $E->Specifications() ) {
-		next if $Spec->name() ne 'Press Run Overs';
-		if ( $Spec->value() != 0.05 ) {
-			$Spec->delete();
-			next;
-		} else {
-			$Spec->min(undef);
-			$Spec->max(undef);
-			$Spec->interpolate(0);
-			$Spec->save();
-		} # end if
-	} # end foreach
-} # end foreach
-}
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
+configuration::init( $log, $dbh );
 
 my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
 if ( $BrochureType ) {

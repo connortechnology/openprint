@@ -21,8 +21,8 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-my $debug = 0;
-my $debug_all = 0;
+my $debug = 1;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -694,7 +694,10 @@ sub find {
 		$local_dbh = $$params{'dbh'};
 		delete $$params{'dbh'};
 	} # end if
-	return () if ! $local_dbh;
+	if ( ! $local_dbh ) {
+		$log->error("No local_dbh");
+	return ();
+	}
 	delete $$params{'dbh'};
 
 	my $cache_field = ${$type.'::cache_field'};
@@ -853,13 +856,13 @@ sub find {
 		Carp::cluck("Extra parameters in $type ::find $k => $search{$k}");
 	} # end foreach
 	
-#$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
+$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
-	#} elsif ( ( ! @$data ) and $debug ) {
-		#$log->debug("No $type ($sql) (@values) " );
+	} elsif ( ( ! @$data ) and $debug ) {
+		$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
 		$log->debug("Loading Debug:$debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
@@ -887,7 +890,6 @@ sub find {
 
 sub find_one {
 	my $type = shift;
-	 
 	my $params;
 	if ( @_ == 1 ) {
 		$params = $_[0];
