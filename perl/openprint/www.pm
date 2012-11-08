@@ -231,6 +231,8 @@ sub handler {
 			} # end if
 			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 			$variable{'PageContent'} = $content;
+		} else {
+$log->debug("PageContent is $variable{PageContent}");
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );

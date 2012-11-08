@@ -144,7 +144,7 @@ cleanup : true
 			<td style="border: 1px solid black;">DATE: 
 				<span id="date"><? echo ( $$variable{'Label'}->get_data('date'); ) ?></span>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=date'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=get&field=date'}, tinymce_options );
 </script>
 			</td>
 		</tr>
