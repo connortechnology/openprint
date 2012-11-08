@@ -26,6 +26,7 @@ require openprint::usergroup;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::PaperAllocation;
+require openprint::Company_Credit;
 
 sub delete_unfinished_orders {
 	# clean out old orders
