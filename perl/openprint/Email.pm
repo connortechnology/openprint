@@ -13,6 +13,11 @@ require Encode;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
+%fields = (
+	from	=>	'from',
+	subject	=>	'subject',
+	ATTACHMENTS	=>	'ATTACHMENTS',
+);
 
 sub html_body {
 	my ( $self, $html ) = @_;
@@ -37,12 +42,7 @@ sub send {
 
 	my $results;
 	if ( $params{'FROM'} ) {
-#$openprint::log->debug(" getting from $params{'FROM'} ng an email");
-		if ( ref $params{'FROM'} eq 'openprint::User' ) {
-			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
-		} else {
-			$$self{'from'} = $params{'FROM'};
-		} # end if
+		$$self{from} = $params{FROM};
 	} # end if
 
     my %mail = (
@@ -53,7 +53,7 @@ sub send {
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $openprint::config{'Mail Server'},
 			( $params{'Return-receipt-to'} ? ( 'Return-receipt-to' => $params{'Return-receipt-to'} ) : () ),
 			( $params{'Disposition-Notification-To'} ? ( 'Disposition-Notification-To' => $params{'Disposition-Notification-To'} ) : () ),
-            FROM    => $$self{'from'},
+            FROM    => ( ref $$self{from} eq 'openprint::User' ? sprintf('"%s" <%s>', $$self{from}->get('name','email') ) : $$self{from} ),
             SUBJECT => ( $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'} ),
 			BODY	=>	( $params{'BODY'} ? $params{'BODY'} : $$self{'body'} ),
 			);
