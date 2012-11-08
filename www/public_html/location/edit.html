@@ -9,7 +9,7 @@
 </script>
 <div class="Location"><div class="Edit">
 	<!--#include virtual="/includes/error_reporting.html"-->
-	<form name="f1" id="f1" action="/location/view.html?location_id=<? echo ( $param{'location_id'} ) ?>" method="post" enctype="multipart/form-data">
+	<form name="f1" id="f1" action="/location/edit.html?location_id=<? echo ( $param{'location_id'} ) ?>" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{'Location'}->deleted() ) ?>
 			<span class="warning">This location has been deleted</span>

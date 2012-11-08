@@ -81,10 +81,6 @@ if ( ! sets::isin( 'currencies', \@tables ) ) {
 if ( ! sets::isin( 'annualsales', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/AnnualSales.sql}) );
 } # end if
-if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 
 if ( ! sets::isin( 'companies', \@tables ) ) {
 	if ( ! sets::isin( 'company', \@tables ) ) {
@@ -177,6 +173,11 @@ if ( $data ) {
 	} # end if
 } else {
 	die  'No Companies found.' . $dbh->errstr();
+} # end if
+
+if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
@@ -336,6 +337,13 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
 } # end if
+if ( sets::isin( 'article_assets', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Assets.sql' ) );
+	die if $dbh->errstr();
+} # end if
+
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( exists $$data{'image_filename'} ) {
@@ -676,6 +684,9 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 		} # end foreach category
 		$dbh->do('ALTER TABLE tbl_equipment DROP strcategory');
 	} # end if
+	if ( ! exists $$data{deleted} ) {
+		$dbh->do(q`ALTER TABLE tbl_equipment ADD deleted BOOLEAN NOT NULL DEFAULT false`);
+	} # end if
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/Equipment.sql} )) or die;
 } # end if
@@ -1001,24 +1012,6 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 	$version = 1898;
 } # end if
 
-if ( $version < 1900 ) {
-	print "Updating to version 1900\n";
-	my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_log LIMIT 1', {} );
-	if ( ! $blah ) {
-	$dbh->do(q{
-			CREATE TABLE Quote_Log (
-				quote_id    INTeger NOT NULL, FOREIGN KEY(quote_Id) REFERENCES tbl_Quotes (index),
-				Company_id  INTeger NOT NULL, FOREIGN KEY(company_id) REFERENCES Companies (id),
-				User_id     INTeger NOT NULL, FOREIGN KEY(user_id) REFERENCES Users (id),
-				dtmwhen     timestamp with time zone NOT NULL default(NOW()),
-				Description         TEXT,
-				PRIMARY KEY (quote_Id,dtmwhen)
-				)
-			});
-	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
-	$version = 1900;
-} # end if
 if ( ! sets::isin( 'pricelists', \@tables ) ) {
 	$dbh->do(misc::load_file( $dbh, '../openprint/sql/Pricelists.sql' ) );
 	die if $dbh->errstr();
@@ -1473,10 +1466,10 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'authorized'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
-			$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+			$dbh->do('UPDATE purchaseorders set authorized=true WHERE authorized_on IS NOT NULL');
 		} # end if
 		if ( ! exists $$data{'manifest_id'} ) {
-			$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
+			$dbh->do('ALTER TABLE purchaseorders add manifest_id INTEGER');
 			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
 		} # end if
 		if ( ! exists $$data{contact_id} ) {
@@ -2250,16 +2243,15 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 			$dbh->do('UPDATE TABLE Payments set received_on=dtmdate where received_on IS NULL');
 			$dbh->do('ALTER TABLE Payments drop column dtmdate');
 		} # end if
-	} elsif ( ! exists $$data{'received_on'} ) {
-		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
-	} # end if
-	if ( exists $$data{'date'} ) {
+	} elsif ( exists $$data{'date'} ) {
 		if ( ! exists $$data{received_on} ) {
 			$dbh->do('ALTER TABLE Payments rename column date to received_on');
 		} else {
 			$dbh->do('UPDATE Payments SET received_on=date WHERE received_on IS NULL') or die $dbh->errstr();
 			$dbh->do('ALTER TABLE Payments DROP COLUMN date') or die $dbh->errstr();
 		} # end if
+	} elsif ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
 	if ( ! exists $$data{'received_on'} ) {
@@ -2876,6 +2868,14 @@ if ( ! sets::isin( 'blocklist', \@tables ) ) {
 	if ( ! exists $$data{unblock} ) {
 		$dbh->do('ALTER TABLE blocklist ADD unblock BOOLEAN NOT NULL DEFAULT false');
 	}
+} # end if
+if ( ! sets::isin( 'lexicon', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Lexicon.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'assistants', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Assistants.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 $dbh->disconnect();
 print "Finished\n";

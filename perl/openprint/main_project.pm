@@ -55,6 +55,15 @@ sub history {
 		foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
 			openprint::print_project::reuse_project( $r, $log, $dbh, $session{_session_id}, \%variable, $project_id );
 		} # end if
+	} elsif ( $param{btnFunction} eq 'Reset' ) {
+$log->debug("Reset");
+		foreach my $k ( keys %session ) {
+			if ( $k =~ /^\/main\/project\/history.html/ ) {
+$log->debug("Reset $k");
+				delete $session{$k};
+			} # end if
+		} # end foreach k
+		%param = ();
 	} # end if
 
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.	This is neccessary because save_params will update lastupdated.
@@ -66,16 +75,10 @@ sub history {
 		$session{'/main/project/history.html?ddmStatus'} = join(',', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
 	} # end if
 	if ( ! exists $session{'/main/project/history.html?company_id'} ) {
-		$session{'/main/project/history.html?company_id'} = $session{'company_id'};
+		$session{'/main/project/history.html?company_id'} = $session{company_id};
 	}
 
-	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus', 'type_id', 'predefined', 'company_id',
-			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
-			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
-			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
-			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
-			);
+	_history();
 } # end sub history
 
 sub _history {

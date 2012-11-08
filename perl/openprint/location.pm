@@ -95,7 +95,7 @@ sub view {
 			
 		if ( ( $_ = openprint::Location->find_one(
 			( $param{'location_id'} ? ( 'id !='=>$param{'location_id'} ) : () ),
-			'name lc'=> lc $param{'location'}, 
+			'name lc'=> lc openprint::Location->transform('name',$param{'location'}), 
 			( $param{'type_id'} ? ( type_id=>$param{type_id} ) : () ),
 			) ) ) {
 			$variable{'error'} .= 'A location with that name at that place already exists.';
@@ -118,7 +118,25 @@ sub view {
 					});
 			(new openprint::Log())->save({'action'=>($param{'location_id'} ? 'Update Location' : 'Create Location'), 'object'=>'Location','object_id'=>$Location->id()});
 		} # end if
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/location/view.html?location_id='.$Location->id();
+		} # end if
 	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} .= $Location->delete();
+	} elsif ( $param{'action'} eq 'Destroy' ) {
+		$variable{'error'} .= $Location->destroy();
+		if ( ! $variable{'error'} ) {
+			$variable{'ExternalRedirect'} = '/location/list.html';
+			$variable{'information'} = 'Location destroyed.';
+		} # end if
+	} elsif ( $param{'action'} eq 'Undelete' ) {
+		$variable{'error'} .= $Location->undelete();
+	} # end if
+} # end sub edit
+
+sub view {
+	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
+	if ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $Location->delete();
 	} elsif ( $param{'action'} eq 'Destroy' ) {
 		$variable{'error'} .= $Location->destroy();

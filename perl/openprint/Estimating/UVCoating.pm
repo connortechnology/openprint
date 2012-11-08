@@ -359,7 +359,7 @@ sub signature_calc {
 
 			my %ImpositionPrice;
 			if ( @$impositions > 1 ) {
-				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $service_index, $sig_specs, {}, $qty_index, $Stock, $$impositions[0] );
+				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $sig_specs, {}, $qty_index, $Stock );
 				$ImpositionPrice{'Cutting'} = $results{'Price'};
 				$breakdown .= sprintf('Stock cutting cost: %.2f<br/>', $results{'Price'} );
 			} # end if

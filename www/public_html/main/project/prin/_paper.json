@@ -110,7 +110,7 @@ $log->warn("No stocks, adding them back for $i $options[$i-1]");
 		} # end if Size or other, size gets special treatment for sorting
 	} # end foreach option
 
-    my @presses = openprint::Equipment->find( 'category'=>'Printing' );
+    my @presses = openprint::Equipment->find( 'category any'=>'Printing', 'useinestimating'=>1 );
 	if ( @presses ) {
 
 		my $min_width = -1;

@@ -1148,20 +1148,21 @@ sub Comments {
 } # end sub Comments
 
 sub Privacy {
-	if ( ! exists $_[0]{'Privacy'} ) {
-		$_[0]{'Privacy'} = openprint::Privacy->find_one('object_type'=>ref $_[0], 'object_id'=>$_[0]{'id'} );
-		if ( ! $_[0]{'Privacy'} ) {
-			$_[0]{'Privacy'} = new openprint::Privacy();
-			$_[0]{'Privacy'}->object_type( ref $_[0] );
-			$_[0]{'Privacy'}{'object_id'} = $_[0]{'id'};
+	if ( ! exists $_[0]{Privacy} ) {
+		$_[0]{Privacy} = openprint::Privacy->find_one(object_type=>ref $_[0], object_id=>$_[0]{id} );
+		if ( ! $_[0]{Privacy} ) {
+			$_[0]{Privacy} = new openprint::Privacy();
+			$_[0]{Privacy}->object_type( ref $_[0] );
+			$_[0]{Privacy}{object_id} = $_[0]{id};
 		} # end if
 	} # end if
 	return $_[0]{'Privacy'};
 } # end sub Privacy
 
 sub can_view {
-return 1;
+	return 1;
 } # end sub can_view
+
 sub Assets {
 	return () if ! $_[0]{'id'};
 	my ( $self, %param ) = @_;

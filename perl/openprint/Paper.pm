@@ -974,6 +974,7 @@ sub cut {
 	} # end if
 	$$self{'mweight'} /= 2;
 	delete $$self{'to_string'};
+	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
@@ -1255,7 +1256,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						next if $Stock_Setting->grain() eq 'Dont Use';
 					} # end if
 					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
-						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() );
+						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if
 					$Paper = $P;

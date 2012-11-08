@@ -1,58 +1,85 @@
 <div class="Payments">
 <fieldset><legend>Payments</legend>
-<? eval ( @{$$variable{'PAYMENTS'}} = openprint::Payment->find('order_id'=>$$variable{'Order'}->id(),'completed'=>1,'order'=>'created_on'); ) ?>
-<? if ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
-<? if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
-	<table class="List">
-		<thead>
-			<tr>
-				<th class="payment_id">Ref #</th>
-				<th class="type">Type</th>
-				<th class="description">Description</th>
-				<th class="ReceivedOn">Received On</th>
-				<th class="Price">Amount</th>
-				<th class="actions">&nbsp;</th>
-			</tr>
-		</thead>
-        <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
-            <tr<?rowclass?>>
-                <td class="payment_id"><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td class="type">&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
-                <td class="description">&nbsp;<? echo ( $$variable{'Payment'}->description() ) ?></td>
-                <td class="ReceivedOn"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
-                <td class="Price"><? echo ( $$variable{'Payment'}->Currency()->format( $$variable{'Payment'}->amount() ); ) ?></td>
-                <td class="actions"><? echo ( ssi::writeButton($log, $dbh,'Delete'.$$variable{'Payment'}->id(),'',"confirm_delete( document.f1, '".$$variable{'Payment'}->id()."' );", '', 'Delete' ); ) ?></td>
-            </tr>
-            <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-        <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
+<? echo ( 
+	my $html;
+	my @Payments = openprint::Payment->find(order_id=>$$variable{Order}->id(),completed=>1,order=>'created_on');
+	if ( @Payments or ! sets::isin( $$variable{Order}->status(), ['Incomplete','Cancelled'] ) ) {
+		my $rowclass;
+
+	if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) {
+		$html .= q`
+<table class="List">
+	<thead>
+		<tr>
+			<th class="payment_id">Ref #</th>
+			<th class="type">Type</th>
+			<th class="description">Description</th>
+			<th class="DateTime">Received On</th>
+			<th class="Price">Amount</th>
+			<th class="actions">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+`;
+		foreach my $Payment ( @Payments ) {
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="description">%4$s</td>
+	<td class="DateTime">%5$s</td>
+	<td class="Price">%6$s</td>
+	<td class="actions">%7$s</td>
+</tr>
+			`, $rowclass, $Payment->id(), $Payment->method(), $Payment->memo(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Payment->created_on() ) ),
+			$Payment->Currency()->format( $Payment->amount() ),
+			ssi::button('Delete'.$Payment->id(), { onclick=>qq`confirm_delete( document.f1, '$$Payment{id}' );`, text=>'Delete' } ),
+			);
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+		$html .= sprintf( q`
         <tr class="totals unprintable">
             <td colspan="2">Record new payment</td>
-            <td class="description"><input type="text" name="Description" /></td>
-			<td class="ReceivedOn"><? echo ( ssi::date_select('received_on'); ) ?></td>
-            <td class="Price"><?CurrencySymbol?><input type="number" id="Amount" name="Amount" value="<? echo ( $$variable{'Order'}->owing() ) ?>"/></td>
-            <td class="actions"><? echo (ssi::button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", href=>'', text=>'Add' } ); ) ?></td>
-        </tr>
-<? else ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
+            <td class="description"><input type="text" name="memo" /></td>
+			<td class="DateTime">%s</td>
+            <td class="Price">%s%s</td>
+            <td class="actions">%s</td>
+        </tr></tbody>`,
+ssi::date_select('received_on', [ Date::Calc::Today() ] ),
+ssi::select( [map{$_->id(), $_->symbol().' ' . $_->short() } openprint::Currency->find(order=>'lower(name)') ], $variable{Order}->currency_id(), { name=>'payment_currency_id' } ),
+ssi::input( type=>'float', name=>'amount', id=>'amount', value=>$$variable{Order}->owing() ),
+ssi::button( 'AddPayment', { onclick=>"f1.btnFunction.value='Save Payment';f1.submit();", href=>'', text=>'Add' } ),
+);
+} else {
+	$html .= '
         <tr>
             <th class="payment_id">Ref #</th>
             <th class="type">Type</th>
             <th class="description">Description</th>
             <th class="DateTime">Date</th>
             <th class="Price">Amount</th>
-        </tr>
-        <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
-            <tr<?rowclass?>>
-                <td class="payment_id"><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td class="type">&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
-                <td class="description"><? echo ( $$variable{'Payment'}->description() ) ?></td>
-                <td class="DateTime"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ) ) ?></td>
-                <td class="Price"><? echo ( $$variable{'Payment'}->Currency()->format( $$variable{'Payment'}->amount() ); ) ?></td>
-            </tr>
-            <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-        <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
-<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
-	</table>
-<? endif ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
+        </tr>';
+		foreach my $Payment ( @Payments ) {
+			$html .= sprintf(q`
+<tr%1$s>
+	<td class="payment_id">%2$d</td>
+	<td class="type">%3$s</td>
+	<td class="description">%4$s</td>
+	<td class="DateTime">%5$s</td>
+	<td class="Price">%6$s</td>
+</tr>
+			`, $rowclass, $Payment->id(), $Payment->method(), $Payment->memo(), 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Payment->created_on() ) ),
+			$Payment->Currency()->format( $Payment->amount() ),
+			);
+            $rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Payment
+} # end if access granted
+$html .= '</table>';
+} # end if has payments or completed
+return $html;
+) ?>
 </fieldset>
 <input type="hidden" name="payment_id" />
 </div>

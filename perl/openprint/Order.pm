@@ -73,7 +73,6 @@ sub save {
 	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
 	my %sql;
 	foreach my $key ( keys %fields ) {
-		next if $key eq 'paid';
 		$$self{$key} = undef if $$self{$key} eq '';
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
@@ -232,7 +231,7 @@ sub approve {
 
 sub status {
 	my ( $self, $new_status ) = @_;
-	if ( defined $new_status and $$self{'status'} ne $new_status ) {
+	if ( ( defined $new_status ) and ( $$self{'status'} ne $new_status ) ) {
 		sql::update( $log, $dbh, 'Orders', ['id=?', $$self{'id'}], 'strStatus', $new_status );
 		$$self{'status'} = $new_status;
 		$self->add_log( "Changed Status to $new_status" );
@@ -558,7 +557,7 @@ sub send_sales_order {
 } # end sub send_sales_order
 
 sub owing {
-	return $_[0]{'total'} - $_[0]{'paid'};
+	return $_[0]{'total'} - $_[0]->paid();
 } # end sub owing
 
 sub Taxes {
@@ -601,7 +600,7 @@ sub Tax {
 sub paid {
 	$_[0]{'paid'} = $_[1] if ( @_ == 2 );
 	if ( $_[0]{id} and ! defined $_[0]{paid} ) {
-		$_[0]{'paid'} = misc::sum( map { $_->amount() } openprint::Payment->find('order_id'=>$_[0]{'id'}) );
+		$_[0]{'paid'} = misc::sum( map { $_->amount() } openprint::Payment->find(order_id=>$_[0]{id}) );
 	} # end if
 	return $_[0]{'paid'};
 } # end sub paid

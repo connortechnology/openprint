@@ -170,19 +170,19 @@
 						</li>
 					</ul>
 				</div>
+   			</fieldset>
+			</div>
+			<? if ($variable{DoEmail}) ?> 
+			<br class="spacer"/>
+				<!--#include virtual="_email_settings.html"-->
+			<? endif ($variable{DoEmail}) ?> 
 <? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.
 <? endif ( $$variable{User}->can_edit() ) ?>
-   			</fieldset>
-			</div>
-<? if ($variable{DoEmail}) ?> 
-<br class="spacer"/>
-	<!--#include virtual="_email_settings.html"-->
-<? endif ($variable{DoEmail}) ?> 
 		</div><!--UserProfile-->
+</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
-</div>
 <? else ( $session{user_id} ) ?>
 You must be logged in to edit user profiles.<br/>
 <? endif ( $session{user_id} ) ?>

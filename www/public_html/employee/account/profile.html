@@ -167,41 +167,9 @@
 				</li>
 			</ul>
 		</fieldset>
-		<fieldset><legend>Email Settings</legend>
-			<ul>
-				<li>
-					<label>Password</label>
-					<input type="text" name="EmailPassword" value="<?EmailPassword?>" />
-				</li>
-				<li>
-					<label>Verify Password</label>
-					<input type="text" name="VerifyEmailPassword" value="<?EmailPassword?>" />
-				</li>
-				<li>
-					<label>Forwards<br/>(One per line)</label>
-					<textarea id="aliases" name="aliases" onkeyup="textarea_resize(this);" rows="<? echo ( @{$$variable{'Aliases'}} ? scalar @{$$variable{'Aliases'}} + 1 : 2 ) ?>"><? echo ( join("\n", @{$$variable{'Aliases'}})) ?></textarea>	
-				</li>
-			</ul>
-		</fieldset>
-		<fieldset><legend>Vacation Auto-Responder Settings</legend>
-			<ul>
-				<li>
-					<label>Subject</label>
-					<input type="text" name="VacationSubject" value="<?VacationSubject?>" />
-				</li>
-				<li>
-					<label>Message</label>
-					<textarea name="VacationMessage" onkeyup="textarea_resize(this);" rows="<? echo ( ssi::count_lines($$variable{VacationMessage});) ?>"><?VacationMessage?></textarea>
-				</li>
-				<li>
-					<label>Vacation Status</label>
-					<input type="radio" id="VacationState1" name="VacationState" <? echo ( 'checked' if $$variable{'VacationState'} ) ?> value="1"/>
-					<label class="radio" for="VacationState1">Enabled</label>
-					<input type="radio" id="VacationState0" name="VacationState" <? echo ( 'checked' if ! $$variable{'VacationState'} ) ?> value="0"/>
-					<label class="radio" for="VacationState0">Disabled</label>
-				</li>
-			</ul>
-		</fieldset>
+		<? if ($variable{DoEmail}) ?> 
+		<!--#include virtual="/account/_email_settings.html"-->
+		<? if ($variable{DoEmail}) ?> 
 <? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>

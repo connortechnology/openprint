@@ -17,7 +17,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 
 # Note: duration_seconds is 1 seconds less than duration
 
-$debug = 1;
+$debug = 0;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';

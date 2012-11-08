@@ -26,7 +26,7 @@ require sql;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-my $debug = 1;
+use constant DEBUG => 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -46,7 +46,7 @@ sub variables {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $signature_index = $$sig_specs{'SignatureIndex'};
 		foreach my $key ( keys %{$specs} ) {
-			if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+			if ( $key =~ /^txtProofIndex-$signature_index-(\d+)-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
 
 				push @v,	(
@@ -77,7 +77,7 @@ sub outputs {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $signature_index = $$sig_specs{'SignatureIndex'};
 		foreach my $key ( keys %{$specs} ) {
-			if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+			if ( $key =~ /^txtProofIndex-$signature_index-(\d+)-(\d+)$/ ) {
 				my ( $proof_index, $qty_index ) = ( $1, $2 );
 
 				push @v,	(
@@ -113,7 +113,7 @@ sub calc {
 
 	my $status = 'calculated';
 
-	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)");
+	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if DEBUG;
 	my $Project = new openprint::Project( $project_index );
 
 	my @signature_service_indices = $Project->signatures();
@@ -156,7 +156,7 @@ sub calc {
 			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
 				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
 					if ( $proof_index == 1 ) {
-						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
+						insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 					} elsif ( $proof_index == 2 ) {
 						insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 					} elsif ( $proof_index == 3 ) {
@@ -165,7 +165,7 @@ sub calc {
 				} else {
 					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux') and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
-						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
+						insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 					} # end if
 				} # end if
 
@@ -191,7 +191,7 @@ sub calc {
 			my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index});
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $qty_index );
-			my %Results = signature_calc( $Project, $specs, $signature_service_index, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
+			my %Results = signature_calc( $Project, $specs, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment, $Imposition );
 			$totalPrice += $Results{'Total'};
 			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
 		} # end foreach my $signature_service_index
@@ -204,12 +204,12 @@ sub calc {
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 
-	$log->debug("PROOFS!!!!!!!!!!!!!!!!!!");
+	$log->debug("PROOFS!!!!!!!!!!!!!!!!!!") if DEBUG;
 	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub signature_calc {
-	my ( $Project, $specs, $sig_service_index, $sig_specs, $qty_index, $indexes, $totals, $Equipment, $Imposition ) = @_;
+	my ( $Project, $specs, $sig_specs, $qty_index, $indexes, $totals, $Equipment, $Imposition ) = @_;
 
 	my %Results;
 	return %Results if ! $$sig_specs{'txtImposition'.$qty_index};
@@ -217,7 +217,7 @@ sub signature_calc {
 	my $signature_index = $$sig_specs{'SignatureIndex'};
 	if ( ! $Equipment ) {
 		$openprint::log->debug("Looking up equipment in Proofs: signature_calc");
-		$Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} );
+		$Equipment = openprint::Equipment->find_one( strid => $$sig_specs{'ddmPress'.$qty_index} );
 		if ( ! $Equipment ) {
 			$openprint::log->warn("Proofs: signature_calc: No equipment for " . $$sig_specs{'ddmPress'.$qty_index} );
 			return %Results;
@@ -237,7 +237,7 @@ sub signature_calc {
 	foreach my $proof_index ( @{$$indexes{$signature_index}} ) {
 		if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
 			if ( $proof_index == 1 ) {
-				insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
+				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 			} elsif ( $proof_index == 2 ) {
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 			} elsif ( $proof_index == 3 ) {
@@ -246,7 +246,7 @@ sub signature_calc {
 		} else {
 			if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux') and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 				$$specs{'alert'} .= 'We require Dylux Proofs<br/>';
-				insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
+				insert_layout_proof( $sig_specs, 1, $qty_index, $specs, $Imposition );
 			} # end if
 		} # end if
 
@@ -329,7 +329,7 @@ sub insert_proofs {
 		insert_scanning_proof( $Project, $signature_service_index, 1, $qty_index, $specs );
 	} else {
 		insert_colour_proof( $Project, $sig_specs, 1, $qty_index, $specs );
-		insert_layout_proof( $Project, $sig_specs, 2, $qty_index, $specs, $Imposition );
+		insert_layout_proof( $sig_specs, 2, $qty_index, $specs, $Imposition );
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 
@@ -400,7 +400,7 @@ sub insert_colour_proof {
 } # end sub insert_colour_proof
 
 sub insert_layout_proof {
-	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
+	my ( $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
 
 #$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
@@ -495,12 +495,12 @@ $log->error("No imposition in signature $signature_index");
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 1;
-				$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
-				insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $variable, $Imposition );
+				$openprint::log->debug("ADDING Layout Proof to $signature_index") if DEBUG;
+				insert_layout_proof( $sig_specs, 1, $qty_index, $variable, $Imposition );
 			} # end if
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
 				push @{$proof_indexes{$signature_index}}, 2;
-				$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
+				$openprint::log->debug("ADDING Colour Proof to $signature_index") if DEBUG;
 				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
 			} # end if
 			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {

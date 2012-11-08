@@ -7,11 +7,11 @@ $table = 'stockgroups';
 $serial = 'stockgroups_id_seq';
 
 %fields = ( 
-	'id'	=>	'id',
-	'name'=>'name',
+	id	=>	'id',
+	name=>	'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = ();
 
