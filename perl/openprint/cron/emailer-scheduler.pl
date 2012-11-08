@@ -37,7 +37,7 @@ if ($opts->{help}) {
     exit 0;
 }
 
-$log = new logger( {'level'=>'debug'});
+$log = new logger( {'level'=>'warn'});
 configuration::init( );
 configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/openprint/emailer-scheduler.conf' );
 configuration::merge( $opts );

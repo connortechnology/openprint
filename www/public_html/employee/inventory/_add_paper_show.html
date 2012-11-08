@@ -34,7 +34,7 @@
 			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockBrand->find('order'=>'lower(name)') ], $param{'Brand'} ? $param{'Brand'} : $$variable{'Paper'}->brand_id() );
 			) ?>
 	</select>
-	<input style="display: none;" type="text" id="Brand" name="Brand" />
+	<input style="display: none;" type="text" id="txtBrand" name="txtBrand" />
 </p><p>
 	<label for="txtFinish" onclick="f1.txtFinish.value='';f1.Finish.selectedIndex=0;f1.Finish.toggle();f1.txtFinish.toggle();">Finish</label>
 	<select id="Finish" name="Finish" size="1" onchange="Finish_onChange(this,'');">
@@ -67,19 +67,14 @@
 </p>
 <p>
 	<label for="weight">Weight</label>
-<!--
-	<label for="txtWeight" onclick="f1.txtWeight.value='';f1.Weight.selectedIndex=0;f1.Weight.toggle();f1.txtWeight.toggle();">Weight</label>
-	<select id="Weight" name="Weight" size="1">
-	<? echo (
-			my @options = ( '', 'select one',
-				sql::execute( $log, $dbh, q{SELECT id, name FROM PaperWeights ORDER BY lower(name)} )
-				);
-			return ssi::make_drop_down( \@options, $param{'Weight'} ? $param{'Weight'} : $$variable{'Paper'}->weight_id() );
-			) ?>
-	</select>
-	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
--->
-	<input type="number" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); if ( $weight =~ /PT/i ) { $weight = '' } $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
+	<? echo ( 
+my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight();
+if ( $weight =~ /PT/i ) {
+	$weight = '';
+}
+$weight =~ s/lb//;
+return input( type=>'float', id=>'weight', name=>'weight', value=> $weight );
+) ?>lb
 </p>
 <p>
 	<label for="txtQuality" onclick="$('txtQuality').toggle();$('Quality').toggle();">Quality</label>

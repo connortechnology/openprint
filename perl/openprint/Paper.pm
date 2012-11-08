@@ -34,7 +34,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -134,11 +134,7 @@ sub Prices {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	if ( $hash ) {
-		foreach my $key ( keys %fields ) {
-			$$self{$key} = $$hash{$key} if exists $$hash{$key};
-		} # end foreach
-	} # end if
+	$self->set($hash);
 	
 	if ( $$self{'group'} and ! $$self{'group_id'} ) {
 		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{'group'} ) );
@@ -227,9 +223,6 @@ sub save {
 		$self->allocated(undef,undef);
 	} # end if
 
-	foreach my $key ( keys %fields ) {
-		$$self{$key} = undef if $$self{$key} eq '';
-	} # end foreach
 	$$self{'height'} = undef if $$self{'type'} eq 'Roll';
 	
 	my $error;
@@ -575,7 +568,7 @@ sub weight {
 		if ( ! $_[0]{'custom'} ) {
 			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $_[1]);
 			if ( $Weight ) {
-				$_[0]{'weight_id','weight'} = @$Weight{'id','name'};
+				@{$_[0]}{'weight_id','weight'} = @$Weight{'id','name'};
 			} else {
 				$_[0]{'weight'} = $_[1];
 			} # end if

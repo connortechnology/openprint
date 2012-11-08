@@ -1,10 +1,10 @@
 <fieldset><legend>Modification History</legend>
 	<table class="List" style="table-layout: auto;">
 	<tr>
-	<th align="left">Customer</th>
-	<th align="left">User</th>
-	<th align="left" width="150">When</th>
-	<th align="left">Description</th>
+	<th class="Company">Customer</th>
+	<th class="User">User</th>
+	<th class="DateTime">When</th>
+	<th class="description">Description</th>
 	</tr>
 	<? eval ( 
 		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
@@ -16,6 +16,8 @@
 				$$variable{'Description'} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
 			} elsif ( $$variable{'Description'} =~ /^Reused to project (\d+)$/ ) {
 				$$variable{'Description'} = "Reused to project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
+			} elsif ( $$variable{'Description'} =~ /^Add to Order (\d+)$/ ) {
+				$$variable{'Description'} = "Add to Order <a href=\"/main/order/history_details.html?OrderID=$1\">$1</a>";
 			} # end if
 		) ?>
 	<tr<?rowclass?>>

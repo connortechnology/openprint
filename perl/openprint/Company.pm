@@ -263,7 +263,7 @@ sub dropdown {
 		} # end if
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
-				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
+				$sql .= ' AND id IN ( '.join(',', @{$params{'id'}} ).' )';
 			} # en dif
 		} # end if
 	} # end if
