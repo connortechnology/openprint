@@ -37,7 +37,7 @@ sub price {
 	} # end if
 
 	if ( ! $_[0]{price} ) {
-		$_[0]{price} = $_[0]->Project()->price( $_[0]->qty_index() );
+		$_[0]{price} = $_[0]->Project()->price( $_[0]->quantity_index() );
 	} # end if
 	return $_[0]{price};
 } # end sub price
@@ -47,7 +47,7 @@ sub quantity {
 		$_[0]{'quantity'} = $_[1];
 	} # end if
 	if ( ! $_[0]{'quantity'} ) {
-		$_[0]{'quantity'} = $_[0]->Project()->quantity( $_[0]->qty_index() );
+		$_[0]{'quantity'} = $_[0]->Project()->quantity( $_[0]->quantity_index() );
 	} # end if
 	return $_[0]{'quantity'};
 } # end sub quantity
