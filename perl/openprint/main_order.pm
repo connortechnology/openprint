@@ -355,13 +355,14 @@ sub confirmation {
 		} # end foreach Tax
 		my $total = $Order->total(undef);
 
-		my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
-		if ( $downpayment eq '' ) {
-			$downpayment = $config{'DefaultDownpayment'};
-		} # end if
-		$downpayment = $total * ( $downpayment / 100 );
-		$downpayment = sprintf( '%.2f', $downpayment );
+		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
+		my ( $downpayment );
+		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
+		#if ( $downpayment eq '' ) {
+			#$downpayment = $config{'DefaultDownpayment'};
+		#} # end if
+		#$downpayment = $total * ( $downpayment / 100 );
+		#$downpayment = Math::Round::nearest( 0.01, $downpayment );
 
 		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #
