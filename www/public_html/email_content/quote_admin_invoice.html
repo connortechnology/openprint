@@ -9,8 +9,8 @@
 <table class="List">
 	<tr> 
 		<th class="project_id">ID</th>
-		<th align="left">Description</th>
-		<th width="130" align="right">Weight</th>
+		<th class="description">Description</th>
+		<th class="weight">Weight</th>
 		<th class="markup">MU</th>
 		<th class="quantity">Quantity</th>
 		<th class="price">Price</th>
@@ -26,8 +26,8 @@
 			my $Project = $QP->Project();
 			$html .= sprintf(q`
 	<tr%1$s> 
-		<td><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%3$d</a></td>
-		<td><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></td>
+		<td class="project_id"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%3$d</a></td>
+		<td class="description"><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></td>
 		<td colspan="5">
 			<table>
 			`, $rowclass, $config{'ExternalSiteURL'}, $QP->project_id(),
