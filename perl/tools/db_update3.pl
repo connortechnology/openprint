@@ -970,6 +970,7 @@ $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+print "done.\n";
 $dbh->disconnect();
 1;
 __END__

@@ -177,10 +177,10 @@ do{
 	$sock->recv($buf, $MAXLEN);
 	my ($port, $ipaddr) = IO::Socket::sockaddr_in($sock->peername);
 	my $hn = gethostbyaddr($ipaddr, Socket::AF_INET);
-	$log->debug($buf) if $config{debug};
+	#$log->debug($buf) if $config{debug};
 	# Without the multiline flag, will do one line at a time, nice.
 	my ( $thing1, $line ) = $buf =~ /<(\d+)>(.*)/;
-$log->debug("Thing1: $1, thing3: $line ");
+#$log->debug("Thing1: $1, thing3: $line ");
 	foreach my $re ( @re ) {
 
 		#$log->debug("Checking Line: $re") if $config{debug};

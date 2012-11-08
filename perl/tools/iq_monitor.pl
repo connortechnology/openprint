@@ -10,6 +10,7 @@ require openprint::Host;
 require logger;
 require openprint::Email;
 require openprint::Log;
+require Net::Ping;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
