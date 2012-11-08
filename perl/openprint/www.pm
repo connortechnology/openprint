@@ -260,9 +260,9 @@ $log->debug("PageContent is $variable{PageContent}");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
-			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
-			$r->print( $_ );
+			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
+			$log->warn($variable{PageContent});
+			$r->print( $variable{PageContent} );
 		} # end if
 	} # end if
 
