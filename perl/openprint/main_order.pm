@@ -152,7 +152,7 @@ $openprint::log->debug("Got product.");
 	 'fax',
 	 'email',
 	 'alsonotify',
-	} = $Order->get('company_name','salutation','first_name','last_name','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
 	if ( $variable{'companyname'} eq '' ) {
 		my $Company = new openprint::Company($session{'company_id'});

@@ -20,10 +20,10 @@
 							</li>
 							<? echo (
 								my $html;
-								my @Suppliers = openprint::Company->find('offers_credit'=>1,'order'=>'index');
+								my @Suppliers = openprint::Company->find(offers_credit=>1,order=>'id');
 								if ( @Suppliers > 1 ) {
 									if ( sets::isin($session{user_type}, ['A','E'] ) ) {
-										$html .= '<li><label>Supplier</label><select name="supplier_id">';
+										$html .= '<li class="supplier"><label>Supplier</label><select name="supplier_id">';
 										$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Suppliers ], $$variable{Order}->supplier_id() );
 										$html .= '</select></li>';
 									} else {
@@ -38,7 +38,7 @@
 								<span id="CompanyDropDown">
 								<!--#include virtual="_company_dropdown.html"-->
 								</span>
-								<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
+								<? echo ( ssi::button( 'AddFromBelow', { onclick=>'save_company();', href=>'', text=>'Save Company' } ); ) ?>
 							</li>
 							<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 						</ul>
@@ -61,7 +61,10 @@
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
 					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();;
-					return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
+					my $html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_quantity_select.html' );
+
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
+					return $html;
 				) ?>
 			</div><!--Shipping-->
 <? endif ( @{$$variable{'Contents'}} == 1 ) ?>
@@ -123,8 +126,8 @@
 				} else {
 					$log->debug("NO Project");
 				} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'AddProject','add_project.gif','','/main/project/history.html','Add Project From History' ) if $config{'OrderMode'} ne 'Simple';
-				$html .= ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); 
+				$html .= ssi::button( 'AddProject', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{'OrderMode'} ne 'Simple';
+				$html .= ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();', href=>'', text=>'Save And Continue' } ); 
 				return $html;
 			) ?>
 		</p>

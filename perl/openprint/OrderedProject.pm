@@ -6,7 +6,7 @@ require openprint::Project;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
 
-$debug = 0;
+$debug = 1;
 $table = 'order_contents';
 @identified_by = ( 'project_id', 'order_id' );
 
@@ -15,7 +15,7 @@ $table = 'order_contents';
 	'order_id'		=>	'orderindex',
 	'project_id'	=>	'lngprojectindex',
 	'quantity'		=>	'intquantity',
-	'qty_index'		=>	'intquantityindex',
+	'quantity_index'		=>	'intquantityindex',
 	'price'			=>	'cursalesprice',
 	'shipping_type'	=>	'shippingtype',
 	'requested_for'	=>	'daterequired',
