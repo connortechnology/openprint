@@ -38,7 +38,7 @@
 								<span id="CompanyDropDown">
 								<!--#include virtual="_company_dropdown.html"-->
 								</span>
-								<? echo ( ssi::button( 'AddFromBelow', { onclick=>'save_company();', href=>'', text=>'Save Company' } ); ) ?>
+								<? echo ( ssi::button( 'AddFromBelow', { onclick=>'save_company();', text=>'Save Company' } ); ) ?>
 							</li>
 							<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 						</ul>

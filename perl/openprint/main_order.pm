@@ -273,7 +273,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
 				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
 				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
-				push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
+				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
 
 				if ( ! Email::Valid->address($$specs{'ToEmail'} ) ) {
 					push @errors, 'Shipping Email is not a valid email address.';
