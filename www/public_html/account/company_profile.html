@@ -87,11 +87,11 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				<ul>
 					<li>
 						<label>Terms</label>
-						<? echo ( $$variable{'Company'}->Credit()->get('DenyDays'); ) ?> Days
+						<? echo ( $$variable{'Company'}->Credit()->denydays(); ) ?> Days
 					</li>
 					<li>
 						<label>Credit Account Limit</label>
-						$ <? echo ( $$variable{'Company'}->Credit()->get('Limit'); ) ?>
+						$ <? echo ( $$variable{'Company'}->Credit()->limit(); ) ?>
 					</li>
 					<li>
 						<label>Current Credit Balance</label>
@@ -103,7 +103,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 					</li>
 					<li>
 						<label>Required Downpayment</label>
-						<? echo ( $$variable{'Company'}->Credit()->get('Downpayment') ) ?>
+						<? echo ( $$variable{'Company'}->Credit()->downpayment() ) ?>
 					</li>
 				</ul>
 			</fieldset>

@@ -563,6 +563,10 @@ my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, c
 	if ( ! $$data{'archive'} ){ 
 		$dbh->do('ALTER TABLE project_files add archive TEXT');
 	} # end if
+	if ( ! exists $$data{company_id} ) {
+		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');
+		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
+	} # end if
 	
 }
 

@@ -694,7 +694,10 @@ sub find {
 		$local_dbh = $$params{'dbh'};
 		delete $$params{'dbh'};
 	} # end if
-	return () if ! $local_dbh;
+	if ( ! $local_dbh ) {
+		$log->error("No local_dbh");
+	return ();
+	}
 	delete $$params{'dbh'};
 
 	my $cache_field = ${$type.'::cache_field'};
@@ -821,7 +824,7 @@ sub find {
 		} # end foreach
 	} # end if
 	if ( $search{'custom'} ) {
-		push @where, shift @{$search{'custom'}};
+		push @where, '(' . (shift @{$search{'custom'}}) . ')';
 		push @values, @{$search{'custom'}};
 		delete $search{'custom'};
 	} # end if
@@ -856,7 +859,7 @@ sub find {
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
@@ -887,7 +890,6 @@ sub find {
 
 sub find_one {
 	my $type = shift;
-	 
 	my $params;
 	if ( @_ == 1 ) {
 		$params = $_[0];

@@ -37,9 +37,9 @@ if ($opts->{help}) {
     exit 0;
 }
 
-$log = new logger( {'level'=>'debug'});
+$log = new logger( {'level'=>'warn'});
 configuration::init( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/openprint/emailer-scheduler.conf' );
 configuration::merge( $opts );
 
 # Declare variables
@@ -61,7 +61,7 @@ $dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::from_db( );
-configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/emailer-scheduler.conf' );
+configuration::from_file( $$opts{'config'} ? $$opts{'config'} : '/etc/openprint/emailer-scheduler.conf' );
 configuration::merge( $opts );
 
 $session{'company_id'} = $config{'owner_id'};
@@ -69,7 +69,7 @@ $ENV{'DOCUMENT_ROOT'} = $config{'DOCUMENT_ROOT'};
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign->find( 'active' => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
+my @campaign_ids = openprint::EmailCampaign->find( active => 'Y', 'nextrun <' => 'NOW()', 'custom'=>['(timeofday IS NULL) OR (timeofday <= CURRENT_TIME)'] );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 

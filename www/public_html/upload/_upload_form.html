@@ -9,7 +9,7 @@
 		<div id="FileList"> <!--#include virtual="_files.html"--> </div>
 	</fieldset>
 <? endif ( $session{'user_id'} ) ?>
-	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval('Upload_id_seq')} ); ) ?>
+	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval(uploads_id_seq)} ); ) ?>
 	<form name="upload" method="post" action="upload.htm?serial=<?serial?>" enctype="multipart/form-data" target="UploadFrame">
 <? if ( ! $session{'user_id'} ) ?>
 		<fieldset><legend>Your Information</legend>

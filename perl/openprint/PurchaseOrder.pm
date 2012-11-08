@@ -10,6 +10,7 @@ use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -177,7 +178,7 @@ sub send_approval_required_notification {
 sub send_to_vendor {
 	my ( $self ) = @_;
 
-	my $From = new openprint::User( $session{'user_id'} );
+	my $From = new openprint::User( $session{user_id} );
 	
 	my %info = (
 			'PurchaseOrder'	=>	$self,
@@ -193,38 +194,31 @@ sub send_to_vendor {
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
 	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
-	my %mail = (
-			FROM    => $From,
-			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
+	my $Email = new openprint::Email();
+	$Email->set({
+			from    => $From,
+			subject => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			ATTACHMENTS => \@attachments,
-			);
+			});
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	foreach my $email ( split(',', $self->vendor_email() ) ) {
 		$email =~ s/^\s*(.*)\s*$/$1/;
 		next if ! $email;
-		$mail{'TO'}	= $email;
-		new openprint::Email()->send(%mail);
-		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		$results .= $Email->send(TO=>$email);
 	} # end foreach
+
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		my $Email = new openprint::Email();
 		$results .= $Email->send( 
 				TO	=>	[ split(',', $self->shipto_email() ) ],
-				FROM	=>	$mail{'FROM'},
-				SUBJECT	=>	$mail{'SUBJECT'},
-				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
-		my $Email = new openprint::Email();
 		$results .= 'Notifications: <br/>' . $Email->send( 
 				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
-				FROM	=>	$mail{'FROM'},
-				SUBJECT	=>	$mail{'SUBJECT'},
 				ATTACHMENTS =>	\@attachments,
 				);
 	} # end if

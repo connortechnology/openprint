@@ -4,7 +4,10 @@
 				<tr> 
 					<th class="service">Service</th>
 					<th class="description">Description</th>
-					<th class="price">Price</th>
+<? echo ( 
+		my @quantity_indexes = ( $variable{Project}->ordered_quantity_index() ? $variable{Project}->ordered_quantity_index() : ( $variable{Project}->quantity_indexes() ) );
+		return join("\n", map { '<th class="price">Price</th>' } @quantity_indexes );
+) ?>
 				</tr>
 			</thead>
 			<tbody>
@@ -47,7 +50,7 @@
 					);
 					$html .= "\n";
 					$rowclass = $rowclass ? '' : ' class="colRow"';
-					foreach my $qty_index ( $Project->ordered_quantity_index() ? $Project->ordered_quantity_index() : ( $Project->quantity_indexes() ) ) {
+					foreach my $qty_index ( @quantity_indexes ) {
 						$totals[$qty_index] += $$service_specs{'txtPrice'.$qty_index};
 					} # end foreach qty_index
 				} # end if
@@ -66,13 +69,15 @@
 							$summary .= openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() );
 						} # end if
 
-						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s</td></tr>', 
+						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td>',
 							$rowclass, $ServiceType->description(), 
 							$summary, 
-							openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from($$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()}) ),
 						);
+						$html .= join("\n", map { '<td class="price">' . openprint::Currency::format( 1*$$variable{'Project'}->Currency()->convert_from($$service_specs{'txtPrice'.$_}) ) . '</td>' } @quantity_indexes );
+						$html .= '</tr>';
+
 						$rowclass = $rowclass ? '' : ' class="colRow"';
-						foreach my $qty_index ( $Project->ordered_quantity_index() ? $Project->ordered_quantity_index() : ( $Project->quantity_indexes() ) ) {
+						foreach my $qty_index ( @quantity_indexes ) {
 							$totals[$qty_index] += $$service_specs{'txtPrice'.$qty_index};
 						} # end foreach total
 					} # end foreach service_id
@@ -80,9 +85,10 @@
 			} # end if Printing or not
 		} # end foreach ServiceCategory
 		$html .= '<tr class="totals"><td colspan="2">Project Cost</td>';
-		foreach my $qty_index ( $Project->ordered_quantity_index() ? $Project->ordered_quantity_index() : ( $Project->quantity_indexes() ) ) {
-			$html .= '<td class="price">'.openprint::Currency::format($totals[$qty_index]).'</td></tr>';
+		foreach my $qty_index ( @quantity_indexes ) {
+			$html .= '<td class="price">'.openprint::Currency::format($totals[$qty_index]).'</td>';
 		} # end foreach qty_index
+		$html .= '</tr>';
 		return $html;
 	) ?>
 		</tbody>

@@ -26,6 +26,7 @@ require openprint::usergroup;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::PaperAllocation;
+require openprint::Company_Credit;
 
 sub delete_unfinished_orders {
 	# clean out old orders
@@ -355,7 +356,7 @@ sub save_project_information {
 
 	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
 
-		if ( ! check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
+		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
 			return q{Date is not valid. Please select a correct date.};
 		} # end if
 		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
@@ -433,8 +434,8 @@ sub save_project_information {
 
 	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
 	if ( ref $OP eq 'openprint::OrderedProject' ) {
-	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
-	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+		$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+		$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
 	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
 	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
 	#$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
@@ -496,7 +497,7 @@ sub get_invoice_to {
 		'phone',
 		'fax',
 		'email'
-	} = $Order->get('company_name','salutation','first_name','last_name','address1','address2','city','state','country','postalcode','phone','fax','email');
+	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','country','postalcode','phone','fax','email');
 
 } # end sub get_invoice_to
 

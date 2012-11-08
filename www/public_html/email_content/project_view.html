@@ -19,9 +19,6 @@
 				return $html;
 			) ?>
 			<th class="status">Status</th>
-			<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-			<th class="unprintable actions">Actions</th>
-			<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 		</tr>
 	</thead>
 <? echo ( 
@@ -170,11 +167,7 @@
 					if ( @summaries ) {
 						for ( my $line = 0; $line < @summaries; $line += 1 ) {
 							$html .= "<tr$rowclass><td>";
-							if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
-								$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
-							} else {
 								$html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
-							} # end if
 							$html .= '</td>';
 							foreach my $qty_index ( $Project->quantity_indexes() ) {
 								$html .= '<td class="price">';
@@ -203,9 +196,6 @@
 					return $html;
 				) ?>
 				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			<tr> 
 				<td>Total Before Taxes</td>
@@ -217,9 +207,6 @@
 					return $html;
 				) ?>
 				<td class="status">&nbsp;</td>
-				<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-				<td class="unprintable actions">&nbsp;</td>
-				<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 <? endif ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 <? if ( $$variable{'Project'}->Ordered_Product() ) ?>
@@ -227,9 +214,6 @@
             <td>Ordered Price</td>
             <td class="price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Ordered_Product()->price() ); ) ?></td>
             <td class="status">&nbsp;</td>
-			<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
-            <td class="unprintable actions">&nbsp;</td>
-			<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
         </tr>
 <? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 	</table>

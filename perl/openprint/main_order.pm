@@ -152,7 +152,7 @@ $openprint::log->debug("Got product.");
 	 'fax',
 	 'email',
 	 'alsonotify',
-	} = $Order->get('company_name','salutation','first_name','last_name','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
+	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','postalcode','country','phone','fax','email','alsonotify');
 
 	if ( $variable{'companyname'} eq '' ) {
 		my $Company = new openprint::Company($session{'company_id'});
@@ -273,7 +273,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				push @errors, 'Please enter the Shipping PostalCode.' if ! $$specs{'ToPostalCode'};
 				push @errors, 'Please enter the Shipping Country.' if ! $$specs{'ToCountry'};
 				push @errors, 'Please enter the Shipping Phone.' if ! $$specs{'ToPhone'};
-				push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
+				#push @errors, 'Please enter the Shipping Email.' if	! $$specs{'ToEmail'};
 
 				if ( ! Email::Valid->address($$specs{'ToEmail'} ) ) {
 					push @errors, 'Shipping Email is not a valid email address.';
@@ -355,13 +355,14 @@ sub confirmation {
 		} # end foreach Tax
 		my $total = $Order->total(undef);
 
-		my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
-		my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
-		if ( $downpayment eq '' ) {
-			$downpayment = $config{'DefaultDownpayment'};
-		} # end if
-		$downpayment = $total * ( $downpayment / 100 );
-		$downpayment = sprintf( '%.2f', $downpayment );
+		#my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
+		my ( $downpayment );
+		#my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
+		#if ( $downpayment eq '' ) {
+			#$downpayment = $config{'DefaultDownpayment'};
+		#} # end if
+		#$downpayment = $total * ( $downpayment / 100 );
+		#$downpayment = Math::Round::nearest( 0.01, $downpayment );
 
 		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #

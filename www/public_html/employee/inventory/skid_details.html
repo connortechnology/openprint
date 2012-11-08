@@ -75,7 +75,7 @@
 			</p>
 		<? else ( $$variable{'Skid'}->id() ) ?>
 			<p><label># of skids to add</label>
-				<input type="number" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
+				<? echo ( input( type=>'cardinal', name=>'skid_quantity', value=>$param{skid_quantity} ); ) ?>
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p><label>RFID Tag</label>

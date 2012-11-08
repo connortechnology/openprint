@@ -184,7 +184,7 @@ sub skids {
 
 sub inventory_report {
 	my %param = @_;
-	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
+	my @header = ('ID','Owner','Manufacturer','Brand','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)', 'Condition', 'Last Seen', 'Cost', 'Value' );
 
 	my @data;
 	my $count = 0;
@@ -208,7 +208,7 @@ sub inventory_report {
 					$$Paper{'id'},
 					new openprint::Company($Paper->owner_id())->name(),
 					$Paper->manufacturer(),
-					$Paper->name(),
+					$Paper->brand(),
 					$Paper->finish(),
 					$Paper->colour(),
 					$Paper->weight(),
@@ -238,7 +238,7 @@ sub inventory_report {
 
 sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
-		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
+		my @header = ('Date','Operator','Owner','Brand','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
 		my @data;
 		my @inventory = openprint::PaperInventory->find(
 				ssi::date_filter( 'added_on_start', 'updated_on >=', \%param ),
@@ -251,7 +251,7 @@ sub paper {
 Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())),
 				$I->User()->name(),
 				$Paper->Owner()->name(),
-				$Paper->name(),
+				$Paper->brand(),
 				$Paper->finish(),
 				$Paper->colour(),
 				$Paper->weight(),
@@ -269,14 +269,14 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 		misc::export_csv( $r, $log, \%variable, "PaperConsumption $date.csv", \@header, \@data );
 	} elsif ( $param{'btnFunction'} eq 'Download Log' ) {
 
-		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
+		my @header = ('Date','Operator','Owner','Brand','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
 		my @info = sql::execute( $log, $dbh, q{SELECT paper_id, skid_id, user_id, delta, units, updated_on, comment FROM paper_inventory ORDER BY updated_on DESC} );
 		my @data;
 		while ( my ( $paper_id, $skid_id, $user_id, $delta, $units, $time, $comment ) = splice @info, 0, 7 ) {
 			my $Paper = new openprint::Paper( $paper_id );
 			push @data, $time, new openprint::User($user_id)->name(),
 				 new openprint::Company($Paper->owner_id())->name(),
-				 $Paper->name(),
+				 $Paper->brand(),
 				 $Paper->finish(),
 				 $Paper->colour(),
 				 $Paper->weight(),
@@ -378,8 +378,8 @@ sub paper_details {
 		$Paper->owner_id( $param{'Owner'} );
 		$Paper->manufacturer( $param{'txtManufacturer'} ) if $param{'txtManufacturer'};
 		$Paper->manufacturer_id( $param{'Manufacturer'} ) if $param{'Manufacturer'};
-		$Paper->name( $param{'txtName'} ) if $param{'txtName'};
-		$Paper->name_id( $param{'Name'} ) if $param{'Name'};
+		$Paper->brand( $param{'txtBrand'} ) if $param{'txtBrand'};
+		$Paper->brand_id( $param{'Brand'} ) if $param{'Brand'};
 		$Paper->finish( $param{'txtFinish'} ) if $param{'txtFinish'};
 		$Paper->finish_id( $param{'Finish'} ) if $param{'Finish'};
 		$Paper->colour( $param{'txtColour'} ) if $param{'txtColour'};
@@ -405,21 +405,21 @@ sub paper_details {
 		$Paper->fsc_code( $param{'fsc_code'} );
 		if ( ! $param{'paper_id'} ) {
 			my @papers = openprint::Paper->find(
-					'owner_id'	=>	$param{'Owner'},
-					'manufacturer'		=>	$param{'txtManufacturer'},
-					'manufacturer_id'	=>	$param{'Manufacturer'},
-					'name'		=>	$param{'txtName'},
-					'name_id'	=>	$param{'Name'},
-					'finish'	=>	$param{'txtFinish'},
-					'finish_id' =>	$param{'Finish'},
-					'colour'	=>	$param{'txtColour'},
-					'colour_id' =>	$param{'Colour'},
-					'weight'	=>	$param{'txtWeight'},
-					'weight_id' =>	$param{'Weight'},
-					'quality'	=>	$param{'txtQuality'},
-					'quality_id'=>	$param{'Quality'},
-					'width'		=> $param{'width'},
-					'height'	=>	$param{'height'},
+					( $param{'Owner'} ? ( 'owner_id'	=>	$param{'Owner'} ) : () ),
+					( $param{'txtManufacturer'} ? ( 'manufacturer'		=>	$param{'txtManufacturer'} ) : () ),
+					( $param{'Manufacturer'} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'} ) : () ),
+					( $param{'txtBrand'} ? ( 'brand'		=>	$param{'txtBrand'} ) : () ),
+					( $param{Brand} ? ( 'brand_id'	=>	$param{'Brand'} ) : () ),
+					( $param{txtFinish} ? ( 'finish'	=>	$param{'txtFinish'} ) : () ),
+					( $param{Finish} ? ( 'finish_id' =>	$param{'Finish'} ) : () ),
+					( $param{txtColour} ? ( 'colour'	=>	$param{'txtColour'} ) : () ),
+					( $param{Colour} ? ( 'colour_id' =>	$param{'Colour'} ) : () ),
+					( $param{txtWeight} ? ( 'weight'	=>	$param{'txtWeight'} ) : () ),
+					( $param{Weight} ? ( 'weight_id' =>	$param{'Weight'} ) : () ),
+					( $param{txtQuality} ? ( 'quality'	=>	$param{'txtQuality'} ) : () ),
+					( $param{Quality} ? ( 'quality_id'=>	$param{'Quality'} ) : () ),
+					( $param{width} ? ( 'width'		=> $param{'width'} ) : () ),
+					( $param{height} ? ( 'height'	=>	$param{'height'} ) : () ),
 					);
 			if ( @papers ) {
 				$variable{'error'} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -456,7 +456,7 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
 		my @Duplicates = openprint::Paper->find(
 				'manufacturer_id'	=> $Paper->manufacturer_id(),
-				'name_id'			=> $Paper->name_id(),
+				'brand_id'			=> $Paper->brand_id(),
 				'finish_id'			=> $Paper->finish_id(),
 				'colour_id'			=> $Paper->colour_id(),
 				'weight_id'			=> $Paper->weight_id(),
@@ -497,25 +497,25 @@ sub save_Paper {
 	} # end if
 
 	my @Papers = openprint::Paper->find(
-			'owner_id'	=>	$param{'Owner'.$id},
-			'manufacturer_id'	=>	$param{'Manufacturer'.$id},
-			'manufacturer'		=>	$param{'txtManufacturer'.$id},
-			'name_id'	=>	$param{'Name'.$id},
-			'name'		=>	$param{'txtName'.$id},
-			'finish_id' =>	$param{'Finish'.$id},
-			'finish'	=>	$param{'txtFinish'.$id},
-			'colour_id' =>	$param{'Colour'.$id},
-			'colour'	=>	$param{'txtColour'.$id},
-			'weight_id' =>	$param{'Weight'.$id},
+			( $param{'Owner'.$id} ? ( 'owner_id'	=>	$param{'Owner'.$id} ) : () ),
+			( $param{'Manufacturer'.$id} ? ( 'manufacturer_id'	=>	$param{'Manufacturer'.$id} ) : () ),
+			( $param{'txtManufacturer'.$id} ? ( 'manufacturer'		=>	$param{'txtManufacturer'.$id} ) : () ),
+			( $param{'Brand'.$id} ? ( 'brand_id'	=>	$param{'Brand'.$id} ) : () ),
+			( $param{'txtBrand'.$id} ? ( 'brand'		=>	$param{'txtBrand'.$id} ) : () ),
+			( $param{'Finish'.$id} ? ( 'finish_id' =>	$param{'Finish'.$id} ) : () ),
+			( $param{'txtFinish'.$id} ? ( 'finish'	=>	$param{'txtFinish'.$id} ) : () ),
+			( $param{'Colour'.$id} ? ( 'colour_id' =>	$param{'Colour'.$id} ) : () ),
+			( $param{'txtColour'.$id} ? ( 'colour'	=>	$param{'txtColour'.$id} ) : () ),
+			( $param{'Weight'.$id} ? ( 'weight_id' =>	$param{'Weight'.$id} ) : () ),
 			'weight'	=>	$weight,
 # We might 
 			#'quality_id' =>	$param{'Quality'.$id},
 			#'quality'	=>	$param{'txtQuality'.$id},
-			'width'		=> $param{'width'.$id},
-			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
-			'type'		=>	$param{'type'.$id},
-			'calliper'	=>	$param{'calliper'.$id},
-			'fsc_code'	=>	$param{'fsc_code'.$id},
+			( $param{'width'.$id} ? ( 'width'		=> $param{'width'.$id} ) : () ),
+			( $param{'height'.$id} ? ( 'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef ) : () ),
+			( $param{'type'.$id} ? ( 'type'		=>	$param{'type'.$id} ) : () ),
+			( $param{'calliper'.$id} ? ( 'calliper'	=>	$param{'calliper'.$id} ) : () ),
+			( $param{'fsc_code'.$id} ? ( 'fsc_code'	=>	$param{'fsc_code'.$id} ) : () ),
 			);
 	my $Paper;
 
@@ -525,8 +525,8 @@ sub save_Paper {
 		$Paper->owner_id( $param{'Owner'.$id} );
 		$Paper->manufacturer( $param{'txtManufacturer'.$id} ) if $param{'txtManufacturer'.$id};
 		$Paper->manufacturer_id( $param{'Manufacturer'.$id} ) if $param{'Manufacturer'.$id};
-		$Paper->name( $param{'txtName'.$id} ) if $param{'txtName'.$id};
-		$Paper->name_id( $param{'Name'.$id} ) if $param{'Name'.$id};
+		$Paper->brand( $param{'txtBrand'.$id} ) if $param{'txtBrand'.$id};
+		$Paper->brand_id( $param{'Brand'.$id} ) if $param{'Brand'.$id};
 		$Paper->finish( $param{'txtFinish'.$id} ) if $param{'txtFinish'.$id};
 		$Paper->finish_id( $param{'Finish'.$id} ) if $param{'Finish'.$id};
 		$Paper->colour( $param{'txtColour'.$id} ) if $param{'txtColour'.$id};
@@ -643,7 +643,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 		$Condition = new openprint::InventoryCondition( $param{'Condition'} );
 	} # end if
 	
-	if ( $param{'Name'} or $param{'txtName'} ) {
+	if ( $param{'Brand'} or $param{'txtBrand'} ) {
 		my $Paper = save_Paper();
 
 		if ( $Paper and $Paper->id() ) {

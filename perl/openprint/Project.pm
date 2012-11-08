@@ -896,17 +896,17 @@ sub ordered_quantity {
 sub ordered_quantity_index {
 	my $OP = $_[0]->Ordered_Project();
 	if ( @_ > 1 ) {
-		$$OP{'qty_index'} = $_[1];
+		$$OP{'quantity_index'} = $_[1];
 	} # end if
 
-	if ( ! $$OP{'qty_index'} ) {
+	if ( ! $$OP{'quantity_index'} ) {
 		my @qtys = $_[0]->quantity_indexes();
 #$openprint::log->debug("Project ordered_qty_index @qtys ");
 		if ( 1 == @qtys ) {
-			$$OP{'qty_index'} = $qtys[0];
+			$$OP{'quantity_index'} = $qtys[0];
 		} # end if
 	} # end if
-	return $$OP{'qty_index'};
+	return $$OP{'quantity_index'};
 } # end sub ordered_quantity_index
 
 sub ordered_price {
@@ -915,7 +915,7 @@ sub ordered_price {
 		$openprint::log->error("No OP in ordered_price");
 	} else {
 		return $$OP{'price'} if $$OP{'price'};
-		return $_[0]{'price'.$$OP{'qty_index'}};
+		return $_[0]{'price'.$$OP{'quantity_index'}};
 	} # end if
 	return 0;
 } # end sub ordered_price
