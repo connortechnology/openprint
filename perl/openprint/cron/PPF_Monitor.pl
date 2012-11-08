@@ -64,7 +64,9 @@ die 'Error opening db' if ! $dbh;
 
 configuration::init( {'SkinPath'=> $opts->{skin_path}});
 
-my @Equipment = openprint::Equipment->find('cip3_monitor'=>1,'strid'=>$opts->{equipment_name});
+my @Equipment = openprint::Equipment->find('cip3_monitor'=>1,
+( exists $opts->{equipment_name} ? ( 'strid'=>$opts->{equipment_name}) : () ),
+);
 if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
