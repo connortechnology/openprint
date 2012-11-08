@@ -824,7 +824,7 @@ sub find {
 		} # end foreach
 	} # end if
 	if ( $search{'custom'} ) {
-		push @where, shift @{$search{'custom'}};
+		push @where, '(' . (shift @{$search{'custom'}}) . ')';
 		push @values, @{$search{'custom'}};
 		delete $search{'custom'};
 	} # end if
