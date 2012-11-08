@@ -69,6 +69,7 @@ print "upgrading structures 3...\n";
 `$lib_path/tools/db_update3.pl $dst_db point-one point-one ` or $log->error($!);
 print "upgrading signatures...";
 `$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one ` or $log->error($!);
+`$lib_path/tools/do_p1_upgrade.pl $dst_db point-one point-one ` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
