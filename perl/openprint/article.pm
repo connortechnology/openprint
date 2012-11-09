@@ -239,7 +239,9 @@ sub edit {
 	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
-	if ( ! $Article->can_edit() ) {
+	if ( ! $param{article_id} ) {
+		$variable{error} .= $Article->save(); # allocate an id.
+	} elsif ( ! $Article->can_edit() ) {
 		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if

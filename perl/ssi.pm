@@ -79,7 +79,7 @@ sub do_new_substitution {
 		return $result;
 	} elsif ( $$command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 		my $result = translate($1);
-$log->error("tranlsating  of $1: $result");
+#$log->error("tranlsating  of $1: $result");
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
@@ -460,12 +460,16 @@ sub button {
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
-	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
-		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
-		if ( $$options{'text'} ) {
-			$html .= "alt=\"$$options{text}\"";
+	if ( $$options{image} ) {
+		if ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) {
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
+		} else {
+			$html .= "<img src=\"$$options{image}\" name=\"Button$name\"";
 		} # end if
-		$html .= "/>";
+			if ( $$options{'text'} ) {
+				$html .= "alt=\"$$options{text}\"";
+			} # end if
+			$html .= "/>";
 	} elsif ( $openprint::config{'SimpleButtons'} ) {
 		$html .= $$options{'text'};
 	} else {
