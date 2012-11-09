@@ -49,6 +49,7 @@ $serial = 'shifts_id_seq';
 );
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::Shift';
 	my %params = @_;
 	$params{'limit'} = 1;
 	my @Results = find(%params);
