@@ -1,26 +1,15 @@
 <? eval (
 	@{$$variable{'Bugs'}} = ();
-	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
 	foreach my $Bug ( openprint::Bug->find( 
-( Date::Calc::check_date( @session{'/bug/history.html?starting_start_year','/bug/history.html?starting_start_month','/bug/history.html?starting_start_day'} ) ? (
-		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/bug/history.html?starting_start_year','/bug/history.html?starting_start_month','/bug/history.html?starting_start_day'} ) ) : () ),
-		( Date::Calc::check_date( @session{'/bug/history.html?starting_end_year','/bug/history.html?starting_end_month','/bug/history.html?starting_end_day'} ) ? ( 'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/bug/history.html?starting_end_year','/bug/history.html?starting_end_month','/bug/history.html?starting_end_day'} ) ) : () ),
-		( $session{'/bug/history.html?company_id'} ? ( 'company_id'	=> $session{'/bug/history.html?company_id'} ) : () ),
-		( $session{'/bug/history.html?user_id'} ? ( 'user_id'	=> $session{'/bug/history.html?user_id'} ) : () ),
+		ssi::date_filter( '/bugs/history.html?starting_start', 'starting_start' ),
+		ssi::date_filter( '/bugs/history.html?starting_end', 'starting_end' ),
+		( $session{'/bugs/history.html?company_id'} ? ( 'company_id'	=> $session{'/bugs/history.html?company_id'} ) : () ),
+		( $session{'/bugs/history.html?user_id'} ? ( 'user_id'	=> $session{'/bugs/history.html?user_id'} ) : () ),
 		'order'				=> 'starting',
 		) ) {
-		next if $Bug->paid() and ! sets::isin( 1, split(',', $session{'/bug/history.html?paid'} ) );
-		next if ( ! $Bug->paid() ) and ! sets::isin( 0, split(',', $session{'/bug/history.html?paid'} ) );
-		next if $Bug->invoiced() and ! sets::isin( 1, split(',', $session{'/bug/history.html?invoiced'} ) );
-		next if ( ! $Bug->invoiced() ) and ! sets::isin( 0, split(',', $session{'/bug/history.html?invoiced'} ) );
 		push @{$$variable{'Bugs'}}, $Bug;
-		$$variable{'elapsed_total'} += $Bug->elapsed();
-		$$variable{'value_total'} += $Bug->value();
-		$$variable{'wage_total'} += $Bug->wage();
-		$$variable{'distance_total'} += $Bug->distance();
 	} # end foreach Bug
 
-	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 ) ?>
 
 <? if ( @{$$variable{'Bugs'}} == 0 ) ?>
