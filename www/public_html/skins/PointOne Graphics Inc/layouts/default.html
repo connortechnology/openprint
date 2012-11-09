@@ -4,28 +4,28 @@
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/window.js"></script>
-		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?v=0"></script>
+		<link href="/css/common.css?v=0" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css" media="screen, print"/>
-		<link href="/css/button.css" rel="stylesheet" type="text/css" media="screen,print"/>
+		<link href="/css/menu.css?v=0" rel="stylesheet" type="text/css" media="screen, print"/>
+		<link href="/css/button.css?v=0" rel="stylesheet" type="text/css" media="screen,print"/>
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
-		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/project.css?v=0" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/order.css?v=0" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
 		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/quote.css?v=0" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<? if ( $r->uri() =~ /\/pageflip\/view/ ) ?>
 <script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
@@ -46,7 +46,7 @@
     $css = join('_', @parts ) . '.css';
         $log->debug("URI: $$variable{uri} $css");
         if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'?v=0"/>'."\n";
         }
         pop @parts;
     } # end while
