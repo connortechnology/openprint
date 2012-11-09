@@ -35,7 +35,7 @@
 		allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
 		sizeLimit: 1024*1024*1024,
 		params: {
-			id: '<? echo ( $$variable{'Article'}->id() ) ?>',
+			id: '<? echo ( $$variable{Article}->id() ) ?>',
 			UploadType: '<? echo ( my $type = ref $$variable{'Article'}; $type =~ s/^openprint:://; return $type; ) ?>'
 		},
 		other_types: [ {

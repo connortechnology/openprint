@@ -197,7 +197,7 @@ if (open($fifoh, "< $config{fifo}")) {
 			# No input at this time. Sleep for half a second (or less) and check again.
 #$log->debug( "No input\n" );
 			check_scoreboard();
-			sleep($config{'sleep'});
+			sleep($config{'sleep'}?$config{'sleep'}:10);
 		} # End if $line
 
 		if ( ! $dbh->ping() ) {
