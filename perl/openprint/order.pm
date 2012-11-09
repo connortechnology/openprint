@@ -484,7 +484,7 @@ sub get_invoice_to {
 	my ( $variable, $Order ) = @_;
 
 	@$variable{
-		'companyname',
+		'company_name',
 		'salutation',
 		'firstname',
 		'lastname',
