@@ -1,0 +1,91 @@
+<script type="text/javascript" src="/javascripts/fileuploader.js?version=1"></script>
+<link type="text/css" rel="/css/fileuploader.css"/>
+<script type="text/javascript" src="/javascripts/dragndrop.js"></script>
+<div class="PhotoAlbum">
+	<div class="Upload">
+		<form id="f1" name="f1" action="/photo_albums/upload.html" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="btnFunction" />
+			<p class="buttons">
+				<? echo ( join("\n",
+					ssi::button( 'Save', { onclick=>q`f1.btnFunction.value='Save';f1.submit();` } ),
+				); ) ?>
+			</p>
+			<fieldset><legend>Add Photos</legend>
+			<div id="assets" class="droparea qq-upload-drop-area">
+				<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+				<div id="uploadinstructions">
+					To upload a photo,
+					<span id="dragndropuploadmessage" style="display:none;">
+					simply drag and drop them here. Or </span>
+					<span id="formuploadmessage"> click on the Upload button. There is a 1GB file size limit.</span>
+				</div>
+				<? echo ( ssi::button( 'Upload', { class=>'qq-upload-button' } ); ) ?>
+				<ul id="upload_list" class="preview qq-upload-list"></ul>
+			</div>
+			<div class="disclaimer"><? echo ( sets::isin( $session{user_type}, ['E','A'] ) ? 'Disclaimer hidden.' : $config{PhotoUploadDisclaimer} ) ?></div>
+			</fieldset>
+			<div class="ChooseAlbum">
+				<fieldset><legend>Choose Album</legend>
+					To create a new album for these photos, enter it's info here, or select one of your albums below.<br/>
+					<div class="NewAlbum">
+					
+					<input type="radio" name="choose_album" id="choose_albumnew" value="new" selected="selected"/><label class="radio" for="choose_albumnew">Create New Album</label>
+						<ul>
+							<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
+							<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
+							<? eval ( $$variable{Privacy} = $variable{Album}->Privacy(); ) ?>
+<!--#include virtual="/includes/_privacy_widget.html"-->
+						</ul>
+					</div>
+				</fieldset>
+				<ul class="AvailableAlbums">
+				<? echo ( my $html;
+					foreach my $Album ( openprint::Photo_Album->find(user_id=>$session{user_id}) ) {
+						$html .= sprintf('<li><input type="radio" name="choose_album" id="choose_album%1$d" value="%1$d"/><label for="choose_album%1$d">%2$s<br/>%3$s</a></li>', $Album->id(), $Album->name(), join( "\n", map { $_->thumbnail_img() } $Album->Photos() ) );
+					} # end foreach Album
+					return $html;
+				) ?>
+				</ul>
+			</div>
+		</form>
+	</div>
+</div>
+<script type="text/javascript">
+    if ( window.FileReader ) {
+        $('dragndropuploadmessage').show();
+    } else {
+        $('dragndropuploadmessage').show();
+        $('formuploadmessage').hide();
+    }
+
+	var uploader = new qq.FileUploader({
+		debug: true,
+		element: $('assets'),
+		template: null,
+		droparea: $('assets'),
+		action: '/upload.htm',
+		limit: 5,
+		allowedExtensions: ['jpg', 'jpeg', 'png', 'gif','bmp','pdf'],
+		sizeLimit: 1024*1024*1024,
+		params: {
+			id: '',
+			UploadType: 'Photo_Album'
+		},
+		other_types: [ {
+			type: 'application/x-moz-file-promise-dest-filename',
+			onComplete: function(e,item) {
+				 new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { 
+					parameters: { 
+						album_id: '', 
+						album_type: 'openprint::Photo_Album',
+						filename: e.dataTransfer.getData(item),
+						action: 'add',
+						} } );
+			}
+		} ],
+		onComplete: function(id, fileName){
+			new Ajax.Updater( 'Photos', '/photo_albums/_album_photos.html', { parameters: { album_id: '', album_type: 'openprint::Photo_Album' } } );
+		}
+
+	});
+</script>

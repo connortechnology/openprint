@@ -2,7 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
-#use warnings;
+use warnings;
 
 require configuration;
 require sql;
@@ -26,9 +26,8 @@ use vars qw( $log $dbh %config );
 use File::Basename qw(basename);
 use Getopt::Long ();
 use Mail::Sendmail ();
-use MIME::QuotedPrint qw(encode_qp);;
+use MIME::QuotedPrint qw(encode_qp);
 use MIME::Base64 qw(encode_base64);
-use Time::HiRes qw(usleep);
 use Encode ();
 use Data::Dumper;
 
@@ -198,17 +197,17 @@ if (open($fifoh, "< $config{fifo}")) {
 			# No input at this time. Sleep for half a second (or less) and check again.
 #$log->debug( "No input\n" );
 			check_scoreboard();
-			usleep($config{'sleep'} * 1000* 1000);
+			sleep($config{'sleep'});
 		} # End if $line
 
 		if ( ! $dbh->ping() ) {
 			$log->warn("REOpening SQL connection");
 			$openprint::dbh = sql::open_sql( $log, 
-					'host'		=> $config{'db_host'},
-					'database'	=> $config{'db_name'},
-					'driver'	=> 'Pg',
-					'login'		=> $config{'db_user'},
-					'password'	=> $config{'db_pass'},
+					host		=> $config{db_host},
+					database	=> $config{db_name},
+					driver		=> 'Pg',
+					login		=> $config{db_user},
+					password	=> $config{db_pass},
 					);
 			die 'Error opening db' if ! $dbh;
 			configuration::init( \%config );
@@ -227,13 +226,12 @@ if ( $config{'pid_file'} ) {
 sub check_scoreboard {
 	my $scoreboard = get_scoreboard( $config{scoreboard} );
 	my @users = map { $$_{'user'} } @$scoreboard;
-	#$log->debug( "Users: @users in scoreboard\n" );
+	$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $username ( keys %uploads ) {
-		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! $Users{$username};
-		my $User = $Users{$username};
+		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! exists $Users{$username};
 
-		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and @{$uploads{$username}} > $config{'max_files'} ) ) {
+		if ( ( ! sets::isin( $username, \@users ) ) or ( $config{'max_files'} and ( @{$uploads{$username}} > $config{'max_files'} ) ) ) {
 			$log->debug( "Sending mail for $username\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$username}} );
@@ -381,12 +379,12 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$Mail->send(
 					FROM    => $from,
 					TO      => \@to,
-#BCC		=>	'iconnor@penultima.org',
+BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
 		} # end if
-		$openprint::dbh->disconnect();
+		#$openprint::dbh->disconnect();
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';

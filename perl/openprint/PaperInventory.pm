@@ -2,25 +2,20 @@ use strict;
 package openprint::PaperInventory;
 our @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use openprint ();
-use vars qw($log $dbh $table $serial %variable %fields %transforms %defaults );
+use vars qw($log $dbh $table $debug $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*variable = \%openprint::variable;
 
 
 require sql;
-require ssi;
-require misc;
-require configuration;
 require openprint::Skid;
 require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 
-my $debug = 1;
+$debug = 1;
 $table = 'paper_inventory';
 $serial = 'paperinventory_id_seq';
 
@@ -28,7 +23,6 @@ $serial = 'paperinventory_id_seq';
 	'id'			=>	'id',
 	'paper_id'		=>	'paper_id',
 	'user_id'		=>	'user_id',
-	'poindex'		=>	'poindex',
 	'instock'		=>	'instock',
 	'updated_on'	=>	'updated_on',
 	'delta'			=>	'delta',
@@ -46,12 +40,8 @@ $serial = 'paperinventory_id_seq';
 	'delta'		=>	[ 's/[^\d\-]//g' ],
 );
 %defaults = (
-	'updated_on'	=>	'NOW()',
+	'updated_on'	=>	q`'NOW()'`,
 	'docket'		=>	undef,
-);
-
-%defaults = (
-	'updated_on'	=>	'NOW()',
 );
 
 sub Paper {

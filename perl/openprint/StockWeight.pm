@@ -2,8 +2,9 @@ use strict;
 package openprint::StockWeight;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
+$debug = 1;
 $table = 'stockweights';
 $serial= 'stockweights_id_seq';
 %fields = (

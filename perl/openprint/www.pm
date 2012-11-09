@@ -231,6 +231,8 @@ sub handler {
 			} # end if
 			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 			$variable{'PageContent'} = $content;
+		} else {
+$log->debug("PageContent is $variable{PageContent}");
 		} # end if
 		my $template;
 		my @page_path = split('/', $page );
@@ -258,9 +260,9 @@ sub handler {
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
-			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
-			$r->print( $_ );
+			$variable{PageContent} = ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
+			$log->warn($variable{PageContent});
+			$r->print( $variable{PageContent} );
 		} # end if
 	} # end if
 

@@ -32,7 +32,7 @@ $serial = 'labels_id_seq';
 
 %defaults = (
 	'docket'		=>	undef,
-	'created_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
 );
 
 sub load {
@@ -66,7 +66,9 @@ sub delete {
 } # end sub delete
 
 sub Order {
-	return openprint::Order->find('docket'=>$_[0]{'docket'});
+	$_ = openprint::Order->find_one(docket=>$_[0]{docket}) if $_[0]{docket};
+	$_ = new openprint::Order() if ! $_;
+	return $_;
 } # end sub Order
 
 sub Project {

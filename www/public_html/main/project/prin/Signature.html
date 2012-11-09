@@ -1,9 +1,9 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/printing.js"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js"></script>
+<script type="text/javascript" src="/javascripts/service.js?v=1"></script>
+<script type="text/javascript" src="/javascripts/printing.js?v=1"></script>
+<script type="text/javascript" src="/javascripts/proj/paper.js?v=1"></script>
 <script type="text/javascript">
 	var quantities=new Array();
 	<?QUANTITIES?>
@@ -35,10 +35,10 @@
                     <label>Spread dimensions</label>
 					<? echo (
 						my $html = sprintf('%s x %s => %s x %s',
-							ssi::input( type=>"number", name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
-							ssi::input( type=>"number", name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
-							ssi::input( type=>"number", name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
-							ssi::input( type=>"number", name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>"this.value=this.value.replace(/[^\\d\\.]/,'');calc(this.form.name);" ),
+							ssi::input( type=>'float', name=>'txtWidth', value=>$$variable{'txtWidth'}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtHeight', value=>$$variable{'txtHeight'}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtFinalWidth', value=>$$variable{'txtFinalWidth'}, onkeyup=>'calc(this.form.name);' ),
+							ssi::input( type=>'float', name=>'txtFinalHeight', value=>$$variable{'txtFinalHeight'}, onkeyup=>'calc(this.form.name);' ),
 							);
 						if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 							$html .= ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', q`calc('f1');` );

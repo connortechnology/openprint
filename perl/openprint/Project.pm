@@ -25,7 +25,7 @@ require openprint::Bug;
 require openprint::Estimating::MultiPage;
 require openprint::service;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -64,7 +64,12 @@ $serial = 'lngProjectIndex_seq';
 	'markup'			=>	'markup',
 );
 %transforms = (
-	'markup'	=> [ 's/[^\-\d\.]//g' ],
+	'markup'	=>	[ 's/[^\-\d\.]//g' ],
+	'quantity1'	=>	[ 's/\D//g' ],
+	'quantity2'	=>	[ 's/\D//g' ],
+	'quantity3'	=>	[ 's/\D//g' ],
+    'reference' =>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    'comments'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -743,7 +748,12 @@ sub ServiceType {
 } # end sub ServiceType
 
 sub services {
-	my ( $self, $name ) = shift;
+	my $self = $_[0];
+
+	if ( @_ > 1 ) {
+		delete $$self{'Services'};
+	} # end if
+	
 	if ( $$self{'id'} and ! exists $$self{'Services'} ) {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
@@ -751,14 +761,6 @@ sub services {
 			push @{$results{$id}}, $index;
 		} # end while
 		$$self{'Services'} = \%results;
-	} # end if
-	if ( $name ) {
-$openprint::log->debug("looking for $name in Project::services");
-		if ( $$self{'Services'}{$name} ) {
-$openprint::log->debug("looking for $name in Project::services: foudn it");
-			return @{$$self{'Services'}{$name}};
-		} # end if
-		return;
 	} # end if
 	return $$self{'Services'};
 } # end sub services
@@ -894,17 +896,17 @@ sub ordered_quantity {
 sub ordered_quantity_index {
 	my $OP = $_[0]->Ordered_Project();
 	if ( @_ > 1 ) {
-		$$OP{'qty_index'} = $_[1];
+		$$OP{'quantity_index'} = $_[1];
 	} # end if
 
-	if ( ! $$OP{'qty_index'} ) {
+	if ( ! $$OP{'quantity_index'} ) {
 		my @qtys = $_[0]->quantity_indexes();
 #$openprint::log->debug("Project ordered_qty_index @qtys ");
 		if ( 1 == @qtys ) {
-			$$OP{'qty_index'} = $qtys[0];
+			$$OP{'quantity_index'} = $qtys[0];
 		} # end if
 	} # end if
-	return $$OP{'qty_index'};
+	return $$OP{'quantity_index'};
 } # end sub ordered_quantity_index
 
 sub ordered_price {
@@ -913,7 +915,7 @@ sub ordered_price {
 		$openprint::log->error("No OP in ordered_price");
 	} else {
 		return $$OP{'price'} if $$OP{'price'};
-		return $_[0]{'price'.$$OP{'qty_index'}};
+		return $_[0]{'price'.$$OP{'quantity_index'}};
 	} # end if
 	return 0;
 } # end sub ordered_price

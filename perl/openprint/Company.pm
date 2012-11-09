@@ -11,7 +11,7 @@ require sql;
 require openprint::Object;
 require openprint::User;
 
-$debug = 0;
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -263,7 +263,7 @@ sub dropdown {
 		} # end if
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
-				$sql .= ' AND index IN ( '.join(',', @{$params{'id'}} ).' )';
+				$sql .= ' AND id IN ( '.join(',', @{$params{'id'}} ).' )';
 			} # en dif
 		} # end if
 	} # end if

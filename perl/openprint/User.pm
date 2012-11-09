@@ -368,10 +368,10 @@ sub po_limit {
 } # end sub po_limit
 
 sub Asset {
-	if ( ! $_[0]{'Asset'} ) {
+	if ( ! $_[0]{Asset} ) {
 		require openprint::Asset;
-		if ( $_[0]{'asset_id'} ) {
-			$_[0]{'Asset'} = new openprint::Asset( $_[0]{'asset_id'} );
+		if ( $_[0]{asset_id} ) {
+			$_[0]{Asset} = new openprint::Asset( $_[0]{asset_id} );
 		} else {
 			if ( $_[0]->Profile()->Gender() ) {
 				#$openprint::log->debug("Loading by gender");
@@ -514,13 +514,14 @@ sub AUTOLOAD {
 } # end sub AUTOLOAD
 
 sub can_edit {
-	return 1 if $openprint::session{'user_id'} == $_[0]{id};
-	return 1 if $openprint::session{'user_type'} eq 'A';
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
-	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{'company_id'} == $openprint::session{'company_id'} );
-	my $Company = new openprint::Company( $_[0]{'company_id'} );
-	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{'user_id'}, $Me->csr_ids(), $Me->assistant_ids() ] );
-	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{'user_id'} );
+	return 1 if ! $_[0]{id};
+	return 1 if $openprint::session{user_id} == $_[0]{id};
+	return 1 if $openprint::session{user_type} eq 'A';
+	my $Me = new openprint::User( $openprint::session{user_id} );
+	return 1 if ( $Me->administrator() eq 'Y' ) and ( $_[0]{company_id} == $openprint::session{company_id} );
+	my $Company = new openprint::Company( $_[0]{company_id} );
+	return 1 if sets::isin( $Company->salesrep_id(), [ $openprint::session{user_id}, $Me->csr_ids(), $Me->assistant_ids() ] );
+	return 1 if openprint::usergroup::is_user_in( ['UserManagement'], $openprint::session{user_id} );
 	return 0;
 } # end sub can_edit
 

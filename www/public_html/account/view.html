@@ -49,17 +49,30 @@
 				if ( $Asset->id() ) {
 					my $Album = openprint::Photo_Album->find_one('asset_id any'=>$$Asset{'id'},user_id=>$$variable{User}->id());
 					if ( ! $Album ) {
+						$Album = openprint::Photo_Album->find_one(user_id=>$$variable{User}->id(), name=>'Profile Photos' );
+						if ( ! $Album ) {
+							$Album = new openprint::Photo_Album();
+							$Album->save({user_id=>$$variable{User}->id(), name=>'Profile Photos'});
+						} # end if
+					} # end if
+
 						# Happens when the asset is the fallback default icon
-						$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
-					} else {
+						#$html = sprintf('<img src="%s" alt="%s"/>', $Asset->url(), $Asset->description() );
+					#} else {
 						$html = sprintf('<a href="/photo_albums/view.html?album_id=%d"><img src="%s" alt="%s"/></a>', $$Album{'id'}, $Asset->url(), $Asset->description() );
-					}
+					#}
 				} # end if
 				if ( ! $$variable{User}->asset_id() ) {
-					$html .= 'No profile picture set.';
+					my $Album = openprint::Photo_Album->find_one(user_id=>$$variable{User}->id(), name=>'Profile Photos' );
+					if ( $Album ) {
+					$html .= '<a href="/photo_albums/view.html?album_id='.$Album->id().'">No profile photo. Click for upload.</a>';
+					} # end if
 				} # end if
 				return $html;
 			) ?>
+			<? if ( $session{user_type} eq 'A' ) ?>
+			<span class="buttons"><? echo ( ssi::button( 'UploadPhoto', { href=>'/photo_albums/upload.html', text=>'Upload Photo' } ); ) ?></span>
+			<? endif ( $session{user_type} eq 'A' ) ?>
 		</div><!--ProfilePicture-->
 		<div id="PhotoAlbums">
 			<fieldset><legend>Photos/Videos</legend>

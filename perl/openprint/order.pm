@@ -1,8 +1,9 @@
 use strict;
 package openprint::order;
 
-use Email::Valid ();
-use Date::Calc ();
+require Email::Valid;
+require Date::Calc;
+require Math::Round;
 
 use openprint ();
 use vars qw( %param %variable %config %session $log $dbh );
@@ -25,6 +26,7 @@ require openprint::usergroup;
 require openprint::press_schedule;
 require openprint::Payment;
 require openprint::PaperAllocation;
+require openprint::Company_Credit;
 
 sub delete_unfinished_orders {
 	# clean out old orders
@@ -354,7 +356,7 @@ sub save_project_information {
 
 	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
 
-		if ( ! check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
+		if ( ! Date::Calc::check_date(1*$param{'ddmDueDateYear'.$project_index},1*$param{'ddmDueDateMonth'.$project_index},1*$param{'ddmDueDateDay'.$project_index})) {
 			return q{Date is not valid. Please select a correct date.};
 		} # end if
 		$OP->requested_for( sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear'.$project_index,'ddmDueDateMonth'.$project_index,'ddmDueDateDay'.$project_index} ) );
@@ -432,8 +434,8 @@ sub save_project_information {
 
 	$error .= $Project->save({'reference'=> $param{"Reference$project_index"}} ) if $param{"Reference$project_index"} and $param{"Reference$project_index"} ne $Project->reference();
 	if ( ref $OP eq 'openprint::OrderedProject' ) {
-	$OP->price( $Project->price( $OP->quantity_index(), undef ) );
-	$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
+		$OP->price( $Project->price( $OP->quantity_index(), undef ) );
+		$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
 	} elsif ( ref $OP eq 'openprint::OrderedProduct' ) {
 	#$OP->price( $Project->price( $OP->quantity_index(), undef ) );
 	#$OP->quantity( $Project->quantity( $OP->quantity_index(), undef ) );
@@ -482,7 +484,7 @@ sub get_invoice_to {
 	my ( $variable, $Order ) = @_;
 
 	@$variable{
-		'companyname',
+		'company_name',
 		'salutation',
 		'firstname',
 		'lastname',
@@ -495,7 +497,7 @@ sub get_invoice_to {
 		'phone',
 		'fax',
 		'email'
-	} = $Order->get('company_name','salutation','first_name','last_name','address1','address2','city','state','country','postalcode','phone','fax','email');
+	} = $Order->get('company_name','salutation','firstname','lastname','address1','address2','city','state','country','postalcode','phone','fax','email');
 
 } # end sub get_invoice_to
 
@@ -505,15 +507,15 @@ sub get_misc {
 	$log->debug("********* START OF Get Misc **************");
 	$$variable{'Order'} = $Order;
 
-	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
+	@$variable{'Downpayment','TOTAL', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
 
 	if ( $Order->status() ne 'Cancelled' ) {
-		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $Order->total() - $Order->paid() );
-		$$variable{'DepositDue'} = sprintf( '%.2f', $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
+		$$variable{'AmountOutstanding'} = Math::Round::nearest( 0.01, $Order->total() - $Order->paid() );
+		$$variable{'DepositDue'} = Math::Round::nearest( 0.01, $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
 	} # end if
 
-	$$variable{'AmountPaid'} = sprintf( '%.2f', $Order->paid() );
+	$$variable{'AmountPaid'} = Math::Round::nearest( 0.01, $Order->paid() );
 } # end sub get_misc
 
 sub display_order {

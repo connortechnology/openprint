@@ -7,9 +7,10 @@
 	<div class="leftColumn">
 		<p>
 			<label># of Pages</label>
-			<input type="number" name="GroupPageQuantity<?Signature?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
-			<input type="checkbox" id="OverrideGroupPageQuantity<?Signature?>" name="OverrideGroupPageQuantity<?Signature?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="OverrideGroupPageQuantity<?Signature?>">Override</label>
+			<? echo ( join("\n",
+				ssi::input( type=>'cardinal', name=>'GroupPageQuantity'.$$variable{Signature}, value=>$$variable{'GroupPageQuantity'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ),
+				ssi::write_override( 'OverrideGroupPageQuantity'.$$variable{Signature}, $$variable{'OverrideGroupPageQuantity'.$$variable{'Signature'}}, '', 'calc(this.form.name);' ),
+			); ) ?>
 		</p>
 		<p>
 			<label>Description</label>
@@ -68,7 +69,7 @@
 		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/colours_coatings.html' );
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/bleeds_colourbars.html' );
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/paper_dropdowns.html' );
-		if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 			$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_overrides.html' );
 		} # end if
 
@@ -85,15 +86,14 @@
 <div class="Quantities">
 	<p>
 		<label>Quantity</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-			<input type="number" id="txtQuantity<?QTYIndex?><?Signature?>" name="txtQuantity<?QTYIndex?><?Signature?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
-		</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? echo ( my $html;
+			foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+				$html .= '<span class="'.$$variable{Columns}.'Columns">';
+				$html .= ssi::input( type=>'cardinal', id=>'txtQuantity'.$qty_index.$$variable{Signature}, name=>'txtQuantity'.$qty_index.$$variable{Signature}, value=>$$variable{'txtQuantity'.$qty_index.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' );
+				$html .= '</span>';
+			} # end foreach qty_index
+			return $html;
+		) ?>
 	</p>
 </div>
 </fieldset>

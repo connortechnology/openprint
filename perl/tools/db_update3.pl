@@ -376,8 +376,9 @@ foreach my $config_action ( keys %config_actions ) {
 			$Action->destroy();
 		} # end if
 	} else {
+		$log->debug("Adding new action");	
 		$Action = new openprint::Log_Action();
-		$Action->save({name=>$config_action,id=>$config_actions{$config_action}});
+		$Action->save({name=>$config_action,id=>$config_actions{$config_action}}, 1);
 	} # end if
 } # end foreach config_action
 die $dbh->errstr() if $dbh->errstr();
@@ -970,6 +971,7 @@ $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+print "done.\n";
 $dbh->disconnect();
 1;
 __END__

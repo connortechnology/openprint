@@ -4,6 +4,8 @@
 	function invite_by_email(input) {
 		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	} // end function invite_by_email
+
+	// li.id is actually company_id _ user_id
     function invitation_set_users(input, li) {
         var user_ids = get_form_element_array( input.form, 'invitation_user_id' );
         user_ids.push(li.id);
@@ -136,8 +138,9 @@ $log->debug("My location is " . $MyLocation->to_string() );
 	<? if ( $variable{User}->id() ) ?>
 	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
 	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
-	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 	<? endif ( $variable{User}->id() ) ?>
+	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
+
 <? if ( $$variable{Event}->id() ) ?>
 	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};
 	 ) ?>

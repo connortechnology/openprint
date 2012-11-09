@@ -18,6 +18,7 @@ if(typeof tinyMCE == 'undefined')
 tinymce.EditorManager.oldAdd = tinymce.EditorManager.add;
 tinymce.EditorManager.add = function(ed) {
   ed.onInit.add(function(ed) {
+if ( $(ed.id) )
     $(ed.id).fire('tinymce:onInit', ed);
   });
   return tinymce.EditorManager.oldAdd(ed);
@@ -58,7 +59,7 @@ Ajax.InPlaceRichEditor = Class.create(Ajax.InPlaceEditor, {
       this.enterEditMode();
   },
   createControl: function($super, mode, handler, extraClasses) {
-    if (!this.options.tinymceSave)
+    //if (!this.options.tinymceSave)
       $super(mode, handler, extraClasses);
   },
   createEditField: function() {

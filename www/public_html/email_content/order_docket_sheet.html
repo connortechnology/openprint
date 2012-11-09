@@ -13,7 +13,13 @@
 	</head>
 	<body marginwidth="0" marginheight="0" topmargin="0" leftmargin="0" >
 	<? if ( $$variable{'Project'}->order_id() ) ?>
-	<!--#include virtual="/includes/main/summ/project_docket_sheet.html" -->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/docket.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/docket.html' );
+	} else {
+		return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
+	} # end if
+) ?>
 	<? else ( $$variable{'Project'}->order_id() ) ?>
 		This Project has not been ordered yet. <?OrderId?>
 	<? endif ( $$variable{'Project'}->order_id() ) ?>

@@ -30,7 +30,7 @@ my $max_recursion_depth = 3;
 my %converted_imposition_cache;
 my $use_converted_imposition_cache = 1;
 my %filtered_imposition_cache;
-my $use_filtered_imposition_cache = 0;
+my $use_filtered_imposition_cache = 1;
 
 my %stitching_cache;
 my %price_cache;
@@ -75,217 +75,217 @@ my @process_colours = ( 'Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Ye
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
 	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'btnFunction'=>[], 'callback'=>[],'SignatureIndex'=>[],
-		'Impositions'=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
-		'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
-		'txtSignatureType' => ['save'],
-		'txtServiceDescription'	=> ['save'],
-		'txtEmployeeComments'	=>	['save'],
-		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
-		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
-		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
-		'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
-		'chkCyanSideOne' => ['save'],
-		'chkMagentaSideOne' => ['save'],
-		'chkYellowSideOne'	=> ['save'],
-		'chkBlackSideOne' 	=> ['save'],
-		'chkProcessColourSideOne' 		=>	['save'],
-		'CyanSpotSideOneCoverage'		=>	['save'],
-		'MagentaSpotSideOneCoverage'	=>	['save'],
-		'YellowSpotSideOneCoverage'		=>	['save'],
-		'BlackSpotSideOneCoverage'		=>	['save'],
+	'Impositions'=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
+	'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
+	'txtSignatureType' => ['save'],
+	'txtServiceDescription'	=> ['save'],
+	'txtEmployeeComments'	=>	['save'],
+	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
+	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
+	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
+	'chkCyanSideOne' => ['save'],
+	'chkMagentaSideOne' => ['save'],
+	'chkYellowSideOne'	=> ['save'],
+	'chkBlackSideOne' 	=> ['save'],
+	'chkProcessColourSideOne' 		=>	['save'],
+	'CyanSpotSideOneCoverage'		=>	['save'],
+	'MagentaSpotSideOneCoverage'	=>	['save'],
+	'YellowSpotSideOneCoverage'		=>	['save'],
+	'BlackSpotSideOneCoverage'		=>	['save'],
 
-		'CyanSideOneCoverage'	=>	['save'],
-		'MagentaSideOneCoverage'	=>	['save'],
-		'YellowSideOneCoverage'	=>	['save'],
-		'BlackSideOneCoverage'	=>	['save'],
-		'chkColourCoating1SideOne' => ['save'], 'ColourCoatingType1SideOne' => ['save'], 'ColourCoatingColour1SideOne' => ['save'],'ColourCoatingCoverage1SideOne' => ['save'],
-'ColourCoatingPrice1SideOne' => ['save'], 'ColourCoatingMileage1SideOne' => ['save'],
+	'CyanSideOneCoverage'	=>	['save'],
+	'MagentaSideOneCoverage'	=>	['save'],
+	'YellowSideOneCoverage'	=>	['save'],
+	'BlackSideOneCoverage'	=>	['save'],
+	'chkColourCoating1SideOne' => ['save'], 'ColourCoatingType1SideOne' => ['save'], 'ColourCoatingColour1SideOne' => ['save'],'ColourCoatingCoverage1SideOne' => ['save'],
+	'ColourCoatingPrice1SideOne' => ['save'], 'ColourCoatingMileage1SideOne' => ['save'],
 
-		'chkColourCoating2SideOne' => ['save'], 'ColourCoatingType2SideOne' => ['save'], 'ColourCoatingColour2SideOne' => ['save'],'ColourCoatingCoverage2SideOne' => ['save'],
-'ColourCoatingPrice2SideOne' => ['save'], 'ColourCoatingMileage2SideOne' => ['save'],
-		'chkColourCoating3SideOne' => ['save'], 'ColourCoatingType3SideOne' => ['save'], 'ColourCoatingColour3SideOne' => ['save'],'ColourCoatingCoverage3SideOne' => ['save'],
-'ColourCoatingPrice3SideOne' => ['save'], 'ColourCoatingMileage3SideOne' => ['save'],
-		'chkColourCoating4SideOne' => ['save'], 'ColourCoatingType4SideOne' => ['save'], 'ColourCoatingColour4SideOne' => ['save'],'ColourCoatingCoverage4SideOne' => ['save'],
-'ColourCoatingPrice4SideOne' => ['save'], 
-'ColourCoatingMileage4SideOne' => ['save'],
-		'chkColourCoating5SideOne' => ['save'], 'ColourCoatingType5SideOne' => ['save'], 'ColourCoatingColour5SideOne' => ['save'],'ColourCoatingCoverage5SideOne' => ['save'],
-'ColourCoatingPrice5SideOne' => ['save'], 
-'ColourCoatingMileage5SideOne' => ['save'],
-		'chkColourCoating6SideOne' => ['save'], 'ColourCoatingType6SideOne' => ['save'], 'ColourCoatingColour6SideOne' => ['save'],'ColourCoatingCoverage6SideOne' => ['save'],
-'ColourCoatingPrice6SideOne' => ['save'], 
-'ColourCoatingMileage6SideOne' => ['save'],
-		'chkColourCoating7SideOne' => ['save'], 'ColourCoatingType7SideOne' => ['save'], 'ColourCoatingColour7SideOne' => ['save'],'ColourCoatingCoverage7SideOne' => ['save'],
-'ColourCoatingPrice7SideOne' => ['save'], 
-'ColourCoatingMileage7SideOne' => ['save'],
-		'chkColourCoating8SideOne' => ['save'], 'ColourCoatingType8SideOne' => ['save'], 'ColourCoatingColour8SideOne' => ['save'],'ColourCoatingCoverage8SideOne' => ['save'],
-'ColourCoatingPrice8SideOne' => ['save'], 
-'ColourCoatingMileage8SideOne' => ['save'],
-		'chkColourCoating9SideOne' => ['save'], 'ColourCoatingType9SideOne' => ['save'], 'ColourCoatingColour9SideOne' => ['save'],'ColourCoatingCoverage9SideOne' => ['save'],
-'ColourCoatingPrice9SideOne' => ['save'], 
-'ColourCoatingMileage9SideOne' => ['save'],
+	'chkColourCoating2SideOne' => ['save'], 'ColourCoatingType2SideOne' => ['save'], 'ColourCoatingColour2SideOne' => ['save'],'ColourCoatingCoverage2SideOne' => ['save'],
+	'ColourCoatingPrice2SideOne' => ['save'], 'ColourCoatingMileage2SideOne' => ['save'],
+	'chkColourCoating3SideOne' => ['save'], 'ColourCoatingType3SideOne' => ['save'], 'ColourCoatingColour3SideOne' => ['save'],'ColourCoatingCoverage3SideOne' => ['save'],
+	'ColourCoatingPrice3SideOne' => ['save'], 'ColourCoatingMileage3SideOne' => ['save'],
+	'chkColourCoating4SideOne' => ['save'], 'ColourCoatingType4SideOne' => ['save'], 'ColourCoatingColour4SideOne' => ['save'],'ColourCoatingCoverage4SideOne' => ['save'],
+	'ColourCoatingPrice4SideOne' => ['save'], 
+	'ColourCoatingMileage4SideOne' => ['save'],
+	'chkColourCoating5SideOne' => ['save'], 'ColourCoatingType5SideOne' => ['save'], 'ColourCoatingColour5SideOne' => ['save'],'ColourCoatingCoverage5SideOne' => ['save'],
+	'ColourCoatingPrice5SideOne' => ['save'], 
+	'ColourCoatingMileage5SideOne' => ['save'],
+	'chkColourCoating6SideOne' => ['save'], 'ColourCoatingType6SideOne' => ['save'], 'ColourCoatingColour6SideOne' => ['save'],'ColourCoatingCoverage6SideOne' => ['save'],
+	'ColourCoatingPrice6SideOne' => ['save'], 
+	'ColourCoatingMileage6SideOne' => ['save'],
+	'chkColourCoating7SideOne' => ['save'], 'ColourCoatingType7SideOne' => ['save'], 'ColourCoatingColour7SideOne' => ['save'],'ColourCoatingCoverage7SideOne' => ['save'],
+	'ColourCoatingPrice7SideOne' => ['save'], 
+	'ColourCoatingMileage7SideOne' => ['save'],
+	'chkColourCoating8SideOne' => ['save'], 'ColourCoatingType8SideOne' => ['save'], 'ColourCoatingColour8SideOne' => ['save'],'ColourCoatingCoverage8SideOne' => ['save'],
+	'ColourCoatingPrice8SideOne' => ['save'], 
+	'ColourCoatingMileage8SideOne' => ['save'],
+	'chkColourCoating9SideOne' => ['save'], 'ColourCoatingType9SideOne' => ['save'], 'ColourCoatingColour9SideOne' => ['save'],'ColourCoatingCoverage9SideOne' => ['save'],
+	'ColourCoatingPrice9SideOne' => ['save'], 
+	'ColourCoatingMileage9SideOne' => ['save'],
 
-		'CyanSpotSideTwoCoverage'	=>	['save'],
-		'MagentaSpotSideTwoCoverage'	=>	['save'],
-		'YellowSpotSideTwoCoverage'	=>	['save'],
-		'BlackSpotSideTwoCoverage'	=>	['save'],
+	'CyanSpotSideTwoCoverage'	=>	['save'],
+	'MagentaSpotSideTwoCoverage'	=>	['save'],
+	'YellowSpotSideTwoCoverage'	=>	['save'],
+	'BlackSpotSideTwoCoverage'	=>	['save'],
 
-		'CyanSideTwoCoverage'	=>	['save'],
-		'MagentaSideTwoCoverage'	=>	['save'],
-		'YellowSideTwoCoverage'	=>	['save'],
-		'BlackSideTwoCoverage'	=>	['save'],
+	'CyanSideTwoCoverage'	=>	['save'],
+	'MagentaSideTwoCoverage'	=>	['save'],
+	'YellowSideTwoCoverage'	=>	['save'],
+	'BlackSideTwoCoverage'	=>	['save'],
 
-		'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
-		'chkProcessColourSideTwo' => ['save'],
-		'chkColourCoating1SideTwo' => ['save'], 'ColourCoatingType1SideTwo' => ['save'], 'ColourCoatingColour1SideTwo' => ['save'],'ColourCoatingCoverage1SideTwo' => ['save'],
-'ColourCoatingPrice1SideTwo' => ['save'], 
-'ColourCoatingMileage1Sidetwo' => ['save'],
-		'chkColourCoating2SideTwo' => ['save'], 'ColourCoatingType2SideTwo' => ['save'], 'ColourCoatingColour2SideTwo' => ['save'],'ColourCoatingCoverage2SideTwo' => ['save'],
-'ColourCoatingPrice2SideTwo' => ['save'], 
-'ColourCoatingMileage2Sidetwo' => ['save'],
-		'chkColourCoating3SideTwo' => ['save'], 'ColourCoatingType3SideTwo' => ['save'], 'ColourCoatingColour3SideTwo' => ['save'],'ColourCoatingCoverage3SideTwo' => ['save'],
-'ColourCoatingPrice3SideTwo' => ['save'], 
-'ColourCoatingMileage3Sidetwo' => ['save'],
-		'chkColourCoating4SideTwo' => ['save'], 'ColourCoatingType4SideTwo' => ['save'], 'ColourCoatingColour4SideTwo' => ['save'],'ColourCoatingCoverage4SideTwo' => ['save'],
-'ColourCoatingPrice4SideTwo' => ['save'], 
-'ColourCoatingMileage4Sidetwo' => ['save'],
-		'chkColourCoating5SideTwo' => ['save'], 'ColourCoatingType5SideTwo' => ['save'], 'ColourCoatingColour5SideTwo' => ['save'],'ColourCoatingCoverage5SideTwo' => ['save'],
-'ColourCoatingPrice5SideTwo' => ['save'], 
-'ColourCoatingMileage5Sidetwo' => ['save'],
-		'chkColourCoating6SideTwo' => ['save'], 'ColourCoatingType6SideTwo' => ['save'], 'ColourCoatingColour6SideTwo' => ['save'],'ColourCoatingCoverage6SideTwo' => ['save'],
-'ColourCoatingPrice6SideTwo' => ['save'], 
-'ColourCoatingMileage6Sidetwo' => ['save'],
-		'chkColourCoating7SideTwo' => ['save'], 'ColourCoatingType7SideTwo' => ['save'], 'ColourCoatingColour7SideTwo' => ['save'],'ColourCoatingCoverage7SideTwo' => ['save'],
-'ColourCoatingPrice7SideTwo' => ['save'], 
-'ColourCoatingMileage7Sidetwo' => ['save'],
-		'chkColourCoating8SideTwo' => ['save'], 'ColourCoatingType8SideTwo' => ['save'], 'ColourCoatingColour8SideTwo' => ['save'],'ColourCoatingCoverage8SideTwo' => ['save'],
-'ColourCoatingPrice8SideTwo' => ['save'], 
-'ColourCoatingMileage8Sidetwo' => ['save'],
-		'chkColourCoating9SideTwo' => ['save'], 'ColourCoatingType9SideTwo' => ['save'], 'ColourCoatingColour9SideTwo' => ['save'],'ColourCoatingCoverage9SideTwo' => ['save'],
-'ColourCoatingPrice9SideTwo' => ['save'], 
-'ColourCoatingMileage9Sidetwo' => ['save'],
-		'sides_the_same'	=> ['save'],
-		'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
-		'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
+	'chkCyanSideTwo' => ['save'],'chkMagentaSideTwo' => ['save'],'chkYellowSideTwo' => ['save'],'chkBlackSideTwo' => ['save'],
+	'chkProcessColourSideTwo' => ['save'],
+	'chkColourCoating1SideTwo' => ['save'], 'ColourCoatingType1SideTwo' => ['save'], 'ColourCoatingColour1SideTwo' => ['save'],'ColourCoatingCoverage1SideTwo' => ['save'],
+	'ColourCoatingPrice1SideTwo' => ['save'], 
+	'ColourCoatingMileage1Sidetwo' => ['save'],
+	'chkColourCoating2SideTwo' => ['save'], 'ColourCoatingType2SideTwo' => ['save'], 'ColourCoatingColour2SideTwo' => ['save'],'ColourCoatingCoverage2SideTwo' => ['save'],
+	'ColourCoatingPrice2SideTwo' => ['save'], 
+	'ColourCoatingMileage2Sidetwo' => ['save'],
+	'chkColourCoating3SideTwo' => ['save'], 'ColourCoatingType3SideTwo' => ['save'], 'ColourCoatingColour3SideTwo' => ['save'],'ColourCoatingCoverage3SideTwo' => ['save'],
+	'ColourCoatingPrice3SideTwo' => ['save'], 
+	'ColourCoatingMileage3Sidetwo' => ['save'],
+	'chkColourCoating4SideTwo' => ['save'], 'ColourCoatingType4SideTwo' => ['save'], 'ColourCoatingColour4SideTwo' => ['save'],'ColourCoatingCoverage4SideTwo' => ['save'],
+	'ColourCoatingPrice4SideTwo' => ['save'], 
+	'ColourCoatingMileage4Sidetwo' => ['save'],
+	'chkColourCoating5SideTwo' => ['save'], 'ColourCoatingType5SideTwo' => ['save'], 'ColourCoatingColour5SideTwo' => ['save'],'ColourCoatingCoverage5SideTwo' => ['save'],
+	'ColourCoatingPrice5SideTwo' => ['save'], 
+	'ColourCoatingMileage5Sidetwo' => ['save'],
+	'chkColourCoating6SideTwo' => ['save'], 'ColourCoatingType6SideTwo' => ['save'], 'ColourCoatingColour6SideTwo' => ['save'],'ColourCoatingCoverage6SideTwo' => ['save'],
+	'ColourCoatingPrice6SideTwo' => ['save'], 
+	'ColourCoatingMileage6Sidetwo' => ['save'],
+	'chkColourCoating7SideTwo' => ['save'], 'ColourCoatingType7SideTwo' => ['save'], 'ColourCoatingColour7SideTwo' => ['save'],'ColourCoatingCoverage7SideTwo' => ['save'],
+	'ColourCoatingPrice7SideTwo' => ['save'], 
+	'ColourCoatingMileage7Sidetwo' => ['save'],
+	'chkColourCoating8SideTwo' => ['save'], 'ColourCoatingType8SideTwo' => ['save'], 'ColourCoatingColour8SideTwo' => ['save'],'ColourCoatingCoverage8SideTwo' => ['save'],
+	'ColourCoatingPrice8SideTwo' => ['save'], 
+	'ColourCoatingMileage8Sidetwo' => ['save'],
+	'chkColourCoating9SideTwo' => ['save'], 'ColourCoatingType9SideTwo' => ['save'], 'ColourCoatingColour9SideTwo' => ['save'],'ColourCoatingCoverage9SideTwo' => ['save'],
+	'ColourCoatingPrice9SideTwo' => ['save'], 
+	'ColourCoatingMileage9Sidetwo' => ['save'],
+	'sides_the_same'	=> ['save'],
+	'ddmBleedSize1' => ['save','output'], 'ddmBleedSize2' => ['save','output'], 'ddmBleedSize3' => ['save','output'],
+	'chkOverrideBleedSize1'=>['save'], 'chkOverrideBleedSize2'=>['save'], 'chkOverrideBleedSize3'=>['save'],
 
-		'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
-		'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
-		'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
+	'BleedLeft' => ['save'], 'BleedRight' => ['save'], 'BleedTop' => ['save'], 'BleedBottom' => ['save'],
+	'rdbColourBar' => ['save','output'], 'txtCropMarkSpace' => ['save'],
+	'ddmStockBrand' => ['save'], 'txtSpecificStockBrand' => ['save'], 'ddmStockFinish' => ['save'], 'txtSpecificStockFinish' => ['save'], 'ddmStockColour' => ['save'], 'txtSpecificStockColour' => ['save'],
 
-		'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
-		'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
-		'perfecting'=>['save'],
-		'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
-		'StockGrade'	=> ['save'],	
-		'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
-		'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
-		'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
-		'minimum_order'=>['save'],'sheets_per_package'=>['save'],'full_packages'=>['save'],
-		'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
-		'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
-		'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
-		'SpreadRows3' => ['save','output'],'SpreadCols3' => ['save','output'],
-		'ddmStockSheetSize' => ['save'],'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
-		'ddmStockSize'	=>	['save'],
-		'ddmRunStyle'=>['save'],'ddmRunStyle1' => ['save','output'], 'ddmRunStyle2' => ['save','output'], 'ddmRunStyle3' => ['save','output'],
-		'ddmPress1' => ['save','output'], 'ddmPress2' => ['save','output'], 'ddmPress3' => ['save','output'], 
-		'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
-		'PrintingTypes' => [],
+	'ddmStockWeight' => ['save'], 'txtSpecificStockWeight'=>['save'],
+	'txtSpecificStockCalliper' => ['save','output'], 'txtSpecificStockWidth' => ['save'], 'txtSpecificStockHeight' => ['save'], 'CustomSheetDoubleSided' => ['save'], 'CustomStockPrice' => ['save'],'txtCustomMWeight' => ['save'],'txtStockGSM' => ['save','output'],
+	'perfecting'=>['save'],
+	'basis_width'=>['save'],'basis_height'=>['save'],'basis_mweight'=>['save'],
+	'StockGrade'	=> ['save'],	
+	'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
+	'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
+	'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
+	'minimum_order'=>['save'],'sheets_per_package'=>['save'],'full_packages'=>['save'],
+	'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
+	'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
+	'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
+	'SpreadRows3' => ['save','output'],'SpreadCols3' => ['save','output'],
+	'ddmStockSheetSize' => ['save'],'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
+	'ddmStockSize'	=>	['save'],
+	'ddmRunStyle'=>['save'],'ddmRunStyle1' => ['save','output'], 'ddmRunStyle2' => ['save','output'], 'ddmRunStyle3' => ['save','output'],
+	'ddmPress1' => ['save','output'], 'ddmPress2' => ['save','output'], 'ddmPress3' => ['save','output'], 
+	'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
+	'PrintingTypes' => [],
 
-		'rdbPlateType1' => ['save','output'], 'rdbPlateType2' => ['save','output'], 'rdbPlateType3' => ['save','output'],
-		'PlateID1' => ['save','output'], 'PlateID2' => ['save','output'], 'PlateID3' => ['save','output'],
-		'txtPlateQuantity1' => ['save','output'], 'txtPlateQuantity2' => ['save','output'], 'txtPlateQuantity3' => ['save','output'], 
-		'BlankPlateQuantity1' => ['save','output'], 'BlankPlateQuantity2' => ['save','output'], 'BlankPlateQuantity3' => ['save','output'], 
-		'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
+	'rdbPlateType1' => ['save','output'], 'rdbPlateType2' => ['save','output'], 'rdbPlateType3' => ['save','output'],
+	'PlateID1' => ['save','output'], 'PlateID2' => ['save','output'], 'PlateID3' => ['save','output'],
+	'txtPlateQuantity1' => ['save','output'], 'txtPlateQuantity2' => ['save','output'], 'txtPlateQuantity3' => ['save','output'], 
+	'BlankPlateQuantity1' => ['save','output'], 'BlankPlateQuantity2' => ['save','output'], 'BlankPlateQuantity3' => ['save','output'], 
+	'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
 #
-		'PerPlateCost1' => ['save','output'], 'PerPlateCost2' => ['save','output'], 'PerPlateCost3' => ['save','output'],
-		'PlateTotalCost1' => ['save','output'], 'PlateTotalCost2'  => ['save','output'], 'PlateTotalCost3' => ['save','output'],
-		'PlateMakeReady1' =>  ['save','output'], 'PlateMakeReady2' => ['save','output'], 'PlateMakeReady3' => ['save','output'],
-		'PerPlateMkRd1' =>  ['save','output'], 'PerPlateMkRd2' => ['save','output'], 'PerPlateMkRd3' => ['save','output'],
-		'RunChargeTotal1' =>  ['save','output'], 'RunChargeTotal2' => ['save','output'], 'RunChargeTotal3' => ['save','output'],
-		'OverBase1' =>  ['save','output'], 'OverBase2' => ['save','output'], 'OverBase3' => ['save','output'],
-		'OverrideBase1' =>  ['save'], 'OverrideBase2' => ['save'], 'OverrideBase3' => ['save'],
-		'OverSetup1' =>  ['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
-		'OverrideSetup1' =>  ['save'], 'OverrideSetup2' => ['save'], 'OverrideSetup3' => ['save'],
-		'OverRun1' =>  ['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
-		'OverrideRun1' =>  ['save'], 'OverrideRun2' => ['save'], 'OverrideRun3' => ['save'],
-		'OverTotal1' =>  ['save','output'], 'OverTotal2' => ['save','output'], 'OverTotal3' => ['save','output'],
-		'PressWashPrice1' =>  ['save','output'], 'PressWashPrice2' => ['save','output'], 'PressWashPrice3' => ['save','output'],
-		'PressWashCharge1' =>  ['save','output'], 'PressWashCharge2' => ['save','output'], 'PressWashCharge3' => ['save','output'],
-		'PressWashes1' =>  ['save','output'], 'PressWashes2' => ['save','output'], 'PressWashes3' => ['save','output'],
-		'ImpositionCharge1' =>  ['save','output'], 'ImpositionCharge2' => ['save','output'], 'ImpositionCharge3' => ['save','output'],
-		'PageCharge1' =>  ['save','output'], 'PageCharge2' => ['save','output'], 'PageCharge3' => ['save','output'],
-		'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
-		'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
-		'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
-		'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
+	'PerPlateCost1' => ['save','output'], 'PerPlateCost2' => ['save','output'], 'PerPlateCost3' => ['save','output'],
+	'PlateTotalCost1' => ['save','output'], 'PlateTotalCost2'  => ['save','output'], 'PlateTotalCost3' => ['save','output'],
+	'PlateMakeReady1' =>  ['save','output'], 'PlateMakeReady2' => ['save','output'], 'PlateMakeReady3' => ['save','output'],
+	'PerPlateMkRd1' =>  ['save','output'], 'PerPlateMkRd2' => ['save','output'], 'PerPlateMkRd3' => ['save','output'],
+	'RunChargeTotal1' =>  ['save','output'], 'RunChargeTotal2' => ['save','output'], 'RunChargeTotal3' => ['save','output'],
+	'OverBase1' =>  ['save','output'], 'OverBase2' => ['save','output'], 'OverBase3' => ['save','output'],
+	'OverrideBase1' =>  ['save'], 'OverrideBase2' => ['save'], 'OverrideBase3' => ['save'],
+	'OverSetup1' =>  ['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
+	'OverrideSetup1' =>  ['save'], 'OverrideSetup2' => ['save'], 'OverrideSetup3' => ['save'],
+	'OverRun1' =>  ['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
+	'OverrideRun1' =>  ['save'], 'OverrideRun2' => ['save'], 'OverrideRun3' => ['save'],
+	'OverTotal1' =>  ['save','output'], 'OverTotal2' => ['save','output'], 'OverTotal3' => ['save','output'],
+	'PressWashPrice1' =>  ['save','output'], 'PressWashPrice2' => ['save','output'], 'PressWashPrice3' => ['save','output'],
+	'PressWashCharge1' =>  ['save','output'], 'PressWashCharge2' => ['save','output'], 'PressWashCharge3' => ['save','output'],
+	'PressWashes1' =>  ['save','output'], 'PressWashes2' => ['save','output'], 'PressWashes3' => ['save','output'],
+	'ImpositionCharge1' =>  ['save','output'], 'ImpositionCharge2' => ['save','output'], 'ImpositionCharge3' => ['save','output'],
+	'PageCharge1' =>  ['save','output'], 'PageCharge2' => ['save','output'], 'PageCharge3' => ['save','output'],
+	'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
+	'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
+	'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
+	'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
 #
 
-		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
-		'Roll2SheetMakeReady1' => ['save','output'], 'Roll2SheetMakeReady2'   => ['save','output'], 'Roll2SheetMakeReady3'   => ['save','output'],
-		'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'   => ['save','output'], 'Roll2SheetRunCharge3'   => ['save','output'],
-		'dutch1'=> ['save'], 'dutch2' => ['save'], 'dutch3' => ['save' ],
-		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
-		'txtImposition'=>['save'],'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
-		'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
-		'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
-		'txtLayoutWidth1' => ['save','output'], 'txtLayoutWidth2' => ['save','output'], 'txtLayoutWidth3' => ['save','output'],
-		'txtLayoutHeight1' => ['save','output'], 'txtLayoutHeight2' => ['save','output'], 'txtLayoutHeight3' => ['save','output'],
-		'hdnImpositionRows'=>['save'],'hdnImpositionRows1' => ['save','output'], 'hdnImpositionRows2' => ['save','output'], 'hdnImpositionRows3' => ['save','output'],
-		'hdnImpositionColumns'=>['save'],'hdnImpositionColumns1' => ['save','output'], 'hdnImpositionColumns2' => ['save','output'], 'hdnImpositionColumns3' => ['save','output'],
-		'hdnImpositionDutchRows'=>['save'],'hdnImpositionDutchRows1' => ['save','output'], 'hdnImpositionDutchRows2' => ['save','output'], 'hdnImpositionDutchRows3' => ['save','output'],
-		'hdnImpositionDutchColumns'=>['save'],'hdnImpositionDutchColumns1' => ['save','output'], 'hdnImpositionDutchColumns2' => ['save','output'], 'hdnImpositionDutchColumns3' => ['save','output'],
-		'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
-		'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
-		'rdbPressProof' => ['save'], 
-		'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
-		'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
-		'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
-		'hdnSuppliedStockHeight1' => ['save','output'], 'hdnSuppliedStockHeight2' => ['save','output'], 'hdnSuppliedStockHeight3' => ['save','output'],
-		'StockWidth'=>['save'],'StockWidth1' => ['save','output'], 'StockWidth2' => ['save','output'], 'StockWidth3' => ['save','output'],
-		'StockHeight'=>['save'],'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
-		'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
-		'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
-		'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
-		'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
-		'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
-		'OverrideStockType1'	=>	['save'], 'OverrideStockType2'	=>	['save'], 'OverrideStockType3'	=>	['save'],
-		'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
-		'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
-		'StockQuantity1' => ['save','output'], 'StockQuantity2' => ['save','output'], 'StockQuantity3' => ['save','output'],
-		'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
-		'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
-		'chkOverrideDimensions'	=> ['save'],
-		'txtFinishedCalliper' => ['save','output'], 
-		'PageQuantity' => ['save'], # for Scratch Pads
+	'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
+	'Roll2SheetMakeReady1' => ['save','output'], 'Roll2SheetMakeReady2'   => ['save','output'], 'Roll2SheetMakeReady3'   => ['save','output'],
+	'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'   => ['save','output'], 'Roll2SheetRunCharge3'   => ['save','output'],
+	'dutch1'=> ['save'], 'dutch2' => ['save'], 'dutch3' => ['save' ],
+	'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
+	'txtImposition'=>['save'],'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
+	'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
+	'txtImageHeight1' => ['save','output'], 'txtImageHeight2' => ['save','output'], 'txtImageHeight3' => ['save','output'],
+	'txtLayoutWidth1' => ['save','output'], 'txtLayoutWidth2' => ['save','output'], 'txtLayoutWidth3' => ['save','output'],
+	'txtLayoutHeight1' => ['save','output'], 'txtLayoutHeight2' => ['save','output'], 'txtLayoutHeight3' => ['save','output'],
+	'hdnImpositionRows'=>['save'],'hdnImpositionRows1' => ['save','output'], 'hdnImpositionRows2' => ['save','output'], 'hdnImpositionRows3' => ['save','output'],
+	'hdnImpositionColumns'=>['save'],'hdnImpositionColumns1' => ['save','output'], 'hdnImpositionColumns2' => ['save','output'], 'hdnImpositionColumns3' => ['save','output'],
+	'hdnImpositionDutchRows'=>['save'],'hdnImpositionDutchRows1' => ['save','output'], 'hdnImpositionDutchRows2' => ['save','output'], 'hdnImpositionDutchRows3' => ['save','output'],
+	'hdnImpositionDutchColumns'=>['save'],'hdnImpositionDutchColumns1' => ['save','output'], 'hdnImpositionDutchColumns2' => ['save','output'], 'hdnImpositionDutchColumns3' => ['save','output'],
+	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'], 
+	'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
+	'rdbPressProof' => ['save'], 
+	'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
+	'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
+	'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
+	'hdnSuppliedStockHeight1' => ['save','output'], 'hdnSuppliedStockHeight2' => ['save','output'], 'hdnSuppliedStockHeight3' => ['save','output'],
+	'StockWidth'=>['save'],'StockWidth1' => ['save','output'], 'StockWidth2' => ['save','output'], 'StockWidth3' => ['save','output'],
+	'StockHeight'=>['save'],'StockHeight1' => ['save','output'], 'StockHeight2' => ['save','output'], 'StockHeight3' => ['save','output'],
+	'OverrideStockWidth1' => ['save'], 'OverrideStockWidth2' => ['save'], 'OverrideStockWidth3' => ['save'],
+	'OverrideStockHeight1' => ['save'], 'OverrideStockHeight2' => ['save'], 'OverrideStockHeight3' => ['save'],
+	'CutOff1' => ['save','output'], 'CutOff2' => ['save','output'], 'CutOff3' => ['save','output'],
+	'OverrideCutOff1' => ['save'], 'OverrideCutOff2' => ['save'], 'OverrideCutOff3' => ['save'],
+	'StockType' => ['save','output'],'StockType1' => ['save','output'], 'StockType2' => ['save','output'], 'StockType3' => ['save','output'],
+	'OverrideStockType1'	=>	['save'], 'OverrideStockType2'	=>	['save'], 'OverrideStockType3'	=>	['save'],
+	'hdnImageOrientation1' => ['save','output'], 'hdnImageOrientation2' => ['save','output'], 'hdnImageOrientation3' => ['save','output'], 
+	'hdnNetSheetCount1' => ['save','output'], 'hdnNetSheetCount2' => ['save','output'], 'hdnNetSheetCount3' => ['save','output'],
+	'StockQuantity1' => ['save','output'], 'StockQuantity2' => ['save','output'], 'StockQuantity3' => ['save','output'],
+	'RunTime1' => ['save','output'], 'RunTime2' => ['save','output'], 'RunTime3' => ['save','output'],
+	'txtWidth' => ['save'], 'txtHeight' => ['save'], 'txtFinalWidth' => ['save'], 'txtFinalHeight' => ['save'],
+	'chkOverrideDimensions'	=> ['save'],
+	'txtFinishedCalliper' => ['save','output'], 
+	'PageQuantity' => ['save'], # for Scratch Pads
 # Presentation Folders
-		'rdbPanels' => ['save'],'PocketSize' => ['save'],'chkPocketLeft' => ['save'],'chkPocketCenter' => ['save'],'chkPocketRight' => ['save'],
-		'rdbSuppliedStock' => ['save'], 'rdbSpecificStock' => ['save'],'rdbTemplateType' => ['save'],
-		'chkOverrideRunStyle1' => ['save'], 'chkOverrideRunStyle2' => ['save'], 'chkOverrideRunStyle3' => ['save'],
-		'chkOverrideSheetSize1' => ['save'], 'chkOverrideSheetSize2' => ['save'], 'chkOverrideSheetSize3' => ['save'],
-		'chkOverridePress1' => ['save'], 'chkOverridePress2' => ['save'], 'chkOverridePress3' => ['save'],
-		'OverridePrintingType1' => ['save'], 'OverridePrintingType2' => ['save'], 'OverridePrintingType3' => ['save'],
-		'Versions' => ['save'],
-		'versions' => ['save'],
-		'ddmProjectSize' => ['save'],
-		'ScreenType' => ['save'],
-		'rdbGrainDirection1' => ['save','output'], 'rdbGrainDirection2' => ['save','output'], 'rdbGrainDirection3' => ['save','output'],
-		'MatchGrain1' => ['save'], 'MatchGrain2' => ['save'], 'MatchGrain3' => ['save'], 
-		'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
-		'txtPressSheetComboItems'=>['save'],
-		'txtSpreadSize' => ['save'],
-		'Group' => ['save'], 'GroupPageQuantity' => ['save'],
-		'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
+	'rdbPanels' => ['save'],'PocketSize' => ['save'],'chkPocketLeft' => ['save'],'chkPocketCenter' => ['save'],'chkPocketRight' => ['save'],
+	'rdbSuppliedStock' => ['save'], 'rdbSpecificStock' => ['save'],'rdbTemplateType' => ['save'],
+	'chkOverrideRunStyle1' => ['save'], 'chkOverrideRunStyle2' => ['save'], 'chkOverrideRunStyle3' => ['save'],
+	'chkOverrideSheetSize1' => ['save'], 'chkOverrideSheetSize2' => ['save'], 'chkOverrideSheetSize3' => ['save'],
+	'chkOverridePress1' => ['save'], 'chkOverridePress2' => ['save'], 'chkOverridePress3' => ['save'],
+	'OverridePrintingType1' => ['save'], 'OverridePrintingType2' => ['save'], 'OverridePrintingType3' => ['save'],
+	'Versions' => ['save'],
+	'versions' => ['save'],
+	'ddmProjectSize' => ['save'],
+	'ScreenType' => ['save'],
+	'rdbGrainDirection1' => ['save','output'], 'rdbGrainDirection2' => ['save','output'], 'rdbGrainDirection3' => ['save','output'],
+	'MatchGrain1' => ['save'], 'MatchGrain2' => ['save'], 'MatchGrain3' => ['save'], 
+	'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
+	'txtPressSheetComboItems'=>['save'],
+	'txtSpreadSize' => ['save'],
+	'Group' => ['save'], 'GroupPageQuantity' => ['save'],
+	'PaperMessage1'=>['output'], 'PaperMessage2'=>['output'], 'PaperMessage3'=>['output'],
 
-		# These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
-		'pages_supplied'=>['save'],
-		'supplied_format'=>['save'],
+# These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
+	'pages_supplied'=>['save'],
+	'supplied_format'=>['save'],
 # Banners
-		'grommets' => ['save'],
-		'pockets'	=>	['save'],
-		'hemmed'	=>	['save'],
-		'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
-		'HemWidth'	=>	['save'],
-		);
+	'grommets' => ['save'],
+	'pockets'	=>	['save'],
+	'hemmed'	=>	['save'],
+	'EdgeLeft' => ['save'], 'EdgeRight' => ['save'], 'EdgeTop' => ['save'], 'EdgeBottom'=>['save'],
+	'HemWidth'	=>	['save'],
+);
 
 sub variables {
 	my ( $project_index, $service_index, $specs, $new_specs ) = @_;
@@ -446,10 +446,10 @@ sub setup_project {
 		my $colour;
 		if ( $$real_colour{name} =~ /Varnish/ ) {
 			next;
-		} elsif ( $$real_colour{name} =~ /(\w*) Spot Colour/ ) {
+		} elsif ( $$real_colour{name} =~ /^(\w+) Spot Colour$/ ) {
 			$colour = $1;
 		} elsif ( $$real_colour{name} =~ /PMS/ ) {
-			$colour = 'PMS';
+			$colour = 'PMSInk';
 		} else { 
 			$colour = $$real_colour{name};
 		} # end if
@@ -724,7 +724,7 @@ sub calc_from_imposition {
 			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 		} # end foreach $index
 
-		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, [] );
+		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, $$project{washed_colours}, [] );
 		my $results = plate_cost( $price, \%PlateCounts );
 		$$price{'Total Cost'} += $$results{'Price'};
 		$$price{'Comparison Cost'} += $$results{'Price'};
@@ -1034,16 +1034,16 @@ sub get_impositions {
 
 	# Don't need to exclude coatings because they have already been cut out.
 	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour' ], [ map { $$_{'name'} } ( @{$$project{'side_one_colours'}}, @{$$project{'side_two_colours'}} ) ] );
+$openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 
-	if ( $$project{print_sides} == 2 ) {
-		# We will be considering W&T, so we will need the coatings array
-	} # end if
 	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
 	} else {
 		$variables{'PrintingType'.$qty_index} = [ sets::union( 'output', @{$variables{'PrintingType'.$qty_index}} ) ];
 	} # end if
 	$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
+	my $ProjectTypeName = $Project->Type()->name();
+	$$project{'Quantity'} = $qty;
 
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
@@ -1104,7 +1104,6 @@ sub get_impositions {
 			} # end if
 		} # end if
 
-		my $ProjectTypeName = $Project->Type()->name();
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
 		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
 			$$project{'Grip'} = $Press->specification('Grip');
@@ -1150,7 +1149,6 @@ sub get_impositions {
 		$$project{'Orientation'} = $Press->specification('Orientation');
 		$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
-		$$project{'Quantity'} = $qty;
 
 		my @impositions;
 
@@ -1320,7 +1318,7 @@ sub get_impositions {
 		my %imps;
 		my %dutches;
 		if ( DEBUG or 0 ) {
-			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions');	
+			$openprint::log->debug('Impositions before filtering on ' . $$Press{'strid'} . ' ' . @impositions . ' impositions' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');	
 			foreach my $i ( @impositions ) {
 				$i->display();
 			}
@@ -1469,7 +1467,7 @@ $openprint::log->debug("Doing nothing, keeping all $add") if DEBUG;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		if ( DEBUG or 0 ) {
-			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions );
+			$openprint::log->warn('Impositions after initial filtering for '. $$Press{'strid'} . ': ' . @impositions . ' ' . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs');
 			foreach my $I ( sort { $$a{'imposition'} <=> $$b{'imposition'} } @impositions ) {
 				$I->display("QTY " . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Price'} );
 			} # end foreach
@@ -1747,7 +1745,7 @@ sub calc {
 	# Must clear these
 	%converted_imposition_cache = ();
 	%filtered_imposition_cache = ();
-	my $master_time = gettimeofday();
+	$master_time = gettimeofday();
 #$openprint::log->debug("Starting Printing::calc");
 
 	if ( ! $project_index or ! $service_index ) {
@@ -2105,10 +2103,10 @@ $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval
 						'login'		=> $openprint::r->dir_config('db_user'),
 						'password'	=> $openprint::r->dir_config('db_password'),
 						);
-					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
+					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, $$project{washed_colours}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 					} );
 		} else {
-			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
+			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, $$project{washed_colours}, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 			$prices{$qty_index} = $sig_price;
 		} # end if
 
@@ -2279,7 +2277,7 @@ if ( 0 ) {
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
-$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' ) if DEBUG;
 	} # end foreach quantity
 $openprint::log->debug("Leaving Printing::calc status: $$specs{'Status'}");
 	return $$specs{'Status'};
@@ -2369,7 +2367,8 @@ sub breakdown {
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
-	$breakdown .= '<p>'.$$price{'AdditionalSignature Breakdown'}.'</p>' if $$price{'AdditionalSignature Breakdown'};
+	$breakdown .= $$price{'AdditionalSignature Breakdown'} if $$price{'AdditionalSignature Breakdown'};
+
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
@@ -2488,7 +2487,7 @@ $imp->display("Grain override next");
 			} # end if
 
 			if ( ( $$imp{'runstyle'} eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-				$openprint::log->debug('No Web 4 U');
+				$openprint::log->debug('No Web 4 U') if DEBUG;
 				next;
 			} # end if
 
@@ -2499,7 +2498,7 @@ $imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $$Pape
 
 			if ( $SpreadLayout > 0 ) {
 				if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $$imp{'imposition'} ) ) {
-$imp->display("Previous Imposition");
+$imp->display("Previous Imposition") if DEBUG;
 					next;
 				} # end if
 				if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -2563,7 +2562,7 @@ $imp->dispay('Ma imposition!') if DEBUG;
 		foreach my $imp ( @results ) {
 			my $add = 1;
 			my $Paper = $imp->Paper();
-$imp->display('Filtering:');
+#$imp->display('Filtering:');
 
 			# My thoughts here:  have to base it purely on this sig. Need to look up price by total, but compare based just on this sig.
 			my $stock_qty = int( $qty/$$imp{'imposition'} );
@@ -2708,7 +2707,7 @@ $imp->display("Comparing mino:" . $Paper->minimum_order_weight() . 'Price: ' . $
 		$openprint::log->debug("Impositions for Press: " . $$Press{'strid'} . ' after folding:' . @impositions) if DEBUG;
 	} # end if Folding
 
-	if ( DEBUG ) {
+	if ( DEBUG or 0 ) {
 		$openprint::log->debug('UPQ:'.$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$$Press{'strid'} . ' # ' . @impositions );
 		foreach my $imp ( @impositions ) {
 			$imp->display();
@@ -2775,7 +2774,7 @@ sub get_new_specs {
 } # end sub get_new_specs
 
 sub get_project_price {
-	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
+	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $washed_colours, $previous_forms_cache, $signatures, $impositions, $other_impositions, $best_price, $recursion_depth ) = @_;
 	my %best_price = $best_price ? %{$best_price} : ();
 $openprint::log->debug("Best price: $recursion_depth starting get_project_price: ($best_price{'Comparison Cost'}) ($best_price{'Comparison Cost'}) " );
 
@@ -2795,7 +2794,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 		} # end if
 		my $time = gettimeofday() if DEBUG;
 		$$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} = $txtUnspecifiedPageQuantity;
-		my @Is = calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
+		my @Is = sort { $$a{pages} <=> $$b{pages} } calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project, $impositions );
 #$openprint::log->debug("calculated_impositions: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		foreach my $imp ( @Is ) {
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $$imp{'runstyle'};
@@ -2807,12 +2806,18 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			$previous_forms_cache{$hash_key} += 1;
 
 			my %PlateCounts = %$PlateCounts;
+			my %washed_colours = %$washed_colours;
+			my %PaperCounts = %$PaperCounts;
+			my $Paper = $imp->Paper();
+
+			my @total_impositions = @$other_impositions;
+			push @total_impositions, @{$$sig_specs{Impositions}} if $$sig_specs{Impositions};
 
 			# Imp still gets modified in calc_price, Folding adds Folder member
 			$imp = $imp->copy();
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
-			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
 #$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if ! $recursion_depth;
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
@@ -2823,7 +2828,12 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 				} # end if
 				next;
 			} # end if
-			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+
+			# This makes a really nice circular reference, which we really shouldn't do.
+			$$imp{price} = $price;
+			$$price{Imposition} = $imp;
+
+			if ( %best_price and ( $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) ) {
 				if ( DEBUG ) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
 					if ( $$sig_specs{'Impositions'} ) {
@@ -2843,15 +2853,15 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			$$price{'sig_count'} = 1;
 
 			# Establish a local copy
-			my %PaperCounts = %$PaperCounts;
-			my $Paper = $imp->Paper();
 
             $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
             $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
 			$PaperCounts{$Paper->id_string()} += $$price{'Stock Qty'};
 
-			@{$$price{'Impositions'}} = @{$$sig_specs{'Impositions'}} if $$sig_specs{'Impositions'};
+			# This price hash only contains the calculating imps.  Non-group imps are in other_impositions
+			@{$$price{'Impositions'}} = ();
 			push @{$$price{'Impositions'}}, $imp;
+			push @total_impositions, $imp;
 
 			my $new_specs;
 			my $upq = $txtUnspecifiedPageQuantity - $$imp{'pages'};
@@ -2859,8 +2869,11 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 			if ( ( $upq > 0 ) and $$imp{'pages'} ) {
 				my @signatures = @$signatures;
 				my $last_sig_price = int($$price{'Comparison Cost'});
+
 				while ( $upq > 0 ) {
+					$imp = $imp->copy();
 					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key );
+					$$imp{specs} = $new_specs;
 
 					if ( $upq >= $$imp{'pages'} 
 						and ( ($$new_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') or ($$new_specs{'PageQuantity'.$qty_index} == $$imp{'pages'}) ) 
@@ -2869,7 +2882,9 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 						and ( ($$new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($$new_specs{'ddmRunStyle'.$qty_index} eq $$imp{'runstyle'}) )
 ) {
 
-				  		my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
+						my $sig_price = calc_price( $Project, $$new_specs{'ServiceIndex'}, $imp, $project, $services, $new_specs, $qty, $qty_index, \%PlateCounts, \%washed_colours, \@total_impositions );
+						$$imp{price} = $sig_price;
+						$$sig_price{Imposition} = $imp;
 #$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
 
 						if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
@@ -2878,12 +2893,12 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 							$PaperCounts{$Paper->id_string()} += $sigs * $$sig_price{'Stock Qty'};
 							foreach ( 1 .. $sigs ) {
 								push @{$$price{'Impositions'}}, $imp;
+								push @total_impositions, $imp;
 								$previous_forms_cache{$hash_key} += 1;
 							} # end foreach
 							$upq = $upq % $$imp{'pages'};
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 							# Blanks get re-used
-							#$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$$price{'sig_count'} += $sigs;
 						} else {
@@ -2891,6 +2906,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 							$last_sig_price = int($$sig_price{'Comparison Cost'});
 							$PaperCounts{$Paper->id_string()} += $$sig_price{'Stock Qty'};
 							push @{$$price{'Impositions'}},$imp;
+							push @total_impositions, $imp;
 							$upq -= $$imp{'pages'};
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
@@ -2907,7 +2923,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 				if ( $$project{'HasProofs'} ) {
 					#my $proofs_time = gettimeofday();
 # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
-					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $service_index, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
 				#$openprint::log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
 					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
@@ -2920,7 +2936,10 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 			
 				if ( $upq ) {
+					$imp = $imp->copy();
 					$new_specs = get_new_specs( $Project, $service_index, $service_specs, \@signatures, $qty_index, $upq, \%previous_forms_cache, $hash_key ) if ! $new_specs;
+					$$imp{specs} = $new_specs;
+
 					# Not identical, so clear this so we get charged setups, etc
 					$$new_specs{'PreviousForms'.$qty_index} = 0;
 #$openprint::log->debug("Doing full calc when UPQ:$upq >= Pages:" . $$imp{'pages'} . ' PageQuantity:' . $$new_specs{'PageQuantity'.$qty_index} ) if $upq >= $$imp{'pages'} or 0;
@@ -2936,7 +2955,7 @@ $openprint::log->debug("Best price: $recursion_depth starting get_project_price:
 
 					my $sig_price = {};
 					if ( $recursion_depth >= 3 ) {
-						$imp->display('Recursion Depth :' . $recursion_depth ) if ( DEBUG );
+						$imp->display('Recursion Depth :' . $recursion_depth ) if DEBUG;
 						$$sig_price{'complete'} = 0;
 					} else {
 						# Check to see if we actually should bother recursing
@@ -2959,22 +2978,22 @@ if ( DEBUG or 0 ) {
 						#return {} if $openprint::r->connection->aborted;
 						my $key = join(',',$qty_index,$$Press{id},$upq,($$sig_specs{'MatchGrain'.$qty_index} eq 'Y'?$imp->grain_direction():()));
 						if ( 1 and $price_cache{$key} ) {
+$openprint::log->debug("Using price cache");
 							$sig_price = $price_cache{$key};
 						} else {
 
 							$$imp{'Price'} = $$price{'Comparison Cost'};
 							if ( %best_price ) {
 								my %b;
-#= %best_price;
 								$b{'Comparison Cost'} = $best_price{'Comparison Cost'} - $$price{'Comparison Cost'};
 								$b{'Impositions'} = $best_price{'Impositions'};
 								$b{'Imposition'} = $best_price{'Imposition'};
 #$openprint::log->debug("recursing with reduce best price from $best_price{'Comparison Cost'} to $b{'Comparison Cost'}");	
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
-								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, \%b, $recursion_depth + 1 );
+								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, \%b, $recursion_depth + 1 );
 							} else {
 #$openprint::log->debug("recursing with no best price ");
-								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
+								$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, undef, $recursion_depth + 1 );
 							} # end if
 							$price_cache{$key} = $sig_price;
 						} # end if cache
@@ -2985,17 +3004,16 @@ if ( DEBUG or 0 ) {
 #$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, pages: " . $$imp{'pages'} . ' of ' . $upq );
 						$$price{'complete'} = $$sig_price{'complete'} = 0;
 						$$price{'Comparison Cost'} += 10000000;
-						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+						$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 					} else {
-						@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
+						push @{$$price{'Impositions'}}, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
+						push @total_impositions, @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
 						# Don't add stock weight because we likely have a different stock anyways.
 						$PaperCounts{$$sig_price{'Imposition'}->Paper()->id_string()} += $$sig_price{'Stock Qty'};
 						$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 						$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-						$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'Breakdown'};
-
 					} # end if sig_price complete
 					$upq = 0;
 
@@ -3005,7 +3023,7 @@ if ( DEBUG or 0 ) {
 				if ( $$project{'HasProofs'} ) {
 					#my $proofs_time = gettimeofday();
 # Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
-					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $service_index, $sig_specs, $qty_index, undef, undef, $Press, $imp );
+					my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $sig_specs, $qty_index, undef, undef, $Press, $imp );
 				#$openprint::log->debug( 'Proofs Calc: ' . sprintf('%.4f', tv_interval( [$proofs_time])*1000) );
 					$$price{'Comparison Cost'} += $$price{'sig_count'} * $Results{'Total'};
 					$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
@@ -3047,7 +3065,7 @@ if ( 1 ) {
 
 	if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
-			if ( 1 == @paper_strings and $Paper->id_string() ne $paper_strings[0] ) {
+			if ( ( 1 == @paper_strings ) and ( $Paper->id_string() ne $paper_strings[0] ) ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->id_string() );
 			} elsif ( DEBUG ) {
 $log->warn("Paper Counts");
@@ -3153,16 +3171,15 @@ $openprint::log->debug($Paper->id_string());
 
 			# The idea is to only calc these on the last sig
 			if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Pages') ) {
-				# other_impositions is all previous impositions, not including cover, and ones in a different group
-				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
 				my $results;
-				#my $starttime = gettimeofday();
+				my $starttime = gettimeofday() if DEBUG;
 				#if ( $stitching_cache{scalar @all_impositions} ) {
 					#$openprint::log->debug("Using Stitching cache for " . scalar @all_impositions . ' sigs' );
 					#$results = $stitching_cache{scalar @all_impositions};
 				#} else {
 
-					#$openprint::log->debug("Stitching::signature_calc");
+				
+					$openprint::log->debug("Stitching::signature_calc") if DEBUG;
 					#if ( $$price{'Impositions'} ) {
 					#foreach my $I ( reverse @{ $$price{'Impositions'} } ) {
 					#$I->display( "before stitch" );
@@ -3174,7 +3191,7 @@ $openprint::log->debug($Paper->id_string());
 					#foreach my $I ( @{$$price{'Impositions'}} ) {
 					#$I->display( "price_impsoitions" );
 					#} # end while
-					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions, $project );
+					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@total_impositions, $project );
 				#} # end if cached
 				if ( $$results{'Status'} eq 'uncalculated' ) {
 					$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
@@ -3189,14 +3206,12 @@ $openprint::log->debug($Paper->id_string());
 #$stitching_cache{scalar @all_impositions} = $results;
 					#$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'}");
 				} # end if
-				#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+				$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) ) if DEBUG;
 
 			} elsif ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Pages') {
-$openprint::log->debug("Doing perfect bound");
+$openprint::log->debug("Doing perfect bound") if DEBUG;
 #my $starttime = gettimeofday();
-				my @all_impositions = ( @{$other_impositions}, @{$$price{'Impositions'}} );
-
-				my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @all_impositions );
+				my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @total_impositions );
 				if ( $$results{'Status'} eq 'uncalculated' ) {
 					$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
 					$$price{'Comparison Cost'} += 1000000;
@@ -3238,22 +3253,26 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$$specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $specs, $qty_index, \@available_printingtypes, $imp );
 	$openprint::log->debug("PrintingTypes: $$specs{'PrintingTypes'}");
 							my %impositions = get_impositions( $Project, $specs, $project, $qty, $qty_index, \@possible_presses, \@Papers );
-							$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
-							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
-							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
-
-							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $specs, $specs, $qty, $qty_index, 
-							\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
-
-							if ( $$sig_price{'Imposition'} ) {
-	$openprint::log->debug("Calculating Additional Signatures for other group success");
-								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-								$$price{'AdditionalSignature Breakdown'} .= sprintf( ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
-								#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
-							} else {
-	$openprint::log->debug("Calculating Additional Signatures for other group failure");
-								$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+							if ( ! %impositions ) {
+								$$price{'Breakdown'} .= 'Unable to calculate impositions for additional signatures.<br/>';
 								$$price{'Comparison Cost'} += 1000000;
+							} else {
+								$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
+								$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
+								$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+
+								my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $specs, $specs, $qty, $qty_index, 
+								\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%washed_colours, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, \%best_price, 0 );
+
+								if ( $$sig_price{'Imposition'} ) {
+		$openprint::log->debug("Calculating Additional Signatures for other group success");
+									$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+									#$$price{'itionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
+								} else {
+		$openprint::log->debug("Calculating Additional Signatures for other group failure");
+									$$price{'Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+									$$price{'Comparison Cost'} += 1000000;
+								} # end if
 							} # end if
 						} else {	
 							$$price{'Comparison Cost'} += 1000000;
@@ -3264,10 +3283,10 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 							$openprint::log->error("$k => $$specs{$k}");
 						} # end if
 					} # end if Has Stocks
+				} else {
+$openprint::log->debug("No sigs for group 2?");
 				} # end if has other sigs
 			} # end if Group == 1
-} else {
-$log->debug("Recursing $recursion_depth");
 } # end if ! recursion_depth
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
@@ -3276,7 +3295,6 @@ $log->debug("Recursing $recursion_depth");
 if ( DEBUG ) {
 				$openprint::log->error("Resulting price worst than best: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 				$imp->display('Worst than best');
-				$$price{Imposition} = $imp;
 				$openprint::log->debug( breakdown( $price, $sig_specs ) );
 				$openprint::log->debug( $best_price{Breakdown} );
 }
@@ -3285,28 +3303,33 @@ if ( DEBUG ) {
 
 if ( DEBUG and ! $recursion_depth ) {
 				$imp->display("New best price chosen: $best_price{'Comparison Cost'} >= $$price{'Comparison Cost'}");
-				$openprint::log->debug( breakdown( \%best_price, $sig_specs ) ) if $best_price{'Imposition'};
-				if ( $best_price{'Impositions'} ) {
-					foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
-						$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "OLD BEST:" );
-					} # end while
-				} 
+				foreach my $I ( @{ $best_price{'Impositions'} } ) {
+					$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "OLD BEST:" );
+				} # end while
 }
 #keep track of the best price we have found so far.
 				%best_price = %{$price};
-				$best_price{'Breakdown'} = sprintf( $best_price{'sig_count'} . ' Signature %dpages %dout %s on %sx%s on %s %.2f', $$imp{'pages'}, $$imp{'imposition'}, $$imp{'runstyle'}, $$Paper{'width'}, $$Paper{'height'}, $$Press{'strid'}, $best_price{'Comparison Cost'} ) . '<br/>';
-#$openprint::log->debug("before breakdown");
-				$best_price{'Breakdown'} .= breakdown( \%best_price, $sig_specs );
-				$best_price{'Imposition'} = $imp;
 				$$imp{'Price'} = $$price{'Comparison Cost'};
 				$best_price{'Press'} = $Press;
-if ( DEBUG and ! $recursion_depth ) {
-	$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
+				
+				if ( ! $recursion_depth ) {
+				
+					$openprint::log->debug( breakdown( \%best_price, $sig_specs ) );
 					if ( $best_price{'Impositions'} ) {
-						foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
+						$best_price{'AdditionalSignature Breakdown'} = '';
+						my @impositions = @{ $best_price{'Impositions'} };
+						shift @impositions;
+						foreach my $I ( @impositions ) {
+							$best_price{'AdditionalSignature Breakdown'} .= sprintf( '<br/><b>Additional Signature %dpages %dout %s on %sx%s on %s</b><br/>', @$I{'pages', 'imposition', 'runstyle'}, $I->Paper()->width(), $I->Paper()->height(), $I->Press()->strid() );
+							$best_price{'AdditionalSignature Breakdown'} .= breakdown( $$I{price}, $$I{specs} );
+						} # end foreach
+					} # end if
+					$best_price{'Breakdown'} = breakdown( \%best_price, $sig_specs );
+				} # end if
+if ( DEBUG and ! $recursion_depth ) {
+						foreach my $I ( @{ $best_price{'Impositions'} } ) {
 							$I->display( join('', map { ' ' } ( 1 .. $recursion_depth ) ) . "NEW BEST qty_index: $qty_index:" );
 						} # end while
-					} 
 }
 			} # end if 
 		} # end foreach imposition
@@ -3367,7 +3390,7 @@ sub plate_cost {
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $other_impositions ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $washed_colours, $other_impositions ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
@@ -3542,14 +3565,14 @@ sub calc_price {
 
 # Has to be NEED because they always leave folding out, and it chooses dumb impositions
 	if ( $$project{'NeedFolding'} ) {
-		my $time = gettimeofday();
+		my $time = gettimeofday() if DEBUG;
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
 $openprint::log->debug("Using cached folding");
 		} else {
-			my @all_impositions = ( @{$other_impositions}, $Imposition );
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, \@all_impositions, $project );
-			#$$Imposition{'folding_results'} = \%folding_results;
+			#my @all_impositions = ( @{$other_impositions}, $Imposition );
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, $other_impositions, $project );
+			$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
 		delete $$Imposition{'Folder'};
@@ -3581,7 +3604,7 @@ $openprint::log->debug("Using cached folding");
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 			} # end if
 		} # end if
-		if ( 0 and DEBUG and tv_interval([$time])*1000 > 10 ) {
+		if ( DEBUG and tv_interval([$time])*1000 > 10 ) {
 			$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 			$Imposition->display('Slow Folding');
 			$openprint::log->debug( $folding_results{'Breakdown'} );
@@ -3708,7 +3731,7 @@ $openprint::log->debug("Using cached folding");
 # Cutting has to go up here, because it adds overs.ABut we will calculate pre-press stock cutting afterwards
 	if ( $$project{'HasCutting'} ) {
 #my $time = gettimeofday();
-		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
+		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
@@ -3739,7 +3762,7 @@ $openprint::log->debug("Using cached folding");
 
 	my $gross_sheets = $net_sheets + $overs;
 	$impressions = $gross_sheets;
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	$impressions *= 2 if $$project{print_sides} == 2 and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
@@ -3764,9 +3787,9 @@ $openprint::log->debug("Using cached folding");
 	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs,);
 	
 	my %mixed_colours = %{$$project{'mixed_colours'}};
-	my %washed_colours = %{$$project{'washed_colours'}};
+	#my %washed_colours = %{$washed_colours};
 	my @left_over_colours;
-	my $colourstarttime = gettimeofday();
+	my $colourstarttime = gettimeofday() if DEBUG;
 #$openprint::log->debug("Colours: @colours");
 	foreach my $Colour ( @colours ) {
 		my $real_colour = $$Colour{'name'};
@@ -3803,23 +3826,23 @@ $openprint::log->debug("Using cached folding");
 			} else {
 				$colour =~ s/ ?Overall ?//;
 			} # end if
-		} elsif ( $real_colour =~ /(\w*) Spot Colour/ ) {
-			$colour = $1.'Ink';
+		} elsif ( $real_colour =~ /^(\w+) Spot Colour$/ ) {
+			$colour = $1;
 		} elsif ( $real_colour =~ /PMS/i ) {
 			$colour = 'PMSInk';
 		} elsif ( $real_colour =~ /Metallic/i ) {
 			$colour = 'MetallicInk';
 		} else { 
-			$colour = $real_colour . 'Ink';
+			$colour = $real_colour;
 		} # end if
 		my $key = $real_colour.'-'.$$Press{strid}.'-'.$qty_index;
-		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $washed_colours{$key} ) {
+		if ( $real_colour =~ /Varnish/ and $real_colour =~ /Overall/ and $$washed_colours{$key} ) {
 		} else {
 			$plate_count += 1;
 		} # end if
 
 # Each Ink/Coating has MakeReady, Mix, Material, Service
-		if ( ! ( $real_colour =~ /Varnish/ and $washed_colours{$key} ) ) {
+		if ( ! ( $real_colour =~ /Varnish/ and $$washed_colours{$key} ) ) {
 			my %InkMakeReady = openprint::service::get_price_object( $real_colour.' MakeReady', undef, $Press );
 			if ( %InkMakeReady ) {
 				$price{'Ink breakdown'} .= sprintf(' MR: %.2f', $InkMakeReady{'Price'} );
@@ -3827,6 +3850,7 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 		} # end if
 
+if ( 0 ) {
 		my %InkService = openprint::service::get_price_object( $real_colour, $impressions, $Press );
 		if ( %InkService ) {
 			if ( $InkService{'units'} eq 'per m' ) {
@@ -3838,12 +3862,13 @@ $openprint::log->debug("Using cached folding");
 			$price{'Ink breakdown'} .= sprintf(' Run: $%1$.2f%2$s * %4$d/1000 = $%3$.2f', @InkService{'Price','units','Total'}, $impressions );
 			$price{'Ink Price'} += $InkService{'Total'};
 		} # end if
+	} # end if
 
 		my %ink_price;
 		my $InkMaterial;
 		my $Ink;
 
-		foreach my $C ( @{$special_colours{$real_colour}} ) {
+		foreach my $C ( @{$special_colours{$colour}} ) {
 			if ( ( ! ( $C->grades() and @{$C->grades()} ) ) or sets::isin( $grade, $C->grades() ) ) {
 				$Ink = $C;
 				last;
@@ -3851,31 +3876,35 @@ $openprint::log->debug("Using cached folding");
 		} # end foreach
 
 		if ( ! $Ink ) {
-			$openprint::log->error("Didnt find ink in colours hash, must be a grade problem");
+			$openprint::log->error("Didnt find ink real ($real_colour) ($colour) ($grade) in colours hash, must be a grade problem");
+			foreach my $C ( @{$special_colours{$colour}} ) {
+				$openprint::log->error($C->to_string() );
+			} # end foreach C
 			# Some PMS or other ink that we don't have in the system, since CMYK are in teh system (we assume), washes can be 1
 			$Ink = new openprint::Ink();
 			$$Ink{pmsid} = $real_colour;
 			if ( ! sets::isin( $real_colour, \@process_colours ) ) {
 				my $Service = openprint::Service->find_one(name=>'PMSInkMix');
-				$$Ink{service_id} = $Service->id();
+				$$Ink{service_id} = $Service->id() if $Service;
 				$$Ink{washups} = 1;
 				my $Material = openprint::Material->find_one(name=>$colour.'Ink');
-				$$Ink{material_id} = $Material->id();
+				$$Ink{material_id} = $Material->id() if $Material;
 			} # end if
 		} # end if
 
 # Washed_colours contains each colour used in the other signatures
 		if ( 
-				( ! $washed_colours{$key} ) or 
+				( ! $$washed_colours{$key} ) or 
 				( 
 				 ( $$Imposition{runstyle} eq 'Perfecting' ) and 
-				 ( $washed_colours{$key} < 2 ) and
+				 ( $$washed_colours{$key} < 2 ) and
 				 sets::isin( $real_colour, $$project{'side_one_colour_names'} ) and 
 				 sets::isin( $real_colour, $$project{'side_two_colour_names'} ) 
 				)
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
-#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$special_colours{$real_colour}{washups} );
+			$$washed_colours{$key} += $$Ink{washups};
+$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
@@ -3893,7 +3922,10 @@ $openprint::log->debug("Using cached folding");
 			} # end if
 		} # end if
 
-		next if ! %ink_price;
+		if ( ! %ink_price ) {
+			$price{'Ink breakdown'} .= ' no price<br/>';
+			next;
+		}	
 		my $area = $Imposition->object_area() * $impressions * ($$project{'inkCoverage'}{$real_colour}/100);
 
 		if ( $ink_price{'units'} eq 'per cartridge' ) {
@@ -3904,7 +3936,7 @@ $openprint::log->debug("Using cached folding");
 			my $Coverage = $InkMaterial->New_Specification('Coverage', { range=>$grade, equipment_id=>$$Press{id}} );
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
 		} elsif ( $ink_price{units} eq 'per kg' ) {
@@ -3917,12 +3949,12 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 }
 			my $qty = Math::Round::nearest( 0.01, $area/$$Coverage{value} ) if $Coverage and $$Coverage{value};
 			my %ink_price = $InkMaterial->get_price( $qty, $Press );
-			$ink_price{'Total'} = $ink_price{'Price'} * $qty;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $qty );
 			$price{'Ink Price'} += $ink_price{'Total'};
-			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, @ink_price{'Price','units','Total'});
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $$Coverage{value}, $qty, 1*$ink_price{Price}, @ink_price{'units','Total'});
 		} elsif ( $ink_price{'units'} eq 'per square foot' ) {
 			$area /= 144;
-			$ink_price{'Total'} = $ink_price{'Price'} * $area;
+			$ink_price{'Total'} = Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
 			$price{'Ink Price'} += $ink_price{'Total'};
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %.2f sq feet * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units','Total'} );
 		} elsif ( $ink_price{'units'} eq 'per unit' ) {
@@ -3930,18 +3962,18 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 				$area /= 2;
 			} # end if
 			my $sheets_per_ink_unit = 750000;
-			my $p = $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'};
+			my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * ($area/$sheets_per_ink_unit) / $$project{'print_sides'} );
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' %.2f sq feet * $%s%s / %d sheets per unit = $%.2f', $area, @ink_price{'Price','units'}, $sheets_per_ink_unit, $p );
 		} elsif ( $ink_price{'units'} eq 'per square inch' ) {
-			my $p = $ink_price{'Price'} * $area;
+			my $p = Math::Round::nearest( 0.01, $ink_price{'Price'} * $area );
 			$price{'Ink Price'} += $p;
 			$price{'Ink breakdown'} .= sprintf(' Grade: %d, %d sq inches * $%s%s = $%.2f', $grade, $area, @ink_price{'Price','units'}, $p );
 		} elsif ( $ink_price{'units'} eq 'per m' ) {
-			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
+			$price{'Ink Price'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions/1000 );
 			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
 		} elsif ( $ink_price{'units'} eq 'per impression' ) {
-			$price{'Ink Price'} += $ink_price{'Price'} * $impressions;
+			$price{'Ink Price'} += Math::Round::nearest( 0.01, $ink_price{'Price'} * $impressions );
 			$price{'Ink breakdown'} .= ' ' . $impressions . " * $ink_price{'Price'}$ink_price{'units'} = " . $ink_price{'Price'} * $impressions;
 		} else {
 			$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $$Press{'strid'} );
@@ -3986,39 +4018,39 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{'side_one_colours'}} and @{$$project{'side_two_colours'}} ) {
-			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $press_setup_front->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 			if ( $$press_setup_front{units} ne 'Total' ) {
-				my $back_press_setup = press_setup_cost( $Press, 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+				my $back_press_setup = press_setup_cost( 0, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 				$press_setup += $$back_press_setup{'Total'};
 				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
 				$price{'Plate Total'} += $$back_press_setup{'Plate Total'};
 				$price{'Plate Setup Count'} += $$back_press_setup{'Plate Count'};
 			} # end if
 		} elsif ( @{$$project{'side_one_colours'}} ) {
-			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_front = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $$press_setup_front{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_front{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_front{'Plate Price','Plate Count','Plate Units'};
 		} elsif ( @{$$project{'side_two_colours'}} ) {
-			my $press_setup_back = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			my $press_setup_back = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 			$press_setup += $$press_setup_back{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_back{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $$press_setup_back{'Plate Total'};
 			@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_back{'Plate Price','Plate Count','Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
-		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'combined_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'combined_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		@price{'Plate Setup Price','Plate Setup Count','Plate Setup Units'} = @$press_setup_cost{'Plate Price','Plate Count','Plate Units'};
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
 	} else {
-		my $press_setup_cost = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'filtered_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+		my $press_setup_cost = press_setup_cost( $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'filtered_colours'}, $$Paper{calliper}, $qty_index, $Imposition );
 		$press_setup += $$press_setup_cost{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_cost{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $$press_setup_cost{'Plate Total'};
@@ -4113,7 +4145,7 @@ $openprint::log->debug("No Coverage for grade $grade Press: $$Press{strid}");
 	if ( $$project{'HasCutting'} ) {
 		if ( ($$Paper{'type'} ne 'Roll') and ($$Paper{'start_width'} != $$Paper{'width'} or $$Paper{'start_height'} != $$Paper{'height'} ) ) {
 #my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
+			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
@@ -4179,10 +4211,10 @@ $openprint::log->warn("Something wrong in AQ");
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $$Imposition{'pages'};
 		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of object' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height();
+			$price{'Imposition Total'} += Math::Round::nearest( 0.01, $ImpositionCharge{Price} * $Imposition->object_width() * $Imposition->object_height() );
 		} elsif ( $ImpositionCharge{'units'} eq 'per square inch of layout' ) {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$Imposition->layout_area(),$Press);
-			$price{'Imposition Total'} += $ImpositionCharge{Price} * $Imposition->layout_area();
+			$price{'Imposition Total'} += Math::Round::nearest( 0.01, $ImpositionCharge{Price} * $Imposition->layout_area() );
 		} else {
 			%ImpositionCharge = openprint::service::get_price_object( $service,$$Imposition{'imposition'},$Press);
 			$price{'Imposition Total'} += $ImpositionCharge{Price} * $$Imposition{'imposition'};
@@ -4549,7 +4581,8 @@ sub get_run_price {
 
 # This is called once perside, or just once for W&T
 sub press_setup_cost {
-	my ( $Press, $plate_change_qty, $plate_runs, $colours, $calliper, $specs, $qty_index, $service_index, $Imposition ) = @_;
+	my ( $plate_change_qty, $plate_runs, $colours, $calliper, $qty_index, $Imposition ) = @_;
+	my $Press = $Imposition->Press();
 
 	# These are pre-filtered in setup_project now
 	my $setup_count = @$colours;
@@ -4560,9 +4593,10 @@ sub press_setup_cost {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', undef, $Press );
 	} # end if
 	if ( $Price{'units'} eq 'stock calliper - per plate' ) {
-		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press);
+		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $calliper, $Press );
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'per form' ) {
+		my $specs = $$Imposition{specs};
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
 		$Price{'Total'} = $Price{'Price'};
 	} elsif ( $Price{'units'} eq 'total' ) {
@@ -4885,11 +4919,16 @@ sub summary {
 	} else { # ! qty_index
 		my $dimensions = '';
 		if ( $$specs{'txtSignatureType'} ) {
-			if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
+if ( 0 ) {
+			if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtFinalWidth','txtFinalHeight'});
 			} else {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$printing_specs{'txtFinalWidth','txtFinalHeight'});
 			} # end if
+} else {
+				$dimensions .= sprintf( '%s&quot;x%s&quot; -> %s&quot;x%s&quot; ',
+						@$specs{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'});
+}
 		} elsif ( ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) and ( $$specs{'txtFinalWidth'} != $$specs{'txtWidth'} or $$specs{'txtFinalHeight'} != $$specs{'txtHeight'} ) ) {
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				$dimensions .= sprintf( '%s&quot;x%s&quot; folded to %s&quot;x%s&quot; ',
@@ -5169,7 +5208,6 @@ sub has_overrides {
 	if ( $qty_index ) {
 		return map { $$specs{$_.$qty_index} eq 'Y' ? $_ : () } (
 				'chkOverrideBleedSize',
-				'chkOverrideSignatureSpreadQuantity',
 				'chkOverridePageQuantity',
 				'chkOverrideImposition',
 				'chkOverrideRunStyle',

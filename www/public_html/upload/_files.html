@@ -5,7 +5,9 @@
 	$variable{'company_name'} = $company_name;
 
 	# if project_id or docket are specified, then destdir will contain them as well.  
-	my $destdir = openprint::upload_handler::get_destdir();
+	require handlers::upload;
+
+	my $destdir = handlers::upload::get_destdir();
 	@{$$variable{'PROJECT_FILES'}} = ();
 	my $path = $param{'path'};
 	if ( $path ) {

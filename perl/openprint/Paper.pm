@@ -34,7 +34,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'papers';
 $serial	= 'paper_id_seq';
 %fields = (
@@ -134,11 +134,7 @@ sub Prices {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	if ( $hash ) {
-		foreach my $key ( keys %fields ) {
-			$$self{$key} = $$hash{$key} if exists $$hash{$key};
-		} # end foreach
-	} # end if
+	$self->set($hash);
 	
 	if ( $$self{'group'} and ! $$self{'group_id'} ) {
 		my $Group = openprint::StockGroup->find_one('name lc'=>lc openprint::StockGroup->transform( 'name', $$self{'group'} ) );
@@ -227,9 +223,6 @@ sub save {
 		$self->allocated(undef,undef);
 	} # end if
 
-	foreach my $key ( keys %fields ) {
-		$$self{$key} = undef if $$self{$key} eq '';
-	} # end foreach
 	$$self{'height'} = undef if $$self{'type'} eq 'Roll';
 	
 	my $error;
@@ -575,7 +568,7 @@ sub weight {
 		if ( ! $_[0]{'custom'} ) {
 			my $Weight = openprint::StockWeight->find_one('name lc'=>lc $_[1]);
 			if ( $Weight ) {
-				$_[0]{'weight_id','weight'} = @$Weight{'id','name'};
+				@{$_[0]}{'weight_id','weight'} = @$Weight{'id','name'};
 			} else {
 				$_[0]{'weight'} = $_[1];
 			} # end if
@@ -974,6 +967,7 @@ sub cut {
 	} # end if
 	$$self{'mweight'} /= 2;
 	delete $$self{'to_string'};
+	delete $$self{'id_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
@@ -1255,7 +1249,7 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 						next if $Stock_Setting->grain() eq 'Dont Use';
 					} # end if
 					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
-						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() );
+						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
 					} # end if
 					$Paper = $P;

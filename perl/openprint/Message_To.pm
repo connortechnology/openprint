@@ -16,6 +16,7 @@ $table = 'message_to';
 );
 %find_fields = (
 	created_on	=>	'(SELECT created_on FROM messages WHERE messages.id=message_id)',
+	conversation_id	=>	'(SELECT conversation_id FROM Messages WHERE messages.id = message_to.message_id)',
 );
 %defaults = (
 	viewed	=>	0,

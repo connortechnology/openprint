@@ -43,18 +43,19 @@
 		<fieldset class="filters"><legend>Select Search Criteria</legend>
 			<div class="content">
 			<div class="leftColumn">
-			<p>
+			<ul>
+			<li>
 				<label>Project #</label>
 				<? echo ( join("\n",
 					ssi::input( type=>'cardinal', name=>'ProjectID', onkeydown=>'if(event.keyCode == 13){load_projects( this.form );}' ),
 					ssi::button( 'Go1', { onclick=>q`load_projects( $('f1') );`, text=>'Go' } ), 
 				); ) ?>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Reference</label>
 				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects( this.form );" />
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Status</label>
 				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects( this.form );">
 <? echo ( 
@@ -62,17 +63,19 @@
 		ssi::make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
 ) ?>
 				</select>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Type</label>
 				<select id="type_id" name="type_id" onchange="load_projects( this.form );">
 					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
 				</select>
-			</p>
+			</li>
+			</ul>
 			</div>
 			<div class="rightColumn">
-			<p>
+			<ul>
+			<li>
 				<label>Creation Date</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
@@ -81,8 +84,8 @@
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>
-			</p>
-			<p>
+			</li>
+			<li>
 				<label>Last Updated</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
@@ -91,36 +94,35 @@
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>
-			</p>
-<? if ( $session{'user_type'} eq 'A' ) ?>
-<!--
-			<p><label>Owner</label>
+			</li>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+			<li><label>Company</label>
 				<select name="company_id" onchange="load_projects(this.form);">
 					<option value="">All</option>
 					<? echo (
 						openprint::Company::get_dropdown( $session{'/main/project/history.html?company_id'} );
 					) ?>
 				</select>
-			</p>
--->
-<? if ( openprint::Product->find_one() ) ?>
-			<p><label>Predefined</label>
+			</li>
+	<? if ( openprint::Product->find_one() ) ?>
+			<li><label>Predefined</label>
 				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects(this.form);" />
 				<label class="radio" for="predefined1">Yes</label>
 				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects(this.form);" />
 				<label class="radio" for="predefined0">No</label>
 				<input type="radio" name="predefined" id="predefined" value="" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects(this.form);" />
 				<label class="radio" for="predefined">Both</label>
-			</p>
-<? endif ( openprint::Product->find_one() ) ?>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
+			</li>
+	<? endif ( openprint::Product->find_one() ) ?>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+			</ul>
 			</div>
 			</div>
 			<p class="buttons">
-					<? echo ( join( '',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					); ) ?>
+				<? echo ( join( '',
+					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>q`f1.btnFunction.value='Reset';f1.submit();`, text=>'Reset' } ),
+				); ) ?>
 			</p>
 		</fieldset>
 		<div id="ProjectList"><!--#include virtual="_history.html"--></div>

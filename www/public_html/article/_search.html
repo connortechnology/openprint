@@ -9,8 +9,10 @@
 		( $session{'/article/search.html?company_id'} ? ( 'company_id'	=> $session{'/article/search.html?company_id'} ) : () ),
 		( $session{'/article/search.html?author_id'} ? ( 'created_by' => $session{'/article/search.html?author_id'} ) : () ), 
 		( $session{'/article/search.html?category_id'} ? ( 'category_id' => $session{'/article/search.html?category_id'} ) : () ),
+		( $session{'/article/search.html?title'} ? ( 'title ilike' => '%'.$session{'/article/search.html?title'}.'%' ) : () ),
 		'order'				=> 'published_on DESC',
 		) ) {
+		next if ! $Article->can_view();
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article
 ) ?>

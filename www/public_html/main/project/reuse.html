@@ -54,15 +54,15 @@
 			<ul>
 				<li class="quantity1">
 					<label for="quantity1">Quantity 1</label>
-					<input id="quantity1" name="quantity1" value="<? echo ( $$variable{'Project'}->quantity1(); ) ?>" type="text" size="12" />
+					<? echo ( ssi::input( type=>'cardinal', id=>'quantity1', name=>'quantity1', value=>$$variable{Project}->quantity1() ); ) ?>
 				</li>
 				<li class="quantity2">
 					<label for="quantity2">Quantity 2</label>
-					<input id="quantity2" name="quantity2" value="<? echo ( $$variable{'Project'}->quantity2(); ) ?>" type="text" size="12" />
+					<? echo ( ssi::input( type=>'cardinal', id=>'quantity2', name=>'quantity2', value=>$$variable{Project}->quantity2() ); ) ?>
 				</li>
 				<li class="quantity3">
 					<label for="quantity3">Quantity 3</label>
-					<input id="quantity3" name="quantity3" value="<? echo ( $$variable{'Project'}->quantity3(); ) ?>" type="text" size="12" />
+					<? echo ( ssi::input( type=>'cardinal', id=>'quantity3', name=>'quantity3', value=>$$variable{Project}->quantity3() ); ) ?>
 				</li>
 			</ul>
 		</fieldset>
@@ -73,7 +73,7 @@
 		<ul>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4" style="width: auto;"/>
+				<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" class="filter" />
 				<select name="ddmCompany">
 					<option value="">Select a Customer</option>
 					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
@@ -85,8 +85,8 @@
 		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
 		<p class="buttons">
 			<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Reset','reset.gif','f1.reset();','','Reset'),
-					ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue'),
+					ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
+					ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();',text=>'Save And Continue'}),
 			); ) ?>
 		</p>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>

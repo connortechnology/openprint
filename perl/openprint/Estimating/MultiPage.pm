@@ -316,6 +316,8 @@ $openprint::log->debug( "Signature: @signatures");
 
 	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $$Project{'id'}, 'Group' ) );
 	if ( ! @groups ) {
+
+		# A single page project
 		foreach my $ss_id ( @signatures ) {
 			my $sig_specs = openprint::service::internal_calc( $openprint::log, $openprint::dbh, \%openprint::variable, $$Project{'id'}, $ss_id, 'Printing' );
 			if ( $$sig_specs{'Status'} ne 'calculated' ) {
