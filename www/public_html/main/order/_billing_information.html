@@ -1,7 +1,7 @@
 <? eval (
 	if ( $param{'company_id'} ) {
 		my $Company = new openprint::Company( $param{'company_id'} );
-		@$variable{'companyname',
+		@$variable{'company_name',
 			 'address1',
 			 'address2',
 			 'city',
@@ -26,7 +26,7 @@
 		<ul> 
 			<li class="required">
 				<label>Company Name</label>
-				<input type="text" id="companyname" name="companyname" value="<?companyname?>"/>
+				<input type="text" id="company_name" name="company_name" value="<?company_name?>"/>
 			</li>
 			<li> 
 				<label>Salutation</label>
@@ -121,7 +121,7 @@ if ( $$variable{'country'} eq 'US' ) {
 			</li>
 			<li class="required">
 				<label>E-mail</label>
-				<input type="text" id="email" name="email" value="<?email?>" />
+				<input type="email" id="email" name="email" value="<?email?>" />
 			</li>
 			<li class="help">We use your email to send your order confirmation and updates.</li>
 		</ul>

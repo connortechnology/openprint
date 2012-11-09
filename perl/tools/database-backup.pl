@@ -12,12 +12,16 @@ $mon++;
 $year += 1900;
 
 my $opts = {};
-GetOptions($opts, 'help', 'host=s', 'path=s', 'days=s', 'debug=s' );
+GetOptions($opts, 'help', 'host=s', 'path=s', 'days=s', 'debug=s', 'c=s' );
 
 if ($opts->{help}) {
     usage();
     exit 0;
 }
+if ( $$opts{c} and ! -e $$opts{c} ) {
+	die "Unable to find check file at $$opts{c}\n";
+} # end if
+
 my $path;
 if ( ! $$opts{'path'} ) {
 	$path = '/var/backups/postgres';

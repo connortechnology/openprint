@@ -173,9 +173,9 @@ if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} e
 				<label>Fax</label>
 				<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 			</li>
-			<li class="required"> 
+			<li> 
 				<label>E-mail</label>
-				<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<input type="email" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 			</li>
 		</ul>
 	</div>
