@@ -62,21 +62,21 @@ function same_as_billing( on, id ) {
 
 function company_id_onchange( e ) {
 	if ( e.getValue() ) {
-		new Ajax.Updater('BillingInformation','_billing_information.html', { method:'get', parameters:e.form.serialize() });
+		new Ajax.Updater('BillingInformation','_billing_information.html', { parameters:e.form.serialize() });
 		$('AddFromBelow').hide();
 	} else {
 		$('AddFromBelow').show();
 	} // end if
 } // end function
+
 function save_company( ) {
 	if ( ! $('txtCompanyName').getValue() ) {
 		alert('Please provide a name for the company');
 	} else {
-		new Ajax.Updater('CompanyDropDown','_company_dropdown.html', { method:'get', parameters:$('f1').serialize() });
+		new Ajax.Updater('CompanyDropDown','_company_dropdown.html', { parameters:$('f1').serialize() });
 	} // end if
 } // end function save_company()
 
 function ddmUsers_onchange( form ) {
 	new Ajax.Request('/main/order/_user_info.json', { parameters: { user_id: form.ddmUsers.options[form.ddmUsers.selectedIndex].value } } );
 } // end function
-
