@@ -44,6 +44,19 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+sub jobs_by_csr {
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id',
+			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
+		);
+	if ( ($param{'btnFunction'} eq 'Reset') and ( ( time - $session{'/employee/production/jobs_by_csr.html?lastupdated'} ) > DAY ) ) {
+		delete @session{map { '/employee/production/jobs_by_csr.html?'.$_ } @params };
+	} else {
+		ssi::save_params( '/employee/production/jobs_by_csr.html', @params );
+	} # end if
+	$session{'/employee/production/jobs_by_csr.html?lastupdated'} = time;
+} # end sub jobs_by_csr
+
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {

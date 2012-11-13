@@ -5,14 +5,23 @@
 <meta http-equiv="pragma" content="no-cache" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/popups.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js?v=0"></script>
-		<script type="text/javascript" src="/javascripts/window.js?v=0"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
+<? echo (
+    require File::HashCache::JavaScript;
+    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
+    my $html;
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/tips.js").'"></script>';
+    return $html;
+) ?>
+
 		<link href="/css/common.css?v=0" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
 		<link href="/css/menu.css?v=0" rel="stylesheet" type="text/css" media="screen, print"/>
@@ -54,7 +63,6 @@
     return $html;
 ) ?>
 
-		<script type="text/javascript" src="/javascripts/tips.js"></script>
     <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
 <script type="text/javascript" src="/javascripts/trustlogo.js"></script>
     <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
