@@ -43,7 +43,8 @@
 				</select>
 			</li>
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
-<? if ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+
+<? if ( @{$$variable{'Categories'}} = openprint::Article_Category->find(order=>'lower(name)') ) ?>
 			<li><label>Category</label>
 				<select name="category_id" id="category_id" onchange="load_articles();">
 					<option value="">All</option>

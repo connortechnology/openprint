@@ -336,6 +336,7 @@ if ( ! sets::isin('articles',\@tables ) ) {
 	if ( ! exists $$data{anonymous} ) {
 	$dbh->do('ALTER TABLE articles ADD anonymous BOOLEAN NOT NULL default false');
 	} # end if
+	$dbh->do('ALTER TABLE articles ALTER company_id DROP NOT NULL');
 } # end if
 if ( sets::isin( 'article_assets', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_assets'", 'column_name');
@@ -562,6 +563,9 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_files'", 'column_name');
 	if ( ! $$data{'archive'} ){ 
 		$dbh->do('ALTER TABLE project_files add archive TEXT');
+	} # end if
+	if ( ! $$data{deleted} ){ 
+		$dbh->do('ALTER TABLE project_files add deleted BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
 	if ( ! exists $$data{company_id} ) {
 		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');

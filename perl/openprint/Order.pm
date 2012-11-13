@@ -155,7 +155,7 @@ sub to_string {
 sub approve {
 	my $self = shift;
 # get taxes
-	my @Taxes = openprint::Tax->find('state'=>$self->state() );
+	my @Taxes = openprint::Tax->find( state =>$self->state() );
 	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
@@ -472,7 +472,7 @@ sub send_sales_order {
 	# When an order is made,the Order currency will be the current session Currency.	
 	# All resends should stay in the currency that the order was created in.
 	my $Currency = $self->Currency();
-	@order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
+	@order{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$order{'Currency'} = $Currency;
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );

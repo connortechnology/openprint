@@ -166,7 +166,7 @@ sub _history {
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'published_on_end_'.$_ } ( 'year','month','day' ) ),
-				'published','employee_id','company_id', 'category_id' ) );
+				'published','employee_id','company_id', 'category_id', 'author_id' ) );
 	} 
 	if ( $param{'action'} eq 'Delete' ) {
 		foreach my $id ( ref $param{'article_id'} eq 'ARRAY' ? @{$param{'article_id'}} : $param{'article_id'} ) {
@@ -239,7 +239,9 @@ sub edit {
 	$param{article_id} = openprint::Article->transform( 'id', $param{article_id} );
 
 	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
-	if ( ! $Article->can_edit() ) {
+	if ( ! $param{article_id} ) {
+		$variable{error} .= $Article->save(); # allocate an id.
+	} elsif ( ! $Article->can_edit() ) {
 		$variable{error} .= 'You do not have rights to edit this article.';
 		return;
 	} # end if
