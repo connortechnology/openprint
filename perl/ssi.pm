@@ -446,7 +446,7 @@ sub button {
 	my ( $name, $options ) = @_;
 
 	$$options{'href'} = '#' if ! $$options{'href'};
-	$$options{'text'} = $name if ! $$options{'text'};
+	$$options{'text'} = $name if ! exists $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
 	$html .= qq`title="$$options{title}" ` if $$options{'title'};
@@ -466,10 +466,13 @@ sub button {
 		} else {
 			$html .= "<img src=\"$$options{image}\" name=\"Button$name\"";
 		} # end if
-			if ( $$options{'text'} ) {
-				$html .= "alt=\"$$options{text}\"";
-			} # end if
-			$html .= "/>";
+		if ( $$options{'title'} ) {
+			$html .= "alt=\"$$options{title}\"";
+		} # end if
+		$html .= "/>";
+		if ( $$options{text} ) {
+			$html .= $$options{text};
+		} # end if
 	} elsif ( $openprint::config{'SimpleButtons'} ) {
 		$html .= $$options{'text'};
 	} else {

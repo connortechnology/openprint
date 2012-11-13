@@ -33,8 +33,6 @@ use Data::Dumper;
 
 my $program = basename($0);
 
-my @args = @ARGV;
-
 my $opts = {};
 Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
@@ -42,14 +40,14 @@ Getopt::Long::GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'igno
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s','max_files=s',
- );
+);
 
 if ($opts->{help}) {
 	usage();
 	exit 0;
 }
 
-$log = new logger('level'=>'debug');
+$log = new logger(level=>'debug',program=>$program);
 # Get our configuration information
 if (my $err = configuration::from_file('/etc/ftp_monitor.conf')) {
     die $err;
@@ -63,7 +61,8 @@ foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smt
 } # end foreach required-param
 foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url', 'max_files' ) {
 	$config{$param} = $$opts{$param} if exists $$opts{$param};
-} # end foreach non-requiredp aram
+} # end foreach non-required param
+
 if ( $config{'site_url'} ) {
 	$config{'siteURL'} = $config{'site_url'};
 	$config{'ExternalSiteURL'} = $config{'site_url'};
@@ -226,7 +225,7 @@ if ( $config{'pid_file'} ) {
 sub check_scoreboard {
 	my $scoreboard = get_scoreboard( $config{scoreboard} );
 	my @users = map { $$_{'user'} } @$scoreboard;
-	$log->debug( "Users: @users in scoreboard\n" );
+	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $username ( keys %uploads ) {
 		$Users{$username}= openprint::User->find_one('email lc'=>lc $username) if ! exists $Users{$username};
