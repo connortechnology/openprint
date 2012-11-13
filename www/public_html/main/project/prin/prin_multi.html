@@ -1,5 +1,12 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
-<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.3"></script>
+<? echo (
+    require File::HashCache::JavaScript;
+    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
+	return join("\n",
+		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/service.js").'"></script>',
+		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/paper.js").'"></script>',
+		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/templates/brochures.js").'"></script>',
+	);
+) ?>
 <script type="text/javascript">
 	function calc( formName ) {
 		var form = getFormObj('f1');
@@ -49,7 +56,6 @@
 
 	<?TemplateSizes?>
 </script>
-<script type="text/javascript" src="/javascripts/templates/brochures.js?version=1.0"></script>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
