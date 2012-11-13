@@ -4,6 +4,21 @@
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 <meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
+<? echo (
+    require File::HashCache::JavaScript;
+    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
+    my $html;
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/prototype.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/scriptaculous/scriptaculous.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>';
+    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>';
+    return $html;
+) ?>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?v=0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?v=0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?v=0"></script>

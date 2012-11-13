@@ -16,17 +16,17 @@ apt-get -y jpegoptim pngcrush
 #ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/
 #ln -sf /etc/apache2/mods-available/apreq.load /etc/apache2/mods-enabled/
 
-mkdir /etc/apache2/lib
-rm /etc/apache2/lib/perl
-ln -sf /var/www/testing/perl /etc/apache2/lib/perl
+#mkdir /etc/apache2/lib
+#rm /etc/apache2/lib/perl
+#ln -sf /var/www/testing/perl /etc/apache2/lib/perl
 
 #echo "PerlRequire      startup.pl" >> /etc/apache2/conf.d/perl
 #echo "APREQ2_ReadLimit 1024M" >> /etc/apache2/conf.d/perl
 
 perl -MCPAN -e shell << EOF
 force install File::HashCache::JavaScript
+EOF
 #force install Date::Handler
 #force install Date::Parse
 #force install Business::PayPal
-EOF
 
