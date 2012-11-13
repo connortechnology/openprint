@@ -217,9 +217,7 @@
 <? echo (
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		my @ss=split " ",`cat /proc/loadavg`;
-		my @host_parts = split( '\.', $r->hostname() );
-$log->error("@host_parts");
-		return '<div class="ServerInfo"><ul><li><label>Server:</label>'.$host_parts[0]."</li><li><label>Load:</label>$ss[0]</li></ul></div>";
+		return '<div class="ServerInfo"><ul><li><label>Server:</label>'.Sys::Hostname::hostname."</li><li><label>Load:</label>$ss[0]</li></ul></div>";
 	} # end if
 ) ?>
 			</div>
