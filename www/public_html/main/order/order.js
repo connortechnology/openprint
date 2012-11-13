@@ -62,7 +62,7 @@ function same_as_billing( on, id ) {
 
 function company_id_onchange( e ) {
 	if ( e.getValue() ) {
-		new Ajax.Updater('BillingInformation','_billing_information.html', { method:'get', parameters:e.form.serialize() });
+		new Ajax.Updater('BillingInformation','_billing_information.html', { parameters:e.form.serialize() });
 		$('AddFromBelow').hide();
 	} else {
 		$('AddFromBelow').show();
