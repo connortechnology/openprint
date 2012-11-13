@@ -1,9 +1,10 @@
 
+
 <VirtualHost *:80>
 	ServerAdmin	 iconnor@penultima.org
 	DocumentRoot	/var/www/point-one/www/public_html
-	ServerName		www.internal.point-one.com
-	ErrorLog		/var/log/apache2/internal.point-one.com/www.log
+	ServerName	isaac.internal.point-one.com
+	ErrorLog		/var/log/apache2/internal.point-one.com/isaac.log
 
 	LogLevel debug
 	#LogLevel warn
@@ -11,24 +12,39 @@
 	RewriteEngine on
 	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
 	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
+
+	ScriptAlias /cgi-bin/ /var/www/point-one/cgi-bin/
+	<Directory "/var/www/point-one/cgi-bin">
+		AllowOverride None
+		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+		Order allow,deny
+		Allow from all
+	</Directory>
 	
-	Alias	/images	"/var/www/point-one/skins/PointOne Graphics Inc/images"
+	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
-	Alias	/css	"/var/www/point-one/skins/PointOne Graphics Inc/css"
+	Alias	/css			"/var/www/point-one/skins/PointOne Graphics Inc/css"
 	Alias	/main/company	"/var/www/point-one/skins/PointOne Graphics Inc/main/company"
 	Alias	/main/services	"/var/www/point-one/skins/PointOne Graphics Inc/main/services"
-	Alias	/video	"/var/www/point-one/skins/PointOne Graphics Inc/video"
+	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
 	Alias	/js				"/var/www/point-one/skins/PointOne Graphics Inc/js"
-	Alias	/assets 		"/media/Storage/Assets/"
-	Alias	/thumbnails	"/media/Storage/Assets/thumbnails/"
 
-	PerlSetVar		SecureSiteURL	http://www.internal.point-one.com
-	PerlSetVar		siteURL		http://www.internal.point-one.com
+	Alias	/mrtg			"/var/www/mrtg"
+	Alias	/calamaris			"/var/www/calamaris"
+	Alias	/assets "/media/Storage/Assets/"
+	Alias	/thumbnails	"/media/Storage/Assets/thumbnails/"
+	Alias /project_files "/media/Storage/Project Files/"
+	PerlSetVar		PageFlipDir	 "/media/PageFlip"
+	Alias	/PageFlip		"/media/PageFlip"
+	Alias	/pdfs			"/media/Storage/PDFS/"
+
+	PerlSetVar		SecureSiteURL	http://isaac.internal.point-one.com
+	PerlSetVar		siteURL		http://isaac.internal.point-one.com
 	PerlSetVar		ExternalSecureSiteURL	http://www.point-one.com
 	PerlSetVar		ExternalSiteURL		http://www.point-one.com
-	PerlSetVar		InternalSecureSiteURL	http://www.internal.point-one.com
-	PerlSetVar		InternalSiteURL		http://www.internal.point-one.com
+	PerlSetVar		InternalSecureSiteURL	http://isaac.internal.point-one.com
+	PerlSetVar		InternalSiteURL		http://isaac.internal.point-one.com
 	PerlSetVar		SiteTitle		"PointOne Graphics Inc"
 	PerlSetVar		SkinPath		"/var/www/point-one/skins/PointOne Graphics Inc/"
 	PerlSetVar		Country		CA
@@ -36,10 +52,10 @@
 	PerlSetVar		Domain		.point-one.com
 
 	PerlSetVar		db_name		point-one
-	PerlSetVar		db_host		database.internal.point-one.com
-	PerlSetVar		db_user		point-one
-	PerlSetVar		db_password	point-one
-	PerlSetVar		db_driver	Pg
+	PerlSetVar		db_host		database
+	PerlSetVar		db_user		 point-one
+	PerlSetVar		db_password	 point-one
+	PerlSetVar		db_driver		Pg
 
 	<DirectoryMatch '^/po'>
 		SetHandler		perl-script
@@ -65,23 +81,19 @@
 		PerlResponseHandler	 openprint::upload_handler
 	</FilesMatch>
 
-	<Files ~ "\.json$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-	<Files ~ "\.html$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-
 	<FilesMatch "^jsrs\.htm$">
 		SetHandler		perl-script
 		PerlResponseHandler	 openprint::jsrs_handler
 	</FilesMatch>
 
-	Alias /project_files "/media/Storage/Project Files/"
-	PerlSetVar		PageFlipDir	 "/media/PageFlip"
-	Alias	/PageFlip	"/media/PageFlip"
-	Alias /pdfs "/media/Storage/PDFS/"
+	<Files ~ "\.json$">
+		SetHandler		perl-script
+		PerlResponseHandler	 openprint::www
+	</Files>
+
+	<Files ~ "\.html$">
+		SetHandler		perl-script
+		PerlResponseHandler	 openprint::www
+	</Files>
 
 </VirtualHost>

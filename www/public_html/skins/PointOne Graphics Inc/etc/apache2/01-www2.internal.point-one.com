@@ -24,12 +24,12 @@
 	Alias	/assets 		"/media/Storage/Assets/"
 	Alias	/thumbnails		"/media/Storage/Assets/thumbnails/"
 
-	PerlSetVar		SecureSiteURL	http://www1.internal.point-one.com
-	PerlSetVar		siteURL			http://www1.internal.point-one.com
-	PerlSetVar		ExternalSecureSiteURL	http://www1.point-one.com
-	PerlSetVar		ExternalSiteURL			http://www1.point-one.com
-	PerlSetVar		InternalSecureSiteURL	http://www1.internal.point-one.com
-	PerlSetVar		InternalSiteURL			http://www1.internal.point-one.com
+	PerlSetVar		SecureSiteURL	http://www2.internal.point-one.com
+	PerlSetVar		siteURL			http://www2.internal.point-one.com
+	PerlSetVar		ExternalSecureSiteURL	http://www2.point-one.com
+	PerlSetVar		ExternalSiteURL			http://www2.point-one.com
+	PerlSetVar		InternalSecureSiteURL	http://www2.internal.point-one.com
+	PerlSetVar		InternalSiteURL			http://www2.internal.point-one.com
 	PerlSetVar		SiteTitle		"PointOne Graphics Inc"
 	PerlSetVar		SkinPath		"/var/www/point-one/skins/PointOne Graphics Inc/"
 	PerlSetVar		Country		CA
