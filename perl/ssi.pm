@@ -12,6 +12,8 @@ use JSON qw(to_json from_json);
 
 require sets;
 require sql;
+require JavaScript::Minifier::XS;
+require CSS::Minifier;
 
 require openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -880,7 +882,9 @@ sub hash_link {
 		my $blob = read_file($_[0]);
 
 		if ( $ext eq 'js' ) {
+			$blob = &JavaScript::Minifier::XS::minify( $blob );
 		} elsif ( $ext eq 'css' ) {
+			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
 		my $hash = md5_hex($blob);
