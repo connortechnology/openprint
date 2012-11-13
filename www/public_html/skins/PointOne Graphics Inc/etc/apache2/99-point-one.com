@@ -259,8 +259,8 @@
 	ServerAlias		*.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www.log
 
-	LogLevel debug
-	#LogLevel warn
+	#LogLevel debug
+	LogLevel warn
 
 	SSLEngine	On
 	SSLCertificateFile		/etc/apache2/ssl.crt/www.point-one.com.crt
