@@ -841,7 +841,7 @@ sub hash_link {
 		};
 		if (! -f $script->{path}) {
 			mkdir $config{cache_dir};
-			if ( ! write_file($script->{path},       { atomic => 1 }, $blob) ) {
+			if ( ! write_file($script->{path},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
 				$log->error( "couldn't cache $script->{path}" );
 				return $path;
 			} # end if
