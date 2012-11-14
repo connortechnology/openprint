@@ -1,9 +1,9 @@
+use strict;
 package openprint::Project;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 # This is the object-oriented version of the project module
 
-use strict;
 use openprint ();
 use vars qw( $log $dbh );
 *log = \$openprint::log;
@@ -597,9 +597,26 @@ sub find {
 		push @values, $params{'ordered_on_end'};
 	} # end if
 
+	if ( $params{'salesrep_id <@'} ) {
+		$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) <@ ? )};
+		push @values, $params{'salesrep_id <@'};
+	} # end if
+	if ( $params{'salesrep_id in'} ) {
+		if ( @{$params{'salesrep_id in'}} ) {
+			$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) IN (} . join(',', map {'?'} @{$params{'salesrep_id in'}}). ') )';
+			push @values, @{$params{'salesrep_id in'}};
+		} # end if
+	} # end if
 	if ( $params{'salesrep_id'} ) {
-		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
-		push @values, $params{'salesrep_id'};
+		if ( ref $params{salesrep_id} eq 'ARRAY' ) {
+			if ( @{$params{salesrep_id}} ) {
+				$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) IN (} . join(',', map {'?'} @{$params{'salesrep_id'}}). ') )';
+				push @values, @{$params{'salesrep_id'}};
+			} # end if
+		} else {
+			$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
+			push @values, $params{'salesrep_id'};
+		} # end if
 	} # end if
 	if ( $params{'csr_id'} ) {
 		$sql .= ' AND ( companyindex IN (SELECT index FROM Company WHERE lngsalesperson=?) )';
@@ -749,6 +766,7 @@ sub save {
 				'rush',					$$self{'rush'},
 				'reprint',				$$self{'reprint'},
 				'reprint_reason',		$$self{'reprint_reason'},
+				'priority',				$$self{priority},
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -912,11 +930,11 @@ sub load {
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason priority/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason priority/};
 	} else {	
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority/};
 	} # endif
 	return;
 } # end sub load
