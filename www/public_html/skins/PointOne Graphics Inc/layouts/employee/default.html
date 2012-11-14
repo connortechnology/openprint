@@ -3,14 +3,13 @@
 	<head>
 		<title><?PageTitle?> - Employee</title>
 		<meta charset="utf-8" />
-		<link href="/css/common.css" rel="stylesheet" type="text/css" />
-		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css" />
-		<link href="/css/button.css" rel="stylesheet" type="text/css" />
-		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="<? echo ( hash_link('/css/common.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/common-print.css') ) ?>" rel="stylesheet" type="text/css" media="print"/>
+		<link href="<? echo ( hash_link('/css/menu.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/button.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/pwc.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="<? echo ( hash_link('/css/alphacube.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="<? echo ( hash_link('/css/alert.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <? if ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,26 +23,25 @@
 	$css =~ s/\..+$//;
 	my @parts = split '/', $css;
 	while ( @parts ) {
-	$css = join('_', @parts ) . '.css';
-		$log->debug("URI: $$variable{uri} $css");
+		$css = join('_', @parts ) . '.css';
 		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
+			push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
 		}
 		pop @parts;
 	} # end while
 	@html = reverse @html;
 	if ( $$variable{'uri'} =~ /claim/ ) {
-		push @html, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/claim.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /credit_application/ ) {
-		push @html, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/credit_application.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /print_overview/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
 	} elsif ( $$variable{'uri'} =~ /operator_schedule/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
 	} elsif ( $$variable{'uri'} =~ /jobs_by_csr/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 
 	return join("\n", @html );
@@ -67,7 +65,6 @@
 <? echo (
     return join("\n", (
 
-    '<script type="text/javascript" src="'.hash_link("/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js").'"></script>',
     '<script type="text/javascript" src="'.hash_link("/javascripts/fastinit.js").'"></script>',
     '<script type="text/javascript" src="'.hash_link("/javascripts/form_utilities.js").'"></script>',
     '<script type="text/javascript" src="'.hash_link("/javascripts/window.js").'"></script>',
