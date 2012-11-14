@@ -8,8 +8,17 @@ use provinces;
 use Date::Calc qw(Days_in_Month Month_to_Text);
 use HTML::Entities qw(encode_entities);
 
+# For Hash stuff
+use List::Util qw(max);
+use Digest::MD5 qw(md5_hex);
+use File::Basename;
+use File::Slurp qw(read_file write_file);
+use JSON qw(to_json from_json);
+
 require sets;
 require sql;
+require JavaScript::Minifier::XS;
+require CSS::Minifier;
 
 use openprint ();
 use vars qw( $r $log $dbh %config %session %param %variable );
@@ -794,16 +803,28 @@ sub select( $$$ ) {
 
 my %hash_cache;
 
+# If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
+	my ( $path ) = @_;
+
 	my $script;
-	if (  !($script = $hash_cache{$_[0]})
+	if (  !($script = $hash_cache{$path})
 			|| ! -f $script->{path}
 			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
 	   ) {
 
-		my ($base, $dir, $ext) = fileparse $_[0], qr/\.[^.]+/;
+		my $src;
+		if ( -e $config{SkinPath}.$path ) {
+			$src = $config{SkinPath}.$path;
+		} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+			$src = $ENV{DOCUMENT_ROOT}.$path;
+		} else {
+			return $path;
+		} # end if
+
+		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
-		my $blob = read_file($_[0]);
+		my $blob = read_file($src);
 
 		if ( $ext eq 'js' ) {
 			$blob = &JavaScript::Minifier::XS::minify( $blob );
@@ -822,12 +843,12 @@ sub hash_link {
 			mkdir $config{cache_dir};
 			if ( ! write_file($script->{path},       { atomic => 1 }, $blob) ) {
 				$log->error( "couldn't cache $script->{path}" );
-				return $_[0];
+				return $path;
 			} # end if
 #write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	}
-	$script->{name};
+	$config{cache_path}.'/'.$script->{name};
 } # end sub hash_link
 
 
