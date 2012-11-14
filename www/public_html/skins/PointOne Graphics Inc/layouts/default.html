@@ -2,52 +2,45 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
-<meta http-equiv="pragma" content="no-cache" />
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
+		<meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 <? echo (
-    require File::HashCache::JavaScript;
-    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
-    my $html;
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/tips.js").'"></script>';
-    return $html;
-) ?>
+	my $html = join("\n",
+		'<link href="'.hash_link('/css/common.css').'" rel="stylesheet" type="text/css"/>',
+		'<link href="'.hash_link('/css/common-print.css').'" rel="stylesheet" type="text/css" media="print"/>',
+		'<link href="'.hash_link('/css/menu.css').'" rel="stylesheet" type="text/css" media="screen, print"/>',
+		'<link href="'.hash_link('/css/button.css').'" rel="stylesheet" type="text/css" media="screen,print"/>',
+		'<link href="'.hash_link('/css/pwc.css').'" rel="stylesheet" type="text/css" media="screen"/>',
+		'<link href="'.hash_link('/css/alphacube.css').'" rel="stylesheet" type="text/css" media="screen"/>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/fastinit.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/form_utilities.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/window.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/buttons.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/proj/misc_prin.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/popups.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/jsrsClient.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/tips.js').'"></script>',
+	);
 
-		<link href="/css/common.css?v=0" rel="stylesheet" type="text/css"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/menu.css?v=0" rel="stylesheet" type="text/css" media="screen, print"/>
-		<link href="/css/button.css?v=0" rel="stylesheet" type="text/css" media="screen,print"/>
-		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
-		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
-		<link href="/css/project.css?v=0" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-		<link href="/css/order.css?v=0" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<link href="/css/quote.css?v=0" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<? if ( $r->uri() =~ /\/pageflip\/view/ ) ?>
-<script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
-<script type="text/javascript" src="/javascripts/pageflip/swfobject.js"></script>
-<script type="text/javascript" src="/javascripts/pageflip/flippingbook.js"></script>
-<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
-		<? endif ( $r->uri() =~ /\/pageflip\/view/ ) ?>
-		<? if ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
-<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
-		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
-<? echo (
-    my $html;
+	if ( $r->uri() =~ /\/main\/project/ ) {
+		$html .= '<link href="'.hash_link('/css/project.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/main\/order/ ) {
+		$html .= '<link href="'.hash_link('/css/order.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/main\/quote/ ) {
+		$html .= '<link href="'.hash_link('/css/quote.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/pageflip\/view/ ) {
+		$html .= join("\n",
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/liquid.js').'"></script>',
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/swfobject.js').'"></script>',
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/flippingbook.js').'"></script>',
+			'<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />',
+		);
+	} elsif ( $r->uri() =~ /\/pageflip\/edit/ ) {
+		$html .= '<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />';
+	} # end if
+
     my $css = $$variable{'uri'};
     $css =~ s/^\///;
     $css =~ s/\..+$//;
@@ -56,7 +49,7 @@
     $css = join('_', @parts ) . '.css';
         $log->debug("URI: $$variable{uri} $css");
         if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'?v=0"/>'."\n";
+            $html .= '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>'."\n";
         }
         pop @parts;
     } # end while
