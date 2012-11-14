@@ -25,7 +25,9 @@ require openprint::service;
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
         'txtNegativeQuantity1', 'txtNegativeQuantity3', 'txtNegativeQuantity2',
-		'chkOverrideNegativeQuantity',
+		'chkOverrideNegativeQuantity1',
+		'chkOverrideNegativeQuantity2',
+		'chkOverrideNegativeQuantity3',
 );
 
 sub variables {
@@ -51,7 +53,7 @@ sub calc {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
-		if ( $$specs{'chkOverrideNegativeQuantity'} ne 'Y' ) {
+		if ( $$specs{'chkOverrideNegativeQuantity'.$qty_index} ne 'Y' ) {
 			@no_output = sets::exclude( ['txtNegativeQuantity'.$qty_index], \@no_output );
 			$$specs{'txtNegativeQuantity'.$qty_index} = 0;
 			foreach my $ss_id ( $Project->signatures() ) {

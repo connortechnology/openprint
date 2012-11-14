@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -31,10 +31,10 @@
 						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 							$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
 							$html .= ssi::input( 
-								type	=>	'number',
+								type	=>	'cardinal',
 								name	=>	"Runspeed$qty_index",
 								id		=>	"Runspeed$qty_index", value=>$$variable{'Runspeed'.$qty_index},
-								onkeyup	=>	'cardinalize(this);calc(this.form.name);' ).'/Hr';
+								onkeyup	=>	'calc(this.form.name);' ).'/Hr';
 							$html .= ssi::write_override( 'OverrideRunspeed'.$qty_index, 'Y', '', "calc(\$('f1').name);" );
 							$html .= '</span>';
 						} # end foreach qty_index
@@ -51,9 +51,6 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 		<input type="hidden" name="Status" value="<?Status?>" />
 	</form>
 </div>

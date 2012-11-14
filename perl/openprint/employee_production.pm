@@ -43,6 +43,49 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *param = \%openprint::param;
 *config = \%openprint::config;
 
+sub jobs_by_csr {
+	_jobs_by_csr();
+} # end sub jobs_by_csr
+
+sub _jobs_by_csr {
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id',
+			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
+		);
+	if ( ($param{'btnFunction'} eq 'Reset') and ( ( time - $session{'/employee/production/jobs_by_csr.html?lastupdated'} ) > DAY ) ) {
+		delete @session{map { '/employee/production/jobs_by_csr.html?'.$_ } @params };
+	} else {
+		ssi::save_params( '/employee/production/jobs_by_csr.html', @params );
+	} # end if
+	$session{'/employee/production/jobs_by_csr.html?lastupdated'} = time;
+} # end sub _jobs_by_csr
+
+sub _jobs_by_csr_ul {
+	if ( $param{projects} ) {
+		my $projects = $param{projects};
+		$projects =~ s/$param{csr_id}\[\]=//g;
+		my @project_ids = split( '&', $projects );
+		my %Projects = map { $_->id(), $_ } openprint::Project->find(id=>\@project_ids);
+		my ( $csr_id ) = $param{csr_id} =~ /^csr_(\d+)$/;
+
+		my $priority = 0;
+		foreach my $project_id ( @project_ids ) {
+			if ( ! $Projects{$project_id} ) {
+				$log->error("Tried to set priority on a non-existent project? $project_id");	
+				next;
+			} # end if
+			$variable{error} .= $Projects{$project_id}->save({priority=>$priority});
+			$priority += 1;
+		} # end foreach project_id
+    @{$variable{Projects}} = openprint::Project->find(
+        status      =>  [ 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' ],
+        salesrep_id =>  $csr_id,
+        order       =>  'priority',
+    );
+	} # end if
+
+} # end sub _jobs_by_csr_ul
+
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {

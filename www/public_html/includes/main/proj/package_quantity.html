@@ -6,13 +6,12 @@
 		return 'Package quantity';
 	} # end if
 ) ?></label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-	<input name="txtPackageQuantity<?QTYIndex?>" type="number" onkeyup="cardinalize(this);calc(this.form.name);" /> 
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? echo ( my $html;
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
+			$html .= '<span class="'.$$variable{Columns}.'Columns">';
+			$html .= input( name=>'txtPackageQuantity'.$qty_index, type=>'cardinal', value=>$$variable{'txtPackageQuantity'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= '</span>';
+		} # end foreach
+		return $html;
+	) ?>
 </li>

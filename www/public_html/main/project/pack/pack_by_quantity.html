@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/service.js?v=1"></script>
-<script type="text/javascript" src="/javascripts/proj/packaging.js?v=1"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/packaging.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -36,7 +36,6 @@
                 <!--#include virtual="/includes/main/proj/quantities_prices.html"-->
 			</ul>
 		</fieldset>
-		<!--#include virtual="/includes/main/proj/service_combo_quantity.html"-->
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>

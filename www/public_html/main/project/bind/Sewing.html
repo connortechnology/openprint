@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 		$$variable{'Columns'} = 'Three';
@@ -7,7 +7,7 @@
 	} # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?> Services</legend>
 			<ul>
 				<li><label>Hemmed Edges</label>
@@ -21,17 +21,21 @@
 					) ?>
 				</li>
 				<li id="HemWidth"><label>Hem Width</label>
-					<input type="number" name="HemWidth" value="<? echo ( $$variable{'HemWidth'} ) ?>" onkeyup="floatize(this);calc(this.form.name);"/>
+					<? echo ( input( type=>'float', name=>'HemWidth', value=>$$variable{HemWidth}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				</li>
 				<li>
 					<label>Inches</label>
-					<input type="number" name="Quantity" value="<?Quantity?>" onkeyup="floatize(this);calc(this.form.name);"/>
-					<? echo ( ssi::write_override( 'QuantityOverride', $$variable{'QuantityOverride'}, '', "calc('f1');" ); ) ?>
+					<? echo ( join("\n",
+								input( type=>'float', name=>'Quantity', value=>$$variable{Quantity}, onkeyup=>'calc(this.form.name);' ),
+								write_override( 'QuantityOverride', $$variable{'QuantityOverride'}, '', "calc('f1');" ),
+						); ) ?>
 				</li>
 			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<ul>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
@@ -40,9 +44,6 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display:none;"></div>
-		<div id="hdnBreakdown2" style="display:none;"></div>
-		<div id="hdnBreakdown3" style="display:none;"></div>
 	</form>
 </div>
 

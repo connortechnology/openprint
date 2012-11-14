@@ -45,35 +45,12 @@ sub get_unfinished_order {
 		return $Order->id() if $Order->id();
 	} # end if
 
-	my @Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Re-Opened', 'order'=>'id DESC' );
-	foreach my $Order ( @Orders ) {
-		if ( ! $Order->company_id() ) {
-			$log->error("Re-Opened Order has no company for order $$Order{id}!");
-			next;
-		} elsif ( $Order->company_id() != $session{'company_id'} ) {
-			$Order->save('session_id'=>undef);
-		} else {
-			$session{'OrderID'} = $Order->id();
-			return $Order->id();
-		} # end if
-	} # foreach
+	my $Order = openprint::Order->find_one('session_id'=>$session{'_session_id'}, company_id=>$session{company_id}, 'status'=>'Incomplete', 'order'=>'id DESC' );
 
-	@Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Incomplete', 'order'=>'id DESC' );
-
-	foreach my $Order ( @Orders ) {
-		if ( ! $Order->company_id() ) {
-			$Order->company_id( $session{'company_id'} );
-			$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
-			$Order->save();
-			return $Order->id();
-		} elsif ( $Order->company_id() != $session{'company_id'} ) {
-			$Order->save('session_id'=>undef);
-			next;
-		} else {
-			$session{'OrderID'} = $Order->id();
-			return $Order->id();
-		} # end if
-	} # foreach
+	if ( $Order ) {
+		$session{'OrderID'} = $Order->id();
+		return $Order->id();
+	} # end if
 
 	return;
 } # end sub get_unfinished_order
@@ -129,29 +106,78 @@ $log->debug("E: $error") if $error;
 	return ( $order_id, $error );
 } # end sub add_product
 
+# Assumptions
+# We may or may not be logged in.
+# We may or may not be logged in as the owner of the project.
+# Project ownership will not change.
+# Order ownership shuold not change, instead we should create a new order.
+
 sub add_project_to_order {
-	my ( $project_index, $order_id ) = @_;
+	my ( $Project, $order_id ) = @_;
 	my $error = '';
 
-	if ( ! $project_index ) {
+	if ( ! $Project->id() ) {
 		return ( undef, 'No project given.' );
 	} # end if
 
+	if ( $Project->company_id() and ( $Project->company_id() != $session{company_id} ) ) {
+# Switch company to the owner of the project
+# FIXME Should do some authentication to ensure that we can
+		openprint::switch_company( $Project->Company() );
+		$variable{warning} .= 'You were not logged in as the owner of the project.  Your company has been changed to ' . $Project->Company()->name().'.';
+	} # end if
+
+	# Can't check an amount, because we havn't selected the quantity to order yet
 	return if check_credit( );
 
 	$order_id = get_unfinished_order( ) if ! $order_id;
-	$order_id = create_order( ) if ! $order_id;
+	# get unfinished no longer looks for re-opened orders.
+
+	my @Orders = openprint::Order->find(company_id=>$session{company_id}, 'status'=>'Re-Opened', 'order'=>'id DESC' );
+	if ( @Orders ) {
+		$error .= 'There are Re-Opened orders.  Please select the existing order or a new order by clicking on the appropriate option.';
+		foreach my $Order ( @Orders ) {
+			$error .= qq`<a href="/main/order/information.html?order_id=$$Order{id}&amp;btnFunction=ProcessOrder">Order $$Order{id} Docket $$Order{docket}`;
+			my @Contents = $Order->Contents();
+			if ( @Contents ) {
+				$error .= 'Containing the following:<br/>';
+				foreach my $C ( @Contents ) {
+					$error .= $C->Project()->reference() . '<br/>' . $C->Project()->summary();
+				} # end foreach
+			} # end if
+			$error .= '</a>';	
+		} # foreach
+		return ( undef, $error );
+	} # end if
+
+	if ( ! $order_id ) {
+		$order_id = create_order( ) if ! $order_id;
+	} # end if
 	my $Order = new openprint::Order( $order_id );
-	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->company_id() ) {
-		$Project->company_id( $session{'company_id'} );
-		$Project->save();
+		if ( $session{company_id} ) {
+			# Will be saved later.
+			$Project->company_id($session{company_id});
+		} # end if
 	} elsif ( $Order->company_id() != $Project->company_id() ) {
-		return ( $order_id, 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name() );
+		$log->error("SHOULD NEVER HAPPEN");
+		if ( ! $Order->Projects() ) {
+			$variable{warning} .= 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name().". The order is empty, so it's owner has been switched to " . $Project->Company()->name().'.';
+			$variable{error} .= $Order->save({
+					company_id	=>	$Project->company_id(),
+					salesrep_id	=>	$Project->Company()->salesrep_id(),
+					});
+		} else {
+			foreach my $P ( $Order->Projects() ) {
+				$log->debug("Contains " . $P->reference() );
+			}
+			return ( $order_id, 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name() );
+		} # end if
 	} # end if
 	if ( $Project->order_id() and ( $Project->order_id() != $order_id ) ) {
 		if ( $Project->Order()->status() eq 'Incomplete' ) {
-			sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, $Project->order_id(), $Project->id() );
+			my $OP = new openprint::OrderedProject({order_id=>$$Project{order_id}, project_id=>$$Project{id}});
+			$error .= $OP->delete();
 		} else {
 			return ( $order_id, sprintf('Project is already in order <a href="/main/order/history_details.html?OrderID=%1$d">%1$d</a>.', $Project->order_id() ) );
 		} # end if
@@ -159,7 +185,7 @@ sub add_project_to_order {
 
 	my %sql = (
 		'OrderIndex'		=>	$order_id,
-		'lngProjectIndex'	=>	$project_index,
+		'lngProjectIndex'	=>	$$Project{id},
 		);
 
 	my $qty_index;
@@ -209,14 +235,16 @@ if ( 0 ) {
 	$dbh->do( 'LOCK TABLE Order_Contents IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 				
 	# make sure project isn't already in any order.
-	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE lngProjectIndex=?}, $project_index );
+	map { $_->delete() } openprint::OrderedProject->find(project_id=>$$Project{id});
+
 	sql::insert( $log, $dbh, 'Order_Contents', \%sql );
 	sql::end_transaction( $dbh, $ac );
 	
-	$Project->order_id( $order_id );
-	$Project->save();
+	$error .= $Project->save({
+			order_id	=>	$order_id,
+			});
 
-	add_to_log( $log, $dbh, $order_id, @session{'company_id','user_id'}, "Add Project $project_index" );
+	add_to_log( $log, $dbh, $order_id, @session{'company_id','user_id'}, "Add Project $$Project{id}" );
 	$Project->add_to_log( @session{'company_id','user_id'}, "Add to Order $order_id" );
 	delete $$Order{'Projects'};
 

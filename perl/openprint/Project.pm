@@ -708,7 +708,6 @@ sub copy {
 	return $new;
 } # end sub copy
 
-
 sub add_to_log {
 	my ( $self, $cust_id, $user_id, $text ) = @_;
 	sql::insert( undef, undef, 'Project_Log',[

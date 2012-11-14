@@ -77,15 +77,13 @@ sub information {
 		if ( $param{'quote_id'} ) {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
-			my $project_index = $param{'ProjectIndex'};
-			$_ = q{SELECT strStatus FROM Orders WHERE id IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
-				q{AND strStatus IN ( 'Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up' )};
-			if ( sql::execute( $log, $dbh, $_, $project_index ) ) {
-				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $project_index has already been ordered." );
+			if ( openprint::Order->find('project_id any'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 			} # end if
 
 			# Normal Order Creation
-			( $order_id, $error ) = openprint::order::add_project_to_order( $param{'ProjectIndex'} );
+			my $Project = new openprint::Project( $param{ProjectIndex} );
+			( $order_id, $error ) = openprint::order::add_project_to_order( $Project );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
@@ -112,7 +110,7 @@ sub information {
 				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
 			} # end if
 			if ( ! $Project->description() ) {
-				push @errors, "Please give project $$Project{projcet_id} a reference<br/>";
+				push @errors, "Please give project $$Project{project_id} a reference<br/>";
 			} # end if
 			if ( ! $Project->shippingtype() ) {
 				push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
@@ -138,7 +136,7 @@ $openprint::log->debug("Got product.");
 	} # end if
 
 # First thing to do is to try to load info directly from the order.
-	 @variable{'companyname',
+	 @variable{'company_name',
 	 'salutation',
 	 'firstname',
 	 'lastname',

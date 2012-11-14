@@ -6,7 +6,7 @@
 		return 'Items per ' . $$variable{'ServiceTypeName'};
 	} # end if
 ) ?></label>
-	<input name="txtItemsPerPackage" value="<?txtItemsPerPackage?>" type="number" onkeyup="cardinalize(this);calc(this.form.name);" />
+	<? echo ( input( name=>'txtItemsPerPackage', value=>$$variable{txtItemsPerPackage}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 </li>
 <li>
 	<label>Accurate count</label>
