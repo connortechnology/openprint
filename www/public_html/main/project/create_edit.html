@@ -2,14 +2,8 @@
 <h1>PROJECTS</h1>
 <h2><? echo ( $$variable{'ProjectIndex'} ? 'Edit' : 'Create' ) ?> Project <?ProjectIndex?></h2>
 </div>
-<? echo (
-    require File::HashCache::JavaScript;
-    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
-	return join("\n",
-		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/service.js").'"></script>',
-		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/proj_create.js").'"></script>',
-	);
-) ?>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/proj_create.js') ) ?>"></script>
 <form name="f1" method="post" action="/main/project/view.html">
 	<? if ( $$variable{'error'} ) ?>
 	<span class="error"><?error?><br/><?details?></span>
