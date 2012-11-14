@@ -62,27 +62,25 @@
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-    <script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 <? echo (
-    require File::HashCache::JavaScript;
-    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
     return join("\n", (
 
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/tablekit.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/barcode.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jscalendar/calendar.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jscalendar/lang/calendar-en.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jscalendar/calendar-setup.js").'"></script>',
-    '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/ipre/src/inplacericheditor.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/fastinit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/form_utilities.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/window.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/buttons.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/proj/misc_prin.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/popups.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jsrsClient.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/tablekit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/barcode.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/lang/calendar-en.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar-setup.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/ipre/src/inplacericheditor.js").'"></script>',
 	) );
 ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
