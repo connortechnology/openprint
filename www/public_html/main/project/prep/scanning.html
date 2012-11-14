@@ -1,8 +1,8 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
-<script type="text/javascript" src="/javascripts/scanning.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/scanning.js') ) ?>"></script>
 <div class="Service">
 	<!--#include virtual="/includes/main/proj/required_fields.html"-->
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 	<fieldset><legend>Scanning Services</legend>
 		<ul>
 		<li class="required"> 
@@ -24,39 +24,36 @@
 </li>
 <li class="required"> 
 	<label>What is the original dimensions of the item(s) being scanned? (W x H in Inches)</label>
-	<input type="number" name="txtScanWidth" value="<?txtScanWidth?>" onkeyup="floatize(this);calc(this.form.name);" />
-	<input type="number" name="txtScanHeight" value="<?txtScanHeight?>" onkeyup="floatize(this);calc(this.form.name);" />
+	<? echo ( join("\n",
+	input( type=>'float', name=>'txtScanWidth', value=>$$variable{txtScanWidth}, onkeyup=>'calc(this.form.name);'),
+	input( type=>'float', name=>'txtScanHeight', value=>$$variable{txtScanHeight}, onkeyup=>'calc(this.form.name);'),
+	); ) ?>
 	(W x H)
 </li>
 <li class="required"> 
 	<label>Please select the % of enlargement or the final dimensions of the scan(s).</label>
-	<input type="number" name="txtPercent" value="<?txtPercent?>" onkeyup="floatize(this);calc_size('f1');"/>
+	<? echo ( input( type=>'float', name=>'txtPercent', value=>$$variable{txtPercent}, onkeyup=>q`calc_size('f1');` ); ) ?>
 	% or <br/>
-	<input type="number" name="txtScanWidthFinal" value="<?txtScanWidthFinal?>" onkeyup="floatize(this);calc_percent_from_width('f1');" />
-	<input type="number" name="txtScanHeightFinal" value="<?txtScanHeightFinal?>" onkeyup="floatize(this);calc_percent_from_height('f1');" />
-	(W x H)
+	<? echo ( join("\n",
+		input( type=>'float', name=>'txtScanWidthFinal', value=>$$variable{txtScanWidthFinal}, onkeyup=>q`calc_percent_from_width('f1');`),
+		input( type=>'float', name=>'txtScanHeightFinal', value=>$$variable{txtScanHeightFinal}, onkeyup=>q`calc_percent_from_height('f1');`),
+		); ) ?>	(W x H)
 </li>
 <li> 
 	<label>What is the required <? echo ( ssi::writeTip('line screen') ) ?>?</label>
-	<input type="number" name="ddmLineScreen" value="<?ddmLineScreen?>" onkeyup="cardinalize(this);calc(this.form.name);" />
+	<? echo ( input( type=>'cardinal', name=>'ddmLineScreen', value=>$$variable{ddmLineScreen}, onkeyup=>'calc(this.form.name);' ); ) ?>
 </li>
 <li class="required"> 
 	<label>What is the quantity of scan(s) required as per the above specifications?</label>
-	<input name="txtQuantity" value="<?txtQuantity?>" type="number" onkeyup="cardinalize(this);calc(this.form.name);" />
+	<? echo ( input( name=>'txtQuantity', value=>$$variable{txtQuantity}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 </li>
 <li> 
 	<label>Do you require <? echo ( ssi::writeTip('proofs') ) ?> of the scanned images?</label>
-	<input type="radio" id="RandomProofY" name="rdbRandomProof" value="Yes" <? echo ( 'checked="checked"' if $$variable{'rdbRandomProof'} eq 'Yes' ) ?> />
-	<label class="radio" for="RandomProofY">Yes</label>
-	<input type="radio" id="RandomProofN" name="rdbRandomProof" value="No" <? echo ( 'checked="checked"' if $$variable{'rdbRandomProof'} ne 'Yes' ) ?> /> 
-	<label class="radio" for="RandomProofN">No</label>
+	<? echo ( radio( 'rdbRandomProof', ['Yes','Yes','No','No' ], $$variable{'rdbRandomProof'}, { default=>'No' } ); ) ?>
 </li>
 <li> 
 	<label>Do you require any additional scans for the current project?</label>
-	<input type="radio" id="AdditionalY" name="rdbAdditional" value="Yes" />
-	<label class="radio" for="AdditionalY">Yes</label>
-	<input type="radio" id="AdditionalN" name="rdbAdditional" value="No" checked="checked" />
-	<label class="radio" for="AdditionalN">No</label>
+	<? echo ( radio( 'Additional', ['Yes','Yes','No','No' ], 'No' ); ) ?>
 </li>
 	<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
 		</ul>

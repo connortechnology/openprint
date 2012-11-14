@@ -88,6 +88,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 		<? echo ( 
 			my $html;
 			my $services = $$variable{'Project'}->services();
+			my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 
 			foreach my $ss_id ( sort $$variable{'Project'}->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
@@ -127,7 +128,6 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					$$variable{'QTYIndex'} = $qty_index;
 
 					$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Type">Type</th><th class="Folds">Folds</th><th class="Angles">Angles</th><th class="Speed">Speed</th></tr>';
-					my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 					foreach my $index ( 1 .. 4 ) {
 						$$variable{'index'} = $index;
 						$html .= ssi::variable_substitution( \$fragment, $variable );

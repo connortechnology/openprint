@@ -1,4 +1,4 @@
 <li>
 	<label># of  hours</label>
-	<input name="txtQuantity" value="<?txtQuantity?>" type="text" size="9" onkeyup="floatize(this);calc(this.form.name);" /> Hours
+	<? echo ( input( name=>'txtQuantity', value=>$$variable{txtQuantity}, type=>'float', onkeyup=>'calc(this.form.name);' ); ) ?> Hours
 </li>

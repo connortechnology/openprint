@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 		$$variable{'Columns'} = 'Three';
@@ -7,32 +7,32 @@
 	} # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
-	<!--#include virtual="/includes/main/proj/required_fields.html"-->
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend><?ServiceTypeName?></legend>
+			<ul>
 		<!--#include virtual="/includes/main/proj/finished_calliper.html"-->
-		<p>
+		<li>
 			<label>Spine Length</label>
-			<input type="number" name="txtFinalHeight" onkeyup="calc('f1');" />
-<? echo ( ssi::write_override( 'chkOverrideFinalHeight', $$variable{'chkOverrideFinalHeight'}, '', "if(!this.checked)calc('f1');" ); ) ?>
-		</p>
-	   <p>
+			<? echo ( join("\n",
+					input( type=>'float', name=>'txtFinalHeight', onkeyup=>q`calc('f1');`),
+					write_override( 'chkOverrideFinalHeight', $$variable{'chkOverrideFinalHeight'}, '', "if(!this.checked)calc('f1');" ),
+				); ) ?>
+		</li>
+	   <li>
 			<label>Material used<br/>(in inches)</label>
-			<input type="number" name="txtMaterialLength" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/>
-<? echo ( ssi::write_override( 'chkOverrideMaterialLength', $$variable{'chkOverrideMaterialLength'}, '', "if(!this.checked)calc('f1');" ); ) ?>
-		</p>
+			<? echo ( join("\n",
+					input( type=>'float', name=>'txtMaterialLength', onkeyup=>'calc(this.form.name);'),
+					write_override( 'chkOverrideMaterialLength', $$variable{'chkOverrideMaterialLength'}, '', "if(!this.checked)calc('f1');" ),
+				); ) ?>
+		</li>
 
-		<!-- The rest is done for each qty -->
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<hr/>
-			<div class="row"><b>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>)</b></div>
-				<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
-		<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<!-- End of Results -->
+		</ul>
+		</fieldset>
+		<fieldset><legend>Results</legend>
+			<ul>
+			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
@@ -41,8 +41,5 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>

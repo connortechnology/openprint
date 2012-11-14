@@ -27,8 +27,8 @@
 		$html .= ssi::input( 
 			name		=>	"txtSignatureQty${page}Page-$$variable{QTYIndex}",
 			value		=>	$$variable{"txtSignatureQty${page}Page-$$variable{QTYIndex}"},
-			type		=>	'number',
-			onkeyup		=>	'cardinalize(this);calc(this.form.name);',
+			type		=>	'cardinal',
+			onkeyup		=>	'calc(this.form.name);',
 			readonly	=>	!sets::isin( $session{'user_type'}, ['A','E'] ),
 			) . ' ' . $page . ' Page Signature(s)<br/>';
 	} # end foreach
@@ -74,9 +74,6 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" id="ServiceType" name="ServiceType" value="<?ServiceTypeType?>" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 		<input type="hidden" id="Status" name="Status" />
 	</form>
 </div>

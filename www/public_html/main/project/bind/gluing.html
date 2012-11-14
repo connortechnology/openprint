@@ -19,14 +19,16 @@
 				<? if ( $$variable{'Reference'} ) ?>
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
-				<p>
+				<ul>
+				<li>
 					<label>Glued Area (square inches)</label>
 					<input type="number" name="txtArea-<?SignatureIndex?>" value="<? echo ( $$variable{'txtArea-'.$$variable{'SignatureIndex'}} ) ?>" onkeyup="calc(this.form.name);"/>
 					<input type="checkbox" id="chkOverrideArea-<?SignatureIndex?>" name="chkOverrideArea-<?SignatureIndex?>" value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" 
 					<? echo ( $$variable{'chkOverrideArea-'.$$variable{'SignatureIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
 					/>
 					<label class="radio" for="chkOverrideArea-<?SignatureIndex?>">Override</label>
-				</p>
+				</li>
+				</ul>
 			</fieldset>
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
 		</fieldset>
@@ -40,9 +42,6 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>" />
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>" />
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display:none;"></div>
-		<div id="hdnBreakdown2" style="display:none;"></div>
-		<div id="hdnBreakdown3" style="display:none;"></div>
 	</form>
 </div>
 

@@ -23,8 +23,8 @@
 						'id'=>"txtVerticalQty-$signature_index",
 						'name'=>"txtVerticalQty-$signature_index",
 						'value'=>$$variable{"txtVerticalQty-$signature_index"},
-						'type'=>'numeric',
-						'onkeyup'=>'cardinalize(this);calc(this.form.name);',
+						'type'=>'cardinal',
+						'onkeyup'=>'calc(this.form.name);',
 						);
 	
 					$html .= qq`<select name="VerticalTeeth-$signature_index">
@@ -36,8 +36,8 @@
 						'id'=>"txtHorizontalQty-$signature_index",
 						'name'=>"txtHorizontalQty-$signature_index",
 						'value'=>$$variable{"txtHorizontalQty-$signature_index"},
-						'type'=>'numeric',
-						'onkeyup'=>'cardinalize(this);calc(this.form.name);',
+						'type'=>'cardinal',
+						'onkeyup'=>'calc(this.form.name);',
 						);
 		
 					$html .= qq`<select name="HorizontalTeeth-$signature_index">
@@ -60,8 +60,5 @@
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
 		<input type="hidden" name="ContinueProject" value="Y" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>

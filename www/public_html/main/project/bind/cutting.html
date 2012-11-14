@@ -1,6 +1,6 @@
 <script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend>Cutting Services</legend>
 			<ul>
@@ -14,9 +14,9 @@
 <li>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-			$html .= ssi::input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>"number", onkeyup=>"calc('f1');" );
-$html .= '</span>';
+		$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
+		$html .= ssi::input( name=>"txtQuantity$qty_index", value=>$$variable{'txtQuantity'.$qty_index}, type=>'integer', onkeyup=>"calc('f1');" );
+		$html .= '</span>';
 	} # end foreach
 	return $html;
 ) ?>
@@ -240,21 +240,11 @@ $html .= '</span>';
 <? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 <fieldset>
 	<ul>
+	<!--#include virtual="/includes/main/proj/_markup.html"-->
 	<!--#include virtual="/includes/main/proj/_unit_price.html"-->
+	<!--#include virtual="/includes/main/proj/_mprice.html"-->
 	<!--#include virtual="/includes/main/proj/_service_price.html"-->
-	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<li>
-		<? echo ( 
-			my $html;
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
-				$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown('$qty_index');", '', 'Breakdown' );
-				$html .= "</span>\n";
-			} # end foreach qty_index
-			return $html;
-		) ?>
-	</li>
-	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	<!--#include virtual="/includes/main/proj/_breakdown.html"-->
 	</ul>
 </fieldset>
 		<hr/>
