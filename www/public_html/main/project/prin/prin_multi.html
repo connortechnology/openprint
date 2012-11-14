@@ -1,12 +1,6 @@
-<? echo (
-    require File::HashCache::JavaScript;
-    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
-	return join("\n",
-		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/service.js").'"></script>',
-		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/paper.js").'"></script>',
-		'<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/templates/brochures.js").'"></script>',
-	);
-) ?>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/paper.js') ) ?>"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/templates/brochures.js') ) ?>"></script>
 <script type="text/javascript">
 	function calc( formName ) {
 		var form = getFormObj('f1');
