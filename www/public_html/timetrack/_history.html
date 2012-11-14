@@ -50,31 +50,48 @@
 			<th class="Price">Wage</th>
 			<th class="Price">Billable</th>
 		</tr>
-		<? while ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
-		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Timetrack'}->Currency()->conversions( $session{'Currency_id'} );
-		) ?>
-		<tr title="<? echo ( ssi::html_escape( $$variable{'Timetrack'}->description() ); ) ?>" <?rowclass?>> 
-			<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
-			<td class="Company"><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
-			<td class="DateTime"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
-			<td class="DateTime"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
-			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Timetrack'}->elapsed() ); ) ?></td>
-			<td class="Invoiced"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
-			<td class="Paid"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
-			<td class="Service"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
-			<td class="Distance"><? echo ( $$variable{'Timetrack'}->distance(); ) ?>km</td>
-			<td class="Rate"><? echo ( join('',$$variable{'Timetrack'}->get('rate','units' ) ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Timetrack'}->wage() ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Timetrack'}->value() ); ) ?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
-		<? endwhile ( $$variable{'Timetrack'} = shift @{$$variable{'Timetracks'}}; ) ?>
+		<? echo ( 
+			my ( $html, $rowclass );
+			my $hs = HTML::Strip->new();
+			foreach my $T ( @{$$variable{'Timetracks'}} ) {
+				$html .= sprintf(q`
+<tr title="%2$s"%1$s>
+	<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=%3$d">%4$s</a></td>
+	<td class="Company"><a href="/timetrack/edit.html?timetrack_id=%3$d">%5$s</a></td>
+	<td class="DateTime">%6$s</td>
+	<td class="DateTime">%7$s</td>
+	<td class="Time">%8$s</td>
+	<td class="Invoiced">%9$s</td>
+	<td class="Paid">%10$s</td>
+	<td class="Service">%11$s</td>
+	<td class="Distance">%12$s</td>
+	<td class="Rate">%13$s</td>
+	<td class="Price">%14$s</td>
+	<td class="Price">%15$s</td>
+</tr>
+`, $rowclass, Encode::encode('utf8',$hs->parse($T->description())), $T->id(), html_escape( $T->User()->name() ),
+html_escape( $T->Company()->name() ),
+Date::Format::time2str(($T->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time($T->starting())),
+Date::Format::time2str(($T->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time($T->ending())),
+misc::seconds_to_pretty_interval( $T->elapsed() ),
+( $T->invoiced() ? 'Y' : 'N' ),
+( $T->paid() ? 'Y' : 'N' ),
+html_escape($T->Service()->name()),
+( $T->distance() ? $T->distance() .'km' : '' ),
+join('',$T->get('rate','units' ) ),
+openprint::Currency::format( $T->wage() ),
+openprint::Currency::format( $T->value() ),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach TimeTrack
+	$hs->eof();
+	return $html;
+) ?>
 		<tr class="totals">
 			<td colspan="4">Totals</td>
 			<td class="Time"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
 			<td colspan="3">&nbsp;</td>
-			<td class="Distance"><? echo ( $$variable{'distance_total'} ) ?>km</td>
+			<td class="Distance"><? echo ( 1*$$variable{'distance_total'} ) ?>km</td>
 			<td class="Rate">&nbsp;</td>
 			<td class="Price"><? echo ( openprint::Currency::format($$variable{'wage_total'}); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format($$variable{'value_total'}); ) ?></td>
