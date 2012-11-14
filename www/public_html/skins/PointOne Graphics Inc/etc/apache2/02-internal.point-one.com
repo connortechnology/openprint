@@ -12,19 +12,19 @@
 	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
 	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
 	
-	Alias	/images	"/var/www/point-one/skins/PointOne Graphics Inc/images"
+	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
-	Alias	/css	"/var/www/point-one/skins/PointOne Graphics Inc/css"
+	Alias	/css			"/var/www/point-one/skins/PointOne Graphics Inc/css"
 	Alias	/main/company	"/var/www/point-one/skins/PointOne Graphics Inc/main/company"
 	Alias	/main/services	"/var/www/point-one/skins/PointOne Graphics Inc/main/services"
-	Alias	/video	"/var/www/point-one/skins/PointOne Graphics Inc/video"
+	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
-	Alias	/js				"/var/www/point-one/skins/PointOne Graphics Inc/js"
+	Alias	/cache			"/var/www/point-one/skins/PointOne Graphics Inc/cache"
 	Alias	/assets 		"/media/Storage/Assets/"
-	Alias	/thumbnails	"/media/Storage/Assets/thumbnails/"
+	Alias	/thumbnails		"/media/Storage/Assets/thumbnails/"
 
 	PerlSetVar		SecureSiteURL	http://www.internal.point-one.com
-	PerlSetVar		siteURL		http://www.internal.point-one.com
+	PerlSetVar		siteURL			http://www.internal.point-one.com
 	PerlSetVar		ExternalSecureSiteURL	http://www.point-one.com
 	PerlSetVar		ExternalSiteURL		http://www.point-one.com
 	PerlSetVar		InternalSecureSiteURL	http://www.internal.point-one.com

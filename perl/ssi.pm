@@ -792,6 +792,44 @@ sub select( $$$ ) {
 	$html .= '</select>';
 }
 
+my %hash_cache;
+
+sub hash_link {
+	my $script;
+	if (  !($script = $hash_cache{$_[0]})
+			|| ! -f $script->{path}
+			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
+	   ) {
+
+		my ($base, $dir, $ext) = fileparse $_[0], qr/\.[^.]+/;
+		$ext =~ s/^\.//;
+		my $blob = read_file($_[0]);
+
+		if ( $ext eq 'js' ) {
+			$blob = &JavaScript::Minifier::XS::minify( $blob );
+		} elsif ( $ext eq 'css' ) {
+			$blob = &CSS::Minifier::minify( input=>$blob );
+		} # end if
+
+		my $hash = md5_hex($blob);
+		$hash_cache{$_[0]} = $script = {
+			name => "$base-$hash.$ext",
+			path => "$config{cache_dir}/$base-$hash.$ext",
+			hash => $hash,
+			timestamp => $timestamp,
+		};
+		if (! -f $script->{path}) {
+			mkdir $config{cache_dir};
+			if ( ! write_file($script->{path},       { atomic => 1 }, $blob) ) {
+				$log->error( "couldn't cache $script->{path}" );
+				return $_[0];
+			} # end if
+#write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
+		}
+	}
+	$script->{name};
+} # end sub hash_link
+
 
 1;
 __END__

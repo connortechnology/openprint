@@ -17,17 +17,17 @@
 	RewriteRule	^/employee/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
 	RewriteRule	^/administrator/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
 
-	Alias	/images	"/var/www/point-one/skins/PointOne Graphics Inc/images"
+	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
-	Alias	/css	"/var/www/point-one/skins/PointOne Graphics Inc/css"
+	Alias	/css			"/var/www/point-one/skins/PointOne Graphics Inc/css"
 	Alias	/main/company	"/var/www/point-one/skins/PointOne Graphics Inc/main/company"
 	Alias	/main/services	"/var/www/point-one/skins/PointOne Graphics Inc/main/services"
-	Alias	/video	"/var/www/point-one/skins/PointOne Graphics Inc/video"
+	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
-	Alias	/js	"/var/www/point-one/skins/PointOne Graphics Inc/js"
+	Alias	/cache			"/var/www/point-one/skins/PointOne Graphics Inc/cache"
 	Alias	/PageFlip		"/media/Storage/PageFlip"
-	Alias	/assets "/media/Storage/Assets/"
-	Alias	/thumbnails	"/media/Storage/Assets/thumbnails/"
+	Alias	/assets 		"/media/Storage/Assets/"
+	Alias	/thumbnails		"/media/Storage/Assets/thumbnails/"
 
 	PerlSetVar		SecureSiteURL	http://www1.point-one.com
 	PerlSetVar		siteURL		http://www1.point-one.com

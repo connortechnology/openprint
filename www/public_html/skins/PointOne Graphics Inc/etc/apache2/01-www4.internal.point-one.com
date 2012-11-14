@@ -29,7 +29,7 @@
 	Alias	/main/services	"/var/www/point-one/skins/PointOne Graphics Inc/main/services"
 	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
-	Alias	/js				"/var/www/point-one/skins/PointOne Graphics Inc/js"
+	Alias	/cache			"/var/www/point-one/skins/PointOne Graphics Inc/cache"
 	Alias	/mrtg			"/var/www/mrtg"
 	Alias	/calamaris			"/var/www/calamaris"
 	Alias	/assets "/media/Storage/Assets/"

@@ -7,18 +7,16 @@
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 <? echo (
-    require File::HashCache::JavaScript;
-    my $jsh = File::HashCache::JavaScript->new(cache_dir=>$config{SkinPath}.'/js');
-    my $html;
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>';
-    $html .= '<script type="text/javascript" src="/js/'.$jsh->hash($ENV{DOCUMENT_ROOT}."/javascripts/tips.js").'"></script>';
-    return $html;
+	return join("\n",
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/fastinit.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/form_utilities.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/window.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/buttons.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/proj/misc_prin.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/popups.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/jsrsClient.js").'"></script>',
+    '<script type="text/javascript" src="/cache/'.hash_link($ENV{DOCUMENT_ROOT}."/javascripts/tips.js").'"></script>',
+);
 ) ?>
 
 		<link href="/css/common.css?v=0" rel="stylesheet" type="text/css"/>
