@@ -3,7 +3,7 @@ package openprint::Order;
 our @ISA=qw(openprint::Object);
 
 use openprint ();
-use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %find_fields %transforms %defaults );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -19,7 +19,7 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -62,6 +62,10 @@ $serial = 'orders_id_seq';
 	'terms_accepted'			=>	'terms_accepted',
 	'supplier_id'				=>	'supplier_id',
 	);
+
+%find_fields = (
+	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+);
 
 sub save {
 	my ( $self, $params ) = @_;
@@ -293,6 +297,16 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
+
+sub Contents {
+	if ( ! $_[0]{Contents} ) {
+		$_[0]{Contents} = [ 
+			openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'}), 
+			openprint::OrderedProduct->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProduct::fields{'project_id'}),
+			];
+	} # end if
+	return @{$_[0]{Contents}};
+} # end sub Contents
 
 sub Ordered_Projects {
 	return openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'});

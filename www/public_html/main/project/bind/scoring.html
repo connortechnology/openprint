@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -15,11 +15,11 @@
 					Information for form <?SignatureIndex?> (<?Reference?>):
 					<p>
 						<label>Score Quantity</label>
-						<? echo ( ssi::input( name=>'txtVerticalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+						<? echo ( input( name=>'txtVerticalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtVerticalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 						Vertical +
-						<? echo ( ssi::input( name=>'txtHorizontalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
+						<? echo ( input( name=>'txtHorizontalQty-'.$$variable{SignatureIndex}, value=>$$variable{"txtHorizontalQty-$$variable{SignatureIndex}"}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 						Horizontal
-						<? echo ( ssi::write_override( 'chkOverrideQty-'.$$variable{SignatureIndex}, $$variable{'chkOverrideQty-'.$$variable{SignatureIndex}}, '', "calc('f1');" ); ) ?>
+						<? echo ( write_override( 'chkOverrideQty-'.$$variable{SignatureIndex}, $$variable{'chkOverrideQty-'.$$variable{SignatureIndex}}, '', "calc('f1');" ); ) ?>
 					</p>
 				</div>
 			<? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'tempSignatureGroups'}},0,2; ) ?>
