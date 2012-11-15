@@ -586,6 +586,16 @@ sub find {
 		push @values, $params{'updated_on_<='};
 	} # end if
 
+	my $approved_on = q`(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=Index AND description IN ('Marked Approved','Marked Proofs QA Approved'))`;
+	if ( $params{'approved_on >='} ) {
+		$sql .= qq{ AND ($approved_on >= ?)};
+		push @values, $params{'approved_on >='};
+	} # end if
+	if ( $params{'approved_on <='} ) {
+		$sql .= qq{ AND ($approved_on <= ?)};
+		push @values, $params{'approved_on <='};
+	} # end if
+
 	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
 		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
 		push @values, @params{'ordered_on_start','ordered_on_end'};

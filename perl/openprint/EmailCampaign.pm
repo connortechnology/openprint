@@ -1,18 +1,21 @@
+use strict;
 package openprint::EmailCampaign;
-@ISA=qw(openprint::Object);
+our @ISA=qw(openprint::Object);
 
 use openprint::Object;
 use Email::Valid;
-use MIME::QuotedPrint;
+require MIME::QuotedPrint;
 use openprint ();
 use vars qw( %config );
 *config = \%openprint::config;
 
-use strict;
 
 require sql;
 require openprint::logs;
 require openprint::EmailTemplate;
+
+use vars qw( $debug );
+$debug = 1;
 
 my @Fields = (
 	'id',
@@ -167,7 +170,7 @@ Users Rep: <?REPNAME?>
 __ADMIN_EMAIL__
 
 	# Do the appropriate variable substitutions
-	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, $replacements ) ) );
+	$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
@@ -215,7 +218,7 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) ) );
+	$email_template = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
@@ -252,8 +255,8 @@ sub send {
 	# this campaign
 	my @mail_user_ids = sql::execute($openprint::log, $openprint::dbh, $self->{'query'});
 	$results .= "There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n";
-	$self->{'lastrun'} = 'NOW()';
-	@$self{'nextrun'} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{'id'} );
+	$self->{lastrun} = 'NOW()';
+	@$self{'nextrun'} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{'id'} ) if $$self{interval};
 	$self->save();
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
@@ -295,6 +298,8 @@ sub send {
 			$results .= 'No body.  Not sending.<br/>';
 			next;
 		} # end if
+
+$openprint::log->debug("Would like to send to " . $replacements{'User'}->email() ) if $debug;
 
 		if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
 			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
