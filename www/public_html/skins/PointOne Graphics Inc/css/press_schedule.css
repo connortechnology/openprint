@@ -388,4 +388,5 @@ table.Pending {
 }
 .status {
 	float: left;
+	width: 300px;
 }
