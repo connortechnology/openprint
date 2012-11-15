@@ -26,13 +26,13 @@
 		<li>
 			<label>Glue Type</label>
 			<select id="glue_id" name="glue_id" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
+<? echo ( make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'GlueTypes'}} ], $$variable{'glue_id'} ); ) ?>
 			</select>
-<? echo ( ssi::write_override( 'override_glue_id', $$variable{'override_glue_id'}, '', 'calc(this.form);' ); ) ?>
+<? echo ( write_override( 'override_glue_id', $$variable{'override_glue_id'}, '', 'calc(this.form);' ); ) ?>
+			</li>
 <? else ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 	<input type="hidden" name="glue_id" value="<?glue_id?>" />
 <? endif ( @{$$variable{'GlueTypes'}} > 1 ) ?>
-			</li>
 			<li>
 				<label>Signatures</label>
 				<? echo (
