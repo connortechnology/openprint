@@ -16,6 +16,25 @@
 			<? echo ( $$variable{Project}->production_comments() ) ?>
 			</textarea>
 		</li>
+		<li><label>Feedback</label>
+	<? echo ( my $html;
+			my @Data = openprint::ProductionFeedback->find(project_id=>$$variable{Project}->id(),order=>'starting_on');
+			if ( @Data ) {
+				$html .= '<table><tr><th class="form">Form</th><th class="version">Version</th><th class="quantity">Quantity</th><th class="comment">Comment</th><th class="DateTime">Finished On</th></tr>
+					';
+				foreach my $Feedback ( @Data ) {
+					my $specs = $Feedback->Service()->specs();
+					$html .= sprintf('<tr><td class="form">%s</td><td class="version">%s</td><td class="quantity">%s</td><td class="comment">%s</td><td class="DateTime">%s</td></tr>',
+							$$specs{SignatureIndex},
+							$Feedback->version(), $Feedback->quantity(), $Feedback->comment(),
+							(Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time($Feedback->ending_on())),
+							) );
+				} # end foreach Feedback
+				$html .= '</table>';
+			} # end if
+		return $html;
+	) ?>
+		</li>
 	</ul>
 	<p class="buttons">
 		<? echo (

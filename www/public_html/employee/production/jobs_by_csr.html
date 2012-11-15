@@ -96,6 +96,9 @@
 			);
 ) ?>
 </li>
+			<li><label>Show Feedback</label>
+			<? echo ( ssi::radio( 'show_feedback', [ 1, 'Yes', 0, 'No', ], $session{'/employee/production/jobs_by_csr.html?show_feedback'}, { onclick=>'calc()', } ); ) ?>
+			</li>
 </ul>
 </div>
 <!--
@@ -146,7 +149,6 @@
 		multiple=>1, name=>'salesrep_id', size=>scalar @Users, onchange=>'calc();',
 		} );
 ) ?>
-					</select>
 				</li>
 			</ul>
 		</div>

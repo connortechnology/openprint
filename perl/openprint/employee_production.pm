@@ -49,7 +49,7 @@ sub jobs_by_csr {
 } # end sub jobs_by_csr
 
 sub _jobs_by_csr {
-	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status',
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback',
 			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
 		);
