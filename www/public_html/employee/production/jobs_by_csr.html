@@ -105,6 +105,26 @@ function textarea_init() {
 	<input type="hidden" name="ServiceIndex" />
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
+		<div class="status">
+		<ul>
+			<li>
+   <label>Status:</label>
+<? echo (
+        my @statuses = @{$$variable{statuses}} = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' );
+		if ( ! $session{'/employee/production/jobs_by_csr.html?status'} ) {
+			$session{'/employee/production/jobs_by_csr.html?status'} = join(',',@statuses);
+		} # end if
+
+		return ssi::select( 
+			[ map { $_, $_ } @statuses ],
+			[ split(',', $session{'/employee/production/jobs_by_csr.html?status'} ) ], 
+			{ size=>scalar @statuses, multiple=>1, onchange=>'load_projects(this.form);', name=>'status' },
+			);
+) ?>
+</li>
+</ul>
+</div>
+<!--
 		<div class="presses">
 		<ul>
 			<li>
@@ -115,7 +135,7 @@ function textarea_init() {
 	return ssi::make_drop_down( openprint::Equipment_Category->dropdown('order'=>'lower(name)'), $session{'/employee/production/jobs_by_csr.html?category_id'} );
 	) ?>
 				</select>
-			</li>
+</li>
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
@@ -138,15 +158,19 @@ function textarea_init() {
 			</select>
 		</li></ul>
 		</div>
+-->
 		<div class="csrs">
 			<ul>
 				<li><label>CSR:</label>
 <? echo ( 
 	my @Users = @{$$variable{CSRS}} = openprint::User->find('usergroup'=>'Sales',order=>'lower(strfirstname),lower(strlastname)');
+	$session{'/employee/production/jobs_by_csr.html?salesrep_id'} = join(',', map { $_->id() } @Users ) if ! $session{'/employee/production/jobs_by_csr.html?salesrep_id'};
 	
-	my $html = '<select multiple="multiple" name="salesrep_id" size="'.(scalar @Users).'" onchange="calc()";>';
-	$html .= make_drop_down( [ map {$_->id(),$_->name()} @Users ], [ split(',', $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ) ] );
-	return $html;
+	return ssi::select( 
+		[ map {$_->id(),$_->name()} @Users ], 
+		[ split(',', $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ) ], {
+		multiple=>1, name=>'salesrep_id', size=>scalar @Users, onchange=>'calc();',
+		} );
 ) ?>
 					</select>
 				</li>

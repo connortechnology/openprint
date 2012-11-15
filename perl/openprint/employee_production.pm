@@ -67,7 +67,8 @@ sub _jobs_by_csr_ul {
 		$projects =~ s/$param{csr_id}\[\]=//g;
 		my @project_ids = split( '&', $projects );
 		my %Projects = map { $_->id(), $_ } openprint::Project->find(id=>\@project_ids);
-		my ( $csr_id ) = $param{csr_id} =~ /^csr_(\d+)$/;
+		my ( $csr_id, $status ) = $param{csr_id} =~ /^csr_(\d+)_(.+)$/;
+		$status =~ s/_/ /g;
 
 		my $priority = 0;
 		foreach my $project_id ( @project_ids ) {
@@ -79,7 +80,7 @@ sub _jobs_by_csr_ul {
 			$priority += 1;
 		} # end foreach project_id
     @{$variable{Projects}} = openprint::Project->find(
-        status      =>  [ 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' ],
+        status      =>  $status,
         salesrep_id =>  $csr_id,
         order       =>  'priority',
     );
