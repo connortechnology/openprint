@@ -777,6 +777,7 @@ sub save {
 				'reprint',				$$self{'reprint'},
 				'reprint_reason',		$$self{'reprint_reason'},
 				'priority',				$$self{priority},
+				'production_comments',	$$self{production_comments},
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -885,6 +886,7 @@ sub copy {
 	} # end foreach
 	delete $$new{'id'};
 	delete $$new{'created_on'};
+	delete $$new{production_comments};
 	$new->save();
 
 	my @dont_copy = (
@@ -940,11 +942,11 @@ sub load {
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason priority/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason priority/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason priority production_comments/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason priority production_comments/};
 	} else {	
-		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority production_comments/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority production_comments/};
 	} # endif
 	return;
 } # end sub load

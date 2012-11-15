@@ -17,7 +17,7 @@
             $colour .= ' rush';
         } # end if
 
-		$html .= qq`<li id="p_$$Project{id}" class="$colour"><span class="Company">`;
+		$html .= qq`<li id="p_$$Project{id}" class="$colour" onclick="job_popup($$Project{id});"><span class="Company">`;
 
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
@@ -41,6 +41,9 @@
 			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
 			$html .= qq` $day</span>`;
 		} # end if
+		$html .= '<div class="reference">'.$Project->reference().'</div>';
+		$html .= qq`<div class="comments">$$Project{production_comments}</div>`;
+
 		$html .= '</li>';
 	} # end foreach Project
 	return $html;

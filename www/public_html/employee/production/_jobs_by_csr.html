@@ -1,7 +1,7 @@
 <table class="schedule"><thead>
 <tr>
 <? echo (
-	my @statuses = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' );
+	my @statuses = split(',', $session{'/employee/production/jobs_by_csr.html?status'} );
 
 	@{$$variable{CSRS}} = openprint::User->find(
 		usergroup	=>	'Sales',

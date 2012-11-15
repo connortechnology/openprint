@@ -1,0 +1,34 @@
+<h3>Information for Docket <? echo ( $$variable{Project}->docket() ) ?></h3>
+<form id="PopupForm" name="PopupForm" action="">
+<fieldset>
+	<ul>
+		<li><label>Company</label>
+			<? echo ( $$variable{Project}->Company()->name() ) ?>
+		</li>
+		<li><label>Reference</label>
+			<? echo ( $$variable{Project}->reference() ) ?>
+		</li>
+		<li><label>Summary</label>
+			<? echo ( $$variable{Project}->summary() ) ?>
+		</li>
+		<li><label>Comments</label>
+			<textarea id="production_comments" name="production_comments">
+			<? echo ( $$variable{Project}->production_comments() ) ?>
+			</textarea>
+		</li>
+	</ul>
+	<p class="buttons">
+		<? echo (
+			my $status = $$variable{Project}->status();
+			$status =~ s/\s/_/g;
+			my $ul_id = 'csr_'.$$variable{Project}->Company()->salesrep_id().'_'.$status;
+			return join('',
+				ssi::button( 'Save', { onclick=>qq`tinyMCE.triggerSave();new Ajax.Updater('$ul_id','_jobs_by_csr_ul.html',{parameters:\$('PopupForm').serialize(), onSuccess:function(){popupWin.close();}});`, text=>'Save' } ),
+				ssi::button( 'Cancel', { onclick=>'popupWin.close();', text=> 'Cancel' } ),
+			);
+		) ?>
+	</p>
+    <input type="hidden" name="action" value="Save" />
+	<input type="hidden" name="project_id" value="<? echo ( $$variable{Project}->id() ) ?>"/>
+</fieldset>
+<!--<script type="text/javascript">tinymce.execCommand('mceToggleEditor', true, 'production_comments' );</script>-->
