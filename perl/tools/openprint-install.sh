@@ -5,10 +5,10 @@ apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl libdi
 apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl libdate-calc-perl libbit-vector-perl libcarp-clan-perl libtext-csv-perl libdatetime-format-pg-perl libdatetime-perl
 apt-get -y install libemail-valid-perl libdigest-hmac-perl libdigest-sha1-perl libmailtools-perl libnet-dns-perl libnet-domain-tld-perl libtimedate-perl libcrypt-ssleay-perl
 apt-get -y install libtext-unaccent-perl libauthen-captcha-perl libdbi-perl libapache-dbi-perl libdbd-pg-perl libunicode-string-perl libsoap-lite-perl
-apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl libnet-server-perl
+apt-get -f -y install libxml-namespacesupport-perl libxml-sax-perl libmath-round-perl libnet-server-perl
 apt-get -f -y --force-yes install perlmagick libgd-barcode-perl libnumber-format-perl libbarcode-code128-perl liblinux-inotify2-perl libnet-arp-perl libmath-round-perl
 # Also need Barcode-Code128-2.00
-apt-get -y jpegoptim pngcrush
+apt-get -y install jpegoptim pngcrush
 
 # FOr db servers:
 #apt-get -y install postgresql
@@ -23,9 +23,9 @@ apt-get -y jpegoptim pngcrush
 #echo "PerlRequire      startup.pl" >> /etc/apache2/conf.d/perl
 #echo "APREQ2_ReadLimit 1024M" >> /etc/apache2/conf.d/perl
 
-perl -MCPAN -e shell << EOF
-force install File::HashCache::JavaScript
-EOF
+#perl -MCPAN -e shell << EOF
+#force install File::HashCache::JavaScript
+#EOF
 #force install Date::Handler
 #force install Date::Parse
 #force install Business::PayPal
