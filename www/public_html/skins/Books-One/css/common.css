@@ -19,10 +19,6 @@
     visibility: hidden;
 
 }
-/* Hides from IE-mac \*/
-* html #Content {height: 1%;}
-#Content {display: block;}
-/* End hide from IE-mac */
 
 #ContentInner {
 	padding: 0px;
@@ -72,7 +68,7 @@ body #Header #Logo {
 	background-color: #22275E;
 	padding: 7px;
 	color: white;
-	font-size: 26px;
+	font-size: 24px;
 	font-family: Georgia, Times, serif;
 }
 body #Header #Logo table {

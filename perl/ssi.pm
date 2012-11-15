@@ -819,6 +819,7 @@ sub hash_link {
 		} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 			$src = $ENV{DOCUMENT_ROOT}.$path;
 		} else {
+$log->error("File nto found $path");
 			return $path;
 		} # end if
 
@@ -831,6 +832,8 @@ sub hash_link {
 		} elsif ( $ext eq 'css' ) {
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
+
+		$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 		my $hash = md5_hex($blob);
 		$hash_cache{$_[0]} = $script = {
@@ -848,7 +851,7 @@ sub hash_link {
 #write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	}
-	$config{cache_path}.'/'.$script->{name};
+	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
 
