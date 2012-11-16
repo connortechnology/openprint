@@ -574,6 +574,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');
 		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 	} # end if
+	$dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL');
 	
 }
 
