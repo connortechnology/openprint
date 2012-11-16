@@ -236,9 +236,6 @@ table .quantity {
 table .product {
 	width: 150px;
 }
-table .description {
-	text-align: left;
-}
 .description select {
 	max-width: 500px;
 }
