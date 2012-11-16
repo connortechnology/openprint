@@ -454,6 +454,9 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{'markup'} ) {
 		$dbh->do('ALTER TABLE projects add markup float');
 	}
+	if ( ! exists $$data{production_comments} ) {
+		$dbh->do('ALTER TABLE projects add production_comments TEXT');
+	}
 	if ( exists $$data{'index'} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
