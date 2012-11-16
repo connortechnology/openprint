@@ -1,0 +1,47 @@
+<? echo ( 
+	my $html = '';
+	$html .= qq`<script type="text/javascript">alert('$variable{error}');</script>` if $variable{error};
+	$html .= qq`<script type="text/javascript">alert('$variable{alert}');</script>` if $variable{alert};
+
+	foreach my $Project ( @{$$variable{Projects}} ) {
+
+		my $colour;
+		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
+            $colour = 'inprepress';
+        } elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
+            $colour = 'complete';
+        } elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
+            $colour = 'approval';
+        } # end if
+        if ( $Project->rush() ) {
+            $colour .= ' rush';
+        } # end if
+
+		$html .= qq`<li id="p_$$Project{id}" class="$colour"><span class="Company">`;
+
+		my $n = $Project->Company()->name();
+		$n =~ s/The //gi;
+		$html .= ssi::htmlize( $n );
+
+		$html .= '</span>';
+		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
+
+		if ( $Project->operator_id() ) {
+			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
+		} # end if
+		$html .= sprintf(q`<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a>`, @$Project{'id','docket'} );
+		if ( $Project->reprint() eq 'Y' ) {
+			$html .= ' REPRINT'. $Project->reprint_reason();
+		} # end if
+		$html .= qq`<span class="DueDate">`;
+		if ( ! $Project->due_date() ) {
+			$html .= 'no duedate</span>';
+		} else {
+			my ( $year, $month, $day ) = split('-', $Project->due_date() );
+			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
+			$html .= qq` $day</span>`;
+		} # end if
+		$html .= '</li>';
+	} # end foreach Project
+	return $html;
+) ?>

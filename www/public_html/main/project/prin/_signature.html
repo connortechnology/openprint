@@ -18,10 +18,14 @@
 		</p>
 		<p>
 			<label>Size</label>
-			<input type="number" name="txtFinalWidth<?Signature?>" value="<? echo ( $$variable{'txtFinalWidth'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Signature?>').checked){calc(this.form.name);}"/>x
-			<input type="number" name="txtFinalHeight<?Signature?>" value="<? echo ( $$variable{'txtFinalHeight'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Signature?>').checked){calc(this.form.name);}" />
-			<input type="checkbox" name="chkOverrideDimensions<?Signature?>" id="chkOverrideDimensions<?Signature?>" value="Y" <? echo ( $$variable{'chkOverrideDimensions'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if(!this.checked)calc(this.form.name);" />
-			<label class="radio" for="chkOverrideDimensions<?Signature?>">Override</label>
+			<? echo (
+				my $html = '';
+				$html .= ssi::input( 'type'=>'float', id=>'txtFinalWidth'.$$variable{Signature}, name=>'txtFinalWidth'.$$variable{Signature}, value=>$$variable{'txtFinalWidth'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' );
+				$html .= ' x ';
+				$html .= ssi::input( 'type'=>'float', id=>'txtFinalHeight'.$$variable{Signature}, name=>'txtFinalHeight'.$$variable{Signature}, value=>$$variable{'txtFinalHeight'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' );
+				$html .= write_override( 'chkOverrideDimensions'.$$variable{Signature}, $$variable{'chkOverrideDimensions'.$$variable{Signature}}, '', q`calc('f1');` );
+				return $html;
+			) ?>
 		</p>
 	</div>
 	<div class="rightColumn">

@@ -563,17 +563,21 @@ if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
 } else {
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_files'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_files'", 'column_name');
 	if ( ! $$data{'archive'} ){ 
-		$dbh->do('ALTER TABLE project_files add archive TEXT');
+		$dbh->do('ALTER TABLE project_files ADD archive TEXT');
+	} # end if
+	if ( ! $$data{size} ){ 
+		$dbh->do('ALTER TABLE project_files ADD size INTEGER');
 	} # end if
 	if ( ! $$data{deleted} ){ 
-		$dbh->do('ALTER TABLE project_files add deleted BOOLEAN NOT NULL DEFAULT FALSE');
+		$dbh->do('ALTER TABLE project_files ADD deleted BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
 	if ( ! exists $$data{company_id} ) {
 		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');
 		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 	} # end if
+	$dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL');
 	
 }
 

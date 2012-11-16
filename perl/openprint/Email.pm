@@ -4,7 +4,6 @@ package openprint::Email;
 our @ISA = qw( openprint::Object );
 
 use openprint ();
-require openprint::User;
 require email;
 require misc;
 require ssi;

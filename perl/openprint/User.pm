@@ -2,8 +2,6 @@ use strict;
 package openprint::User;
 our @ISA = qw( openprint::Object );
 
-require openprint::Company;
-
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial $AUTOLOAD );
 *log = \$openprint::log;
@@ -242,6 +240,7 @@ sub Prev {
 } # end sub Nex
 
 sub Company {
+	require openprint::Company;
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 

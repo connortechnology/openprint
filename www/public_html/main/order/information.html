@@ -5,6 +5,10 @@
 <script type="text/javascript" src="/main/order/order.js"></script>
 <div class="Order"><div class="Information">
 	<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( ! $$variable{Order}->id() ) ?>
+	<div class="error">There was a problem creating an order. Please contact support.</div>
+<? else ( ! $$variable{Order}->id() ) ?>
+
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
 			<div id="Information">
@@ -134,4 +138,5 @@
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
+<? endif ( ! $$variable{Order}->id() ) ?>
 </div><!--Information--></div><!--class=Order-->

@@ -108,7 +108,7 @@ sub html {
 	} elsif ( $self->type() eq 'path' ) {
 		if ( ! ( $ENV{HTTP_REFERER} =~ /ip[hone|ad|od]/i ) ) {
 		#return sprintf('<svg src="%s" />', $_[0]->file_path() );
-		return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="' . $self->width() .'" height="'.$self->height().'"
+			return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="' . $self->width() .'" height="'.$self->height().'"
     xmlns:xlink="http://www.w3.org/1999/xlink"><path d="'.$$self{image_data}.'" style="stroke:#000066; fill:none;"/></svg>';
 		} else {
 			return sprintf('<embed src="%s" type="image/svg+xml"/>', $self->file_path() );
