@@ -1,4 +1,19 @@
 <script type="text/javascript">
+	function complete( e, ul_id, project_id ) {
+		if (!e) e = window.event;
+
+		//IE9 & Other Browsers
+		if (e.stopPropagation) {
+			e.stopPropagation();
+		} else {
+			//IE8 and Lower
+			e.cancelBubble = true;
+		}
+		new Ajax.Updater( ul_id, '_jobs_by_csr_ul.html', { 
+			parameters: { action: 'complete', project_id: project_id }
+		 } );
+		return false;
+	}
 	function calc( ) {
 		var div = $('Results');
 		div.innerHTML = 'Loading...please wait...';

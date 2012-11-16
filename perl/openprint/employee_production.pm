@@ -94,6 +94,15 @@ sub _jobs_by_csr_ul {
 				salesrep_id =>  $Project->Company()->salesrep_id(),
 				order       =>  'priority',
 				);
+	} elsif ( $param{action} eq 'complete' ) {
+		my $Project = new openprint::Project($param{project_id});
+		my $old_status = $Project->status();
+		$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
+		@{$variable{Projects}} = openprint::Project->find(
+				status      =>  $old_status,
+				salesrep_id =>  $Project->Company()->salesrep_id(),
+				order       =>  'priority',
+				);
 	} # end if
 
 } # end sub _jobs_by_csr_ul
