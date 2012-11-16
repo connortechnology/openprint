@@ -295,7 +295,7 @@ sub send {
 
 		$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
-			$results .= 'No body.  Not sending.<br/>';
+			$results .= sprintf('No body.  Not sending to %s %s at %s.<br/>',$replacements{'User'}->get('firstname','lastname','email') );;
 			next;
 		} # end if
 
