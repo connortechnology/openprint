@@ -41,6 +41,7 @@
 			$html .= qq`<ul id="csr_$$CSR{id}_$id">`;
 		
 			if ( $Jobs{$$CSR{id}} and $Jobs{$$CSR{id}}{$status} ) {
+				$$variable{ul_id} = "csr_$$CSR{id}_$id";
 				@{$$variable{Projects}} = @{$Jobs{$$CSR{id}}{$status}};
 				$html .= ssi::variable_substitution( $r, $log, $dbh, \$ul_html, $variable );
 			} # end if JOBS

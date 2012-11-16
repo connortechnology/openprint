@@ -34,13 +34,20 @@
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
 		$html .= qq`<span class="DueDate">`;
+		my ( $due_year, $due_month, $due_day );
+		my ( $y,$m,$d) = Date::Calc::Today();
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
 		} else {
-			my ( $year, $month, $day ) = split('-', $Project->due_date() );
-			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
-			$html .= qq` $day</span>`;
-		} # end if
+			( $due_year, $due_month, $due_day ) = split('-', $Project->due_date() );
+			
+			if ( $due_month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $due_month ),0, 3); } # end if
+			$html .= qq` $due_day`;
+			if ( $due_year and ( $due_year < $y ) ) {
+				$html .= ' '.$due_year;
+			} # end if
+			$html .= '</span>';
+		} # end if duedate
 		$html .= '<div class="reference">'.$Project->reference().'</div>';
 		$html .= qq`<div class="comments">$$Project{production_comments}</div>`;
 
@@ -61,6 +68,17 @@
 				$html .= '</table></fieldset></div>';
 			} # end if
 		} # end if show Feedback
+
+		$html .= '<div class="buttons">';
+		if ( $Project->due_date() and ( Date::Calc::Delta_Days( 
+( $due_year, $due_month, $due_day ),
+( $y, $m, $d ),
+ ) > 30 ) ) {
+			$html .= ssi::button( 'Complete'.$$Project{id}, { onclick=> "complete( event, '$$variable{ul_id}',$$Project{id});", text=> 'C', title=>'Mark Complete' } );
+		} else {
+			$html .= ssi::button( 'Complete'.$$Project{id}, { onclick=> "if(confirm('Are you sure')){return complete(event,'$$variable{ul_id}', $$Project{id} ); }", text=> 'C', title=>'Mark Complete' } );
+		} # end if
+		$html .= '</div>';
 
 		$html .= '</li>';
 	} # end foreach Project
