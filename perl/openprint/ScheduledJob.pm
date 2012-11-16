@@ -17,7 +17,6 @@ require Date::Parse;
 require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
-require openprint::employee_project;
 require openprint::employee_production;
 require openprint::ProductionFeedback;
 
@@ -846,6 +845,7 @@ sub approve {
 	if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
 	} # end if
+	require openprint::employee_project;
 	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
 	openprint::employee_project::send_proofs_approved_email( $Project->id() );
 	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );

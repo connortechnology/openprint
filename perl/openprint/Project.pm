@@ -62,6 +62,8 @@ $serial = 'lngProjectIndex_seq';
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
 	'markup'			=>	'markup',
+	priority			=>	'priority',
+	production_comments	=>	'production_comments',
 );
 %transforms = (
 	'markup'	=>	[ 's/[^\-\d\.]//g' ],
@@ -84,19 +86,21 @@ $serial = 'lngProjectIndex_seq';
 	'order_id'		=>	undef,
 	'due_date'		=>	undef,
 	'markup'		=>	undef,
+	priority		=>	undef,
 );
 
 %find_fields = (
-	'take_over' => q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
-	'ordered_on'	=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
-	'salesrep_id'		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
-	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
-	'csr_id'			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
-	'value'				=>	[ 'price1', 'price2', 'price3' ],
-	'used_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
-	'estimated_press_name'	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
-	'operator_id'		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
-	'quote_id'			=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
+	take_over		=> q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
+	ordered_on		=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
+	salesrep_id		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
+	takenover_on	=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
+	approved_on		=>	q{(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description IN ('Marked Approved','Marked Proofs QA Approved'))},
+	csr_id			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
+	value			=>	[ 'price1', 'price2', 'price3' ],
+	used_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName='UsePress')`,
+	estimated_press_name	=>	q`(SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3'))`,
+	operator_id		=>	q`(SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=id)`,
+	quote_id		=>	q`(SELECT quote_id FROM tbl_quote_details WHERE project_id=Projects.id)`,
 );
 
 sub delete {
@@ -661,7 +665,7 @@ sub copy {
 	@$new{@keys} = @$self{@keys};
 
 	delete $$new{'Services'};
-	$new->save({'id'=>undef, 'created_on'=>undef} );
+	$new->save({'id'=>undef, 'created_on'=>undef,'production_comments'=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',

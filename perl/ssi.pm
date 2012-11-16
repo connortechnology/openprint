@@ -844,13 +844,14 @@ sub input {
 	return $html;
 } # end sub input
 
-
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
 	$html .= ' name="'.$$options{name}.'"' if $$options{name};
 	$html .= ' id="'.$$options{id}.'"' if $$options{id};
 	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
+	$html .= ' size="'.$$options{size}.'"' if $$options{size};
+	$html .= ' multiple="multiple"' if $$options{multiple};
 	$html .= '>';
 	$html .= make_drop_down( $data, $selected );
 	$html .= '</select>';
@@ -882,7 +883,7 @@ sub hash_link {
 	my ( $path ) = @_;
 
 	my $script;
-	if (  !($script = $hash_cache{$path})
+	if (  !($hash_cache{$config{SkinPath}} and $script = $hash_cache{$config{SkinPath}}{$path})
 			|| ! -f $script->{path}
 			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
 	   ) {
@@ -909,7 +910,7 @@ sub hash_link {
 		$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 		my $hash = md5_hex($blob);
-		$hash_cache{$_[0]} = $script = {
+		$hash_cache{$config{SkinPath}}{$path} = $script = {
 			name => "$base-$hash.$ext",
 			path => "$config{cache_dir}/$base-$hash.$ext",
 			hash => $hash,

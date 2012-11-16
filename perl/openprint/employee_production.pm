@@ -48,7 +48,7 @@ sub jobs_by_csr {
 } # end sub jobs_by_csr
 
 sub _jobs_by_csr {
-	my @params = ( 'Equipment', 'category_id', 'salesrep_id',
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback',
 			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
 		);
@@ -66,7 +66,8 @@ sub _jobs_by_csr_ul {
 		$projects =~ s/$param{csr_id}\[\]=//g;
 		my @project_ids = split( '&', $projects );
 		my %Projects = map { $_->id(), $_ } openprint::Project->find(id=>\@project_ids);
-		my ( $csr_id ) = $param{csr_id} =~ /^csr_(\d+)$/;
+		my ( $csr_id, $status ) = $param{csr_id} =~ /^csr_(\d+)_(.+)$/;
+		$status =~ s/_/ /g;
 
 		my $priority = 0;
 		foreach my $project_id ( @project_ids ) {
@@ -77,14 +78,37 @@ sub _jobs_by_csr_ul {
 			$variable{error} .= $Projects{$project_id}->save({priority=>$priority});
 			$priority += 1;
 		} # end foreach project_id
-    @{$variable{Projects}} = openprint::Project->find(
-        status      =>  [ 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval', 'Approved','Printed' ],
-        salesrep_id =>  $csr_id,
-        order       =>  'priority',
-    );
+		@{$variable{Projects}} = openprint::Project->find(
+				status      =>  $status,
+				salesrep_id =>  $csr_id,
+				order       =>  'priority',
+				);
+	} elsif ( $param{action} eq 'Save' ) {
+		my $Project = new openprint::Project($param{project_id});
+		if ( $Project->production_comments() ne $param{production_comments} ) {
+			$Project->save({ production_comments	=> $param{production_comments} });
+		} # end if
+		@{$variable{Projects}} = openprint::Project->find(
+				status      =>  $Project->status(),
+				salesrep_id =>  $Project->Company()->salesrep_id(),
+				order       =>  'priority',
+				);
+	} elsif ( $param{action} eq 'complete' ) {
+		my $Project = new openprint::Project($param{project_id});
+		my $old_status = $Project->status();
+		$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
+		@{$variable{Projects}} = openprint::Project->find(
+				status      =>  $old_status,
+				salesrep_id =>  $Project->Company()->salesrep_id(),
+				order       =>  'priority',
+				);
 	} # end if
 
 } # end sub _jobs_by_csr_ul
+
+sub _jobs_by_csr_popup {
+	$variable{'Project'} = new openprint::Project($param{project_id});
+} # end sub _stock_popup
 
 sub print_overview {
 	if ( %param ) {

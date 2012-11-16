@@ -454,6 +454,9 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{'markup'} ) {
 		$dbh->do('ALTER TABLE projects add markup float');
 	}
+	if ( ! exists $$data{production_comments} ) {
+		$dbh->do('ALTER TABLE projects add production_comments TEXT');
+	}
 	if ( exists $$data{'index'} ) {
 		$dbh->do('ALTER TABLE Projects rename column index to id');
 		$dbh->do('ALTER TABLE Projects rename column companyindex to company_id');
@@ -574,6 +577,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_files ADD company_id INTEGER');
 		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 	} # end if
+	$dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL');
 	
 }
 
