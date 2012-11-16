@@ -781,14 +781,12 @@ sub date_filter {
 		#foreach my $k ( keys %$hash ) {
 			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
 		#} # end foreach
-	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
 		return ();
 	} # end if
 	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-	$month = 1 if ! $month;
-	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
