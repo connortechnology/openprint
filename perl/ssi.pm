@@ -810,48 +810,59 @@ my %hash_cache;
 sub hash_link {
 	my ( $path ) = @_;
 
-	my $script;
-	if (  !($script = $hash_cache{$path})
-			|| ! -f $script->{path}
-			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
-	   ) {
+    $config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
-		my $src;
-		if ( -e $config{SkinPath}.$path ) {
-			$src = $config{SkinPath}.$path;
-		} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-			$src = $ENV{DOCUMENT_ROOT}.$path;
-		} else {
-			return $path;
-		} # end if
+    my $script;
+    if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
+        $log->debug("reading config");
+        $hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+        $hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+    } # end if
 
-		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
-		$ext =~ s/^\.//;
-		my $blob = read_file($src);
+    if ( !($script = $hash_cache{$config{SkinPath}}{$path})
+            || ! -f $script->{cache_file}
+            || ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
+       ) {
 
-		if ( $ext eq 'js' ) {
-			$blob = &JavaScript::Minifier::XS::minify( $blob );
-		} elsif ( $ext eq 'css' ) {
-			$blob = &CSS::Minifier::minify( input=>$blob );
-		} # end if
+        my $src;
+        if ( -e $config{SkinPath}.$path ) {
+            $src = $config{SkinPath}.$path;
+        } elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+            $src = $ENV{DOCUMENT_ROOT}.$path;
+        } else {
+            return $path;
+        } # end if
 
-		my $hash = md5_hex($blob);
-		$hash_cache{$_[0]} = $script = {
-			name => "$base-$hash.$ext",
-			path => "$config{cache_dir}/$base-$hash.$ext",
-			hash => $hash,
-			timestamp => $timestamp,
-		};
-		if (! -f $script->{path}) {
-			mkdir $config{cache_dir};
-			if ( ! write_file($script->{path},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
-				$log->error( "couldn't cache $script->{path}" );
-				return $path;
-			} # end if
-#write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
-		}
-	}
-	$config{cache_path}.'/'.$script->{name};
+        my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
+        $ext =~ s/^\.//;
+        my $blob = read_file($src);
+
+        if ( $ext eq 'js' ) {
+            $blob = &JavaScript::Minifier::XS::minify( $blob );
+        } elsif ( $ext eq 'css' ) {
+            $blob = &CSS::Minifier::minify( input=>$blob );
+        } # end if
+
+
+        my $hash = md5_hex($blob);
+        $hash_cache{$config{SkinPath}}{$path} = $script = {
+            name => "$base-$hash.$ext",
+            path    => $path,
+            cache_file => "$config{cache_dir}/$base-$hash.$ext",
+            hash => $hash,
+            timestamp => $timestamp,
+        };
+        if (! -f $script->{cache_file}) {
+            mkdir $config{cache_dir};
+            if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+                $log->error( "couldn't cache $script->{cache_file}" );
+                return $path;
+            } # end if
+            write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
+        }   
+    }
+    ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+
 } # end sub hash_link
 
 

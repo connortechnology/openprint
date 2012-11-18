@@ -1,5 +1,6 @@
+use strict;
 package openprint::PageFlip_Page;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 
 use Image::Magick;
 use openprint ();
