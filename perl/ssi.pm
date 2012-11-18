@@ -880,11 +880,24 @@ my %hash_cache;
 sub hash_link {
 	my ( $path ) = @_;
 
+	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
+
 	my $script;
-	if (  !($hash_cache{$config{SkinPath}} and $script = $hash_cache{$config{SkinPath}}{$path})
-			|| ! -f $script->{path}
+$log->debug("Cache dir is $config{cache_dir}");
+	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
+		$log->debug("reading config");
+		$hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+	} # end if
+
+	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
+			|| ! -f $script->{cache_file}
 			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
 	   ) {
+$log->debug("Generating new cache for $path");
+	foreach my $k ( keys %{$hash_cache{$config{SkinPath}}} ) {
+		$log->debug("cache contains $k ");
+	} # end foeach
 
 		my $src;
 		if ( -e $config{SkinPath}.$path ) {
@@ -905,24 +918,28 @@ sub hash_link {
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
-		$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 		my $hash = md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
 			name => "$base-$hash.$ext",
-			path => "$config{cache_dir}/$base-$hash.$ext",
+			path	=> $path,
+			cache_file => "$config{cache_dir}/$base-$hash.$ext",
 			hash => $hash,
 			timestamp => $timestamp,
 		};
-		if (! -f $script->{path}) {
+		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
-			if ( ! write_file($script->{path},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
-				$log->error( "couldn't cache $script->{path}" );
+			if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-#write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
+$log->debug("saving config $hash_cache{$config{SkinPath}}");
+			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
+	} else {
+$log->debug("Using cached for $path ");
 	}
+$log->debug("script path ($$script{path}) name ($$script{name})");
 	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
