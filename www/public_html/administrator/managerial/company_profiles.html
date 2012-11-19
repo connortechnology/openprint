@@ -56,7 +56,7 @@
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
-			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
+			<? echo ( ssi::button( 'Go2', { onclick=>"f1.btnFunction.value='Go';fmCheck(f1);", text=>'Go' } ); ) ?>
 		</li>
 		</ul>
 	</fieldset>
@@ -226,7 +226,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 				<label>Account #</label>
 				<input type="text" name="accountnumber" value="<? echo ( $$variable{'Company'}->accountnumber() ) ?>" />
 			</li>
-			<li><label>Company Category:</label>
+			<li><label>Company Category</label>
 				<select name="category_id" id="category_id">
 					<option value="">select</option>
 				<? echo ( ssi::make_drop_down( openprint::Company_Category->dropdown('order'=>'lower(name)'), $$variable{'Company'}->category_id() ); ) ?>
@@ -244,7 +244,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 				<label>Address</label>
 				<input type="text" name="address1" value="<? echo ( $$variable{'Company'}->address1() ) ?>" />
 			</li>
-			<li> 
+			<li class="address2"> 
 				<label>&nbsp;</label>
 				<input type="text" name="address2" value="<? echo ( $$variable{'Company'}->address2() ) ?>" />
 			</li>
@@ -272,7 +272,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 			</li>
 			<li> 
 				<label>Phone</label>
-				<input type="text" name="phone" value="<? echo ( $$variable{'Company'}->phone() ) ?>" />
+				<input type="tel" name="phone" value="<? echo ( $$variable{'Company'}->phone() ) ?>" />
 			</li>
 			<li> 
 				<label>Extension</label>
@@ -280,7 +280,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 			</li>
 			<li> 
 				<label>Fax</label>
-				<input type="text" name="fax" value="<? echo ( $$variable{'Company'}->fax() ) ?>" />
+				<input type="tel" name="fax" value="<? echo ( $$variable{'Company'}->fax() ) ?>" />
 			</li>
 		</ul>
 	</fieldset>
@@ -308,7 +308,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 					<option value=""> Select </option>
 					<? echo ( ssi::getmonths( $$variable{'Company'}->start_month() ); ) ?>
 				</select>
-				<input type="text" name="start_year" id="start_year" value="<? echo ( $$variable{'Company'}->start_year(); ) ?>" />
+				<? echo ( input( type=>'cardinal', name=>'start_year', id=>'start_year', value=>$$variable{Company}->start_year() ); ) ?>
 			</li>
 			<li> 
 				<label>President/Owner/CEO</label>
@@ -329,10 +329,6 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 				</select>
 			</li>
 			<li> 
-				<label>Prov/State #</label>
-				<input type="text" name="pst_number" value="<? echo ( $$variable{'Company'}->pst_number() ) ?>" />
-			</li>
-			<li> 
 				<label>Federal/GST #</label>
 				<input type="text" name="gst_number" value="<? echo ( $$variable{'Company'}->gst_number() ) ?>" />
 			</li>
@@ -342,6 +338,10 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 				<label class="radio" for="gst_exemptY">Yes</label>
 				<input type="radio"	name="gst_exempt" id="gst_exemptN" value="N" <? echo ( ssi::checked( $$variable{'Company'}->gst_exempt() ne 'Y' ); ) ?> />
 				<label class="radio" for="gst_exemptN">No</label>
+			</li>
+			<li> 
+				<label>Prov/State #</label>
+				<input type="text" name="pst_number" value="<? echo ( $$variable{'Company'}->pst_number() ) ?>" />
 			</li>
 			<li> 
 				<label>State/Provincial Tax Exempt?</label>

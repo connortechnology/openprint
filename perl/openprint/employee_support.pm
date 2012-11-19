@@ -1,11 +1,14 @@
 use strict;
 package openprint::employee_support;
 
-use MIME::QuotedPrint ();
-use openprint ();
+require MIME::QuotedPrint;
 
 require sql;
 require misc;
+require openprint;
+require openprint::RMA;
+require openprint::Email;
+
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -110,8 +113,8 @@ sub helpdesk_search {
 
 	my $sql = q{SELECT id, strFirstName || ' ' || strLastName, date(dtmRequestDate), strCompanyName, ysnReviewed FROM HelpDesk};
 	my @values;
-	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @params{'created_on_start_year','created_on_start_month','created_on_start_day'});
-	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @params{'created_on_end_year','created_on_end_month','created_on_end_day'});
+	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'});
+	push @values, sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_end_year','created_on_end_month','created_on_end_day'});
 	$sql .= ' WHERE ( dtmREquestDate BETWEEN ? AND ? )';
 	if ( $param{'ddmReviewed'} ) {
 		$sql .= ' AND ysnReviewed = ?';
@@ -127,9 +130,9 @@ sub helpdesk_search {
 	$variable{'ddmReviewed'.$param{'ddmReviewed'}} = 'SELECTED';
 
 	ssi::save_params( '/employee/support/helpdesk_search.html', (
-		'created_on_start_year', 'created_on_start_month', 'created_on_start_day',
-		'created_on_end_year', 'created_on_end_month', 'created_on_end_day',
-		);
+			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		) );
 
 } # end sub helpdesk_search
 
@@ -173,25 +176,33 @@ sub returns {
 		);
 
 	} # end if
-	ssi::get_start_end_dates( $log, $dbh, \%variable, 
-			$r->param('ddmStartYear'),
-			$r->param('ddmStartMonth'),
-			$r->param('ddmStartDay'),
-			$r->param('ddmEndYear'),
-			$r->param('ddmEndMonth'),
-			$r->param('ddmEndDay') );
 
-	$_ = "SELECT id, (SELECT name FROM Companies WHERE id=company_id), order_id, to_char(dtmRequestDate,'MM/DD/YYYY'), ysnApprove FROM RMA\n";
-	$_ .= "WHERE dtmRequestDate BETWEEN '$variable{'StartDate'} 00:00:00' AND '$variable{'EndDate'} 23:59:59'\n";
-	$_ .= "AND ysnReviewed = '".$param{'ddmReviewed'}."'\n" if $param{'ddmReviewed'};
-	$_ .= "AND company_id = '".$param{'ddmCustomers'}."'\n" if $param{'ddmCustomers'};
-	$_ .= "ORDER BY id";
-	@{$variable{'RMAS'}} = sql::execute( $log, $dbh, $_ );
+	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_start', -180 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_end', 0 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_end', 0 );
 
-	$variable{'ddmReviewed'.$param{'ddmReviewed'}} = 'selected';
-
+	_returns();
 } # end sub rma_search 
 
+sub _returns {
+	ssi::save_params( '/employee/support/returns.html', 
+			'status', 'company_id',
+			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+			( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
+			( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
+			);
+
+	@{$variable{'RMAS'}} = openprint::RMA->find(
+		ssi::date_filter( '/employee/support/returns.html?created_on_start', 'created_on >=' ),
+		ssi::date_filter( '/employee/support/returns.html?created_on_end', 'created_on <=' ),
+		ssi::date_filter( '/employee/support/returns.html?updated_on_start', 'updated_on >=' ),
+		ssi::date_filter( '/employee/support/returns.html?updated_on_end', 'updated_on <=' ),
+		( $session{'/employee/support/returns.html?company_id'} ? ( company_id	=>	'/employee/support/returns.html?company_id' ) : () ),
+		order	=>	'rmanumber,id',
+	);
+} # end sub _returns
 
 1;
 __END__

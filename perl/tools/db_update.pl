@@ -2892,6 +2892,23 @@ if ( ! sets::isin( 'assistants', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Assistants.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'rma_types', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Types.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'rma_statuses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Statuses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'rma', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='rma'", 'column_name');
+	if ( ! exists $$data{updated_on} ) {
+		$dbh->do('ALTER TABLE rma ADD updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
+	} # end if
+} # end if
 $dbh->disconnect();
 print "Finished\n";
 1;

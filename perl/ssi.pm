@@ -98,6 +98,11 @@ sub do_new_substitution {
 #$log->error("tranlsating  of $1: $result");
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
+	} elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+		my $result = hash_link($1);
+#$log->error("tranlsating  of $1: $result");
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -880,6 +885,15 @@ my %hash_cache;
 sub hash_link {
 	my ( $path ) = @_;
 
+	my $src;
+	if ( -e $config{SkinPath}.$path ) {
+		$src = $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		$src = $ENV{DOCUMENT_ROOT}.$path;
+	} else {
+		return $path;
+	} # end if
+
 	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 	my $script;
@@ -891,19 +905,14 @@ sub hash_link {
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
 			|| ! -f $script->{cache_file}
-			|| ( ( my $timestamp = (stat $script->{cache_file})[9] ) > $script->{timestamp} )
+			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
 	   ) {
 
-		$timestamp = (stat $script->{cache_file})[9] if ! $timestamp;
-
-		my $src;
-		if ( -e $config{SkinPath}.$path ) {
-			$src = $config{SkinPath}.$path;
-		} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-			$src = $ENV{DOCUMENT_ROOT}.$path;
-		} else {
-			return $path;
-		} # end if
+		#my @stat = stat $src;
+		#my $ctime = $stat[10];
+		#my $mtime = $stat[9];
+		#my $atime = $stat[8];
+#$log->debug("HASH UNCACHED $path ($$script{cache_file}) ($timestamp) ($$script{timestamp}) @stat");
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
@@ -915,9 +924,9 @@ sub hash_link {
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
-
 		my $hash = md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
+			src	=>	$src,
 			name => "$base-$hash.$ext",
 			path	=> $path,
 			cache_file => "$config{cache_dir}/$base-$hash.$ext",
@@ -932,7 +941,13 @@ sub hash_link {
 			} # end if
 			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
-	}
+	#} else {
+		#my @stat = stat $script->{src};
+
+#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+	} # end if
+
+	# cache_path is the url part
 	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 

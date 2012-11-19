@@ -1,7 +1,7 @@
 use strict;
 package openprint::support;
 
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use Email::Valid ();
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -14,6 +14,9 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *config = \%openprint::config;
 
 require sql;
+require openprint::RMA;
+require openprint::RMA_Type;
+require openprint::RMA_Status;
 
 sub returns {
 } # end sub returns 
@@ -21,7 +24,7 @@ sub returns {
 sub confirmation_returns {
 
 	my $order_id = $param{'order_id'};
-	my $prod_id = $param{'project_id'};
+	my $prod_id = openprint::Project->transform( 'id', $param{project_id} );
 	my ( $check_order_id, $check_cust_id );
 
 	if ( $param{'docket'} ) {
@@ -38,8 +41,7 @@ sub confirmation_returns {
 		return misc::error( $log, $dbh, \%variable, 'Error','You are not the owner of that order.' );
 	} # end if
 
-	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?';
-	if ( ! sql::execute( $log, $dbh, $_, $order_id, $prod_id ) ) {
+	if ( ! openprint::OrderedProject->find(order_id=>$order_id,project_id=>$prod_id) ) {
 		return misc::error( $log, $dbh, \%variable, 'Error',"Order $order_id does not contain project $prod_id" );
 	} # end if
 	

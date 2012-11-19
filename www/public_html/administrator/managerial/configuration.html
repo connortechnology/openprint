@@ -23,6 +23,8 @@
         if ( $description eq '' ) {
             $description = $name;
         } # end if
+
+		$name =~ s/\s/_/g;
         $html .= qq{<li id="$name"><label>$description</label>\n};
         if ( $type eq 'Supplier' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
@@ -30,11 +32,11 @@
             $html .= qq{</select>};
         } elsif ( $type eq 'pricelist' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
-            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find('order'=>'lower(name)') ], $value );
+            $html .= ssi::make_drop_down( openprint::Pricelist->dropdown(order=>'lower(name)'), $value );
             $html .= qq{</select>};
         } elsif ( $type eq 'currency' ) {
             $html .= qq{<select name="$name"><option value=""> select one </option>};
-            $html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $value );
+            $html .= ssi::make_drop_down( openprint::Currency->dropdown(order=>'lower(name)'), $value );
             $html .= qq{</select>};
         } elsif ( $type eq 'yes/no' ) {
             $html .= qq{<input type="radio" id="}.$name.qq{Y" name="$name" value="Y"};
@@ -50,8 +52,8 @@
             $html .= sprintf('<input type="text" name="%s" value="%s" />', ssi::htmlize($name, $value) );
         } # end if
 		$html .= '<span class="buttons">';
-		$html .= ssi::button( 'Delete'.$name, { 'onclick'=>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$name', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
-		$html .= ssi::button( 'Edit'.$name, { 'onclick'=>qq`popup_window('_configuration_popup.html','name=$name');`, 'text'=>'Edit' } );
+		$html .= ssi::button( 'Delete'.$name, { onclick =>qq`new Ajax.Request('_configuration.json', { parameters: { name: '$name', action: 'delete' }, evalScripts: true } );`, 'text'=>'Delete' } );
+		$html .= ssi::button( 'Edit'.$name, { onclick =>qq`popup_window('_configuration_popup.html','name=$name');`, 'text'=>'Edit' } );
 		$html .= '</span>';
         $html .= qq{</li>\n};
 		$cat = $category;
