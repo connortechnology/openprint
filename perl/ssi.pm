@@ -810,6 +810,15 @@ my %hash_cache;
 sub hash_link {
 	my ( $path ) = @_;
 
+	my $src;
+	if ( -e $config{SkinPath}.$path ) {
+		$src = $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		$src = $ENV{DOCUMENT_ROOT}.$path;
+	} else {
+		return $path;
+	} # end if
+
     $config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
     my $script;
@@ -821,17 +830,8 @@ sub hash_link {
 
     if ( !($script = $hash_cache{$config{SkinPath}}{$path})
             || ! -f $script->{cache_file}
-            || ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
+            || ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
        ) {
-
-        my $src;
-        if ( -e $config{SkinPath}.$path ) {
-            $src = $config{SkinPath}.$path;
-        } elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-            $src = $ENV{DOCUMENT_ROOT}.$path;
-        } else {
-            return $path;
-        } # end if
 
         my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
         $ext =~ s/^\.//;
@@ -843,9 +843,9 @@ sub hash_link {
             $blob = &CSS::Minifier::minify( input=>$blob );
         } # end if
 
-
         my $hash = md5_hex($blob);
         $hash_cache{$config{SkinPath}}{$path} = $script = {
+			src	=>	$src,
             name => "$base-$hash.$ext",
             path    => $path,
             cache_file => "$config{cache_dir}/$base-$hash.$ext",
