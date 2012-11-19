@@ -883,7 +883,6 @@ sub hash_link {
 	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 	my $script;
-$log->debug("Cache dir is $config{cache_dir}");
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
 		$log->debug("reading config");
 		$hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
@@ -894,10 +893,6 @@ $log->debug("Cache dir is $config{cache_dir}");
 			|| ! -f $script->{cache_file}
 			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
 	   ) {
-$log->debug("Generating new cache for $path");
-	foreach my $k ( keys %{$hash_cache{$config{SkinPath}}} ) {
-		$log->debug("cache contains $k ");
-	} # end foeach
 
 		my $src;
 		if ( -e $config{SkinPath}.$path ) {
@@ -933,13 +928,9 @@ $log->debug("Generating new cache for $path");
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-$log->debug("saving config $hash_cache{$config{SkinPath}}");
 			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
-	} else {
-$log->debug("Using cached for $path ");
 	}
-$log->debug("script path ($$script{path}) name ($$script{name})");
 	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
