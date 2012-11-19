@@ -892,9 +892,11 @@ $log->debug("Cache dir is $config{cache_dir}");
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
 			|| ! -f $script->{cache_file}
-			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
+			|| ( ( my $timestamp = (stat $script->{cache_file})[9] ) > $script->{timestamp} )
 	   ) {
-$log->debug("Generating new cache for $path");
+
+		$timestamp = (stat $script->{cache_file})[9] if ! $timestamp;
+$log->debug("Generating new cache for $path $timestamp > $$script{timestamp} ");
 	foreach my $k ( keys %{$hash_cache{$config{SkinPath}}} ) {
 		$log->debug("cache contains $k ");
 	} # end foeach
@@ -937,7 +939,7 @@ $log->debug("saving config $hash_cache{$config{SkinPath}}");
 			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	} else {
-$log->debug("Using cached for $path ");
+$log->debug("Using cached for $path $timestamp > $$script{timestamp}");
 	}
 $log->debug("script path ($$script{path}) name ($$script{name})");
 	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
