@@ -12,9 +12,16 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 sub list {
 	my $ProductCategory = new openprint::Product_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		$ProductCategory->save( \%param );
+		$variable{error} .= $ProductCategory->save( \%param );
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/product_categories/list.html';
+			$session{information} .= 'Category saved.';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
-		$ProductCategory->delete();
+		$variable{error} .= $ProductCategory->delete();
+		if ( ! $variable{error} ) {
+			$variable{ExternalRedirect} = '/administrator/product_categories/list.html';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Name', 'Description' );
 	    my @data = sql::execute( $log, $dbh, 'SELECT name, description FROM Product_Categories' );

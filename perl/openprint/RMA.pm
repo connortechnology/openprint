@@ -16,7 +16,8 @@ $serial = 'rma_id_seq';
 	user_id		=>	'user_id',
 	project_id	=>	'project_id',
 	order_id	=>	'order_id',
-	type		=>	'type',
+	type_id		=>	'type_id',
+	type		=>	undef,
 	created_on	=>	'created_on',
 	updated_on	=>	'updated_on',
 	description	=>	'description',
@@ -24,6 +25,7 @@ $serial = 'rma_id_seq';
 	rmanumber	=>	'rmanumber',
 	approved	=>	'approved',
 	status_id	=>	'status_id',
+	status		=>	undef,
 );
 
 %transforms = (
@@ -41,6 +43,7 @@ $serial = 'rma_id_seq';
 	type_id		=>	undef,
 	status_id	=>	undef,
 	created_on	=>	q`'NOW()'`,
+	approved	=>	0,
 );
 
 sub Type {

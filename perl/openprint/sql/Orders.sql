@@ -59,5 +59,7 @@ CREATE TABLE Orders (
 	strAdministratorComments	TEXT,
 	strAdministratorName		TEXT,
 	lngDocketNumber			INTEGER,
+	strsessionid			TEXT,
+	invoice_id				INTEGER, FOREIGN KEY (invoice_id) REFERENCES invoices(id),
 	PRIMARY KEY (id)
 );

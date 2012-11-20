@@ -100,9 +100,11 @@
 						<label>Sort</label>
 						<input type="number" name="sort" value="<? echo ( 1*$$variable{'Product'}->sort(); ) ?>" />
 					</li>
+<? if ( $$variable{Product}->id() ) ?>
 					<li><label>Created On</label>
 						<? echo ( Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $variable{Product}->created_on() ) ); ) ?>
 					</li>
+<? endif ( $$variable{Product}->id() ) ?>
 <? if ( openprint::ProjectType->find_one() ) ?>
 					<li>
 						<label>Template</label>

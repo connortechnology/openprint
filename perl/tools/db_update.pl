@@ -2909,6 +2909,32 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 	if ( ! exists $$data{updated_on} ) {
 		$dbh->do('ALTER TABLE rma ADD updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 	} # end if
+	if ( ! exists $$data{approved} ) {
+		$dbh->do('ALTER TABLE rma add approved BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( exists $$data{approve} ) {
+		$dbh->do(q`UPDATE rma SET approved=true WHERE approve='Y'`);
+		$dbh->do('ALTER TABLE rma DROP approve');
+	} # end if
+	if ( ! exists $$data{type_id} ) {
+		$dbh->do('ALTER TABLE rma ADD type_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (type_id) REFERENCES RMA_Types (id)');
+	} # end if
+	if ( exists $$data{type} ) {
+		foreach my $type ( sql::execute( undef, undef, 'SELECT DISTINCT type FROM RMA' ) ) {
+			next if ! openprint::RMA_Type->transform('name',$type);
+			if ( ! openprint::RMA_Type->find_one(name=>$type) ) {
+				my $Type = new openprint::RMA_Type();
+				$Type->save({name=>$type});
+			} # end if
+		} # end foreach
+		$dbh->do('UPDATE rma set type_id=(SELECT id FROM rma_types WHERE name=type)');
+		$dbh->do('ALTER TABLE rma DROP type');
+	} # end if
+	if ( ! exists $$data{status_id} ) {
+		$dbh->do('ALTER TABLE rma ADD status_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
+	} # end if
 } # end if
 $dbh->disconnect();
 print "Finished\n";
