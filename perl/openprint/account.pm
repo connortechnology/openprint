@@ -100,7 +100,7 @@ sub registration {
 			# Remove spaces, because some people want to put spaces between the characters, etc.
 			$param{'Captcha'} =~ s/\s//g;
 			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-				$error .= 'Validation Code incorrect.  Please try again.';
+				$error .= 'Captcha validation code incorrect.  Please try again.';
 			} # end if
 		} # end if
 	} # end if
