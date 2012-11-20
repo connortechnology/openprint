@@ -18,7 +18,7 @@ require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
 
-sub returns {
+sub rma {
 	if ( $param{action} eq 'Submit' ) {
 
 		$param{project_id} = openprint::Project->transform( 'id', $param{project_id} );
@@ -32,7 +32,15 @@ sub returns {
 			$Order = openprint::Order->find_one(id=>$param{order_id}) if $param{order_id};
 		} # end if
 
+		
 		if ( ! $Order ) {
+			if ( $param{company} ) {
+				my $Company = openprint::Company->find_one('name lc'=>lc openprint::Company->transform($param{company}) );
+				if ( ! $Company ) {
+					$Company = new openprint::Company();
+					$Company->save({name=>$param{company}});
+				} # end if
+			} # end if
 			if ( $config{RMAValidOrder} ne 'Y' ) {
 				$Order = new openprint::Order();
 				$variable{error} .= $Order->save({

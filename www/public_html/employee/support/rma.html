@@ -1,0 +1,64 @@
+<script type="text/javascript">
+	function submit_handler(form) {
+		form.submit();
+	} // end function
+</script>  
+<div class="Support"><div class="RMA">
+<!--#include virtual="/includes/error_reporting.html"-->
+	<form id="f1" name="f1" method="post" action="rma.html">
+		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
+			<ul>
+			<li> 
+				<label>Submission Date</label>
+				<? echo ( format_datetime( $variable{RMA}->created_on() ); ) ?>
+			</li>
+			<li> 
+				<label>Order #</label>
+				<a href="/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $$variable{RMA}->order_id() ) ?></a>
+			</li>
+			<li> 
+				<label>Order Date</label>
+				<? echo ( format_datetime( $variable{RMA}->Order()->created_on() ); ) ?>
+			</li>
+			<li>
+				<label>Docket #: (click to view)</label>
+				<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&order_id=<?OrderID?>"><?ProjectReference?></a>
+			</li>
+			<li class="Company">
+				<label>Company Name</label>
+				<? echo ( $$variable{RMA}->Company()->name() ) ?>
+			</li>
+			<li class="description">
+				<label>Description of problem</label>
+				<? echo ( $$variable{RMA}->description() ) ?>
+			</li>
+			<li> 
+				<label>Type of Request</label>
+				<? echo ( $$variable{RMA}->type() ) ?>
+			</li>
+			<li> 
+				<label>Status</label>
+				<? echo ( $$variable{RMA}->status() ) ?>
+			</li>
+			<li> 
+				<label>RMA #</label>
+				<? if ( ! $$variable{RMA}->rmanumber() ) ?>
+				<input type="text" name="RMANumber" value="<?RMANumber?>">
+				<? else ( ! $$variable{RMA}->rmanumber() ) ?>
+				<? echo ( $$variable{RMA}->rmanumber() ) ?>
+				<? endif ( ! $$variable{RMA}->rmanumber() ) ?>
+			</li>
+		</ul>
+	</fieldset>
+<p class="buttons">
+<? echo ( join("\n",
+		button('Save', { onclick=>q`f1.btnFunction.value='Save';submit_handler(f1);` } ),
+		button('Reset', { onclick=>'f1.reset();' } ),
+); ) ?>
+</p>
+
+		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
+		<input type="hidden" name="btnFunction"/>
+	</form>
+</div>
+</div>

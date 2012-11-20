@@ -1,12 +1,12 @@
 use strict;
 package openprint::employee_support;
 
-require MIME::QuotedPrint;
-
 require sql;
 require misc;
 require openprint;
 require openprint::RMA;
+require openprint::RMA_Type;
+require openprint::RMA_Status;
 require openprint::Email;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -39,14 +39,13 @@ sub helpdesk {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		my $email_template = ssi::variable_substitution( \$_, \%info );
 
 		my $Email = new openprint::Email();
+		$Email->html_body( ssi::variable_substitution( \$_, \%info ) );
 		$Email->send(
 			FROM	=> $config{'HelpdeskEmail'},
 			TO		=> $email,
 			SUBJECT	=> 'Your help desk submission has been reviewed.',
-			ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 	} # end if
 
@@ -66,29 +65,10 @@ sub helpdesk {
 } # end sub helpdesk
 
 sub rma {
-	my $rma = $param{'rma_id'};
 
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
 
-	$_ = q{SELECT company_id,
-		to_char(dtmRequestDate,'MM/DD/YYYY'), chrRMAType, strDescription, ysnApprove, txtComments,strRMANumber,
-		order_id, (SELECT dtmOrderDate FROM Orders WHERE Orders.id=RMA.order_id),
-		project_id, (SELECT strReference FROM Projects WHERE Projects.id=project_id)
-		FROM RMA WHERE id=?};
-	@variable{'CustomerIndex', 
-		'RequestDate', 'RMAType','Problem','Verdict','txtAdminComments','RMANumber',
-		'OrderID', 'OrderDate',
-		'ProjectIndex','ProjectReference'
-	} = sql::execute( $log, $dbh, $_, $rma );
-	$variable{'CompanyName'} = new openprint::Company( $variable{'CustomerIndex'} )->name();
-
-
-	$variable{'rmatype'} = 'Credit' if $variable{'RMAType'} eq 'C';
-	$variable{'rmatype'} = 'Reproduction' if $variable{'RMAType'} eq 'R';
-	$variable{'rmatype'} = 'Service' if $variable{'RMAType'} eq 'S';
-
-	$variable{'rdbVerdict'.$variable{'Verdict'}} = 'CHECKED';
-
-	$variable{'RMAIndex'} = $rma;
 } # end sub rma
 
 sub helpdesk_search {
@@ -168,11 +148,11 @@ sub returns {
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my $Email = new openprint::Email();
+		$Email->html_body( $email_template );
 		$Email->send(
 				FROM	=> $config{'RMAEmail'},
 				TO		=> $To,
 				SUBJECT	=> 'Your RMA has been reviewed.',
-				ATTACHMENTS => [ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
 		);
 
 	} # end if
@@ -186,7 +166,8 @@ sub returns {
 } # end sub rma_search 
 
 sub _returns {
-	ssi::save_params( '/employee/support/returns.html', 
+	my $url = '/employee/support/returns.html';
+	ssi::save_params( $url,
 			'status', 'company_id',
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
@@ -194,12 +175,19 @@ sub _returns {
 			( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 			);
 
-	@{$variable{'RMAS'}} = openprint::RMA->find(
-		ssi::date_filter( '/employee/support/returns.html?created_on_start', 'created_on >=' ),
-		ssi::date_filter( '/employee/support/returns.html?created_on_end', 'created_on <=' ),
-		ssi::date_filter( '/employee/support/returns.html?updated_on_start', 'updated_on >=' ),
-		ssi::date_filter( '/employee/support/returns.html?updated_on_end', 'updated_on <=' ),
-		( $session{'/employee/support/returns.html?company_id'} ? ( company_id	=>	'/employee/support/returns.html?company_id' ) : () ),
+	my %companies = @{openprint::Company->dropdown()};
+	my @company_ids = keys %companies;
+
+	if ( $session{$url.'?company_id'} and ! sets::isin( $session{$url.'?company_id'}, \@company_ids ) ) {
+		delete $session{$url.'?company_id'};
+	} # end if
+
+	@{$variable{RMAS}} = openprint::RMA->find(
+		ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
+		ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
+		ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+		ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
+		company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ),
 		order	=>	'rmanumber,id',
 	);
 } # end sub _returns

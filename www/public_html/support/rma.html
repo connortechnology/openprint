@@ -1,10 +1,16 @@
 <div class="Support"><div class="Return">
 <!--#include virtual="/includes/error_reporting.html"-->
-<form method="post" id="f1" name="f1" action="returns.html">
+<form method="post" id="f1" name="f1" action="rma.html">
 <fieldset>
 	Please fill out the return authorization form and verify the information below.<br/>
 	<br/>
 	<ul>
+<? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
+		<li class="rmanumber">
+		<label>RMA Number</label>
+		<input type="text" name="rmanumber" value="<? echo ( $param{rmanumber} ) ?>" />
+		</li>
+<? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 		<li class="docket"> 
 			<label>Docket ID</label>
 			<? echo ( input( type=>'cardinal', name=>'docket', value=>$param{docket} ); ) ?>
@@ -18,12 +24,14 @@
 		</li>
 <? if ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 		<li><label>Company</label>
-			<select name="company_id">
-				<option value="">All</option>
+			<select name="company_id" id="company_id" onchange="$('company').value='';">
+				<option value="">None or new</option>
 				<? echo (
 					openprint::Company::get_dropdown( $session{'/support/returns.html?company_id'} ? $session{'/support/returns.html?company_id'} : $param{company_id} );
 				) ?>
 			</select>
+			or 
+			<input type="text" name="company" id="company" value="<? echo ( $param{company} ) ?>" onkeyup="ddm_select_by_text($('company_id'), this.value, 0);" placeholder="Enter new company here"/>
 		</li>
 <? endif ( sets::isin( $session{user_type},[ 'E', 'A' ] ) ) ?>
 
@@ -53,7 +61,6 @@
 			} );
 	} # end if
 	$html .= ssi::select( openprint::Product->dropdown(order=>'lower(name)'), undef, { name=>'product_id', id=>'product_id' } );
-) ?>
 	return $html;
 ) ?>
 		</li>
@@ -65,8 +72,8 @@
 	</ul>
 	<p class="buttons">
 	<? echo ( join("\n",
-				ssi::button( 'Submit', { onclick=>"f1.elements['action'].value='Submit';f1.submit();", text=>'Submit' } ),
-				ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ), 
+				ssi::button( 'Submit', { onclick=>"f1.elements['action'].value='Submit';f1.submit();" } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();' } ), 
 	); ) ?>
 	</p>
 </fieldset>
