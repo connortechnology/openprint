@@ -410,7 +410,9 @@ sub subtotal {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'subtotal'} = shift;
-	} elsif ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'subtotal'} ) {
+	} # end if
+
+	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'subtotal'} ) {
 		$$self{'subtotal'} = 0;
 		foreach my $Project ( $self->Projects() ) {
 			my $price = $Project->ordered_price();
@@ -440,12 +442,12 @@ sub total {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'total'} = shift;
-	} elsif ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
+	} # emd of
+	if ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal();
 		foreach my $Tax ( $self->Taxes() ) {
 			$$self{'total'} += $Tax->amount();
 		} # end foreach Tax
-$log->debug("Calcingtotal $$self{total}");
 	} # end if
 	return $$self{'total'};
 } # end sub total

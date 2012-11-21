@@ -37,14 +37,15 @@
 			<li> 
 				<label>Created</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
+<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { onchange=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				</span>
 				to
 				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_end', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
+<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_end', { onchange=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				</span>
 			</li>
 			</ul>
+			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join( '',
 					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
