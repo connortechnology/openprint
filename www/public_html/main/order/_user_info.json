@@ -1,0 +1,8 @@
+<? echo (
+	my $User = new openprint::User( $param{user_id} );
+	my $html;
+	foreach my $field ( 'salutation', 'firstname','lastname','phone','fax','email' ) {
+	$html .= qq`set_value(\$('$field'), '$$User{$field}');\n`;
+	} # end foreach
+	return $html;
+) ?>
