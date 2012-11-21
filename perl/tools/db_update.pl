@@ -465,6 +465,12 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	if ( ! exists $$data{'summary'} ) {
 		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
 	} # end if
+	if ( ! exists $$data{priority} ) {
+		$dbh->do(q`ALTER TABLE projects ADD priority INTEGER`) or $log->error($dbh->errstr());
+	} # end if
+	if ( ! exists $$data{production_comments} ) {
+		$dbh->do(q`ALTER TABLE projects ADD production_comments TEXT`) or $log->error($dbh->errstr());
+	} # end if
 } # end if
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Service_Types rename column strid to name});
