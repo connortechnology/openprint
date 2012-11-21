@@ -48,35 +48,5 @@
 ); ) ?>
 		</p>
 	</fieldset>
+	<div id="Results"><!--#include virtual="_returns.html"--></div>
 </form>
-<? if ( @{$$variable{'RMAS'}} ) ?>
-<table class="List">
-	<tr>
-		<th align="left">Company</th>
-		<th align="center" width="100">OrderID</th>
-		<th align="center" width="200">Date</th>
-		<th align="right" width="100">Status</th>
-	</tr>
-	<? while ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
-	<tr>
-		<td align="left"><a href="return.html?rma_id=<?index?>">&nbsp;<?name?></a></td>
-		<td align="center"><a href="return.html?rma_id=<?index?>">&nbsp;<?order_id?></a></td>
-		<td align="center"><a href="return.html?rma_id=<?index?>">&nbsp;<?date?></a></td>
-		<td align="right"><a href="return.html?rma_id=<?index?>">&nbsp;
-<? if ( $$variable{'status'} eq 'Y' ) ?>
-Approved
-<? endif ( $$variable{'status'} eq 'Y' ) ?>
-<? if ( $$variable{'status'} eq 'N' ) ?>
-Declined
-<? endif ( $$variable{'status'} eq 'N' ) ?>
-<? if ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
-Non-Reviewed
-<? endif ( $$variable{'status'} ne 'N' and $$variable{'status'} ne 'Y' ) ?>
-</a></td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'index','name','order_id','date','status'} = splice @{$$variable{'RMAS'}},0,5; ) ?>
-</table>
-<? else ( @{$$variable{'RMAS'}} ) ?>
-There were no results matching your criteria.<br>
-<? endif ( @{$$variable{'RMAS'}} ) ?>

@@ -31,7 +31,7 @@
 		<li><label>Deleted?</label><? echo ( ssi::radio( 'deleted', [ '1','Yes', '0', 'No', '', 'Both' ], $param{'deleted'}, {'onclick'=>"f1.ddmCustomer.selectedIndex=-1;f1.btnFunction.value='Go';f1.submit();"} ); ) ?></li>
 		<li> 
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" />
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" class="filter" />
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
