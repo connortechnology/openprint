@@ -3,22 +3,29 @@
 <h2>History</h2>
 </div>
 <? if ( $session{'user_id'} ) ?>
-<form name="f1" action="history.html" method="post">
+<form id="f1" name="f1" action="history.html" method="post">
 	<div class="Order"><div class="History">
 		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID</legend>
-			<p>
-				<label for="OrderID">Order ID</label>
-				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
-			</p>
-			<p>
+			<ul>
+			<li>
+				<label for="order_id">Order ID</label>
+				<? echo ( join("\n",
+					input( type=>'cardinal', id=>'order_id', name=>'order_id', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go1', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+				); ) ?>
+			</li>
+			<li>
 				<label>Docket</label>
-				<input type="text" size="10" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
-			</p>
+				<? echo ( join("\n",
+					input( type=>'cardinal', id=>'Docket', name=>'Docket', onkeydown=>'if(event.keyCode == 13){f1.submit();}' ),
+					button( 'Go2', { onclick=>"LoadContent('Results','/main/order/_history.html',f1);", text=>'Go' } ),
+				); ) ?>
+			</li>
+			</ul>
 		</fieldset>
 		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria</legend>
-			<p>
+			<ul>
+			<li>
 				<label>Ordered by</label>
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
 					<option value="">Ordered By</option>
@@ -26,21 +33,22 @@
 						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>
 				</select>
-			</p>
-			<p> 
+			</li>
+			<li> 
 				<label>Created</label>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
-				to
 				</span>
+				to
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_end', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				</span>
-			</p>
+			</li>
+			</ul>
 			<p class="buttons">
 				<? echo ( join( '',
-					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::button( 'ShowResults', { onclick=>'f1.submit();', text=>'Show Results' } ),
+					ssi::button( 'Reset', { onclick=>'f1.reset();' } ),
 				); ) ?>
 			</p>
 		</fieldset>

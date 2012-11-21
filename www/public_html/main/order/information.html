@@ -2,13 +2,10 @@
 <h1>Orders</h1>
 <h2>Information</h2>
 </div>
-<script type="text/javascript" src="/main/order/order.js"></script>
+<script type="text/javascript" src="<? hash_link( /main/order/order.js ) ?>"></script>
 <div class="Order"><div class="Information">
 	<!--#include virtual="/includes/error_reporting.html"-->
-<? if ( ! $$variable{Order}->id() ) ?>
-	<div class="error">There was a problem creating an order. Please contact support.</div>
-<? else ( ! $$variable{Order}->id() ) ?>
-
+<? if ( $$variable{Order}->id() ) ?>
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
 			<div id="Information">
@@ -64,9 +61,8 @@
 			<div id="ShippingInformation">
 				<? echo (
 					# If there is only 1 thing in the order, then we can condense
-					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();;
+					$$variable{'Project'} = $$variable{'Contents'}[0]->Project();
 					my $html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_quantity_select.html' );
-
 					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_shipping_type_select.html' );
 					return $html;
 				) ?>
@@ -81,7 +77,7 @@
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
 							$html .= '<div class="Project"><h3 class="project_id"><a href="/main/project/view.html?ProjectIndex='.$Project->id().'">Project '.$Project->id().'</a></h3><p class="buttons">';
-							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;project_id=$$Project{id}", 'text'=>'Remove' } );
+							$html .= ssi::button( 'Remove'.$$Project{id}, { href=>"information.html?order_id=$$variable{order_id}&amp;action=remove&amp;project_id=$$Project{id}", text=>'Remove' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
 							$html .= '</div>';
@@ -96,7 +92,7 @@
 							$$variable{'Product'} = $Product;
 							my $Project = $$variable{'Project'} = $Product->Project();
 							$html .= '<div class="Project"><p class="buttons">';
-							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?OrderID=$$variable{'OrderID'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
+							$html .= ssi::button( 'Remove'.$$Project{'id'}, { 'href'=>"information.html?order_id=$$variable{'order_id'}&amp;action=remove&amp;product_id=$$Product{id}", 'text' => 'Remove' } );
 							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
 							$html .= '</div>';
@@ -123,20 +119,20 @@
 				if ( @Projects ) {
 					my $Project = $Projects[0];
 					if ( $Project->mode() eq 'Simple' ) {
-						$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif','','/content/'.$Project->Type()->url().'?project_id='.$$Project{'id'},'Back' );
+						$html .= ssi::button( 'Back',{ href=>'/content/'.$Project->Type()->url().'?project_id='.$$Project{id}} );
 					} else {
-						$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif','','/main/project/view.html?ProjectIndex='.$$Project{'id'},'Back' );
+						$html .= ssi::button( 'Back', { href=>'/main/project/view.html?ProjectIndex='.$$Project{id} } );
 					} 
 				} else {
 					$log->debug("NO Project");
 				} # end if
 				$html .= ssi::button( 'AddProject', { onclick=>'', href=>'/main/project/history.html', text=>'Add Project From History' } ) if $config{'OrderMode'} ne 'Simple';
-				$html .= ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();', href=>'', text=>'Save And Continue' } ); 
+				$html .= ssi::button( 'SaveAndContinue', { onclick=>'f1.submit();', text=>'Save And Continue' } ); 
 				return $html;
 			) ?>
 		</p>
-		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+		<input type="hidden" name="order_id" value="<?order_id?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-<? endif ( ! $$variable{Order}->id() ) ?>
+<? endif ( $$variable{Order}->id() ) ?>
 </div><!--Information--></div><!--class=Order-->
