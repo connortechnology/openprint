@@ -578,6 +578,7 @@ if ( ! sets::isin( 'project_files', \@tables ) ) {
 		$dbh->do('ALTER TABLE project_files ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 	} # end if
 	$dbh->do('ALTER TABLE project_files ALTER project_id DROP NOT NULL');
+	$dbh->do('ALTER TABLE project_files ALTER description DROP NOT NULL');
 	
 }
 
@@ -2892,6 +2893,53 @@ if ( ! sets::isin( 'assistants', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Assistants.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'rma_types', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Types.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'rma_statuses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Statuses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'rma', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='rma'", 'column_name');
+	if ( ! exists $$data{updated_on} ) {
+		$dbh->do('ALTER TABLE rma ADD updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
+	} # end if
+	if ( ! exists $$data{approved} ) {
+		$dbh->do('ALTER TABLE rma add approved BOOLEAN NOT NULL DEFAULT FALSE');
+	} # end if
+	if ( exists $$data{approve} ) {
+		$dbh->do(q`UPDATE rma SET approved=true WHERE approve='Y'`);
+		$dbh->do('ALTER TABLE rma DROP approve');
+	} # end if
+	if ( ! exists $$data{type_id} ) {
+		$dbh->do('ALTER TABLE rma ADD type_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (type_id) REFERENCES RMA_Types (id)');
+	} # end if
+	if ( exists $$data{type} ) {
+		foreach my $type ( sql::execute( undef, undef, 'SELECT DISTINCT type FROM RMA' ) ) {
+			next if ! openprint::RMA_Type->transform('name',$type);
+			if ( ! openprint::RMA_Type->find_one(name=>$type) ) {
+				my $Type = new openprint::RMA_Type();
+				$Type->save({name=>$type});
+			} # end if
+		} # end foreach
+		$dbh->do('UPDATE rma set type_id=(SELECT id FROM rma_types WHERE name=type)');
+		$dbh->do('ALTER TABLE rma DROP type');
+	} # end if
+	if ( ! exists $$data{status_id} ) {
+		$dbh->do('ALTER TABLE rma ADD status_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
+	} # end if
+} # end if
+if ( ! sets::isin( 'glossary', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Glossary.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 print "Finished\n";
 1;

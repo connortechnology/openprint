@@ -58,10 +58,16 @@ $serial = 'orders_id_seq';
 	'administrator_comments'	=> 'stradministratorcomments',
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
-	'invoiced_on'				=>	'invoiced_on',
+	# deprecated, look up invioce and use it's created_on time instead
+	#'invoiced_on'				=>	'invoiced_on',
 	'terms_accepted'			=>	'terms_accepted',
 	'supplier_id'				=>	'supplier_id',
 	);
+
+%transforms = (
+	id		=>	[ 's/\D//g' ],
+	docket	=>	[ 's/\D//g' ],
+);
 
 %find_fields = (
 	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',

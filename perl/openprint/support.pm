@@ -1,7 +1,7 @@
 use strict;
 package openprint::support;
 
-use MIME::QuotedPrint ();
+require MIME::QuotedPrint;
 use Email::Valid ();
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -14,84 +14,98 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 *config = \%openprint::config;
 
 require sql;
+require openprint::RMA;
+require openprint::RMA_Type;
+require openprint::RMA_Status;
 
-sub returns {
-} # end sub returns 
+sub rma {
+	if ( $param{action} eq 'Submit' ) {
 
-sub confirmation_returns {
+		$param{project_id} = openprint::Project->transform( 'id', $param{project_id} );
+		my $Order;
 
-	my $order_id = $param{'order_id'};
-	my $prod_id = $param{'project_id'};
-	my ( $check_order_id, $check_cust_id );
+		if ( $param{docket} ) {
+			$param{docket} = openprint::Order->transform('docket', $param{docket} );
+			$Order = openprint::Order->find_one(docket=>$param{docket}) if $param{docket};
+		} elsif ( $param{order_id} ) {
+			$param{order_id} = openprint::Order->transform('id', $param{order_id} );
+			$Order = openprint::Order->find_one(id=>$param{order_id}) if $param{order_id};
+		} # end if
 
-	if ( $param{'docket'} ) {
-		$_ = 'SELECT Index, CompanyIndex FROM Orders WHERE lngDocketNumber=?';
-		( $check_order_id, $check_cust_id ) = sql::execute( $log, $dbh, $_, $openprint::param{'docket'} );
-	} elsif ( $param{'order_id'} ) {
-		$_ = 'SELECT Index, CompanyIndex FROM Orders WHERE Index=?';
-		( $check_order_id, $check_cust_id ) = sql::execute( $log, $dbh, $_, $order_id );
-	} # end if
+		
+		if ( ! $Order ) {
+			if ( $param{company} ) {
+				my $Company = openprint::Company->find_one('name lc'=>lc openprint::Company->transform($param{company}) );
+				if ( ! $Company ) {
+					$Company = new openprint::Company();
+					$Company->save({name=>$param{company}});
+				} # end if
+			} # end if
+			if ( $config{RMAValidOrder} ne 'Y' ) {
+				$Order = new openprint::Order();
+				$variable{error} .= $Order->save({
+					id		=>	$param{order_id},
+					docket	=>	$param{docket},
+					company_id => ( $param{company_id} ? $param{company_id} : $session{company_id} ),
+				}, 1 );
+			} else {
+				$variable{error} .= 'Invalid Order ID';
+				return;
+			} # end if
+		} elsif ( ( ! sets::isin( $session{user_type}, ['E','A'] ) ) and ( $Order->company_id() != $session{company_id} ) ) {
+			$variable{error} .= 'You are not the owner of that order.';
+			return;
+		} # end if
 
-	if ( $check_order_id eq '' ) {
-		return misc::error( $log, $dbh, \%variable, 'Error','Invalid Order ID' );
-	} elsif ( $check_cust_id != $session{'company_id'} ) {
-		return misc::error( $log, $dbh, \%variable, 'Error','You are not the owner of that order.' );
-	} # end if
+		my $Project = new openprint::Project( $param{project_id} );
+		if ( $param{project_id} and ! openprint::OrderedProject->find(order_id=>$$Order{id},project_id=>$param{project_id}) ) {
+			$variable{error} .= qq`Order <a href="/main/order/history_details.html?order_id=$$Order{id}">$$Order{id}</a> does not contain project <a href="/main/project/view.html?project_id=$param{project_id}">$param{project_id}</a>.`;
+			return;
+		} # end if
 
-	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?';
-	if ( ! sql::execute( $log, $dbh, $_, $order_id, $prod_id ) ) {
-		return misc::error( $log, $dbh, \%variable, 'Error',"Order $order_id does not contain project $prod_id" );
-	} # end if
-	
-	my ( $rma_id ) = sql::execute( $log, $dbh, "SELECT nextval('RMA_Index_seq')" );
-	
-	sql::insert( $log, $dbh, 'tbl_RMA',
-		'lngIndex',			$rma_id,
-		'lngProjectIndex',	$prod_id,
-		'lngCustomerIndex',	$session{'company_id'},
-		'lngUserIndex',		$session{'user_id'},
-		'OrderIndex',		$order_id,
-		'chrRMAType',		$param{'rdbRMAType'},
-		'strDescription',	$param{'txtDescription'},
-		'ysnApprove',		undef,
-		'dtmRequestDate',	'NOW()',
-	);
+		my $RMA = new openprint::RMA();
+		$variable{error} .= $RMA->save({
+				project_id		=>	$param{project_id},
+				company_id		=>	( sets::isin( $session{user_type}, ['E','A'] ) ? $param{company_id} : $session{'company_id'} ),
+				user_id			=>	$session{user_id},
+				order_id		=>	$$Order{id},
+				type_id			=>	$param{type_id},
+				description		=>	$param{description},
+				});
+		return if $variable{error};
+		
+		$session{information} .= 'RMA has been saved.';
 
-	my %info;
-	$_ = "SELECT strSalutation, strFirstName, strLastName, strEmail FROM Orders WHERE Index=?";
-	@info{'Salutation','FirstName','LastName','Email'} = sql::execute( $log, $dbh, $_, $order_id );
-
-	$info{'ProjectIndex'} = $prod_id;
-	my $Project = new openprint::Project( $prod_id );
-	@info{'ProjectReference'} = $Project->reference();
-	$info{'OrderID'} = $order_id;
-	$info{'RMAType'} = ( $param{'rdbRMAType'} eq 'C' ? 'Credit' : 'Reproduction' );
-	$info{'Description'} = $param{'txtDescription'};
-	$info{'RMAIndex'} = $rma_id;
-
-	my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/rma_notification.html' );
-	$template = ssi::variable_substitution( $template, \%info );
-
-	my $Email = new openprint::Email();
-	$Email->send(
-			FROM	=> $config{'RMAEmail'},
-			TO		=> $config{'RMAEmail'},
-			SUBJECT => 'Online RMA Submission.',
-			ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($template), 'text/html', 'quoted-printable' ],
-			);
-
-	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
-	$info{'ReplacementText'} = ssi::variable_substitution( $info{'ReplacementText'}, \%info );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$email_template = ssi::variable_substitution( $email_template, \%info );
-
-	$Email = new openprint::Email();
-	$Email->send(
-		TO		=> $info{'Email'},
-		FROM	=> $config{'RMAEmail'},
-		SUBJECT => 'Online RMA Submission.',
-		ATTACHMENTS	=>	[ '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ],
+		my %info = (
+			RMA		=>	$RMA,
+			Project	=>	$Project,
+			Order	=>	$Order,
 		);
+
+		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/rma_notification.html' );
+		$template = ssi::variable_substitution( \$template, \%info );
+
+		my $Email = new openprint::Email();
+		$Email->html_body( $template );
+		$Email->send(
+				FROM	=> $config{'RMAEmail'},
+				TO		=> $config{'RMAEmail'},
+				SUBJECT => 'Online RMA Submission.',
+				);
+
+		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+
+		$template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+		$template = ssi::variable_substitution( \$template, \%info );
+
+		$Email->html_body( $template );
+		$Email->send(
+				TO		=> $info{'Email'},
+				);
+		$variable{ExternalRedirect} = '/support/returns.html';
+		%param = ();
+	} # end if action
 
 } # end sub rma
 

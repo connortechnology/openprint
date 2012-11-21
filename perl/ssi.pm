@@ -32,6 +32,15 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+#Used for resource hashed links
+my %hash_cache;
+
+#Used for writeTip
+my %Glossary;
+
+# Used for translations
+my %Lexicon;
+
 sub do_new_substitution {
 	my ( $command, $text, $variable ) = @_;
 	if ( $$command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
@@ -95,6 +104,11 @@ sub do_new_substitution {
 		return $result;
 	} elsif ( $$command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 		my $result = translate($1);
+#$log->error("tranlsating  of $1: $result");
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
+	} elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+		my $result = hash_link($1);
 #$log->error("tranlsating  of $1: $result");
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
@@ -535,8 +549,15 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
-}
+	if ( ! %Glossary ) {
+		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	} # end if
+	if ( $Glossary{$word} ) {
+		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
+	} else {
+		return $word;
+	} # endif
+} # end  sub writeTip
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
@@ -781,14 +802,12 @@ sub date_filter {
 		#foreach my $k ( keys %$hash ) {
 			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
 		#} # end foreach
-	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
 		return ();
 	} # end if
 	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-	$month = 1 if ! $month;
-	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
@@ -857,7 +876,6 @@ sub select( $$$ ) {
 	$html .= '</select>';
 } # end sub select($$$)
 
-my %Lexicon;
 sub translate($) {
 	if ( ! %Lexicon ) {
 		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
@@ -876,26 +894,39 @@ sub reset_session($) {
 	$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
-my %hash_cache;
 
 # If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
 	my ( $path ) = @_;
 
+	my $src;
+	if ( -e $config{SkinPath}.$path ) {
+		$src = $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		$src = $ENV{DOCUMENT_ROOT}.$path;
+	} else {
+		return $path;
+	} # end if
+
+	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
+
 	my $script;
-	if (  !($hash_cache{$config{SkinPath}} and $script = $hash_cache{$config{SkinPath}}{$path})
-			|| ! -f $script->{path}
-			|| ( ( my $timestamp = (stat $_)[9] ) > $script->{timestamp} )
+	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
+		$log->debug("reading config");
+		$hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+	} # end if
+
+	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
+			|| ! -f $script->{cache_file}
+			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
 	   ) {
 
-		my $src;
-		if ( -e $config{SkinPath}.$path ) {
-			$src = $config{SkinPath}.$path;
-		} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
-			$src = $ENV{DOCUMENT_ROOT}.$path;
-		} else {
-			return $path;
-		} # end if
+		#my @stat = stat $src;
+		#my $ctime = $stat[10];
+		#my $mtime = $stat[9];
+		#my $atime = $stat[8];
+#$log->debug("HASH UNCACHED $path ($$script{cache_file}) ($timestamp) ($$script{timestamp}) @stat");
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
@@ -907,26 +938,39 @@ sub hash_link {
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
-		$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
-
 		my $hash = md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
+			src	=>	$src,
 			name => "$base-$hash.$ext",
-			path => "$config{cache_dir}/$base-$hash.$ext",
+			path	=> $path,
+			cache_file => "$config{cache_dir}/$base-$hash.$ext",
 			hash => $hash,
 			timestamp => $timestamp,
 		};
-		if (! -f $script->{path}) {
+		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
-			if ( ! write_file($script->{path},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
-				$log->error( "couldn't cache $script->{path}" );
+			if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-#write_file($config{cache_file}, { atomic => 1 }, to_json(\%hash_cache, {pretty => 1})) or warn "Couldn't save cache control file";
+			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
-	}
+	#} else {
+		#my @stat = stat $script->{src};
+
+#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+	} # end if
+
+	# cache_path is the url part
 	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
+
+sub format_date {
+	return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+sub format_datetime {
+	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
 
 1;
 __END__

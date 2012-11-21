@@ -66,12 +66,13 @@ $serial = 'lngProjectIndex_seq';
 	production_comments	=>	'production_comments',
 );
 %transforms = (
-	'markup'	=>	[ 's/[^\-\d\.]//g' ],
-	'quantity1'	=>	[ 's/\D//g' ],
-	'quantity2'	=>	[ 's/\D//g' ],
-	'quantity3'	=>	[ 's/\D//g' ],
-    'reference' =>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'comments'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id			=>	[ 's/\D//g' ],
+	markup		=>	[ 's/[^\-\d\.]//g' ],
+	quantity1	=>	[ 's/\D//g' ],
+	quantity2	=>	[ 's/\D//g' ],
+	quantity3	=>	[ 's/\D//g' ],
+    reference	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    comments	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
