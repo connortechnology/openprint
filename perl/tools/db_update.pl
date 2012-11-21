@@ -2910,6 +2910,10 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 	} # end if
 } # end if
+if ( ! sets::isin( 'glossary', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Glossary.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 print "Finished\n";
 1;

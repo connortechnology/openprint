@@ -32,6 +32,15 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
 
+#Used for resource hashed links
+my %hash_cache;
+
+#Used for writeTip
+my %Glossary;
+
+# Used for translations
+my %Lexicon;
+
 sub do_new_substitution {
 	my ( $command, $text, $variable ) = @_;
 	if ( $$command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
@@ -540,8 +549,15 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
-}
+	if ( ! %Glossary ) {
+		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	} # end if
+	if ( $Glossary{$word} ) {
+		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
+	} else {
+		return $word;
+	} # endif
+} # end  sub writeTip
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
@@ -860,7 +876,6 @@ sub select( $$$ ) {
 	$html .= '</select>';
 } # end sub select($$$)
 
-my %Lexicon;
 sub translate($) {
 	if ( ! %Lexicon ) {
 		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
@@ -879,7 +894,6 @@ sub reset_session($) {
 	$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
-my %hash_cache;
 
 # If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
