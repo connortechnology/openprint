@@ -8,7 +8,7 @@ require email;
 require misc;
 require ssi;
 
-use vars qw( $table $serial %fields %transforms %defaults $log %session %config $debug );
+use vars qw( $dbh $table $serial %fields %transforms %defaults $log %session %config $debug );
 *log = \$openprint::log;
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -132,7 +132,7 @@ sub find {
 		push @values, $params{'active'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
 		$log->debug("openprint::Email::find($sql)" . $openprint::dbh->errstr);
 	} else {
