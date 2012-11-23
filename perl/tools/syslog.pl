@@ -188,7 +188,11 @@ do{
 
 		if ( $line =~ /$re/ ) {
 			my ($when, $source) = ( $1, $2 );
-			$log->debug( "match for $source") if $config{debug};
+			if ( $config{debug} ) {
+				$log->debug( "match for source: $source");
+				$log->debug( "match for line: $line");
+				$log->debug( "match for re: $re");
+			} # end if
 			my ( $ip, $hostname );
 			if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 # Is an IP
