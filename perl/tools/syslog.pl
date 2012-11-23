@@ -6,8 +6,6 @@ require IO::Socket;
 
 require configuration;
 require sql;
-require ssi;
-require misc;
 require logger;
 require openprint;
 require openprint::Host;
