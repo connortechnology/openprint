@@ -206,6 +206,7 @@ do{
 
 			if ( $ip and $whitelist{$ip} ) {
 				$log->debug( "$ip is whitelisted" ) if $config{debug};
+				last;
 			} # end if
 			if ( ! $ip ) {
 				$log->debug( "No ip for $source" ) if $config{debug};
@@ -237,6 +238,7 @@ do{
 
 	foreach my $ip ( sort keys %host_counts ) {
 		next if ! $host_counts{$ip}{update};
+		next if $host_counts{$ip}{whitelist};
 		if ( $host_counts{$ip}{count} > 20 ) {
 			$host_counts{$ip}{blacklist} = 1;
 		} # end if
