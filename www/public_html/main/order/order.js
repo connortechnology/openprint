@@ -42,7 +42,7 @@ function same_as_billing( on, id ) {
 	var checkbox = $('same_as_billing'+id);
 	var form = checkbox.form;	
 	if ( on ) {
-		form.elements['ToCompanyName'+id].value = form.elements['companyname'].value;
+		form.elements['ToCompanyName'+id].value = form.elements['company_name'].value;
 		set_rdb_value( form.elements['ToSalutation'+id], get_value( form.elements['salutation'] ) );
 		form.elements['ToFirstName'+id].value = form.elements['firstname'].value;
 		form.elements['ToLastName'+id].value = form.elements['lastname'].value;

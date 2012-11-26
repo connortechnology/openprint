@@ -39,6 +39,21 @@ function get_value( obj ) {
 	return obj.value;
 }
 
+function set_value( obj, value ) {
+	if ( ! obj ) {
+		return;
+	} // end if
+	if ( obj.type == 'select-one' ) {
+		ddm_select_by_value( obj, value );
+	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+		set_rdb_value( obj, value );
+	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
+		obj.value = value;
+	} else {
+		obj.innerHTML = value;
+	} // end if
+}
+
 function get_select_value ( ddm ) {
 	var selected = new Array();
 	if ( ddm ) {
