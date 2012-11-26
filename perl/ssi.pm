@@ -4,23 +4,10 @@ package ssi;
 use Date::Calc qw(Days_in_Month Month_to_Text);
 
 # For Hash stuff
-use List::Util qw(max);
-use Digest::MD5 qw(md5_hex);
 use File::Basename;
-use File::Slurp qw(read_file write_file);
-use JSON qw(to_json from_json);
-
-# For Hash stuff
-use List::Util qw(max);
-use Digest::MD5 qw(md5_hex);
-use File::Basename;
-use File::Slurp qw(read_file write_file);
-use JSON qw(to_json from_json);
 
 require sets;
 require sql;
-require JavaScript::Minifier::XS;
-require CSS::Minifier;
 
 require openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -901,6 +888,7 @@ sub hash_link {
 
 	my $src;
 	if ( -e $config{SkinPath}.$path ) {
+
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -908,12 +896,16 @@ sub hash_link {
 		return $path;
 	} # end if
 
+	require File::Slurp;
+	require JSON;
+	require Digest::MD5;
+
 	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
 		$log->debug("reading config");
-		$hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
 		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
 	} # end if
 
@@ -930,15 +922,17 @@ sub hash_link {
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
-		my $blob = read_file($src);
+		my $blob = File::Slurp::read_file($src);
 
 		if ( $ext eq 'js' ) {
+			require JavaScript::Minifier::XS;
 			$blob = &JavaScript::Minifier::XS::minify( $blob );
 		} elsif ( $ext eq 'css' ) {
+			require CSS::Minifier;
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
-		my $hash = md5_hex($blob);
+		my $hash = Digest::MD5::md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
 			src	=>	$src,
 			name => "$base-$hash.$ext",
@@ -949,11 +943,11 @@ sub hash_link {
 		};
 		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
-			if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+			if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
+			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	#} else {
 		#my @stat = stat $script->{src};

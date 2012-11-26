@@ -1,10 +1,10 @@
 <? eval (
 	$$variable{'Currency'} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = $$variable{'Currency'}->get('name','symbol','short');
-	if ( $param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'},'company_id'=>$session{'company_id'}, );
+	if ( $param{'order_id'} ) {
+		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'order_id'},'company_id'=>$session{'company_id'}, );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
-			@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'} );
+			@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'order_id'} );
 		} # end if
 	} elsif ( $param{'Docket'} ) {
 		@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'},'company_id'=>$session{'company_id'}, );
@@ -64,13 +64,13 @@
 				$$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'Order'}->status() eq 'Waiting For Customer Approval';
 		) ?>
 		<tr<?rowclass?>> 
-			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
-			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-			<td align="left"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->name(); ) ?></a></td>
-			<td class="Date"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
-			<td class="Status"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
-			<td class="Price"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></a></td>
-			<td class="Price"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'balance'} ); ) ?></a></td>
+			<td><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
+			<td><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
+			<td align="left"><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->name(); ) ?></a></td>
+			<td class="Date"><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
+			<td class="Status"><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
+			<td class="Price"><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></a></td>
+			<td class="Price"><a href="history_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'balance'} ); ) ?></a></td>
 		</tr>
 		<tr<?rowclass?>>
 			<td colspan="2">&nbsp;</td>

@@ -40,15 +40,15 @@ sub delete_unfinished_orders {
 
 sub get_unfinished_order {
 	# This also tests for existence of the order
-	if ( $session{'OrderID'} ) {
-		my $Order = new openprint::Order( $session{'OrderID'} );
+	if ( $session{order_id} ) {
+		my $Order = new openprint::Order( $session{order_id} );
 		return $Order->id() if $Order->id();
 	} # end if
 
 	my $Order = openprint::Order->find_one('session_id'=>$session{'_session_id'}, company_id=>$session{company_id}, 'status'=>'Incomplete', 'order'=>'id DESC' );
 
 	if ( $Order ) {
-		$session{'OrderID'} = $Order->id();
+		$session{order_id} = $Order->id();
 		return $Order->id();
 	} # end if
 
@@ -133,25 +133,30 @@ sub add_project_to_order {
 	$order_id = get_unfinished_order( ) if ! $order_id;
 	# get unfinished no longer looks for re-opened orders.
 
-	my @Orders = openprint::Order->find(company_id=>$session{company_id}, 'status'=>'Re-Opened', 'order'=>'id DESC' );
-	if ( @Orders ) {
-		$error .= 'There are Re-Opened orders.  Please select the existing order or a new order by clicking on the appropriate option.';
-		foreach my $Order ( @Orders ) {
-			$error .= qq`<a href="/main/order/information.html?order_id=$$Order{id}&amp;btnFunction=ProcessOrder">Order $$Order{id} Docket $$Order{docket}`;
-			my @Contents = $Order->Contents();
-			if ( @Contents ) {
-				$error .= 'Containing the following:<br/>';
-				foreach my $C ( @Contents ) {
-					$error .= $C->Project()->reference() . '<br/>' . $C->Project()->summary();
-				} # end foreach
-			} # end if
-			$error .= '</a>';	
-		} # foreach
-		return ( undef, $error );
+	if ( ! $order_id ) {
+		my @Orders = openprint::Order->find(company_id=>$session{company_id}, 'status'=>'Re-Opened', 'order'=>'id DESC' );
+		if ( @Orders ) {
+			$error .= 'There are Re-Opened orders.  Please select the existing order or a new order by clicking on the appropriate option.<br/>';
+			$error .= qq`<a href="/main/order/information.html?order_id=New&amp;ProjectIndex=$$Project{id}&amp;btnFunction=Process%20Order">New Order</a><br/><br/>`;
+			foreach my $Order ( @Orders ) {
+				$error .= qq`<a href="/main/order/information.html?order_id=$$Order{id}&amp;ProjectIndex=$$Project{id}&amp;btnFunction=Process%20Order">Order $$Order{id} Docket $$Order{docket}`;
+				my @Contents = $Order->Contents();
+				if ( @Contents ) {
+					$error .= ' Containing the following:<br/>';
+					foreach my $C ( @Contents ) {
+						$error .= 'Project ' . $C->project_id() . ' ' . $C->Project()->reference() . '<br/>' . $C->Project()->summary().'<br/>';
+					} # end foreach
+				} else {
+					$error .= ' empty';
+				} # end if
+				$error .= '</a><br/><br/>';	
+			} # foreach
+			return ( undef, $error );
+		} # end if
 	} # end if
 
-	if ( ! $order_id ) {
-		$order_id = create_order( ) if ! $order_id;
+	if ( ( ! $order_id ) or $order_id eq 'New' ) {
+		$order_id = create_order();
 	} # end if
 	my $Order = new openprint::Order( $order_id );
 	if ( ! $Project->company_id() ) {
@@ -179,7 +184,7 @@ sub add_project_to_order {
 			my $OP = new openprint::OrderedProject({order_id=>$$Project{order_id}, project_id=>$$Project{id}});
 			$error .= $OP->delete();
 		} else {
-			return ( $order_id, sprintf('Project is already in order <a href="/main/order/history_details.html?OrderID=%1$d">%1$d</a>.', $Project->order_id() ) );
+			return ( $order_id, sprintf('Project is already in order <a href="/main/order/history_details.html?order_id=%1$d">%1$d</a>.', $Project->order_id() ) );
 		} # end if
 	} # end if
 
@@ -477,7 +482,7 @@ sub save_project_information {
 # comes here on the transition from orde_info to orde_info_cred_card or order_info_digi_cheq
 # stores the order information into the database
 sub store_order_info {
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{'order_id'};
 	$order_id = get_unfinished_order( ) if ! $order_id;
 
 	my $error = '';
@@ -553,7 +558,7 @@ sub display_order {
 	my $Currency = openprint::Currency::get_current();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$variable{'Currency'} = $Currency;
-	$variable{'OrderID'} = $order_id;
+	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = $Order;
 } # end sub display_order
 

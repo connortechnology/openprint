@@ -1,7 +1,6 @@
 <? if ( @{$$variable{'Contents'}} > 1 ) ?>
 <!--#include virtual="/main/order/_shipping_type_select.html"-->
 <? endif ( @{$$variable{'Contents'}} > 1 ) ?>
-<div class="Project">
 	<!--#include virtual="/main/order/_project_header.html"-->
 <? echo (
     if ( $$variable{'Project'}->style_id() ) {
@@ -10,4 +9,3 @@
         ssi::include( $ENV{'DOCUMENT_ROOT'}.'/main/order/_project_details.html' );
     } # end if
 ) ?>
-</div>

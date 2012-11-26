@@ -53,15 +53,6 @@ foreach my $param ( 'db_name','db_user','db_pass', ) {
 configuration::merge($opts);
 $config{port} = 10514 if ! $config{port};
 
-if ( $config{'pid_file'} ) {
-	my $pidh;
-	if (open($pidh, '> '.$config{'pid_file'} ) ) {
-		print $pidh $$."\n";
-		close($pidh);
-	} else {
-		die "Unable to open pid file";
-	} # end if
-} # end if
 
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 $log->info("Opening SQL connection");
@@ -107,6 +98,16 @@ my $MAXLEN = 1524;
 
 # Start Listening on UDP port 514
 my $sock = IO::Socket::INET->new(LocalPort => $config{port}, Proto => 'udp')||die("Socket: $@");
+
+if ( $config{'pid_file'} ) {
+	my $pidh;
+	if (open($pidh, '> '.$config{'pid_file'} ) ) {
+		print $pidh $$."\n";
+		close($pidh);
+	} else {
+		die "Unable to open pid file";
+	} # end if
+} # end if
 
 my $buf;
 do{
@@ -187,7 +188,11 @@ do{
 
 		if ( $line =~ /$re/ ) {
 			my ($when, $source) = ( $1, $2 );
-			$log->debug( "match for $source") if $config{debug};
+			if ( $config{debug} ) {
+				$log->debug( "match for source: $source");
+				$log->debug( "match for line: $line");
+				$log->debug( "match for re: $re");
+			} # end if
 			my ( $ip, $hostname );
 			if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 # Is an IP
@@ -205,6 +210,7 @@ do{
 
 			if ( $ip and $whitelist{$ip} ) {
 				$log->debug( "$ip is whitelisted" ) if $config{debug};
+				last;
 			} # end if
 			if ( ! $ip ) {
 				$log->debug( "No ip for $source" ) if $config{debug};
@@ -236,6 +242,7 @@ do{
 
 	foreach my $ip ( sort keys %host_counts ) {
 		next if ! $host_counts{$ip}{update};
+		next if $host_counts{$ip}{whitelist};
 		if ( $host_counts{$ip}{count} > 20 ) {
 			$host_counts{$ip}{blacklist} = 1;
 		} # end if
@@ -263,6 +270,11 @@ Command-line options:
 EOH
 } # end sub usage
 
-$dbh->disconnect();
+$dbh->disconnect() if $dbh;
+
+if ( $config{pid_file} ) {
+	unlink $config{pid_file};
+} # end if
+
 1;
 __END__
