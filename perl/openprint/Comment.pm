@@ -29,6 +29,7 @@ $serial = 'comments_id_seq';
 	'approved'		=>	0,
 );
 sub Object {
+	require $_[0]->object_type().'.pm';
 	return $_[0]->object_type()->new( $_[0]{'object_id'} );
 } # end sub Object
 
