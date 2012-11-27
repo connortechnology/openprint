@@ -174,6 +174,51 @@ if ( $data ) {
 	if ( ! exists $$data{salesrep_id} ) {
 		$dbh->do('ALTER TABLE companies add salesrep_id INTEGER');
 	} # end if
+	foreach my $field ( 'name', 'address1', 'address2', 'city','country','state', 'postalcode', 'gst_number', 'pst_number',
+'accountnumber','phone','extension','fax','url','greeting','business_type','business_name','business_form','president_owner','bank_name','bank_branch','bank_account','bank_manager','bank_phone','bank_fax','bank_email','notes', 'employees','annual_sales' ) {
+		next if ! $openprint::Company::fields{$field};
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TEXT');
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
+	foreach my $field ( 'created_on', 'updated_on' ) {
+		next if ! $openprint::Company::fields{$field};
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.' TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
+	foreach my $field ( 'supplier','reseller', 'gst_exempt','pst_exempt', 'activation', 'mailinglist', 'quote_project_breakdown' ) {
+		next if ! $openprint::Company::fields{$field};
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` CHAR(1) default 'N'`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
+	foreach my $field ( 'deleted', 'offers_credit' ) { 
+		next if ! $openprint::Company::fields{$field};
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` BOOLEAN NOT NULL DEFAULT FALSE`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
+	foreach my $field ( 'salesrep_id', 'pricelist_id', 'currency_id', 'detail_level',  ) { 
+		next if ! $openprint::Company::fields{$field};
+		if ( ! exists $$data{$openprint::Company::fields{$field}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{$field}.q` INTEGER`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	} # end foreach
+		if ( ! exists $$data{$openprint::Company::fields{established}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{established}.q` date`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+		if ( ! exists $$data{$openprint::Company::fields{discount}} ) {
+			$dbh->do('ALTER TABLE companies ADD '.$openprint::Company::fields{discount}.q` numeric(16,4) DEFAULT '0.0000' NOT NULL`);
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
+	
 } else {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
@@ -392,6 +437,14 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{curtotalsale} ) {
 		$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
 	} # end if
+	if ( ! exists $$data{company_id} ) {
+		if ( exists $$data{companyindex} ) {
+			$dbh->do('ALTER TABLE Orders RENAME companyindex to company_id');
+		} else {
+			$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
+		} # end if
+	} # end if
+	
 }
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {

@@ -3430,7 +3430,7 @@ sub calc_price {
 	if ( sets::isin( $$Imposition{'runstyle'}, ['Sheet Work','Web'] ) ) {
 		$is_sheetwork = 1;
 		$is_perfecting = 0;
-		@colours = @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}};
+		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( ( $$specs{'sides_the_same'} eq 'Y' ) and ( $$Imposition{'runstyle'} eq 'Sheet Work' ) ) {
 		} else {
 			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
@@ -3440,12 +3440,12 @@ sub calc_price {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $$Paper{'grade'}, $Press );
-		@colours = @{$$project{'filtered_colours'}},@{$$project{filtered_coatings}};;
+		@colours = ( @{$$project{'filtered_colours'}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
 		$is_sheetwork = 1;
 		$is_perfecting = 1;
-		@colours = @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}};
+		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( $$specs{'sides_the_same'} ne 'Y' ) {
 			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
 		} # end if
