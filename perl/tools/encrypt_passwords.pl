@@ -49,7 +49,9 @@ foreach my $User ( openprint::User->find(deleted=>[0,1,undef]) ) {
 		next;
 	} # end if
 	my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-                cost => 8, salt => sprintf('%.16s', $User->email() ),
+                cost => 8, 
+				salt_random=>1,
+				#salt => sprintf('%-.16s', $User->email() ),
                 passphrase =>$User->password() );
 	$User->save({password=>$ppr->as_rfc2307});
 	
