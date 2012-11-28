@@ -462,7 +462,12 @@ sub get_start_end_dates {
 sub button {
 	my ( $name, $options ) = @_;
 
-	$$options{'href'} = '#' if ! $$options{'href'};
+	if ( $$options{href} ) {
+		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		return if $PageSetting and ! $PageSetting->can_view();
+	} else {
+		$$options{href} = '#';
+	} # end if
 	$$options{'text'} = $name if ! exists $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
@@ -888,7 +893,6 @@ sub hash_link {
 
 	my $src;
 	if ( -e $config{SkinPath}.$path ) {
-
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -956,7 +960,7 @@ sub hash_link {
 	} # end if
 
 	# cache_path is the url part
-	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+	return ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
 sub format_date {

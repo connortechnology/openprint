@@ -185,12 +185,12 @@ view_photo();
 sub view_photo {
 	$param{'asset_id'} =~ s/\D//g;
 	$param{'album_id'} =~ s/\D//g;
-	if ( ! $param{'asset_id'} and $param{'album_id'} ) {
+	if ( ! ( $param{asset_id} and $param{album_id} ) ) {
 		# Search engines, etc might get here
 		return;
 	} # end if
 
-	my $Photo = openprint::Photo_in_Album->find_one( 'asset_id' => $param{'asset_id'}, 'album_id'=> $param{'album_id'} );
+	my $Photo = openprint::Photo_in_Album->find_one( asset_id => $param{asset_id}, album_id=> $param{album_id} );
 	if ( ! $Photo ) {
 		$log->warn("No photo for album $param{album_id} phto: $param{asset_id}");
 		return;

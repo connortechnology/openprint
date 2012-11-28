@@ -15,23 +15,23 @@ $table = 'events';
 $serial = 'events_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'created_by'	=>	'created_by',
-	'starting_on'	=>	'starting_on',
-	'ending_on'		=>	'ending_on',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'deleted'		=>	'deleted',
-	'location_id'	=>	'location_id',
-	'info'			=>	'info',
-	'time_associated'	=>	'time_associated',
-	'category_id'	=>	'category_id',
-	'category'		=>	undef,
-	#'asset_id'		=>	'asset_id',
+	id			=>	'id',
+	name		=>	'name',
+	created_by	=>	'created_by',
+	starting_on	=>	'starting_on',
+	ending_on	=>	'ending_on',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	deleted		=>	'deleted',
+	location_id	=>	'location_id',
+	info		=>	'info',
+	time_associated	=>	'time_associated',
+	category_id	=>	'category_id',
+	category	=>	undef,
+	#'asset_id		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
-	'album_id'		=>	'album_id', 
-	url				=>	'url',
+	album_id	=>	'album_id', 
+	url			=>	'url',
 );
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
@@ -302,12 +302,11 @@ sub send_invitations {
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
 	my $results = $Email->send(
-		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
+		BCC			=>	new openprint::User( $openprint::session{'user_id'} ),
 		#'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
-		'TO'			=>	[map { $_->User() } $self->Invitations()],
-		'FROM'			=>	$self->Created_By(),
-		#'ATTACHMENTS'	=>	\@attachments,
-		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
+		TO			=>	[map { $_->User() } $self->Invitations()],
+		FROM		=>	$self->Created_By(),
+		SUBJECT		=>	'You are invited to an event:'. $$self{name},
 	);
 	$self->add_to_log( $results );
 	return $results;

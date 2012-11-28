@@ -105,11 +105,9 @@ sub handler {
 	if ( $dbh ) {
 		openprint::session_init();
 		if ( ! ( %page_settings and $page_settings{$page} ) ) {
-#$log->debug("Page Settings not found in cache for $page");
 			# First step, reload page settings
 			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
 			if ( ! $page_settings{$page} ) {
-#$log->debug("Page Settings not found for $page");
 				# Need to create one.
 				my @chunks = split('/', $page );
 				while ( @chunks ) {
@@ -121,22 +119,15 @@ sub handler {
 					$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
 		
 					if ( $page_settings{$chunk} ) {
-#$log->debug("Using page settings for $chunk");
-						#my $NewPageSettings = $page_settings{$chunk}->copy();
-						#$NewPageSettings->save({'url'=>$page});
-						#$page_settings{$page} = $NewPageSettings;
-
 						# Why stuff up the db with entries, just fill the hash with copies.
 						$page_settings{$page} = $page_settings{$chunk};
 						last;
-#} else {
-#$log->debug("No page settings for $chunk");
 					} # end if
 				} # end while chunks
 			} # end if
 			if ( ! $page_settings{$page} ) {
 				$page_settings{$page} = new openprint::Page_Setting();
-				$page_settings{$page}->save({'url'=>$page});
+				$page_settings{$page}->save({url=>$page}) if $session{user_type} eq 'A';
 			} # end if
 		} # end if Page Settings not found
 

@@ -1,16 +1,11 @@
+use strict;
 package openprint::PageFlip;
-@ISA = qw( openprint::Object );
-
-use openprint ();
-
-use vars qw( $log $dbh %config );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+our @ISA = qw( openprint::Object );
 
 require openprint::PageFlip_Page;
 
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
+$debug = 1;
 $table = 'pageflip';
 $serial = 'pageflip_id_seq';
 
