@@ -81,7 +81,7 @@
 				if ( (new openprint::User( $session{'user_id'} ))->email() =~ /^iconnor/ ) {
 					$html .= '<br/>';
 					$html .= ssi::button( 'Merge', { 'onclick'=>"f1.btnFunction.value='merge';f1.submit();" } );
-					$html .= '<select name="merge_company_id">';
+					$html .= '<select name="merge_company_id"><option value=""> none </option>';
 					$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Companies'}} ], $$variable{'CustomerIndex'} );
 					$html .= '</select>';
 				} # end if

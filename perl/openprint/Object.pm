@@ -322,9 +322,9 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				} # end foreach
 			} # end if $$self{field}
 
-			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = eval($defaults{$field});
+				$$self{$field} = defined $defaults{$field} ? eval($defaults{$field}) : $defaults{$field};
 				$log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} # end if
