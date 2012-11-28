@@ -171,6 +171,9 @@ if ( $data ) {
 	if ( ! exists $$data{asset_id} ) {
 		$dbh->do('ALTER TABLE companies ADD asset_id INTEGER');
 	} # end if
+	if ( ! exists $$data{salesrep_id} ) {
+		$dbh->do('ALTER TABLE companies add salesrep_id INTEGER');
+	} # end if
 } else {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
@@ -191,7 +194,7 @@ if ( ! sets::isin( 'user_types', \@tables ) ) {
 }
 
 if ( ! sets::isin( 'users', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users.sql}) );
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users.sql}) ) or die $dbh->errstr();
 } else {
 
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
@@ -386,6 +389,9 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
+	if ( ! exists $$data{curtotalsale} ) {
+		$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
+	} # end if
 }
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
@@ -464,6 +470,12 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 	} # end if
 	if ( ! exists $$data{'summary'} ) {
 		$dbh->do(q`alter table Projects add summary text`) or $log->error($dbh->errstr());
+	} # end if
+	if ( ! exists $$data{priority} ) {
+		$dbh->do(q`ALTER TABLE projects ADD priority INTEGER`) or $log->error($dbh->errstr());
+	} # end if
+	if ( ! exists $$data{production_comments} ) {
+		$dbh->do(q`ALTER TABLE projects ADD production_comments TEXT`) or $log->error($dbh->errstr());
 	} # end if
 } # end if
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
@@ -1002,20 +1014,13 @@ sql::execute( undef, undef, 'delete from configuration where name=?', 'cookie_is
 } # end if
 
 
-if ( $version < 1898 ) {
-	print "Updating to version 1898\n";
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
-	if ( !$data ) {
-		$dbh->do(q{CREATE TABLE StockPurposes (
-					id  SERIAL NOT NULL,
-					name   TEXT NOT NULL,
-					PRIMARY KEY (id)
-					)});
-	} # end if
-	sql::end_transaction( $dbh, $ac );
+if ( ! sets::isin( 'stockpurposes', \@tables ) ) {
+	$dbh->do(q{CREATE TABLE StockPurposes (
+				id  SERIAL NOT NULL,
+				name   TEXT NOT NULL,
+				PRIMARY KEY (id)
+				)});
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'purpose_id'} ) {
 		$dbh->do(q{alter table skid_contents add purpose_id integer});
 		$dbh->do(q{alter table skid_contents add foreign key (purpose_id) references stockpurposes (id)});
@@ -1023,9 +1028,6 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 		$dbh->do(q{insert into stockpurposes (name) values ('Job Stock')});
 		$dbh->do(q{insert into stockpurposes (name) values ('Sample')});
 	}
-	sql::insert( undef, undef, 'database_info', 'version', 1898, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1898;
 } # end if
 
 if ( ! sets::isin( 'pricelists', \@tables ) ) {
@@ -2936,6 +2938,10 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
 	} # end if
 } # end if
+if ( ! sets::isin( 'glossary', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Glossary.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 $dbh->disconnect();
 print "Finished\n";
 1;

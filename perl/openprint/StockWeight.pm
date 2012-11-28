@@ -4,29 +4,28 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'stockweights';
 $serial= 'stockweights_id_seq';
 %fields = (
-    'id'    =>  'id',
-    'name' =>  'name',
+	id		=>	'id',
+	name	=>	'name',
 );
 %transforms = (
-    'name' => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	name	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 );
 
 sub sort {
 	shift if $_[0] eq 'openprint::StockWeight';
-$openprint::log->debug("Sorting Weight");
 	return sort { 
 		my $a_name = $$a{'name'};
 		$a_name =~ s/\D//g;
 		my $b_name = $$b{'name'};
 		$b_name =~ s/\D//g;
-	
-		$a_name <=> $b_name } @_;
+		$a_name <=> $b_name
+	} @_;
 }# end sub sort
 
 1;

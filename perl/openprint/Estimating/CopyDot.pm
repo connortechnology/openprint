@@ -18,8 +18,6 @@ package openprint::Estimating::CopyDot;
 
 use strict;
 
-require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (

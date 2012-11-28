@@ -1248,6 +1248,10 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 					if ( $Press and ( my $Stock_Setting = $Press->Stock_Setting( $P ) ) ) {
 						next if $Stock_Setting->grain() eq 'Dont Use';
 					} # end if
+					if ( ! $$specs{'StockQuantity'.$qty_index} ) {
+						$$specs{'StockQuantity'.$qty_index} = $$specs{'txtPressSheetQty'.$qty_index};
+						$$specs{'StockQuantity'.$qty_index} =~ s/\D//g;
+					} # end if
 					if ( $$specs{'StockQuantity'.$qty_index} < $P->minimum_order() ) {
 						$openprint::log->debug("Paper no good due to minimum order. Need " . $$specs{'StockQuantity'.$qty_index} . ' have ' . $P->minimum_order() ) if $debug;
 						next;
@@ -1257,7 +1261,10 @@ $log->debug("Didn't find specific paper $params{'width'} x $params{'height'}");
 				} # end foreach
 			} # end if
 			if ( ( ! $Paper ) and @Papers ) {
-$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
+$log->debug("No paper found matching minimum_order want($$specs{'StockQuantity'.$qty_index})");
+foreach my $P ( @Papers ) {
+$log->debug($P->id_string());
+} # end foreach P
 				$Paper = shift @Papers;
 			} # end if
 		} # end if Paper

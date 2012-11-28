@@ -212,7 +212,7 @@
 				$html .= '<br/>Grain Overriden';
 			} # end if
 
-			my $Press = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'});
+			my $Press = openprint::Equipment->find_one('strid'=>$$sig_specs{'UsePress'});
 			if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
 				my $FoldingService = $$variable{'Project'}->Service( $$variable{'Services'}{'Folding'}[0] );
 				my $specs = $FoldingService->specs();

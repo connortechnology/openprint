@@ -4,23 +4,10 @@ package ssi;
 use Date::Calc qw(Days_in_Month Month_to_Text);
 
 # For Hash stuff
-use List::Util qw(max);
-use Digest::MD5 qw(md5_hex);
 use File::Basename;
-use File::Slurp qw(read_file write_file);
-use JSON qw(to_json from_json);
-
-# For Hash stuff
-use List::Util qw(max);
-use Digest::MD5 qw(md5_hex);
-use File::Basename;
-use File::Slurp qw(read_file write_file);
-use JSON qw(to_json from_json);
 
 require sets;
 require sql;
-require JavaScript::Minifier::XS;
-require CSS::Minifier;
 
 require openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -31,6 +18,15 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+
+#Used for resource hashed links
+my %hash_cache;
+
+#Used for writeTip
+my %Glossary;
+
+# Used for translations
+my %Lexicon;
 
 sub do_new_substitution {
 	my ( $command, $text, $variable ) = @_;
@@ -540,8 +536,15 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
-}
+	if ( ! %Glossary ) {
+		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	} # end if
+	if ( $Glossary{$word} ) {
+		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
+	} else {
+		return $word;
+	} # endif
+} # end  sub writeTip
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
@@ -860,7 +863,6 @@ sub select( $$$ ) {
 	$html .= '</select>';
 } # end sub select($$$)
 
-my %Lexicon;
 sub translate($) {
 	if ( ! %Lexicon ) {
 		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
@@ -879,7 +881,6 @@ sub reset_session($) {
 	$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
 
-my %hash_cache;
 
 # If there is any problem, return the original path, so that the original file can be sent.
 sub hash_link {
@@ -894,12 +895,16 @@ sub hash_link {
 		return $path;
 	} # end if
 
+	require File::Slurp;
+	require JSON;
+	require Digest::MD5;
+
 	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
 		$log->debug("reading config");
-		$hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
 		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
 	} # end if
 
@@ -916,15 +921,17 @@ sub hash_link {
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
-		my $blob = read_file($src);
+		my $blob = File::Slurp::read_file($src);
 
 		if ( $ext eq 'js' ) {
+			require JavaScript::Minifier::XS;
 			$blob = &JavaScript::Minifier::XS::minify( $blob );
 		} elsif ( $ext eq 'css' ) {
+			require CSS::Minifier;
 			$blob = &CSS::Minifier::minify( input=>$blob );
 		} # end if
 
-		my $hash = md5_hex($blob);
+		my $hash = Digest::MD5::md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
 			src	=>	$src,
 			name => "$base-$hash.$ext",
@@ -935,11 +942,11 @@ sub hash_link {
 		};
 		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
-			if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+			if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-			write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
+			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	#} else {
 		#my @stat = stat $script->{src};
@@ -948,7 +955,7 @@ sub hash_link {
 	} # end if
 
 	# cache_path is the url part
-	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+	return ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
 sub format_date {

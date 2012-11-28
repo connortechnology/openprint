@@ -337,11 +337,10 @@ function textarea_init() {
 				next;
 			} # end if
 
-
 			# First, need to find the first Equipment Shift to show.  Easy, will be given by the first shift in our list of shifts
 			my $ES = $Shifts[0]->Equipment_Shift();
 
-$log->debug("Setp 2" . $ES->to_string());
+			#$log->debug("Setp 2" . $ES->to_string());
 			# Step two: Make sure all the shifts are there. We do this by running through them, comparing the shift_id to the expected ES
 			# We start at 1 because we already looked for 0 and found it.  Micro-optimisation
 			for ( my $shift_index = 1; $shift_index < @Shifts; $shift_index += 1 ) {

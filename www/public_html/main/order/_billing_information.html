@@ -14,7 +14,7 @@
 	} # end if
 	my @Users = @{$$variable{'Users'}} = openprint::User->find( 
 		 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-		 'order'=>'lower(lastname),lower(firstname)'
+		 'order'=>'lower(firstname),lower(lastname)'
 	);
 	if ( scalar @Users == 1 ) {
 		$param{'ddmUsers'} = $Users[0]->id();
@@ -27,17 +27,6 @@
 			<li class="required">
 				<label>Company Name</label>
 				<input type="text" id="company_name" name="company_name" value="<?company_name?>"/>
-			</li>
-			<li> 
-				<label>Salutation</label>
-				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mr.' ); ) ?> />
-				<label class="radio" for="salutationMr.">Mr.</label>
-				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mrs.' ); ) ?> />
-				<label class="radio" for="salutationMrs.">Mrs.</label>
-				<input type="radio" id="salutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Ms.' ); ) ?> />
-				<label class="radio" for="salutationMs.">Ms.</label>
-				<input type="radio" id="salutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'salutation'} eq 'Miss' ); ) ?> />
-				<label class="radio" for="salutationMiss">Miss</label>
 			</li>
 		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
@@ -54,6 +43,10 @@
 				<input type="hidden" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
+			<li> 
+				<label>Salutation</label>
+				<? echo ( radio( 'salutation', [ map { $_,$_} ( 'Mr.','Mrs.','Ms.','Miss' ) ], $$variable{salutation} ); ) ?>
+			</li>
 			<li> 
 				<label >First Name</label>
 				<input type="text" id="firstname" name="firstname" value="<?firstname?>"/>
@@ -113,11 +106,11 @@ if ( $$variable{'country'} eq 'US' ) {
 			</li>
 			<li>
 				<label>Phone</label>
-				<input type="text" id="phone" name="phone" value="<?phone?>" />
+				<input type="tel" id="phone" name="phone" value="<?phone?>" />
 			</li>
 			<li>
 				<label>Fax</label>
-				<input type="text" id="fax" name="fax" value="<?fax?>" />
+				<input type="tel" id="fax" name="fax" value="<?fax?>" />
 			</li>
 			<li class="required">
 				<label>E-mail</label>
