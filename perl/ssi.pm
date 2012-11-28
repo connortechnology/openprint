@@ -893,7 +893,6 @@ sub hash_link {
 
 	my $src;
 	if ( -e $config{SkinPath}.$path ) {
-
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -961,7 +960,7 @@ sub hash_link {
 	} # end if
 
 	# cache_path is the url part
-	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+	return ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
 sub format_date {

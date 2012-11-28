@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
 use strict;
 use Socket;
@@ -6,8 +6,6 @@ require IO::Socket;
 
 require configuration;
 require sql;
-require ssi;
-require misc;
 require logger;
 require openprint;
 require openprint::Host;
@@ -42,17 +40,15 @@ $log = new logger('level'=>'debug');
 if (my $err = configuration::from_file('/etc/openprint/syslog.conf')) {
 	die $err;
 } # end if
+configuration::merge($opts);
 
-foreach my $param ( 'db_name','db_user','db_pass', ) {
-	$config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $config{$param} ) {
-		die "$program: missing required --$param parameter";
-	}
+foreach my $param ( 'db_name','db_user','db_pass' ) {
+	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-configuration::merge($opts);
-$config{port} = 10514 if ! $config{port};
-
+my %defaults = (
+	port	=>	10514,
+);
 
 $log = logger->new( {'file'=>$config{'log_file'}, 'level'=>$config{'log_level'}} );
 $log->info("Opening SQL connection");
@@ -64,9 +60,10 @@ $dbh = sql::open_sql( $log,
 	password	=> $config{db_pass},
 );
 die "Couldn't connect to db: $$dbh{errstr}" if ! $dbh;
-configuration::init( \%config );
+configuration::init();
 configuration::from_file('/etc/openprint/syslog.conf');
 configuration::merge($opts);
+configuration::merge_defaults(\%defaults);
 
 my @re = (
 		'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_\w+\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
@@ -124,9 +121,10 @@ do{
 			sleep(10);
 			next;
 		} # end if
-		configuration::init( \%config );
+		configuration::init( );
 		configuration::from_file('/etc/openprint/syslog.conf');
 		configuration::merge($opts);
+		configuration::merge_defaults(\%defaults);
 	} # end if
 	
 	my %host_counts;

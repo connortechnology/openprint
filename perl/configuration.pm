@@ -83,6 +83,12 @@ sub merge {
 	@config{keys %{$_[0]}} = values %{$_[0]};
 } # end sub merge
 
+sub merge_defaults { 
+	foreach my $k ( keys %{$_[0]} ) {
+		$config{$k} = $_[0]{$k} if ! $config{$k};
+	} # end foreach
+} # end sub merge_defaults
+
 sub from_file {
 	my $file = $_[0];
 # Process the contents of the config file

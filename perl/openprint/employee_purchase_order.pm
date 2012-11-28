@@ -331,8 +331,24 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			$variable{error} .= $PO->save( { created_by	=> $session{user_id}, company_id => $Me->company_id() } );
 		} # end if
 
-		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{'supplier_id'} ) and $param{vendor_name};
-		$param{contact_id} = save_contact( \%param ) if $param{'supplier_id'} and ( ! $param{contact_id} ) and $param{contact_name};
+		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
+		$param{contact_id} = save_contact( \%param ) if $param{supplier_id} and ( ! $param{contact_id} ) and $param{contact_name};
+		if ( $param{supplier_id} and $param{vendor_name} ) {
+			my $Supplier = openprint::Company->find_one( id=>$param{supplier_id} );
+			if ( ! $Supplier ) {
+				$log->error("SUpplier not found!");
+			} else {
+				
+				if ( ! $Supplier->name() ) {
+					$Supplier->name($param{vendor_name});
+					foreach ( 'country', 'state', 'address1', 'address2', 'city', 'postalcode', 'phone', 'fax' ) {	
+						$$Supplier{$_} = $param{"vendor_$_"} if ( ! $$Supplier{$_}) and $param{"vendor_$_"};
+					} # end foreach
+					$Supplier->save();
+				} # end if
+			} # end if
+		} # end if
+		
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
