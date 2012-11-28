@@ -10,8 +10,19 @@ require ssi;
 require MIME::QuotedPrint;
 require Encode;
 
+<<<<<<< HEAD
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
+=======
+use vars qw( $dbh $table $serial %fields %transforms %defaults $log %session %config $debug );
+*log = \$openprint::log;
+*session = \%openprint::session;
+*config = \%openprint::config;
+
+$debug = 0;
+$table = 'mailbox';
+
+>>>>>>> 1fdaeadc60df578eeae18e0e8fc8eb1cc0bb9bd0
 %fields = (
 	from	=>	'from',
 	subject	=>	'subject',
@@ -135,6 +146,7 @@ sub filter_exclude {
 	my ( $email, $exclude ) = @_;
 	$email = $email->email() if ref $email eq 'openprint::User';
 
+<<<<<<< HEAD
 	if ( ref $exclude eq 'ARRAY' ) {
 		if ( ref $$exclude[0] eq 'openprint::User' ) {
 			return 1 if sets::isin( $email, [ map { $_->email() } @{$exclude} ] );
@@ -143,6 +155,18 @@ sub filter_exclude {
 		} # end if
 	} elsif ( ref $exclude eq 'openprint::User' ) {
 		return 1 if $email eq $exclude->email();
+=======
+	if ( $params{'active'} ) {
+		$sql .= ' AND active = ?';
+		push @values, $params{'active'};
+	} # end if
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	if ( ! $data ) {
+		$log->debug("openprint::Email::find($sql)" . $openprint::dbh->errstr);
+	} else {
+		return map { new openprint::Email( $_->{username}, $_ ); } @$data;
+>>>>>>> 1fdaeadc60df578eeae18e0e8fc8eb1cc0bb9bd0
 	} # end if
 	return 0;
 }
