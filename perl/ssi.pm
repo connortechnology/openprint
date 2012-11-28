@@ -462,7 +462,12 @@ sub get_start_end_dates {
 sub button {
 	my ( $name, $options ) = @_;
 
-	$$options{'href'} = '#' if ! $$options{'href'};
+	if ( $$options{href} ) {
+		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		return if $PageSetting and ! $PageSetting->can_view();
+	} else {
+		$$options{href} = '#';
+	} # end if
 	$$options{'text'} = $name if ! exists $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;

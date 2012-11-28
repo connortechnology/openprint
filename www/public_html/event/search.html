@@ -78,7 +78,7 @@
 				<? echo ( join('',
 					ssi::button( 'ShowResults', { 'onclick'=> 'load_events(f1);', 'text'=>'Show Results' } ),
 					#ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-					ssi::button( 'New', { 'href'=> '/event/edit.html', 'text'=>'New Event' } ),
+					ssi::button( 'New', { href=>'/event/edit.html', text=>'New Event' } ),
 					); ) ?>
 			</p>
 		</fieldset>
