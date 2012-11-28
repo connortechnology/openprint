@@ -20,5 +20,19 @@ $serial = 'page_settings_id_seq';
 	'cacheable'		=>	undef,
 );
 
+sub can_view {
+	if ( $openprint::session{user_type} eq 'A' ) {
+		return 1;
+	} elsif ( $openprint::session{user_type} eq 'E' ) {
+		return 0 if $_[0]{user_level} eq 'A';
+		return 1;
+	} elsif ( $openprint::session{user_type} eq 'C' ) {
+		return 0 if $_[0]{user_level} eq 'A' or $_[0]{user_level} eq 'E';
+		return 1;
+	} 
+	return 0 if $_[0]{user_level};
+	return 1; 
+} # end sub can_view
+
 1;
 __END__
