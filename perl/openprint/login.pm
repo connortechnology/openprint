@@ -8,8 +8,6 @@ require openprint::usergroup;
 require openprint::Log;
 require MIME::QuotedPrint;
 require Encode;
-require Authen::Passphrase;
-require Authen::Passphrase::BlowfishCrypt;
 
 use openprint ();
 use vars qw( $r $dbh $log %variable %param %session %config);
@@ -87,6 +85,7 @@ sub verify_login {
 	my $User;
 	foreach my $U ( @Users ) {
 		if ( $config{encrypt_passwords} ) {
+require Authen::Passphrase::BlowfishCrypt;
 			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
 			if ( ! $ppr->match($password) ) {
 				next;
@@ -287,6 +286,7 @@ sub change_password {
 	} # end if
 
 	if ( $config{encrypt_passwords} ) {
+require Authen::Passphrase::BlowfishCrypt;
 		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
                 cost => 8, salt_random => 1,
                 passphrase => $param{txtOldPassword} );
