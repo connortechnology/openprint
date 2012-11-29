@@ -1,5 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
-<script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
+<script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
 		<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
@@ -7,7 +7,7 @@
 			<ul>
 			<li>
 				<label>Company</label>
-				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
+				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" class="filter" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
@@ -20,8 +20,8 @@
 					<option value="">select</option>
 					<? echo ( 
 						my %params = (
-							'company_id'=>$param{'company_id'}, 
-							'order'=>'lower(firstname),lower(lastname)'
+							company_id	=>	$param{'company_id'}, 
+							order		=>	'lower(firstname),lower(lastname)'
 						);
 						if ( $session{'user_type'} ne 'A' ) {
 							$params{'type'} = ['C','E'];
@@ -38,10 +38,10 @@
 				<? echo ( 
 					my $html;
 					if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
-						$html .= ssi::button( 'New1', { onclick=>"addCheck(f1);", text=>'New' } ),
+						$html .= ssi::button( 'New1', { onclick=>'addCheck(f1);', text=>'New' } ),
 					} # end if
 					$html .= ssi::button( 'Submit1', { onclick=>"f1.btnFunction.value='Save';f1.submit();", text=>'Save' } );
-					$html .= ssi::button( 'Reset1', { onclick=>"f1.reset();", text=>'Reset' } );
+					$html .= ssi::button( 'Reset1', { onclick=>'f1.reset();', text=>'Reset' } );
 					return $html;
 				) ?>
 			</p>
@@ -85,12 +85,12 @@
 			</li>
 			<li class="required"> 
 				<label for="phone">Phone</label>
-				<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" > x
-				<input type="text" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
+				<input type="tel" id="phone" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" > x
+				<input type="text" id="extension" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" />
 			</li>
 			<li> 
 				<label for="mobile">Mobile</label>
-				<input type="text" id="mobile" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" />
+				<input type="tel" id="mobile" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" />
 			</li>
 			<li> 
 				<label for="sms">SMS (email)</label>
@@ -98,7 +98,7 @@
 			</li>
 			<li> 
 				<label for="fax">Fax</label>
-				<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
+				<input type="tel" id="fax" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</li>
 			<li> 
 				<label for="">Mailing List</label>
@@ -169,7 +169,7 @@
 		</fieldset>
 		<? if ($variable{DoEmail}) ?> 
 		<!--#include virtual="/account/_email_settings.html"-->
-		<? if ($variable{DoEmail}) ?> 
+		<? endif ($variable{DoEmail}) ?> 
 <? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>
         <ul>

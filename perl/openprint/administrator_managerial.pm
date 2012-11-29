@@ -249,10 +249,10 @@ sub user_profiles {
 			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
 			if ( ! $ppr->match($param{password}) ) {
 				$param{password_changed_on} = 'NOW()';
-				delete $param{password};
-			} else {
 				my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
 				$param{password} = $ppr->as_rfc2307();
+			} else {
+				delete $param{password};
 			} # end if
 		
 		} elsif ( $param{password} ne $User->password() ) {

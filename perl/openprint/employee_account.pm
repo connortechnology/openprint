@@ -7,8 +7,10 @@ require	email;
 require misc;
 require sql;
 require openprint::MarketingCategory;
+require Authen::Passphrase::BlowfishCrypt;
 
-use openprint ();
+
+require openprint;
 use vars qw( $r $log $dbh %variable %param %session %config);
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -46,7 +48,22 @@ sub profile {
 		if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
 			$param{'csr_ids'} = '' if ! exists $param{'csr_ids'};
 		} # end if
-		delete $param{'password'} if ( ! $param{'password'} );
+		if ( ! $param{password} ) {
+            delete $param{password};
+        } elsif ( $config{encrypt_passwords} ) {
+            my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+            if ( ! $ppr->match($param{password}) ) {
+                $param{password_changed_on} = 'NOW()';
+                my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
+                $param{password} = $ppr->as_rfc2307();
+            } else {
+                delete $param{password};
+            } # end if
+
+        } elsif ( $param{password} ne $User->password() ) {
+            $param{password_changed_on} = 'NOW()';
+        } # end if
+
 		delete $param{'VerifyPassword'} if ( ! $param{'VerifyPassword'} );
 		delete $param{'btnFunction'};
 		$variable{'error'} .= $User->save( \%param );

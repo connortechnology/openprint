@@ -73,23 +73,23 @@ $debug = 1;
 );
 
 %defaults = (
-	'web_active'	=>	q`'N'`,
-	'ftp_active'	=>	0,
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'type'			=>	q`'C'`,
-	'change_password'	=>	q`'N'`,
-	'administrator'		=>	q`'N'`,
-	'commission'		=>	undef,
-	'quote_level'		=> undef,
-	'purchasing_limit'	=>	undef,
-	'purchasing_total_limit'	=>	undef,
-	'wage'				=>	undef,
-	'deleted'			=>	0,
-	'email_quotes_to_myself'	=>	0,
-	'asset_id'			=>	undef,
-	'password_changed_on'		=>	undef,
-	'password'			=>	'',
+	web_active				=>	q`'N'`,
+	ftp_active				=>	0,
+	created_on				=>	q`'NOW()'`,
+	updated_on				=>	q`'NOW()'`,
+	type					=>	q`'C'`,
+	change_password			=>	q`'N'`,
+	administrator			=>	q`'N'`,
+	commission				=>	undef,
+	quote_level				=>	undef,
+	purchasing_limit		=>	undef,
+	purchasing_total_limit	=>	undef,
+	wage					=>	undef,
+	deleted					=>	0,
+	email_quotes_to_myself	=>	0,
+	asset_id				=>	undef,
+	password_changed_on		=>	undef,
+	password				=>	'',
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -189,7 +189,7 @@ sub destroy {
 
 	sql::end_transaction( $dbh, $ac );
 
-	(new openprint::Log())->save({'action'=>'Destroy User','note'=>"User ID: " . $$self{'id'}});
+	(new openprint::Log())->save({action=>'Destroy User',note=>'User ID: ' . $$self{id}});
 } # end sub destroy
 
 sub next {

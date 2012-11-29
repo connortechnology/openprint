@@ -1,21 +1,19 @@
 use strict;
-use openprint ();
+require openprint;
 require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
-package openprint::Location;
-our @ISA = qw( openprint::Object );
 require Geo::Coder::Googlev3;
 require Geo::IP;
 
+package openprint::Location;
+our @ISA = qw( openprint::Object );
+
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
-use JSON ();
-use LWP::UserAgent ();
-use HTTP::Request ();
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
