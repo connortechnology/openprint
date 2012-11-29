@@ -89,12 +89,6 @@ sub verify_login {
 		if ( $config{encrypt_passwords} ) {
 			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
 			if ( ! $ppr->match($password) ) {
-
-				my $ppr2 = Authen::Passphrase::BlowfishCrypt->new(
-						cost => 8, salt	=> sprintf('%-.16s', $U->email() ),
-						passphrase => $password );
-
-				$log->debug("Password didn't match for $$U{email} $$U{password} $password (".$ppr2->as_rfc2307);
 				next;
 			} # end if
 		} else {

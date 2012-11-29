@@ -25,6 +25,9 @@ require openprint::Company_Profile_Field;
 require openprint::Company_Category;
 require openprint::Company_Credit;
 
+require Authen::Passphrase;
+require Authen::Passphrase::BlowfishCrypt;
+
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -193,7 +196,7 @@ sub _currency_conversions {
 
 sub user_profiles {
 
-	my $user_id = $param{'ddmUser'};
+	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : $session{user_id};
 	my $User = $variable{'User'} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
@@ -230,7 +233,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};;
+		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -240,16 +243,25 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 
-		if ( ! $openprint::param{'password'} ) {
-			delete $openprint::param{'password'};
-		} elsif ( $openprint::param{'password'} ne $User->password() ) {
-			$openprint::param{'password_changed_on'} = 'NOW()';
+		if ( ! $param{password} ) {
+			delete $param{password};
+		} elsif ( $config{encrypt_passwords} ) {
+			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+			if ( ! $ppr->match($param{password}) ) {
+				$param{password_changed_on} = 'NOW()';
+				delete $param{password};
+			} else {
+				my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
+				$param{password} = $ppr->as_rfc2307();
+			} # end if
+		
+		} elsif ( $param{password} ne $User->password() ) {
+			$param{password_changed_on} = 'NOW()';
 		} # end if
 
 		# This has to exist, in order to save the no assistants situation
 		$param{'assistant_ids'} = [] if ! exists $param{'assistant_ids'};
 		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};
-		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
 		if ( ! $error ) {
 			$User->Profile()->save( \%param );
@@ -316,10 +328,10 @@ sub user_profiles {
 		} # end foreach
 		if ( $param{'name-'} ) {
 			sql::insert( undef, undef, 'User_Service_Defaults', {
-					'user_id'		=>$User->id(),
-					'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
-					'name'			=>$param{'name-'},
-					'value'			=>$param{'value-'} 
+					user_id			=>	$User->id(),
+					servicetype_id	=>	$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
+					name			=>	$param{'name-'},
+					value			=>	$param{'value-'} 
 					} );
 		} # end if
 
