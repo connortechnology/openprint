@@ -14,6 +14,7 @@ $table = 'event_invitations';
 	event_id	=>	'event_id',
 	user_id		=>	'user_id',
 	created_on	=>	'created_on',
+	sent_on		=>	'sent_on',
 );
 
 %defaults = (
