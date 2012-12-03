@@ -285,6 +285,11 @@ if ( ! sets::isin( 'event_attendance', \@tables ) ) {
 if ( ! sets::isin( 'event_invitations', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Invitations.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='event_invitations'", 'column_name');
+	if ( ! exists $$data{'conversation_id'} ) {
+		$dbh->do('ALTER TABLE event_invitations ADD sent_on timestamp with time zone');
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
