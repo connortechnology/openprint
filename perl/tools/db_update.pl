@@ -3035,6 +3035,12 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 	if ( ! exists $$data{estimate_required} ) {
 		$dbh->do('ALTER TABLE RMA ADD estimate_required BOOLEAN');
 	} # end i
+	if ( ! exists $$data{created_on} ) {
+		$dbh->do('ALTER TABLE RMA ADD created_on TIMESTAMP WITH TIME ZONE');
+		$dbh->do('UPDATE RMA set created_on=received_on');
+		$dbh->do('ALTER TABLE RMA ALTER created_on set default NOW()');
+		$dbh->do('ALTER TABLE RMA ALTER created_on set NOT NULL');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'glossary', \@tables ) ) {
@@ -3133,6 +3139,7 @@ if ( ! sets::isin( 'test_results', \@tables ) ) {
 		$dbh->do('ALTER TABLE test_results DROP employeename');
 	} # end if
 	if ( exists $$data{wtest} ) {
+	require openprint::Test_Result_Result;
 		if ( ! exists $$data{result_id} ) {
 			$dbh->do('ALTER TABLE test_results ADD result_id INTEGER');
 			$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (result_id) REFERENCES Test_Result_Results (id)');
