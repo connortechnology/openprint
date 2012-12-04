@@ -2964,6 +2964,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 	if ( ! exists $$data{updated_on} ) {
 		$dbh->do('ALTER TABLE rma ADD updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 	} # end if
+	if ( ! exists $$data{received_on} ) {
+		$dbh->do('ALTER TABLE rma ADD received_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
+	} # end if
 	if ( ! exists $$data{approved} ) {
 		$dbh->do('ALTER TABLE rma add approved BOOLEAN NOT NULL DEFAULT FALSE');
 	} # end if
@@ -2990,10 +2993,154 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD status_id INTEGER');
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
 	} # end if
+	if ( ! exists $$data{po_id} ) {
+		if ( exists $$data{ponumber} ) {
+			foreach my $po ( sql::execute( undef, undef, 'SELECT DISTINCT ponumber FROM RMA')) {
+				my $PO = openprint::PurchaseOrder->find_one(id=>$po);
+				if ( ! $PO ) {
+					$PO = new openprint::PurchaseOrder();
+					$_ = $PO->save({id=>$po}, 1);
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'rma', [ 'ponumber=?', $po ], 'po_id', $PO->id() );
+			} # end foreach po
+		} # end if
+	} # end if
+	if ( ! exists $$data{description} ) {
+		if ( exists $$data{customer_problem} ) {
+			$dbh->do('ALTER TABLE RMA rename column customer_problem to description');
+		} # end if
+		$dbh->do('ALTER TABLE RMA add description TEXT');
+	} # end if
+	if ( ! exists $$data{comments} ) {
+		if ( exists $$data{remarks} ) {
+			$dbh->do('ALTER TABLE RMA rename column remarks to comments');
+		} # end if
+		$dbh->do('ALTER TABLE RMA add comments TEXT');
+	} # end if
+	if ( ! exists $$data{priority} ) {
+		$dbh->do('ALTER TABLE RMA ADD priority integer');
+	} # end i
+	if ( ! exists $$data{warranty} ) {
+		$dbh->do('ALTER TABLE RMA ADD warranty text');
+	} # end i
+	if ( ! exists $$data{estimate_required} ) {
+		$dbh->do('ALTER TABLE RMA ADD estimate_required BOOLEAN');
+	} # end i
+	
 } # end if
 if ( ! sets::isin( 'glossary', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Glossary.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'faults', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Faults.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='fault_found'", 'column_name');
+	if ( exists $$data{faults} ) {
+		$dbh->do('ALTER TABLE faults RENAME COLUMN faults to name');
+	} 
+	if ( exists $$data{faultdescription} ) {
+		$dbh->do('ALTER TABLE faults RENAME COLUMN faultdescription to description');
+	} 
+}
+if ( ! sets::isin( 'fault_found', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Fault_Found.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='fault_found'", 'column_name');
+	if ( ! exists $$data{fault_id} ) {
+		$dbh->do('ALTER TABLE fault_found ADD fault_id INTEGER');	
+		$dbh->do('ALTER TABLE fault_found ADD FOREIGN KEY (fault_id) REFERENCES Faults (id)');	
+		if ( exists $$data{faults} ) {
+			require openprint::Fault;
+			$dbh->do('UPDATE fault_found SET fault_id = (SELECT id FROM Faults WHERE faults.faults=fault_found.faults)');
+			foreach my $fault ( sql::execute( undef, undef, 'SELECT DISTINCT faults FROM fault_found WHERE fault_id IS NULL' ) ) {
+				next if ! $fault;
+				my $Fault = openprint::Fault->find_one('name lc'=>lc $fault);
+				if ( ! $Fault ) {
+				$Fault = new openprint::Fault();
+				$Fault->save({name=>$fault});
+				} # end if
+				sql::update( undef, undef, [ 'faults=?', $fault ], 'fault_id', $Fault->id() );
+			} # end foreach fault
+		} # end if
+	} # end if
+	if ( exists $$data{fauldescription_action_taken} ) {
+		$dbh->do('ALTER TABLE fault_found RENAME COLUMN FaulDescription_Action_Taken TO action');
+	} 
+	if ( exists $$data{faultqty} ) {
+		$dbh->do('ALTER TABLE fault_found RENAME COLUMN Faultqty TO quantity');
+	} # end if	
+}
+if ( ! sets::isin( 'test_result_results', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Test_Result_Results.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} 
+if ( ! sets::isin( 'test_results', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Test_Results.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='test_results'", 'column_name');
+	if ( exists $$data{technician} ) {
+		$dbh->do('ALTER TABLE test_results ADD technician_id INTEGER');
+		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (technician_id) REFERENCES Users (id)');
+		$dbh->do('UPDATE test_results set technician_id =(SELECT id FROM Users WHERE firstname=technician)');
+		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT technician FROM test_results WHERE technician_id IS NULL')){
+			my $User = openprint::User->find_one('firstname lc'=>$name);
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$User->save({
+					firstname=>$name,
+					type	=>	'E',
+				});
+			} # end if
+			sql::update( undef, undef, 'test_results', [ 'technician=?', $name ], 'technician_id', $User->id() );
+		} # end foreach
+	} # end if exists technician
+	if ( exists $$data{employeename} ) {
+		$dbh->do('ALTER TABLE test_results ADD employee_id INTEGER');
+		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (employee_id) REFERENCES Users (id)');
+		$dbh->do('UPDATE test_results set employee_id =(SELECT id FROM Users WHERE firstname=employeename)');
+		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT employeename FROM test_results WHERE employee_id IS NULL')){
+			my $User = openprint::User->find_one('firstname lc'=>$name);
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$User->save({
+					firstname=>$name,
+					type	=>	'E',
+				});
+			} # end if
+			sql::update( undef, undef, 'test_results', [ 'employeename=?', $name ], 'employee_id', $User->id() );
+		} # end foreach
+		$dbh->do('ALTER TABLE test_results DROP employeename');
+	} # end if
+	if ( exists $$data{wtest} ) {
+		$dbh->do('ALTER TABLE test_results ADD result_id INTEGER');
+		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (result_id) REFERENCES Test_Result_Results (id)');
+		$dbh->do('UPDATE test_results set result_id =(SELECT id FROM Test_Result_Results WHERE name=wtest)');
+		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT wtest FROM test_results WHERE result_id IS NULL')){
+			my $Result = openprint::Test_Result_Result->find_one('name lc'=>$name);
+			if ( ! $Result ) {
+				$Result = new openprint::Test_Result_Result();
+				$Result->save({
+					name=>$name,
+				});
+			} # end if
+			sql::update( undef, undef, 'test_results', [ 'wtest=?', $name ], 'result_id', $Result->id() );
+		} # end foreach
+		$dbh->do('ALTER TABLE test_results DROP wtest');
+	} # end if
+	if ( exists $$data{wdate} ) {
+		$dbh->do('ALTER TABLE test_results rename column wdate to tested_on');
+	} 
+	if ( exists $$data{problemlevel} ) {
+			$dbh->do('ALTER TABLE test_results rename column problemlevel to problem_level');
+	}
+	if ( exists $$data{wremarks} ) {
+		$dbh->do('ALTER TABLE test_results rename column wremarks to remarks');
+	}
 }
 $dbh->disconnect();
 print "Finished\n";
