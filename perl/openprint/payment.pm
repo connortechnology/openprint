@@ -12,6 +12,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *r = \$openprint::r;
 
 require openprint::Payment;
+require openprint::Invoice_Payment;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Save' ) {
