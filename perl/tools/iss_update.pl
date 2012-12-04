@@ -61,5 +61,13 @@ if ( ! openprint::User->find_one(email=>'iconnor@connortechnology.com') ) {
 		company_id=>$CT->id()});
 } # end if
 
+foreach my $status ( sql::execute( undef, undef, 'SELECT status FROM status' ) ) {
+	my $RMA_Status = openprint::RMA_Status->find_one('name lc'=>lc $status);
+	if ( ! $RMA_Status ) {
+	$RMA_Status = new openprint::RMA_Status() ;
+		$RMA_Status->save({name=>$status});
+	} # end if
+}
+$dbh->do('DROP TABLE Status');
 1;
 __END__
