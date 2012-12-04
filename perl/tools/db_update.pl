@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -241,7 +241,6 @@ if ( ! sets::isin( 'user_types', \@tables ) ) {
 if ( ! sets::isin( 'users', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Users.sql}) ) or die $dbh->errstr();
 } else {
-
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 	if ( $data ) {
 		print "Updating Users...\n";
@@ -324,6 +323,7 @@ if ( ! sets::isin( 'users', \@tables ) ) {
 		$dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
 		@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 	} # end if
+	$dbh->do('ALTER TABLE Users ALTER email DROP NOT NULL');
 } # end if
 
 if ( ! sets::isin( 'assets', \@tables ) ) {
@@ -1520,9 +1520,14 @@ foreach my $E ( openprint::Equipment->find() ) {
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql}) );
 } else {
+	$dbh->do('ALTER TABLE PurchaseOrders alter currency_id DROP NOT NULL');
+	$dbh->do('ALTER TABLE PurchaseOrders alter created_by DROP NOT NULL');
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='purchaseorders'", 'column_name');
 	if ( $data ) {
 		my $ac = sql::start_transaction( $dbh );
+		if ( ! exists $$data{num} ) {
+			$dbh->do('ALTER TABLE PurchaseOrders ADD num TEXT');
+		} # end if
 		if ( ! exists $$data{'federaltax_charge'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
 		} # end if
@@ -2994,16 +2999,19 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
 	} # end if
 	if ( ! exists $$data{po_id} ) {
+		$dbh->do('ALTER TABLE RMA ADD po_id INTEGER');
+		$dbh->do('ALTER TABLE RMA ADD FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
 		if ( exists $$data{ponumber} ) {
 			foreach my $po ( sql::execute( undef, undef, 'SELECT DISTINCT ponumber FROM RMA')) {
-				my $PO = openprint::PurchaseOrder->find_one(id=>$po);
+				my $PO = openprint::PurchaseOrder->find_one(num=>$po);
 				if ( ! $PO ) {
 					$PO = new openprint::PurchaseOrder();
-					$_ = $PO->save({id=>$po}, 1);
+					$_ = $PO->save({num=>$po}, 1);
 					die $_ if $_;
 				} # end if
 				sql::update( undef, undef, 'rma', [ 'ponumber=?', $po ], 'po_id', $PO->id() );
 			} # end foreach po
+			$dbh->do('ALTER TABLE RMA DROP ponumber');
 		} # end if
 	} # end if
 	if ( ! exists $$data{description} ) {
@@ -3037,7 +3045,7 @@ if ( ! sets::isin( 'faults', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Faults.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='fault_found'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='faults'", 'column_name');
 	if ( exists $$data{faults} ) {
 		$dbh->do('ALTER TABLE faults RENAME COLUMN faults to name');
 	} 
@@ -3084,49 +3092,60 @@ if ( ! sets::isin( 'test_results', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='test_results'", 'column_name');
 	if ( exists $$data{technician} ) {
+		if ( ! exists $$data{technician_id} ) {
 		$dbh->do('ALTER TABLE test_results ADD technician_id INTEGER');
 		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (technician_id) REFERENCES Users (id)');
+		} # end if
 		$dbh->do('UPDATE test_results set technician_id =(SELECT id FROM Users WHERE firstname=technician)');
 		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT technician FROM test_results WHERE technician_id IS NULL')){
+			next if ! $name;
 			my $User = openprint::User->find_one('firstname lc'=>$name);
 			if ( ! $User ) {
 				$User = new openprint::User();
-				$User->save({
+				$_ = $User->save({
 					firstname=>$name,
 					type	=>	'E',
 				});
+				die $_ if $_;
 			} # end if
 			sql::update( undef, undef, 'test_results', [ 'technician=?', $name ], 'technician_id', $User->id() );
 		} # end foreach
 	} # end if exists technician
 	if ( exists $$data{employeename} ) {
-		$dbh->do('ALTER TABLE test_results ADD employee_id INTEGER');
-		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (employee_id) REFERENCES Users (id)');
+		if ( ! exists $$data{employee_id} ) {
+			$dbh->do('ALTER TABLE test_results ADD employee_id INTEGER');
+			$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (employee_id) REFERENCES Users (id)');
+		} # end if
 		$dbh->do('UPDATE test_results set employee_id =(SELECT id FROM Users WHERE firstname=employeename)');
 		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT employeename FROM test_results WHERE employee_id IS NULL')){
+			next if ! $name;
 			my $User = openprint::User->find_one('firstname lc'=>$name);
 			if ( ! $User ) {
 				$User = new openprint::User();
-				$User->save({
+				$_ = $User->save({
 					firstname=>$name,
 					type	=>	'E',
 				});
+				die $_ if $_;
 			} # end if
 			sql::update( undef, undef, 'test_results', [ 'employeename=?', $name ], 'employee_id', $User->id() );
 		} # end foreach
 		$dbh->do('ALTER TABLE test_results DROP employeename');
 	} # end if
 	if ( exists $$data{wtest} ) {
-		$dbh->do('ALTER TABLE test_results ADD result_id INTEGER');
-		$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (result_id) REFERENCES Test_Result_Results (id)');
+		if ( ! exists $$data{result_id} ) {
+			$dbh->do('ALTER TABLE test_results ADD result_id INTEGER');
+			$dbh->do('ALTER TABLE test_results ADD FOREIGN KEY (result_id) REFERENCES Test_Result_Results (id)');
+		} # end if
 		$dbh->do('UPDATE test_results set result_id =(SELECT id FROM Test_Result_Results WHERE name=wtest)');
 		foreach my $name ( sql::execute(undef,undef, 'SELECT DISTINCT wtest FROM test_results WHERE result_id IS NULL')){
 			my $Result = openprint::Test_Result_Result->find_one('name lc'=>$name);
 			if ( ! $Result ) {
 				$Result = new openprint::Test_Result_Result();
-				$Result->save({
+				$_ = $Result->save({
 					name=>$name,
 				});
+				die $_ if $_;
 			} # end if
 			sql::update( undef, undef, 'test_results', [ 'wtest=?', $name ], 'result_id', $Result->id() );
 		} # end foreach

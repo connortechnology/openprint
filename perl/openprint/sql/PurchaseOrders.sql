@@ -1,12 +1,13 @@
 
 CREATE TABLE PurchaseOrders (
 	id	SERIAL NOT NULL,
-	currency_id	INTEGER NOT NULL, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+	num			TEXT,
+	currency_id	INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	company_id	INTEGER,
 	supplier_id	INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	contact_id	INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (id),
 	total		float,
-	created_by	INTEGER NOT NULL, FOREIGN KEY (created_by) REFERENCES Users (id),
+	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	subtotal	float,
