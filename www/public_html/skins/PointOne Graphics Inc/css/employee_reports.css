@@ -38,3 +38,6 @@ table .plate_units {
 #value_start, #value_end {
 	width: 100px;
 }
+.filters {
+	display: block;
+}
