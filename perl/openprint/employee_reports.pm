@@ -105,11 +105,44 @@ $log->debug("test $keep");
 }
 
 sub project_performance {
-	project_history();
+	ssi::setup_date_select( '/employee/reports/project_performance.html', 'created_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/project_performance.html', 'created_on_end', '' );
+	_project_performance();
 }
 
 sub _project_performance {
-	_project_history_results();
+	ssi::save_params('/employee/reports/project_performance.html',
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		'company_id', 'estimator', 'estimator_exclude', 'CSR',
+	);
+	my %parameters; 
+	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+		$parameters{'SalesPerson'} = $session{'user_id'};
+		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
+	} elsif ( $param{'CSR'} ) {
+		$parameters{'SalesPerson'} = $param{'CSR'};
+	} # end if
+	#$parameters{'order'} = 'lower(strcompanyname)';
+	my @Companies = openprint::Company::find( %parameters );
+	my %companies = map { $_->id(), $_->name() } @Companies;
+	my %filters = (
+			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/reports/project_history.html?created_on_end', 'created_on_end' ),
+			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
+			'order' => 'index',
+);
+	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
+		$filters{'company_id'} = $param{'company_id'};
+	} # end if
+
+	if ( %companies ) {
+		$variable{'Projects'} = [ openprint::Project->find( %filters ) ];
+	} else {
+		@{$variable{'Projects'}} = ();
+		$variable{information} .= 'There were no companies to filter on.<br/>';
+	} # end if
+	%{$variable{'Companies'}} = %companies;
 }
 
 sub order_history {
