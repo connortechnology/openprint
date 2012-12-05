@@ -37,7 +37,7 @@ sub _project_history_results {
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company::find( %parameters );
-	my %companies = map { int($_->id()), $_->name() } @Companies;
+	my %companies = map { $_->id(), $_->name() } @Companies;
 	my %filters = (
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_end', 'created_on_end' ),
@@ -102,6 +102,14 @@ $log->debug("test $keep");
 	$variable{'OrderedCount'} = 0;
 	return '';
 
+}
+
+sub project_performance {
+	project_history();
+}
+
+sub _project_performance {
+	_project_history_results();
 }
 
 sub order_history {

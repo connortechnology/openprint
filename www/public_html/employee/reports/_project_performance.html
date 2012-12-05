@@ -1,0 +1,48 @@
+<? if ( @{$$variable{'Projects'}} ) ?>
+<? echo (
+	require Chart::Clicker;
+	my $html;
+	my %months;
+	my %days;
+	my %hours;
+	foreach my $Project ( @{$$variable{Projects}} ) {
+		my ( $year, $month, $day, $h, $m ) = $Project->created_on() =~ /^(\d\d\d\d)-(\d\d)-(\d\d) (\d+):(\d+)/;
+		$months{$year}{1*$month} += 1;
+		$days{$year}{1*$day} += 1;
+		$hours{$year}{1*$h} += 1;
+	} # end foreach Project
+	my $time = time;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Month');
+	$cc->get_context('default')->range_axis->format('%.0f');
+	foreach my $year ( sort keys %months ) {
+		my @months = ( map { $_, defined $months{$year}{$_} ? $months{$year}{$_} : 0 } ( 1 .. 12 ) );
+		$cc->add_data( 'Projects for '.$year, { @months } );
+	} # end foreach year
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-months.png');
+	$html .= qq`<img src="/images/charts/$time-months.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Day');
+	$cc->get_context('default')->range_axis->format('%.0f');
+	foreach my $year ( sort keys %months ) {
+		my @days = ( map { $_, defined $days{$year}{$_} ? $days{$year}{$_} : 0 } ( 1 .. 31 ) );
+		$cc->add_data( 'Projects for '.$year, { @days } );
+	} # end foreach
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-days.png');
+	$html .= qq`<img src="/images/charts/$time-hours.png" alt=""/>`;
+
+	my $cc = Chart::Clicker->new(width=>800);
+	$cc->title->text('Project Creation by Hour');
+	$cc->get_context('default')->range_axis->format('%.0f');
+	foreach my $year ( sort keys %months ) {
+		$cc->add_data( 'Projects for '.$year, { map { $_, defined $hours{$year}{$_} ? $hours{$year}{$_} : 0 } ( 0 .. 23 )  } );
+	}
+	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-hours.png');
+	$html .= qq`<img src="/images/charts/$time-days.png" alt=""/>`;
+	return $html;
+) ?>
+<? else ( @{$$variable{'Projects'}} ) ?>
+There were no projects matching your criteria.  Please try again.
+<? endif ( @{$$variable{'Projects'}} ) ?>
