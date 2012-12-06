@@ -159,7 +159,7 @@ sub returns {
 
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_start', -180 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_end', 0 );
-	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', -60 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_end', 0 );
 
 	_returns();
@@ -175,7 +175,7 @@ sub _returns {
 			( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 			);
 
-	my %companies = @{openprint::Company->dropdown()};
+	my %companies = @{openprint::Company->dropdown()} if $session{user_type} ne 'A';
 	my @company_ids = keys %companies;
 
 	if ( $session{$url.'?company_id'} and ! sets::isin( $session{$url.'?company_id'}, \@company_ids ) ) {
@@ -187,7 +187,7 @@ sub _returns {
 		ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
 		ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
 		ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
-		company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ),
+		( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
 		order	=>	'rmanumber,id',
 	);
 } # end sub _returns

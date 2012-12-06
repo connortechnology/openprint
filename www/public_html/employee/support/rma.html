@@ -8,19 +8,40 @@
 	<form id="f1" name="f1" method="post" action="rma.html">
 		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
 			<ul>
-			<li> 
+			<li class="rmanumber"><label>RMA #</label>
+				<? if ( ! $$variable{RMA}->rmanumber() ) ?>
+				<input type="text" name="RMANumber" value="<?RMANumber?>" />
+				<? else ( ! $$variable{RMA}->rmanumber() ) ?>
+				<? echo ( $$variable{RMA}->rmanumber() ) ?>
+				<? endif ( ! $$variable{RMA}->rmanumber() ) ?>
+			</li>
+			<li class="created_on"> 
 				<label>Submission Date</label>
 				<? echo ( format_datetime( $variable{RMA}->created_on() ); ) ?>
 			</li>
-			<li> 
+			<li class="received_on"> 
+				<label>Date Received</label>
+				<? echo ( 
+					if ( ! $variable{RMA}->received_on() ) {
+						return date_select( 'received_on', $variable{RMA}->received_on() );
+					} else {
+						return format_datetime( $variable{RMA}->received_on() );
+					} # end if
+				) ?>
+			</li>
+			<li class="order_id"> 
 				<label>Order #</label>
 				<a href="/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $$variable{RMA}->order_id() ) ?></a>
 			</li>
-			<li> 
+			<li class="ordered_on"> 
 				<label>Order Date</label>
 				<? echo ( format_datetime( $variable{RMA}->Order()->created_on() ); ) ?>
 			</li>
-			<li>
+			<li class="invoice_num"> 
+				<label>Invoice #</label>
+				<? echo ( $variable{RMA}->Order()->invoice_id(); ) ?>
+			</li>
+			<li class="docket">
 				<label>Docket #: (click to view)</label>
 				<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&order_id=<?OrderID?>"><?ProjectReference?></a>
 			</li>
@@ -28,6 +49,12 @@
 				<label>Company Name</label>
 				<? echo ( $$variable{RMA}->Company()->name() ) ?>
 			</li>
+			<li class="CompanyAddress">
+				<? echo ( $$variable{RMA}->Company()->address() ) ?>
+			</li>
+			<li class="model"><label>Model</label><? echo ( $$variable{RMA}->Product()->name() ) ?></li>
+			<li class="serial"><label>Serial</label><? echo ( $$variable{RMA}->serialnumber() ) ?></li>
+
 			<li class="description">
 				<label>Description of problem</label>
 				<? echo ( $$variable{RMA}->description() ) ?>
@@ -36,17 +63,12 @@
 				<label>Type of Request</label>
 				<? echo ( $$variable{RMA}->type() ) ?>
 			</li>
-			<li> 
+			<li class="status"> 
 				<label>Status</label>
 				<? echo ( $$variable{RMA}->status() ) ?>
 			</li>
 			<li> 
 				<label>RMA #</label>
-				<? if ( ! $$variable{RMA}->rmanumber() ) ?>
-				<input type="text" name="RMANumber" value="<?RMANumber?>">
-				<? else ( ! $$variable{RMA}->rmanumber() ) ?>
-				<? echo ( $$variable{RMA}->rmanumber() ) ?>
-				<? endif ( ! $$variable{RMA}->rmanumber() ) ?>
 			</li>
 		</ul>
 	</fieldset>
@@ -60,5 +82,20 @@
 		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
 		<input type="hidden" name="btnFunction"/>
 	</form>
+	<div class="Log">
+		<? echo ( my $html; my $rowclass;
+			foreach my $Log ( openprint::RMA_Log->find(rma_id=>$$variable{RMA}->id(), order=>'created_on' ) ) {
+				$html .= sprintf(q`
+<tr%s>
+	<td class="User">%s</td>
+	<td class="DateTime">%s</td>
+	<td class="description">%s</td>
+</tr>`, $rowclass, $Log->rma_id(), $Log->User()->name(), $Log->description() 
+);
+				$rowclass = $rowclass ? '' : ' class="colRow"'; 
+			} # end foreach Log
+			return $html;
+		) ?>
+	</div>
 </div>
 </div>

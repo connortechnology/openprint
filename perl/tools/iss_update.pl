@@ -61,13 +61,20 @@ if ( ! openprint::User->find_one(email=>'iconnor@connortechnology.com') ) {
 		company_id=>$CT->id()});
 } # end if
 
-foreach my $status ( sql::execute( undef, undef, 'SELECT status FROM status' ) ) {
-	my $RMA_Status = openprint::RMA_Status->find_one('name lc'=>lc $status);
-	if ( ! $RMA_Status ) {
-	$RMA_Status = new openprint::RMA_Status() ;
-		$RMA_Status->save({name=>$status});
-	} # end if
-}
-$dbh->do('DROP TABLE Status');
+if ( 0 ) {
+	foreach my $status ( sql::execute( undef, undef, 'SELECT status FROM status' ) ) {
+		my $RMA_Status = openprint::RMA_Status->find_one('name lc'=>lc $status);
+		if ( ! $RMA_Status ) {
+		$RMA_Status = new openprint::RMA_Status() ;
+			$RMA_Status->save({name=>$status});
+		} # end if
+	}
+	$dbh->do('DROP TABLE Status');
+} else {
+	$dbh->do('ALTER TABLE RMA_Statuses RENAME COLUMN status to name');
+} # end if
+$dbh->do('ALTER TABLE RMA DROP COLUMN winvoice');
+$dbh->do(q`UPDATE Companies Set country='US' WHERE country='USA'`);
+$dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
 1;
 __END__

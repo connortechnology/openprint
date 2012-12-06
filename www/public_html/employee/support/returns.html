@@ -13,10 +13,10 @@
 		<ul>
 		<li>
 			<label>Customers</label>
-			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" class="filter"/>
-			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
+			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
-				<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomers'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?company_id'} ); ) ?>
 			</select>
 		</li><li>
 			<label>Status</label>

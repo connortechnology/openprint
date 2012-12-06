@@ -3043,6 +3043,10 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 	} # end if
 	
 } # end if
+if ( ! sets::isin( 'rma_logs', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Logs.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'glossary', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Glossary.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
