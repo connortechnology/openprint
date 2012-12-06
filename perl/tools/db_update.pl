@@ -2970,7 +2970,11 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma DROP type');
 	} # end if
 	if ( ! exists $$data{status_id} ) {
+		if ( exists $$data{statusid} ) {
+			$dbh->do('ALTER TABLE rma RENAME column statusid TO status_id');
+		} else {
 		$dbh->do('ALTER TABLE rma ADD status_id INTEGER');
+		} # end if
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
 	} # end if
 	if ( ! exists $$data{po_id} ) {

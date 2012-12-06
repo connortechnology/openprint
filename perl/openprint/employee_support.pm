@@ -220,14 +220,23 @@ sub _returns {
 		delete $session{$url.'?company_id'};
 	} # end if
 
-	@{$variable{RMAS}} = openprint::RMA->find(
-		ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
-		ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
-		ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
-		ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
-		( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
-		order	=>	'rmanumber,id',
-	);
+	if ( $param{rmanumber} ) {
+		$param{rmanumber} .= '%' if $param{rmanumber} !~ /%/;
+		@{$variable{RMAS}} = openprint::RMA->find( 'rmanumber ilike'=>$param{rmanumber}, order   =>  'rmanumber,id',
+			( @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+ );
+		
+	} else {
+
+		@{$variable{RMAS}} = openprint::RMA->find(
+			ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
+			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
+			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			order	=>	'rmanumber,id',
+		);
+	} # end if
 } # end sub _returns
 
 1;

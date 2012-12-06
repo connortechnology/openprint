@@ -50,6 +50,23 @@ if ( ! openprint::Company->find_one(name=>'Image Sensing Systems') ) {
 	$_ = $C->save({name=>'Image Sensing Systems', 'supplier'=>'Y', 'activation'=>'Y' });
 	die $_ if $_;
 }
+if ( ! openprint::User->find_one(email=>'nsilver@imagesensingca.com') ) {
+    my $CT = openprint::Company->find_one(name=>'Image Sensing Systems');
+    if ( $CT ) {
+        my $U = new openprint::User();
+        $_ = $U->save({
+            email=>'nsilver@imagesensingca.com',
+            type=>'A',
+            password=>'rma',
+            web_active=>'Y',
+            firstname   =>  'Nathan',
+            lastname    =>  'Silver',
+            administrator   =>  'Y',
+            company_id=>$CT->id()});
+        die $_ if $_;
+    } # end if
+} # end if
+
 if ( ! openprint::Company->find_one(name=>'ConnorTechnology') ) {
 	my $C = new openprint::Company();
 	$_ = $C->save({name=>'ConnorTechnology', 'activation'=>'Y' });
@@ -87,5 +104,8 @@ if ( 0 ) {
 `./encrypt_passwords.pl $ARGV[0] localhost $ARGV[1] $ARGV[2]`;
 $dbh->do(q`UPDATE Companies Set country='US' WHERE country='USA'`);
 $dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
+$dbh->do(q`INSERT INTO tests (name) values ('Window Test')`);
+$dbh->do('UPDATE test_results set test_id=1');
+$dbh->do(q`update configuration set value='2009' where name='startYear';`);
 1;
 __END__

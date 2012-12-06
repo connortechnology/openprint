@@ -17,9 +17,9 @@
 <td class="Result">%s</td>
 <td class="Remarks">%s</td>
 <td class="DateTime">%s</td>
-</tr>`, $rowclass, $Test->Technician()->name(), $Test->type(), $Test->result(), 
+</tr>`, $rowclass, $Test->Technician()->name(), $Test->test(), $Test->result(), 
 		$Test->remarks(),
-		format_datetime($Test->repaired_on()),
+		format_datetime($Test->tested_on()),
 );
 		$rowclass = $rowclass ? '' : ' class="colRow"'; 
 	} # end foreach Test

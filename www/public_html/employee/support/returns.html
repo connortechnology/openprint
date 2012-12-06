@@ -11,6 +11,11 @@
 <form id="f1" name="f1" method="post" action="returns.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
+			<li><label>RMA #</label>
+				<input type="text" name="rmanumber" value="<? echo ( $param{rmanumber} ) ?>" />
+				<? echo ( button('Go', { onclick=>'load_results();' } ); ) ?>
+			</li>
+		<ul>
 		<li>
 			<label>Customers</label>
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
