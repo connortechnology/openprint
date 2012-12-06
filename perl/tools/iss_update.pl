@@ -35,30 +35,41 @@ $ARGV[1] = $ARGV[0] if ! $ARGV[1];
 $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
+$dbh->do('ALTER TABLE Fault_Found rename to Faults_Found');
+$dbh->do('ALTER TABLE RMA DROP COLUMN Comments');
+$dbh->do('ALTER TABLE RMA DROP COLUMN winvoice');
+`./db_update.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
+`./db_update2.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
+`./db_update3.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 $dbh->do(qq`SELECT setval( '$openprint::Company::serial', (SELECT MAX(id) FROM companies))`);
 if ( ! openprint::Company->find_one(name=>'Image Sensing Systems') ) {
 	my $C = new openprint::Company();
-	$C->save({name=>'Image Sensing Systems', 'supplier'=>'Y', 'activation'=>'Y' });
+	$_ = $C->save({name=>'Image Sensing Systems', 'supplier'=>'Y', 'activation'=>'Y' });
+	die $_ if $_;
 }
 if ( ! openprint::Company->find_one(name=>'ConnorTechnology') ) {
 	my $C = new openprint::Company();
-	$C->save({name=>'ConnorTechnology', 'activation'=>'Y' });
+	$_ = $C->save({name=>'ConnorTechnology', 'activation'=>'Y' });
+	die $_ if $_;
 } # end if
 if ( ! openprint::User->find_one(email=>'iconnor@connortechnology.com') ) {
 	my $CT = openprint::Company->find_one(name=>'ConnorTechnology');
-	my $U = new openprint::User();
-	$U->save({
-		email=>'iconnor@connortechnology.com',
-		type=>'A',
-		password=>'XV36meISS',
-		web_active=>'Y',
-		firstname	=>	'Isaac',
-		lastname	=>	'Connor',
-		administrator	=>	'Y',
-		company_id=>$CT->id()});
+	if ( $CT ) {
+		my $U = new openprint::User();
+		$_ = $U->save({
+			email=>'iconnor@connortechnology.com',
+			type=>'A',
+			password=>'XV36meISS',
+			web_active=>'Y',
+			firstname	=>	'Isaac',
+			lastname	=>	'Connor',
+			administrator	=>	'Y',
+			company_id=>$CT->id()});
+		die $_ if $_;
+	} # end if
 } # end if
 
 if ( 0 ) {
@@ -73,7 +84,7 @@ if ( 0 ) {
 } else {
 	$dbh->do('ALTER TABLE RMA_Statuses RENAME COLUMN status to name');
 } # end if
-$dbh->do('ALTER TABLE RMA DROP COLUMN winvoice');
+`./encrypt_passwords.pl $ARGV[0] localhost $ARGV[1] $ARGV[2]`;
 $dbh->do(q`UPDATE Companies Set country='US' WHERE country='USA'`);
 $dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
 1;

@@ -8,6 +8,11 @@ require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
 require openprint::Email;
+require openprint::RMA_Log;
+require openprint::Fault_Found;
+require openprint::Fault;
+require openprint::Test;
+require openprint::Test_Result;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -70,6 +75,39 @@ sub rma {
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
 
 } # end sub rma
+
+sub _faults {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{fault} = openprint::Fault->transform('name', $param{fault} );
+		if ( $param{fault} ) {
+			my $Fault = openprint::Fault->find_one('name lc'=>lc $param{fault});
+			if ( ! $Fault ) {
+				$Fault = new openprint::Fault();
+				$variable{error} .= $Fault->save({name=>$param{fault}});
+			} # end if
+			$param{fault_id} = $Fault->id();
+		} # end if
+		delete $param{fault};
+
+		my $Fault = new openprint::Fault_Found();
+		$variable{error} .= $Fault->save({
+			rma_id	=>	$RMA->id(),
+			fault_id	=>	$param{fault_id},
+			quantity	=>	$param{quantity},
+			action		=>	$param{action_taken},
+			( $param{user_id} ? ( user_id => $param{user_id} ) : () ),
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub faults
 
 sub helpdesk_search {
 

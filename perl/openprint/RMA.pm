@@ -33,6 +33,7 @@ $serial = 'rma_id_seq';
 	estimate_required	=>	'estimate_required',
 	product_id	=>	'product_id',
 	serialnumber		=>	'serialnumber',
+	accessories			=>	'accessories',
 );
 
 %transforms = (
@@ -41,6 +42,7 @@ $serial = 'rma_id_seq';
 	comments		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	rmanumber		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 	serialnumber	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	accessories		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (

@@ -6,6 +6,12 @@
 <div class="Support"><div class="RMA">
 <!--#include virtual="/includes/error_reporting.html"-->
 	<form id="f1" name="f1" method="post" action="rma.html">
+<p class="buttons">
+<? echo ( join("\n",
+		button('Save', { onclick=>q`f1.btnFunction.value='Save';submit_handler(f1);` } ),
+		button('Reset', { onclick=>'f1.reset();' } ),
+); ) ?>
+</p>
 		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
 			<ul>
 			<li class="rmanumber"><label>RMA #</label>
@@ -29,6 +35,10 @@
 					} # end if
 				) ?>
 			</li>
+			<li class="status"> 
+				<label>Status</label>
+				<? echo ( $$variable{RMA}->status() ) ?>
+			</li>
 			<li class="order_id"> 
 				<label>Order #</label>
 				<a href="/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $$variable{RMA}->order_id() ) ?></a>
@@ -36,6 +46,10 @@
 			<li class="ordered_on"> 
 				<label>Order Date</label>
 				<? echo ( format_datetime( $variable{RMA}->Order()->created_on() ); ) ?>
+			</li>
+			<li class="po_num"> 
+				<label>PO #</label>
+				<? echo ( $variable{RMA}->po_id(); ) ?>
 			</li>
 			<li class="invoice_num"> 
 				<label>Invoice #</label>
@@ -54,35 +68,36 @@
 			</li>
 			<li class="model"><label>Model</label><? echo ( $$variable{RMA}->Product()->name() ) ?></li>
 			<li class="serial"><label>Serial</label><? echo ( $$variable{RMA}->serialnumber() ) ?></li>
+			<li class="accessories"><label>Accessories</label><textarea name="accessories"><? echo ( $$variable{RMA}->accessories() ) ?></textarea></li>
 
 			<li class="description">
 				<label>Description of problem</label>
-				<? echo ( $$variable{RMA}->description() ) ?>
+				<textarea name="description"><? echo ( $$variable{RMA}->description() ) ?></textarea>
 			</li>
-			<li> 
+			<li class="comments">
+				<label>Comments</label>
+				<textarea name="comments"><? echo ( $$variable{RMA}->comments() ) ?></textarea>
+			</li>
+			<li class="type"> 
 				<label>Type of Request</label>
 				<? echo ( $$variable{RMA}->type() ) ?>
 			</li>
-			<li class="status"> 
-				<label>Status</label>
-				<? echo ( $$variable{RMA}->status() ) ?>
-			</li>
-			<li> 
-				<label>RMA #</label>
-			</li>
 		</ul>
 	</fieldset>
-<p class="buttons">
-<? echo ( join("\n",
-		button('Save', { onclick=>q`f1.btnFunction.value='Save';submit_handler(f1);` } ),
-		button('Reset', { onclick=>'f1.reset();' } ),
-); ) ?>
-</p>
+	<div class="Faults" id="Faults"><!--#include virtual="_faults.html"--></div>
+	<div class="Tests" id="Tests"><!--#include virtual="_tests.html"--></div>
 
 		<input type="hidden" name="rma_id" value="<? echo ( $$variable{RMA}->id() ) ?>"/>
 		<input type="hidden" name="btnFunction"/>
 	</form>
-	<div class="Log">
+	<div class="Logs">
+		<fieldset><legend>Logs</legend>
+			<table>
+				<tr>
+					<th class="User">User</th>
+					<th class="DateTime">When</th>
+					<th class="description">Description</th>
+				</tr>
 		<? echo ( my $html; my $rowclass;
 			foreach my $Log ( openprint::RMA_Log->find(rma_id=>$$variable{RMA}->id(), order=>'created_on' ) ) {
 				$html .= sprintf(q`
@@ -90,12 +105,14 @@
 	<td class="User">%s</td>
 	<td class="DateTime">%s</td>
 	<td class="description">%s</td>
-</tr>`, $rowclass, $Log->rma_id(), $Log->User()->name(), $Log->description() 
+</tr>`, $rowclass, $Log->User()->name(), $Log->description() 
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"'; 
 			} # end foreach Log
 			return $html;
 		) ?>
-	</div>
+			</table>
+		</fieldset>
+	</div><!--Logs-->
 </div>
 </div>

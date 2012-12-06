@@ -22,6 +22,7 @@ $table = 'rma_logs';
 %defaults = (
 	user_id		=>	undef,
 	company_id	=>	undef,
+	created_on	=>	q`'NOW()'`,
 );
 
 sub User {

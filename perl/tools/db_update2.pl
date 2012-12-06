@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -399,7 +399,7 @@ $log->debug("Add email_html");
 		$dbh->do('ALTER TABLE emailcampaigns add email_html text');
 	} # end if
 } else {
-$log->debug("no has email_campaigns");
+	$log->debug("no has email_campaigns");
 } # end if
 if ( ! sets::isin( 'paycheques', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques.sql}) );
@@ -413,5 +413,6 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	} # end if
 } # end if
 $dbh->disconnect();
+print "Finished\n";
 1;
 __END__
