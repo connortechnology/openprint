@@ -42,13 +42,14 @@ $serial = 'locations_id_seq';
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
-	'parent_id'		=>	[ 's/\D//g' ],
-	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
-    'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'postalcode'	=> [ 's/\s*//' ],
-	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
-	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
+	id			=>	[ 's/\D//g' ],
+	parent_id	=>	[ 's/\D//g' ],
+	postalcode	=>	[ 'tr/[a-z]/[A-Z]/' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    address		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    postalcode	=>	[ 's/\s*//' ],
+	latitude	=>	[ 's/[^\-\d\.]//g' ],
+	longitude	=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
