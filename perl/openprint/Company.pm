@@ -373,5 +373,10 @@ sub taxexempt2 {
 	} # end if
 	return $_[0]{'taxexempt2'};
 } # end sub taxexempt2
+
+sub address {
+return join(', ', map { $_ ? $_ : () } @{$_[0]}{'address1','address2','city','state','postalcode','country'} );
+} # end sub address
+
 1;
 __END__

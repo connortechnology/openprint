@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Currencies;
-DROP SEQUENCE IF EXISTS Currency_id_seq;
 CREATE SEQUENCE Currency_id_seq;
 
 CREATE TABLE Currencies (

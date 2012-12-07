@@ -8,6 +8,11 @@ require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
 require openprint::Email;
+require openprint::RMA_Log;
+require openprint::Fault_Found;
+require openprint::Fault;
+require openprint::Test;
+require openprint::Test_Result;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -70,6 +75,39 @@ sub rma {
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
 
 } # end sub rma
+
+sub _faults {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{fault} = openprint::Fault->transform('name', $param{fault} );
+		if ( $param{fault} ) {
+			my $Fault = openprint::Fault->find_one('name lc'=>lc $param{fault});
+			if ( ! $Fault ) {
+				$Fault = new openprint::Fault();
+				$variable{error} .= $Fault->save({name=>$param{fault}});
+			} # end if
+			$param{fault_id} = $Fault->id();
+		} # end if
+		delete $param{fault};
+
+		my $Fault = new openprint::Fault_Found();
+		$variable{error} .= $Fault->save({
+			rma_id	=>	$RMA->id(),
+			fault_id	=>	$param{fault_id},
+			quantity	=>	$param{quantity},
+			action		=>	$param{action_taken},
+			( $param{user_id} ? ( user_id => $param{user_id} ) : () ),
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub faults
 
 sub helpdesk_search {
 
@@ -159,7 +197,7 @@ sub returns {
 
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_start', -180 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_end', 0 );
-	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', -60 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_end', 0 );
 
 	_returns();
@@ -175,21 +213,30 @@ sub _returns {
 			( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 			);
 
-	my %companies = @{openprint::Company->dropdown()};
+	my %companies = @{openprint::Company->dropdown()} if $session{user_type} ne 'A';
 	my @company_ids = keys %companies;
 
 	if ( $session{$url.'?company_id'} and ! sets::isin( $session{$url.'?company_id'}, \@company_ids ) ) {
 		delete $session{$url.'?company_id'};
 	} # end if
 
-	@{$variable{RMAS}} = openprint::RMA->find(
-		ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
-		ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
-		ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
-		ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
-		company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ),
-		order	=>	'rmanumber,id',
-	);
+	if ( $param{rmanumber} ) {
+		$param{rmanumber} .= '%' if $param{rmanumber} !~ /%/;
+		@{$variable{RMAS}} = openprint::RMA->find( 'rmanumber ilike'=>$param{rmanumber}, order   =>  'rmanumber,id',
+			( @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+ );
+		
+	} else {
+
+		@{$variable{RMAS}} = openprint::RMA->find(
+			ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
+			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
+			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			order	=>	'rmanumber,id',
+		);
+	} # end if
 } # end sub _returns
 
 1;

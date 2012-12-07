@@ -1,0 +1,49 @@
+
+<fieldset><legend>Faults</legend>
+	<table>
+		<tr>
+			<th class="Technician">Technician</th>
+			<th class="Fault">Fault</th>
+			<th class="action">Action</th>
+			<th class="DateTime">Repair Date</th>
+			<th class="quantity" colspan="2">Quantity</th>
+		</tr>
+<? echo ( my $html; my $rowclass;
+	foreach my $Fault ( openprint::Fault_Found->find(rma_id=>$$variable{RMA}->id(), order=>'id' ) ) {
+		$html .= sprintf(q`
+<tr%s>
+<td class="Technician">%s</td>
+<td class="Fault">%s</td>
+<td class="action">%s</td>
+<td class="DateTime">%s</td>
+<td class="quantity" colspan="2">%s</td>
+</tr>`, $rowclass, $Fault->Technician()->name(), $Fault->Fault()->name(), $Fault->action(), 
+		format_datetime($Fault->repaired_on()),
+		$Fault->quantity(),
+);
+		$rowclass = $rowclass ? '' : ' class="colRow"'; 
+	} # end foreach Fault
+	return $html;
+) ?>
+		<tr>
+			<td class="Technician"><? echo (
+				if ( $session{user_type} eq 'A' ) {
+					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'user_id' } );
+				} else {
+					return '';
+				}
+			) ?></td>
+			<td class="Fault"><select name="fault_id"><option value="">select</option>
+				<? echo ( make_drop_down( openprint::Fault->dropdown(order=>'lower(name)'), $param{fault_id} ); ) ?>
+				</select>
+				<input type="text" name="fault" placeholder="new fault"/>
+			</td>
+			<td class="action_taken"><textarea name="action_taken" placeholder="action taken" onkeyup="textarea_resize(this);"><? echo ( $param{action_taken} ) ?></textarea>
+			</td>
+			<td class="DateTime"></td>
+			<td class="quantity"><? echo ( input(type=>'cardinal', name=>'quantity', value=>$param{quantity} ? $param{quantity} : 1); ) ?>
+			</td>
+			<td class="buttons"><? echo ( button( 'AddFault', { onclick=>qq`new Ajax.Updater('Faults', '_faults.html', { parameters: getValues( 'f1', [ 'fault_id', 'fault', 'action_taken', 'quantity', 'user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+		</tr>
+	</table>
+</fieldset>

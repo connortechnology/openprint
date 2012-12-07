@@ -1,5 +1,3 @@
-DROP TABLE iF EXISTS Users;
-
 CREATE TABLE Users (
 /* tablename, etc too long.	So we had to truncate it in here... it all works automatically elsewhere */
 	id		SERIAL,
@@ -34,6 +32,7 @@ CREATE TABLE Users (
 	howdidyouhearaboutusother	text,
 	deleted					BOOLEAN NOT NULL default false,
 	asset_id				INTEGER,
+	password_changed_on TIMESTAMP WITH TIME ZONE,
 	PRIMARY KEY (id)
 );
 CREATE INDEX users_email_idx ON Users (email);

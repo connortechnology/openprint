@@ -31,12 +31,18 @@ $serial = 'rma_id_seq';
 	received_on	=>	'received_on',
 	warranty	=>	'warranty',
 	estimate_required	=>	'estimate_required',
+	product_id	=>	'product_id',
+	serialnumber		=>	'serialnumber',
+	accessories			=>	'accessories',
 );
 
 %transforms = (
-	description	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	comments	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	rmanumber	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id				=>	[ 's/\D//g' ],
+	description		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	comments		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	rmanumber		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	serialnumber	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	accessories		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -53,6 +59,7 @@ $serial = 'rma_id_seq';
 	priority	=>	undef,
 	po_id		=>	undef,
 	estimate_required	=>	undef,
+	warranty	=>	undef,
 );
 
 sub Type {

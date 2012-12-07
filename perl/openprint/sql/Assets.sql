@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS Assets;
-DROP TABLE IF EXISTS Asset_Types;
 
 CREATE TABLE Asset_Types (
 	id SERIAL,

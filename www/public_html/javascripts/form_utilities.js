@@ -1296,8 +1296,9 @@ function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
 }
-function getValues( form, element_names ) {
-	var results = new Hash();
+function getValues( form, element_names, more_values ) {
+	form = $(form);
+	var results = new Hash( more_values );
 	for ( var index = element_names.length; index; index -- ) {
 		var form_element = form.elements[element_names[index-1]];
 		if ( form_element ) 
