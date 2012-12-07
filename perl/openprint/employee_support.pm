@@ -9,6 +9,7 @@ require openprint::RMA_Type;
 require openprint::RMA_Status;
 require openprint::Email;
 require openprint::RMA_Log;
+require openprint::RMA_Part;
 require openprint::Fault_Found;
 require openprint::Fault;
 require openprint::Test;

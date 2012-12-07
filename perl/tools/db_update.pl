@@ -404,8 +404,12 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'invoices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) );
+} # end if
+
 if ( ! sets::isin( 'orders', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) );
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
 	if ( ! $$data{supplier_id} ) {
@@ -509,6 +513,10 @@ if ( ! sets::isin( 'projects', \@tables ) ) {
 		$dbh->do(q`ALTER TABLE projects ADD production_comments TEXT`) or $log->error($dbh->errstr());
 	} # end if
 } # end if
+if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
+}
+
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Service_Types rename column strid to name});
 	$dbh->do(q{alter table tbl_Service_Types rename column strname to description});
@@ -539,12 +547,6 @@ if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
 } # end if
 $dbh->do(q{ALTER TABLE service_types alter id set default nextval('service_types_id_seq')});
 
-if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql}) );
-	foreach my $c ( sql::execute( undef, undef, 'SELECT DISTINCT category FROM Service_types' ) ) {
-		sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
-	} # end foreach
-} # end if
 
 my $data;
 if ( sets::isin( 'service_types', \@tables ) ) {
@@ -558,6 +560,9 @@ if ( $data ) {
 	if ( exists $$data{'category'} ) {
 		if ( ! exists $$data{'category_id'} ) {
 		$dbh->do(q`ALTER TABLE service_types add category_id INTEGER`);
+		foreach my $c ( sql::execute( undef, undef, 'SELECT DISTINCT category FROM Service_types' ) ) {
+			sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
+		} # end foreach
 		$dbh->do('UPDATE service_types set category_id=(select id from servicetype_categories where name=category)');
 		} # end if
 		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
@@ -791,9 +796,18 @@ if ( ! sets::isin( 'papers', \@tables ) ) {
 	} # end nif
 } # end if
 
+if ( sets::isin( 'tbl_material_categories', \@tables ) ) {
+	$dbh->do('ALTER TABLE tbl_material_categories RENAME to material_categories');
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+} # end if
 if ( ! sets::isin( 'material_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Categories.sql}) ) or die $dbh->errstr();
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='material_categories'", 'column_name' );
+	$dbh->do(q{alter table tbl_Material_Categories rename column lngindex to id}) if exists $$data{lngindex};
+	$dbh->do(q{alter table tbl_Material_Categories rename column strid to name}) if exists $$data{strid};
+	$dbh->do(q{alter table tbl_Material_Categories drop column strname}) if exists $$data{strname};
+	$dbh->do(q{ALTER TABLE Materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
 	$dbh->do(q{alter table material_categories alter column id drop default});
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
@@ -869,23 +883,6 @@ if ( ! sets::isin( 'paper_allocations', \@tables ) ) {
 if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Service_Defaults.sql}) ) or die;
 }
-
-
-if ( $version < 1587 ) {
-	print "Updating to version 1587\n";
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Material_Categories LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
-if ( $data ) {
-$dbh->do(q{alter table tbl_Material_Categories rename column lngindex to id});
-$dbh->do(q{alter table tbl_Material_Categories rename column strid to name});
-$dbh->do(q{alter table tbl_Material_Categories drop column strname});
-$dbh->do(q{alter table tbl_Material_Categories rename to Material_Categories});
-$dbh->do(q{ALTER TABLE Materials ADD foreign key (category_id) REFERENCES Material_Categories (id)});
-} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1587, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1587;
-} # end if
 
 if ( sets::isin( 'tbl_services', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Services rename column lngindex to id});
@@ -1047,7 +1044,7 @@ if ( ! sets::isin( 'stockpurposes', \@tables ) ) {
 				name   TEXT NOT NULL,
 				PRIMARY KEY (id)
 				)});
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skids'", 'column_name' );
 	if ( ! exists $$data{'purpose_id'} ) {
 		$dbh->do(q{alter table skid_contents add purpose_id integer});
 		$dbh->do(q{alter table skid_contents add foreign key (purpose_id) references stockpurposes (id)});
@@ -1731,12 +1728,39 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	if ( ! exists $$data{'created_on'} ) {
 		$dbh->do('alter table products add created_on TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()');
 	} # end if
+	if ( ! exists $$data{id} ) {
+		$dbh->do('ALTER TABLE products ADD id SERIAL');
+		$dbh->do('ALTER TABLE products ADD PRIMARY KEY (id)');
+	} # end if
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
+	} # end if
+	if ( ! exists $$data{'manufacturer_id'} ) {
+		$dbh->do('ALTER TABLE products ADD manufacturer_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
+	} # end if
+	if ( ! exists $$data{category_id} ) {
+		$dbh->do('ALTER TABLE products ADD category_id INTEGER');
+		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (category_id) REFERENCES Product_Categories (id)');
+	} # end if
+	if ( ! exists $$data{weight} ) {
+		$dbh->do('ALTER TABLE products ADD weight float');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Specifications.sql}) );
 } # end if
 
+if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoiced_Products.sql}) );
+} else {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
+	if ( $data and ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE Invoiced_Products add description text');
+	} # end if
+} # end if
 if ( ! sets::isin( 'sessions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Sessions.sql}) );
 } else {
@@ -2430,17 +2454,6 @@ if ( ! sets::isin( 'taxes', \@tables ) ) {
 		} # end if
 	} # end if
 }
-if ( ! sets::isin( 'invoices', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) );
-} # end if
-if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoiced_Products.sql}) );
-} else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
-	if ( $data and ! exists $$data{'description'} ) {
-		$dbh->do('ALTER TABLE Invoiced_Products add description text');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Manifest_Content_Types.sql}) );
@@ -3214,7 +3227,30 @@ if ( ! sets::isin( 'test_results', \@tables ) ) {
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 }
-$dbh->disconnect();
+if ( ! sets::isin( 'rma_parts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Parts.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='rma_parts'", 'column_name');
+	if ( ! exists $$data{product_id} ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('ALTER TABLE rma_parts ADD product_id INTEGER');
+		$dbh->do('ALTER TABLE rma_parts ADD FOREIGN KEY (product_id) REFERENCES Products (id)');
+		if ( exists $$data{name} ) {
+			foreach my $product ( sql::execute( undef, undef, 'SELECT distinct name FROM rma_parts' ) ) {
+				my $Product = openprint::Product->find_one('name lc'=>lc openprint::Product->transform('name', $product ) );
+				if ( ! $Product ) {
+					$Product = new openprint::Product();
+					$_ = $Product->save({name=>$product});
+					die $_ if $_;
+				} # end if
+				sql::update(undef,undef, 'rma_parts', [ 'name=?', $product ], 'product_id', $Product->id() );
+			} # end foreach
+			$dbh->do('ALTER TABLE rma_parts DROP name');
+		} # end if
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+} # end if
 print "Finished\n";
 1;
 __END__

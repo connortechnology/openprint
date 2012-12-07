@@ -197,15 +197,21 @@ sub _currency_conversions {
 sub user_profiles {
 
 	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : $session{user_id};
-	my $User = $variable{'User'} = new openprint::User( $user_id );
+	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
 
-	# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
-	# selected company
-	if ( ( ! exists $param{'ddmCustomer'} ) or ( $User->id() and ( $param{'ddmCustomer'} != $User->company_id() ) ) ) {
-		$param{'ddmCustomer'} = $User->company_id();
+	if ( exists $param{ddmCustomer} ) {
+		if ( $param{ddmCustomer} and ( $User->company_id() != $param{ddmCustomer} ) ) {
+			# Prevent selection of user from another company
+			$User = new openprint::User();
+		} # end if
+	} else {
+		# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
+		$param{'ddmCustomer'} = $User->company_id() if $User->id();
 	} # end if
+
+	# selected company
 	my $cust_id = $param{'ddmCustomer'};
 	$cust_id = $session{'company_id'} if ! $cust_id;
 
