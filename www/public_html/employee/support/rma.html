@@ -12,6 +12,7 @@
 		button('Reset', { onclick=>'f1.reset();' } ),
 ); ) ?>
 </p>
+		<div class="Information">
 		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
 			<ul>
 			<li class="rmanumber"><label>RMA #</label>
@@ -57,18 +58,37 @@
 			</li>
 			<li class="docket">
 				<label>Docket #: (click to view)</label>
-				<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&order_id=<?OrderID?>"><?ProjectReference?></a>
+				<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;order_id=<?OrderID?>"><?ProjectReference?></a>
 			</li>
 			<li class="Company">
 				<label>Company Name</label>
-				<? echo ( $$variable{RMA}->Company()->name() ) ?>
+				<? echo ( 
+					if ( $$variable{RMA}->company_id() and $session{user_type} ne 'A' ) {
+						return $$variable{RMA}->Company()->name()
+					} else {
+						return ssi::select( openprint::Company->dropdown(), [ $$variable{RMA}->company_id() ], { name=>'company_id' } );
+					} # end if
+				) ?>
 			</li>
 			<li class="CompanyAddress">
 				<? echo ( $$variable{RMA}->Company()->address() ) ?>
 			</li>
+			<li class="product_category"><label>Category</label>
+			<? echo (
+				if ( $$variable{RMA}->product_id() ) {
+					return $$variable{RMA}->Product()->category();
+				} else {
+					return ssi::select( openprint::Product_Category->dropdown(order=>'lower(name)'), [ $$variable{RMA}->Product()->category_id() ], {
+						name=>'product_category_id', prepend=>['','select'],
+						onchange=>q`new Ajax.Updater('product_id', '/includes/_products_ddm.html', { parameters: { category_id: get_value(this) } } );`,
+						} );
+				} # end if
+			) ?>
+			</li>
 			<li class="model"><label>Model</label>
-				<? echo ( $$variable{RMA}->product_id() ? $$variable{RMA}->Product()->name() : 
-					ssi::select( openprint::Product->dropdown('order'=>'lower(name)'), [], { name=>'product_id' } );
+				<? echo (
+						$$variable{RMA}->product_id() ? $$variable{RMA}->Product()->name() : 
+					ssi::select( openprint::Product->dropdown('order'=>'lower(name)'), [], { name=>'product_id', id=>'product_id', prepend=>['','select'], } );
 ) ?>
 </li>
 			<li class="serial"><label>Serial</label><? echo ( $$variable{RMA}->serialnumber() ) ?></li>
@@ -88,6 +108,7 @@
 			</li>
 		</ul>
 	</fieldset>
+	</div>
 	<div class="Faults" id="Faults"><!--#include virtual="_faults.html"--></div>
 	<div class="Tests" id="Tests"><!--#include virtual="_tests.html"--></div>
 	<div class="Parts" id="Parts"><!--#include virtual="_parts.html"--></div>

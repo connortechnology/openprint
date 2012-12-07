@@ -1299,10 +1299,13 @@ function toggle_input( ddm, txt ) {
 function getValues( form, element_names, more_values ) {
 	form = $(form);
 	var results = new Hash( more_values );
-	for ( var index = element_names.length; index; index -- ) {
-		var form_element = form.elements[element_names[index-1]];
-		if ( form_element ) 
-			results.set(element_names[index-1], form_element.getValue());
+	for ( var index = 0, len = element_names.length; index < len ; index ++ ) {
+		var form_element = form.elements[element_names[index]];
+		if ( form_element ) {
+			results.set(element_names[index], get_value( form_element ) );
+		} else {
+			alert("Element " + element_names[index] + ' not found.' );
+		} 
 	} // end for
 	return results;
 } // end function getValues

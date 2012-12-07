@@ -100,7 +100,7 @@ sub _faults {
 		$variable{error} .= $Fault->save({
 			rma_id	=>	$RMA->id(),
 			fault_id	=>	$param{fault_id},
-			quantity	=>	$param{quantity},
+			quantity	=>	$param{fault_quantity},
 			action		=>	$param{action_taken},
 			( $param{user_id} ? ( user_id => $param{user_id} ) : () ),
 		});
@@ -109,6 +109,72 @@ sub _faults {
 		} # end if
 	} # end if
 } # end sub faults
+
+sub _tests {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{test} = openprint::Test->transform('name', $param{test} );
+		if ( $param{test} ) {
+			my $Test = openprint::Test->find_one('name lc'=>lc $param{test});
+			if ( ! $Test ) {
+				$Test = new openprint::Test();
+				$variable{error} .= $Test->save({name=>$param{fault}});
+			} # end if
+			$param{test_id} = $Test->id();
+		} # end if
+		delete $param{test};
+
+		my $Result = new openprint::Test_Result();
+		$variable{error} .= $Result->save({
+			rma_id	=>	$RMA->id(),
+			test_id	=>	$param{test_id},
+			remarks	=>	$param{test_remarks},
+			result_id	=>	$param{result_id},
+			( $param{user_id} ? ( technician_id => $param{user_id} ) : () ),
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _tests
+
+sub _parts {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{parts_product_id} = openprint::Product->transform('id', $param{parts_product_id} );
+		if ( ! $param{parts_product_id} ) {
+			$variable{error} .= 'No part specified.';
+			return;
+		} # end if
+	
+		my $Product = openprint::Product->find_one( id=>$param{parts_product_id} );
+		if ( ! $Product ) {
+			$variable{error} .= 'Product not found.';
+			return;
+		} # end if
+
+		my $Part = new openprint::RMA_Part();
+		$variable{error} .= $Part->save({
+			rma_id		=>	$RMA->id(),
+			product_id	=>	$param{parts_product_id},
+			serialnumber	=>	$param{serialnumber},
+			quantity	=>	$param{parts_quantity},
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _parts
 
 sub helpdesk_search {
 

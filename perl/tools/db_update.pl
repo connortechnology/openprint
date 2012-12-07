@@ -2245,6 +2245,7 @@ if ( $data ) {
 
 if ( ! sets::isin( 'surveys', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Surveys.sql}) ) or die $dbh->errstr();
+	push @tables, 'surveys';
 } # end if
 if ( ! sets::isin( 'survey_question_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Survey_Question_Categories.sql}) ) or die $dbh->errstr();
@@ -2395,9 +2396,6 @@ if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 } 
 if ( ! sets::isin( 'emailtemplates', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/EmailTemplates.sql}) );
-} 
-if ( ! sets::isin( 'surveys', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Surveys.sql}) );
 } 
 
 if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
@@ -3226,6 +3224,7 @@ if ( ! sets::isin( 'test_results', \@tables ) ) {
 		$dbh->do('ALTER TABLE test_results add FOREIGN KEY (test_id) REFERENCES tests (id)');
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
+	$dbh->do(q`SELECT setval( 'test_results_id_seq', (SELECT MAX(id) FROM test_results) )`);
 }
 if ( ! sets::isin( 'rma_parts', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Parts.sql}) );

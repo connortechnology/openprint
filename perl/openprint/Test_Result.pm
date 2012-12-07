@@ -26,7 +26,12 @@ $serial = 'test_results_id_seq';
 %transforms = (
 	remarks => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
-%defaults = ();
+%defaults = (
+	tested_on	=>	q`'NOW()'`,
+	technician_id	=>	q`$session{user_id}`,
+	rdate		=>	q`'NOW()'`,
+	cost		=>	undef,
+);
 
 sub Technician {
 	return new openprint::User( $_[0]{technician_id} );
