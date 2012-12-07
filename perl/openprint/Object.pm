@@ -133,7 +133,8 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	@$self{keys %$fields} = @$data{values %$fields};
+	my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+	@$self{@keys} = @$data{@$fields{@keys}};
 } # end sub load
 
 sub save {

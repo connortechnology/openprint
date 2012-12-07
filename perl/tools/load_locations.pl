@@ -6,6 +6,7 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Location;
+require Encode;
 use countries;
 use states;
 use provinces;
@@ -15,7 +16,6 @@ use vars qw( $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
-@session{'company_id','user_id'} = ( 6, 1085 );
 
 $log = new logger( 'debug' );
 
@@ -27,15 +27,19 @@ die if ! $dbh;
 
 for ( my $i = 0; $i < @countries::countries; $i += 2 ) {
 	my $Country;
+	$countries::countries[$i+1] = Encode::encode('utf-8',  $countries::countries[$i+1] );
 	if ( ! ( $Country = openprint::Location->find_one('name'=>$countries::countries[$i+1]) ) ) {
 		$Country = new openprint::Location();
-		$Country->save({'name'=>$countries::countries[$i+1], 'short'=>$countries::countries[$i], 'type'=>'country' });
+		$_ = $Country->save({'name'=>$countries::countries[$i+1], 'short'=>$countries::countries[$i], 'type'=>'country' });
+		die $_ if $_;
 	} else {
 		if ( ! $Country->short() ) {
-			$Country->save({'short'=>$countries::countries[$i]});
+			$_ = $Country->save({'short'=>$countries::countries[$i]});
+		die $_ if $_;
 		} # end if
 		if ( $Country->type() ne 'country' ) {
-			$Country->save({'type'=>'country'});
+			$_ = $Country->save({'type'=>'country'});
+		die $_ if $_;
 		} # end if
 	} # end if
 } # end for
@@ -44,15 +48,19 @@ my $US = openprint::Location->find_one('short'=>'US');
 die if ! $US;
 foreach my $state ( keys %states::states ) {
 	my $State;
+	$state = Encode::encode('utf-8',  $state );
 	if ( ! ( $State = openprint::Location->find_one('short'=>$state,'type'=>'state' ) ) ) {
 		$State = new openprint::Location();
-		$State->save({'name'=>$states::states{$state}, 'short'=>$state, 'type'=>'state','parent_id'=>$US->id() });
+		$_ = $State->save({'name'=>Encode::encode('utf-8', $states::states{$state} ), 'short'=>$state, 'type'=>'state','parent_id'=>$US->id() });
+		die $_ if $_;
 	} else {
 		if ( ! $State->name() ) {
-			$State->save({'name'=>$states::states{$state} });
+			$_ = $State->save({'name'=>Encode::encode('utf-8', $states::states{$state} )});
+		die $_ if $_;
 		} # end if
 		if ( $State->parent_id() != $US->id() ) {
-			$State->save({'parent_id'=>$US->id()});
+			$_ = $State->save({'parent_id'=>$US->id()});
+		die $_ if $_;
 		} # end if
 	} # end if
 } # end foreach state
@@ -61,15 +69,19 @@ my $CA = openprint::Location->find_one('short'=>'CA');
 die if ! $CA;
 foreach my $state ( keys %provinces::provinces ) {
 	my $State;
+	$state = Encode::encode('utf-8',  $state );
 	if ( ! ( $State = openprint::Location->find_one('short'=>$state,'type'=>'province' ) ) ) {
 		$State = new openprint::Location();
-		$State->save({'name'=>$provinces::provinces{$state}, 'short'=>$state, 'type'=>'province','parent_id'=>$CA->id() });
+		$_ = $State->save({'name'=>Encode::encode('utf-8', $provinces::provinces{$state}), 'short'=>$state, 'type'=>'province','parent_id'=>$CA->id() });
+		die $_ if $_;
 	} else {
 		if ( ! $State->name() ) {
-			$State->save({'name'=>$provinces::provinces{$state} });
+			$_ = $State->save({'name'=>Encode::encode('utf-8', $provinces::provinces{$state}) });
+		die $_ if $_;
 		} # end if
 		if ( $State->parent_id() != $CA->id() ) {
-			$State->save({'parent_id'=>$CA->id()});
+			$_ = $State->save({'parent_id'=>$CA->id()});
+		die $_ if $_;
 		} # end if
 	} # end if
 } # end foreach state

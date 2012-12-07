@@ -10,6 +10,11 @@ require openprint::Object;
 require openprint::Log;
 require openprint::Log_Action;
 require openprint::ServiceType;
+require openprint::Company;
+require countries;
+require provinces;
+require states;
+require openprint::Location;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -968,6 +973,65 @@ $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+foreach my $Company ( openprint::Company->find() ) {
+	my $Country;
+	if ( $Company->country() ) {
+		if ( ! ( $Country = openprint::Location->find_one(short=>$Company->country(),type=>'country' ) ) ) {
+			$Country = new openprint::Location();
+			$Country->save({
+					short=>$Company->country(),
+					name=> ( $countries::countries{$Company->country} ? $countries::countries{$Company->country} : $Company->country() ),
+					type=> 'country',
+					});
+		} # end if
+		my $State;
+		if ( $Company->country() eq 'CA' ) {
+			if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'province' ) ) ) {
+				$State = new openprint::Location();
+				$State->save({
+						parent_id	=>	$Country->id(),
+						short=>$Company->state(),
+						name=> ( $provinces::provinces{$Company->state()} ? $provinces::pronvices{$Company->state()} : $Company->state() ),
+						type=> 'province',
+						});
+			} # end if
+		} else {
+			if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'state' ) ) ) {
+				$State = new openprint::Location();
+				$State->save({
+						parent_id	=>	$Country->id(),
+						short=>$Company->state(),
+						name=> ( $states::states{$Company->state()} ? $states::states{$Company->state()} : $Company->state() ),
+						type=> 'state',
+						});
+			} # end if
+		} # end if
+		next if ! $State;
+		my $City;
+		if ( $Company->city() and ! ( $City = openprint::Location->find_one(name=>$Company->city(),type=>'city' ) ) ) {
+			$City = new openprint::Location();
+			$City->save({
+					parent_id	=>	$State->id(),
+					name=> $Company->city(),
+					type=> 'city',
+					});
+		} # end if
+		next if ! $City;
+		if ( $Company->address1() ) {
+			my $Address = openprint::Location->find_one(address=>$Company->address1(),type=>'place');
+			if ( ! $Address ) {
+				$Address = new openprint::Location();
+				$Address->save({
+					address=>$Company->address1() . ' ' . $Company->address2(),
+					postalcode	=>	$Company->postalcode(),
+					type=>'place',
+					parent_id	=>	$City->id(),
+				});
+			} # end if
+		} # end if
+	} # end if has coutnry
+	
+} # end foreach $Company
 print "done.\n";
 $dbh->disconnect();
 1;

@@ -71,7 +71,19 @@
 				) ?>
 			</li>
 			<li class="CompanyAddress">
-				<? echo ( $$variable{RMA}->Company()->address() ) ?>
+				<? echo ( 
+					if ( $$variable{RMA}->shipto_address_id() ) {
+						return $$variable{RMA}-Location()->where();
+					} else {
+						my $html;
+						my @Addresses = openprint::Address->find(company_id=>$$variable{RMA}->company_id() );
+
+						ssi::select( [ map { $_->id(), $_->to_string() } @Addresses ], [ $$variable{RMA}->shipto_address_id() ? $$variable{RMA}->shipto_address_id() : ( @Addresses >= 1 ? $Addresses[0]->id() ) ], { name=>'shipto_address_id', id=>'shipto_address_id' } );
+						$html .= ssi::include( $ENV{DOCUMENT_ROOT}.'/locations/_location_fields.html' );
+						return $html;
+					} # end if
+				) ?>
+			
 			</li>
 			<li class="product_category"><label>Category</label>
 			<? echo (

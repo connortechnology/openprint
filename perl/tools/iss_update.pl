@@ -56,10 +56,16 @@ $dbh->do('ALTER Table Products rename column unitname to name');
 $dbh->do('ALTER Table Products DROP version');
 $dbh->do('ALTER Table Products DROP vendor');
 $dbh->do('ALTER table products drop constraint  "units_pkey"');
+$dbh->do('ALTER TABLE RMA DROP partsid');
+$dbh->do('ALTER TABLE RMA DROP packingslipno');
+$dbh->do('ALTER TABLE RMA DROP time_spent');
+$dbh->do('ALTER TABLE RMA DROP area_of_defect');
+
 
 
 `./db_update.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
 `./db_update2.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
+#`./load_locations.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
 `./db_update3.pl $ARGV[0]  $ARGV[1] $ARGV[2]` or die $!;
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -93,6 +99,36 @@ if ( ! openprint::User->find_one(email=>'nsilver@imagesensingca.com') ) {
             lastname    =>  'Silver',
             administrator   =>  'Y',
             company_id=>$CT->id()});
+        die $_ if $_;
+    } # end if
+} # end if
+
+my $Econolite;
+if ( ! $Econolite = openprint::Company->find_one(name=>'Econolite') ) {
+    $Econolite = new openprint::Company();
+    $_ = $Econolite->save({name=>'Econolite', 'supplier'=>'Y', 'activation'=>'Y' });
+    die $_ if $_;
+}
+if ( ! openprint::User->find_one(email=>'econolite@imagesensingca.com') ) {
+        my $password = 'rma';
+        if ( $config{encrypt_passwords} ) {
+            my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+                    cost => 8,
+                    salt_random=>1,
+                    passphrase =>$password );
+            $password= $ppr->as_rfc2307;
+        } # end if
+
+        my $U = new openprint::User();
+        $_ = $U->save({
+            email=>'econolite@imagesensingca.com',
+            type=>'E',
+            password=>$password,
+            web_active=>'Y',
+            firstname   =>  'Nathan',
+            lastname    =>  'Silver',
+            administrator   =>  'Y',
+            company_id=>$Econolite->id()});
         die $_ if $_;
     } # end if
 } # end if

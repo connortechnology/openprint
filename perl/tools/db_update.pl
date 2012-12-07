@@ -3033,6 +3033,25 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE RMA ALTER created_on set default NOW()');
 		$dbh->do('ALTER TABLE RMA ALTER created_on set NOT NULL');
 	} # end if
+	if ( ! exists $$data{product_id} ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('ALTER TABLE rma ADD product_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (product_id) REFERENCES Products (id)');
+		if ( exists $$data{unitname} ) {
+			foreach my $product ( sql::execute( undef, undef, 'SELECT distinct unitname FROM rma' ) ) {
+				next if ! $product;
+				my $Product = openprint::Product->find_one('name lc'=>lc openprint::Product->transform('name', $product ) );
+				if ( ! $Product ) {
+					$Product = new openprint::Product();
+					$_ = $Product->save({name=>$product});
+					die $_ if $_;
+				} # end if
+				sql::update(undef,undef, 'rma', [ 'unitname=?', $product ], 'product_id', $Product->id() );
+			} # end foreach
+			$dbh->do('ALTER TABLE rma DROP unitname');
+		} # end if
+		sql::end_transaction( $dbh, $ac );
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
