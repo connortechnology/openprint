@@ -27,11 +27,6 @@ sub _action {
 sub edit {
 	$param{location_id} = openprint::Location->transform('id', $param{location_id});
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
-} # end sub edit
-
-sub view {
-	$param{location_id} = openprint::Location->transform('id', $param{location_id});
-	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
 	if ( $param{'action'} eq 'Save' ) {
 		foreach ( 'country','state','city','location' ) {
 			$param{$_} = openprint::Location->transform('name',$param{$_});
@@ -135,6 +130,7 @@ sub view {
 } # end sub edit
 
 sub view {
+	$param{location_id} = openprint::Location->transform('id', $param{location_id});
 	my $Location = $variable{'Location'} = new openprint::Location( $param{'location_id'} );
 	if ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} .= $Location->delete();
