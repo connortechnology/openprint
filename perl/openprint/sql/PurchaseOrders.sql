@@ -13,6 +13,7 @@ CREATE TABLE PurchaseOrders (
 	subtotal	float,
 	authorized_by	INTEGER, FOREIGN KEY (authorized_by) REFERENCES Users (id),
 	authorized_on	TIMESTAMP WITH TIME ZONE,
+	authorized BOOLEAN,
 	delivered_on	TIMESTAMP WITH TIME ZONE,
 	delivered_on_switch	TEXT,
 	deleted		BOOLEAN NOT NULL default false,

@@ -96,7 +96,7 @@ sub category {
 		my $Category = openprint::Product_Category->find_one('name lc'=>lc openprint::Product_Category->transform('name',$_[1]));
 		if ( ! $Category ) {
 			$Category = new openprint::Product_Category();
-			$Category->save({'name'=>$_[1]});
+			$Category->save({name=>$_[1]});
 		} # end if
 		$_[0]{'category_id'} = $Category->id();
 		$_[0]{'category'} = $Category->name();

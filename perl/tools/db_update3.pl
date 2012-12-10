@@ -10,6 +10,11 @@ require openprint::Object;
 require openprint::Log;
 require openprint::Log_Action;
 require openprint::ServiceType;
+require openprint::Company;
+require countries;
+require provinces;
+require states;
+require openprint::Location;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -584,7 +589,7 @@ if ( ! sets::isin( 'opinions', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'value'} ) {
 			$dbh->do('ALTER TABLE likes ADD value INTEGER');
-			$dbh->do('ALTER TABLE likes ADD FORIEGN KEY (value) REFERENCES opinion_types (id)');
+			$dbh->do('ALTER TABLE likes ADD FOREIGN KEY (value) REFERENCES opinion_types (id)');
 		} # end if
 		if ( ! exists $$data{'opinion_type_id'} ) {
 			$dbh->do('ALTER TABLE likes ADD opinion_type_id INTEGER');
@@ -961,21 +966,6 @@ if ( ! sets::isin('object_views', \@tables ) ) {
 	die if $dbh->errstr();
 } # end if
 
-if ( ! sets::isin('products', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Products.sql}) );
-	die if $dbh->errstr();
-} else {
-	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='products'", 'column_name');
-	if ( ! exists $$data{'album_id'} ) {
-		$dbh->do('ALTER TABLE products ADD album_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (album_id) REFERENCES Photo_Albums (id)');
-	} # end if
-	if ( ! exists $$data{'manufacturer_id'} ) {
-		$dbh->do('ALTER TABLE products ADD manufacturer_id INTEGER');
-		$dbh->do('ALTER TABLE products ADD FOREIGN KEY (manufacturer_id) REFERENCES Manufacturers (id)');
-	} # end if
-	
-} # end if
 if ( ! sets::isin('tbl_material_prices',\@tables) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Prices.sql}) );
 } else {
@@ -983,6 +973,65 @@ $dbh->do( 'update tbl_material_prices set strunits=lower(strunits)');
 }
 $dbh->do( 'update service_prices set units=lower(units)');
 $dbh->do( 'update paper_prices set strunits=lower(strunits)');
+foreach my $Company ( openprint::Company->find() ) {
+	my $Country;
+	if ( $Company->country() ) {
+		if ( ! ( $Country = openprint::Location->find_one(short=>$Company->country(),type=>'country' ) ) ) {
+			$Country = new openprint::Location();
+			$Country->save({
+					short=>$Company->country(),
+					name=> ( $countries::countries{$Company->country} ? $countries::countries{$Company->country} : $Company->country() ),
+					type=> 'country',
+					});
+		} # end if
+		my $State;
+		if ( $Company->country() eq 'CA' ) {
+			if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'province' ) ) ) {
+				$State = new openprint::Location();
+				$State->save({
+						parent_id	=>	$Country->id(),
+						short=>$Company->state(),
+						name=> ( $provinces::provinces{$Company->state()} ? $provinces::pronvices{$Company->state()} : $Company->state() ),
+						type=> 'province',
+						});
+			} # end if
+		} else {
+			if ( $Company->state() and ! ( $State = openprint::Location->find_one(short=>$Company->state(),type=>'state' ) ) ) {
+				$State = new openprint::Location();
+				$State->save({
+						parent_id	=>	$Country->id(),
+						short=>$Company->state(),
+						name=> ( $states::states{$Company->state()} ? $states::states{$Company->state()} : $Company->state() ),
+						type=> 'state',
+						});
+			} # end if
+		} # end if
+		next if ! $State;
+		my $City;
+		if ( $Company->city() and ! ( $City = openprint::Location->find_one(name=>$Company->city(),type=>'city' ) ) ) {
+			$City = new openprint::Location();
+			$City->save({
+					parent_id	=>	$State->id(),
+					name=> $Company->city(),
+					type=> 'city',
+					});
+		} # end if
+		next if ! $City;
+		if ( $Company->address1() ) {
+			my $Address = openprint::Location->find_one(address=>$Company->address1(),type=>'place');
+			if ( ! $Address ) {
+				$Address = new openprint::Location();
+				$Address->save({
+					address=>$Company->address1() . ' ' . $Company->address2(),
+					postalcode	=>	$Company->postalcode(),
+					type=>'place',
+					parent_id	=>	$City->id(),
+				});
+			} # end if
+		} # end if
+	} # end if has coutnry
+	
+} # end foreach $Company
 print "done.\n";
 $dbh->disconnect();
 1;

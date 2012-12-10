@@ -85,15 +85,20 @@ sub verify_login {
 	my $User;
 	foreach my $U ( @Users ) {
 		if ( $config{encrypt_passwords} ) {
-require Authen::Passphrase::BlowfishCrypt;
-			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
-			if ( ! $ppr->match($password) ) {
-				next;
-			} # end if
+			eval {
+				require Authen::Passphrase::BlowfishCrypt;
+				my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
+				if ( $ppr->match($password) ) {
+					$User = $U;
+					last;
+				} # end if
+			}
 		} else {
-			next if $password ne $U->password();
+			if ( $password eq $U->password() ) {
+				$User = $U;
+				last;
+			} # end if
 		} # end if
-		$User = $U;
 	} # end foreach
 	if ( ! $User ) {
 		$$variable{'information'} = 'The password you entered was not correct.	Please try again.';
