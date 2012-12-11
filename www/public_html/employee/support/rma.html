@@ -16,11 +16,15 @@
 		<fieldset><legend>RMA <? echo ( $$variable{RMA}->rmanumber() ? $$variable{RMA}->rmanumber() : 'Request ' . $$variable{RMA}->id() ) ?></legend>
 			<ul>
 			<li class="rmanumber"><label>RMA #</label>
-				<? if ( ! $$variable{RMA}->rmanumber() ) ?>
-				<input type="text" name="RMANumber" value="<?RMANumber?>" />
-				<? else ( ! $$variable{RMA}->rmanumber() ) ?>
+				<? if ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
+				<input type="text" name="RMANumber" value="<? echo ( $$variable{RMA}->rmanumber() ) ?>" />
+				<? else ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
 				<? echo ( $$variable{RMA}->rmanumber() ) ?>
-				<? endif ( ! $$variable{RMA}->rmanumber() ) ?>
+				<? endif ( ($session{user_type} eq 'A') or ! $$variable{RMA}->rmanumber() ) ?>
+			</li>
+			<li class="status"> 
+				<label>Status</label>
+				<? echo ( $$variable{RMA}->status() ) ?>
 			</li>
 			<li class="created_on"> 
 				<label>Submission Date</label>
@@ -29,20 +33,22 @@
 			<li class="received_on"> 
 				<label>Date Received</label>
 				<? echo ( 
-					if ( ! $variable{RMA}->received_on() ) {
+					if ( ($session{user_type} eq 'A') or ! $variable{RMA}->received_on() ) {
 						return date_select( 'received_on', $variable{RMA}->received_on() );
 					} else {
 						return format_datetime( $variable{RMA}->received_on() );
 					} # end if
 				) ?>
 			</li>
-			<li class="status"> 
-				<label>Status</label>
-				<? echo ( $$variable{RMA}->status() ) ?>
-			</li>
 			<li class="order_id"> 
 				<label>Order #</label>
-				<a href="/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $$variable{RMA}->order_id() ) ?></a>
+				<? echo (
+						if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->order_id() ) {
+							return input( type=>'text', name=>'order_id', value=>$$variable{RMA}->order_id() );
+						} else {
+							return sprintf('<a href="/main/order/history_details.html?order_id=%1$s">%1$s</a>', $$variable{RMA}->order_id() );
+						} 
+				) ?>
 			</li>
 			<li class="ordered_on"> 
 				<label>Order Date</label>
@@ -50,10 +56,21 @@
 			</li>
 			<li class="po_num"> 
 				<label>PO #</label>
-				<? echo ( $variable{RMA}->po_id(); ) ?>
+				<? echo (
+					if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->po_id() ) {
+						return input( type=>'text', name=>'po_num', value=>$$variable{RMA}->PurchaseOrder()->num() );
+					} # end if
+					sprintf('<a href="/employee/purchase_order/view.html?po_id=%1$d">%2$s</a>', $$variable{RMA}->po_id(), $$variable{RMA}->PurchaseOrder()->num() );
+				) ?>
 			</li>
 			<li class="invoice_num"> 
 				<label>Invoice #</label>
+				<? echo (
+					if ( ( $session{user_type} eq 'A' ) or ! $$variable{RMA}->invoice_id() ) {
+						return input( type=>'text', name=>'invoice_num', value=>$$variable{RMA}->Invoice()->num() );
+					} # end if
+					sprintf('<a href="/invoice/view.html?invoice_id=%1$d">%2$s</a>', $$variable{RMA}->invoice_id(), $$variable{RMA}->Invoice()->num() );
+				) ?>
 				<? echo ( $variable{RMA}->Order()->invoice_id(); ) ?>
 			</li>
 			<li class="docket">
@@ -70,24 +87,33 @@
 					} # end if
 				) ?>
 			</li>
-			<li class="CompanyAddress">
+			<li class="CompanyAddress"><label>Ship To</label>
 				<? echo ( 
-					if ( $$variable{RMA}->shipto_address_id() ) {
-						return $$variable{RMA}-Location()->where();
+					if ( $$variable{RMA}->shipto_address_id() and ( $session{user_type} ne 'A' ) ) {
+						return $$variable{RMA}->Address()->Location()->where_link();
 					} else {
 						my $html;
-						my @Addresses = openprint::Address->find(company_id=>$$variable{RMA}->company_id() );
+						require openprint::Address;
+						my @Addresses = openprint::Address->find(company_id=>$$variable{RMA}->company_id(),order=>'name' );
 
-						ssi::select( [ map { $_->id(), $_->to_string() } @Addresses ], [ $$variable{RMA}->shipto_address_id() ? $$variable{RMA}->shipto_address_id() : ( @Addresses >= 1 ? $Addresses[0]->id() ) ], { name=>'shipto_address_id', id=>'shipto_address_id' } );
-						$html .= ssi::include( $ENV{DOCUMENT_ROOT}.'/locations/_location_fields.html' );
+						$html .= ssi::select( 
+							[ ('', 'New'), map { $_->id(), $_->to_string() } @Addresses ], 
+							[ $$variable{RMA}->shipto_address_id() ? $$variable{RMA}->shipto_address_id() : ( @Addresses >= 1 ? $Addresses[0]->id() : '' ) ],
+							{ 
+								name=>'shipto_address_id', 
+								id=>'shipto_address_id', 
+								onchange=>q`if(get_value(this)==''){new Ajax.Updater('location_fields', '/location/_location_fields.html', { } );} else { $('location_fields').innerHTML='';};`,
+							}
+							);
+						$$variable{Location} = $$variable{RMA}->Address()->Location();
+						$html .= '<div id="location_fields">'.ssi::include( $ENV{DOCUMENT_ROOT}.'/location/_location_fields.html' ).'</div>';
 						return $html;
 					} # end if
 				) ?>
-			
 			</li>
 			<li class="product_category"><label>Category</label>
 			<? echo (
-				if ( $$variable{RMA}->product_id() ) {
+				if ( $$variable{RMA}->product_id() and ( $session{user_type} ne 'A' ) ) {
 					return $$variable{RMA}->Product()->category();
 				} else {
 					return ssi::select( openprint::Product_Category->dropdown(order=>'lower(name)'), [ $$variable{RMA}->Product()->category_id() ], {
@@ -99,10 +125,13 @@
 			</li>
 			<li class="model"><label>Model</label>
 				<? echo (
-						$$variable{RMA}->product_id() ? $$variable{RMA}->Product()->name() : 
-					ssi::select( openprint::Product->dropdown('order'=>'lower(name)'), [], { name=>'product_id', id=>'product_id', prepend=>['','select'], } );
-) ?>
-</li>
+				if ( $$variable{RMA}->product_id() and ( $session{user_type} ne 'A' ) ) {
+					return $$variable{RMA}->Product()->name();
+				} else {
+					return ssi::select( openprint::Product->dropdown('order'=>'lower(name)'), [], { name=>'product_id', id=>'product_id', prepend=>['','select'], } );
+				} # end if
+				) ?>
+			</li>
 			<li class="serial"><label>Serial</label><? echo ( $$variable{RMA}->serialnumber() ) ?></li>
 			<li class="accessories"><label>Accessories</label><textarea name="accessories"><? echo ( $$variable{RMA}->accessories() ) ?></textarea></li>
 

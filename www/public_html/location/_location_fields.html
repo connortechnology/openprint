@@ -1,5 +1,6 @@
 <ul class="location">
 <? echo (
+$log->debug("Location: " . $$variable{Location}->to_string() );
 	my $Country = $$variable{'Location'}->ancestor(type=>'country');
 	my $State = $$variable{'Location'}->ancestor(type=>'state');
 	my $City = $$variable{'Location'}->ancestor(type=>'city');

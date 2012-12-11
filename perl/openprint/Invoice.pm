@@ -46,6 +46,7 @@ $serial = 'invoices_id_seq';
 	'paid'				=>	'paid',
 	'interest'			=>	'interest',
 	'bad_debt'			=>	'bad_debt',
+	num					=>	'num',
 );
 
 %find_fields = (
@@ -292,12 +293,22 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Invoice_Tax->find_one('invoice_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+	my $result = openprint::Invoice_Tax->find_one( invoice_id =>$_[0]{id}, tax_id=>$_[1]->id() );
 	if ( ! $result ) {
 		return new openprint::Invoice_Tax();
 	} # end if
 	return $result;
 } # end sub Tax
+
+sub num {
+	if ( @_ > 1 ) {
+		$_[0]{num} = $_[1];
+	}
+	if ( ! $_[0]{num} ) {
+		$_[0]{num} = $_[0]{id};
+	} # end if
+	return $_[0]{num};
+} # end sub num
 
 1;
 __END__

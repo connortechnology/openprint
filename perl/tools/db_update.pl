@@ -201,10 +201,6 @@ if ( $data ) {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
 
-if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
@@ -406,6 +402,11 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 
 if ( ! sets::isin( 'invoices', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='invoices'", 'column_name');
+	if ( ! exists $$data{num} ) {
+		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
@@ -3052,6 +3053,10 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	if ( ! exists $$data{shipto_address_id} ) {
+		$dbh->do('ALTER TABLE rma add shipto_address_id INTEGER');
+		$dbh->do('ALTER TABLE rma add FOREIGN KEY (shipto_address_id) REFERENCES Addresses (id)');
+	} # end if
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3269,6 +3274,10 @@ if ( ! sets::isin( 'rma_parts', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
+if ( ! sets::isin( 'addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__

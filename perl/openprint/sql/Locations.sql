@@ -24,6 +24,7 @@ CREATE TABLE Locations (
 	longitude	float,
 	url			text,
 	asset_id				INTEGER,
+	album_id INTEGER, FOREIGN KEY (album_id) REFERENCES Photo_Albums (id),
 	description	text,
 	deleted		BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)

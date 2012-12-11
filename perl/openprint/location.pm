@@ -197,5 +197,9 @@ sub _search {
 } # end sub _search
 sub _ddm {
 } # end sub _ddm
+
+sub _location_fields {
+	$variable{Location} = new openprint::Location( $param{location_id} );
+} # end sub _location_fields
 1;
 __END__

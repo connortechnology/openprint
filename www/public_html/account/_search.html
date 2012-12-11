@@ -33,7 +33,7 @@
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
-			'order'	=>	'(select name from companies where companies.id=company_id),lower(firstname),lower(lastname)',
+			'order'	=>	'(SELECT name FROM companies WHERE companies.id=company_id),lower(firstname),lower(lastname)',
 			'id not in'	=>	\@blocked_user_ids,
 			#'id not in'	=>	[$session{'user_id'},@blocked_user_ids],
 		);
