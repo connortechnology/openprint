@@ -493,14 +493,14 @@ sub button {
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) {
-			$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
 		} else {
-			$html .= "<img src=\"$$options{image}\" name=\"Button$name\"";
+			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
 		} # end if
 		if ( $$options{'title'} ) {
-			$html .= "alt=\"$$options{title}\"";
+			$html .= " alt=\"$$options{title}\"";
 		} # end if
-		$html .= "/>";
+		$html .= '/>';
 		if ( $$options{text} ) {
 			$html .= $$options{text};
 		} # end if
