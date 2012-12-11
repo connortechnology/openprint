@@ -108,6 +108,9 @@ sub _equipment {
 sub _products_ddm {
 } # end sub _products_ddm
 
+sub _address_ddm {
+	require openprint::Address;
+} # end sub _addres_ddm
 
 1;
 __END__

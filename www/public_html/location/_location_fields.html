@@ -1,6 +1,5 @@
 <ul class="location">
 <? echo (
-$log->debug("Location: " . $$variable{Location}->to_string() );
 	my $Country = $$variable{'Location'}->ancestor(type=>'country');
 	my $State = $$variable{'Location'}->ancestor(type=>'state');
 	my $City = $$variable{'Location'}->ancestor(type=>'city');
@@ -20,8 +19,8 @@ $log->debug("Location: " . $$variable{Location}->to_string() );
 	$html .= sprintf('
 	<li><label>Address</label><input type="text" name="address" id="address" value="%s" /></li>
 	<li><label>Postal/Zip Code</label><input type="text" name="postalcode" id="postalcode" value="%s" /></li>
-	<li><label>Latitude</label><input type="number" name="latitude" id="latitude" value="%s" /></li>
-	<li><label>Longitude</label><input type="number" name="longitude" id="longitude" value="%s" /></li>
+	<li class="latitude"><label>Latitude</label><input type="number" name="latitude" id="latitude" value="%s" /></li>
+	<li class="longitude"><label>Longitude</label><input type="number" name="longitude" id="longitude" value="%s" /></li>
 ', $$variable{'Location'}->get('address','postalcode','latitude','longitude') ) if ! sets::isin( $$variable{'Location'}->type(), ['city','state','country'] );
 
 	$html .= '</ul><ul class="ancestors">';

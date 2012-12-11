@@ -74,6 +74,75 @@ sub rma {
 
 	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		# Set default
+		$RMA->received_on( sprintf('%.4d-%.2d-%.2d', Date::Calc::Today() ) );
+		$RMA->company_id( $session{'/employee/support/rma.html?company_id'} );
+		$RMA->shipto_address_id( $session{'/employee/support/rma.html?shipto_address_id'} );
+	} # end if
+	if ( $param{action} eq 'Save' ) {
+		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
+			$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'} );
+		} # end if
+
+		my $PO;
+		if ( $param{po_num} and ! ( $param{po_num} = openprint::PurchaseOrder->transform('num', $param{po_num}) ) ) {
+			$variable{error} .= 'Invalid PO #<br/>';
+		} # end if
+		if ( $param{po_num} ) {
+			$PO = openprint::PurchaseOrder->find_one(num=>$param{po_num});
+			if ( ! $PO ) {
+				$PO = new openprint::PurchaseOrder();
+				$variable{error} .= $PO->save({num=>$param{po_num}, supplier_id=>$session{company_id}});
+			} # end if
+		} # end if
+		my $Invoice;
+		if ( $param{invoice_num} and ! ( $param{invoice_num} = openprint::Invoice->transform('num', $param{invoice_num}) ) ) {
+            $variable{error} .= 'Invalid Invoice #<br/>';
+        } # end if
+        if ( $param{invoice_num} ) {
+            $Invoice = openprint::Invoice->find_one(num=>$param{invoice_num});
+            if ( ! $Invoice ) {
+                $Invoice = new openprint::Invoice();
+                $variable{error} .= $Invoice->save({num=>$param{invoice_num}, invoicer_id=>$session{company_id}, invoicee_id=>$param{company_id} });
+            } # end if
+        } # end if
+
+		$variable{error} .= $RMA->save({
+			rmanumber	=>	$param{rmanumber},
+			received_on	=>	$param{received_on},
+			order_id	=>	$param{order_id},
+			( $PO ? ( po_id		=>	$PO->id() ) : () ),
+			( $Invoice ? ( invoice_id	=>	$Invoice->id() ) : () ),
+			company_id	=>	$param{company_id},
+			product_id	=>	$param{product_id},
+			shipto_address_id	=>	$param{shipto_address_id},
+			serialnumber	=> $param{serialnumber},
+			description		=>	$param{description},
+			comments		=>	$param{comments},
+			accessories		=>	$param{accessories},
+		});
+
+		if ( ! $variable{error} ) {
+			$RMA = new openprint::RMA();
+			$RMA->set({
+				rmanumber	=>	$param{rmanumber},
+				received_on	=>	$param{received_on},
+				order_id	=>	$param{order_id},
+				( $PO ? ( po_id		=>	$PO->id() ) : () ),
+				( $Invoice ? ( invoice_id	=>	$Invoice->id() ) : () ),
+				company_id	=>	$param{company_id},
+				product_id	=>	$param{product_id},
+				shipto_address_id	=>	$param{shipto_address_id},
+			});
+
+# Fields to remember
+			foreach my $key ( 'company_id', 'order_id', 'po_num', 'invoice_num', 'product_id', 'shipto_address_id', 'rmanumber' ) {
+				$session{'/employee/support/rma.html?'.$key} = $param{$key};
+			} # end foreach key
+		} # end if	
+		
+	} # end 
 
 } # end sub rma
 

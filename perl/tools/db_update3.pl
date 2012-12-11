@@ -976,6 +976,15 @@ $dbh->do( 'update paper_prices set strunits=lower(strunits)');
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {
+		$Company->country('Canada') if $Company->country() eq 'CANADAq';
+		if ( $Company->country() =~ /\./ ) {
+			$_ = $Company->country();
+			$_ =~ s/\.//g;
+			$Company->country($_);
+		} 
+		$Company->country(openprint::Location->transform('name',$Company->country()));
+
+
 		if ( $countries::countries{$Company->country} ) {
 			if ( ! ( $Country = openprint::Location->find_one(short=>$Company->country(),type=>'country' ) ) ) {
 				$Country = new openprint::Location();
@@ -987,11 +996,11 @@ foreach my $Company ( openprint::Company->find() ) {
 				die $_ if $_;
 			} # end if
 		} else {
-			if ( ! ( $Country = openprint::Location->find_one('name lc'=>lc$Company->country(),type=>'country' ) ) ) {
+			if ( ! ( $Country = openprint::Location->find_one('name lc'=>lc $Company->country(),type=>'country' ) ) ) {
 				$Country = new openprint::Location();
 				$_ = $Country->save({
 						name	=> $Company->country(),
-					type=> 'country',
+						type=> 'country',
 				});
 				die $_ if $_;
 			} # end if
@@ -1048,6 +1057,7 @@ foreach my $Company ( openprint::Company->find() ) {
 		} # end if
 		next if ! $State;
 		my $City;
+		$Company->city(openprint::Location->transform('name', $Company->city() ));
 		if ( $Company->city() and ! ( $City = openprint::Location->find_one('name lc'=>lc $Company->city(),type=>'city' ) ) ) {
 			$City = new openprint::Location();
 			$_ = $City->save({
@@ -1058,12 +1068,14 @@ foreach my $Company ( openprint::Company->find() ) {
 					die $_ if $_;
 		} # end if
 		next if ! $City;
+		$Company->address1( openprint::Location->transform('address', $Company->address1() ) );
+
 		if ( $Company->address1() ) {
-			my $Address = openprint::Location->find_one('address lc'=>lc $Company->address1() . ' ' . $Company->address2(),type=>'place');
+			my $Address = openprint::Location->find_one('address lc'=>lc ($Company->address1() . ( $Company->address2() ? ( ' ' . $Company->address2() ) : '' )),type=>'place');
 			if ( ! $Address ) {
 				$Address = new openprint::Location();
 				$_ = $Address->save({
-					address=>$Company->address1() . ' ' . $Company->address2(),
+					address=>$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
 					postalcode	=>	$Company->postalcode(),
 					type=>'place',
 					parent_id	=>	$City->id(),

@@ -171,6 +171,7 @@ if ( 0 ) {
 	$dbh->do('ALTER TABLE RMA_Statuses RENAME COLUMN status to name');
 } # end if
 `./encrypt_passwords.pl $ARGV[0] localhost $ARGV[1] $ARGV[2]`;
+$dbh->do(q`update addresses set country='Turkey', city='Istanbul' where city='Istanbul, Turkey';`);
 `./convert_addresses.pl	$ARGV[0] $ARGV[1] $ARGV[2]`;
 $dbh->do('UPDATE RMA SET shipto_address_id=(SELECT id FROM addresses WHERE addresses.company_id=rma.company_id)');
 $dbh->do(q`UPDATE Companies Set country='US' WHERE country='USA'`);
