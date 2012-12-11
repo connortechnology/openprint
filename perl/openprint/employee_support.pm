@@ -74,12 +74,6 @@ sub rma {
 
 	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
-	if ( ! $RMA->id() ) {
-		# Set default
-		$RMA->received_on( sprintf('%.4d-%.2d-%.2d', Date::Calc::Today() ) );
-		$RMA->company_id( $session{'/employee/support/rma.html?company_id'} );
-		$RMA->shipto_address_id( $session{'/employee/support/rma.html?shipto_address_id'} );
-	} # end if
 	if ( $param{action} eq 'Save' ) {
 		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
 			$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'} );
@@ -141,7 +135,13 @@ sub rma {
 				$session{'/employee/support/rma.html?'.$key} = $param{$key};
 			} # end foreach key
 		} # end if	
-		
+	} else {	
+		if ( ! $RMA->id() ) {
+# Set default
+			$RMA->received_on( sprintf('%.4d-%.2d-%.2d', Date::Calc::Today() ) );
+			$RMA->company_id( $session{'/employee/support/rma.html?company_id'} );
+			$RMA->shipto_address_id( $session{'/employee/support/rma.html?shipto_address_id'} );
+		} # end if
 	} # end 
 
 } # end sub rma

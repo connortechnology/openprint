@@ -3057,6 +3057,19 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma add shipto_address_id INTEGER');
 		$dbh->do('ALTER TABLE rma add FOREIGN KEY (shipto_address_id) REFERENCES Addresses (id)');
 	} # end if
+	if ( ! exists $$data{project_id} ) {
+		$dbh->do('ALTER TABLE rma ADD project_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
+	} # end if
+	if ( ! exists $$data{order_id} ) {
+		$dbh->do('ALTER TABLE rma ADD order_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (order_id) REFERENCES orders (id)');
+	} # end if
+	if ( ! exists $$data{user_id} ) {
+		$dbh->do('ALTER TABLE rma ADD user_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (user_id) REFERENCES users (id)');
+	} # end if
+	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3162,6 +3175,11 @@ if ( ! sets::isin( 'faults_found_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'tests', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Tests.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tests'", 'column_name');
+	if ( ! exists $$data{mandatory} ) {
+		$dbh->do('ALTER TABLE tests ADD mandatory   BOOLEAN NOT NULL DEFAULT False');
+	} # end if
 } 
 if ( ! sets::isin( 'test_result_results', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Test_Result_Results.sql}) );
