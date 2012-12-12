@@ -49,6 +49,8 @@
 				return ssi::make_select( $$variable{options}, \@selected );
 			) ?>
 			</select>
+		</li>
+		<li><label>Status Change On</label>
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
 		</li>
