@@ -95,13 +95,21 @@ sub _jobs_by_csr_ul {
 				);
 	} elsif ( $param{action} eq 'complete' ) {
 		my $Project = new openprint::Project($param{project_id});
-		my $old_status = $Project->status();
-		$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
-		@{$variable{Projects}} = openprint::Project->find(
-				status      =>  $old_status,
-				salesrep_id =>  $Project->Company()->salesrep_id(),
-				order       =>  'priority',
-				);
+		if ( ! $Project->id() ) {
+			$variable{error} = 'Project not found.';
+		} else {
+			my $old_status = $Project->status();
+			$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
+			$log->debug("Status: $old_status");
+			my $csr_id = $Project->Company()->salesrep_id();
+			@{$variable{Projects}} = openprint::Project->find(
+					status      =>  $old_status,
+					salesrep_id =>  $csr_id,
+					order       =>  'priority',
+					);
+			$old_status =~ s/\s/_/g;
+			$variable{ul_id} = "csr_${csr_id}_$old_status";
+		} # end if
 	} # end if
 
 } # end sub _jobs_by_csr_ul

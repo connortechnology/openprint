@@ -2,7 +2,6 @@ use strict;
 require Math::Round;
 package openprint::Invoice;
 our @ISA = qw(openprint::Object);
-#use Carp qw(cluck);
 
 use vars qw( %config $log %session );
 *session = \%openprint::session;
@@ -56,14 +55,14 @@ $serial = 'invoices_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'deleted'		=> 0,
-	'posted'		=> 0,
-	'interest'		=> undef,
-	'monthly_interest'		=> undef,
-	'paid'			=> undef,
-	'bad_debt'			=> 0,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	deleted		=> 0,
+	posted		=> 0,
+	interest		=> undef,
+	monthly_interest		=> undef,
+	paid			=> undef,
+	bad_debt		=> 0,
 );
 
 sub save {
