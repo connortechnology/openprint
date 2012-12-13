@@ -38,7 +38,12 @@ $serial = 'events_id_seq';
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
 	'name+info'	=>	q`name || info`,
 );
-
+%transforms = (
+	id	=>	[ 's/\D//g' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    info		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    url			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
