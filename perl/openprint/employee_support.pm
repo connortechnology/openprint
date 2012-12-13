@@ -101,11 +101,22 @@ sub rma {
                 $variable{error} .= $Invoice->save({num=>$param{invoice_num}, invoicer_id=>$session{company_id}, invoicee_id=>$param{company_id} });
             } # end if
         } # end if
+		my $Order;
+		if ( $param{order_id} and ! ( $param{order_id} = openprint::Invoice->transform('id', $param{order_id}) ) ) {
+            $variable{error} .= 'Invalid Order #<br/>';
+        } # end if
+        if ( $param{order_id} ) {
+            $Order = openprint::Order->find_one(id=>$param{order_id});
+            if ( ! $Order ) {
+                $Order = new openprint::Order();
+                $variable{error} .= $Order->save({id=>$param{order_id}, supplier_id=>$session{company_id}, company_id=>$param{company_id} });
+            } # end if
+        } # end if
 
 		$variable{error} .= $RMA->save({
 			rmanumber	=>	$param{rmanumber},
 			received_on	=>	$param{received_on},
-			order_id	=>	$param{order_id},
+			( $Order ? ( order_id	=>	$$Order{id} ) : () ),
 			( $PO ? ( po_id		=>	$PO->id() ) : () ),
 			( $Invoice ? ( invoice_id	=>	$Invoice->id() ) : () ),
 			company_id	=>	$param{company_id},
@@ -171,7 +182,7 @@ sub _faults {
 			fault_id	=>	$param{fault_id},
 			quantity	=>	$param{fault_quantity},
 			action		=>	$param{action_taken},
-			( $param{user_id} ? ( user_id => $param{user_id} ) : () ),
+			( $param{fault_user_id} ? ( user_id => $param{fault_user_id} ) : ( user_id => $session{user_id} ) ),
 		});
 		if ( ! $variable{error} ) {
 			%param = ();
@@ -204,7 +215,7 @@ sub _tests {
 			test_id	=>	$param{test_id},
 			remarks	=>	$param{test_remarks},
 			result_id	=>	$param{result_id},
-			( $param{user_id} ? ( technician_id => $param{user_id} ) : () ),
+			( $param{test_user_id} ? ( technician_id => $param{test_user_id} ) : ( technician_id => $session{user_id} ) ),
 		});
 		if ( ! $variable{error} ) {
 			%param = ();
@@ -236,7 +247,7 @@ sub _parts {
 		$variable{error} .= $Part->save({
 			rma_id		=>	$RMA->id(),
 			product_id	=>	$param{parts_product_id},
-			serialnumber	=>	$param{serialnumber},
+			serialnumber	=>	$param{parts_serialnumber},
 			quantity	=>	$param{parts_quantity},
 		});
 		if ( ! $variable{error} ) {

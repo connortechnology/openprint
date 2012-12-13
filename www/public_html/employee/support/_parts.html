@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
 <? if ( $$variable{RMA}->id() ) ?>
 <fieldset><legend>Parts</legend>
 	<table class="List">
@@ -34,9 +34,9 @@
 			<td class="Part">
 				<? echo ( ssi::select( openprint::Product->dropdown(order=>'lower(name)'), [ $param{test_id} ], { id=>'parts_product_id', name=>'parts_product_id', prepend=>['','select'] } ); ) ?>
 			</td>
-			<td class="Serial"><input type="text" name="serialnumber" placeholder="" value="<? echo ( $param{serialnumber} ) ?>"/></td>
+			<td class="Serial"><input type="text" name="parts_serialnumber" placeholder="" value="<? echo ( $param{parts_serialnumber} ) ?>"/></td>
 			<td class="quantity"><? echo ( input( type=>'cardinal', name=>'parts_quantity', value=>$param{parts_quantity} ? $param{parts_quantity} : 1 ); ) ?></td>
-			<td class="buttons"><? echo ( button( 'AddPart', { onclick=>qq`new Ajax.Updater('Parts', '_parts.html', { parameters: getValues( 'f1', [ 'parts_product_id', 'category_id', 'serialnumber', 'parts_quantity' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddPart', { onclick=>qq`new Ajax.Updater('Parts', '_parts.html', { parameters: getValues( 'f1', [ 'parts_product_id', 'category_id', 'parts_serialnumber', 'parts_quantity' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
 		</tr>
 	</table>
 </fieldset>

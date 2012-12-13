@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
 <? if ( $$variable{RMA}->id() ) ?>
 <fieldset><legend>Faults</legend>
 	<table class="List">
@@ -31,7 +31,7 @@
 		<tr class="new">
 			<td class="Technician"><? echo (
 				if ( $session{user_type} eq 'A' ) {
-					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'user_id' } );
+					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'fault_user_id' } );
 				} else {
 					return '';
 				}
@@ -46,7 +46,7 @@
 			<td class="DateTime"></td>
 			<td class="quantity"><? echo ( input(type=>'cardinal', name=>'fault_quantity', value=>$param{fault_quantity} ? $param{fault_quantity} : 1); ) ?>
 			</td>
-			<td class="buttons"><? echo ( button( 'AddFault', { onclick=>qq`new Ajax.Updater('Faults', '_faults.html', { parameters: getValues( 'f1', [ 'fault_id', 'fault', 'action_taken', 'fault_quantity', 'user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddFault', { onclick=>qq`new Ajax.Updater('Faults', '_faults.html', { parameters: getValues( 'f1', [ 'fault_id', 'fault', 'action_taken', 'fault_quantity', 'fault_user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
 		</tr>
 	</table>
 </fieldset>
