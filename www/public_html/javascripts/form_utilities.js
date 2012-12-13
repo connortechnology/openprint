@@ -466,6 +466,7 @@ function clearSelect( ddm ) {
 }
 
 function clearForm(form) {
+	form = $(form);
 	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )

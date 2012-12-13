@@ -72,95 +72,90 @@ my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM informat
 configuration::init( { db_name => $ARGV[0], db_host=>$ARGV[3], db_user=>$ARGV[1] } );
 
 $dbh->do(qq`SELECT setval( '$openprint::Company::serial', (SELECT MAX(id) FROM companies))`);
-if ( ! openprint::Company->find_one(name=>'Image Sensing Systems') ) {
-	my $C = new openprint::Company();
-	$_ = $C->save({name=>'Image Sensing Systems', 'supplier'=>'Y', 'activation'=>'Y' });
+my $ISS;
+if ( ! ( $ISS = openprint::Company->find_one(name=>'Image Sensing Systems') ) ) {
+	$ISS = new openprint::Company();
+	$_ = $ISS->save({name=>'Image Sensing Systems', 'supplier'=>'Y', 'activation'=>'Y' });
 	die $_ if $_;
 }
 if ( ! openprint::User->find_one(email=>'nsilver@imagesensingca.com') ) {
-    my $CT = openprint::Company->find_one(name=>'Image Sensing Systems');
-    if ( $CT ) {
-		my $password = 'rma';
-		if ( $config{encrypt_passwords} ) {
-			my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-					cost => 8,
-					salt_random=>1,
-					passphrase =>$password );
-			$password= $ppr->as_rfc2307;
-		} # end if
+	my $password = 'rma';
+	if ( $config{encrypt_passwords} ) {
+		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+				cost => 8,
+				salt_random=>1,
+				passphrase =>$password );
+		$password= $ppr->as_rfc2307;
+	} # end if
 
-        my $U = new openprint::User();
-        $_ = $U->save({
-            email=>'nsilver@imagesensingca.com',
-            type=>'A',
-            password=>$password,
-            web_active=>'Y',
-            firstname   =>  'Nathan',
-            lastname    =>  'Silver',
-            administrator   =>  'Y',
-            company_id=>$CT->id()});
-        die $_ if $_;
-    } # end if
+	my $U = new openprint::User();
+	$_ = $U->save({
+		email=>'nsilver@imagesensingca.com',
+		type=>'A',
+		password=>$password,
+		web_active=>'Y',
+		firstname   =>  'Nathan',
+		lastname    =>  'Silver',
+		administrator   =>  'Y',
+		company_id=>$ISS->id()});
+	die $_ if $_;
 } # end if
 
 my $Econolite;
-if ( ! $Econolite = openprint::Company->find_one(name=>'Econolite') ) {
+if ( ! ( $Econolite = openprint::Company->find_one(name=>'Econolite') ) ) {
     $Econolite = new openprint::Company();
     $_ = $Econolite->save({name=>'Econolite', 'supplier'=>'Y', 'activation'=>'Y' });
     die $_ if $_;
 }
 if ( ! openprint::User->find_one(email=>'econolite@imagesensingca.com') ) {
-        my $password = 'rma';
-        if ( $config{encrypt_passwords} ) {
-            my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-                    cost => 8,
-                    salt_random=>1,
-                    passphrase =>$password );
-            $password= $ppr->as_rfc2307;
-        } # end if
+	my $password = 'rma';
+	if ( $config{encrypt_passwords} ) {
+		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+				cost => 8,
+				salt_random=>1,
+				passphrase =>$password );
+		$password= $ppr->as_rfc2307;
+	} # end if
 
-        my $U = new openprint::User();
-        $_ = $U->save({
-            email=>'econolite@imagesensingca.com',
-            type=>'E',
-            password=>$password,
-            web_active=>'Y',
-            firstname   =>  'Nathan',
-            lastname    =>  'Silver',
-            administrator   =>  'Y',
-            company_id=>$Econolite->id()});
-        die $_ if $_;
-    } # end if
+	my $U = new openprint::User();
+	$_ = $U->save({
+		email=>'econolite@imagesensingca.com',
+		type=>'E',
+		password=>$password,
+		web_active=>'Y',
+		firstname   =>  'Nathan',
+		lastname    =>  'Silver',
+		administrator   =>  'Y',
+		company_id=>$Econolite->id()});
+	die $_ if $_;
 } # end if
 
-if ( ! openprint::Company->find_one(name=>'ConnorTechnology') ) {
-	my $C = new openprint::Company();
-	$_ = $C->save({name=>'ConnorTechnology', 'activation'=>'Y' });
+my $CT;
+if ( ! ( $CT = openprint::Company->find_one(name=>'ConnorTechnology') ) ) {
+	$CT = new openprint::Company();
+	$_ = $CT->save({name=>'ConnorTechnology', 'activation'=>'Y' });
 	die $_ if $_;
 } # end if
 if ( ! openprint::User->find_one(email=>'iconnor@connortechnology.com') ) {
-	my $CT = openprint::Company->find_one(name=>'ConnorTechnology');
-	if ( $CT ) {
-		my $password = 'XV36meISS';
-		if ( $config{encrypt_passwords} ) {
-			my $ppr = Authen::Passphrase::BlowfishCrypt->new(
-					cost => 8,
-					salt_random=>1,
-					passphrase =>$password );
-			$password= $ppr->as_rfc2307;
-		} # end if
-		my $U = new openprint::User();
-		$_ = $U->save({
-			email=>'iconnor@connortechnology.com',
-			type=>'A',
-			password=>$password,
-			web_active=>'Y',
-			firstname	=>	'Isaac',
-			lastname	=>	'Connor',
-			administrator	=>	'Y',
-			company_id=>$CT->id()});
-		die $_ if $_;
+	my $password = 'XV36meISS';
+	if ( $config{encrypt_passwords} ) {
+		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+				cost => 8,
+				salt_random=>1,
+				passphrase =>$password );
+		$password= $ppr->as_rfc2307;
 	} # end if
+	my $U = new openprint::User();
+	$_ = $U->save({
+		email=>'iconnor@connortechnology.com',
+		type=>'A',
+		password=>$password,
+		web_active=>'Y',
+		firstname	=>	'Isaac',
+		lastname	=>	'Connor',
+		administrator	=>	'Y',
+		company_id=>$CT->id()});
+	die $_ if $_;
 } # end if
 
 if ( 0 ) {
@@ -176,6 +171,9 @@ if ( 0 ) {
 	$dbh->do('ALTER TABLE RMA_Statuses RENAME COLUMN status to name');
 } # end if
 `./encrypt_passwords.pl $ARGV[0] localhost $ARGV[1] $ARGV[2]`;
+$dbh->do(q`update addresses set country='Turkey', city='Istanbul' where city='Istanbul, Turkey';`);
+`./convert_addresses.pl	$ARGV[0] $ARGV[1] $ARGV[2]`;
+$dbh->do('UPDATE RMA SET shipto_address_id=(SELECT id FROM addresses WHERE addresses.company_id=rma.company_id)');
 $dbh->do(q`UPDATE Companies Set country='US' WHERE country='USA'`);
 $dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
 $dbh->do(q`INSERT INTO tests (name) values ('Window Test')`);

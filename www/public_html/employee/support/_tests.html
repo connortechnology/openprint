@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
 <? if ( $$variable{RMA}->id() ) ?>
 <fieldset><legend>Tests</legend>
 	<table class="List">
@@ -32,7 +32,7 @@ $Test->result(),
 		<tr class="new">
 			<td class="Technician"><? echo (
 				if ( $session{user_type} eq 'A' ) {
-					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'user_id' } );
+					return ssi::select( openprint::User->dropdown(order=>'lower(firstname),lower(lastname)',type=>'E'), [], { name=>'test_user_id' } );
 				} else {
 					return '';
 				}
@@ -45,7 +45,7 @@ $Test->result(),
 			<td class="Remarks"><textarea name="test_remarks" placeholder="" onkeyup="textarea_resize(this);"><? echo ( $param{test_remarks} ) ?></textarea></td>
 			<td class="DateTime"></td>
 			<td class="Result"><? echo ( ssi::select( [ 'PASSED', 'PASSED', 'FAIL', 'FAIL' ] , [ $param{result} ], { name=>'result' } ); ) ?></td>
-			<td class="buttons"><? echo ( button( 'AddTest', { onclick=>qq`new Ajax.Updater('Tests', '_tests.html', { parameters: getValues( 'f1', [ 'test_id', 'test', 'test_remarks', 'result', 'user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
+			<td class="buttons"><? echo ( button( 'AddTest', { onclick=>qq`new Ajax.Updater('Tests', '_tests.html', { parameters: getValues( 'f1', [ 'test_id', 'test', 'test_remarks', 'result', 'test_user_id' ], { action: 'Add', rma_id: '$$variable{RMA}{id}' } ) } );`, text=>'Add' } ); ) ?></td>
 		</tr>
 	</table>
 </fieldset>

@@ -1,11 +1,14 @@
 <? eval (
+	if ( $param{username} and ( $param{username} !~ /%/ ) ) {
+		$param{username} = '%'.$param{username}.'%';
+	} # end if
 	my @Records = openprint::RADIUS_Check->find(
-			'order' => $param{'order'} ? $param{'order'} : 'lower(username),attribute',
-			( $param{'username'} ne '' ? ( 'username'=>$param{'username'} ) : () ),
-			( $param{'attribute'} ne '' ? ( 'attribute'=>$param{'attribute'} ) : () ),
+			order => $param{order} ? $param{order} : 'lower(username),attribute',
+			( $param{username} ne '' ? ( 'username ilike' =>$param{username} ) : () ),
+			( $param{attribute} ne '' ? ( attribute => $param{attribute} ) : () ),
 			);
 
-	@{$$variable{'Records'}} = @Records;
+	@{$$variable{Records}} = @Records;
 
 ) ?>
 <table class="List">

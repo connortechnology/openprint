@@ -201,10 +201,6 @@ if ( $data ) {
 	die  'No Companies found.' . $dbh->errstr();
 } # end if
 
-if ( ! sets::isin( 'tbl_addresses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql}) );
@@ -406,6 +402,11 @@ if ( ! sets::isin( 'photo_albums', \@tables ) ) {
 
 if ( ! sets::isin( 'invoices', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='invoices'", 'column_name');
+	if ( ! exists $$data{num} ) {
+		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
@@ -416,17 +417,148 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (supplier_id) REFERENCES Companies (Id)');
 	} # end if
-	if ( ! exists $$data{curtotalsale} ) {
-		$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
+	if ( ! exists $$data{total} ) {
+		if ( exists $$data{curtotalsale} ) {
+			$dbh->do('ALTER TABLE orders rename curtotalsale to total');
+		} else {
+			$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
+		} # end if
 	} # end if
 	if ( ! exists $$data{company_id} ) {
 		if ( exists $$data{companyindex} ) {
 			$dbh->do('ALTER TABLE Orders RENAME companyindex to company_id');
 		} else {
-			$dbh->do('ALTER TABLE Orders ADD curtotalsale NUMERIC(10,2)');
+			$dbh->do('ALTER TABLE Orders ADD company_id INTEGER');
+			$dbh->do('ALTER TABLE Orders ADD FOREIGN KEY (company_id) REFERENCES Companies (id)');
 		} # end if
 	} # end if
-	
+	if ( ! exists $$data{strsessionid} ) {
+		$dbh->do('ALTER TABLE orders ADD strsessionid text');
+	} # e
+	if ( ! exists $$data{user_id} ) {
+		if ( exists $$data{userindex} ) {
+			$dbh->do('ALTER TABLE orders rename userindex to user_id');
+		} else {
+			$dbh->do('ALTER TABLE orders add user_id INTEGER');
+			$dbh->do('ALTER TABLE orders add FOREIGN KEY (user_id) REFERENCES Users (id)');
+		} # end if
+	} # end if
+	if ( ! exists $$data{status_id} ) {
+		$dbh->do('ALTER TABLE Orders ADD status_id INTEGER');
+		$dbh->do('ALTER TABLE Orders ADD FOREIGN KEY (status_id) REFERENCES Order_statuses (id)');
+		if ( exists $$data{status} ) {
+			my %Statuses = map { $_->name(), $_ } openprint::Order_Status->find();
+			foreach my $status ( sql::execute( undef, undef, 'SELECT DISTINCT status FROM Orders' ) ) {
+				if ( ! $Statuses{$status} ) {
+					$Statuses{$status} = new openprint::Order_Status();
+					$_ = $Statuses{$status}->save({name=>$status});
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'orders', [ 'status=?', $status ], 'status_id', $Statuses{$status}->id() );	
+			} # end foreach status
+			$dbh->do('ALTER TABLE orders DROP status');
+		} # end if	
+	} # end if	
+	if ( ! exists $$data{downpayment} ) {
+		if ( exists $$data{curdownpayment} ) {
+			$dbh->do('ALTER TABLE orders rename curdownpayment to downpayment');
+		} else {
+			$dbh->do('ALTER TABLE orders add downpayment NUMERIC(10,2)');
+		} # end if
+	} # end if
+	if ( ! exists $$data{created_on} ) {
+		if ( exists $$data{orderdate} ) {
+			$dbh->do('ALTER TABLE Orders rename orderdate to created_on');
+		} elsif ( exists $$data{dtmorderdate} ) {
+			$dbh->do('ALTER TABLE Orders rename dtmorderdate to created_on');
+		} else {
+			$dbh->do('ALTER TABLE orders ADD created_on TIMESTAMP WITH TIME ZONE');
+		} # end if
+	}	
+	if ( ! exists $$data{company_name} ) {
+			if ( exists $$data{'strcompanyname'} ) {
+				$dbh->do('ALTER TABLE orders rename strcompanyname to company_name');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD company_name TEXT');
+			}
+	}
+	if ( ! exists $$data{administrator_name} ) {
+			if ( exists $$data{'stradministratorname'} ) {
+				$dbh->do('ALTER TABLE orders rename stradministratorname to administrator_name');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD administrator_name TEXT');
+			}
+	}
+	if ( ! exists $$data{administrator_comments} ) {
+			if ( exists $$data{'stradministratorcomments'} ) {
+				$dbh->do('ALTER TABLE orders rename stradministratorcomments to administrator_comments');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD administrator_comments TEXT');
+			}
+	}
+	if ( ! exists $$data{extension} ) {
+			if ( exists $$data{'strext'} ) {
+				$dbh->do('ALTER TABLE orders rename strext to extension');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD extension TEXT');
+			}
+	}
+	if ( ! exists $$data{po} ) {
+			if ( exists $$data{'strponumber'} ) {
+				$dbh->do('ALTER TABLE orders rename strponumber to po');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD po TEXT');
+			}
+	}
+	if ( ! exists $$data{currency_id} ) {
+			if ( exists $$data{'currencyindex'} ) {
+				$dbh->do('ALTER TABLE orders rename currencyindex to currency_id');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD currency_id INTEGER');
+				$dbh->do('ALTER TABLE ORders ADD FOREIGN KEY (currency_id) REFERENCES Currencies (id)');
+			}
+	}
+	if ( ! exists $$data{salesrep_id} ) {
+			if ( exists $$data{'employeeindex'} ) {
+				$dbh->do('ALTER TABLE orders rename employeeindex to salesrep_id');
+			} else {
+				$dbh->do('ALTER TABLE ORders ADD salesrep_id INTEGER');
+				$dbh->do('ALTER TABLE ORders ADD FOREIGN KEY (salesrep_id) REFERENCES Users (id)');
+			}
+	}
+	foreach my $k ( 'address1', 'address2', 'firstname','lastname', 'city','state','country', 'postalcode', 'phone', 'fax', 'email','alsonotify', 'salutation' ) {
+		if ( ! exists $$data{$k} ) {
+			if ( exists $$data{'str'.$k} ) {
+				$dbh->do("ALTER TABLE orders rename str$k to $k");
+			} else {
+				$dbh->do("ALTER TABLE ORders ADD $k TEXT");
+			}
+		}
+	} # end foreach
+	if ( ! exists $$data{invoice_id} ) {
+		$dbh->do('ALTER TABLE orders ADD invoice_id INTEGER');
+		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (invoice_id) REFERENCES Invoices (id)');
+		if ( exists $$data{oinvoice} ) {
+			foreach my $invoice_id ( sql::execute( undef, undef, 'SELECT DISTINCT oinvoice FROM orders' ) ) {
+				my $Invoice = openprint::Invoice->find_one('num lc'=>lc openrpint::Invoice->transform('num', $invoice_id ) );
+				if ( ! $Invoice ) {
+					$Invoice = new openprint::Invoice();
+					$_ = $Invoice->save({num=>$invoice_id});
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'orders', [ 'oinvoice=>', $invoice_id ], 'invoice_id', $Invoice->id() );
+			} # end foreach
+			$dbh->do('ALTER TABLE Orders DROP oinvoice');
+		} # end if
+	} # end if
+	if ( ! exists $$data{docket} ) {
+		if ( exists $$data{lngdocketnumber} ) {
+			$dbh->do('ALTER TABLE Orders rename lngdocketnumber to docket');
+		} else {
+			$dbh->do('ALTER TABLE ORders ADD Docket INTEGER');
+		} # end if
+	} # end if
+		
 }
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
@@ -3052,6 +3184,23 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if
+	if ( ! exists $$data{shipto_address_id} ) {
+		$dbh->do('ALTER TABLE rma add shipto_address_id INTEGER');
+		$dbh->do('ALTER TABLE rma add FOREIGN KEY (shipto_address_id) REFERENCES Addresses (id)');
+	} # end if
+	if ( ! exists $$data{project_id} ) {
+		$dbh->do('ALTER TABLE rma ADD project_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (project_id) REFERENCES projects (id)');
+	} # end if
+	if ( ! exists $$data{order_id} ) {
+		$dbh->do('ALTER TABLE rma ADD order_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (order_id) REFERENCES orders (id)');
+	} # end if
+	if ( ! exists $$data{user_id} ) {
+		$dbh->do('ALTER TABLE rma ADD user_id INTEGER');
+		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (user_id) REFERENCES users (id)');
+	} # end if
+	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
 	
 } # end if
 if ( ! sets::isin( 'rma_logs', \@tables ) ) {
@@ -3157,6 +3306,11 @@ if ( ! sets::isin( 'faults_found_id_seq', \@sequences ) ) {
 if ( ! sets::isin( 'tests', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Tests.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tests'", 'column_name');
+	if ( ! exists $$data{mandatory} ) {
+		$dbh->do('ALTER TABLE tests ADD mandatory   BOOLEAN NOT NULL DEFAULT False');
+	} # end if
 } 
 if ( ! sets::isin( 'test_result_results', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Test_Result_Results.sql}) );
@@ -3269,6 +3423,10 @@ if ( ! sets::isin( 'rma_parts', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
+if ( ! sets::isin( 'addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 print "Finished\n";
 1;
 __END__

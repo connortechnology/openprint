@@ -193,5 +193,10 @@ sub _search {
 } # end sub _search
 sub _ddm {
 } # end sub _ddm
+
+sub _location_fields {
+	$param{location_id} = openprint::Location->transform('id', $param{location_id});
+	$variable{Location} = new openprint::Location( $param{location_id} );
+} # end sub _location_fields
 1;
 __END__

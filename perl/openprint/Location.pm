@@ -346,21 +346,47 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub address_line {
+	if ( ! $_[0]{address_line} ) {
+		my $L = $_[0];
+		$_[0]{address_line} = '';
+		if ( $L->address() ) {
+			$_[0]{address_line} .= $L->address() . ', ';
+		} # end if
+		$_[0]{address_line} .= join(', ', map { $_->name() } $L->Parents() );
+		if ( $L->postalcode() ) {
+			$_[0]{address_line} .= ', '.$L->postalcode();
+		} # end if
+	} # end if
+	return $_[0]{address_line};
+} # end sub address_line
+
 sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0];
-		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
 		$_[0]{'where'} .= join(', ', map { $_->name() } $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
 		} # end if
-		$_[0]{'where'} .= '</a>';
+	} # end if
+	return $_[0]{where};
+} # end sub where
+
+sub where_link {
+	if ( ! $_[0]{'where_link'} ) {
+		my $L = $_[0];
+		$_[0]{'where_link'} = '<a href="/location/view.html?location_id='.$L->id().'">';
+		$_[0]{'where_link'} .= join(', ', map { $_->name() } $L->Parents() );
+		if ( $L->address() or $L->postalcode() ) {
+			$_[0]{'where_link'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+		} # end if
+		$_[0]{'where_link'} .= '</a>';
 		if ( $L->url() ) {
-			$_[0]{'where'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
+			$_[0]{'where_link'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
 		} # end if
 	} # end if
-	return $_[0]{'where'};
-} # end sub where
+	return $_[0]{'where_link'};
+} # end sub where_link
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.
 # If no location name is given, returns the parent. So if in an event I specified Toronto, then the location would be Toronto

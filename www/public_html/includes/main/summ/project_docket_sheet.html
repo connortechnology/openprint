@@ -480,53 +480,50 @@ $inkCoverage{$colour} = 100;
 		<td class="docketText" valign="top">
 	<? echo ( my $html;
 		my @BinderyServices = split(',',$$variable{BinderyServices});
-$log->debug("@BinderyServices");
+
+		my @bindery_text;
+
 		if ( ( ! @BinderyServices ) or ( $BinderyServices[0] eq 'No Bindery' ) ) {
-			$html .= 'Ship Flat';
+			push @bindery_text, 'Ship Flat';
 		} elsif ( sets::isin( 'Saddle Stitching', @BinderyServices ) ) {
-			$html .= 'Stitch';
+			push @bindery_text, 'Stitch';
 		} elsif ( sets::isin( 'Loop Stitching', @BinderyServices ) ) {
-			$html .= 'Loop Stitch';
+			push @bindery_text, 'Loop Stitch';
 		} # end if
 
 		if ( sets::isin( 'Perforation', @BinderyServices ) ) {
-			$html .= 'Perf';
+			push @bindery_text, 'Perf';
 		} # end if
 
 		my $services = $$variable{Project}->services();
 
 		if ( ! sets::intersection( 'Saddle Stitching', 'Loop Stitching', @BinderyServices ) ) {
 			if ( sets::isin( 'Cutting', @BinderyServices ) ) {
-				$html .= ' Trim';
-				if ( ! sets::isin( 'Folding', @BinderyServices) ) {
-					$html .= $$variable{txtFinalWidth} . '&quot; x '.$$variable{txtFinalHeight} . '&quot;';
-				} # end if
+				push @bindery_text, ( ' Trim ' . (  ! sets::isin( 'Folding', @BinderyServices) ? $$variable{txtFinalWidth} . '&quot; x '.$$variable{txtFinalHeight} . '&quot;' : '' ) );
 			} # end if
 			if ( sets::isin( 'Scoring', @BinderyServices ) ) {
-				$html = ' with <b>';
+				my $scoring_html = ' with <b>';
 				my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $$services{Scoring}[0] );
 				my @signatures = $$variable{Project}->signatures();
 				foreach my $signature_service_index ( @signatures ) {
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $signature_service_index );
 					next if ! $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"};
-					if ( $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} == 1 ) {
-						$html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' x Score';
-					} else {
-						$html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' x Scores';
-					} # end if
-					$html .= '</b>';
-					$html .= ' on form ' . $$sig_specs{'SignatureIndex'} if @signatures > 1;
+					$scoring_html .= $$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} . ' Score' . ($$specs{"txtQty-$$sig_specs{'SignatureIndex'}"} ? 's' : '') . ' on form ' . $$sig_specs{'SignatureIndex'} . '<br/>';
 				} # end foreach
+				$scoring_html .= '</b>';
+				push @bindery_text, $scoring_html;
 			} # end if
 
 			if ( sets::isin( 'Folding', @BinderyServices) ) {
-				$html .= sprintf('Fold %s&quot; x %s&quot;-&gt;%s&quot; x %s&quot;', @$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} );
+				push @bindery_text, sprintf(' Fold %s&quot; x %s&quot;-&gt;%s&quot; x %s&quot;', @$variable{'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight'} );
 			} # end if
 		} # end if no stitching
 		if ( sets::isin( 'Drilling', @BinderyServices) ) {
 			my $drill_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'Drilling'}[0] );
-			$html .=  sprintf('Drill %d holes (%s&quot;)', @$drill_specs{'txtHoleQty','txtHoleSize'} );
+			push @bindery_text, sprintf('Drill %d holes (%s&quot;)', @$drill_specs{'txtHoleQty','txtHoleSize'} );
 		} # end if
+
+		$html .= join(', ', @bindery_text ) . ' ';
 
         if ( $$variable{'txtTotalPageQuantity'} ) {
 			if ( $$variable{'rdbCover'} eq 'Different' ) {
