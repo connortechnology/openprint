@@ -408,6 +408,9 @@ if ( ! sets::isin( 'invoices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Invoices ADD num TEXT');
 	} # end if
 } # end if
+if ( ! sets::isin( 'invoices_id_seq', \@sequences ) ) {
+	$dbh->do('CREATE SEQUENCE invoices_id_seq');
+} # en dif
 
 if ( ! sets::isin( 'orders', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Orders.sql}) ) or die $dbh->errstr();
@@ -492,6 +495,8 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{administrator_comments} ) {
 			if ( exists $$data{'stradministratorcomments'} ) {
 				$dbh->do('ALTER TABLE orders rename stradministratorcomments to administrator_comments');
+			} elsif ( exists $$data{'comments'} ) {
+				$dbh->do('ALTER TABLE orders rename comments to administrator_comments');
 			} else {
 				$dbh->do('ALTER TABLE ORders ADD administrator_comments TEXT');
 			}
@@ -506,6 +511,8 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 	if ( ! exists $$data{po} ) {
 			if ( exists $$data{'strponumber'} ) {
 				$dbh->do('ALTER TABLE orders rename strponumber to po');
+			} elsif ( exists $$data{'purchaseordernumber'} ) {
+				$dbh->do('ALTER TABLE orders rename purchaseordernumber to po');
 			} else {
 				$dbh->do('ALTER TABLE ORders ADD po TEXT');
 			}
@@ -540,13 +547,14 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 		$dbh->do('ALTER TABLE orders ADD FOREIGN KEY (invoice_id) REFERENCES Invoices (id)');
 		if ( exists $$data{oinvoice} ) {
 			foreach my $invoice_id ( sql::execute( undef, undef, 'SELECT DISTINCT oinvoice FROM orders' ) ) {
-				my $Invoice = openprint::Invoice->find_one('num lc'=>lc openrpint::Invoice->transform('num', $invoice_id ) );
+					next if ! $invoice_id;
+				my $Invoice = openprint::Invoice->find_one('num lc'=>lc openprint::Invoice->transform('num', $invoice_id ) );
 				if ( ! $Invoice ) {
 					$Invoice = new openprint::Invoice();
 					$_ = $Invoice->save({num=>$invoice_id});
 					die $_ if $_;
 				} # end if
-				sql::update( undef, undef, 'orders', [ 'oinvoice=>', $invoice_id ], 'invoice_id', $Invoice->id() );
+				sql::update( undef, undef, 'orders', [ 'oinvoice=?', $invoice_id ], 'invoice_id', $Invoice->id() );
 			} # end foreach
 			$dbh->do('ALTER TABLE Orders DROP oinvoice');
 		} # end if
@@ -558,7 +566,20 @@ if ( ! sets::isin( 'orders', \@tables ) ) {
 			$dbh->do('ALTER TABLE ORders ADD Docket INTEGER');
 		} # end if
 	} # end if
-		
+
+	if ( exists $$data{preparedby} ) {
+		foreach my $name ( sql::execute( undef, undef, 'SELECT DISTINCT preparedby FROM orders' ) ) {
+			next if ! $name;
+			my $User = openprint::User->find_one('firstname lc' => lc openprint::User->transform('firstname',$name) );
+			if ( ! $User ) {
+				$User = new openprint::User();
+				$_ = $User->save({firstname=>$name});
+				die $_ if $_;
+			} # end if
+		} # end foreach
+		$dbh->do('ALTER TABLE orders DROP preparedby');
+	} # end if
+
 }
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
