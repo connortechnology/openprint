@@ -14,6 +14,7 @@ require openprint::Fault_Found;
 require openprint::Fault;
 require openprint::Test;
 require openprint::Test_Result;
+require openprint::Upgrade;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -190,6 +191,47 @@ sub _faults {
 	} # end if
 } # end sub faults
 
+sub _upgrades {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{upgrade_new_version} = openprint::Upgrade->transform('new_version', $param{upgrade_new_version} );
+		if ( ! $param{upgrade_new_version} ) {
+			$variable{error} .= 'New version is a required field.<br/>';
+		} # end if
+		$param{upgrade_type_id} = openprint::Upgrade->transform('new_version', $param{upgrade_type_id} );
+		if ( ! $param{upgrade_type_id} ) {
+			$variable{error} .= 'Upgrade type is a required field.<br/>';
+		} # end if
+		return if $variable{error};
+
+		if ( ( $session{user_type} eq 'A' ) and $param{upgrade_type} ) {
+			my $Type = openprint::Upgrade_Type->find_one('name lc'=>lc $param{upgrade_type});
+			if ( ! $Type ) {
+				$Type = new openprint::Upgrade_Type();
+				$variable{error} .= $Type->save({name=>$param{upgrade_type}});
+			} # end if
+			$param{upgrade_type_id} = $Type->id();
+			delete $param{upgrade_type};
+		} # end if
+
+		my $Upgrade = new openprint::Upgrade();
+		$variable{error} .= $Upgrade->save({
+			rma_id	=>	$RMA->id(),
+			type_id	=>	$param{upgrade_type_id},
+			old_version	=>	$param{upgrade_old_version},
+			new_version	=>	$param{upgrade_new_version},
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _upgrades
+
 sub _tests {
 	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
@@ -203,7 +245,7 @@ sub _tests {
 			my $Test = openprint::Test->find_one('name lc'=>lc $param{test});
 			if ( ! $Test ) {
 				$Test = new openprint::Test();
-				$variable{error} .= $Test->save({name=>$param{fault}});
+				$variable{error} .= $Test->save({name=>$param{test}});
 			} # end if
 			$param{test_id} = $Test->id();
 		} # end if
