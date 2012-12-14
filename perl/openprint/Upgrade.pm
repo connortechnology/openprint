@@ -1,0 +1,48 @@
+use strict;
+
+package openprint::Upgrade_Type;
+our @ISA = qw(openprint::Object);
+
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
+$table = 'upgrade_types';
+$serial = 'upgrade_types_id_seq';
+
+%fields = ( 
+	id	=>	'id',
+	name=>	'name',
+);
+%transforms = (
+	id	=>	['s/\D//g'],
+    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+%defaults = (
+);
+
+package openprint::Upgrade;
+our @ISA = qw(openprint::Object);
+
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
+$table = 'upgrades';
+$serial = 'upgrades_id_seq';
+
+%fields = ( 
+	id	=>	'id',
+	rma_id	=>	'rma_id',
+	type_id	=>	'type_id',
+	old_version	=>	'old_version',
+	new_version	=>	'new_version',
+);
+%transforms = (
+	id	=>	['s/\D//g'],
+	rma_id	=>	['s/\D//g'],
+	type_id	=>	['s/\D//g'],
+    old_version => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    new_version => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
+%defaults = (
+);
+
+1;
+__END__

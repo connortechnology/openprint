@@ -120,14 +120,22 @@ sub category {
 } # end sub category
 
 sub view {
+	if ( ! $param{event_id} ) {
+		$variable{ExternalRedirect} = '/event/search.html';
+	} # end if
 	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
 		$param{event_id}=$1;
 		$param{user_id} = $2;
 	} else {
-	
-	$param{event_id} =~ s/\D//g;
-	$param{user_id} =~ s/\D//g;
+		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
+		$param{user_id} = openprint::User->transform('id', $param{user_id} );
 	} # end if
+
+	if ( ! $param{event_id} ) {
+		$variable{error} .= 'Invalid event specified.';
+		return;
+	} # end if
+
 	if ( $param{user_id} ) {
 		$variable{User} = new openprint::User( $param{user_id} );
 	} else {

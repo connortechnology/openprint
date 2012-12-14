@@ -1,4 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{Event} ) ?>
 <? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
 	function invite_by_email(input) {
@@ -30,7 +31,6 @@
 	}
 </script>
 <? endif ( $$variable{Event}->id() ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{Event}->can_view($param{user_id}) ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>" method="post" enctype="multipart/form-data">
@@ -162,3 +162,4 @@ $log->debug("My location is " . $MyLocation->to_string() );
 <? else ( $$variable{Event}->can_view($param{user_id}) ) ?>
 You can't view this event.
 <? endif ( $$variable{Event}->can_view($param{user_id}) ) ?>
+<? endif ( $$variable{Event} ) ?>
