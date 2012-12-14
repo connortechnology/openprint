@@ -842,6 +842,10 @@ if ( ! sets::isin( 'locations', \@tables ) ) {
 	$dbh->do('ALTER TABLE Locations add deleted BOOLEAN NOT NULL DEFAULT false');
 	} # end if
 } # end if
+if ( ! sets::isin( 'addresses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'equipment_categories', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Equipment_Categories.sql' ) ) or die $dbh->errstr();
 	die $dbh->errstr() if $dbh->errstr();
@@ -3200,6 +3204,9 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD user_id INTEGER');
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (user_id) REFERENCES users (id)');
 	} # end if
+	if ( ! sets::isin( 'rma_id_seq', \@sequences ) ) {
+		$dbh->do('CREATE SEQUENCE rma_id_seq');
+	} # end if
 	$dbh->do(q`select setval('rma_id_seq',(SELECT Max(id) FROM RMA));`);
 	
 } # end if
@@ -3423,10 +3430,6 @@ if ( ! sets::isin( 'rma_parts', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
-if ( ! sets::isin( 'addresses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, q{../openprint/sql/Addresses.sql}) );
-	die $dbh->errstr() if $dbh->errstr();
-}
 print "Finished\n";
 1;
 __END__
