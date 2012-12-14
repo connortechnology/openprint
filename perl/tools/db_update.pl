@@ -3430,6 +3430,34 @@ if ( ! sets::isin( 'rma_parts', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
+if ( sets::isin( 'upgrade_type', \@tables ) ) {
+	$dbh->do('ALTER TABLE upgrade_type RENAME to Upgrade_Types');
+	$dbh->do('ALTER TABLE upgrade_types RENAME utype to name');
+	$dbh->do('ALTER TABLE upgrade_types RENAME ucategory to category');
+	$dbh->do('ALTER SEQUENCE upgrade_type_id_seq RENAME TO upgrade_types_id_seq');
+	$dbh->do(q`ALTER TABLE Upgrade_Types ALTER ID SET DEFAULT nextval('upgrade_types_id_seq')`);
+	$dbh->do(q`SELECT setval('upgrade_types_id_seq', (SELECT MAX(id) FROM upgrade_types))`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
+} # end if
+if ( ! sets::isin( 'upgrade_types', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Upgrade_Types.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+if ( ! sets::isin( 'upgrades', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Upgrades.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+if ( sets::isin( 'upgrade', \@tables ) ) {
+	my @data = sql::execute( undef, undef, 'SELECT * from Upgrade' );
+	while ( my ( $id, $rma_id, $type, $firmware, $hardware, $board ) = splice ( @data, 0, 6 ) ) {
+		my $U = new openprint::Upgrade();
+		$U->save({id=>$id,rma_id=>$rma_id, type=>'Firmware', new_version=>$firmware }, 1 ) if $firmware;
+		$U->save({id=>$id,rma_id=>$rma_id, type=>'Hardware', new_version=>$hardware}, 1  ) if $hardware;
+		$U->save({id=>$id,rma_id=>$rma_id, type=>'Board', new_version=>$board}, 1  ) if $board;
+	} # end while
+	$dbh->do('DROP TABLE upgrade');
+} # end if
 print "Finished\n";
 1;
 __END__
