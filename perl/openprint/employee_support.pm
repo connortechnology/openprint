@@ -147,6 +147,17 @@ sub rma {
 				$session{'/employee/support/rma.html?'.$key} = $param{$key};
 			} # end foreach key
 		} # end if	
+	} elsif ( $param{action} eq 'ChangeStatus' ) {
+		if ( $RMA->status_id() != $param{status_id} ) {
+			$RMA->status_id( $param{status_id} );
+			$variable{error} .= $RMA->save();
+			$RMA->add_log( 'Status changed to ' . $RMA->status() );
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/support/rma.html?rma_id='.$RMA->id();
+			} # end nif
+		} else {
+			$variable{warning} .= 'Status was already ' . $RMA->status() . '. Not changed.<br/>';
+		} # end if
 	} else {	
 		if ( ! $RMA->id() ) {
 # Set default

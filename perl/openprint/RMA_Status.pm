@@ -10,6 +10,8 @@ $serial = 'rma_statuses_id_seq';
 %fields = ( 
 	id		=>	'id',
 	name	=>	'name',
+	sort	=>	'sort',
+	current_status_id	=>	'current_status_id',
 );
 %transforms = (
 	id		=>	[ 's/\D//g' ],

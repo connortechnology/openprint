@@ -3122,6 +3122,11 @@ if ( ! sets::isin( 'rma_types', \@tables ) ) {
 if ( ! sets::isin( 'rma_statuses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Statuses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='rma_statuses'", 'column_name');
+	if ( ! exists $$data{current_status_id} ) {
+		$dbh->do('ALTER TABLE rma_statuses ADD current_status_id INTEGER[]');
+	} # end if
 } # end if
 if ( ! sets::isin( 'rma', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA.sql}) );

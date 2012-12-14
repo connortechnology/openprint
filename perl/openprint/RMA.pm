@@ -85,6 +85,14 @@ sub type {
 	return $_[0]{type};
 } # end sub type
 
+sub update_status {
+	if ( ! $_[0]->status() ) {
+		$_[0]->status('Submitted');
+	} elsif ( $_[0]->received_on() ) {
+		$_[0]->status( 'Units Received' );
+	} # end if
+} # end sub update_status
+
 sub status {
 	if ( @_ > 1 ) {
 		my $status = openprint::RMA_Status->transform( 'name', $_[0] );
@@ -99,7 +107,15 @@ sub status {
 		$_[0]{status} = new openprint::RMA_Status( $_[0]{status_id} )->name();
 	} # end if
 	return $_[0]{status};
-} # end sub type
+} # end sub status
+
+sub status_id {
+	if ( @_ > 1 ) {
+		my $Status = new openprint::RMA_Status( $_[1] );
+		@{$_[0]}{'status_id','status'} = @$Status{'id','name'};
+	} # end if
+	return $_[0]{status_id};
+} # end sub status_id
 
 sub PurchaseOrder {
 	require openprint::PurchaseOrder;
@@ -118,5 +134,13 @@ sub Address {
 	require openprint::Address;
 	return new openprint::Address( $_[0]{shipto_address_id} );
 } # end sub Adress
+sub add_log {
+	sql::insert( undef, undef, 'RMA_Logs',{
+			rma_id		=>	$_[0]{id},
+			company_id	=>	$openprint::session{company_id} ? $openprint::session{company_id} : undef,
+			user_id		=>	$openprint::session{user_id},
+			description	=>	$_[1],
+			} );
+} # end sub add_log
 1;
 __END__

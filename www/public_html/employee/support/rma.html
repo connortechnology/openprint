@@ -7,10 +7,20 @@
 <div class="Support"><div class="RMA">
 <? echo ( include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' ); ) ?>
 	<form id="f1" name="f1" method="post" action="rma.html">
+		<input type="hidden" name="status_id" value=""/>
 <p class="buttons">
 <? echo ( join("\n",
 		button('Save', { onclick=>q`f1.elements['action'].value='Save';submit_handler(f1);` } ),
 		button('Clear', { onclick=>q`clearForm('f1');` } ),
+	
+map {
+	my $button_id = $_->name();
+	$button_id =~ s/\s//g;
+	button( $button_id, { 
+		onclick	=>	qq`f1.elements['status_id'].value='$$_{id}';f1.elements['action'].value='ChangeStatus';submit_handler(f1);`,
+		text	=>	$$_{name},
+		} );
+} openprint::RMA_Status->find( current_status_id => $$variable{RMA}->status_id(), order => 'sort' ),
 ); ) ?>
 </p>
 		<div class="Information">
@@ -208,7 +218,9 @@
 	<td class="User">%s</td>
 	<td class="DateTime">%s</td>
 	<td class="description">%s</td>
-</tr>`, $rowclass, $Log->User()->name(), $Log->description() 
+</tr>`, $rowclass, $Log->User()->name(), 
+format_datetime( $Log->created_on() ),
+$Log->description() 
 );
 				$rowclass = $rowclass ? '' : ' class="colRow"'; 
 			} # end foreach Log
