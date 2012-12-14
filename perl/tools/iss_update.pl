@@ -179,5 +179,8 @@ $dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
 $dbh->do(q`INSERT INTO tests (name) values ('Window Test')`);
 $dbh->do('UPDATE test_results set test_id=1');
 $dbh->do(q`update configuration set value='2009' where name='startYear';`);
+$dbh->do('ALTER TABLE Orders DROP vendor');
+$dbh->do('ALTER TABLE Orders DROP openbalance');
+
 1;
 __END__

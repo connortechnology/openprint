@@ -209,7 +209,7 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+	$dbh->do('UPDATE orders SET owing=total-paid');
 	if ( ! exists $$data{terms_accepted} ) {
 		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
 	} # end if
