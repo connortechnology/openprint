@@ -86,6 +86,10 @@ sub edit {
 	if ( $param{btnFunction} eq 'Copy' ) {
 		$variable{Event} = $variable{Event}->copy();
 		$variable{error} .= $variable{Event}->save();
+	if ( $param{action} eq 'Delete' ) {
+		$variable{error} .= $Event->delete();
+	} elsif ( $param{action} eq 'Undelete' ) {
+		$variable{error} .= $Event->undelete();
 	} elsif ( $param{function} eq 'Save' ) {
 		$param{company_id} = $session{company_id} if ! $param{company_id};
 		$param{created_by} = $session{'user_id'} if ! $param{created_by};
