@@ -263,10 +263,12 @@ sub calc_setup_object {
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
+	$openprint::log->debug("Using binding: $$specs{Binding}") if $debug;
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
-	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound','SpinePaste'] ) ) {
+	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound'] ) ) {
+# Not sure what extras spine paste needs.
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
 	} # end if
