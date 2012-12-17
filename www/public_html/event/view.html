@@ -12,13 +12,13 @@
         user_ids.push(li.id);
 
         if ( li.id ) {
-            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
         } // end if
     }
     function invitation_remove_user( user_id ) {
         var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
         user_ids = user_ids.without( user_id );
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
     }
     // adds the currently selected users, so that we can filter them out of returned results
     function invitation_add_user_ids( input, query ) {
@@ -27,7 +27,7 @@
         return query;
     }
 	function invite_by_relationship( ddm ) {
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	}
 </script>
 <? endif ( $$variable{Event}->id() ) ?>
