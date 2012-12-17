@@ -75,9 +75,9 @@ sub search {
 sub _search {
 	if ( ! $param{btnFunction} ) {
 		ssi::save_params( '/event/search.html', ( 
-				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
-				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
-				'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
+					'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+					'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+					'user_id', 'category_id', 'country_id', 'state_id', 'city_id' ) );
 	} # end if
 } # end sub _history
 
@@ -87,57 +87,65 @@ sub edit {
 		$variable{Event} = $variable{Event}->copy();
 		$variable{error} .= $variable{Event}->save();
 	} elsif ( $param{function} eq 'Destory' ) {
-		$variable{error} .= $Event->destory();
-		if ( ! $variable{error} ) {
-			$variable{information} = 'Event destroy.';
-			$variable{ExternalRedirect} = '/event/search.html';
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->destroy();
+			if ( ! $variable{error} ) {
+				$variable{information} = 'Event destroy.';
+				$variable{ExternalRedirect} = '/event/search.html';
+			} # end if
 		} # end if
 	} elsif ( $param{function} eq 'Delete' ) {
-		$variable{error} .= $Event->delete();
-		if ( ! $variable{error} ) {
-			$variable{information} = 'Event deleted.';
-			$variable{ExternalRedirect} = '/event/search.html';
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->delete();
+			if ( ! $variable{error} ) {
+				$variable{information} = 'Event deleted.';
+				$variable{ExternalRedirect} = '/event/search.html';
+			} # end if
 		} # end if
 	} elsif ( $param{function} eq 'Undelete' ) {
-		$variable{error} .= $Event->undelete();
-		if ( ! $variable{error} ) {
-			$variable{information} = 'Event undeleted.';
-			$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->undelete();
+			if ( ! $variable{error} ) {
+				$variable{information} = 'Event undeleted.';
+				$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+			} # end if
 		} # end if
 	} elsif ( $param{function} eq 'Save' ) {
-		$param{company_id} = $session{company_id} if ! $param{company_id};
-		$param{created_by} = $session{'user_id'} if ! $param{created_by};
-		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
-		$param{ending_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
-		if ( $param{category_id} ) {
-			delete $param{category};
-		} elsif ( $param{category} ) {
-			delete $param{category_id};
-		} else {
-			delete $param{category};
-			delete $param{category_id};
-		} # end if
-		my $Location = openprint::Location::save_location( \%param );
-		$variable{error} .= $Location if $Location and ref $Location ne 'openprint::Location';
+		if ( $Event->can_edit() ) {
+			$param{company_id} = $session{company_id} if ! $param{company_id};
+			$param{created_by} = $session{'user_id'} if ! $param{created_by};
+			$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
+			$param{ending_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
+			if ( $param{category_id} ) {
+				delete $param{category};
+			} elsif ( $param{category} ) {
+				delete $param{category_id};
+			} else {
+				delete $param{category};
+				delete $param{category_id};
+			} # end if
+			my $Location = openprint::Location::save_location( \%param );
+			$variable{error} .= $Location if $Location and ref $Location ne 'openprint::Location';
 
-		if ( ( ! $param{event_id} ) and ( $_ = openprint::Event->find_one(
-			( $Location ? ( 'location_id'=>$Location->id() ) : () ),
-			, 'starting_on'=>$param{'starting_on'}, 'name lc'=> lc openprint::Event->transform('name', $param{name} ) ) ) ) {
-			$variable{Event} = $Event = $_;
-			$variable{error} .= 'An event with that name at that place at that time already exists.';
-		} else {
-			$param{location_id} = $Location->id() if $Location;
-			$variable{error} .= $Event->save(\%param);
-			(new openprint::Log())->save({action=>($param{event_id} ? 'Update Event' : 'Create Event'), 'object_type'=>'openprint::Event','object_id'=>$Event->id()});
-		} # end if
-		if ( ! $variable{error} ) {
-			my $Privacy = $Event->Privacy();
-			$variable{error} .= $Privacy->save( {
-					map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
-				} );
-		} # en dif ! error
-		if ( ! $variable{error} ) {
-			$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+			if ( ( ! $param{event_id} ) and ( $_ = openprint::Event->find_one(
+							( $Location ? ( 'location_id'=>$Location->id() ) : () ),
+							, 'starting_on'=>$param{'starting_on'}, 'name lc'=> lc openprint::Event->transform('name', $param{name} ) ) ) ) {
+				$variable{Event} = $Event = $_;
+				$variable{error} .= 'An event with that name at that place at that time already exists.';
+			} else {
+				$param{location_id} = $Location->id() if $Location;
+				$variable{error} .= $Event->save(\%param);
+				(new openprint::Log())->save({action=>($param{event_id} ? 'Update Event' : 'Create Event'), 'object_type'=>'openprint::Event','object_id'=>$Event->id()});
+			} # end if
+			if ( ! $variable{error} ) {
+				my $Privacy = $Event->Privacy();
+				$variable{error} .= $Privacy->save( {
+						map { $_, $param{'privacy_'.$_} } ( 'mode','user_id','relationship_type_id','usergroup_id' )
+						} );
+			} # en dif ! error
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+			} # end if
 		} # end if
 	} # end if
 } # end sub edit
@@ -201,16 +209,20 @@ sub view {
 		$log->debug("Can view it.");
 	} # end if
 	if ( $param{function} eq 'Delete' ) {
-		$variable{error} .= $Event->delete();
-		if ( ! $variable{error} ) {
-			$variable{information} = 'Event deleted.';
-			$variable{ExternalRedirect} = '/event/search.html';
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->delete();
+			if ( ! $variable{error} ) {
+				$variable{information} = 'Event deleted.';
+				$variable{ExternalRedirect} = '/event/search.html';
+			} # end if
 		} # end if
 	} elsif ( $param{function} eq 'Undelete' ) {
-		$variable{error} .= $Event->undelete();
-		if ( ! $variable{error} ) {
-			$variable{information} = 'Event undeleted.';
-			$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+		if ( $Event->can_edit() ) {
+			$variable{error} .= $Event->undelete();
+			if ( ! $variable{error} ) {
+				$variable{information} = 'Event undeleted.';
+				$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+			} # end if
 		} # end if
 		
 	} elsif ( $param{function} eq 'Copy' ) {
