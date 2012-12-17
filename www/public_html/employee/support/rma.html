@@ -110,8 +110,12 @@
 								onchange=>q`if(get_value(this)==''){new Ajax.Updater('location_fields', '/location/_location_fields.html', { } );} else { $('location_fields').innerHTML='';};`,
 							}
 							);
-						$$variable{Location} = $$variable{RMA}->Address()->Location();
-						$html .= '<div id="location_fields">'.ssi::include( $ENV{DOCUMENT_ROOT}.'/location/_location_fields.html' ).'</div>';
+						$html .= '<div id="location_fields">';
+						if ( ! ( ( @Addresses == 1 ) or $$variable{RMA}->shipto_address_id() ) ) {
+							$$variable{Location} = $$variable{RMA}->Address()->Location();
+							$html .= ssi::include( $ENV{DOCUMENT_ROOT}.'/location/_location_fields.html' );
+						} # end if
+						$html .= '</div>';
 						return $html;
 					} # end if
 				) ?>
@@ -181,6 +185,7 @@
 	</fieldset>
 	</div>
 	<div class="Faults" id="Faults"><!--#include virtual="_faults.html"--></div>
+	<div class="Upgrades" id="Upgrades"><!--#include virtual="_upgrades.html"--></div>
 	<div class="Tests" id="Tests"><!--#include virtual="_tests.html"--></div>
 	<div class="Parts" id="Parts"><!--#include virtual="_parts.html"--></div>
 

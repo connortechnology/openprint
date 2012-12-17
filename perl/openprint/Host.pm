@@ -9,8 +9,8 @@ $table = 'host_notifications';
 @identified_by = ( 'host_id','user_id' );
 
 %fields = (
-	'host_id'			=>	'host_id',
-	'user_id'			=>	'user_id',
+	host_id			=>	'host_id',
+	user_id			=>	'user_id',
 );
 
 package openprint::Host_Type;
@@ -20,11 +20,12 @@ $debug = 0;
 $table = 'host_types';
 $serial = 'host_types_id_seq';
 %fields = (
-	'id'			=>	'id',
-	'name'			=>	'name',
+	id			=>	'id',
+	name		=>	'name',
 );
 %transforms = (
-    'name'  =>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id		=>	[ 's/\D//g' ],
+    name	=>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 package openprint::Host;
@@ -59,6 +60,9 @@ $serial = 'hosts_id_seq';
 	'type'	=>	'(SELECT name FROM Host_types WHERE host_types.id=type_id)',
 );
 %transforms = (
+	id			=>	[ 's/\D//g' ],
+    hostname	=>  [ 's/\s//g' ],
+    description	=>  [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
 	'blacklist'	=>	0,
@@ -138,18 +142,18 @@ sub Type {
 
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::Host_Type->find_one('name lc'=> lc $_[1] );
+		my $Type = openprint::Host_Type->find_one('name lc'=> lc openprint::Host_Type->transform('name',$_[1]) );
 		if ( ! $Type ) {
 			$Type = new openprint::Host_Type();
-			$Type->save({'name'=>$_[1]});
+			$Type->save({name=>$_[1]});
 		} # end if
-		$_[0]{'type_id'} = $Type->id();
-		$_[0]{'type'} = $Type->name();
-	}
-	if ( ! $_[0]{'type'} ) {
-		$_[0]{'type'} = new openprint::Host_Type( $_[0]{'type_id'} )->name();
+		$_[0]{type_id} = $Type->id();
+		$_[0]{type} = $Type->name();
+	} # end if @_ > 1
+	if ( ! $_[0]{type} ) {
+		$_[0]{type} = new openprint::Host_Type( $_[0]{type_id} )->name();
 	} # end if
-	return $_[0]{'type'};
+	return $_[0]{type};
 } # end sub type
 
 sub Assets {

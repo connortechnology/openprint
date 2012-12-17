@@ -58,9 +58,11 @@ sub execute_array {
 	} # end if
 	if ( my $num_of_fields = $sth->{'NUM_OF_FIELDS'} ) {
 		while ( my $ref = $sth->fetchrow_arrayref ) {
-			for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
-				push @return_array, $$ref[$i];
-			} # end for
+			push @return_array, @$ref;
+
+			#for ( my $i = 0; $i < $num_of_fields; $i += 1 ) {
+				#push @return_array, $$ref[$i];
+			#} # end for
 		} # end while
 	} # end if
 	$sth->finish();
