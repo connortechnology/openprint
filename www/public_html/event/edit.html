@@ -24,9 +24,10 @@
 					if ( $$variable{Event}->id() ) {
 						$html = ssi::button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
 						if ( $$variable{Event}->deleted() ) {
-							$html .= ssi::button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+							$html .= ssi::button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Undelete';f1.submit();}" } );
+							$html .= ssi::button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
 						} else {
-							$html .= ssi::button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+							$html .= ssi::button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
 						} # end if
 						#$html .= ssi::button( 'Copy', { onclick=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
 					} # end if

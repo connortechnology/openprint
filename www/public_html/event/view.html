@@ -12,13 +12,13 @@
         user_ids.push(li.id);
 
         if ( li.id ) {
-            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+            new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
         } // end if
     }
     function invitation_remove_user( user_id ) {
         var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
         user_ids = user_ids.without( user_id );
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
     }
     // adds the currently selected users, so that we can filter them out of returned results
     function invitation_add_user_ids( input, query ) {
@@ -27,14 +27,14 @@
         return query;
     }
 	function invite_by_relationship( ddm ) {
-        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+        new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { function: 'add by relationship', relationship_id: get_ddm_value(ddm), event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	}
 </script>
 <? endif ( $$variable{Event}->id() ) ?>
 <? if ( $$variable{Event}->can_view($param{user_id}) ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="action"/>
+	<input type="hidden" name="function"/>
 	<fieldset>
 		<? if ( $session{'user_type'} eq 'A' ) ?>
 		<legend>Viewing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
@@ -45,9 +45,9 @@
 				if ( $$variable{Event}->id() ) {
 					if ( $$variable{Event}->can_edit() ) {
 						if ( $$variable{Event}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
+						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
 						} else {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );

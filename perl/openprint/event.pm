@@ -86,10 +86,24 @@ sub edit {
 	if ( $param{btnFunction} eq 'Copy' ) {
 		$variable{Event} = $variable{Event}->copy();
 		$variable{error} .= $variable{Event}->save();
-	if ( $param{action} eq 'Delete' ) {
+	} elsif ( $param{function} eq 'Destory' ) {
+		$variable{error} .= $Event->destory();
+		if ( ! $variable{error} ) {
+			$variable{information} = 'Event destroy.';
+			$variable{ExternalRedirect} = '/event/search.html';
+		} # end if
+	} elsif ( $param{function} eq 'Delete' ) {
 		$variable{error} .= $Event->delete();
-	} elsif ( $param{action} eq 'Undelete' ) {
+		if ( ! $variable{error} ) {
+			$variable{information} = 'Event deleted.';
+			$variable{ExternalRedirect} = '/event/search.html';
+		} # end if
+	} elsif ( $param{function} eq 'Undelete' ) {
 		$variable{error} .= $Event->undelete();
+		if ( ! $variable{error} ) {
+			$variable{information} = 'Event undeleted.';
+			$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+		} # end if
 	} elsif ( $param{function} eq 'Save' ) {
 		$param{company_id} = $session{company_id} if ! $param{company_id};
 		$param{created_by} = $session{'user_id'} if ! $param{created_by};
@@ -186,10 +200,18 @@ sub view {
 	} else {
 		$log->debug("Can view it.");
 	} # end if
-	if ( $param{action} eq 'Delete' ) {
+	if ( $param{function} eq 'Delete' ) {
 		$variable{error} .= $Event->delete();
-	} elsif ( $param{action} eq 'Undelete' ) {
+		if ( ! $variable{error} ) {
+			$variable{information} = 'Event deleted.';
+			$variable{ExternalRedirect} = '/event/search.html';
+		} # end if
+	} elsif ( $param{function} eq 'Undelete' ) {
 		$variable{error} .= $Event->undelete();
+		if ( ! $variable{error} ) {
+			$variable{information} = 'Event undeleted.';
+			$variable{ExternalRedirect} = '/event/view.html?event_id='.$Event->id();
+		} # end if
 		
 	} elsif ( $param{function} eq 'Copy' ) {
 		my $NewEvent = $variable{Event}->copy();
