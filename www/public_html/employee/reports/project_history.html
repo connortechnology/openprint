@@ -12,7 +12,7 @@
 	<fieldset class="filters"><legend>Report Criteria</legend>
 <ul>
 		<li>
-			<label>Company:</label>
+			<label>Company</label>
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter" />
 			<select name="company_id">
 				<option value="">All</option>
@@ -20,7 +20,7 @@
 			</select>
 		</li>
 		<li>
-			<label>Estimator:</label>
+			<label>Estimator</label>
 			<select name="Estimator" size="1">
 			<? echo (
 					my @options = ( '', 'All', 'Non Employee', 'Non Employee' );
@@ -30,7 +30,7 @@
 			</select>
 		</li>
 		<li>
-			<label>Current Status:</label>
+			<label>Current Status</label>
 			<select name="status" multiple="multiple" size="4">
 			<? echo (
 				@{$$variable{options}} = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
@@ -41,7 +41,7 @@
 			</select>
 		</li>
 		<li>
-			<label>Previous Status:</label>
+			<label>Previous Status</label>
 			<select name="previous_status" multiple="multiple" size="4" >
 			<? echo (
 				my @selected = split(',', $session{'/employee/reports/project_history.html?previous_status'} );
@@ -55,12 +55,23 @@
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
 		</li>
 		<li>
-			<label>Created On:</label>
+			<label>Created On</label>
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'created_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
 		</li>
 		<li>
-			<label>Value:</label>
+			<label>Created On Time</label>
+			<? echo ( join(':',
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_start_hour'} ], { name=>'created_on_start_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_start_minute'} ], { name=>'created_on_start_minute' } ),
+						); ) ?> to 
+			<? echo ( join(':',
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_end_hour'} ], { name=>'created_on_end_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_end_minute'} ], { name=>'created_on_end_minute' } ),
+						); ) ?>
+		</li>
+		<li>
+			<label>Value</label>
 			<? echo ( join(' to ', 
 				input( type=>'number', id=>'value_start', name=>'value_start', value=>$param{value_start} ),
 				input( type=>'number', id=>'value_end', name=>'value_end', value=>$param{value_end} ),
@@ -68,7 +79,7 @@
 		</li>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<li>
-			<label>CSR:</label>
+			<label>CSR</label>
 			<select name="CSR" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
@@ -79,7 +90,7 @@
 			 </select>
 		</li>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-		<li><label>Reprint:</label>
+		<li><label>Reprint</label>
 			<? echo (
 				return ssi::radio( 'reprint', [ 'Y', 'Yes', 'N', 'No', '', 'Both' ], $session{'/employee/reports/project_history.html?reprint'} );
 			) ?>

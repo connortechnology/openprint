@@ -577,6 +577,14 @@ sub find {
 		$sql .= q{ AND (dtmlastmodified <= ?)};
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( $params{'created_on::time >='} ) {
+		$sql .= q{ AND (dtmcreationdate::time  >= ?)};
+		push @values, $params{'created_on::time >='};
+	} # end if
+	if ( $params{'created_on::time <='} ) {
+		$sql .= q{ AND (dtmcreationdate::time <= ?)};
+		push @values, $params{'created_on::time <='};
+	} # end if
 	if ( $params{'updated_on_>='} ) {
 		$sql .= q{ AND (dtmlastmodified >= ?)};
 		push @values, $params{'updated_on_>='};

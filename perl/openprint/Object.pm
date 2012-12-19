@@ -299,6 +299,11 @@ sub Creator {
 	require openprint::User;
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
+sub User {
+	require openprint::User;
+	return new openprint::User( $_[0]{user_id} );
+} # end sub User
+
 sub find {
 	my $type = shift;
     my $table = eval '$'.$type.'::table';

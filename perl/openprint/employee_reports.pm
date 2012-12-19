@@ -23,10 +23,10 @@ sub project_history {
 }
 sub _project_history_results {
 	ssi::save_params('/employee/reports/project_history.html',
-		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
-		( map { 'status_on_start_'.$_ } ( 'year','month','day' ) ),
-		( map { 'status_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
 	);
 	my %parameters; 
@@ -42,6 +42,20 @@ sub _project_history_results {
 	my %filters = (
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/employee/reports/project_history.html?created_on_end', 'created_on_end' ),
+			( 
+			 ( $session{'/employee/reports/project_history.html?created_on_start_hour'} or $session{'/employee/reports/project_history.html?created_on_start_minute'} ) ? (			
+				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{
+					 '/employee/reports/project_history.html?created_on_start_hour',
+					 '/employee/reports/project_history.html?created_on_start_minute',
+					 } ) ) : ()
+			),
+			( 
+			 ( $session{'/employee/reports/project_history.html?created_on_end_hour'} or $session{'/employee/reports/project_history.html?created_on_end_minute'} ) ? (			
+				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{
+					 '/employee/reports/project_history.html?created_on_end_hour',
+					 '/employee/reports/project_history.html?created_on_end_minute',
+					 } ) ) : ()
+			),
 			( $param{'status'} ? (
 				'status' =>
 				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
@@ -58,7 +72,7 @@ sub _project_history_results {
 
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
-		foreach my $Project ( openprint::Project::find( %filters ) ) {
+		foreach my $Project ( openprint::Project->find( %filters ) ) {
 			if ( $param{'previous_status'} and (
 						Date::Calc::check_date( @param{'status_on_start_year','status_on_start_month','status_on_start_day'} ) or 
 						Date::Calc::check_date( @param{'status_on_end_year','status_on_end_month','status_on_end_day'} )
