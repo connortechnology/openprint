@@ -16,6 +16,7 @@
 
 	my $ac = sql::start_transaction( $dbh ); # for speed
 	my @Projects = openprint::Project->find(
+		( $session{'/employee/production/jobs_by_csr.html?company_id'} ? ( company_id => $session{'/employee/production/jobs_by_csr.html?company_id'} ) : () ),
 		status		=>	\@statuses,
 		salesrep_id	=>	[ map { $_->id() } @{$$variable{CSRS}} ],
 		order		=>	'priority',
