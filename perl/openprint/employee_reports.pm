@@ -89,7 +89,6 @@ sub _project_history_results {
 							'description in'	=>	[ map { 'Marked ' . $_ } @statuses ],
 							);
 				} # end if
-$log->debug("test $keep");
 				next if ! $keep;
 			} # end if
 			push @{$variable{'Projects'}}, $Project;
@@ -288,15 +287,23 @@ sub _order_history_results {
 }
 
 sub order_performance {
+	ssi::setup_date_select( '/employee/reports/order_performance.html', 'created_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/order_performance.html', 'created_on_end', '' );
+	_order_performance();
 } # end sub order_performance
 
 sub _order_performance {
+	ssi::save_params('/employee/reports/order_performance.html',
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		'company_id', 'status', 'press_id', 'CSR', 'reprint', 'pos',
+	);
 	my %parameters; 
 	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting','Accounting'], $session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
-	} elsif ( $param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $param{'CSR'};
+		$parameters{'SalesPerson'} = $session{user_id};
+		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
+	} elsif ( $session{'/employee/reports/order_performance.html?CSR'} ) {
+		$parameters{'SalesPerson'} = $session{'/employee/reports/order_performance.html?CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strname)';
 	my @Companies = openprint::Company::find( %parameters );
@@ -304,17 +311,14 @@ sub _order_performance {
 	@{$variable{Orders}} = ();
 	if ( %companies ) {
 		foreach my $Order ( openprint::Order->find(
-			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
-			ssi::date_filter( 'created_on_start', 'created_on_start', \%param ),
-			ssi::date_filter( 'created_on_end', 'created_on_end', \%param ),
-			( $param{'status'} ? (
-				'status' =>
-				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
+			'company_id' => ( ($session{'/employee/reports/order_performance.html?company_id'} and exists $companies{$session{'/employee/reports/order_performance.html?company_id'}} ) ? $session{'/employee/reports/order_performance.html?company_id'} : [ keys %companies ] ),
+			ssi::date_filter( '/employee/reports/order_performance.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/employee/reports/order_performance.html?created_on_end', 'created_on_end' ),
+			( $session{'/employee/reports/order_performance.html?status'} ? (
+				status => [ split(',', $session{'/employee/reports/order_performance.html?status'} ) ],
 				) : () ),
-			'order' => ($param{'order'} ? $param{'order'} : 'Index'),
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
 		) ) {
-			if ( $param{'reprint'} ) {
+			if ( $session{'/employee/reports/order_performance.html?reprint'} ) {
 				my $reprint = 0;
 				foreach my $Project ( $Order->Projects() ) {
 					if ( $Project->reprint() eq 'Y' ) {
@@ -322,11 +326,11 @@ sub _order_performance {
 						last;
 					} # end if
 				} # end foreach Project
-				next if ( $param{'reprint'} eq 'Y' ) and ! $reprint;
-				next if ( $param{'reprint'} eq 'N' ) and $reprint;
+				next if ( $session{'/employee/reports/order_performance.html?reprint'} eq 'Y' ) and ! $reprint;
+				next if ( $session{'/employee/reports/order_performance.html?reprint'} eq 'N' ) and $reprint;
 			} # end if reprint
-			if ( $param{'press_id'} ) {
-				my $Press = new openprint::Equipment( $param{'press_id'} );
+			if ( $session{'/employee/reports/order_performance.html?press_id'} ) {
+				my $Press = new openprint::Equipment( $session{'/employee/reports/order_performance.html?press_id'} );
 				my $on_press = 0;
 				foreach my $Project ( $Order->Projects() ) {
 					foreach my $sig_id ( $Project->signatures() ) {
