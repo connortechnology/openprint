@@ -29,7 +29,6 @@
 		$series->name($year);
 		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
 		$cc->add_to_datasets( $ds );
-		#$cc->add_data( $year, { @months } );
 	} # end foreach year
 	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-months.png');
 	$html .= qq`<img src="/images/charts/$time-months.png" alt=""/>`;
@@ -41,8 +40,10 @@
 	$context->domain_axis->format('%.0f');
 	$context->domain_axis->ticks(30);
 	foreach my $year ( sort keys %months ) {
-		my @days = ( map { $_, defined $days{$year}{$_} ? $days{$year}{$_} : 0 } ( 1 .. 31 ) );
-		$cc->add_data( $year, { @days } );
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $days{$year}{$_} ? $days{$year}{$_} : 0 } ( 1 .. 31 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
 	} # end foreach
 	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-days.png');
 	$html .= qq`<img src="/images/charts/$time-days.png" alt=""/>`;
@@ -54,8 +55,11 @@
 	$context->domain_axis->ticks(6);
 	$context->domain_axis->tick_labels( [ map { Date::Calc::Day_of_Week_Abbreviation($_) } ( 1 .. 7 ) ] );
 	foreach my $year ( sort keys %months ) {
-		$cc->add_data( $year, { map { $_, defined $dow{$year}{$_} ? $dow{$year}{$_} : 0 } ( 1 .. 7 )  } );
-	}
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $dow{$year}{$_} ? $dow{$year}{$_} : 0 } ( 1 .. 7 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
 	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-dow.png');
 	$html .= qq`<img src="/images/charts/$time-dow.png" alt=""/>`;
 
@@ -67,8 +71,11 @@
 	$context->domain_axis->format('%.0f');
 	$context->domain_axis->ticks(23);
 	foreach my $year ( sort keys %months ) {
-		$cc->add_data( $year, { map { $_, defined $hours{$year}{$_} ? $hours{$year}{$_} : 0 } ( 0 .. 23 )  } );
-	}
+		my $series = Chart::Clicker::Data::Series->new({ map { $_, defined $hours{$year}{$_} ? $hours{$year}{$_} : 0 } ( 0 .. 23 ) } );
+		$series->name($year);
+		my $ds = Chart::Clicker::Data::DataSet->new( series => [ $series ] );
+		$cc->add_to_datasets( $ds );
+	} # end foreach year
 	$cc->write_output($config{SkinPath}.'/images/charts/'.$time.'-hours.png');
 	$html .= qq`<img src="/images/charts/$time-hours.png" alt=""/>`;
 	return $html;
