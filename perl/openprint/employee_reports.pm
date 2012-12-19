@@ -132,10 +132,10 @@ sub _project_performance {
 	);
 	my %parameters; 
 	if ( $session{user_type} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{user_id} ) ) {
-		$parameters{SalesPerson} = $session{user_id};
+		$parameters{salesrep_id} = $session{user_id};
 		$parameters{or} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
 	} elsif ( $session{'/employee/reports/project_performance.html?CSR'} ) {
-		$parameters{SalesPerson} = $session{'/employee/reports/project_performance.html?CSR'};
+		$parameters{salesrep_id} = $session{'/employee/reports/project_performance.html?CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company->find( %parameters );
@@ -143,11 +143,15 @@ sub _project_performance {
 	my %filters = (
 			ssi::date_filter( '/employee/reports/project_performance.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/employee/reports/project_performance.html?created_on_end', 'created_on_end' ),
-			user_id	=> ($session{'/employee/reports/project_performance.html?Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT index FROM users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{'/employee/reports/project_performance.html?Estimator'}),
+			user_id	=> ($session{'/employee/reports/project_performance.html?estimator'} eq 'Non Employee' ? q{NOT IN (SELECT index FROM users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{'/employee/reports/project_performance.html?estimator'}),
+				( $session{'/employee/reports/project_performance.html?estimator_exclude'} ? (
+					  'user_id not in'	=> [ split(',', $session{'/employee/reports/project_performance.html?estimator_exclude'} ) ] ) : () ),
 			order	=> 'index',
 );
-	if ( $param{'company_id'} and exists $companies{$session{'/employee/reports/project_performance.html?company_id'}} ) {
-		$filters{'company_id'} = $session{'/employee/reports/project_performance.html?company_id'};
+	if ( $session{'/employee/reports/project_performance.html?company_id'} and exists $companies{$session{'/employee/reports/project_performance.html?company_id'}} ) {
+		$filters{company_id} = $session{'/employee/reports/project_performance.html?company_id'};
+	} else {
+		$filters{company_id} = [ map { $_->id() } @Companies ];
 	} # end if
 
 	if ( %companies ) {

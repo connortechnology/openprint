@@ -21,7 +21,7 @@
 		</li>
 		<li class="estimator">
 			<label>Estimator:</label>
-			<select name="Estimator">
+			<select name="estimator">
 			<? echo (
 					my @options = ( '', 'All', 'All Employee', 'All Employee', 'Non Employee', 'Non Employee' );
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');

@@ -557,6 +557,15 @@ sub find {
 			push @values, $params{'user_id'};
 		} # end if
 	} # end if
+	if ( $params{'user_id not in'} ) {
+		if ( ref $params{'user_id not in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( userindex NOT IN ('.join(',', map {'?'} @{$params{'user_id not in'}} ).') )';
+			push @values, @{$params{'user_id not in'}};
+		} else {
+			$sql .= q{ AND (UserIndex!=?)};
+			push @values, $params{'user_id not in'};
+		} # end if
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= q{ AND (dtmcreationdate BETWEEN ? AND ?)};
 		push @values, @params{'created_on_start','created_on_end'};
