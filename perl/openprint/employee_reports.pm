@@ -7,7 +7,7 @@ require openprint::Project;
 require openprint::Project_Log;
 require openprint::Order_Status;
 
-use openprint qw();
+require openprint;
 use vars qw( $r $log $dbh %variable %session %param );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -125,43 +125,44 @@ sub project_performance {
 }
 
 sub _project_performance {
-	ssi::save_params('/employee/reports/project_performance.html',
+	my $page = '/employee/reports/project_performance.html';
+
+	ssi::save_params($page, (
 		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 		'company_id', 'estimator', 'estimator_exclude', 'CSR',
-	);
+	) );
 	my %parameters; 
 	if ( $session{user_type} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{user_id} ) ) {
 		$parameters{salesrep_id} = $session{user_id};
 		$parameters{or} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
-	} elsif ( $session{'/employee/reports/project_performance.html?CSR'} ) {
-		$parameters{salesrep_id} = $session{'/employee/reports/project_performance.html?CSR'};
+	} elsif ( $session{$page.'?CSR'} ) {
+		$parameters{salesrep_id} = $session{$page.'?CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { $_->id(), $_->name() } @Companies;
 	my %filters = (
-			ssi::date_filter( '/employee/reports/project_performance.html?created_on_start', 'created_on_start' ),
-			ssi::date_filter( '/employee/reports/project_performance.html?created_on_end', 'created_on_end' ),
-			user_id	=> ($session{'/employee/reports/project_performance.html?estimator'} eq 'Non Employee' ? q{NOT IN (SELECT index FROM users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{'/employee/reports/project_performance.html?estimator'}),
-				( $session{'/employee/reports/project_performance.html?estimator_exclude'} ? (
-					  'user_id not in'	=> [ split(',', $session{'/employee/reports/project_performance.html?estimator_exclude'} ) ] ) : () ),
+			ssi::date_filter( $page.'?created_on_start', 'created_on_start' ),
+			ssi::date_filter( $page.'?created_on_end', 'created_on_end' ),
+			user_id	=> ($session{$page.'?estimator'} eq 'Non Employee' ? q{NOT IN (SELECT index FROM users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{$page.'?estimator'}),
+			( $session{$page.'?estimator_exclude'} ? ( 'user_id not in'	=> [ split(',', $session{$page.'?estimator_exclude'} ) ] ) : () ),
+			company_id => ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : [ map { $_->id() } @Companies ] ),
 			order	=> 'index',
-);
-	if ( $session{'/employee/reports/project_performance.html?company_id'} and exists $companies{$session{'/employee/reports/project_performance.html?company_id'}} ) {
-		$filters{company_id} = $session{'/employee/reports/project_performance.html?company_id'};
-	} else {
-		$filters{company_id} = [ map { $_->id() } @Companies ];
+	);
+
+	if ( $session{$page.'?company_id'} and ! exists $companies{$session{$page.'?company_id'}} ) {
+		$variable{error} .= 'Specified company is not allowed.<br/>';
 	} # end if
 
 	if ( %companies ) {
-		$variable{'Projects'} = [ openprint::Project->find( %filters ) ];
+		$variable{Projects} = [ openprint::Project->find( %filters ) ];
 	} else {
-		@{$variable{'Projects'}} = ();
+		@{$variable{Projects}} = ();
 		$variable{information} .= 'There were no companies to filter on.<br/>';
 	} # end if
-	%{$variable{'Companies'}} = %companies;
-}
+	%{$variable{Companies}} = %companies;
+} # end sub _project_performance
 
 sub order_history {
 

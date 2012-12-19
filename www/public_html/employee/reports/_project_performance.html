@@ -1,9 +1,10 @@
+
 <? if ( @{$$variable{'Projects'}} ) ?>
 <? echo (
 	require Chart::Clicker;
 	require Chart::Clicker::Data::DataSet;
 	require Chart::Clicker::Data::Series;
-	my $html;
+	my $html = ssi::include( $ENV{DOCUMENT_ROOT}.'/includes/error_reporting.html' );
 	my %months;
 	my %days;
 	my %hours;
