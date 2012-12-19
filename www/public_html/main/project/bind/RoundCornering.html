@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -11,7 +11,7 @@
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 			<li><label>Rounded Corners</label>
-				<input type="number" id="RoundedCorners" name="RoundedCorners" value="<?RoundedCorners?>" onkeyup="integerize(this);calc(this.form.name);" />
+				<? echo ( input( type=>'cardinal', id=>'RoundedCorners', name=>'RoundedCorners', value=>$$variable{RoundedCorners}, onkeyup=>'calc(this.form.name);' ); ) ?>
 			</li>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 			</ul>
@@ -24,8 +24,5 @@
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="Status" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>

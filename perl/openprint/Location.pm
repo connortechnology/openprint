@@ -1,21 +1,19 @@
 use strict;
-use openprint ();
+require openprint;
 require openprint::Location_Type;
 require openprint::Asset;
 require openprint::Photo_Album;
-package openprint::Location;
-our @ISA = qw( openprint::Object );
 require Geo::Coder::Googlev3;
 require Geo::IP;
 
+package openprint::Location;
+our @ISA = qw( openprint::Object );
+
 use constant PI => atan2(1,1)*4;
 # 3.14159265358979;
-use JSON ();
-use LWP::UserAgent ();
-use HTTP::Request ();
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
@@ -44,13 +42,14 @@ $serial = 'locations_id_seq';
 	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 %transforms = (
-	'parent_id'		=>	[ 's/\D//g' ],
-	'postalcode'	=>	[ 'tr/[a-z]/[A-Z]/' ],
-    'name'			=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'address'		=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    'postalcode'	=> [ 's/\s*//' ],
-	'latitude'		=>	[ 's/[^\-\d\.]//g' ],
-	'longitude'		=>	[ 's/[^\-\d\.]//g' ],
+	id			=>	[ 's/\D//g' ],
+	parent_id	=>	[ 's/\D//g' ],
+	postalcode	=>	[ 'tr/[a-z]/[A-Z]/' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    address		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    postalcode	=>	[ 's/\s*//' ],
+	latitude	=>	[ 's/[^\-\d\.]//g' ],
+	longitude	=>	[ 's/[^\-\d\.]//g' ],
 );
 %defaults = (
 	'created_by'	=>	q`$session{user_id}`,
@@ -347,21 +346,47 @@ sub can_edit {
 	return 0;
 } # end sub can_edit
 
+sub address_line {
+	if ( ! $_[0]{address_line} ) {
+		my $L = $_[0];
+		$_[0]{address_line} = '';
+		if ( $L->address() ) {
+			$_[0]{address_line} .= $L->address() . ', ';
+		} # end if
+		$_[0]{address_line} .= join(', ', map { $_->name() } $L->Parents() );
+		if ( $L->postalcode() ) {
+			$_[0]{address_line} .= ', '.$L->postalcode();
+		} # end if
+	} # end if
+	return $_[0]{address_line};
+} # end sub address_line
+
 sub where {
 	if ( ! $_[0]{'where'} ) {
 		my $L = $_[0];
-		$_[0]{'where'} = '<a href="/location/view.html?location_id='.$L->id().'">';
 		$_[0]{'where'} .= join(', ', map { $_->name() } $L->Parents() );
 		if ( $L->address() or $L->postalcode() ) {
 			$_[0]{'where'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
 		} # end if
-		$_[0]{'where'} .= '</a>';
+	} # end if
+	return $_[0]{where};
+} # end sub where
+
+sub where_link {
+	if ( ! $_[0]{'where_link'} ) {
+		my $L = $_[0];
+		$_[0]{'where_link'} = '<a href="/location/view.html?location_id='.$L->id().'">';
+		$_[0]{'where_link'} .= join(', ', map { $_->name() } $L->Parents() );
+		if ( $L->address() or $L->postalcode() ) {
+			$_[0]{'where_link'} .= '<br/>' . $L->address() . ', '.$L->postalcode();
+		} # end if
+		$_[0]{'where_link'} .= '</a>';
 		if ( $L->url() ) {
-			$_[0]{'where'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
+			$_[0]{'where_link'} .= '<br/><a target="_blank" href="'.$L->url().'">'.$L->url().'</a>';
 		} # end if
 	} # end if
-	return $_[0]{'where'};
-} # end sub where
+	return $_[0]{'where_link'};
+} # end sub where_link
 
 # Takes a hash, probably %param, and does all the saving neccessary, returns a Location object.
 # If no location name is given, returns the parent. So if in an event I specified Toronto, then the location would be Toronto

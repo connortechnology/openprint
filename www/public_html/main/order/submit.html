@@ -4,7 +4,7 @@
 </div>
 <div class="Order"><div class="Submit">
 <!--#include virtual="/includes/error_reporting.html"-->
-	<form method="post" name="f1" action="confirmation.html">
+	<form method="post" id="f1" name="f1" action="confirmation.html">
 		<!--#include virtual="/includes/order_header.html" -->
 		<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
 		<!--#include virtual="/main/order/_contents.html" -->
@@ -49,7 +49,7 @@
 			);	
 		) ?>
 		</p>
-		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+		<input type="hidden" name="order_id" value="<?order_id?>"/>
 		<input type="hidden" name="btnFunction" value="Complete"/>
 	</form>
 </div>

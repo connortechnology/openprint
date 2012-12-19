@@ -1,5 +1,5 @@
 package logger;
-use Encode;
+require Encode;
 use strict;
 
 sub new {

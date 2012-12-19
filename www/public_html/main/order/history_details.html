@@ -10,12 +10,12 @@
 
 <div class="PageTitle">
 <h1>Order History</h1>
-<h2>Viewing Order <?OrderID?></h2>
+<h2>Viewing Order <?order_id?></h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="history_details.html">
 	<input type="hidden" name="btnFunction" value=""/>
-	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+	<input type="hidden" name="order_id" value="<?order_id?>"/>
 	<p class="buttons">
 		<? echo ( 
 			my $html;
@@ -23,12 +23,12 @@
 				$html .= ssi::button( 'ReOpen', { onclick=>q`f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();`, text=>'Continue' } );
 				$html .= ssi::button( 'Cancel',{ onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
 			} elsif ( $$variable{'Order'}->status() eq 'Incomplete' ) {
-				$html .= ssi::button( 'Continue', { href=>'information.html?OrderID='.$$variable{'OrderID'} } );
+				$html .= ssi::button( 'Continue', { href=>'information.html?order_id='.$$variable{'order_id'} } );
 				$html .= ssi::button( 'Cancel', { onclick=>q`f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();` } ) if $$variable{'Order'}->status() ne 'Cancelled';
 			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval','Waiting For QA Approval' ) ) {
 				$html .= ssi::button( 'UploadCenter', { href=>'/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), text=>'Upload Files' } ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= ssi::button( 'reOrder', { onclick=>"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", href=>'', text=>'ReOrder' } ); 
-				$html .= ssi::button( 'Resend', { href=>"/main/order/history_details.html?OrderID=$$variable{OrderID}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
+				$html .= ssi::button( 'Resend', { href=>"/main/order/history_details.html?order_id=$$variable{order_id}&amp;btnFunction=Resend", text=>'Resend' } ) if $$variable{'Order'}->status() ne 'Cancelled'; 
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
 					$html .= ssi::button( 'ReOpen', { onclick=>"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", href=>'', text=>'ReOpen' } );
 					$html .= ssi::button( 'Cancel', { onclick=>"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } ) if $$variable{'Order'}->status() ne 'Cancelled';

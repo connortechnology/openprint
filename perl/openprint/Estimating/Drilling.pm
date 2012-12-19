@@ -68,7 +68,7 @@ sub calc {
 	} elsif ( $$services{'LoopStitching'} ) {
 		$stitching_service_index = $$services{'LoopStitching'}[0];
 	} # end if
-	my $stitching_specs = openprint::service::get_specs_ref( $Project, $stitching_service_index );
+	my $stitching_specs = $stitching_service_index ? openprint::service::get_specs_ref( $Project, $stitching_service_index ) : {};
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );

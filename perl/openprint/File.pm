@@ -5,32 +5,33 @@ require misc;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'project_files';
 $serial = 'project_files_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'project_id'	=>	'project_id',
-	'filename'		=>	'filename',
-	'description'	=>	'description',
-	'upload_id'		=>	'upload_id',
-	'deleted'		=>	'deleted',
-	'size'			=>	'size',
-	'company_id'	=>	'company_id',
-	'archive'		=>	'archive',
+	id			=>	'id',
+	project_id	=>	'project_id',
+	filename	=>	'filename',
+	description	=>	'description',
+	upload_id	=>	'upload_id',
+	deleted		=>	'deleted',
+	size		=>	'size',
+	company_id	=>	'company_id',
+	archive		=>	'archive',
 );
 %transforms = (
+    filename => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'deleted'		=>	0,
-	'company_id'	=>	undef,
-	'project_id'	=>	undef,
-	'upload_id'		=>	undef,
+	deleted		=>	0,
+	company_id	=>	undef,
+	project_id	=>	undef,
+	upload_id	=>	undef,
+	size		=>	undef,
 );
 
 sub size_text {
-	my ( $self ) = @_;
-	return misc::format_bytes( $$self{'size'} );
+	return misc::format_bytes( $_[0]{size} );
 } #end sub size_text
 
 1;

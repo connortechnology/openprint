@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS User_Types;
 
 CREATE TABLE User_Types (
 	identifier	char NOT NULL,
-	label		TEXT NOT NULL
+	label		TEXT NOT NULL,
+	PRIMARY KEY (identifier)
 );
 
 INSERT INTO User_Types VALUES('C', 'Customer');

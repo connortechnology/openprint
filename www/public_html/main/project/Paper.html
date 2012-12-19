@@ -24,7 +24,7 @@
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
 			next if ! ( $Paper->id() or $$Paper{custom} );
-			my $paper_string = $Paper->to_string();
+			my $paper_string = $Paper->id_string();
 			$papers{$paper_string} = $Paper;
 		} # end foreach
 	} # end foreach signature
@@ -36,25 +36,36 @@
 	foreach my $ss_id ( $Project->signatures() ) {
 		$$variable{'ss_id'} = $ss_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		$html .= '<fieldset><legend>Stock for Signature ' . $$sig_specs{'SignatureIndex'} . '</legend>';
+		$html .= '<fieldset><legend>Stock for Signature ' . $$sig_specs{'SignatureIndex'} . '</legend><ul>';
 
 		my %sig_papers;
 		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		foreach my $qty_index ( $$variable{Project}->quantity_indexes() ) {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			next if ! ( $Paper->id() or $$Paper{custom} );
-			my $paper_string = $Paper->to_string();
+			if ( ! $Paper->id() ) {
+				next if $$Paper{custom};
+				$log->error("No paper found in signature!");
+				next;
+			} # end if
+			$Paper = $Paper->Supplied();
+			my $paper_string = $Paper->id_string();
 			$sig_papers{$paper_string} = $Paper;
 		} # end foreach
+		foreach my $id ( keys %sig_papers ) {
+$log->debug("Sig Papers $id");
+		}
 
 		foreach my $paper_string ( @stocks ) {
-			next if ! $sig_papers{$paper_string};
+			if ( ! $sig_papers{$paper_string} ) {
+				$log->error("$paper_string not in sig_papers");
+				next;
+			} # end if
 
 			$$variable{'stock_index'} = $indexes{$paper_string};
 			$$variable{'Stock'} = $sig_papers{$paper_string};
 			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/main/project/_stock_line.html');
 		} # end foreach stock_index
-		$html .= "</fieldset>\n";
+		$html .= "</ul></fieldset>\n";
 	} # end foreach signature
 
 	$html .= "<fieldset><legend>Totals</legend><ul>\n";

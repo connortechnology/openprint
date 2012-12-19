@@ -1,9 +1,0 @@
-<? echo (
-	my $html;
-	@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
-	foreach my $Project ( @{$$variable{'Projects'}} ) {
-		$$variable{'Project'} = $Project;
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
-	} # end foreach
-	return $html;
-) ?>

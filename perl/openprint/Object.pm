@@ -133,7 +133,8 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	@$self{keys %$fields} = @$data{values %$fields};
+	my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+	@$self{@keys} = @$data{@$fields{@keys}};
 } # end sub load
 
 sub save {
@@ -322,10 +323,16 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				} # end foreach
 			} # end if $$self{field}
 
-			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = eval($defaults{$field});
-				$log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
+				if ( defined $defaults{$field} ) {
+					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+					$$self{$field} = eval($defaults{$field});
+					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
+				} else {
+					$$self{$field} = $defaults{$field};
+				} # end if
+#$$self{$field} = ( defined $defaults{$field} ) ? eval($defaults{$field}) : $defaults{$field};
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} # end if
 		} # end if

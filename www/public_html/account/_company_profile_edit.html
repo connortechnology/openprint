@@ -1,7 +1,7 @@
+<? if ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>
 <div id="CompanyProfile">
 	<fieldset><legend>Profile</legend>
 		<div class="content">
-<? if ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>
 			<ul>
 <? echo ( 
 	my $html;
@@ -44,7 +44,7 @@
 	return $html;
 ) ?>
 			</ul>
-<? endif ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>
 		</div>
 	</fieldset>
 </div>
+<? endif ( @{$$variable{'Fields'}} = openprint::Company_Profile_Field->find('order'=>'sort,name') ) ?>

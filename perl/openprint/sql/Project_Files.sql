@@ -2,9 +2,9 @@
 DROP TABLE IF EXISTS project_files;
 CREATE TABLE project_files ( 
 	id			SERIAL,
-	project_id	INTEGER NOT NULL, FOREIGN KEY(project_id) REFERENCES Projects (id),
+	project_id	INTEGER, FOREIGN KEY(project_id) REFERENCES Projects (id),
 	filename	TEXT NOT NULL,
-	description	TEXT NOT NULL,
+	description	TEXT,
 	upload_id	INTEGER, FOREIGN KEY(upload_id) REFERENCES Uploads (id),
 	PRIMARY KEY (id)
 );

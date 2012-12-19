@@ -32,6 +32,7 @@ $serial = 'purchaseorders_id_seq';
 
 %fields = (
 	'id'				=>	'id',
+	num					=>	'num',
 	'company_id'		=>	'company_id',
 	contact_id			=>	'contact_id',
 	'currency_id'		=>	'currency_id',
@@ -112,7 +113,7 @@ sub save {
 	$self->total(undef);
 	if ( ! $$self{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
-		$$self{'currency_id'} = $Currency->id();
+		$$self{'currency_id'} = $Currency->id() if $Currency;
 	} # end if
 	my $error = $self->SUPER::save();
 
@@ -469,6 +470,14 @@ sub can_view {
 	} # end if
 	return 0;
 } # end sub can_view
+
+sub num {
+	if ( @_ > 1 ) {
+		$_[0]{num} = $_[1];
+	} 
+	return $_[0]{id} if ! $_[0]{num};
+	return $_[0]{num};
+} # end sub num
 
 1;
 __END__

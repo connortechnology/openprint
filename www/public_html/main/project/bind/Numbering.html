@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -7,12 +7,13 @@
     } # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<p><label>Sets of Numbers</label>
-				<input type="number" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
-			</p>
-			<p><label>Colour</label>
+			<ul>
+			<li><label>Sets of Numbers</label>
+				<? echo ( input( type=>'cardinal', id=>'SetsOfNumbers', name=>'SetsOfNumbers', value=>$$variable{SetsOfNumbers}, onkeyup=>'calc(this.form.name);' ); ) ?>
+			</li>
+			<li><label>Colour</label>
 				<select name="colour" id="colour" onchange="calc(this.form.name);">
 					<? echo (
 						my @options = (
@@ -24,7 +25,8 @@
 						return ssi::make_drop_down( \@options, $$variable{'colour'} );
 					) ?>
 				</select>
-			</p>
+			</li>
+			</ul>
 			<? echo (
 				my $html = '';
 				foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
@@ -37,7 +39,9 @@
 				} # end foreach ss_id
 				return $html;
 			) ?>
+			<ul>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
@@ -47,9 +51,6 @@
 		<input type="hidden" name="ServiceType" value="<?ServiceType?>">
 		<input type="hidden" name="ContinueProject" value="Y" />
 		<input type="hidden" name="Status" />
-		<div id="hdnBreakdown1" style="display: none;"></div>
-		<div id="hdnBreakdown2" style="display: none;"></div>
-		<div id="hdnBreakdown3" style="display: none;"></div>
 	</form>
 </div>
 

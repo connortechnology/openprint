@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
     $$variable{'Columns'} = 'Three';
@@ -7,7 +7,7 @@
     } # end if
 ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Die Cutting</legend>
 		<? eval ( @{$$variable{'SignatureGroups'}} = $$variable{'Project'}->signatures(); ) ?>
 		<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
@@ -19,29 +19,34 @@
 				<? if ( $$variable{'Reference'} ) ?>
 				<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
 				<? endif ( $$variable{'Reference'} ) ?>
-				<p>
+				<ul>
+				<li>
 					<label>Die Cutting Needed</label>
 					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>Y" value="Y" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').show();calc(this.form.name);" />
 					<label class="radio" for="Needed-<?SignatureIndex?>Y">Yes</label>
 					<input type="radio" name="Needed-<?SignatureIndex?>" id="Needed-<?SignatureIndex?>N" value="N" <? echo ( ssi::checked( $$variable{'Needed-'.$$variable{'SignatureIndex'}} eq 'N' ); ) ?> onchange="$('DieCutting-<?SignatureIndex?>').hide();calc(this.form.name);" />
 					<label class="radio" for="Needed-<?SignatureIndex?>N">No</label>
-				</p>
+				</li>
+				</ul>
 				<div id="DieCutting-<?SignatureIndex?>" <? echo ( $$variable{'Needed-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'style="display:none;"' : '' ) ?>>
+				<ul>
 				<!--#include virtual="/includes/main/proj/die_cutting.html"-->
 				<!--#include virtual="/includes/main/proj/signature_imposition_with_override.html"-->
 				<!--#include virtual="/includes/main/proj/signature_equipment.html"-->
+				</ul>
 				</div>
 				</fieldset>
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
-<p id="DiePrice">
-	<label><b>Die Price (<?CurrencySymbol?>)</b></label>
+		<ul>
+<li id="DiePrice">
+	<label>Die Price (<?CurrencySymbol?>)</label>
 <? echo (
 	my $html;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-			$html .= sprintf(q`<input type="text" name="DiePrice%d" value="%s" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />`, $qty_index, $$variable{'DiePrice'.$qty_index} );
-			$html .= ssi::write_override( 'OverrideDiePrice'.$qty_index, $$variable{'OverrideDiePrice'.$qty_index}, '', 'calc(this.form.name);' );
+			$html .= input( type=>'float', name=>'DiePrice'.$qty_index, value=>$$variable{'DiePrice'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideDiePrice'.$qty_index, $$variable{'OverrideDiePrice'.$qty_index}, '', 'calc(this.form.name);' );
 		} else {
 			$html .= $$variable{'DiePrice'.$qty_index};
 		} # end if
@@ -49,19 +54,16 @@
 	} # end foreach
 	return $html;
 ) ?>
-</p>
-<p id="StrippingPrice">
-	<label><b>Stripping Price (<?CurrencySymbol?>)</b>
-	</label>
+</li>
+<li id="StrippingPrice">
+	<label>Stripping Price (<?CurrencySymbol?>)</label>
 <? echo (
 	my $html;
-	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-	} # end if
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-			$html .= sprintf(q`<input type="text" name="StrippingPrice%d" value="%s" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />`, $qty_index, $$variable{'StrippingPrice'.$qty_index} );
-			$html .= ssi::write_override( 'OverrideStrippingPrice'.$qty_index, $$variable{'OverrideStrippingPrice'.$qty_index}, '', 'calc(this.form.name);' );
+			$html .= input( type=>'float', name=>'StrippingPrice'.$qty_index, value=>$$variable{'StrippingPrice'.$qty_index}, onkeyup=>'calc(this.form.name);' );
+			$html .= write_override( 'OverrideStrippingPrice'.$qty_index, $$variable{'OverrideStrippingPrice'.$qty_index}, '', 'calc(this.form.name);' );
 		} else {
 			$html .= $$variable{'StrippingPrice'.$qty_index};
 		} # end if
@@ -69,23 +71,24 @@
 	} # end foreach
 	return $html;
 ) ?>
-</p>
+</li>
 			<!--#include virtual="/includes/main/proj/_quantities.html"-->
 			<!--#include virtual="/includes/main/proj/_unit_price.html"-->
 			<!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<p><label>&nbsp;</label>
+<li><label>&nbsp;</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-<? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ); ) ?>
+<? echo ( ssi::button( 'Breakdown'.$$variable{'QTYIndex'}, { onclick=>"show_breakdown('$$variable{'QTYIndex'}');", href=>'', text=>'Breakdown' } ); ) ?>
     </span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
+</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			</ul>
 		</fieldset>
 		<hr/>
         <!--#include virtual="/includes/main/proj/add_to_project.html"-->

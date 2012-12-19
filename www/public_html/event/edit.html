@@ -1,14 +1,15 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-<script type="text/javascript" src="/javascripts/location.js"></script>
+<script type="text/javascript" src="<? hash_link(/javascripts/location.js) ?>"></script>
 
 <script type="text/javascript">
 	tinyMCE.init({
-		mode : "textareas",
+		mode : "specific_textareas",
+		editor_selector : "mce",
 		theme : "advanced"
 	});
 </script>
 <div class="Event"><div class="Edit">
-	<form name="f1" id="f1" action="/event/view.html" method="post" enctype="multipart/form-data">
+	<form name="f1" id="f1" action="/event/edit.html" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{Event}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{Event}->deleted() ) ?>
 			<span class="warning">This event has been deleted</span>
@@ -21,15 +22,16 @@
 					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
 					
 					if ( $$variable{Event}->id() ) {
-						$html = ssi::button( 'Reset', { 'onclick'=>'f1.reset();check_time_published_on(f1);' } );
+						$html = ssi::button( 'Reset', { onclick=>'f1.reset();check_time_published_on(f1);' } );
 						if ( $$variable{Event}->deleted() ) {
-							$html .= ssi::button( 'Destroy', { 'onclick'=>"if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
+							$html .= ssi::button( 'Undelete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Undelete';f1.submit();}" } );
+							$html .= ssi::button( 'Destroy', { onclick=>"if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
 						} else {
-							$html .= ssi::button( 'Delete', { 'onclick' => "if(confirm('Are you sure?')){f1.function.value='Destroy';f1.submit();}" } );
+							$html .= ssi::button( 'Delete', { onclick => "if(confirm('Are you sure?')){f1.function.value='Delete';f1.submit();}" } );
 						} # end if
-						#$html .= ssi::button( 'Copy', { 'onclick'=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
+						#$html .= ssi::button( 'Copy', { onclick=>"f1.action='edit.html';f1.function.value='Copy';f1.submit();" } );
 					} # end if
-					$html .= ssi::button( 'Save', { 'onclick'=>"f1.function.value='Save';f1.submit();" } );
+					$html .= ssi::button( 'Save', { onclick=>"f1.function.value='Save';f1.submit();" } );
 					return $html;
 				) ?>
 			</p>
@@ -115,7 +117,7 @@ $company_id = $session{company_id} if (!$company_id);
 						</li>
 						<li>
 							<label for="info">More info</label>
-							<textarea id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{Event}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Event}->info()); ) ?></textarea>
+							<textarea id="info" name="info" class="mce" rows="<? echo ( ssi::count_lines( $$variable{Event}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( ssi::html_escape($$variable{Event}->info()); ) ?></textarea>
 						</li>
 						<li><label>URL</label>
 							<input type="url" id="url" name="url" value="<? echo ( $$variable{Event}->url() ) ?>" />

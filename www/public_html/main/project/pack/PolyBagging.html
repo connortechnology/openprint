@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/javascripts/service.js"></script>
+<script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 	$$variable{'Columns'} = 'Three';
@@ -9,12 +9,16 @@
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
-			<p><label># of additional components</label>
-				<input type="number" name="Inserts" value="<?Inserts?>" onkeyup="this.value = this.value.replace(/[^\d\.]/g, '' );calc(this.form.name);" />
-			</p>
+			<ul>
+			<li><label># of additional components</label>
+				<? echo ( input( type=>'cardinal', name=>'Inserts', value=>$$variable{Inserts}, onkeyup=>'calc(this.form.name);' ); ) ?>
+			</li>
+			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
+			<ul>
 			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+			</ul>
 		</fieldset>
 		<!--#include virtual="/includes/main/proj/service_combo_quantity.html"-->
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->

@@ -50,16 +50,17 @@ $serial = 'articles_id_seq';
 );
 
 %transforms = (
-	'user_type'	=>	[ 's/\s//g' ],
+	user_type	=>	[ 's/\s//g' ],
+	id			=>	[ 's/\D//' ],
 );
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'published_on'	=> q`'NOW()'`,
-	'deleted'		=> 0,
-	'category_id'	=>	undef,
-	'user_type'		=>	undef,
-	'created_by'	=>	undef,
+	created_on		=> q`'NOW()'`,
+	updated_on		=> q`'NOW()'`,
+	published_on	=> q`'NOW()'`,
+	deleted			=> 0,
+	category_id		=>	undef,
+	user_type		=>	undef,
+	created_by		=>	undef,
 	anonymous		=>	0,
 	published		=>	0,
 );

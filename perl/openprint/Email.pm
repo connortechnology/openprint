@@ -4,7 +4,6 @@ package openprint::Email;
 our @ISA = qw( openprint::Object );
 
 use openprint ();
-require openprint::User;
 require email;
 require misc;
 require ssi;
@@ -13,6 +12,7 @@ require Encode;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
+
 %fields = (
 	from	=>	'from',
 	subject	=>	'subject',

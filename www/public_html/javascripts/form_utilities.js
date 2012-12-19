@@ -39,6 +39,21 @@ function get_value( obj ) {
 	return obj.value;
 }
 
+function set_value( obj, value ) {
+	if ( ! obj ) {
+		return;
+	} // end if
+	if ( obj.type == 'select-one' ) {
+		ddm_select_by_value( obj, value );
+	} else if ( obj.type == 'radio' || obj.type == 'checkbox' ) {
+		set_rdb_value( obj, value );
+	} else if ( obj.type == 'hidden' || obj.type == 'text' || obj.type == 'number' || obj.type == 'email' || obj.type == 'tel' ) {
+		obj.value = value;
+	} else {
+		obj.innerHTML = value;
+	} // end if
+}
+
 function get_select_value ( ddm ) {
 	var selected = new Array();
 	if ( ddm ) {
@@ -451,6 +466,7 @@ function clearSelect( ddm ) {
 }
 
 function clearForm(form) {
+	form = $(form);
 	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )
@@ -1281,12 +1297,16 @@ function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
 }
-function getValues( form, element_names ) {
-	var results = new Hash();
-	for ( var index = element_names.length; index; index -- ) {
-		var form_element = form.elements[element_names[index-1]];
-		if ( form_element ) 
-			results.set(element_names[index-1], form_element.getValue());
+function getValues( form, element_names, more_values ) {
+	form = $(form);
+	var results = new Hash( more_values );
+	for ( var index = 0, len = element_names.length; index < len ; index ++ ) {
+		var form_element = form.elements[element_names[index]];
+		if ( form_element ) {
+			results.set(element_names[index], get_value( form_element ) );
+		} else {
+			alert("Element " + element_names[index] + ' not found.' );
+		} 
 	} // end for
 	return results;
 } // end function getValues

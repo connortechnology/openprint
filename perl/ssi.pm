@@ -3,6 +3,9 @@ package ssi;
 
 use Date::Calc qw(Days_in_Month Month_to_Text);
 
+# For Hash stuff
+use File::Basename;
+
 require sets;
 require sql;
 
@@ -15,6 +18,15 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *r = \$openprint::r;
+
+#Used for resource hashed links
+my %hash_cache;
+
+#Used for writeTip
+my %Glossary;
+
+# Used for translations
+my %Lexicon;
 
 sub do_new_substitution {
 	my ( $command, $text, $variable ) = @_;
@@ -79,7 +91,12 @@ sub do_new_substitution {
 		return $result;
 	} elsif ( $$command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
 		my $result = translate($1);
-$log->error("tranlsating  of $1: $result");
+#$log->error("tranlsating  of $1: $result");
+		$result .= variable_substitution( $text, $variable ) if $text;
+		return $result;
+	} elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+		my $result = hash_link($1);
+#$log->error("tranlsating  of $1: $result");
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
@@ -223,7 +240,8 @@ sub encode_html {
 
 sub make_drop_down {
 	require HTML::Entities;
-	my ( $search_data, $checkval, $length ) = @_;
+	my ( $search_data, $checkval, $options ) = @_;
+	$options = {} if ! $options;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
 		$check_array = $checkval;
@@ -232,11 +250,19 @@ sub make_drop_down {
 	} # end if
 
 	my $temp = '';
+	if ( $$options{prepend} ) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+			$temp .= sprintf('<option value="%s"%s>%s</option>',
+					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+		} # end for
+	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
 			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
+			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -445,8 +471,13 @@ sub get_start_end_dates {
 sub button {
 	my ( $name, $options ) = @_;
 
-	$$options{'href'} = '#' if ! $$options{'href'};
-	$$options{'text'} = $name if ! $$options{'text'};
+	if ( $$options{href} ) {
+		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		return if $PageSetting and ! $PageSetting->can_view();
+	} else {
+		$$options{href} = '#';
+	} # end if
+	$$options{'text'} = $name if ! exists $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
 	$html .= qq`title="$$options{title}" ` if $$options{'title'};
@@ -460,12 +491,19 @@ sub button {
 	} # end if
 	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
 	$html .= '>';
-	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $$options{'image'} ) {
-		$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
-		if ( $$options{'text'} ) {
-			$html .= "alt=\"$$options{text}\"";
+	if ( $$options{image} ) {
+		if ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) {
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
+		} else {
+			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
 		} # end if
-		$html .= "/>";
+		if ( $$options{'title'} ) {
+			$html .= " alt=\"$$options{title}\"";
+		} # end if
+		$html .= '/>';
+		if ( $$options{text} ) {
+			$html .= $$options{text};
+		} # end if
 	} elsif ( $openprint::config{'SimpleButtons'} ) {
 		$html .= $$options{'text'};
 	} else {
@@ -512,8 +550,15 @@ sub checked {
 
 sub writeTip {
 	my $word = shift;
-return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) {tipOn('%1$s',3,event);}" onmouseout="if ( typeof(tipOff) == 'function' ) {tipOff('%1$s');}">%1$s</span>`, $word );
-}
+	if ( ! %Glossary ) {
+		%Glossary = sql::execute( undef, undef, 'SELECT word, definition FROM Glossary' );
+	} # end if
+	if ( $Glossary{$word} ) {
+		return sprintf(q`<span class="TipLink" onmouseover="tipOn('%1$s',3,event);" onmouseout="tipOff('%1$s');">%1$s</span>`, $word );
+	} else {
+		return $word;
+	} # endif
+} # end  sub writeTip
 
 sub setup_date_select {
 	my ( $page, $prefix, $delta ) = @_;
@@ -758,14 +803,12 @@ sub date_filter {
 		#foreach my $k ( keys %$hash ) {
 			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
 		#} # end foreach
-	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+	if ( ! ( $$hash{$field.'_year'} and $$hash{$field.'_month'} and $$hash{$field.'_day'} ) ) {
 #$log->debug("ssi::date_filter: No date specified for $field");
 		return ();
 	} # end if
 	my ( $year, $month, $day, $hour, $minute, $second ) = @$hash{map { $field.$_ } ( '_year','_month','_day','_hour','_minute','_second' )};
 #$log->debug("ssi::date_filter: $year-$month-$day $hour:$minute:$second");
-	$month = 1 if ! $month;
-	$day = 1 if ! $day;
 	if ( $field =~ /end$/ ) {
 		$hour = 23 if ( ! defined $hour ) or $hour eq '';
 		$minute = 59 if ( ! defined $minute ) or $minute eq '';
@@ -821,19 +864,19 @@ sub input {
 	return $html;
 } # end sub input
 
-
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
 	$html .= ' name="'.$$options{name}.'"' if $$options{name};
 	$html .= ' id="'.$$options{id}.'"' if $$options{id};
 	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
+	$html .= ' size="'.$$options{size}.'"' if $$options{size};
+	$html .= ' multiple="multiple"' if $$options{multiple};
 	$html .= '>';
-	$html .= make_drop_down( $data, $selected );
+	$html .= make_drop_down( $data, $selected, $options );
 	$html .= '</select>';
 } # end sub select($$$)
 
-my %Lexicon;
 sub translate($) {
 	if ( ! %Lexicon ) {
 		%Lexicon = sql::execute( undef, undef, 'SELECT word, translation FROM Lexicon '  );
@@ -851,5 +894,90 @@ sub reset_session($) {
 	%param = ();
 	$variable{ExternalRedirect} = $_[0];
 } # end sub reset_session
+
+
+# If there is any problem, return the original path, so that the original file can be sent.
+sub hash_link {
+	my ( $path ) = @_;
+
+	my $src;
+	if ( -e $config{SkinPath}.$path ) {
+		$src = $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		$src = $ENV{DOCUMENT_ROOT}.$path;
+	} else {
+		return $path;
+	} # end if
+
+	require File::Slurp;
+	require JSON;
+	require Digest::MD5;
+
+	$config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
+
+	my $script;
+	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
+		$log->debug("reading config");
+		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
+		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+	} # end if
+
+	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
+			|| ! -f $script->{cache_file}
+			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+	   ) {
+
+		#my @stat = stat $src;
+		#my $ctime = $stat[10];
+		#my $mtime = $stat[9];
+		#my $atime = $stat[8];
+#$log->debug("HASH UNCACHED $path ($$script{cache_file}) ($timestamp) ($$script{timestamp}) @stat");
+
+		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
+		$ext =~ s/^\.//;
+		my $blob = File::Slurp::read_file($src);
+
+		if ( $ext eq 'js' ) {
+			require JavaScript::Minifier::XS;
+			$blob = &JavaScript::Minifier::XS::minify( $blob );
+		} elsif ( $ext eq 'css' ) {
+			require CSS::Minifier;
+			$blob = &CSS::Minifier::minify( input=>$blob );
+		} # end if
+
+		my $hash = Digest::MD5::md5_hex($blob);
+		$hash_cache{$config{SkinPath}}{$path} = $script = {
+			src	=>	$src,
+			name => "$base-$hash.$ext",
+			path	=> $path,
+			cache_file => "$config{cache_dir}/$base-$hash.$ext",
+			hash => $hash,
+			timestamp => $timestamp,
+		};
+		if (! -f $script->{cache_file}) {
+			mkdir $config{cache_dir};
+			if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+				$log->error( "couldn't cache $script->{cache_file}" );
+				return $path;
+			} # end if
+			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
+		}
+	#} else {
+		#my @stat = stat $script->{src};
+
+#$log->debug("HASH CACHED $path ($$script{cache_file} ($timestamp) ($$script{timestamp}) @stat");
+	} # end if
+
+	# cache_path is the url part
+	return ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+} # end sub hash_link
+
+sub format_date {
+	return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+sub format_datetime {
+	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+
 1;
 __END__

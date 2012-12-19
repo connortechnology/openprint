@@ -10,15 +10,17 @@
 		<ul>
 		<li>
 			<label>Name</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>"  />
+			<input type="text" name="name" value="<? hecho ( $$variable{'Category'}->name(); ) ?>" />
 		</li>
+<? if ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
 		<li>
 			<label>Project Type</label>
 			<select name="projecttype_id">
 				<option value=""> select </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find( 'order'=>'name' ) ], $$variable{Category}->projecttype_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{ProjectTypes}} ], $$variable{Category}->projecttype_id() ); ) ?>
 			</select>
 		</li>
+<? endif ( @{$$variable{ProjectTypes}} = openprint::ProjectType->find( 'order'=>'name' ); ) ?>
 		<li>
 			<label>Description</label>
 			<textarea name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description()); ) ?>"><? hecho ( $$variable{'Category'}->description(); ) ?></textarea>

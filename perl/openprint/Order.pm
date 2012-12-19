@@ -3,7 +3,7 @@ package openprint::Order;
 our @ISA=qw(openprint::Object);
 
 use openprint ();
-use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %find_fields %transforms %defaults );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -19,49 +19,60 @@ require openprint::Order_Status;
 require openprint::Payment;
 require openprint::Tax;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
 %fields = (
-	'id'						=> 'id',
-	'session_id'				=> 'strsessionid',
-	'company_id'				=> 'companyindex',
-	'user_id'					=> 'userindex',
-	'docket'					=> 'lngdocketnumber',
-	'status'					=> 'strstatus',
-	'total'						=> 'curtotalsale',
-	'downpayment'				=> 'curdownpayment',
-	'cod_percent'				=>	'cod_percent',
-	'downpayment_percent'		=>	'downpayment_percent',
-	'created_on'				=> 'dtmorderdate',
-	'company_name'				=> 'strcompanyname',
-	'salutation'				=> 'strsalutation',
-	'firstname'					=> 'strfirstname',
-	'lastname'					=> 'strlastname',
-	'address1'					=> 'straddress1',
-	'address2'					=> 'straddress2',
-	'city'						=> 'strcity',
-	'state'						=> 'strstate',
-	'country'					=> 'strcountry',
-	'postalcode'				=> 'strpostalcode',
-	'phone'						=> 'strphone',
-	'extension'					=> 'strext',
-	'fax'						=> 'strfax',
-	'email'						=> 'stremail',
-	'alsonotify'				=> 'stralsonotify',	
-	'paid'						=> 'paid',
-	'owing'						=>	'owing',
-	'currency_id'				=> 'currencyindex',
-	'po'						=> 'strponumber',
-	'administrator_name'		=> 'stradministratorname',
-	'administrator_comments'	=> 'stradministratorcomments',
-	'salesrep_id'				=>	'employeeindex',
-	'invoice_id'				=>	'invoice_id',
-	'invoiced_on'				=>	'invoiced_on',
-	'terms_accepted'			=>	'terms_accepted',
-	'supplier_id'				=>	'supplier_id',
+	id						=> 'id',
+	session_id				=> 'strsessionid',
+	company_id				=> 'company_id',
+	user_id					=> 'user_id',
+	docket					=> 'docket',
+	status					=> undef,
+	status_id				=>	'status_id',
+	total					=> 'total',
+	downpayment				=> 'downpayment',
+	cod_percent				=>	'cod_percent',
+	downpayment_percent		=>	'downpayment_percent',
+	created_on				=> 'created_on',
+	company_name			=> 'company_name',
+	salutation				=> 'salutation',
+	firstname				=> 'firstname',
+	lastname				=> 'lastname',
+	address1				=> 'address1',
+	address2				=> 'address2',
+	city					=> 'city',
+	state					=> 'state',
+	country					=> 'country',
+	postalcode				=> 'postalcode',
+	phone					=> 'phone',
+	extension				=> 'extension',
+	fax						=> 'fax',
+	email					=> 'email',
+	alsonotify				=> 'alsonotify',	
+	paid					=> 'paid',
+	owing					=>	'owing',
+	currency_id				=> 'currency_id',
+	po						=> 'po',
+	administrator_name		=> 'administrator_name',
+	administrator_comments	=> 'administrator_comments',
+	salesrep_id				=>	'salesrep_id',
+	invoice_id				=>	'invoice_id',
+	# deprecated, look up invioce and use it's created_on time instead
+	#'invoiced_on'				=>	'invoiced_on',
+	terms_accepted			=>	'terms_accepted',
+	supplier_id				=>	'supplier_id',
 	);
+
+%transforms = (
+	id		=>	[ 's/\D//g' ],
+	docket	=>	[ 's/\D//g' ],
+);
+
+%find_fields = (
+	project_id	=>	'(SELECT lngprojectindex FROM Order_Contents WHERE OrderIndex=Orders.id)',
+);
 
 sub save {
 	my ( $self, $params ) = @_;
@@ -73,6 +84,7 @@ sub save {
 	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
 	my %sql;
 	foreach my $key ( keys %fields ) {
+		next if ! $fields{$key};
 		$$self{$key} = undef if $$self{$key} eq '';
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
@@ -229,14 +241,27 @@ sub approve {
 
 } # end sub approve
 
+sub Status {
+	return new openprint::Order_Status( $_[0]{status_id} );
+} # end sub Status
 sub status {
-	my ( $self, $new_status ) = @_;
-	if ( ( defined $new_status ) and ( $$self{'status'} ne $new_status ) ) {
-		sql::update( $log, $dbh, 'Orders', ['id=?', $$self{'id'}], 'strStatus', $new_status );
-		$$self{'status'} = $new_status;
-		$self->add_log( "Changed Status to $new_status" );
+	if ( @_ > 1 ) {
+		my $Status = openprint::Order_Status->find_one(name => $_[1]);
+		if ( ! $Status ) {
+			$log->error("New Order Status! $_[1]");
+			$Status = new openprint::Order_Status();
+			$Status->save({name=>$_[1]});
+		} # end if
+		if ( $Status->id() != $_[0]{status_id} ) {
+			sql::update( $log, $dbh, 'Orders', ['id=?', $_[0]{id}], 'status_id', $Status->id() );
+			$_[0]{status} = $_[1];
+			$_[0]->add_log( "Changed Status to $_[1]" );
+		} # end if
 	} # end if
-	return $$self{'status'};
+	if ( ! $_[0]{status} ) {
+		$_[0]{status} = $_[0]->Status()->name();
+	} # end if
+	return $_[0]{status};
 } # end sub status
 
 # Adding Waiting For Pickup, Shipped, Picked Up
@@ -265,7 +290,7 @@ sub update_status {
 		} # end if
 		$self->status('Complete');
 	} # end if
-	if ( 'Complete' eq $$self{'status'} ) {
+	if ( 'Complete' eq $self->status() ) {
 		$self->send_completion_notice( );
 
 		if ( $config{'SendInvoiceOnProjectCompletion'} ne 'N' ) {
@@ -293,6 +318,16 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
+
+sub Contents {
+	if ( ! $_[0]{Contents} ) {
+		$_[0]{Contents} = [ 
+			openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'}), 
+			openprint::OrderedProduct->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProduct::fields{'project_id'}),
+			];
+	} # end if
+	return @{$_[0]{Contents}};
+} # end sub Contents
 
 sub Ordered_Projects {
 	return openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'});

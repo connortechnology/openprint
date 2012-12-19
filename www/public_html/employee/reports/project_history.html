@@ -13,7 +13,7 @@
 		<ul>
 		<li>
 			<label>Company</label>
-			<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" />
+			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter" />
 			<select name="company_id">
 				<option value="">All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/project_history.html?company_id'} ); ) ?>
@@ -31,7 +31,7 @@
 		</li>
 		<li>
 			<label>Current Status</label>
-			<select name="status" multiple="multiple" size="4" >
+			<select name="status" multiple="multiple" size="4">
 			<? echo (
 				@{$$variable{options}} = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
 				my @selected = split(',', $session{'/employee/reports/project_history.html?status'} );
@@ -49,6 +49,8 @@
 				return ssi::make_drop_down( $$variable{options}, \@selected );
 			) ?>
 			</select>
+		</li>
+		<li><label>Status Change On</label>
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span> to
 			<span class="DateSelectorCT"><? echo ( ssi::date_select_session('/employee/reports/project_history.html', 'status_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?></span>
 		</li>
@@ -59,8 +61,10 @@
 		</li>
 		<li>
 			<label>Value</label>
-			<input type="number" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" /> to
-			<input type="number" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" />
+			<? echo ( join(' to ', 
+				input( type=>'number', id=>'value_start', name=>'value_start', value=>$param{value_start} ),
+				input( type=>'number', id=>'value_end', name=>'value_end', value=>$param{value_end} ),
+			); ) ?>
 		</li>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<li>

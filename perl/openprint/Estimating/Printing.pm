@@ -392,12 +392,14 @@ sub setup_project {
 	if ( ( @$side_two_colours > 0 ) and ( @$side_one_colours > 0 ) ) {
 		$project{print_sides} = 2;
 	} # end if
+
     my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-    my @coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+    my %coatings = map { $_->name(), 1 } $CoatingsCategory->Services() if $CoatingsCategory;
+$log->debug("Coatings: " . join( ',', keys %coatings ) );
 
 	$project{'side_one_colours'} = [];
 	foreach my $c ( @$side_one_colours ) {
-		if ( sets::isin( $$c{'name'}, \@coatings ) ) {
+		if ( $coatings{$$c{'name'}} ) {
 			push @{$project{'side_one_coatings'}}, $c;
 		} else {
 			push @{$project{'side_one_colours'}}, $c;
@@ -406,7 +408,7 @@ sub setup_project {
 	$project{'side_two_colours'} = [];
 	$project{'side_two_coatings'} = [];
 	foreach my $c ( @$side_two_colours ) {
-		if ( sets::isin( $$c{'name'}, \@coatings ) ) {
+		if ( $coatings{$$c{'name'}} ) {
 			push @{$project{'side_two_coatings'}}, $c;
 		} else {
 			push @{$project{'side_two_colours'}}, $c;
@@ -427,7 +429,7 @@ sub setup_project {
 		next if $index >= $service_index;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 		next if $$sig_specs{'pages_supplied'} eq 'Y';
-		foreach my $Colour ( get_colours( $sig_specs, 'SideOne' ), get_colours( $sig_specs, 'SideTwo' ) ) {
+		foreach my $Colour ( @{$side_one_colours}, @{$side_two_colours} ) {
 			$mixed_colours{$$Colour{'name'}} = 1;
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				$washed_colours{$$Colour{'name'}.'-'.$$sig_specs{'ddmPress'.$qty_index}.'-'.$qty_index} += 1;
@@ -437,6 +439,7 @@ sub setup_project {
 	$project{'mixed_colours'} = \%mixed_colours;
 	$project{'washed_colours'} = \%washed_colours;
 	$project{'filtered_colours'} = \@filtered_colours;
+	$project{'filtered_coatings'} = [ filter_colours( @{$project{'side_one_coatings'}}, @{$project{'side_two_coatings'}} ) ];
 
 	foreach my $C ( openprint::Ink->find() ) {
 		push @{$special_colours{$$C{pmsid}}}, $C;
@@ -534,6 +537,7 @@ sub setup_project {
 # Now it will return an array of hash refs, which may someday become Objects
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
+$openprint::log->debug("Called get_colours");
 	my @colours;
 	if ( ( defined $$specs{'sides_the_same'} ) and ( $$specs{'sides_the_same'} eq 'Y' ) and ( $side eq 'SideTwo' ) ) {
 		$side = 'SideOne';
@@ -549,17 +553,16 @@ sub get_colours {
 	} # end foreach
 
 	if ( $$specs{'chkProcessColour'.$side.$signature} ) {
-		foreach my $c ( 'Cyan','Magenta','Yellow','Black' ) {
-			push @colours, { 'name' => $c };
-		} # end foreach c
+		push @colours, map { { name => $_ } } ( 'Cyan','Magenta','Yellow','Black' );
 	} # end if
 
 	foreach my $k ( keys %$specs ) {
 		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
 			next if ! $$specs{"chkColourCoating$index$side$signature"};
-			my $c = {};
-			$$c{'type'} = $$specs{"ColourCoatingType$index$side$signature"};
-			next if ! $$c{'type'};
+			my $c = {
+				type => $$specs{"ColourCoatingType$index$side$signature"},
+			};
+			next if ! $$c{type};
 			next if $$specs{'ColourCoatingColour'.$index.$side.$signature} eq 'None';
 			#$openprint::log->debug("Found Colour $index.$side $signature $type");
 			if ( $$c{'type'} =~ /^PMS/ ) {
@@ -1028,13 +1031,10 @@ $openprint::log->debug("No well cut Stock found");
 sub get_impositions {
 	my ( $Project, $specs, $project, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
-	my $services = $Project->services();
-	#my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-	#my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 
 	# Don't need to exclude coatings because they have already been cut out.
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour' ], [ map { $$_{'name'} } ( @{$$project{'side_one_colours'}}, @{$$project{'side_two_colours'}} ) ] );
-$openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
+	my @non_process_colours = sets::exclude( \@process_colours, [ map { $$_{'name'} } ( @{$$project{'side_one_colours'}}, @{$$project{'side_two_colours'}} ) ] );
+$openprint::log->debug("Non-process colours in get_impositions: @non_process_colours") if DEBUG;
 
 	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
@@ -1068,11 +1068,26 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 			$openprint::log->warn("Press Plate Type ");
 			next;
 		} # end if
-		if ( (! $$services{'Folding'} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
+		if ( (! $$project{'HasFolding'} ) and ($Press->specification('Sheeter') ne 'Y' ) ) {
 			$openprint::log->error("No Sheeter");
 			next;
 		} # end if
 
+		# If we need a varnish, varnish can be done inline if the press has enough units, or in a second pass.  
+		# The second pass requires washes for all other units as a second pass, so that tends to be not likely.
+		my $varnish_capable = $Press->specification('Varnish Capable');
+		my @side_one_colours = @{$$project{'side_one_colours'}};
+		foreach my $c ( @{$$project{'side_one_coatings'}} ) {
+			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
+				push @side_one_colours, $$c{name};
+			} # end if
+		} # end foreach c
+		my @side_two_colours = @{$$project{'side_two_colours'}};
+		foreach my $c ( @{$$project{'side_two_coatings'}} ) {
+			if ( ( $$c{name} =~ /Varnish/ ) and ( $varnish_capable eq 'Y' ) ) {
+				push @side_two_colours, $$c{name};
+			} # end if
+		} # end foreach c
 		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{'Runstyles'} = $Press->specification('Runstyles');
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
@@ -1083,8 +1098,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{'Runstyles'} ) ] ) ) {
 			$openprint::log->debug("** $$Press{strid} Can't Perfect - Perfecting not in runstyles ***") if DEBUG;
 			$do_perfecting = 0;
-		} elsif ( @{$$project{'side_one_colours'}} > int($number_of_colours/2) or @{$$project{'side_two_colours'}} > int($number_of_colours/2) ) {
-			$openprint::log->debug("** This to many colours to  Perfect  ***") if DEBUG;
+		} elsif ( @side_one_colours > int($number_of_colours/2) or @side_two_colours > int($number_of_colours/2) ) {
+			$openprint::log->debug("** Too many colours to  Perfect  ***") if DEBUG;
 			$do_perfecting = 0;
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
 			$do_perfecting = 0;
@@ -1119,14 +1134,14 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 
 # PMS
 			if ( ! $$specs{'rdbColourBar'} ) {
-				if ( @c ) {
+				if ( @non_process_colours ) {
 					$$project{'Add Colour Bar'} = $Press->specification('Colour Bar Default');
 				} else {
 					$$project{'Add Colour Bar'} = $Press->specification('Process Colour Bar Default');
 				} # end if
 			} # end if
 			if ( $$project{'Add Colour Bar'} eq 'Y' ) {
-				if ( @c ) {
+				if ( @non_process_colours ) {
 					$$project{'colour_bar_size'} = $Press->specification('Colour Bar Size');
 				} else {
 					$$project{'colour_bar_size'} = $Press->specification('Process Colour Bar Size');
@@ -1174,6 +1189,11 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 		my $maximum_roll_width = $Press->specification('Maximum Roll Width');
 		my $minimum_roll_width = $Press->specification('Minimum Roll Width');
 		my $roll2sheet_minimum_weight = $Press->Specification('Roll2Sheet Minimum Weight');
+		my $runstyles = $Press->specification('Runstyles');
+		my $runstyles_roll = $Press->specification('RunstylesRoll');
+		$runstyles_roll = $runstyles if ! $runstyles_roll;
+		my $runstyles_sheet = $Press->specification('RunstylesSheet');
+		$runstyles_sheet = $runstyles if ! $runstyles_sheet;
 
 		foreach my $Paper ( @$Papers ) {
 #Paper might have different calliperso# Is this needed anymore
@@ -1188,9 +1208,8 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 			my @imps;
 			if ( $$Paper{'type'} eq 'Roll' ) {
 				next if ! sets::isin( 'Roll', \@feeds );
-				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
-					$$project{'Runstyles'} = $Press->specification('Runstyles');
-				} # end if
+				
+				$$project{'Runstyles'} = $runstyles_roll;
 				next if $$Paper{'width'} > $maximum_sheet_width;
 				next if $maximum_roll_width and ( $$Paper{'width'} > $maximum_roll_width );
 #$openprint::log->debug('blah'.$Paper->to_string());
@@ -1264,9 +1283,7 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 				next if ! sets::isin( 'Sheet', \@feeds );
 				next if ! ( $$Paper{'width'} and $$Paper{'height'} );
 				next if $printing_type eq 'Digital' and ! $Paper->digital();
-				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesSheet') ) ) {
-					$$project{'Runstyles'} = $Press->specification('Runstyles');
-				} # end if
+				$$project{'Runstyles'} = $runstyles_sheet;
 
 				my $P = $Paper->clone();
 
@@ -1288,9 +1305,9 @@ $openprint::log->debug("Non-process colours in get_impositions: @c") if DEBUG;
 
 # Keep cutting while the sheet still fits on the press.  I originally thought that we shouldn't do this, because why would you want to run a half sheet if a full sheet fits?  The answer: small jobs, that due to overs requires the same sheets whether you run full or half.  So by running half, you need half the # of real sheets.
 				while (
-						( $P->width() >= $Press->specification('Minimum Sheet Width') and $P->height() >= $Press->specification('Minimum Sheet Length') )
+						( $P->width() >= $minimum_sheet_width and $P->height() >= $minimum_sheet_length )
 						or
-						( $P->width() >= $Press->specification('Minimum Sheet Length') and $P->height() >= $Press->specification('Minimum Sheet Width') )
+						( $P->width() >= $minimum_sheet_length and $P->height() >= $minimum_sheet_width )
 					  ) {
 
 					if ( ! ( 
@@ -1854,6 +1871,7 @@ $PaperServiceType = openprint::ServiceType->find_one(name=>'Paper');
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+$openprint::log->debug("Side one @side_one_colours twp: @side_two_colours");
 	my %inkCoverage = get_inkcoverage( $Project, $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
@@ -1903,8 +1921,6 @@ $openprint::log->debug("after sorting presses: " . ( sprintf('%.4f', tv_interval
 		push @available_printingtypes, $Press->specification('Printing Type');
 	} # end foreach
 	@available_printingtypes = sets::union( @available_printingtypes );
-
-
 
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
@@ -3414,24 +3430,24 @@ sub calc_price {
 	if ( sets::isin( $$Imposition{'runstyle'}, ['Sheet Work','Web'] ) ) {
 		$is_sheetwork = 1;
 		$is_perfecting = 0;
-		@colours = @{$$project{'side_one_colours'}};
+		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( ( $$specs{'sides_the_same'} eq 'Y' ) and ( $$Imposition{'runstyle'} eq 'Sheet Work' ) ) {
 		} else {
-			push @colours, @{$$project{'side_two_colours'}};
+			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
 		} # end if
 
 	} elsif ( sets::isin( $$Imposition{'runstyle'}, ['Work & Turn','Work & Tumble'] ) ) {
 		$is_sheetwork = 0;
 		$is_perfecting = 0;
 		$price{'WorkTurn Dry Charge'} = openprint::service::get_price( 'WTDrying', $$Paper{'grade'}, $Press );
-		@colours = @{$$project{'filtered_colours'}};
+		@colours = ( @{$$project{'filtered_colours'}},@{$$project{filtered_coatings}} );
 	} elsif ( $$Imposition{runstyle} eq 'Perfecting' ) {
 #$log->debug("************ WE HAVE PERFECTING ****************");
 		$is_sheetwork = 1;
 		$is_perfecting = 1;
-		@colours = @{$$project{'side_one_colours'}};
+		@colours = ( @{$$project{'side_one_colours'}}, @{$$project{'side_one_coatings'}} );
 		if ( $$specs{'sides_the_same'} ne 'Y' ) {
-			push @colours, @{$$project{'side_two_colours'}};
+			push @colours, @{$$project{'side_two_colours'}},@{$$project{'side_two_coatings'}};
 		} # end if
 	} else {
 		$openprint::log->error("\n\n\n********* UNKNOWN RUNSTYLE: in function 'get_project_price' ****************\n\n\n");
@@ -3904,7 +3920,7 @@ if ( 0 ) {
 		   ) {
 			$price{'Press Washes'} += $$Ink{washups};
 			$$washed_colours{$key} += $$Ink{washups};
-$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
+#$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$Ink{washups} );
 		} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
@@ -4303,7 +4319,7 @@ sub select_presses {
 #$log->debug(" ** HAVE VARNISH **" );
 			$varnish = 1;
 		} elsif ( $$colour{'name'} =~ /Aqueous/ ) {
-#$log->debug(" ** HAVE VARNISH **" );
+#$log->debug(" ** HAVE Aqueous **" );
 			$aqueous = 1;
 		} # end if
 	} # end if

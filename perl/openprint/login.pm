@@ -62,19 +62,15 @@ sub verify_login {
 
 	my $password = $openprint::param{'password'};
 
+
 	# doing it this way allows for multiple accounts with the same email address, identified by their password.
 	# however, on user registration, we enforce the uniqueness of email addresses.	Also, the db should have a UNIQUE
 	# attribute on the strEmail field.
-	my @Users = openprint::User->find('email'=>$email, 'password'=>$password);
+	my @Users = openprint::User->find('email'=>$email);
 
 	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		if ( @Users = openprint::User->find('email'=>$email) ) {
-			$$variable{'information'} = "The password you entered was not correct.	Please try again.";
-			foreach my $U ( @Users ) {
-				(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Invalid Password', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
-			} # end foreach U
-		} elsif ( @Users = openprint::User->find('email'=>$email,'deleted'=>1) ) {
+		if ( @Users = openprint::User->find(email=>$email,deleted=>1) ) {
 			foreach my $U ( @Users ) {
 				$$variable{'information'} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
 				(new openprint::Log())->save({'action'=>'Login Failed', 'note'=>'Account Deleted', 'user_id'=>$U->id(), 'company_id'=>$U->company_id() } );
@@ -86,7 +82,31 @@ sub verify_login {
 		$$variable{'error'} = 'Authentication Failed.';
 		return;
 	} # end if
-	my $User = @Users[0];
+	my $User;
+	foreach my $U ( @Users ) {
+		if ( $config{encrypt_passwords} ) {
+			eval {
+				require Authen::Passphrase::BlowfishCrypt;
+				my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($U->password());
+				if ( $ppr->match($password) ) {
+					$User = $U;
+					last;
+				} # end if
+			}
+		} else {
+			if ( $password eq $U->password() ) {
+				$User = $U;
+				last;
+			} # end if
+		} # end if
+	} # end foreach
+	if ( ! $User ) {
+		$$variable{'information'} = 'The password you entered was not correct.	Please try again.';
+		foreach my $U ( @Users ) {
+			(new openprint::Log())->save({action=>'Login Failed', note=>'Invalid Password', user_id=>$U->id(), company_id=>$U->company_id() } );
+		} # end foreach U
+		return;
+	} # end if
 
 	# Have a valid user now.
 	if ( $User->Company()->activation() eq 'N' ) {
@@ -136,7 +156,7 @@ sub verify_login {
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%info ) ) );
 			(new openprint::Email())->send(
 					FROM	=> $config{'LoginEmail'},
 					TO		=> $config{'LoginEmail'},
@@ -206,6 +226,11 @@ sub logout {
 sub email_password {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+	if ( $config{encrypt_passwords} ) {
+		return misc::error( $log, $dbh, $variable, 'System Error.', 'We are unable to email your password to you.	Please contact support.' );
+	} # end if
+		
+
 	my @Users = openprint::User->find('email'=> lc $param{'txtEmail2'} );
 
 	if ( ! @Users ) {
@@ -244,7 +269,7 @@ sub login_password {
 
 sub change_password {
 
-	if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
+	if ( $param{txtNewPassword} ne $param{'txtConfirmPassword'} ) {
 		$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
 		$variable{'Redirect'} = '/account/change_password.html';
 		return;
@@ -259,23 +284,36 @@ sub change_password {
 
 	my $User = new openprint::User( $session{'user_id'} );
 
+	if ( my $reason = check_password( $openprint::param{'txtNewPassword'} ) ) {
+		$variable{'error'} = "The new password you entered was not good enough: $reason.<br/>";
+		$variable{'Redirect'} = '/account/change_password.html';
+		return;
+	} # end if
+
+	if ( $config{encrypt_passwords} ) {
+require Authen::Passphrase::BlowfishCrypt;
+		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+                cost => 8, salt_random => 1,
+                passphrase => $param{txtOldPassword} );
+		$param{txtOldPassword} = $ppr->as_rfc2307();
+		my $ppr = Authen::Passphrase::BlowfishCrypt->new(
+				cost => 8, salt_random => 1,
+				passphrase => $param{txtNewPassword} );
+		$param{txtNewPassword} = $ppr->as_rfc2307();
+	} # end if
+	
 	if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
 		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
 		$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 
-	if ( my $reason = check_password( $openprint::param{'txtNewPassword'} ) ) {
-		$variable{'error'} = "The new password you entered was not good enough: $reason.<br/>";
-		$variable{'Redirect'} = '/account/change_password.html';
-		return;
-	} # end if
-	
 	if ( $User->password() eq $openprint::param{'txtOldPassword'} ) {
-		$User->password( $openprint::param{'txtNewPassword'} );
-		$User->change_password( 'N' );
-		$User->password_changed_on('NOW()');
-		$User->save();
+		$variable{error} .= $User->save({
+				password => $param{txtNewPassword},
+				change_password => 'N',
+				password_changed_on => 'NOW()',
+				});
 		if ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
 			$variable{'ExternalRedirect'} = $1.'.html?'.$2;
 			delete $session{'Destination'};
@@ -366,12 +404,16 @@ sub password_strength {
 } # end sub password_strength
 
 sub forgotten_password {
-	if ( ! $param{'email'} ) {
-		$variable{'error'} = 'Please enter the email address of the account to retrieve.';
+	if ( $config{encrypt_passwords} ) {
+		$variable{error} = 'We cannot retrieve passwords.';
+		return;
+	} # end if
+	if ( ! $param{email} ) {
+		$variable{error} = 'Please enter the email address of the account to retrieve.';
 		return;
 	} # end if
 
-	my $User = openprint::User->find_one('email lc'=>openprint::User->transform('email', $param{'email'} ) );
+	my $User = openprint::User->find_one('email lc'=>openprint::User->transform('email', $param{email} ) );
 	if ( ! $User ) {
 		$variable{'error'} = 'The account you entered does not exist.';
 		return;

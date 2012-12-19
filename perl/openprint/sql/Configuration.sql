@@ -74,3 +74,4 @@ INSERT INTO configuration VALUES ('bitcoin_port', '8332', 'text', 'Bitcoin Serve
 INSERT INTO configuration VALUES ('bitcoin_user', '', 'text', 'Bitcoin Server Username', 'Bitcoin Settings');
 INSERT INTO configuration VALUES ('bitcoin_password', '', 'text', 'Bitcoin Server Password', 'Bitcoin Settings');
 INSERT INTO configuration VALUES ('bitcoin_account', '', 'text', 'Bitcoin Account', 'Bitcoin Settings');
+insert into Configuration values ('encrypt_passwords', '', 'text', 'Whether to use encrypted passwords.', 'System Settings');

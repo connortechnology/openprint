@@ -188,18 +188,14 @@ sub choose_service {
 		" AND strName='ServiceType' AND strValue != 'Signature' AND lngServiceIndex IN (".join(',',@incomplete_services).")";
 	my @project_services = sql::execute( $log, $dbh, $_, $project_index );
 
-	$_ = "SELECT name, strDetailedUrl FROM Service_Types WHERE strDetailedUrl != '' ORDER BY sorting";
-	my @service_info = sql::execute( $log, $dbh, $_ );
-
-	while ( @service_info ) {
-		my $index = shift @service_info;
-		my $url = shift @service_info;
-		for (my $x = 0; $x < @project_services; $x += 2 ) {
-			if ( $project_services[$x] eq $index ) {
-				return ( $project_services[$x+1], '/main/project/'.$url );
+	foreach my $ServiceType ( openprint::ServiceType->find('url is null'=>0, 'url !='=>'', order=>'sorting') ) {
+		if ( $$services{$ServiceType->name()} ) {
+			my @incomplete = sets::intersection( @incomplete_services, @{$$services{$ServiceType->name()}} );
+			if ( @incomplete ) {
+				return ( $incomplete[0], '/main/project/'.$ServiceType->url() );
 			} # end if	
-		} # end for
-	} # end while
+		} # end if
+	} # end foreach ServiceType
 
 	return ( '', '' );
 } # end sub choose_service

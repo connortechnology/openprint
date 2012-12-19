@@ -29,8 +29,9 @@ require openprint::Tax;
 sub information {
 
 	my $error;
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{'order_id'};
 	# Order creation can happen here as well, because we are doing away with quantity_select
+	# order_id may also be the word New
 
 	if ( $order_id and $param{'action'} eq 'remove' ) {
 		if ( $param{'project_id'} ) {
@@ -63,7 +64,7 @@ sub information {
 		return if ! $order_id;
 	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
 		openprint::order::delete_unfinished_orders();
-		if ( $order_id = $param{'OrderID'} ) {
+		if ( $order_id = $param{'order_id'} ) {
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
 			foreach my $OP ( $Order->Ordered_Projects() ) {
@@ -71,21 +72,19 @@ sub information {
 			} # end foreach
 			$Order->add_to_log( 'Re-Opened' );
 		} else {
-			$error = 'No OrderID given to Re-Open.';
-		} # end if OrderID
+			$error = 'No order_id given to Re-Open.';
+		} # end if order_id
 	} elsif ( $param{'btnFunction'} eq 'Process Order' ) {
 		if ( $param{'quote_id'} ) {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
-			my $project_index = $param{'ProjectIndex'};
-			$_ = q{SELECT strStatus FROM Orders WHERE id IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
-				q{AND strStatus IN ( 'Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up' )};
-			if ( sql::execute( $log, $dbh, $_, $project_index ) ) {
-				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $project_index has already been ordered." );
+			if ( openprint::Order->find('project_id any'=>$param{ProjectIndex},status=>['Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up']) ) {
+				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $param{ProjectIndex} has already been ordered." );
 			} # end if
 
 			# Normal Order Creation
-			( $order_id, $error ) = openprint::order::add_project_to_order( $param{'ProjectIndex'} );
+			my $Project = new openprint::Project( $param{ProjectIndex} );
+			( $order_id, $error ) = openprint::order::add_project_to_order( $Project, $order_id );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Continue') { # saving projcet information
 		$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
@@ -97,11 +96,12 @@ sub information {
 	} # end if
 
 	if ( $error ) {
-		return misc::error( $log, $dbh, \%variable, 'Error', $error );
+		$variable{error} = $error;
+		return;
 	} # end if
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
-	$session{'OrderID'} = $order_id;
+	$session{'order_id'} = $order_id;
 
 	if ( ! $variable{'error'} ) {
 		# Only check for errors if we don't have any yet
@@ -112,7 +112,7 @@ sub information {
 				push @errors, "Please select the quantity to order for project $$Project{project_id}<br/>";
 			} # end if
 			if ( ! $Project->description() ) {
-				push @errors, "Please give project $$Project{projcet_id} a reference<br/>";
+				push @errors, "Please give project $$Project{project_id} a reference<br/>";
 			} # end if
 			if ( ! $Project->shippingtype() ) {
 				push @errors, "Please select a shipping type for project $$Project{project_id}<br/>";
@@ -138,7 +138,7 @@ $openprint::log->debug("Got product.");
 	} # end if
 
 # First thing to do is to try to load info directly from the order.
-	 @variable{'companyname',
+	 @variable{'company_name',
 	 'salutation',
 	 'firstname',
 	 'lastname',
@@ -192,18 +192,18 @@ $openprint::log->debug("Got product.");
 
 	} # end if
 
-	$variable{'OrderID'} = $order_id;
+	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = new openprint::Order( $order_id );
 
 } # end sub information
 
 sub submit {
 		
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{'order_id'};
 	$order_id =~ s/\D//g;
 	$order_id = openprint::order::get_unfinished_order(  ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
-	$session{'OrderID'} = $order_id;
+	$session{'order_id'} = $order_id;
 
 	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
 		
@@ -291,7 +291,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	} # end foreach  Project
 	if ( @errors ) {
 		%param = ();
-		$param{'OrderID'} = $order_id;
+		$param{'order_id'} = $order_id;
 		$variable{'error'} .= join('<br/>', @errors );
 		$variable{'Redirect'} = '/main/order/information.html';
 		return;
@@ -306,7 +306,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 		$Tax->amount(undef);
 	} # end foreach Tax
 
-	$variable{'OrderID'} = $order_id;
+	$variable{'order_id'} = $order_id;
 
 	@{$variable{'Projects'}} = $Order->Projects();
 	$variable{'Order'} = $Order;
@@ -318,7 +318,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 } # end sub submit
 
 sub confirmation {
-	my $order_id = $param{'OrderID'};
+	my $order_id = $param{'order_id'};
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	if ( $order_id eq '' ) {
 		$log->error( "Still no Order ID" );
@@ -419,9 +419,9 @@ sub confirmation {
 		} # end if
 	} # end if
 
-	$variable{'OrderID'} = $order_id;
+	$variable{'order_id'} = $order_id;
 	$variable{'Order'} = $Order;
-	delete $session{'OrderID'}
+	delete $session{'order_id'}
 } # end sub confirmation
 
 sub history {
@@ -444,8 +444,7 @@ sub _history {
 } # end sub _history
 
 sub history_details {
-	my $order_id = $param{'OrderID'};
-	$order_id = $param{'order_id'} if $param{'order_id'} and ! $order_id;
+	my $order_id = $param{'order_id'};
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $param{'btnFunction'} eq 'AcceptTerms' ) {
