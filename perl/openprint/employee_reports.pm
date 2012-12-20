@@ -128,7 +128,7 @@ sub _project_performance {
 		'company_id', 'estimator', 'estimator_exclude', 'CSR',
 	) );
 	my %parameters; 
-	if ( $session{user_type} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{user_id} ) ) {
+	if ( $session{user_type} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{user_id} ) ) {
 		$parameters{salesrep_id} = $session{user_id};
 		$parameters{or} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
 	} elsif ( $session{$page.'?CSR'} ) {
