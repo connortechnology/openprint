@@ -22,7 +22,8 @@ sub project_history {
 	_project_history_results();
 }
 sub _project_history_results {
-	ssi::save_params('/employee/reports/project_history.html',
+	my $page = '/employee/reports/project_history.html';
+	ssi::save_params($page,
 		( map { 'created_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'created_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
@@ -30,43 +31,37 @@ sub _project_history_results {
 		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
 	);
 	my %parameters; 
-	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
-	} elsif ( $param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $param{'CSR'};
+	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{user_id} ) ) {
+		$parameters{salesrep_id} = $session{'user_id'};
+		$parameters{or} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{user_id})";
+	} elsif ( $session{$page.'?CSR'} ) {
+		$parameters{salesrep_id} = $session{$page.'?CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company::find( %parameters );
 	my %companies = map { $_->id(), $_->name() } @Companies;
 	my %filters = (
-			ssi::date_filter( '/employee/reports/project_history.html?created_on_start', 'created_on_start' ),
-			ssi::date_filter( '/employee/reports/project_history.html?created_on_end', 'created_on_end' ),
+			ssi::date_filter( $page.'?created_on_start', 'created_on_start' ),
+			ssi::date_filter( $page.'?created_on_end', 'created_on_end' ),
 			( 
-			 ( $session{'/employee/reports/project_history.html?created_on_start_hour'} or $session{'/employee/reports/project_history.html?created_on_start_minute'} ) ? (			
+			 ( $session{$page.'?created_on_start_hour'} or $session{$page.'?created_on_start_minute'} ) ? (			
 				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{
-					 '/employee/reports/project_history.html?created_on_start_hour',
-					 '/employee/reports/project_history.html?created_on_start_minute',
+					 $page.'?created_on_start_hour',
+					 $page.'?created_on_start_minute',
 					 } ) ) : ()
 			),
 			( 
-			 ( $session{'/employee/reports/project_history.html?created_on_end_hour'} or $session{'/employee/reports/project_history.html?created_on_end_minute'} ) ? (			
-				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{
-					 '/employee/reports/project_history.html?created_on_end_hour',
-					 '/employee/reports/project_history.html?created_on_end_minute',
-					 } ) ) : ()
-			),
-			( $param{'status'} ? (
-				'status' =>
-				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
-				) : () ),
+			 ( $session{$page.'?created_on_end_hour'} or $session{$page.'?created_on_end_minute'} ) ? (			
+				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_end_hour',$page.'?created_on_end_minute'} ) ) : () ),
+			( $session{$page.'?status'} ?  ( status => [ split(',', $session{$page.'?status'} ) ] ) : () ),
 			'value_start' => $param{'value_start'},
 			'value_end' => $param{'value_end'},
 			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
+			company_id => ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : [ map { $_->id() } @Companies ] ),
 			'order' => 'index',
-);
-	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
-		$filters{'company_id'} = $param{'company_id'};
+			);
+	if ( $session{$page.'?company_id'} and ! exists $companies{$session{$page.'?company_id'}} ) {
+		$variable{error} .= 'Specified company is not allowed.<br/>';
 	} # end if
 	$filters{'reprint'} = $param{'reprint'} if $param{'reprint'};
 

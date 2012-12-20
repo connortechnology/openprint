@@ -614,34 +614,34 @@ sub find {
 	} # end if
 
 	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) BETWEEN ? AND ?)};
 		push @values, @params{'ordered_on_start','ordered_on_end'};
 	} elsif ( $params{'ordered_on_start'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) >= ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) >= ?)};
 		push @values, $params{'ordered_on_start'};
 	} elsif ( $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) <= ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) <= ?)};
 		push @values, $params{'ordered_on_end'};
 	} # end if
 
 	if ( $params{'salesrep_id <@'} ) {
-		$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) <@ ? )};
+		$sql .= q{ AND ( (SELECT lngsaleserson FROM company WHERE company.Index=companyindex) <@ ? )};
 		push @values, $params{'salesrep_id <@'};
 	} # end if
 	if ( $params{'salesrep_id in'} ) {
 		if ( @{$params{'salesrep_id in'}} ) {
-			$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) IN (} . join(',', map {'?'} @{$params{'salesrep_id in'}}). ') )';
+			$sql .= q{ AND ( (SELECT lngsalespreson FROM company WHERE company.Index=companyindex) IN (} . join(',', map {'?'} @{$params{'salesrep_id in'}}). ') )';
 			push @values, @{$params{'salesrep_id in'}};
 		} # end if
 	} # end if
 	if ( $params{'salesrep_id'} ) {
 		if ( ref $params{salesrep_id} eq 'ARRAY' ) {
 			if ( @{$params{salesrep_id}} ) {
-				$sql .= q{ AND ( (SELECT employeeindex FROM Orders WHERE Index=order_id) IN (} . join(',', map {'?'} @{$params{'salesrep_id'}}). ') )';
+				$sql .= q{ AND ( (SELECT lngsalesperson FROM company WHERE company.index=companyindex) IN (} . join(',', map {'?'} @{$params{'salesrep_id'}}). ') )';
 				push @values, @{$params{'salesrep_id'}};
 			} # end if
 		} else {
-			$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
+			$sql .= ' AND (SELECT lngsalesperson FROM company WHERE company.Index=companyindex)=?';
 			push @values, $params{'salesrep_id'};
 		} # end if
 	} # end if
@@ -741,6 +741,14 @@ $openprint::log->debug("No presses in used_press_name");
 	if ( $params{'docket'} ) {
 		$sql .= ' AND lngdocketnumber=?';
 		push @values, $params{'docket'};
+	} # end if
+	if ( $params{'docket >'} ) {
+		$sql .= ' AND lngdocketnumber > ?';
+		push @values, $params{'docket >'};
+	} # end if
+	if ( $params{'docket <'} ) {
+		$sql .= ' AND lngdocketnumber < ?';
+		push @values, $params{'docket <'};
 	} # end if
 	$sql .= $params{'misc'} if $params{'misc'};
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};

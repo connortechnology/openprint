@@ -91,7 +91,7 @@ sub _jobs_by_csr_ul {
 		} # end if
 		@{$variable{Projects}} = openprint::Project->find(
 				status      =>  $Project->status(),
-				salesrep_id =>  $Project->Company()->salesrep_id(),
+				salesrep_id =>  [ $Project->Company()->salesrep_id() ],
 				order       =>  'priority',
 				);
 	} elsif ( $param{action} eq 'complete' ) {
@@ -105,7 +105,7 @@ sub _jobs_by_csr_ul {
 			my $csr_id = $Project->Company()->salesrep_id();
 			@{$variable{Projects}} = openprint::Project->find(
 					status      =>  $old_status,
-					salesrep_id =>  $csr_id,
+					salesrep_id =>  [ $csr_id ],
 					order       =>  'priority',
 					);
 			$old_status =~ s/\s/_/g;

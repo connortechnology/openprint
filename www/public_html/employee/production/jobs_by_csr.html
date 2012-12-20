@@ -115,9 +115,14 @@
 			</li>
 			<li><label>Customer</label>
 			<? echo ( ssi::select( openprint::Company->dropdown(), [ $session{'/employee/production/jobs_by_csr.html?company_id'} ], { 
+						id			=>	'company_id',
 						name		=>	'company_id',
 						onchange	=>	'calc();',
+						prepend		=>	[ '', 'select' ],
 						} ); ) ?>
+			</li>
+			<li><label>Docket</label>
+				<? echo ( input( type=>'cardinal', name=>'docket', value=>$session{'/employee/production/jobs_by_csr.html?docket'}, pattern=>'[<0-9>]*', filter=>'input_filter(this,/[^\d<>]/g);' ); ) ?>
 			</li>
 	</ul>
 </div>
@@ -166,7 +171,8 @@
 	return ssi::select( 
 		[ map {$_->id(),$_->name()} @Users ], 
 		[ split(',', $session{'/employee/production/jobs_by_csr.html?salesrep_id'} ) ], {
-		multiple=>1, name=>'salesrep_id', size=>scalar @Users, onchange=>'calc();',
+		multiple	=>1, name=>'salesrep_id', size=>scalar @Users,
+		onchange	=>	q`new Ajax.Updater('company_id', '/includes/_company_ddm.html', { parameters: { salesrep_id: get_value( this ), selected_id: get_ddm_value($('company_id')) } } );calc();`,
 		} );
 ) ?>
 				</li>
