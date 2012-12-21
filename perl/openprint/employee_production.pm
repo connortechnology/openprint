@@ -48,7 +48,7 @@ sub jobs_by_csr {
 } # end sub jobs_by_csr
 
 sub _jobs_by_csr {
-	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback',
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback', 'company_id', 'docket',
 			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
 		);
@@ -90,7 +90,7 @@ sub _jobs_by_csr_ul {
 		} # end if
 		@{$variable{Projects}} = openprint::Project->find(
 				status      =>  $Project->status(),
-				salesrep_id =>  $Project->Company()->salesrep_id(),
+				salesrep_id =>  [ $Project->Company()->salesrep_id() ],
 				order       =>  'priority',
 				);
 	} elsif ( $param{action} eq 'complete' ) {
@@ -104,7 +104,7 @@ sub _jobs_by_csr_ul {
 			my $csr_id = $Project->Company()->salesrep_id();
 			@{$variable{Projects}} = openprint::Project->find(
 					status      =>  $old_status,
-					salesrep_id =>  $csr_id,
+					salesrep_id =>  [ $csr_id ],
 					order       =>  'priority',
 					);
 			$old_status =~ s/\s/_/g;

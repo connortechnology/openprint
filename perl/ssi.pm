@@ -831,11 +831,12 @@ sub input {
 	if ( $options{type} eq 'cardinal' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9]*' if ! $options{pattern};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+		$options{filter} = 'cardinalize(this);' if ! $options{filter};
+		$options{onkeyup} = $options{filter}.$options{onkeyup};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
