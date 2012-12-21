@@ -437,47 +437,53 @@ my @sql_functions = (
 sub find_operators {
 	my ( $field, $type, $operator, $value ) = @_;
 
-	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>', 'in', 'not in' ] ) ) {
-		return $field.$type.' ' . $operator . '?';
+	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>' ] ) ) {
+		return ( $field.$type.' ' . $operator . ' ?', $value );
+	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
+		if ( ref $value eq 'ARRAY' ) {
+			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
+		} else {
+			return ( $field.$type.' ' . $operator . ' (?)', $value );
+		} # end if
 	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
-		return $field.'::text ' . $operator . '?';
+		return $field.'::text ' . $operator . '?', $value;
 	} elsif ( $operator eq 'start' ) {
-		return $field.$type.' >= ?';
+		return $field.$type.' >= ?', $value;
 	} elsif ( $operator eq 'end' ) {
-		return $field.$type.' <= ?';
+		return $field.$type.' <= ?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?';
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?';
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?', $value;
 	} elsif ( $operator eq 'null_or_>' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?';
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?', $value;
 	} elsif ( $operator eq 'null_or_<' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?';
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?', $value;
 	} elsif ( $operator eq 'null_or_=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?';
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?', $value;
 	} elsif ( $operator eq 'exists' ) {
-		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
+		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field, $value;
 	} elsif ( $operator eq 'lc' ) {
-		return 'lower('.$field.$type.') = ?';
+		return 'lower('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'uc' ) {
-		return 'upper('.$field.$type.') = ?';
+		return 'upper('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'any' ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)"; 
+			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)", @{$value}; 
 		} else {
-			return "? = ANY($field)", 
+			return "? = ANY($field)", $value;
 		} # end if
 	} elsif ( $operator eq 'not any' ) {
 		if ( ref $value eq 'ARRAY' ) {
-			return '(' . join(',', map { '?' } @{$value} ).") != ANY($field)"; 
+			return '(' . join(',', map { '?' } @{$value} ).") != ANY($field)", @{$value}; 
 		} else {
-			return "? != ANY($field)", 
+			return "? != ANY($field)", $value;
 		} # end if
 	} elsif ( $operator eq 'is null' ) {
 		if ( $value ) {
-		return $field.$type. ' is null';
+			return $field.$type. ' is null';
 		} else {
-		return $field.$type. ' is not null';
+			return $field.$type. ' is not null';
 		} # end if
 	} # end if
 	return;
@@ -564,7 +570,7 @@ sub find {
 	
 	foreach my $k ( @param_keys ) {
 		my ( $field, $type, $function ) = $k =~ /^(\w+)(::\w+)?[\s_]*(.*)?$/;
-$log->debug("param $field($type) $function");
+$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
 			my $fields = \%{$object_type.'::'.$_};
@@ -579,37 +585,39 @@ $log->debug("param $field($type) $function");
 
 					if ( ref $search{$k} eq 'ARRAY' ) {
 						if ( @{$search{$k}} ) {
-							push @where, $field . $type .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
+							push @where, $db_field . $type .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
 							push @values, @{$search{$k}};
 						} # end if
 					} elsif ( ref $search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$search{$k}} ) {
 							my $v = $search{$k}{$p_k};
 							if ( ref $v eq 'ARRAY' ) {
-								push @where, $field.$type.' IN ('.join(',', map {'?'} @{$v} ) . ')';
+								push @where, $db_field.$type.' IN ('.join(',', map {'?'} @{$v} ) . ')';
 								push @values, $p_k, @{$v};
 							} else {
-								push @where, $field.$type.'=?';
+								push @where, $db_field.$type.'=?';
 								push @values, $p_k, $v;
 							} # end if
 						} # end foreach p_k
 					} elsif ( ! defined $search{$k} ) {
-						push @where, $field.$type.' IS NULL';
+						push @where, $db_field.$type.' IS NULL';
 					} else {
-						push @where, $field.$type .'=?';
+						push @where, $db_field.$type .'=?';
 						push @values, $search{$k};
 					} # end if
 					delete $search{$k};
 				} else {
-					my @w = ref $search{$k} eq 'ARRAY' ? 
-						map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
-						( find_operators( $field, $type, $function, $search{$k} ) );
-					if ( @w ) {
-						push @where, '(' . join(' OR ', @w ) . ')';
-						push @values, @{$search{$k}};
+					#my @w = 
+#ref $search{$k} eq 'ARRAY' ? 
+						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
+					my ( $w, @v ) = find_operators( $db_field, $type, $function, $search{$k} );
+					if ( $w ) {
+						#push @where, '(' . join(' OR ', @w ) . ')';
+						push @where, $w;
+						push @values, @v if @v;
+						delete $search{$k};
+						push @used_fields, $k;
 					} # end if @w
-					delete $search{$k};
-					push @used_fields, $k;
 				} # end if has function or not
 			} # end foreach db_field
 		} # end foreach find_field
@@ -661,8 +669,8 @@ $log->debug("param $field($type) $function");
 		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
 	} # end if
 	foreach my $k ( keys %search ) {
-		$log->error("Extra parameters in $type ::find $k => $search{$k}");
-		Carp::cluck("Extra parameters in $type ::find $k => $search{$k}");
+		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
+		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
