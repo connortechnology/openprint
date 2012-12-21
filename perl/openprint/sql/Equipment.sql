@@ -28,6 +28,7 @@ CREATE TABLE tbl_Equipment (
 	smartscheduling		BOOLEAN,
 	sorting				integer,
 	message				text,
+	deleted				BOOLEAN NOT NULL DEFAULT FALSE,
 	PRIMARY KEY (id)
 );
 

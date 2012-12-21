@@ -19,12 +19,12 @@
 
 		$html .= qq`<li id="p_$$Project{id}" class="$colour" onclick="job_popup($$Project{id});"><span class="Company">`;
 
-		my $n = $Project->Company()->name();
+		my $n = $Project->Order()->Company()->name();
 		$n =~ s/The //gi;
 		$html .= ssi::htmlize( $n );
 
 		$html .= '</span>';
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
+		$html .= ' (<span class="CSR">'.$Project->Order()->Company()->CSR()->firstname().'</span>)';
 
 		if ( $Project->operator_id() ) {
 			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';

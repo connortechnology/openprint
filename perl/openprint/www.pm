@@ -104,53 +104,44 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
-		if ( ! ( %page_settings and $page_settings{$page} ) ) {
-#$log->debug("Page Settings not found in cache for $page");
-			# First step, reload page settings
-			%page_settings = map { $_->url(), $_ } openprint::Page_Setting->find();
-			if ( ! $page_settings{$page} ) {
-#$log->debug("Page Settings not found for $page");
-				# Need to create one.
-				my @chunks = split('/', $page );
-				while ( @chunks ) {
-					pop @chunks;
-					last if ! @chunks;
-					
-					# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
-					my $chunk = join('/', @chunks);
-					$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
-		
-					if ( $page_settings{$chunk} ) {
-#$log->debug("Using page settings for $chunk");
-						#my $NewPageSettings = $page_settings{$chunk}->copy();
-						#$NewPageSettings->save({'url'=>$page});
-						#$page_settings{$page} = $NewPageSettings;
+		if ( ! $page_settings{$config{db_name}} ) {
+			$page_settings{$config{db_name}} = { map { $_->url(), $_ } openprint::Page_Setting->find() };
+		} # end if
+		if ( ! $page_settings{$config{db_name}}{$page} ) {
+# Need to create one.
+			my @chunks = split('/', $page );
+			while ( @chunks ) {
+				pop @chunks;
+				last if ! @chunks;
 
-						# Why stuff up the db with entries, just fill the hash with copies.
-						$page_settings{$page} = $page_settings{$chunk};
-						last;
-#} else {
-#$log->debug("No page settings for $chunk");
-					} # end if
-				} # end while chunks
-			} # end if
-			if ( ! $page_settings{$page} ) {
-				$page_settings{$page} = new openprint::Page_Setting();
-				$page_settings{$page}->save({'url'=>$page});
+# Because there is a / at the beginning of the url, the first entry in chunks is '', so we don't need to prepend a /
+				my $chunk = join('/', @chunks);
+				$chunk = '/' if ! $chunk; # neccessary to deal with the empty string
+
+					$log->debug("Looking for page setting for $chunk");
+				if ( $page_settings{$config{db_name}}{$chunk} ) {
+# Why stuff up the db with entries, just fill the hash with copies.
+					$page_settings{$config{db_name}}{$page} = $page_settings{$config{db_name}}{$chunk};
+					last;
+				} # end if
+			} # end while chunks
+			if ( ! $page_settings{$config{db_name}}{$page} ) {
+				$page_settings{$config{db_name}}{$page} = new openprint::Page_Setting();
+				$page_settings{$config{db_name}}{$page}->save({url=>$page}) if $session{user_type} eq 'A';
 			} # end if
 		} # end if Page Settings not found
 
 		# if not logged in, determine if they are allowed to see this page or not.
-		if ( $page_settings{$page}->user_level() ) {
-#$log->debug("Checking user level, need : " . $page_settings{$page}->user_level() . ' session is: ' . $session{'user_type'} );
+		if ( $page_settings{$config{db_name}}{$page}->user_level() ) {
+$log->debug("Checking user level, need : " . $page_settings{$config{db_name}}{$page}->user_level() . ' session is: ' . $session{'user_type'} );
 			if ( 
-					( $page_settings{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
+					( $page_settings{$config{db_name}}{$page}->user_level() eq 'C' and ! sets::isin( $session{'user_type'}, ['C','E','A'] ) ) 
 					or
-					( $page_settings{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
+					( $page_settings{$config{db_name}}{$page}->user_level() eq 'E' and ! sets::isin( $session{'user_type'}, ['E','A'] ) ) 
 					or
-					( $page_settings{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
+					( $page_settings{$config{db_name}}{$page}->user_level() eq 'A' and ! sets::isin( $session{'user_type'}, ['A'] ) ) 
 			   ) {
-#$log->debug("No good, need login");
+$log->debug("No good, need login");
 				if ( $page =~ /^.*\/_/ ) {
 					$variable{'PageContent'} = q`<script type="text/javascript">window.location='/error/error_login.html';</script>`;
 				} else {
@@ -160,8 +151,10 @@ sub handler {
 				#$r->headers_out->set(Location=>'/error/error_login.html');
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
+		} else {
+$log->debug("No pagesetting?");
 		} # end if
-		$variable{'PageSetting'} = $page_settings{$page} ? $page_settings{$page} : new openprint::Page_Setting();
+		$variable{'PageSetting'} = $page_settings{$config{db_name}}{$page} ? $page_settings{$config{db_name}}{$page} : new openprint::Page_Setting();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			('openprint::'.$o)->init_cache();

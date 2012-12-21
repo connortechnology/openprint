@@ -15,30 +15,35 @@ $table = 'events';
 $serial = 'events_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'created_by'	=>	'created_by',
-	'starting_on'	=>	'starting_on',
-	'ending_on'		=>	'ending_on',
-	'created_on'	=>	'created_on',
-	'updated_on'	=>	'updated_on',
-	'deleted'		=>	'deleted',
-	'location_id'	=>	'location_id',
-	'info'			=>	'info',
-	'time_associated'	=>	'time_associated',
-	'category_id'	=>	'category_id',
-	'category'		=>	undef,
-	#'asset_id'		=>	'asset_id',
+	id			=>	'id',
+	name		=>	'name',
+	created_by	=>	'created_by',
+	starting_on	=>	'starting_on',
+	ending_on	=>	'ending_on',
+	created_on	=>	'created_on',
+	updated_on	=>	'updated_on',
+	deleted		=>	'deleted',
+	location_id	=>	'location_id',
+	info		=>	'info',
+	time_associated	=>	'time_associated',
+	category_id	=>	'category_id',
+	category	=>	undef,
+	#'asset_id		=>	'asset_id',
 	# Photo album for the event, created on first photo upload
-	'album_id'		=>	'album_id', 
-	url				=>	'url',
+	album_id	=>	'album_id', 
+	url			=>	'url',
 );
 %find_fields = (
 	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
 	'name+info'	=>	q`name || info`,
 );
-
+%transforms = (
+	id	=>	[ 's/\D//g' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    info		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    url			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+);
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
@@ -294,22 +299,25 @@ sub send_invitations {
 	$data{Event} = $self;
 	$data{uri} = 'event';
 	$data{User} = new openprint::User($openprint::session{user_id});
-	my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+	my $email_template = misc::load_file( $openprint::log, $openprint::config{SkinPath}.'/email_template.html' );
 	my @attachments;
-	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'}.'/email_content/event_invitation_body.html' );
-	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
+	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{DOCUMENT_ROOT}.'/email_content/event_invitation_body.html' );
+	$data{'ReplacementText'} = ssi::variable_substitution( \$data{ReplacementText}, \%data );
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, 'sent_on is null'=>1);
 	my $results = $Email->send(
-		'BCC'			=>	new openprint::User( $openprint::session{'user_id'} ),
-		#'TO'			=>	new openprint::User( $openprint::session{'user_id'} ),
-		'TO'			=>	[map { $_->User() } $self->Invitations()],
-		'FROM'			=>	$self->Created_By(),
-		#'ATTACHMENTS'	=>	\@attachments,
-		'SUBJECT'		=>	'You are invited to an event:'. $$self{name},
+		BCC			=>	new openprint::User( $openprint::session{user_id} ),
+		#'TO'			=>	new openprint::User( $openprint::session{user_id} ),
+		TO			=>	[map { $_->User() } @To ],
+		FROM		=>	$self->Created_By(),
+		SUBJECT		=>	'You are invited to an event:'. $$self{name},
 	);
 	$self->add_to_log( $results );
+	foreach ( @To ) {
+		$_->save({sent_on=>'NOW()'});
+	} # end foreach
 	return $results;
 } # end sub send_invitations
 

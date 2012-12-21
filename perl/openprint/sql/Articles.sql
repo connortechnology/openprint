@@ -1,4 +1,3 @@
-DROP TABLE IF EXISTS Articles;
 CREATE TABLE Articles (
 	id	SERIAL NOT NULL,
     created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),

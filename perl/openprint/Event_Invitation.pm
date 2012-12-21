@@ -11,14 +11,15 @@ $table = 'event_invitations';
 @identified_by = ( 'event_id', 'user_id' );
 
 %fields = (
-	'event_id'	=>	'event_id',
-	'user_id'	=>	'user_id',
-	'created_on'	=>	'created_on',
+	event_id	=>	'event_id',
+	user_id		=>	'user_id',
+	created_on	=>	'created_on',
+	sent_on		=>	'sent_on',
 );
 
 %defaults = (
-	'attending'		=> undef,
-	'created_on'	=>	q`'NOW()'`,
+	attending	=>	undef,
+	created_on	=>	q`'NOW()'`,
 );
 
 sub User {

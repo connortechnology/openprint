@@ -48,7 +48,7 @@ sub jobs_by_csr {
 } # end sub jobs_by_csr
 
 sub _jobs_by_csr {
-	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback',
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback', 'company_id', 'docket',
 			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
 		);
@@ -90,18 +90,26 @@ sub _jobs_by_csr_ul {
 		} # end if
 		@{$variable{Projects}} = openprint::Project->find(
 				status      =>  $Project->status(),
-				salesrep_id =>  $Project->Company()->salesrep_id(),
+				salesrep_id =>  [ $Project->Company()->salesrep_id() ],
 				order       =>  'priority',
 				);
 	} elsif ( $param{action} eq 'complete' ) {
 		my $Project = new openprint::Project($param{project_id});
-		my $old_status = $Project->status();
-		$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
-		@{$variable{Projects}} = openprint::Project->find(
-				status      =>  $old_status,
-				salesrep_id =>  $Project->Company()->salesrep_id(),
-				order       =>  'priority',
-				);
+		if ( ! $Project->id() ) {
+			$variable{error} = 'Project not found.';
+		} else {
+			my $old_status = $Project->status();
+			$Project->status_change( @session{'company_id','user_id'}, 'Complete' );
+			$log->debug("Status: $old_status");
+			my $csr_id = $Project->Company()->salesrep_id();
+			@{$variable{Projects}} = openprint::Project->find(
+					status      =>  $old_status,
+					salesrep_id =>  [ $csr_id ],
+					order       =>  'priority',
+					);
+			$old_status =~ s/\s/_/g;
+			$variable{ul_id} = "csr_${csr_id}_$old_status";
+		} # end if
 	} # end if
 
 } # end sub _jobs_by_csr_ul

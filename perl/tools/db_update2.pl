@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
 use strict;
 
@@ -39,6 +39,7 @@ $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 configuration::init( $log, $dbh );
+$config{db_name} = $ARGV[0];
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -209,7 +210,7 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+	$dbh->do('UPDATE orders SET owing=total-paid');
 	if ( ! exists $$data{terms_accepted} ) {
 		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
 	} # end if
@@ -399,7 +400,7 @@ $log->debug("Add email_html");
 		$dbh->do('ALTER TABLE emailcampaigns add email_html text');
 	} # end if
 } else {
-$log->debug("no has email_campaigns");
+	$log->debug("no has email_campaigns");
 } # end if
 if ( ! sets::isin( 'paycheques', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques.sql}) );
@@ -413,5 +414,6 @@ if ( ! sets::isin( 'timetracks', \@tables ) ) {
 	} # end if
 } # end if
 $dbh->disconnect();
+print "Finished\n";
 1;
 __END__

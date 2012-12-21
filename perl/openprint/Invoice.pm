@@ -2,7 +2,6 @@ use strict;
 require Math::Round;
 package openprint::Invoice;
 our @ISA = qw(openprint::Object);
-#use Carp qw(cluck);
 
 use vars qw( %config $log %session );
 *session = \%openprint::session;
@@ -46,23 +45,25 @@ $serial = 'invoices_id_seq';
 	'paid'				=>	'paid',
 	'interest'			=>	'interest',
 	'bad_debt'			=>	'bad_debt',
+	num					=>	'num',
 );
 
 %find_fields = (
-	'po'	=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
+	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
+	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
 );
 
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'updated_on'	=> q`'NOW()'`,
-	'deleted'		=> 0,
-	'posted'		=> 0,
-	'interest'		=> undef,
-	'monthly_interest'		=> undef,
-	'paid'			=> undef,
-	'bad_debt'			=> 0,
+	created_on	=> q`'NOW()'`,
+	updated_on	=> q`'NOW()'`,
+	deleted		=> 0,
+	posted		=> 0,
+	interest		=> undef,
+	monthly_interest	=> undef,
+	paid			=> undef,
+	bad_debt		=> 0,
 );
 
 sub save {
@@ -292,12 +293,22 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-	my $result = openprint::Invoice_Tax->find_one('invoice_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+	my $result = openprint::Invoice_Tax->find_one( invoice_id =>$_[0]{id}, tax_id=>$_[1]->id() );
 	if ( ! $result ) {
 		return new openprint::Invoice_Tax();
 	} # end if
 	return $result;
 } # end sub Tax
+
+sub num {
+	if ( @_ > 1 ) {
+		$_[0]{num} = $_[1];
+	}
+	if ( ! $_[0]{num} ) {
+		$_[0]{num} = $_[0]{id};
+	} # end if
+	return $_[0]{num};
+} # end sub num
 
 1;
 __END__

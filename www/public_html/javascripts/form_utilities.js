@@ -466,6 +466,7 @@ function clearSelect( ddm ) {
 }
 
 function clearForm(form) {
+	form = $(form);
 	for ( var i=0, len = form.elements.length; i < len; i += 1 ) {
 		var e = form.elements[i];
 		if ( ! e.type )
@@ -1296,12 +1297,16 @@ function toggle_input( ddm, txt ) {
 	ddm.toggle();
 	txt.toggle();
 }
-function getValues( form, element_names ) {
-	var results = new Hash();
-	for ( var index = element_names.length; index; index -- ) {
-		var form_element = form.elements[element_names[index-1]];
-		if ( form_element ) 
-			results.set(element_names[index-1], form_element.getValue());
+function getValues( form, element_names, more_values ) {
+	form = $(form);
+	var results = new Hash( more_values );
+	for ( var index = 0, len = element_names.length; index < len ; index ++ ) {
+		var form_element = form.elements[element_names[index]];
+		if ( form_element ) {
+			results.set(element_names[index], get_value( form_element ) );
+		} else {
+			alert("Element " + element_names[index] + ' not found.' );
+		} 
 	} // end for
 	return results;
 } // end function getValues
@@ -1371,6 +1376,11 @@ function get_form_element_array( form, name ) {
 } // end function get_form_element_array
 
 // We do the matching to prevent cursor movements
+function input_filter(e,regexp) {
+	if ( e.value.match(regexp) )
+		e.value = e.value.replace(regexp,'');
+	return e.value;
+}
 function cardinalize(e) {
 	if ( e.value.match(/\D/g) )
 		e.value = e.value.replace(/\D/g,'');
@@ -1384,6 +1394,11 @@ function integerize(e) {
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.]/g) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
+	return e.value;
+}
+function floatize_calculator(e) {
+	if ( e.value.match(/[^\d\-\.\+\*\/]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.\+\*\/]/g,''));
 	return e.value;
 }
 function hexize(e) {

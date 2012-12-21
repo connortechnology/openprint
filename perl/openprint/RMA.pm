@@ -26,13 +26,25 @@ $serial = 'rma_id_seq';
 	approved	=>	'approved',
 	status_id	=>	'status_id',
 	status		=>	undef,
+	priority	=>	'priority',
+	po_id		=>	'po_id',
+	received_on	=>	'received_on',
+	warranty	=>	'warranty',
+	estimate_required	=>	'estimate_required',
+	product_id	=>	'product_id',
+	serialnumber		=>	'serialnumber',
+	accessories			=>	'accessories',
+	shipto_address_id	=>	'shipto_address_id',
 );
 
 %transforms = (
-	description	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	comments	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	rmanumber	=> [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	
+	id				=>	[ 's/\D//g' ],
+	shipto_address_id	=>	[ 's/\D//g' ],
+	description		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	comments		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	rmanumber		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	serialnumber	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	accessories		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (
@@ -43,7 +55,14 @@ $serial = 'rma_id_seq';
 	type_id		=>	undef,
 	status_id	=>	undef,
 	created_on	=>	q`'NOW()'`,
+	received_on	=>	q`'NOW()'`,
 	approved	=>	0,
+	status		=>	undef,
+	priority	=>	undef,
+	po_id		=>	undef,
+	estimate_required	=>	undef,
+	warranty	=>	undef,
+	shipto_address_id	=>	undef,
 );
 
 sub Type {
@@ -81,5 +100,23 @@ sub status {
 	} # end if
 	return $_[0]{status};
 } # end sub type
+
+sub PurchaseOrder {
+	require openprint::PurchaseOrder;
+	return new openprint::PurchaseOrder( $_[0]{po_id} );
+} # end sub PruchaseOrder
+sub Order {
+	require openprint::Order;
+	return new openprint::Order( $_[0]{order_id} );
+} # end sub Order
+sub Invoice {
+	require openprint::Invoice;
+	return new openprint::Invoice( $_[0]{invoice_id} );
+} # end sub Invoice
+
+sub Address {
+	require openprint::Address;
+	return new openprint::Address( $_[0]{shipto_address_id} );
+} # end sub Adress
 1;
 __END__

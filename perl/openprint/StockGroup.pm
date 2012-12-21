@@ -2,7 +2,8 @@ use strict;
 package openprint::StockGroup;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'stockgroups';
 $serial = 'stockgroups_id_seq';
 

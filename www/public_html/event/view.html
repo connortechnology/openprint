@@ -1,4 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{Event} ) ?>
 <? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
 	function invite_by_email(input) {
@@ -14,8 +15,10 @@
             new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
         } // end if
     }
-    function invitation_remove_user( user_id ) {
-        var user_ids = get_form_element_array( $('invitations'), 'invitation_user_id' );
+    function invitation_remove_user( user_id, form ) {
+		if ( ! form )
+			form = $('invitations');
+        var user_ids = get_form_element_array( form, 'invitation_user_id' );
         user_ids = user_ids.without( user_id );
         new Ajax.Updater( 'invitation_users', '/event/_invitation_users.html', { parameters: { action: 'set', user_id: user_ids, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
     }
@@ -30,11 +33,10 @@
 	}
 </script>
 <? endif ( $$variable{Event}->id() ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{Event}->can_view($param{user_id}) ) ?>
 <div class="Event"><div class="View">
 	<form id="f1" name="f1" action="/event/view.html?event_id=<? echo ( $$variable{Event}->id() ) ?>" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="action"/>
+	<input type="hidden" name="function"/>
 	<fieldset>
 		<? if ( $session{'user_type'} eq 'A' ) ?>
 		<legend>Viewing Event<? echo ( $$variable{Event}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
@@ -45,9 +47,9 @@
 				if ( $$variable{Event}->id() ) {
 					if ( $$variable{Event}->can_edit() ) {
 						if ( $$variable{Event}->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Undelete';f1.submit();}" } );
+						$html .= ssi::button( 'Undelete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Undelete';f1.submit();}" } );
 						} else {
-						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}" } );
+						$html .= ssi::button( 'Delete', { 'onclick'=>"if(confirm('Are you sure?')){f1.elements['function'].value='Delete';f1.submit();}" } );
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
@@ -137,7 +139,31 @@ $log->debug("My location is " . $MyLocation->to_string() );
 	<br class="spacer"/>
 	<? if ( $variable{User}->id() ) ?>
 	<div id="Opinions"><? echo ( $$variable{Event}->opinions('Opinions') ) ?></div>
+<div id="Invitations">
+<fieldset><legend>Invitations</legend>
+	<ul>
+		<li><label>By Name</label>
+			<input type="text" name="user_name" id="user_name"/><br/>
+			<div id="user_name_autocomplete" class="autocomplete" style="display:none;"></div>
+			<script type="text/javascript">
+			new Ajax.Autocompleter('user_name','user_name_autocomplete', '/includes/_user_autocomplete.html', { minChars: 2,afterUpdateElement : invitation_set_users, tokens: [',',';',' ','\n'], callback: invitation_add_user_ids } );
+			</script>
+		</li>
+		<li><label>By Relationship</label>
+			<select name="relationship_ip" onchange="invite_by_relationship(this);"><option value="">none</option>
+				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
+			</select>
+		</li>
+		<li><label>By Email</label>
+			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
+		</li>
+	</ul>
+	<p class="buttons">
+			<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
+	</p>
+</fieldset>
 	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
+</div>
 	<? endif ( $variable{User}->id() ) ?>
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 
@@ -162,3 +188,4 @@ $log->debug("My location is " . $MyLocation->to_string() );
 <? else ( $$variable{Event}->can_view($param{user_id}) ) ?>
 You can't view this event.
 <? endif ( $$variable{Event}->can_view($param{user_id}) ) ?>
+<? endif ( $$variable{Event} ) ?>

@@ -25,6 +25,9 @@ require openprint::Company_Profile_Field;
 require openprint::Company_Category;
 require openprint::Company_Credit;
 
+require Authen::Passphrase;
+require Authen::Passphrase::BlowfishCrypt;
+
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -193,16 +196,22 @@ sub _currency_conversions {
 
 sub user_profiles {
 
-	my $user_id = $param{'ddmUser'};
-	my $User = $variable{'User'} = new openprint::User( $user_id );
+	my $user_id = $param{ddmUser} ? openprint::User->transform( 'id', $param{ddmUser} ) : $session{user_id};
+	my $User = $variable{User} = new openprint::User( $user_id );
 
 	my $user_role = $param{'ddmUserRole'};
 
-	# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
-	# selected company
-	if ( ( ! exists $param{'ddmCustomer'} ) or ( $User->id() and ( $param{'ddmCustomer'} != $User->company_id() ) ) ) {
-		$param{'ddmCustomer'} = $User->company_id();
+	if ( exists $param{ddmCustomer} ) {
+		if ( $param{ddmCustomer} and ( $User->company_id() != $param{ddmCustomer} ) ) {
+			# Prevent selection of user from another company
+			$User = new openprint::User();
+		} # end if
+	} else {
+		# The porpose of this code was something to do with selecting by email address. It would load the user, but not change the
+		$param{'ddmCustomer'} = $User->company_id() if $User->id();
 	} # end if
+
+	# selected company
 	my $cust_id = $param{'ddmCustomer'};
 	$cust_id = $session{'company_id'} if ! $cust_id;
 
@@ -230,7 +239,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};;
+		my @Users = openprint::User->find( 'email lc' => lc $param{email} ) if $param{email};
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -240,16 +249,25 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 
-		if ( ! $openprint::param{'password'} ) {
-			delete $openprint::param{'password'};
-		} elsif ( $openprint::param{'password'} ne $User->password() ) {
-			$openprint::param{'password_changed_on'} = 'NOW()';
+		if ( ! $param{password} ) {
+			delete $param{password};
+		} elsif ( $config{encrypt_passwords} ) {
+			my $ppr = Authen::Passphrase::BlowfishCrypt->from_rfc2307($User->password());
+			if ( ! $ppr->match($param{password}) ) {
+				$param{password_changed_on} = 'NOW()';
+				my $ppr = Authen::Passphrase::BlowfishCrypt->new( cost => 8, salt_random => 1, passphrase => $param{password} );
+				$param{password} = $ppr->as_rfc2307();
+			} else {
+				delete $param{password};
+			} # end if
+		
+		} elsif ( $param{password} ne $User->password() ) {
+			$param{password_changed_on} = 'NOW()';
 		} # end if
 
 		# This has to exist, in order to save the no assistants situation
 		$param{'assistant_ids'} = [] if ! exists $param{'assistant_ids'};
 		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};
-		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
 		if ( ! $error ) {
 			$User->Profile()->save( \%param );
@@ -316,10 +334,10 @@ sub user_profiles {
 		} # end foreach
 		if ( $param{'name-'} ) {
 			sql::insert( undef, undef, 'User_Service_Defaults', {
-					'user_id'		=>$User->id(),
-					'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
-					'name'			=>$param{'name-'},
-					'value'			=>$param{'value-'} 
+					user_id			=>	$User->id(),
+					servicetype_id	=>	$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
+					name			=>	$param{'name-'},
+					value			=>	$param{'value-'} 
 					} );
 		} # end if
 
@@ -753,12 +771,12 @@ sub _search_by_email {
 
 sub page_settings {
 	require openprint::Page_Setting;
-	if ( $param{'action'} eq 'save' ) {
+	if ( $param{action} eq 'save' ) {
 		foreach my $PS ( openprint::Page_Setting->find() ) {
 			if ( ! $param{'url-'.$PS->id()} ) {
 				$PS->delete();
 			} elsif ( 
-					( $PS->url() ne $param{'url-'.$PS->id()} ) or 
+					( $PS->url() ne openprint::Page_Setting->transform('url',$param{'url-'.$PS->id()}) ) or 
 					( $PS->cacheable() ne $param{'cacheable-'.$PS->id()} ) or 
 					( $PS->user_level() ne $param{'user_level-'.$PS->id()} ) or
 					( $PS->keywords() ne $param{'keywords-'.$PS->id()} ) or
@@ -766,11 +784,11 @@ sub page_settings {
 	
 				) {
 				$variable{'error'} .= $PS->save({
-						'url'			=>	$param{'url-'.$$PS{id}},
-						'cacheable'		=>	$param{'cacheable-'.$$PS{id}},
-						'user_level'	=>	$param{'user_level-'.$$PS{id}},
-						'keywords'		=>	$param{'keywords-'.$$PS{id}},
-						'description'	=>	$param{'description-'.$$PS{id}},
+						url			=>	$param{'url-'.$$PS{id}},
+						cacheable	=>	$param{'cacheable-'.$$PS{id}},
+						user_level	=>	$param{'user_level-'.$$PS{id}},
+						keywords	=>	$param{'keywords-'.$$PS{id}},
+						description	=>	$param{'description-'.$$PS{id}},
 						});
 			} # end if need to save
 		} # end foreach PS

@@ -2,7 +2,8 @@ use strict;
 package openprint::RMA_Status;
 our @ISA = qw(openprint::Object);
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'rma_statuses';
 $serial = 'rma_statuses_id_seq';
 
@@ -11,7 +12,8 @@ $serial = 'rma_statuses_id_seq';
 	name	=>	'name',
 );
 %transforms = (
-	name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id		=>	[ 's/\D//g' ],
+	name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = ();
 

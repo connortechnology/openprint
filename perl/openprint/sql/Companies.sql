@@ -35,7 +35,7 @@ CREATE TABLE Companies (
 	bank_phone		TEXT,
 	bank_fax			TEXT,
 	bank_email			TEXT,
-	priceList_id			INT4,
+	priceList_id			INTEGER,
 	discount		numeric(16,4) DEFAULT '0.0000' NOT NULL,
 	salesrep_id			INTEGER, 
 /* FOREIGN KEY will be added in users after the addition of that table 

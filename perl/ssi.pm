@@ -240,7 +240,8 @@ sub encode_html {
 
 sub make_drop_down {
 	require HTML::Entities;
-	my ( $search_data, $checkval, $length ) = @_;
+	my ( $search_data, $checkval, $options ) = @_;
+	$options = {} if ! $options;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
 		$check_array = $checkval;
@@ -249,11 +250,19 @@ sub make_drop_down {
 	} # end if
 
 	my $temp = '';
+	if ( $$options{prepend} ) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+			$temp .= sprintf('<option value="%s"%s>%s</option>',
+					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+		} # end for
+	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
 			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
+			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -462,7 +471,12 @@ sub get_start_end_dates {
 sub button {
 	my ( $name, $options ) = @_;
 
-	$$options{'href'} = '#' if ! $$options{'href'};
+	if ( $$options{href} ) {
+		my $PageSetting = openprint::Page_Setting->find_one(url=>$$options{href});
+		return if $PageSetting and ! $PageSetting->can_view();
+	} else {
+		$$options{href} = '#';
+	} # end if
 	$$options{'text'} = $name if ! exists $$options{'text'};
 
 	my $html = qq`<a id="Button$name" href="$$options{href}" class="button $$options{class}" `;
@@ -479,14 +493,14 @@ sub button {
 	$html .= '>';
 	if ( $$options{image} ) {
 		if ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) {
-			$html .= "<img src=\"/images/buttons/off/$$options{image}\" name=\"Button$name\"";
+			$html .= "<img src=\"/images/buttons/off/$$options{image}\" id=\"ButtonImage$name\"";
 		} else {
-			$html .= "<img src=\"$$options{image}\" name=\"Button$name\"";
+			$html .= "<img src=\"$$options{image}\" id=\"ButtonImage$name\"";
 		} # end if
 		if ( $$options{'title'} ) {
-			$html .= "alt=\"$$options{title}\"";
+			$html .= " alt=\"$$options{title}\"";
 		} # end if
-		$html .= "/>";
+		$html .= '/>';
 		if ( $$options{text} ) {
 			$html .= $$options{text};
 		} # end if
@@ -817,11 +831,12 @@ sub input {
 	if ( $options{type} eq 'cardinal' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9]*' if ! $options{pattern};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+		$options{filter} = 'cardinalize(this);' if ! $options{filter};
+		$options{onkeyup} = $options{filter}.$options{onkeyup};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -838,6 +853,14 @@ sub input {
 			$options{type} = 'number';
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'float_calculator' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
 
@@ -859,7 +882,7 @@ sub select( $$$ ) {
 	$html .= ' size="'.$$options{size}.'"' if $$options{size};
 	$html .= ' multiple="multiple"' if $$options{multiple};
 	$html .= '>';
-	$html .= make_drop_down( $data, $selected );
+	$html .= make_drop_down( $data, $selected, $options );
 	$html .= '</select>';
 } # end sub select($$$)
 
@@ -888,7 +911,6 @@ sub hash_link {
 
 	my $src;
 	if ( -e $config{SkinPath}.$path ) {
-
 		$src = $config{SkinPath}.$path;
 	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
 		$src = $ENV{DOCUMENT_ROOT}.$path;
@@ -956,7 +978,7 @@ sub hash_link {
 	} # end if
 
 	# cache_path is the url part
-	($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+	return ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
 } # end sub hash_link
 
 sub format_date {

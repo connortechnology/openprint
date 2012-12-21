@@ -133,7 +133,8 @@ sub load {
 			#$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 		} # end if
 	} # end if
-	@$self{keys %$fields} = @$data{values %$fields};
+	my @keys = map { defined $$fields{$_} ? $_ : () } keys %$fields;
+	@$self{@keys} = @$data{@$fields{@keys}};
 } # end sub load
 
 sub save {
@@ -322,10 +323,16 @@ $openprint::log->debug("Running $field with $$params{$field}") if $debug;
 				} # end foreach
 			} # end if $$self{field}
 
-			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+			if ( ( ( ! exists $$self{$field} ) or (!defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = eval($defaults{$field});
-				$log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
+				if ( defined $defaults{$field} ) {
+					$log->debug("Default $field is defined: $defaults{$field}") if $debug;
+					$$self{$field} = eval($defaults{$field});
+					$log->error( "Eval error of object default $field default ($defaults{$field}) Reason: " . $@ ) if $@;
+				} else {
+					$$self{$field} = $defaults{$field};
+				} # end if
+#$$self{$field} = ( defined $defaults{$field} ) ? eval($defaults{$field}) : $defaults{$field};
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} # end if
 		} # end if
@@ -426,242 +433,73 @@ my @sql_functions = (
 	'NOW()','CURRENT_TIME',
 );
 
+# We make this a separate function so that we can use it to generate the sql statements for each value in an OR
 sub find_operators {
-	my ( $params, $k, $f ) = @_;
-	my %results;
+	my ( $field, $type, $operator, $value ) = @_;
 
-	foreach my $operator ( '=', '!=', '<', '>', '<=', '>=', '<<=' ) {
-		if ( exists $$params{$k.' '.$operator} ) {
-			push @{$results{' '.$operator}}, 
-				$k.' '.$operator, 
-				$f.' '.$operator.' ?', 
-				$$params{$k.' '.$operator};
-		} # end if
-	} # end foreach
-	if ( exists $$params{$k.'_like'} ) {
-		push @{$results{'_like'}}, 
-			 $k.'_like',
-			 $f.'::text LIKE ?', 
-			 $$params{$k.'_like'};
-	} 
-	if ( exists $$params{$k.' like'} ) {
-		push @{$results{' like'}}, 
-			 $k.' like', 
-			 $f.'::text LIKE ?', 
-			 $$params{$k.' like'};
-	} 
-	if ( exists $$params{$k.' ilike'} ) {
-		push @{$results{' ilike'}}, 
-			 $k.' ilike',
-			 $f.'::text ILIKE ?',
-			 $$params{$k.' ilike'};
-	} 
-	if ( exists $$params{$k.'_start'} ) {
-		push @{$results{'_start'}},
-			 $k.'_start',
-			 $f.' >= ?',
-			 $$params{$k.'_start'};
-	} 
-	if ( exists $$params{$k.'_end'} ) {
-		push @{$results{'_end'}}, 
-			 $k.'_end', 
-			 $f.' <= ?', 
-			 $$params{$k.'_end'};
-	} # end if
-	if ( exists $$params{$k.'_null_or_<='} ) {
-		push @{$results{'_null_or_<='}}, 
-			 $k.'_null_or_<=',
-			 "( $f <= ? OR $f IS NULL )", 
-			 $$params{$k.'_null_or_<='};
-	} # end if
-	if ( exists $$params{$k.'_null_or_>='} ) {
-		push @{$results{'_null_or_>='}}, 
-			 $k.'_null_or_>=', 
-			 "( $f >= ? OR $f IS NULL )", 
-			 $$params{$k.'_null_or_>='};
-	} # end if
-	if ( exists $$params{$k.'_null_or_>'} ) {
-		push @{$results{'_null_or_>'}}, 
-			 $k.'_null_or_>',
-			 "( $f > ? OR $f IS NULL )", 
-			 $$params{$k.'_null_or_>'};
-	} # end if
-	if ( exists $$params{$k.'_null_or_<'} ) {
-		push @{$results{'_null_or_<'}}, 
-			 $k.'_null_or_<',
-			 "( $f < ? OR $f IS NULL )",
-			 $$params{$k.'_null_or_<'};
-	} # end if
-	if ( exists $$params{$k.' is null or ='} ) {
-		push @{$results{' is null or ='}}, 
-			 $k.' is null or =',
-			 "( $f = ? OR $f IS NULL )",
-			 $$params{$k.' is null or ='};
-	} # end if
-	if ( exists $$params{$k.' exists'} ) {
-		push @{$results{' exists'}}, 
-			 $k.' exists',
-			 ( $$params{$k.' exists'} ? ' EXISTS' : ' NOT EXISTS ' ) . $f,
-			 ();
-	} # end if
-	if ( exists $$params{$k.' &&'} ) {
-		if ( ref $$params{$k.' &&'} eq 'ARRAY' ) {
-			if ( @{$$params{$k.' &&'}} ) {
-				push @{$results{' &&'}}, 
-					$k.' &&',
-					$f . ' && ?',
-					$$params{$k.' &&'};
-			} # end if
+	if ( sets::isin( $operator, [ '=', '!=', '<', '>', '<=', '>=', '<<=', '&&', '<@', '@>' ] ) ) {
+		return ( $field.$type.' ' . $operator . ' ?', $value );
+	} elsif ( sets::isin( $operator, [ 'in', 'not in' ] ) ) {
+		if ( ref $value eq 'ARRAY' ) {
+			return ( $field.$type.' ' . $operator . ' ('. join(',', map { '?' } @{$value} ) . ')', @{$value} );
 		} else {
-			push @{$results{' &&'}}, 
-				 $k.' &&', 
-				 "$f && ?", 
-				 [ $$params{$k.' &&'} ];
+			return ( $field.$type.' ' . $operator . ' (?)', $value );
 		} # end if
-	} # end if
-	if ( exists $$params{$k.' <@'} ) {
-		if ( ref $$params{$k.' <@'} eq 'ARRAY' ) {
-			if ( @{$$params{$k.' <@'}} ) {
-				push @{$results{' <@'}}, 
-					$k.' <@',
-					$f . ' <@ ?',
-					$$params{$k.' <@'};
-			} # end if
+	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
+		return $field.'::text ' . $operator . '?', $value;
+	} elsif ( $operator eq 'start' ) {
+		return $field.$type.' >= ?', $value;
+	} elsif ( $operator eq 'end' ) {
+		return $field.$type.' <= ?', $value;
+	} elsif ( $operator eq 'null_or_<=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?', $value;
+	} elsif ( $operator eq 'null_or_>=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?', $value;
+	} elsif ( $operator eq 'null_or_>' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?', $value;
+	} elsif ( $operator eq 'null_or_<' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?', $value;
+	} elsif ( $operator eq 'null_or_=' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?', $value;
+	} elsif ( $operator eq 'exists' ) {
+		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field, $value;
+	} elsif ( $operator eq 'lc' ) {
+		return 'lower('.$field.$type.') = ?', $value;
+	} elsif ( $operator eq 'uc' ) {
+		return 'upper('.$field.$type.') = ?', $value;
+	} elsif ( $operator eq 'any' ) {
+		if ( ref $value eq 'ARRAY' ) {
+			return '(' . join(',', map { '?' } @{$value} ).") = ANY($field)", @{$value}; 
 		} else {
-			push @{$results{' <@'}}, 
-				 $k.' <@', 
-				 "$f <@ ?", 
-				 [ $$params{$k.' <@'} ];
+			return "? = ANY($field)", $value;
 		} # end if
-	} # end if
-	if ( exists $$params{$k.' @>'} ) {
-		if ( ref $$params{$k.' @>'} eq 'ARRAY' ) {
-			if ( @{$$params{$k.' @>'}} ) {
-				push @{$results{' @>'}}, 
-					$k.' @>',
-					$f . ' @> ?',
-					$$params{$k.' @>'};
-			} # end if
+	} elsif ( $operator eq 'not any' ) {
+		if ( ref $value eq 'ARRAY' ) {
+			return '(' . join(',', map { '?' } @{$value} ).") != ANY($field)", @{$value}; 
 		} else {
-			push @{$results{' @>'}}, 
-				 $k.' @>', 
-				 "$f @> ?", 
-				 [$$params{$k.' @>'}];
+			return "? != ANY($field)", $value;
 		} # end if
-	} # end if
-	if ( exists $$params{$k.' in'} ) {
-		if ( ref $$params{$k.' in'} eq 'ARRAY' ) {
-			if ( @{$$params{$k.' in'}} ) {
-				push @{$results{' in'}}, 
-					$k.' in',
-					$f.' IN (' . join(',', map { '?' } @{$$params{$k.' in'}} ).')', 
-					@{$$params{$k.' in'}};
-			} # end if
-		} elsif ( $$params{$k.' in'} ) {
-			push @{$results{' in'}}, 
-			$k.' in', 
-			$f.' IN (?)', 
-			$$params{$k.' in'};
-		} # end if
-	} # end if
-	if ( exists $$params{$k.' not in'} ) {
-		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
-			if ( @{$$params{$k.' not in'}} ) {
-				push @{$results{' not in'}}, 
-					$k.' not in',
-					$f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', 
-					@{$$params{$k.' not in'}};
-			} else {
-				push @{$results{' not in'}}, $k.' not in';
-			} # end if
-		} elsif ( $$params{$k.' not in'} ) {
-			push @{$results{' not in'}}, 
-			$k.' not in',
-			$f.' != ?', 
-			$$params{$k.' not in'};
+	} elsif ( $operator eq 'is null' ) {
+		if ( $value ) {
+			return $field.$type. ' is null';
 		} else {
-			push @{$results{' not in'}}, $k.' not in';
+			return $field.$type. ' is not null';
 		} # end if
 	} # end if
-	if ( exists $$params{'not in '.$k} ) {
-		if ( ref $$params{'not in '.$k} eq 'ARRAY' ) {
-$log->error("Bad use of not in");
-		} elsif ( $$params{'not in '.$k} ) {
-			push @{$results{'not in '}}, 
-			'not in '.$k,
-			'? NOT IN '.$f, 
-			$$params{'not in '.$k};
-		} else {
-			push @{$results{'not in '}}, 'not in '.$k;
-		} # end if
-	} # end if
-	if ( exists $$params{$k.'_lc'} ) {
-		push @{$results{'_lc'}}, 
-			 $k.'_lc',
-			 "lower($f) = ?", 
-			 $$params{$k.'_lc'};
-	} # end if
-	if ( exists $$params{$k.' lc'} ) {
-		push @{$results{' lc'}}, 
-			 $k.' lc', 
-			 "lower($f) = ?", 
-			 $$params{$k.' lc'};
-	} # end if
-	if ( exists $$params{$k.' uc'} ) {
-		push @{$results{' uc'}}, 
-			 $k.' uc',
-			 "upper($f) = ?", 
-			 $$params{$k.' uc'};
-	} # end if
-	if ( exists $$params{$k.' any'} ) {
-		if ( ref $$params{$k.' any'} eq 'ARRAY' ) {
-			push @{$results{' any'}}, 
-				 $k.' any',
-				 '(' . join(',', map { '?' } @{$$params{$k.' any'}} ).") = ANY($f)", 
-				 @{$$params{$k.' any'}};
-		} else {
-			push @{$results{' any'}}, 
-				 $k.' any',
-				 "? = ANY($f)", 
-				 $$params{$k.' any'};
-		} # end if
-	} # end if
-	if ( exists $$params{$k.' not any'} ) {
-		if ( ref $$params{$k.' not any'} eq 'ARRAY' ) {
-			push @{$results{' not any'}}, 
-				 $k.' not any',
-				 '(' . join(',', map { '?' } @{$$params{$k.' not any'}} ).") != ANY($f)",
-				 @{$$params{$k.' not any'}};
-		} else {
-			push @{$results{' not any'}}, 
-				 $k.' not any', 
-				 "? != ANY($f)",
-				 $$params{$k.' not any'};
-		} # end if
-	} # end if
-	if ( exists $$params{$k.' is null'} ) {
-		if ( $$params{$k.' is null'} ) {
-			push @{$results{' is null'}}, 
-				 $k.' is null',
-				 "$f IS NULL",
-				 ();
-		} else {
-			push @{$results{' is null'}},
-				 $k.' is null',
-				 "$f IS NOT NULL",
-				 ();
-		} # end if
-	} # end if
-
-	return \%results;
+	return;
 } # end sub
+
+sub User {
+	require openprint::User;
+	return new openprint::User( $_[0]{user_id} );
+} # end sub User
 
 sub find {
 	no strict 'refs';
-	my $type = shift;
-	my $table = ${$type.'::table'};
+	my $object_type = shift;
+	my $table = ${$object_type.'::table'};
 
-	my $debug = ${$type.'::debug'};
+	my $debug = ${$object_type.'::debug'};
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
@@ -688,7 +526,7 @@ sub find {
 	} # end if
 	$sql .= ' FROM '.$table;
 	my @values;
-	my $local_dbh = ${$type.'::dbh'};
+	my $local_dbh = ${$object_type.'::dbh'};
 	$local_dbh = $openprint::dbh if ! $local_dbh;
 	if ( $$params{'dbh'} ) {
 		$local_dbh = $$params{'dbh'};
@@ -700,22 +538,22 @@ sub find {
 	}
 	delete $$params{'dbh'};
 
-	my $cache_field = ${$type.'::cache_field'};
+	my $cache_field = ${$object_type.'::cache_field'};
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
 
 #$log->debug("have cache field $cache_field flr $$params{$cache_field}");
-		if ( exists $name_cache{$type} and exists $name_cache{$type}{$$params{$cache_field}} ) {
+		if ( exists $name_cache{$object_type} and exists $name_cache{$object_type}{$$params{$cache_field}} ) {
 #$log->debug("There is an object in the cache");
-			if ( $name_cache{$type}{$$params{$cache_field}} ) {
+			if ( $name_cache{$object_type}{$$params{$cache_field}} ) {
 #$log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
-				return $name_cache{$type}{$$params{$cache_field}} 
+				return $name_cache{$object_type}{$$params{$cache_field}} 
 			} else {
 #$log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
 				return ();
 			} # end if
 		} else {
 #$log->debug("Undefing $type $cache_field $params{$cache_field}");
-			$name_cache{$type}{$$params{$cache_field}} = undef;
+			$name_cache{$object_type}{$$params{$cache_field}} = undef;
 		} # end if
 	#} else {
 		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
@@ -725,90 +563,69 @@ sub find {
 	my @used_fields;
 
 	my @param_keys = sets::exclude( [ 'order','limit','offset','or' ], [ keys %$params ] );
+
+	# We use this search hash so that we can mash it up and leave the params hash alone
 	my %search;
 	@search{@param_keys} = @$params{@param_keys};
 	
-	if ( @param_keys ) {
-		foreach ( 'find_fields', 'fields' ) {
-			my $f = \%{$type.'::'.$_};
-			next if ! $f;
+	foreach my $k ( @param_keys ) {
+		my ( $field, $type, $function ) = $k =~ /^(\w+)(::\w+)?[\s_]*(.*)?$/;
+$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
-			foreach my $k ( @param_keys ) {
+		foreach ( 'find_fields', 'fields' ) {
+			my $fields = \%{$object_type.'::'.$_};
+			next if ! $fields;
+
 #$log->debug("looking for ($k) in $type :: $_ , $$f{$k}");
-				next if ! $$f{$k};
+			next if ! $$fields{$field};
 
 # This allows mainly for find_fields to reference multiple values, opinion in Project, value
-				foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
+			foreach my $db_field ( ref $$fields{$field} eq 'ARRAY' ? @{$$fields{$field}} : $$fields{$field} ) {
+				if ( ! $function ) {
+
 					if ( ref $search{$k} eq 'ARRAY' ) {
 						if ( @{$search{$k}} ) {
-							push @where, "$field IN (".join(',', map {'?'} @{$search{$k}} ) . ')';
+							push @where, $db_field . $type .' IN ('.join(',', map {'?'} @{$search{$k}} ) . ')';
 							push @values, @{$search{$k}};
 						} # end if
 					} elsif ( ref $search{$k} eq 'HASH' ) {
 						foreach my $p_k ( keys %{$search{$k}} ) {
 							my $v = $search{$k}{$p_k};
 							if ( ref $v eq 'ARRAY' ) {
-								push @where, "$field IN (".join(',', map {'?'} @{$v} ) . ')';
+								push @where, $db_field.$type.' IN ('.join(',', map {'?'} @{$v} ) . ')';
 								push @values, $p_k, @{$v};
 							} else {
-								push @where, "$field=?";
+								push @where, $db_field.$type.'=?';
 								push @values, $p_k, $v;
 							} # end if
 						} # end foreach p_k
 					} elsif ( ! defined $search{$k} ) {
-						push @where, "$field IS NULL";
+						push @where, $db_field.$type.' IS NULL';
 					} else {
-						push @where, "$field=?";
+						push @where, $db_field.$type .'=?';
 						push @values, $search{$k};
 					} # end if
-				} # end foreach field
-				delete $search{$k};
-				push @used_fields, $k;
-			} # end foreach k
-			last if ! %search;
-			#$log->debug("Used fields @used_fields" . join(',',keys %search));
-
-			foreach my $k ( keys %$f ) {
-				if ( ref $$f{$k} eq 'ARRAY' ) {
-					my @w;
-					foreach my $field ( @{$$f{$k}} ) {
-						my $results = find_operators( \%search, $k, $field );
-						foreach my $operator ( keys %$results ) {
-							if ( @{$$results{$operator}} ) {
-								delete $search{shift @{$$results{$operator}}};
-								if ( @{$$results{$operator}} ) {
-									push @w, shift @{$$results{$operator}};
-									push @values, @{$$results{$operator}};
-								} # end if
-							} # end if
-							push @used_fields, $k;
-						} # end foreach
-					} # end foreach field
-					push @where, '(' . join(' OR ', @w ) . ')' if @w;
+					delete $search{$k};
 				} else {
-					my $results = find_operators( \%search, $k, $$f{$k} );
-					foreach my $operator ( keys %$results ) {
-						if ( @{$$results{$operator}} ) {
-							delete $search{shift @{$$results{$operator}}};
-							if ( @{$$results{$operator}} ) {
-								push @where, shift @{$$results{$operator}};
-								push @values, @{$$results{$operator}};
-							} # end if
-						} # end if
+					#my @w = 
+#ref $search{$k} eq 'ARRAY' ? 
+						#map { find_operators( $field, $type, $function, $_ ); } @{$search{$k}} :
+					my ( $w, @v ) = find_operators( $db_field, $type, $function, $search{$k} );
+					if ( $w ) {
+						#push @where, '(' . join(' OR ', @w ) . ')';
+						push @where, $w;
+						push @values, @v if @v;
+						delete $search{$k};
 						push @used_fields, $k;
-					} # end foraech
-				} # end if
-			} # end foreach k in fields
-			last if ! %search;
-		} # end foreach set of fields
-
-#$log->debug("Where: (@where)");
-
-	} # end if @find_fields
-	my $fields = \%{$type.'::fields'};
+					} # end if @w
+				} # end if has function or not
+			} # end foreach db_field
+		} # end foreach find_field
+	} # end foreach k
+	my $fields = \%{$object_type.'::fields'};
 # Check for Object references
 	if ( %search ) {
-		foreach my $k ( keys %$params ) {
+		foreach my $k ( keys %search ) {
 			next if sets::isin( ref $search{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $$fields{$f} ) {
@@ -852,52 +669,52 @@ sub find {
 		$sql .= " OFFSET $$params{'offset'}" if $$params{'offset'};
 	} # end if
 	foreach my $k ( keys %search ) {
-		$log->error("Extra parameters in $type ::find $k => $search{$k}");
-		Carp::cluck("Extra parameters in $type ::find $k => $search{$k}");
+		$log->error("Extra parameters in $object_type ::find $k => $search{$k}");
+		Carp::cluck("Extra parameters in $object_type ::find $k => $search{$k}");
 	} # end foreach
 	
 #$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->error('Error ' . $local_dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->error('Error ' . $local_dbh->errstr() . " loading $object_type ($sql) (@values) " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$log->debug("Loading Debug:$debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading Debug:$debug $object_type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
 		if ( $cache_field and 1 ) {
 			my @results;
 			foreach ( @$data ) {
-				my $result = $type->new( $_->{$$fields{'id'}}, $_ );
-				$name_cache{$type}{$$result{$$fields{$cache_field}}} = $result;
+				my $result = $object_type->new( $_->{$$fields{'id'}}, $_ );
+				$name_cache{$object_type}{$$result{$$fields{$cache_field}}} = $result;
 				push @results, $result;
 			} # end foreach results
 			return @results;
 		} # end if
-		return map { $type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
+		return map { $object_type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
 	} else {
-		my @identified_by = eval '@'.$type.'::identified_by';
+		my @identified_by = eval '@'.$object_type.'::identified_by';
 		if ( ! @identified_by ) {
-			$log->error("Multi key object $type but no identified by");
+			$log->error("Multi key object $object_type but no identified by");
 		} # end if
-		return map { $type->new( \@identified_by, $_ ) } @$data;
+		return map { $object_type->new( \@identified_by, $_ ) } @$data;
 #$log->debug("Objs: "  . scalar @objs );
 		#return @objs;
 	} # end if
 } # end sub find
 
 sub find_one {
-	my $type = shift;
+	my $object_type = shift;
 	my $params;
 	if ( @_ == 1 ) {
 		$params = $_[0];
 	} else {
 		%{$params} = @_;
 	} # end if
-	$$params{'limit'}=1;
-	my @Results = $type->find($params);
+	$$params{limit}=1;
+	my @Results = $object_type->find($params);
 	return $Results[0] if @Results;
 } # end sub find_one
 

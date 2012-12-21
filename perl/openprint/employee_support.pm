@@ -8,6 +8,13 @@ require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
 require openprint::Email;
+require openprint::RMA_Log;
+require openprint::RMA_Part;
+require openprint::Fault_Found;
+require openprint::Fault;
+require openprint::Test;
+require openprint::Test_Result;
+require openprint::Upgrade;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -68,8 +75,228 @@ sub rma {
 
 	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( $param{action} eq 'Save' ) {
+		if ( Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
+			$param{received_on} = join('-', @param{'received_on_year','received_on_month','received_on_day'} );
+		} # end if
+
+		my $PO;
+		if ( $param{po_num} and ! ( $param{po_num} = openprint::PurchaseOrder->transform('num', $param{po_num}) ) ) {
+			$variable{error} .= 'Invalid PO #<br/>';
+		} # end if
+		if ( $param{po_num} ) {
+			$PO = openprint::PurchaseOrder->find_one(num=>$param{po_num});
+			if ( ! $PO ) {
+				$PO = new openprint::PurchaseOrder();
+				$variable{error} .= $PO->save({num=>$param{po_num}, supplier_id=>$session{company_id}});
+			} # end if
+		} # end if
+		my $Invoice;
+		if ( $param{invoice_num} and ! ( $param{invoice_num} = openprint::Invoice->transform('num', $param{invoice_num}) ) ) {
+            $variable{error} .= 'Invalid Invoice #<br/>';
+        } # end if
+        if ( $param{invoice_num} ) {
+            $Invoice = openprint::Invoice->find_one(num=>$param{invoice_num});
+            if ( ! $Invoice ) {
+                $Invoice = new openprint::Invoice();
+                $variable{error} .= $Invoice->save({num=>$param{invoice_num}, invoicer_id=>$session{company_id}, invoicee_id=>$param{company_id} });
+            } # end if
+        } # end if
+		my $Order;
+		if ( $param{order_id} and ! ( $param{order_id} = openprint::Invoice->transform('id', $param{order_id}) ) ) {
+            $variable{error} .= 'Invalid Order #<br/>';
+        } # end if
+        if ( $param{order_id} ) {
+            $Order = openprint::Order->find_one(id=>$param{order_id});
+            if ( ! $Order ) {
+                $Order = new openprint::Order();
+                $variable{error} .= $Order->save({id=>$param{order_id}, supplier_id=>$session{company_id}, company_id=>$param{company_id} });
+            } # end if
+        } # end if
+
+		$variable{error} .= $RMA->save({
+			rmanumber	=>	$param{rmanumber},
+			received_on	=>	$param{received_on},
+			( $Order ? ( order_id	=>	$$Order{id} ) : () ),
+			( $PO ? ( po_id		=>	$PO->id() ) : () ),
+			( $Invoice ? ( invoice_id	=>	$Invoice->id() ) : () ),
+			company_id	=>	$param{company_id},
+			product_id	=>	$param{product_id},
+			shipto_address_id	=>	$param{shipto_address_id},
+			serialnumber	=> $param{serialnumber},
+			description		=>	$param{description},
+			comments		=>	$param{comments},
+			accessories		=>	$param{accessories},
+		});
+
+		if ( ! $variable{error} ) {
+			$RMA = new openprint::RMA();
+			$RMA->set({
+				rmanumber	=>	$param{rmanumber},
+				received_on	=>	$param{received_on},
+				order_id	=>	$param{order_id},
+				( $PO ? ( po_id		=>	$PO->id() ) : () ),
+				( $Invoice ? ( invoice_id	=>	$Invoice->id() ) : () ),
+				company_id	=>	$param{company_id},
+				product_id	=>	$param{product_id},
+				shipto_address_id	=>	$param{shipto_address_id},
+			});
+
+# Fields to remember
+			foreach my $key ( 'company_id', 'order_id', 'po_num', 'invoice_num', 'product_id', 'shipto_address_id', 'rmanumber' ) {
+				$session{'/employee/support/rma.html?'.$key} = $param{$key};
+			} # end foreach key
+		} # end if	
+	} else {	
+		if ( ! $RMA->id() ) {
+# Set default
+			$RMA->received_on( sprintf('%.4d-%.2d-%.2d', Date::Calc::Today() ) );
+			$RMA->company_id( $session{'/employee/support/rma.html?company_id'} );
+			$RMA->shipto_address_id( $session{'/employee/support/rma.html?shipto_address_id'} );
+		} # end if
+	} # end 
 
 } # end sub rma
+
+sub _faults {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{fault} = openprint::Fault->transform('name', $param{fault} );
+		if ( $param{fault} ) {
+			my $Fault = openprint::Fault->find_one('name lc'=>lc $param{fault});
+			if ( ! $Fault ) {
+				$Fault = new openprint::Fault();
+				$variable{error} .= $Fault->save({name=>$param{fault}});
+			} # end if
+			$param{fault_id} = $Fault->id();
+		} # end if
+		delete $param{fault};
+
+		my $Fault = new openprint::Fault_Found();
+		$variable{error} .= $Fault->save({
+			rma_id	=>	$RMA->id(),
+			fault_id	=>	$param{fault_id},
+			quantity	=>	$param{fault_quantity},
+			action		=>	$param{action_taken},
+			( $param{fault_user_id} ? ( user_id => $param{fault_user_id} ) : ( user_id => $session{user_id} ) ),
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub faults
+
+sub _upgrades {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{upgrade_new_version} = openprint::Upgrade->transform('new_version', $param{upgrade_new_version} );
+		if ( ! $param{upgrade_new_version} ) {
+			$variable{error} .= 'New version is a required field.<br/>';
+		} # end if
+		$param{upgrade_type_id} = openprint::Upgrade->transform('new_version', $param{upgrade_type_id} );
+		if ( ! $param{upgrade_type_id} ) {
+			$variable{error} .= 'Upgrade type is a required field.<br/>';
+		} # end if
+		return if $variable{error};
+
+		if ( ( $session{user_type} eq 'A' ) and $param{upgrade_type} ) {
+			my $Type = openprint::Upgrade_Type->find_one('name lc'=>lc $param{upgrade_type});
+			if ( ! $Type ) {
+				$Type = new openprint::Upgrade_Type();
+				$variable{error} .= $Type->save({name=>$param{upgrade_type}});
+			} # end if
+			$param{upgrade_type_id} = $Type->id();
+			delete $param{upgrade_type};
+		} # end if
+
+		my $Upgrade = new openprint::Upgrade();
+		$variable{error} .= $Upgrade->save({
+			rma_id	=>	$RMA->id(),
+			type_id	=>	$param{upgrade_type_id},
+			old_version	=>	$param{upgrade_old_version},
+			new_version	=>	$param{upgrade_new_version},
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _upgrades
+
+sub _tests {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{test} = openprint::Test->transform('name', $param{test} );
+		if ( $param{test} ) {
+			my $Test = openprint::Test->find_one('name lc'=>lc $param{test});
+			if ( ! $Test ) {
+				$Test = new openprint::Test();
+				$variable{error} .= $Test->save({name=>$param{test}});
+			} # end if
+			$param{test_id} = $Test->id();
+		} # end if
+		delete $param{test};
+
+		my $Result = new openprint::Test_Result();
+		$variable{error} .= $Result->save({
+			rma_id	=>	$RMA->id(),
+			test_id	=>	$param{test_id},
+			remarks	=>	$param{test_remarks},
+			result_id	=>	$param{result_id},
+			( $param{test_user_id} ? ( technician_id => $param{test_user_id} ) : ( technician_id => $session{user_id} ) ),
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _tests
+
+sub _parts {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{parts_product_id} = openprint::Product->transform('id', $param{parts_product_id} );
+		if ( ! $param{parts_product_id} ) {
+			$variable{error} .= 'No part specified.';
+			return;
+		} # end if
+	
+		my $Product = openprint::Product->find_one( id=>$param{parts_product_id} );
+		if ( ! $Product ) {
+			$variable{error} .= 'Product not found.';
+			return;
+		} # end if
+
+		my $Part = new openprint::RMA_Part();
+		$variable{error} .= $Part->save({
+			rma_id		=>	$RMA->id(),
+			product_id	=>	$param{parts_product_id},
+			serialnumber	=>	$param{parts_serialnumber},
+			quantity	=>	$param{parts_quantity},
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _parts
 
 sub helpdesk_search {
 
@@ -159,7 +386,7 @@ sub returns {
 
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_start', -180 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'created_on_end', 0 );
-	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_start', -60 );
 	ssi::setup_date_select( '/employee/support/returns.html', 'updated_on_end', 0 );
 
 	_returns();
@@ -175,21 +402,30 @@ sub _returns {
 			( map { 'updated_on_end_'.$_ } ( 'year','month','day' ) ),
 			);
 
-	my %companies = @{openprint::Company->dropdown()};
+	my %companies = @{openprint::Company->dropdown()} if $session{user_type} ne 'A';
 	my @company_ids = keys %companies;
 
 	if ( $session{$url.'?company_id'} and ! sets::isin( $session{$url.'?company_id'}, \@company_ids ) ) {
 		delete $session{$url.'?company_id'};
 	} # end if
 
-	@{$variable{RMAS}} = openprint::RMA->find(
-		ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
-		ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
-		ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
-		ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
-		company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ),
-		order	=>	'rmanumber,id',
-	);
+	if ( $param{rmanumber} ) {
+		$param{rmanumber} .= '%' if $param{rmanumber} !~ /%/;
+		@{$variable{RMAS}} = openprint::RMA->find( 'rmanumber ilike'=>$param{rmanumber}, order   =>  'rmanumber,id',
+			( @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+ );
+		
+	} else {
+
+		@{$variable{RMAS}} = openprint::RMA->find(
+			ssi::date_filter( $url.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $url.'?created_on_end', 'created_on <=' ),
+			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
+			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
+			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			order	=>	'rmanumber,id',
+		);
+	} # end if
 } # end sub _returns
 
 1;
