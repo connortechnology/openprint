@@ -448,15 +448,15 @@ sub find_operators {
 	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
 		return $field.'::text ' . $operator . '?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?', $value;
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?', $value;
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' >= ?)', $value;
 	} elsif ( $operator eq 'null_or_>' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?', $value;
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' > ?)', $value;
 	} elsif ( $operator eq 'null_or_<' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?', $value;
-	} elsif ( $operator eq 'null_or_=' ) {
-		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?', $value;
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' < ?)', $value;
+	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
+		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
 	} elsif ( $operator eq 'exists' ) {
 		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field, $value;
 	} elsif ( $operator eq 'lc' ) {
