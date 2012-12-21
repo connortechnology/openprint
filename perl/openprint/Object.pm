@@ -447,10 +447,6 @@ sub find_operators {
 		} # end if
 	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
 		return $field.'::text ' . $operator . '?', $value;
-	} elsif ( $operator eq 'start' ) {
-		return $field.$type.' >= ?', $value;
-	} elsif ( $operator eq 'end' ) {
-		return $field.$type.' <= ?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
