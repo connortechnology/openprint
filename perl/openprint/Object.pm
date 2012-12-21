@@ -445,6 +445,10 @@ sub find_operators {
 		} else {
 			return ( $field.$type.' ' . $operator . ' (?)', $value );
 		} # end if
+	} elsif ( $operator eq 'contains' ) {
+		return ( '? IN '.$field.$type, $value );
+	} elsif ( $operator eq 'does not contain' ) {
+		return ( '? NOT IN '.$field.$type, $value );
 	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
 		return $field.'::text ' . $operator . '?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
