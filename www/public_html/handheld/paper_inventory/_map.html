@@ -5,7 +5,7 @@
 		$$variable{'Selected'} = $$variable{'RFIDTag'}->Location();
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
 	} elsif ( $param{'selected_name'} ) {
-		$$variable{'Selected'} = openprint::Location->find_one( 'name_lc' => $param{'selected_name'} );
+		$$variable{'Selected'} = openprint::Location->find_one( 'name lc' => lc $param{'selected_name'} );
 	} elsif ( $param{'selected_id'} ) {
 		$$variable{'Selected'} = new openprint::Location( $param{'selected_id'} );
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();

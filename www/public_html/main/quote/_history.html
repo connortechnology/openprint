@@ -2,7 +2,7 @@
 	if ( $param{'QuoteID'} ) {
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
 			( sets::isin($session{'user_type'}, ['E','A'] ) ? () : ( 'company_id'		=>	$session{'company_id'} ) ),
-			'id_like'			=>	'%'.$param{'QuoteID'}.'%',
+			'id like'			=>	'%'.$param{'QuoteID'}.'%',
 		);
 	} else {
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
@@ -19,7 +19,7 @@
 
 	<? 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 		<? eval (
-				@{$$variable{'Quotes'}} = openprint::Quote->find( 'id_like' => '%'.$param{'QuoteID'}.'%' );
+				@{$$variable{'Quotes'}} = openprint::Quote->find( 'id like' => '%'.$param{'QuoteID'}.'%' );
 		) ?>
 		There were no quotes matching your search criteria for your currently selected Company.<br/>
 		<? if ( @{$$variable{'Quotes'}} > 0 ) ?>

@@ -165,10 +165,11 @@ sub _photos {
 
 sub search {
 	_search();
-	#if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		#ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
-		#ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
-	#} # end if
+	if ( ! exists $session{'/location/search.html?type_id'} ) {
+		if ( $_ = openprint::Location_Type->find_one(name=>'place') ) {
+			$session{'/location/search.html?type_id'} = $_->id();
+		} # end if
+	} # end if
 
 	my $Location = new openprint::User( $session{'user_id'} )->Location() if $session{user_id};;
 	if ( ! ( $Location and $Location->id() ) ) {

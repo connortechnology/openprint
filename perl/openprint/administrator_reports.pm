@@ -70,14 +70,14 @@ sub orders {
 		my @header = ('OrderID', 'Docket', 'Order Date', 'CSR', 'Company Name', 'Status', 'Total', 'Currency');
 
 		my @Orders = openprint::Order->find(
-				'company_id'		=> $param{'ddmCustomer'},
-				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
-				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
-				'value_start'	   => $param{'TotalStart'},
-				'value_end'		 => $param{'TotalEnd'},
-				'salesrep_id'	   => $param{'ddmEmployee'},
-				'status'			=> $param{'ddmStatus'},
-				'currency_id'	   => $param{'ddmCurrency'},
+				( $param{ddmCustomer} ? ( 'company_id'		=> $param{'ddmCustomer'} ) : () ),
+				'created_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
+				'created_on <='	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+				( $param{'TotalStart'} ? ( 'value >='	   => $param{'TotalStart'} ) : () ),
+				( $param{'TotalEnd'} ? ( 'value <='		 => $param{'TotalEnd'} ) : () ),
+				( $param{ddmEmployee} ? ( 'salesrep_id'	   => $param{'ddmEmployee'} ) : () ),
+				( $param{ddmStatus} ? ( 'status'			=> $param{'ddmStatus'} ) : () ),
+				( $param{ddmCurrency} ? ( 'currency_id'	   => $param{'ddmCurrency'} ) : () ),
 				);
 		my @data;
 		my $total = 0;
@@ -425,8 +425,8 @@ sub yearly_sales {
 
 					my @Orders = openprint::Order->find( 
 							'company_id' => $Company->id(),
-							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $year ),
-							'created_on_end' => sprintf('%.4d-12-31 23:59:59', $year ),
+							'created_on >=' => sprintf('%.4d-01-01 00:00:00', $year ),
+							'created_on <=' => sprintf('%.4d-12-31 23:59:59', $year ),
 							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 							);
 					last if $dbh->errstr();

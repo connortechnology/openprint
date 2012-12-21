@@ -133,8 +133,8 @@ if ( openprint::Project->find_one() ) {
 	@Projects = openprint::Project->find(
 			'predefined'	=>	0,
 			'status'=>'Deleted','order'=>'id desc',
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'limit'		=>	1000,
 			'quote_id exists'	=>	0,
 			);
@@ -165,14 +165,14 @@ if ( openprint::Project->find_one() ) {
 
 if ( openprint::Order->find_one() ) {
 # Clean out unfinished Orders
-	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
 	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
 } # end if
 if ( openprint::Quote->find_one() ) {
-	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
+	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
 	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
@@ -239,12 +239,12 @@ foreach my $Skid ( openprint::Skid->find() ) {
 
 if ( 0 ) {
 	require openprint::PaperInventory;
-	foreach my $PI ( openprint::PaperInventory->find('comment_like'=>'Removed%' ) ) {
+	foreach my $PI ( openprint::PaperInventory->find('comment like'=>'Removed%' ) ) {
 		$PI->comment() =~ /Removed (.*)/;
 		$PI->comment( "Checked out $1" );
 		$PI->save();
 	} # end foreach
-	foreach my $PI ( openprint::PaperInventory->find('comment_like'=>'Skid checked%' ) ) {
+	foreach my $PI ( openprint::PaperInventory->find('comment like'=>'Skid checked%' ) ) {
 		$PI->comment() =~ /Skid checked (.*)/;
 		$PI->comment( "Checked $1" );
 		$PI->save();

@@ -639,7 +639,7 @@ sub bump {
 			} # end foreach job in shift
 			push @final_order, $self->Shift()->Next()->Schedule();
 			push @final_order, $self;
-			push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
+			push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime >='=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
 
 			openprint::employee_production::reorder_jobs( @final_order );
 		} # end if

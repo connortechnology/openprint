@@ -90,8 +90,8 @@ sub save_contents {
 						'company_id'	=>	$PO->company_id(),
 						'vendor_id'		=>	$$p{'supplier_id'},
 						'type_id'		=>	$$p{'type_id-'.$content_id},
-						'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
-						'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
+						'name lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
+						'product lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
 						);
 				if ( ! $Item ) {
 					$Item = new openprint::PurchaseOrder_Item();

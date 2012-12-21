@@ -111,7 +111,7 @@ sub category_id {
 
 sub category {
 	if ( @_ > 1 ) {
-		my $Category = openprint::Expense_Category->find_one('name_lc'=>lc$_[1]);
+		my $Category = openprint::Expense_Category->find_one('name lc'=>lc $_[1]);
 		if ( ! $Category ) {
 			$Category = new openprint::Expense_Category();
 			$Category->save({'name'=>$_[1]})
@@ -128,7 +128,7 @@ sub Category {
 
 sub account {
 	if ( @_ > 1 ) {
-		my $Account = openprint::Expense_Account->find_one('name_lc'=>lc$_[1]);
+		my $Account = openprint::Expense_Account->find_one('name lc'=>lc $_[1]);
 		if ( ! $Account ) {
 			$Account = new openprint::Expense_Account();
 			$Account->save({'name'=>$_[1]})

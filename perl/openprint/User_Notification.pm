@@ -34,7 +34,7 @@ sub User {
 }
 sub type {
 	if ( @_ > 1 ) {
-		my $Type = openprint::User_Notification_Type->find_one('name_lc'=>lc $_[1]);
+		my $Type = openprint::User_Notification_Type->find_one('name lc'=>lc $_[1]);
 		if ( ! $Type->id() ) {
 			$Type->save('name'=>$_[1]);
 		} # end if

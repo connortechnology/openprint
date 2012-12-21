@@ -35,8 +35,8 @@
 	</p>
 	<p class="buttons">
 		<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::button( 'ShowResults', { onclick=>'f1.submit();', href=>'', text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 ); ) ?>
 	</p>
 </fieldset>
@@ -48,7 +48,10 @@
 			$params{'id'} = $openprint::param{'ddmEmployee'};
 		} # end if
 		@{$$variable{'Results'}} = openprint::User->find( %params );
-		@{$$variable{'Projects'}} = openprint::Project->find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+		@{$$variable{'Projects'}} = openprint::Project->find(
+			'ordered_on <='=>"$$variable{'End'} 23:59:59",
+			'ordered_on >='=>"$$variable{'Start'} 00:00:00",
+			);
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
 	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:

@@ -49,7 +49,8 @@ $serial = 'invoices_id_seq';
 );
 
 %find_fields = (
-	'po'	=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
+	po		=>	'(SELECT po FROM invoiced_products WHERE invoiced_products.invoice_id = invoices.id)',
+	sent_on	=>	'(SELECT created_on FROM invoice_logs WHERE invoice_id=invoices.id LIMIT 1)',
 );
 
 %transforms = (
@@ -60,7 +61,7 @@ $serial = 'invoices_id_seq';
 	deleted		=> 0,
 	posted		=> 0,
 	interest		=> undef,
-	monthly_interest		=> undef,
+	monthly_interest	=> undef,
 	paid			=> undef,
 	bad_debt		=> 0,
 );
@@ -274,8 +275,8 @@ sub Taxes {
 	if ( ! ( $$self{'Taxes'} and @{$$self{'Taxes'}} ) ) {
 		$$self{'Taxes'} = [];
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='	=>	$$self{'created_on'},
-					'period_end_null_or_>='		=>	$$self{'created_on'},
+					'period_start null_or_<='	=>	$$self{'created_on'},
+					'period_end null_or_>='		=>	$$self{'created_on'},
 					'country'	=>	$self->Invoicee()->country(),
 					'state'		=>	$self->Invoicee()->state()),
 				) {

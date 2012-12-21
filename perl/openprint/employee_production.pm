@@ -48,7 +48,7 @@ sub jobs_by_csr {
 } # end sub jobs_by_csr
 
 sub _jobs_by_csr {
-	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback',
+	my @params = ( 'Equipment', 'category_id', 'salesrep_id','status','show_feedback', 'company_id', 'docket',
 			( map { 'schedule_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'schedule_end_'.$_ } ( 'year','month','day' ) ),
 		);
@@ -90,7 +90,7 @@ sub _jobs_by_csr_ul {
 		} # end if
 		@{$variable{Projects}} = openprint::Project->find(
 				status      =>  $Project->status(),
-				salesrep_id =>  $Project->Company()->salesrep_id(),
+				salesrep_id =>  [ $Project->Company()->salesrep_id() ],
 				order       =>  'priority',
 				);
 	} elsif ( $param{action} eq 'complete' ) {
@@ -104,7 +104,7 @@ sub _jobs_by_csr_ul {
 			my $csr_id = $Project->Company()->salesrep_id();
 			@{$variable{Projects}} = openprint::Project->find(
 					status      =>  $old_status,
-					salesrep_id =>  $csr_id,
+					salesrep_id =>  [ $csr_id ],
 					order       =>  'priority',
 					);
 			$old_status =~ s/\s/_/g;
@@ -302,9 +302,9 @@ sub bindery_overview {
 
 	@{$variable{'Projects'}} = ();
 	my @Projects = openprint::Project->find(order=>'due_date',
-			'status'			=>	\@statuses,
-			'due_date_start'	=>	$variable{'StartDate'},
-			'due_date_end'		=>	$variable{'EndDate'},
+			'status'		=>	\@statuses,
+			'due_date >='	=>	$variable{'StartDate'},
+			'due_date <='	=>	$variable{'EndDate'},
 			( $param{ddmSalesRep} ? ( 'salesrep_id'		=>	$param{ddmSalesRep} ) : () ),
 			);
 	foreach my $Project ( @Projects ) {
@@ -472,7 +472,7 @@ sub projects {
 			my $Order = new openprint::Order( $order_id );
 			@projects = $Order->Projects();
 		} elsif ( $startdocket and $enddocket ) {
-			@projects = openprint::Project->find( 'docket_start'=>$startdocket, 'docket_end' => $enddocket );
+			@projects = openprint::Project->find( 'docket >='=>$startdocket, 'docket <=' => $enddocket );
 		} elsif ( $startdocket ) {
 			@projects = openprint::Project->find( 'docket'=>$startdocket );
 		} elsif ( $enddocket ) {
@@ -1273,7 +1273,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 				} # end foreach row
 
 # Get the rest of the jobs on this equipment
-				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
+				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime <='=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 				foreach my $row_id ( @order ) {
@@ -1370,7 +1370,7 @@ sub reorder_jobs {
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift->find(
 			'equipment_id'	=>	$$row{'equipment_id'},
-			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
+			'endtime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
 			'order'			=>	'starttime',
 			);
 #foreach my $S ( @Shifts ) {

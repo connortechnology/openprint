@@ -6,31 +6,31 @@ Please select an allocation to view/edit.<br>
 		<p>
 			<label>Docket</label>
 			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/allocations.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_allocations.html', $('f1').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );",'','Go' ); ) ?>
+			<? echo ( ssi::button( 'Go2', { onclick=>"LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );", href=>'', text=>'Go' } ); ) ?>
 		</p>
 		<hr/>
 		<p>
 			<label>Date Added</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'created_on_start', $session{'/employee/inventory/allocations.html?created_on_start_year'} ? [@session{'/employee/inventory/allocations.html?created_on_start_year','/employee/inventory/allocations.html?created_on_start_month','/employee/inventory/allocations.html?created_on_start_day'}] : ' '); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'created_on_start_today', 't.gif', 'set_today( f1.created_on_start_year, f1.created_on_start_month, f1.created_on_start_day );', '', 'T' ); ) ?>
+<? echo ( ssi::button( 'created_on_start_today', { onclick=>'set_today( f1.created_on_start_year, f1.created_on_start_month, f1.created_on_start_day );', href=>'', text=>'T' } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'created_on_end', $session{'/employee/inventory/allocations.html?created_on_end_year'} ? [@session{'/employee/inventory/allocations.html?created_on_end_year','/employee/inventory/allocations.html?created_on_end_month','/employee/inventory/allocations.html?created_on_end_day'}] : ' ' ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'created_on_end_today', 't.gif', 'set_today( f1.created_on_end_year, f1.created_on_end_month, f1.created_on_end_day );', '', 'T' ); ) ?>
+<? echo ( ssi::button( 'created_on_end_today', { onclick=>'set_today( f1.created_on_end_year, f1.created_on_end_month, f1.created_on_end_day );', href=>'', text=>'T' } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Stock Age</label>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'stock_age_start', $session{'/employee/inventory/allocations.html?stock_age_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_start_year','/employee/inventory/allocations.html?stock_age_start_month','/employee/inventory/allocations.html?stock_age_start_day'} ) : ' ' ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'stock_age_start_today', 't.gif', 'set_today( f1.stock_age_start_year, f1.stock_age_start_month, f1.stock_age_start_day );', '', 'T' ); ) ?>
+<? echo ( ssi::button( 'stock_age_start_today', { onclick=>'set_today( f1.stock_age_start_year, f1.stock_age_start_month, f1.stock_age_start_day );', href=>'', text=>'T' } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
 <? echo ( ssi::date_select( 'stock_age_end', $session{'/employee/inventory/allocations.html?stock_age_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_end_year','/employee/inventory/allocations.html?stock_age_end_month','/employee/inventory/allocations.html?stock_age_end_day'} ) : ' ' ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'stock_age_end_today', 't.gif', 'set_today( f1.stock_age_end_year, f1.stock_age_end_month, f1.stock_age_end_day );', '', 'T' ); ) ?>
+<? echo ( ssi::button( 'stock_age_end_today', { onclick=>'set_today( f1.stock_age_end_year, f1.stock_age_end_month, f1.stock_age_end_day );', href=>'', text=>'T' } ); ) ?>
 			</span>
 		</p>
 		<p><label>Type</label>
@@ -41,8 +41,8 @@ Please select an allocation to view/edit.<br>
         </p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );", '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::button( 'ShowResults', { onclick=>"LoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );", href=>'', text=>'Show Results' } ),
+				ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 				); ) ?>
 		</p>
 	</fieldset>

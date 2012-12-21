@@ -386,8 +386,8 @@ sub Taxes {
 
 	if ( $country and $state and ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='	=>	$created_on,
-					'period_end_null_or_>='	 =>	$created_on,
+					'period start_null_or_<='	=>	$created_on,
+					'period end_null_or_>='	 =>	$created_on,
 					'country'	=>	$country,
 					'state'	 =>	$state,
 				) ) {
@@ -405,8 +405,8 @@ sub Taxes {
 	} # end if
 	if ( @_ > 1 and $$self{'id'} ) {
 		my @new_taxes = openprint::Tax->find(
-				'period_start_null_or_<='	=>	$created_on,
-				'period_end_null_or_>='	 	=>	$created_on,
+				'period start_null_or_<='	=>	$created_on,
+				'period end_null_or_>='	 	=>	$created_on,
 				country	=>	$country,
 				state	 =>	$state,
 			);

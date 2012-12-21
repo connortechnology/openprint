@@ -112,5 +112,7 @@ sub _address_ddm {
 	require openprint::Address;
 } # end sub _addres_ddm
 
+sub _company_ddm {
+} # end sub _company_ddm
 1;
 __END__

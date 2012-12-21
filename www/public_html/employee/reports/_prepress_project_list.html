@@ -14,10 +14,10 @@
 		} # end if
 		
 	} elsif ( $$variable{'StartDocket'} ) {
-		$sql{'docket_like'} = $$variable{'StartDocket'}.'%';
+		$sql{'docket like'} = $$variable{'StartDocket'}.'%';
 	} else {
-		$sql{'take_over_start'} = sprintf( '%.4d-%.2d-%.2d 00:00:00', ssi::fix_date(@param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'}) );
-		$sql{'take_over_end'} = sprintf( '%.4d-%.2d-%.2d 23:59:59', ssi::fix_date(@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'}) );
+		$sql{'take_over <='} = sprintf( '%.4d-%.2d-%.2d 23:59:59', ssi::fix_date(@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'}) );
+		$sql{'take_over >='} = sprintf( '%.4d-%.2d-%.2d 00:00:00', ssi::fix_date(@param{'TakeOverStartYear','TakeOverStartMonth','TakeOverStartDay'}) );
 
 		$sql{'company_id'} = $param{'ddmCustomer'} if $param{'ddmCustomer'};
 		$sql{'order_id is null'} = 0;

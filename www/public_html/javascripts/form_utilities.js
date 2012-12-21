@@ -1376,6 +1376,11 @@ function get_form_element_array( form, name ) {
 } // end function get_form_element_array
 
 // We do the matching to prevent cursor movements
+function input_filter(e,regexp) {
+	if ( e.value.match(regexp) )
+		e.value = e.value.replace(regexp,'');
+	return e.value;
+}
 function cardinalize(e) {
 	if ( e.value.match(/\D/g) )
 		e.value = e.value.replace(/\D/g,'');
@@ -1389,6 +1394,11 @@ function integerize(e) {
 function floatize(e) {
 	if ( e.value.match(/[^\d\-\.]/g) )
 		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
+	return e.value;
+}
+function floatize_calculator(e) {
+	if ( e.value.match(/[^\d\-\.\+\*\/]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.\+\*\/]/g,''));
 	return e.value;
 }
 function hexize(e) {
