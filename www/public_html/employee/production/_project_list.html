@@ -1,8 +1,8 @@
 <? eval (
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
 		@{$$variable{'Projects'}} = openprint::Project->find(
-			'docket_start' => $param{'StartDocket'},
-			'docket_end'=> $param{'EndDocket'},
+			'docket <='	=> $param{'EndDocket'},
+			'docket >=' => $param{'StartDocket'},
 			'order'=>'lngdocketnumber',
 			);
 
@@ -26,8 +26,8 @@
 				( $session{'/employee/production/projects.html?ddmPress'} ? (	'used_press_name in'	=> $session{'/employee/production/projects.html?ddmPress'} ) : () ),
 				( $session{'/employee/production/projects.html?ddmEmployee'} ? (	'operator_id in'	=> $session{'/employee/production/projects.html?ddmEmployee'} ) : () ),
 				'status'			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
-				'due_date_start'	=> $$variable{'DueDateStart'},
-				'due_date_end'		=> $$variable{'DueDateEnd'},
+				'due_date <='		=> $$variable{'DueDateEnd'},
+				'due_date >='		=> $$variable{'DueDateStart'},
 				#'due_date'			=> undef,
 				'order_id is null'	=> 0,
 				'order'				=> 'due_date, lngDocketNumber',

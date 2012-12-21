@@ -275,8 +275,8 @@ sub Taxes {
 	if ( ! ( $$self{'Taxes'} and @{$$self{'Taxes'}} ) ) {
 		$$self{'Taxes'} = [];
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='	=>	$$self{'created_on'},
-					'period_end_null_or_>='		=>	$$self{'created_on'},
+					'period_start null_or_<='	=>	$$self{'created_on'},
+					'period_end null_or_>='		=>	$$self{'created_on'},
 					'country'	=>	$self->Invoicee()->country(),
 					'state'		=>	$self->Invoicee()->state()),
 				) {

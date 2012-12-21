@@ -8,14 +8,14 @@
     $filters{'currency_id'} = $param{'currency_id'} if $param{'currency_id'};
     $filters{'total_start'} = $param{'total_start'} if $param{'total_start'};
     $filters{'total_end'} = $param{'total_end'} if $param{'total_end'};
-    if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
-        $filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
-    } # end if
     if ( Date::Calc::check_date( @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} ) ) {
-        $filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+        $filters{'created_on <='} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+    } # end if
+    if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
+        $filters{'created_on >='} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
     } # end if
 
-    @{$variable{'Quotes'}} = openprint::Quote->find( %filters );
+    $variable{'Quotes'} = [ openprint::Quote->find( %filters ) ];
 
 ) ?>	
 <? if ( @{$$variable{'Quotes'}} ) ?>

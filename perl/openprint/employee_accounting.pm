@@ -414,7 +414,7 @@ sub expense {
 		$param{'paid_on'} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
 		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
 		if ( ! $param{'recipient_id'} ) {
-			my $Recipient = openprint::Company->find_one('name_lc'=>lc$param{'recipient'});
+			my $Recipient = openprint::Company->find_one('name lc'=>lc $param{'recipient'});
 			if ( ! $Recipient ) {
 				$Recipient = new openprint::Company();
 				$variable{'error'} .= $Recipient->save({'name'=>$param{'recipient'}});

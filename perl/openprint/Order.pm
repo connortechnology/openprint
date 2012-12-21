@@ -609,8 +609,8 @@ sub Taxes {
 	} # end if
 	if ( $self->Company()->country() and $self->Company()->state() and ! @{$$self{'Taxes'}} ) {
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='	=>	$$self{'created_on'},
-					'period_end_null_or_>='		=>	$$self{'created_on'},
+					'period_start null_or_<='	=>	$$self{'created_on'},
+					'period_end null_or_>='		=>	$$self{'created_on'},
 					'country'	=>	$self->Company()->country(),
 					'state'		=>	$self->Company()->state()),
 				) {

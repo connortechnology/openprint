@@ -15,13 +15,13 @@
 		} # end foreach
 	} else {
 		foreach my $Ledger ( openprint::Ledger->find( 
-			'occurred_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/ledger.html?occurred_on_start_year','/employee/accounting/ledger.html?occurred_on_start_month','/employee/accounting/ledger.html?occurred_on_start_day'} ),
-			'occurred_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/ledger.html?occurred_on_end_year','/employee/accounting/ledger.html?occurred_on_end_month','/employee/accounting/ledger.html?occurred_on_end_day'} ),
-			'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/ledger.html?due_on_start_year','/employee/accounting/ledger.html?due_on_start_month','/employee/accounting/ledger.html?due_on_start_day'} ),
-			'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/ledger.html?due_on_end_year','/employee/accounting/ledger.html?due_on_end_month','/employee/accounting/ledger.html?due_on_end_day'} ),
-			'ledgere_id'		=> $session{'/employee/accounting/ledger.html?company_id'},
-			'ledgerr_id'		=> $session{'company_id'},
-			'order'				=> 'id',
+			ssi::date_filter( '/employee/accounting/ledger.html?occurred_on_end', 'occurred_on <=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?occurred_on_start', 'occurred_on >=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?due_on_end', 'due_on <=' ),
+			ssi::date_filter( '/employee/accounting/ledger.html?due_on_start', 'due_on >=' ),
+			( $session{'/employee/accounting/ledger.html?company_id'} ? ( 'ledgere_id'		=> $session{'/employee/accounting/ledger.html?company_id'} ) : () ),
+			( $session{'company_id'} ? ( 'ledgerr_id'		=> $session{'company_id'} ) : () ),
+			order				=> 'id',
 			) ) {
 			push @{$$variable{'Ledgers'}}, $Ledger;
 			$$variable{'subtotal'} += $Ledger->subtotal();

@@ -7,12 +7,12 @@
 		<p>
 			<label for="OrderID">Order ID</label>
 			<input type="number" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="cardinalize(this);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go1', { onclick=>"f1.submit();", href=>'', text=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Docket</label>
 			<input type="number" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="cardinalize(this);" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ); ) ?>
+			<? echo ( ssi::button( 'Go2', { onclick=>"f1.submit();", href=>'', text=>'Go' } ); ) ?>
 		</p>
 		<p>
 			<label>Company</label>
@@ -93,9 +93,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 		</p>
 		<p class="buttons">
 		<? echo ( $log, $dbh, join('',
-			ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.action='orders.html';f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
-			ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' ),
-			ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.reset();", '', 'Reset' ),
+			ssi::button( 'ShowResults', { onclick=>"f1.action='orders.html';f1.btnFunction.value='Show Results';f1.submit();", href=>'', text=>'Show Results' } ),
+			ssi::button( 'DownloadCSV', { onclick=>"f1.action='orders.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", href=>'', text=>'Download in CSV Format' } ),
+			ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -107,8 +107,8 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 	} else {
 		@{$$variable{'Orders'}} = openprint::Order->find( 
 			( $param{'ddmCustomer'} ? ( 'company_id'		=> $param{'ddmCustomer'} ) : () ),
-			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
-			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+			'created_on <='	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
+			'created_on >='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
 			( $param{'TotalStart'} ? ( 'total >='		=> $param{'TotalStart'} ) : () ),
 			( $param{'TotalEnd'} ? ( 'total <='			=> $param{'TotalEnd'} ) : () ),
 			( $param{'ddmEmployee'} ? ( 'salesrep_id'		=> $param{'ddmEmployee'} ) : () ),

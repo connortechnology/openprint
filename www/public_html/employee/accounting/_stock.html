@@ -20,8 +20,8 @@ Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/
 	my $rowclass = '';
 	my $total = 0;
 	foreach my $Manifest ( openprint::Manifest->find(
-			ssi::date_filter( '/employee/accounting/stock.html?received_on_start', 'received_on_start' ),
-			ssi::date_filter( '/employee/accounting/stock.html?received_on_end', 'received_on_end' ),
+			ssi::date_filter( '/employee/accounting/stock.html?received_on_end', 'received_on <=' ),
+			ssi::date_filter( '/employee/accounting/stock.html?received_on_start', 'received_on >=' ),
 			'order'				=>	'received_on',
 	) ) {
 		foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id(), 'cost'=>undef) ) {

@@ -108,7 +108,7 @@ sub Author {
 sub category {
 	if ( @_ > 1 ) {
 		if ( $_[1] ) {
-			my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
+			my $Category = openprint::Article_Category->find_one('name lc'=>lc $_[1]);
 			if ( ! $Category ) {
 				$Category = new openprint::Article_Category();
 				$Category->save({'name'=>$_[1]})

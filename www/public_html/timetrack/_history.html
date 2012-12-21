@@ -2,8 +2,8 @@
 	@{$$variable{'Timetracks'}} = ();
 	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
 	foreach my $Timetrack ( openprint::Timetrack->find( 
-		ssi::date_filter( '/timetrack/history.html?starting_start', 'starting_start' ),
-		ssi::date_filter( '/timetrack/history.html?starting_end', 'starting_end' ),
+		ssi::date_filter( '/timetrack/history.html?starting_end', 'starting <=' ),
+		ssi::date_filter( '/timetrack/history.html?starting_start', 'starting >=' ),
 
 		( sets::isin( $session{'user_type'}, ['E', 'A'] ) ?
 			( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'	=> $session{'/timetrack/history.html?company_id'} ) : () ) :

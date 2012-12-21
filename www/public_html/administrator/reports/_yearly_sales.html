@@ -52,9 +52,9 @@
 
 				my @Orders = openprint::Order->find( 
 						'company_id' => $Company->id(),
-						'created_on_start' => sprintf('%.4d-01-01 00:00:00', $year ),
-						'created_on_end' => sprintf('%.4d-12-31 23:59:59', $year ),
-						'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						'created_on <=' => sprintf('%.4d-12-31 23:59:59', $year ),
+						'created_on >=' => sprintf('%.4d-01-01 00:00:00', $year ),
+						'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						);
 				last if $dbh->errstr();
 				foreach my $Order ( @Orders ) {
@@ -73,7 +73,7 @@
 			} # end foreach year
 			my $LastOrder = openprint::Order->find_one( 
 					'company_id' => $Company->id(),
-					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 					'order'	=>	$openprint::Order::fields{'id'}.' DESC',
 					);
 			$html .= sprintf('<td class="last_order">%s</td>', $LastOrder ? Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($LastOrder->created_on()) ):'' );

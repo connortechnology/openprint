@@ -40,30 +40,32 @@ sub _project_history_results {
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
+	my @company_ids = map { $_->id() } @Companies;
+	openprint::User->find(company_id=>\@company_ids);
+
 	my %filters = (
-			ssi::date_filter( $page.'?created_on_start', 'created_on_start' ),
-			ssi::date_filter( $page.'?created_on_end', 'created_on_end' ),
+			ssi::date_filter( $page.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $page.'?created_on_end', 'created_on <=' ),
 			( 
 			 ( $session{$page.'?created_on_start_hour'} or $session{$page.'?created_on_start_minute'} ) ? (			
-				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{
-					 $page.'?created_on_start_hour',
-					 $page.'?created_on_start_minute',
-					 } ) ) : ()
-			),
+				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_start_hour',$page.'?created_on_start_minute'} ) ) : () ),
 			( 
 			 ( $session{$page.'?created_on_end_hour'} or $session{$page.'?created_on_end_minute'} ) ? (			
 				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_end_hour',$page.'?created_on_end_minute'} ) ) : () ),
-			( $session{$page.'?status'} ?  ( status => [ split(',', $session{$page.'?status'} ) ] ) : () ),
-			value_start		=> $param{value_start},
-			value_end		=> $param{value_end},
-			user_id			=> ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-			company_id	=> ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : [ map { $_->id() } @Companies ] ),
+			( $session{$page.'?status'} ? ( status => [ split(',', $session{$page.'?status'} ) ] ) : () ),
+			( $session{$page.'?value_start'} ? ( 'value >=' => $session{$page.'value_start'} ) : () ),
+			( $session{$page.'?value_end'} ? ( 'value <=' => $session{$page.'value_end'} ) : () ),
+			company_id	=> ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : \@company_ids ),
+			( $session{$page.'reprint'} ? ( reprint	=> $session{$page.'?reprint'} ) : () ),
 			order		=> 'id',
 			);
+	if ( $session{$page.'?Estimator'} ) {
+			$filters{user_id} = $session{$page.'?Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{$page.'?Estimator'};
+	} # end if
+
 	if ( $session{$page.'?company_id'} and ! exists $companies{$session{$page.'?company_id'}} ) {
 		$variable{error} .= 'Specified company is not allowed.<br/>';
 	} # end if
-	$filters{'reprint'} = $param{'reprint'} if $param{'reprint'};
 
 	if ( %companies ) {
 		@{$variable{'Projects'}} = ();
@@ -110,14 +112,13 @@ sub _project_history_results {
 	$variable{'ReportCount'} = 0;
 	$variable{'OrderedCount'} = 0;
 	return '';
-
-}
+} # end sub _project_history_results
 
 sub project_performance {
 	ssi::setup_date_select( '/employee/reports/project_performance.html', 'created_on_start', -31 );
 	ssi::setup_date_select( '/employee/reports/project_performance.html', 'created_on_end', '' );
 	_project_performance();
-}
+} # end sub _project_history_results
 
 sub _project_performance {
 	my $page = '/employee/reports/project_performance.html';
@@ -137,14 +138,19 @@ sub _project_performance {
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { $_->id(), $_->name() } @Companies;
+	my @company_ids = map { $_->id() } @Companies;
+	openprint::User->find(company_id=>\@company_ids);
 	my %filters = (
-			ssi::date_filter( $page.'?created_on_start', 'created_on_start' ),
-			ssi::date_filter( $page.'?created_on_end', 'created_on_end' ),
-			user_id	=> ($session{$page.'?estimator'} eq 'Non Employee' ? q{NOT IN (SELECT index FROM users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{$page.'?estimator'}),
+			ssi::date_filter( $page.'?created_on_start', 'created_on >=' ),
+			ssi::date_filter( $page.'?created_on_end', 'created_on <=' ),
 			( $session{$page.'?estimator_exclude'} ? ( 'user_id not in'	=> [ split(',', $session{$page.'?estimator_exclude'} ) ] ) : () ),
-			company_id => ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : [ map { $_->id() } @Companies ] ),
+			company_id => ( ( $session{$page.'?company_id'} and ( exists $companies{$session{$page.'?company_id'}} ) ) ? $session{$page.'?company_id'} : \@company_ids ),
 			order	=> 'index',
 	);
+
+	if ( $session{$page.'?estimator'} ) {
+		$filters{user_id} = ($session{$page.'?estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $session{$page.'?estimator'}),
+	} # end if
 
 	if ( $session{$page.'?company_id'} and ! exists $companies{$session{$page.'?company_id'}} ) {
 		$variable{error} .= 'Specified company is not allowed.<br/>';
@@ -262,16 +268,16 @@ sub _order_history_results {
 	if ( %companies ) {
 		foreach my $Order ( openprint::Order->find(
 			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
-			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
+			'created_on >=' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
+			'created_on <=' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
 			( $param{'status'} ? (
 				'status' =>
 				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
 				) : () ),
-			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
-			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+			( $param{'value_start'} ? ( 'value >=' => $param{'value_start'} ) : () ),
+			( $param{'value_end'} ? ( 'value <=' => $param{'value_end'} ) : () ),
 			'order' => ($param{'order'} ? $openprint::Order::fields{$param{'order'}} : 'id'),
-			( $param{'Estimator'} ? ( 'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
+			( $param{'Estimator'} ? ( user_id => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}) ) : () ),
 		) ) {
 			if ( $param{'reprint'} ) {
 				my $reprint = 0;
@@ -335,8 +341,8 @@ sub _order_performance {
 	if ( %companies ) {
 		foreach my $Order ( openprint::Order->find(
 			'company_id' => ( ($session{'/employee/reports/order_performance.html?company_id'} and exists $companies{$session{'/employee/reports/order_performance.html?company_id'}} ) ? $session{'/employee/reports/order_performance.html?company_id'} : [ keys %companies ] ),
-			ssi::date_filter( '/employee/reports/order_performance.html?created_on_start', 'created_on_start' ),
-			ssi::date_filter( '/employee/reports/order_performance.html?created_on_end', 'created_on_end' ),
+			ssi::date_filter( '/employee/reports/order_performance.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/employee/reports/order_performance.html?created_on_end', 'created_on <=' ),
 			( $session{'/employee/reports/order_performance.html?status'} ? (
 				status => [ split(',', $session{'/employee/reports/order_performance.html?status'} ) ],
 				) : () ),
@@ -469,8 +475,8 @@ sub _job_size {
 
 	foreach my $Order ( openprint::Order->find(
 				'company_id' => ( ($session{'/employee/reports/job_size.html?company_id'} and exists $companies{$session{'/employee/reports/job_size.html?company_id'}} ) ? $session{'/employee/reports/job_size.html?company_id'} : [ keys %companies ] ),
-				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_start', 'created_on_start' ),
-				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_end', 'created_on_end' ),
+				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_start', 'created_on >=' ),
+				ssi::date_filter( '/employee/reports/job_size.html?ordered_on_end', 'created_on <=' ),
 				( $param{'status'} ? (
 									  'status' =>
 									  ( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
@@ -579,9 +585,9 @@ sub customer_performance {
 
 				my @Orders = openprint::Order->find( 
 						'company_id' => $Company->id(),
-						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on_start' ),
-						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on_end' ),
-							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_start', 'created_on >=' ),
+						ssi::date_filter( '/employee/reports/customer_performance.html?ordered_on_end', 'created_on <=' ),
+							'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						);
 				last if $dbh->errstr();
 				next if ! @Orders;
@@ -597,9 +603,9 @@ sub customer_performance {
 				   ) {
 
 					next if openprint::Order->find(
-							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on_start' ),
-							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on_end' ),
-							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_start', 'created_on >=' ),
+							ssi::date_filter( '/employee/reports/customer_performance.html?not_ordered_on_end', 'created_on <=' ),
+							'status' => ['Complete','Picked Up', 'Shipped','Waiting For QA Approval', 'Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 							);
 				} # end if
 				foreach my $Order ( @Orders ) {

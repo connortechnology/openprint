@@ -31,20 +31,19 @@
 	<? echo (
 		my $html;
 		my %params = (
-			'updated_on_start'	=>
-			sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @session{
-				'/employee/inventory/inventory_log.html?StartYear',
-				'/employee/inventory/inventory_log.html?StartMonth',
-				'/employee/inventory/inventory_log.html?StartDay',
-				'/employee/inventory/inventory_log.html?StartHour',
-				'/employee/inventory/inventory_log.html?StartMinute',
-				}),
-			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @session{
+			'updated_on <='	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:59', @session{
 				'/employee/inventory/inventory_log.html?EndYear',
 				'/employee/inventory/inventory_log.html?EndMonth',
 				'/employee/inventory/inventory_log.html?EndDay',
 				'/employee/inventory/inventory_log.html?EndHour',
 				'/employee/inventory/inventory_log.html?EndMinute',
+				}),
+			'updated_on >='	=> sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @session{
+				'/employee/inventory/inventory_log.html?StartYear',
+				'/employee/inventory/inventory_log.html?StartMonth',
+				'/employee/inventory/inventory_log.html?StartDay',
+				'/employee/inventory/inventory_log.html?StartHour',
+				'/employee/inventory/inventory_log.html?StartMinute',
 				}),
 			'order'	=>	'updated_on',
 			);
