@@ -21,7 +21,7 @@ TOUCH=/bin/touch;
 RSYNC=/usr/bin/rsync;
 CHMOD=/bin/chmod;
 
-USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c=arg] args"
+USAGE="Usage: `/usr/bin/basename $0` [-hv] [-c arg] args"
 
 while getopts hvc: OPT; do
     case "$OPT" in
@@ -46,7 +46,7 @@ done
 
 if [ $CHECK_FILE ] ; then
 	if [ ! -e "$CHECK_FILE" ] ; then
-		echo "Check file missing"
+		echo "Check file missing at ($CHECK_FILE)"
 		exit 1
 	fi;
 fi;	
