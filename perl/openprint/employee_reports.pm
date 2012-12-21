@@ -24,8 +24,10 @@ sub project_history {
 sub _project_history_results {
 	my $page = '/employee/reports/project_history.html';
 	ssi::save_params($page,
-		( map { 'created_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
-		( map { 'created_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
+		( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
+		( map { 'created_on_time_start_'.$_ } ( 'hour','minute' ) ),
+		( map { 'created_on_time_end_'.$_ } ( 'hour','minute' ) ),
 		( map { 'status_on_start_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		( map { 'status_on_end_'.$_ } ( 'year','month','day','hour','minute' ) ),
 		'status', 'previous_status', 'company_id', 'Estimator', 'CSR', 'reprint', 
@@ -47,11 +49,11 @@ sub _project_history_results {
 			ssi::date_filter( $page.'?created_on_start', 'created_on >=' ),
 			ssi::date_filter( $page.'?created_on_end', 'created_on <=' ),
 			( 
-			 ( $session{$page.'?created_on_start_hour'} or $session{$page.'?created_on_start_minute'} ) ? (			
-				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_start_hour',$page.'?created_on_start_minute'} ) ) : () ),
+			 ( $session{$page.'?created_on_time_start_hour'} or $session{$page.'?created_on_time_start_minute'} ) ? (			
+				 'created_on::time >=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_time_start_hour',$page.'?created_on_time_start_minute'} ) ) : () ),
 			( 
-			 ( $session{$page.'?created_on_end_hour'} or $session{$page.'?created_on_end_minute'} ) ? (			
-				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_end_hour',$page.'?created_on_end_minute'} ) ) : () ),
+			 ( $session{$page.'?created_on_time_end_hour'} or $session{$page.'?created_on_time_end_minute'} ) ? (			
+				 'created_on::time <=' => sprintf('%.2d:%.2d', @session{$page.'?created_on_time_end_hour',$page.'?created_on_time_end_minute'} ) ) : () ),
 			( $session{$page.'?status'} ? ( status => [ split(',', $session{$page.'?status'} ) ] ) : () ),
 			( $session{$page.'?value_start'} ? ( 'value >=' => $session{$page.'value_start'} ) : () ),
 			( $session{$page.'?value_end'} ? ( 'value <=' => $session{$page.'value_end'} ) : () ),

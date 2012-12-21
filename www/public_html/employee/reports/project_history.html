@@ -75,12 +75,12 @@
 		<li>
 			<label>Created On Time</label>
 			<? echo ( join(':',
-						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_start_hour'} ], { name=>'created_on_start_hour' } ),
-						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_start_minute'} ], { name=>'created_on_start_minute' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_time_start_hour'} ], { name=>'created_on_time_start_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_time_start_minute'} ], { name=>'created_on_time_start_minute' } ),
 						); ) ?> to 
 			<? echo ( join(':',
-						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_end_hour'} ], { name=>'created_on_end_hour' } ),
-						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_end_minute'} ], { name=>'created_on_end_minute' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 23 ) ], [ $session{'/employee/reports/project_history.html?created_on_time_end_hour'} ], { name=>'created_on_time_end_hour' } ),
+						ssi::select( [ map { $_, $_ } ( '', 0 .. 59 ) ], [ $session{'/employee/reports/project_history.html?created_on_time_end_minute'} ], { name=>'created_on_time_end_minute' } ),
 						); ) ?>
 		</li>
 		<li>
