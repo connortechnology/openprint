@@ -251,9 +251,9 @@ sub _attendance {
 		my $Attending = new openprint::Event_Attendance( {event_id=>$param{event_id}, user_id=>$param{user_id} } );
 $log->debug("Got: " . $Attending->to_string() );
 		$variable{error} .= $Attending->save({
-			'event_id'	=>	$param{event_id},
-			'user_id'	=>	$param{user_id},
-			'attending'	=>	$param{attending},
+			event_id	=>	$param{event_id},
+			user_id		=>	$param{user_id},
+			attending	=>	$param{attending},
 		});
 	} # end if
 } # end sub _attendance
@@ -267,11 +267,12 @@ sub _invitation_users {
 	my $Privacy = $Event->Privacy();
 	my $privacy_users = $Privacy->user_id();
 	if ( $param{action} eq 'set' ) {
-		my %old = map { $_->user_id(), $_ } $Event->Invitations();
+		my %old = map { $_->user_id().'_'.$_->company_id(), $_ } $Event->Invitations();
 		my @user_ids;
 		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
-			my ( $user_id, $company_id ) = $id =~ /^(\d*)_(\d+)$/;
+			my ( $user_id, $company_id ) = $id =~ /^(\d*)_(\d*)$/;
 			if ( $company_id and ! $user_id ) {
+				# All users in the company
 				push @user_ids, map { $_->id() } ( new openprint::Company( $company_id )->Users() );
 			} else {
 				push @user_ids, $user_id;
@@ -327,7 +328,9 @@ sub _invitation_users {
 			$variable{error} .= $Privacy->save({user_id=>[ sets::union( @$privacy_users, @new_users ) ] });
 		} # end if
 	} elsif ( $param{email} ) {
-		foreach my $address ( misc::trim(split(',',$param{email})) ) {
+		foreach my $address ( misc::trim(split(/[,; ]/,$param{email})) ) {
+			$address =~ s/\s//g;
+			next if ! $address;
 			if ( ! Email::Valid->address( $address ) ) {
 				$variable{error} .= $address . ' is not a valid email address.<br/>';
 				next;
@@ -335,10 +338,10 @@ sub _invitation_users {
 			my $User = openprint::User->find_one('email lc'=>lc $address);
 			if ( ! $User ) {
 				$User = new openprint::User();
-				$User->save({email=>$address});
+				$variable{error} .= $User->save({email=>$address});
 			} # end if
 			if ( ! openprint::Event_Invitation->find_one(event_id=>$param{event_id}, user_id=>$$User{id}) ) {
-				new openprint::Event_Invitation()->save({event_id=>$param{event_id}, user_id=>$$User{id}});
+				$variable{error} .= (new openprint::Event_Invitation())->save({event_id=>$param{event_id}, user_id=>$$User{id}});
 				$variable{error} .= $Privacy->save({user_id=>[ @$privacy_users, $$User{id} ] });
 #$Event->invited_user_ids(undef);
 			} # end if

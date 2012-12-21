@@ -1391,6 +1391,11 @@ function floatize(e) {
 		e.value = parseFloat(e.value.replace(/[^\d\-\.]/g,''));
 	return e.value;
 }
+function floatize_calculator(e) {
+	if ( e.value.match(/[^\d\-\.\+\*\/]/g) )
+		e.value = parseFloat(e.value.replace(/[^\d\-\.\+\*\/]/g,''));
+	return e.value;
+}
 function hexize(e) {
 	e.value = e.value.replace(/[^\da-fA-F]/g,'');
 	return e.value;

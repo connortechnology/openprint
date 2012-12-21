@@ -852,6 +852,14 @@ sub input {
 			$options{type} = 'number';
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'float_calculator' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
 
