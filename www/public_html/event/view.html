@@ -154,12 +154,14 @@ $log->debug("My location is " . $MyLocation->to_string() );
 				<? echo ( ssi::make_drop_down( openprint::User_Relationship_Type->dropdown('order'=>'lower(name)') ) ) ?>
 			</select>
 		</li>
+<? if ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 		<li><label>By Email</label>
 			<input type="email" id="email" name="email" onkeydown="if(event.keyCode == 13){invite_by_email(this);}" />
 		</li>
+<? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 	</ul>
 	<p class="buttons">
-			<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
+		<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
 	</p>
 </fieldset>
 	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
@@ -168,11 +170,9 @@ $log->debug("My location is " . $MyLocation->to_string() );
 	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
 
 <? if ( $$variable{Event}->id() ) ?>
-	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};
-	 ) ?>
+	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>
 	<!--#include virtual="/photo_albums/_album_upload.html"-->
 	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
-	
 <? endif ( $$variable{Event}->id() ) ?>
 	</fieldset>
 	</form>
