@@ -450,7 +450,7 @@ sub find_operators {
 	} elsif ( $operator eq 'does not contain' ) {
 		return ( '? NOT IN '.$field.$type, $value );
 	} elsif ( sets::isin( $operator, [ 'like','ilike' ] ) ) {
-		return $field.'::text ' . $operator . '?', $value;
+		return $field.'::text ' . $operator . ' ?', $value;
 	} elsif ( $operator eq 'null_or_<=' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' <= ?)', $value;
 	} elsif ( $operator eq 'null_or_>=' ) {
@@ -462,7 +462,7 @@ sub find_operators {
 	} elsif ( $operator eq 'null_or_=' or $operator eq 'is null or =' ) {
 		return '('.$field.$type.' IS NULL OR '.$field.$type.' = ?)', $value;
 	} elsif ( $operator eq 'exists' ) {
-		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field, $value;
+		return ( $value ? ' EXISTS ' : 'NOT EXISTS ' ).$field;
 	} elsif ( $operator eq 'lc' ) {
 		return 'lower('.$field.$type.') = ?', $value;
 	} elsif ( $operator eq 'uc' ) {
@@ -570,7 +570,7 @@ sub find {
 	
 	foreach my $k ( @param_keys ) {
 		my ( $field, $type, $function ) = $k =~ /^(\w+)(::\w+)?[\s_]*(.*)?$/;
-$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
+#$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
 			my $fields = \%{$object_type.'::'.$_};

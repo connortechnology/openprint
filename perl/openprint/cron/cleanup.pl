@@ -77,8 +77,8 @@ if ( openprint::Project->find_one() ) {
 			'predefined'	=>	0,
 			'status'=>'uncalculated',
 			'order'=>'id desc',
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'quote_id exists'	=>	0,
 			'limit'		=>	1000,
 			);
@@ -106,8 +106,8 @@ if ( openprint::Project->find_one() ) {
 			'predefined'	=>	0,
 			'status'=>'Unordered',
 			'order'=>'id desc',
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
-			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'created_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on <=' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'limit'		=>	1000,
 			'quote_id exists'	=>	0,
 			);
