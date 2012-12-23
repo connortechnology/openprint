@@ -11,20 +11,18 @@
 		my @Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
 		if ( @Companies ) {
 			@Users = openprint::User->find('company_id in'=> [ map { $$_{'id'} } @Companies ],
-				'order'	=>	'lower(firstname),lower(lastname)',
-				'id not in'	=>	\@blocked_user_ids,
-				#'id not in'	=>	[$session{'user_id'},@blocked_user_ids],
+				order	=>	'lower(firstname),lower(lastname)',
+				( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
 				);
 		} # end if
-	} elsif ( $param{'name'} ) {
-		if ( ! ( $param{'name'} =~ /%/ ) ) {
-			$param{'name'} .= '%';
+	} elsif ( $param{name} ) {
+		if ( ! ( $param{name} =~ /%/ ) ) {
+			$param{name} .= '%';
 		} # end if
 		@Users = openprint::User->find(
 			'name ilike'=>	$param{'name'},
-			'order'		=>	'lower(firstname),lower(lastname)',
-			'id not in'	=>	\@blocked_user_ids,
-			#'id not in'	=>	[$session{'user_id'},@blocked_user_ids],
+			order		=>	'lower(firstname),lower(lastname)',
+			( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
 			);
 	} else {
 
@@ -34,8 +32,7 @@
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online >=' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online <=' ),
 			'order'	=>	'(SELECT name FROM companies WHERE companies.id=company_id),lower(firstname),lower(lastname)',
-			'id not in'	=>	\@blocked_user_ids,
-			#'id not in'	=>	[$session{'user_id'},@blocked_user_ids],
+			( @blocked_user_ids ? ( 'id not in'	=>	\@blocked_user_ids ) : () ),
 		);
 
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
