@@ -497,7 +497,6 @@ sub User {
 sub find {
 	no strict 'refs';
 	my $object_type = shift;
-	my $table = ${$object_type.'::table'};
 
 	my $debug = ${$object_type.'::debug'};
 	$debug = $debug_all if ! $debug;
@@ -509,22 +508,28 @@ sub find {
 	} else {
 		$params = { @_ };
 	} # end if
-	if ( $$params{'table'} ) {
-		$table = $$params{'table'};
-		delete $$params{'table'};
-	} # end if
 
 	my @where;
 	my $sql = 'SELECT';
-	$sql .= ' DISTINCT' if $$params{'distinct'};
-	delete $$params{'distinct'};
+	
+	if ( exists $$params{distinct} ) {
+		$sql .= ' DISTINCT';
+		delete $$params{distinct};
+	} # end if
 	if ( $$params{'columns'} ) {
 		$sql .= ' ' . $$params{'columns'};
 		delete $$params{'columns'};
 	} else {
 		$sql .= ' *';
 	} # end if
-	$sql .= ' FROM '.$table;
+	$sql .= ' FROM ';
+	if ( $$params{'table'} ) {
+		$sql .= $$params{'table'};
+		delete $$params{'table'};
+	} else {
+		$sql .= ${$object_type.'::table'};
+	} # end if
+
 	my @values;
 	my $local_dbh = ${$object_type.'::dbh'};
 	$local_dbh = $openprint::dbh if ! $local_dbh;
@@ -534,7 +539,7 @@ sub find {
 	} # end if
 	if ( ! $local_dbh ) {
 		$log->error("No local_dbh");
-	return ();
+		return ();
 	}
 	delete $$params{'dbh'};
 
@@ -569,7 +574,7 @@ sub find {
 	@search{@param_keys} = @$params{@param_keys};
 	
 	foreach my $k ( @param_keys ) {
-		my ( $field, $type, $function ) = $k =~ /^(\w+)(::\w+)?[\s_]*(.*)?$/;
+		my ( $field, $type, $function ) = $k =~ /^([\w\-]+)(::\w+)?[\s_]*(.*)?$/;
 #$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
