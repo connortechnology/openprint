@@ -181,20 +181,21 @@ sub send {
 		# de we need to send this email?
 
 		my ( $interval_expired, $num_email_sent );
-		$replacements{User} = new openprint::User( $user_id );
+		my $User = $replacements{User} = new openprint::User( $user_id );
 
-		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
-		if ( ! $replacements{ReplacementText} ) {
-			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
-			next;
-		} # end if
-
-		if ( ! Email::Valid->address( $replacements{User}->email() ) ) {
+		if ( $User->mailinglist() eq 'N' ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : they have chosen to not receive email.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
+		} elsif ( ! Email::Valid->address( $replacements{User}->email() ) ) {
 			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : the email address appears to be invalid.</span><br/>', $replacements{User}->get('firstname','lastname','email') );
 		} else {
+			$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
+			if ( ! $replacements{ReplacementText} ) {
+				$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s : No body.</span><br/>%s<br/>', $replacements{'User'}->get('firstname','lastname','email'),$@ );
+				next;
+			} # end if
 			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
 			$self->send_email( \%replacements );
-		} # end if email is valid
+		} # end if
 	} # for all mail user ids
 	return $results;
 } # end sub send
