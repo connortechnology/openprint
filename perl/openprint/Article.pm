@@ -51,7 +51,7 @@ $serial = 'articles_id_seq';
 
 %transforms = (
 	user_type	=>	[ 's/\s//g' ],
-	id			=>	[ 's/\D//' ],
+	id			=>	[ 's/\D//g' ],
 );
 %defaults = (
 	created_on		=> q`'NOW()'`,

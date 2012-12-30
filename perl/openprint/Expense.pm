@@ -166,8 +166,8 @@ sub Taxes {
     } # end if
     if ( $self->Company()->country() and $self->Company()->state() and $$self{'invoiced_on'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
-                    'period_start_null_or_<='   =>  $$self{'invoiced_on'},
-                    'period_end_null_or_>='     =>  $$self{'invoiced_on'},
+                    'period_start null_or_<='   =>  $$self{'invoiced_on'},
+                    'period_end null_or_>='     =>  $$self{'invoiced_on'},
                     'country'   =>  $self->Company()->country(),
                     'state'     =>  $self->Company()->state()),
                 ) {
@@ -196,8 +196,8 @@ sub save {
 		my @New_Taxes;
 
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='   =>  $$self{'invoiced_on'},
-					'period_end_null_or_>='     =>  $$self{'invoiced_on'},
+					'period_start null_or_<='   =>  $$self{'invoiced_on'},
+					'period_end null_or_>='     =>  $$self{'invoiced_on'},
 					'country'   =>  $self->Company()->country(),
 					'state'     =>  $self->Company()->state()),
 				) {
