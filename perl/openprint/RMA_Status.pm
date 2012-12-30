@@ -3,7 +3,7 @@ package openprint::RMA_Status;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'rma_statuses';
 $serial = 'rma_statuses_id_seq';
 

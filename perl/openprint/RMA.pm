@@ -5,7 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::RMA_Type;
 require openprint::RMA_Status;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
 $debug = 1;
 $table = 'rma';
@@ -29,13 +29,16 @@ $serial = 'rma_id_seq';
 	priority	=>	'priority',
 	po_id		=>	'po_id',
 	received_on	=>	'received_on',
-	warranty	=>	'warranty',
+	warranty			=>	'warranty',
 	estimate_required	=>	'estimate_required',
-	product_id	=>	'product_id',
+	product_id			=>	'product_id',
 	serialnumber		=>	'serialnumber',
 	accessories			=>	'accessories',
 	shipto_address_id	=>	'shipto_address_id',
-	tester_id	=>	'tester_id',
+	tester_id			=>	'tester_id',
+);
+%find_fields = (
+	supplier_id	=>	'(SELECT supplier_id FROM Product_Prices WHERE product_id=rma.product_id)',
 );
 
 %transforms = (

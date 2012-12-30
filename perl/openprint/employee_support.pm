@@ -406,7 +406,7 @@ sub returns {
 sub _returns {
 	my $url = '/employee/support/returns.html';
 	ssi::save_params( $url,
-			'status', 'company_id',
+			'status', 'company_id','supplier_id',
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
@@ -434,8 +434,10 @@ sub _returns {
 			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
 			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
 			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			( $session{$url.'?supplier_id'} ? ( 'supplier_id any'	=> $session{$url.'?supplier_id'} ) : () ),
 			order	=>	'rmanumber,id',
 		);
+		openprint::Company->find(id=>[ map { $_->company_id() } @{$variable{RMAS}} ]) if @{$variable{RMAS}} > 20;
 	} # end if
 } # end sub _returns
 

@@ -191,6 +191,9 @@ map {
 				<label>Type of Request</label>
 				<? echo ( $$variable{RMA}->type() ) ?>
 			</li>
+			<li class="warranty"><label>Warranty</label>
+				<? echo ( radio( 'warranty', [ 1, 'Yes', 0, 'No' ], $$variable{RMA}->warranty() ); ) ?>
+			</li>
 		</ul>
 	</fieldset>
 	</div>
