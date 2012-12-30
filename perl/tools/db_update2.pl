@@ -171,8 +171,8 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Invoice->Invoicee()->country(), 
 					'state'				=>	$Invoice->Invoicee()->state(), 
-					'period_start_null_or_<='	=>	$Invoice->created_on(),
-					'period_end_null_or_>='		=>	$Invoice->created_on(),
+					'period_start null_or_<='	=>	$Invoice->created_on(),
+					'period_end null_or_>='		=>	$Invoice->created_on(),
 			) ) {
 			my $new_amount;
 
@@ -238,8 +238,8 @@ if ( ! openprint::Order_Tax->find_one() ) {
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Order->country(), 
 					'state'				=>	$Order->state(), 
-					'period_start_null_or_<='	=>	$Order->created_on(),
-					'period_end_null_or_>='		=>	$Order->created_on(),
+					'period_start null_or_<='	=>	$Order->created_on(),
+					'period_end null_or_>='		=>	$Order->created_on(),
 			) ) {
 			my $new_amount;
 

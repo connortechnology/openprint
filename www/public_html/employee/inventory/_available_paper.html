@@ -2,7 +2,7 @@
 <? eval (
 		my %sql = (
 			#'order'					=>	'lower(manufacturers.name),brand,finish,colour,weight,width,height', 
-			'in_stock_null_or_>'	=>	1,
+			'in_stock null_or_>'	=>	1,
 			'type'					=>	[ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ],
 			#'table'		=>	'Papers,Manufacturers,StockBrands,StockFinishes,StockColours,StockWeights',
 			#'columns'	=>	'*,Manufacturers.name AS manufacturer, StockBrands.name as brand,StockFinishes.name as finish, StockColours.name as colour,StockWeights.name  as weight',

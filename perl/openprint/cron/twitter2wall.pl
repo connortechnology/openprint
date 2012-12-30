@@ -91,10 +91,9 @@ foreach my $Twitter_ID ( openprint::User_Profile_Entry->find('field_id'=>$ID_Fie
 	if ($arg=~ /http:/i) {
 		$content = Encode::encode('utf-8',get($arg));
 		die "Could not retrieve $arg" unless $content;
-$log->debug($content);
+#$log->debug($content);
 # parse the RSS content
 		$rss->parse($content);
-
 # argument is a file
 	} else {
 		$file = $arg;
@@ -106,10 +105,10 @@ $log->debug($content);
 	foreach my $item (@{$rss->{'items'}}) {
 		$$item{title} =~ s/^$$Twitter_ID{value}: //i;
 		my $Wall = openprint::Wall->find_one(
-			'user_id'=>$Twitter_ID->user_id(),
-			'author_id'=>$Twitter_ID->user_id(),
-			'message'=>$$item{'title'},
-			'created_on'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
+			user_id		=>	$Twitter_ID->user_id(),
+			author_id	=>	$Twitter_ID->user_id(),
+			message		=>	$$item{'title'},
+			created_on	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', Date::Parse::str2time( $item->{'pubDate'} ) ),
 		);
 		next if $Wall;
 		$Wall = new openprint::Wall();

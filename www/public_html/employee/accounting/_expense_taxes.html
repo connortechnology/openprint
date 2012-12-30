@@ -1,8 +1,8 @@
 <? echo (
 	my $html;
 	my @Taxes = openprint::Tax->find(
-			'period_start_null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
-			'period_end_null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
+			'period_start null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
+			'period_end null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
 			'country'   =>  $$variable{'Expense'}->Company()->country(),
 			'state'     =>  $$variable{'Expense'}->Company()->state()
 );
