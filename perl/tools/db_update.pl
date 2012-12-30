@@ -1810,9 +1810,10 @@ if ( ! sets::isin( 'stockgroups', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/StockGroups.sql}) );
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'papers', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Papers.sql}) ) or die $dbh->errstr();
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='papers'", 'column_name');
 	if ( ! exists $$data{'material_id'} ) {
 		my $ac = sql::start_transaction( $dbh );
 		print "Adding material_id to Papers";
@@ -2017,7 +2018,6 @@ if ( $data ) {
 	$dbh->do(q`ALTER TABLE tbl_Quote_Details rename projectindex to project_id`) if exists $$data{'projectindex'};
 	sql::end_transaction( $dbh, $ac );
 } # end if
-$log->debug("Materials");
 new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category->find('name'=>'Materials');
 if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Paper') ) {
 	$ServiceType->save({'category'=>'Materials'}) if $ServiceType->category() ne 'Materials';
@@ -2061,7 +2061,7 @@ if ( my @C = openprint::MaterialCategory->find('name'=>'Plain Cartons') ) {
     print "Adding PlainCartons Category\n";
 } # end if
 
-foreach my $M ( openprint::Material->find('name_like'=>'Plain Carton%') ) {
+foreach my $M ( openprint::Material->find('name like'=>'Plain Carton%') ) {
 	if ( my ( $w, $h, $d ) = $M->name() =~ /Plain Carton (\d+)x(\d+)x(\d+)/ ) {
 		if ( $d and ! $M->specification('Depth') ) {
 			my $S = new openprint::MaterialSpecification();
@@ -3168,6 +3168,22 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 		$dbh->do('ALTER TABLE rma ADD status_id INTEGER');
 		} # end if
 		$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (status_id) REFERENCES RMA_Statuses (id)');
+	} # end if
+	if ( ! exists $$data{tester_id} ) {
+		$dbh->do('ALTER TABLE RMA ADD tester_id INTEGER');
+		$dbh->do('ALTER TABLE RMA ADD FOREIGN KEY (tester_id) REFERENCES Users (id)');
+		if ( exists $$data{tester} ) {
+			foreach my $tester ( sql::execute( undef, undef, 'SELECT DISTINCT tester FROM RMA')) {
+				my $User = openprint::User->find_one('firstname lc'=>lc openprint::User->transform('firstname', $tester) );
+				if ( ! $User ) {
+					$User = new openprint::User();
+					$_ = $User->save({firstname=>$tester,email=>$tester} );
+					die $_ if $_;
+				} # end if
+				sql::update( undef, undef, 'rma', [ 'tester=?', $tester ], 'tester_id', $User->id() );
+			} # end foreach po
+			$dbh->do('ALTER TABLE RMA DROP tester');
+		} # end if
 	} # end if
 	if ( ! exists $$data{po_id} ) {
 		$dbh->do('ALTER TABLE RMA ADD po_id INTEGER');

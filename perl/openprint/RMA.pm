@@ -35,6 +35,7 @@ $serial = 'rma_id_seq';
 	serialnumber		=>	'serialnumber',
 	accessories			=>	'accessories',
 	shipto_address_id	=>	'shipto_address_id',
+	tester_id	=>	'tester_id',
 );
 
 %transforms = (
@@ -63,6 +64,7 @@ $serial = 'rma_id_seq';
 	estimate_required	=>	undef,
 	warranty	=>	undef,
 	shipto_address_id	=>	undef,
+	tester_id	=>	undef,
 );
 
 sub Type {

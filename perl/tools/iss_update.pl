@@ -179,8 +179,35 @@ $dbh->do(q`UPDATE Companies Set country='CA' WHERE country='CANADA'`);
 $dbh->do(q`INSERT INTO tests (name) values ('Window Test')`);
 $dbh->do('UPDATE test_results set test_id=1');
 $dbh->do(q`update configuration set value='2009' where name='startYear';`);
-$dbh->do('ALTER TABLE Orders DROP vendor');
-$dbh->do('ALTER TABLE Orders DROP openbalance');
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+$dbh->do('ALTER TABLE Orders DROP vendor') if exists $$data{vendor};
+$dbh->do('ALTER TABLE Orders DROP openbalance') if exists $$data{openbalance};
+$dbh->do('ALTER TABLE Orders DROP shippingmethodid') if exists $$data{openbalance};
+$dbh->do('DROP TABLE employee') if sets::isin('employee', \@tables );
+$dbh->do('DROP TABLE Parts_slip') if sets::isin('parts_slip', \@tables );
+$dbh->do('DROP TABLE Parts_slip_details') if sets::isin('parts_slip_details', \@tables );
+$dbh->do('DROP TABLE scrap') if sets::isin('scrap', \@tables );
+my $Shipping_Category;
+if ( ! ( $Shipping_Category = openprint::ServiceType_Category->find_one(name=>'Shipping')  ) ) {
+	$Shipping_Category = new openprint::ServiceType_Category();
+	$_ = $Shipping_Category->save({name=>'Shipping'});
+	die $_ if $_;
+} # end if
+if ( sets::isin( 'shippingby', \@tables ) ) {
+	foreach my $shipby ( sql::execute(undef,undef,'SELECT shippingname from shippingby')){
+		next if openprint::ServiceType->find_one(name=>$shipby);
+		my $SType = new openprint::ServiceType();
+		$_ = $SType->save({name=>$shipby,category_id=>$Shipping_Category->id()});	
+		die $_ if $_;
+	} # end foreach
+	$dbh->do('DROP TABLE shippingby');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='rma'", 'column_name');
+$dbh->do('ALTER TABLE RMA drop shippername') if exists $$data{shippername};
+$dbh->do('ALTER TABLE RMA drop environmental_test') if exists $$data{environmental_test};
+$dbh->do('ALTER TABLE RMA drop new_coefficient') if exists $$data{new_coefficient};
+$dbh->do('ALTER TABLE RMA drop bias') if exists $$data{bias};
+$dbh->do('ALTER TABLE RMA drop shippername') if exists $$data{shippername};
 
 1;
 __END__
