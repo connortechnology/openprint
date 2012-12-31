@@ -208,6 +208,8 @@ $dbh->do('ALTER TABLE RMA drop environmental_test') if exists $$data{environment
 $dbh->do('ALTER TABLE RMA drop new_coefficient') if exists $$data{new_coefficient};
 $dbh->do('ALTER TABLE RMA drop bias') if exists $$data{bias};
 $dbh->do('ALTER TABLE RMA drop shippername') if exists $$data{shippername};
+$dbh->do('DROP TABLE name_autocorrect_save_failures');
+$dbh->do('DROP TABLE supplies');
 
 1;
 __END__
