@@ -196,7 +196,7 @@ map {
 			</li>
 <? if ( $session{user_type} eq 'A' ) ?>
 			<li class="priority"><label>Priority</label>
-				<? echo ( ssi::select( openprint::RMA_Priority->dropdown(order=>'sort,lower(name)'), $variable{RMA}->priority_id(), { name=>'priority_id' } ); ) ?>
+				<? echo ( ssi::select( openprint::RMA_Priority->dropdown(order=>'sort,lower(name)'), $variable{RMA}->priority_id(), { name=>'priority_id', prepend=>['','select'] } ); ) ?>
 			</li>
 <? endif ( $session{user_type} eq 'A' ) ?>
 		</ul>
