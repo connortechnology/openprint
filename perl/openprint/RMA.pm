@@ -4,6 +4,7 @@ our @ISA = qw(openprint::Object);
 
 require openprint::RMA_Type;
 require openprint::RMA_Status;
+require openprint::RMA_Priority;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
@@ -121,6 +122,29 @@ sub status_id {
 	} # end if
 	return $_[0]{status_id};
 } # end sub status_id
+sub priority {
+	if ( @_ > 1 ) {
+		my $priority = openprint::RMA_Priority->transform( 'name', $_[0] );
+		my $Priority = openprint::RMA_Priority->find_one( 'name lc' => lc $priority );
+		if ( ! $Priority ) {
+			$Priority = new openprint::RMA_Priority();
+			$Priority->set(name=>$priority);
+		} # end if
+
+		@{$_[0]}{'priority_id','priority'} = @$Priority{'id','name'};
+	} elsif ( $_[0]{priority_id} and ! $_[0]{priority} ) {
+		$_[0]{priority} = new openprint::RMA_Priority( $_[0]{priority_id} )->name();
+	} # end if
+	return $_[0]{priority};
+} # end sub priority
+
+sub priority_id {
+	if ( @_ > 1 ) {
+		my $Priority = new openprint::RMA_Priority( $_[1] );
+		@{$_[0]}{'priority_id','priority'} = @$Priority{'id','name'} if $Priority;
+	} # end if
+	return $_[0]{priority_id};
+} # end sub priority_id
 
 sub PurchaseOrder {
 	require openprint::PurchaseOrder;

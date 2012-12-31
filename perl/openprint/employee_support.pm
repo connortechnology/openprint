@@ -7,6 +7,7 @@ require openprint;
 require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
+require openprint::RMA_Priority;
 require openprint::Email;
 require openprint::RMA_Log;
 require openprint::RMA_Part;

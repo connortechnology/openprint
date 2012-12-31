@@ -1929,11 +1929,20 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Specifications.sql}) );
 } # end if
+if ( ! sets::isin( 'product_prices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Product_Prices.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='product_prices'", 'column_name');
+	if ( ! exists $$data{supplier_id} ) {
+		$dbh->do('ALTER TABLE product_prices ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE product_prices ADD FOREIGN KEY (supplier_id) REFERENCES companies (id)');
+	} # end if
+} # end if
 
 if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoiced_Products.sql}) );
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='invoiced_products'", 'column_name');
 	if ( $data and ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
@@ -1941,7 +1950,7 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 if ( ! sets::isin( 'sessions', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Sessions.sql}) );
 } else {
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='sessions'", 'column_name');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='sessions'", 'column_name');
 	if ( ! exists $$data{'a_session'} ) {
 		$dbh->do('ALTER TABLE sessions add a_session TEXT');
 	}
@@ -3119,6 +3128,10 @@ if ( ! sets::isin( 'rma_types', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Types.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'rma_priorities', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Priorities.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 if ( ! sets::isin( 'rma_statuses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/RMA_Statuses.sql}) );
 	die $dbh->errstr() if $dbh->errstr();
@@ -3215,9 +3228,13 @@ if ( ! sets::isin( 'rma', \@tables ) ) {
 			$dbh->do('ALTER TABLE RMA add comments TEXT');
 		} # end if
 	} # end if
-	if ( ! exists $$data{priority} ) {
-		$dbh->do('ALTER TABLE RMA ADD priority integer');
+	if ( ! exists $$data{priority_id} ) {
+		$dbh->do('ALTER TABLE RMA ADD priority_id integer');
+		$dbh->do('ALTER TABLE RMA ADD FOREIGN KEY (priority_id) REFERENCES RMA_Priorities (id)');
 	} # end i
+	if ( exists $$data{priority} ) {
+		$dbh->do('ALTER TABLE RMA DROP priority');
+	} # end if
 	if ( ! exists $$data{warranty} ) {
 		$dbh->do('ALTER TABLE RMA ADD warranty text');
 	} # end i

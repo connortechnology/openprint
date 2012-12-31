@@ -194,6 +194,11 @@ map {
 			<li class="warranty"><label>Warranty</label>
 				<? echo ( radio( 'warranty', [ 1, 'Yes', 0, 'No' ], $$variable{RMA}->warranty() ); ) ?>
 			</li>
+<? if ( $session{user_type} eq 'A' ) ?>
+			<li class="priority"><label>Priority</label>
+				<? echo ( ssi::select( openprint::RMA_Priority->dropdown(order=>'sort,lower(name)'), $variable{RMA}->priority_id(), { name=>'priority_id' } ); ) ?>
+			</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
 		</ul>
 	</fieldset>
 	</div>
