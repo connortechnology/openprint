@@ -1,17 +1,16 @@
 use strict;
-package openprint::RMA_Status;
+package openprint::RMA_Priority;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 0;
-$table = 'rma_statuses';
-$serial = 'rma_statuses_id_seq';
+$table = 'rma_priorities';
+$serial = 'rma_priorities_id_seq';
 
 %fields = ( 
 	id		=>	'id',
 	name	=>	'name',
 	sort	=>	'sort',
-	current_status_id	=>	'current_status_id',
 );
 %transforms = (
 	id		=>	[ 's/\D//g' ],

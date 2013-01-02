@@ -183,7 +183,7 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 				$new_amount = $$data{'statetax'};
 				} # end if
 			} else {
-				$new_amount = sprintf('%.2f', $Invoice->subtotal() * ( $Tax->rate()/100 ) );
+				$new_amount = Math::Round::nearest(0.01, $Invoice->subtotal() * ( $Tax->rate()/100 ) );
 			} # end if
 				
 			my $Invoice_Tax = new openprint::Invoice_Tax();

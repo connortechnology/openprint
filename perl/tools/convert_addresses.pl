@@ -32,17 +32,19 @@ die if ! $dbh;
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 $dbh->do('ALTER TABLE Addresses RENAME To addr') if ! sets::isin( 'addr', \@tables );;
 @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
-if ( sets::isin( 'addresses', \@tables )  ) {
-	$log->debug("DROPPING ADDESS");
-$dbh->do('DROP TABLE Addresses');
-die $dbh->errstr() if $dbh->errstr();
-} else {
-$log->debug('NOT DROP TABLE Addresses');
-}
-$dbh->do(misc::load_file($log,'../openprint/sql/Addresses.sql'));
-die $dbh->err_str if $dbh->errstr();
+#if ( sets::isin( 'addresses', \@tables ) ) {
+	#$log->debug("DROPPING ADDESS");
+	#$dbh->do('DROP TABLE Addresses');
+	#die $dbh->errstr() if $dbh->errstr();
+#} else {
+	#$log->debug('NOT DROP TABLE Addresses');
+#} # end if
+#$dbh->do(misc::load_file($log,'../openprint/sql/Addresses.sql'));
+#die $dbh->err_str if $dbh->errstr();
 @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 die "No addr table\n" if ! sets::isin( 'addr', \@tables );
+$dbh->do('ALTER TABLE rma ADD shipping_address_id INTEGER');
+$dbh->do('ALTER TABLE rma ADD FOREIGN KEY (shipping_address_id) REFERENCES addresses (id)');
 
 my $data = $dbh->selectall_arrayref( 'SELECT * FROM addr', { Slice => {} } );
 foreach my $addr ( @$data ) {
@@ -63,7 +65,7 @@ foreach my $addr ( @$data ) {
 	my $Contact;
 	if ( $$addr{contact} ) {
 		my ( $sal, $first, $last, $extra ) = $$addr{contact} =~ /^(Mr|Mrs|Ms|Miss)\.?\s+(\S+)\s+(\S+)(.*)$/i;
-$log->debug("contact: $$addr{contact} Sal: $sal, first: $first, last: $last, extra: $extra");
+#$log->debug("contact: $$addr{contact} Sal: $sal, first: $first, last: $last, extra: $extra");
 		if ( $extra ) {
 			$Contact = openprint::User->find_one('name lc'=>lc openprint::User->transform('firstname',$$addr{contact}) );
 		} else {
@@ -95,8 +97,7 @@ $log->debug("contact: $$addr{contact} Sal: $sal, first: $first, last: $last, ext
 		if ( ! $Country ) {
 			$Country = new openprint::Location();
 			$_ = $Country->save({name=>$$addr{country}, type=>'country'});
-	
-				die $_ if $_;
+			die $_ if $_;
 		} # end 
 	} # end 
 	my $State;
@@ -135,7 +136,7 @@ $log->debug("contact: $$addr{contact} Sal: $sal, first: $first, last: $last, ext
 		next;
 	} # end if
 	if ( ! $Location ) {
-	$Location = new openprint::Location();
+		$Location = new openprint::Location();
 		$_ = $Location->save({
 			( $City ? ( parent_id=>$City->id() ) : () ),
 			name	=>	$Company->name(),
@@ -158,7 +159,11 @@ $log->debug("contact: $$addr{contact} Sal: $sal, first: $first, last: $last, ext
 		});	
 				die $_ if $_;
 	} # end if
+	sql::update(undef,undef, 'rma', [ 'shipto_address_id=?', $$addr{id} ], 'shipping_address_id', $Address->id(), 'shipto_address_id', undef );
+ 
 } # end foreach addr
+$dbh->do('ALTER TABLE rma DROP shipto_address_id');
+$dbh->do('DROP TABLE addr');
 
 
 $dbh->disconnect();

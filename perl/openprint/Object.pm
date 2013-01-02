@@ -575,6 +575,7 @@ sub find {
 	
 	foreach my $k ( @param_keys ) {
 		my ( $field, $type, $function ) = $k =~ /^([\w\-]+)(::\w+)?[\s_]*(.*)?$/;
+		$type = '' if ! defined $type;
 #$log->debug("$object_type param $field($type) $function " . ( ref $search{$k} eq 'ARRAY' ? join(',',@{$search{$k}}) : $search{$k} ) );
 
 		foreach ( 'find_fields', 'fields' ) {
