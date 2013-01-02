@@ -2,6 +2,7 @@ use strict;
 require openprint;
 require Digest::MD5;
 require openprint::Keyword;
+require IPC::Run3;
 
 
 package openprint::Asset_Type;
@@ -119,8 +120,10 @@ sub sized_url {
 					return '/assets/'.$filename;
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width} x $src $dest");
-				if ( system(qq`convert -adaptive-resize ${width}x "$src" "$dest"`) ) {
-					$openprint::log->error("ERror creating sized image. Reason: $1");
+				my ( $stderr, $stdout );
+				IPC::Run3::run3(qq`convert -adaptive-resize ${width}x "$src" "$dest"`, undef, $stdout, $stderr );
+				if ( $? ) {
+					$openprint::log->error("ERror creating sized image. Reason: ($?) stdout($stdout) stderr($stderr)");
 				} # end if convert
 			} # end if
 		} # end if
