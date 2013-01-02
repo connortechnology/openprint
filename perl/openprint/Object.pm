@@ -95,7 +95,7 @@ sub load {
 } # end sub load
 
 sub save {
-	my ( $self, $data ) = @_;
+	my ( $self, $data, $force_insert ) = @_;
 	my $type = ref $self;
 	my $local_dbh = eval '$'.$type.'::dbh';
 	$local_dbh = $openprint::dbh if ! $local_dbh;
@@ -123,10 +123,12 @@ sub save {
 	foreach my $k ( keys %fields ) {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
-	delete $sql{'created_on'};
-	$sql{'created_by'} = $session{'user_id'} if exists $fields{'created_by'} and ! $sql{'created_by'};
-	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
-	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
+	if ( ! $force_insert ) {
+		delete $sql{'created_on'};
+		$sql{'created_by'} = $session{'user_id'} if exists $fields{'created_by'} and ! $sql{'created_by'};
+		$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
+		$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
+	} # end if
 	if ( $debug ) {
 		foreach my $k ( keys %sql ) {
 			$openprint::log->debug("Saving $k => $sql{$k}");
@@ -135,7 +137,7 @@ sub save {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
-		my $insert = 0;
+		my $insert = $force_insert;
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
@@ -164,10 +166,12 @@ sub save {
 			} # end if
 		} # end if
 	} else {
-		if ( ! $$self{'id'} ) {
-			my $serial = eval '$'.$type.'::serial';
-			if ( $serial ) {
-				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+		if ( ( ! $$self{'id'} ) or $force_insert ) {
+			if ( ! $$self{'id'} ) {
+				my $serial = eval '$'.$type.'::serial';
+				if ( $serial ) {
+					($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, $local_dbh, q{SELECT nextval('} . $serial . q{')} );
+				} # end if
 			} # end if
 			if ( my $error = sql::insert( undef, $local_dbh, $table, \%sql ) ) {
 				$local_dbh->rollback();
