@@ -8,9 +8,9 @@
 	LogLevel debug
 	#LogLevel warn
 
-	RewriteEngine on
-	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
+   RewriteLog "/tmp/modrewrite.log"
+    RewriteLogLevel 9
+
 	
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
@@ -51,34 +51,57 @@
 		PerlHandler	 MapImage
 	</Location>
 
-	<FilesMatch "^JMF\.htm$">
-		SetHandler		perl-script
-		PerlHandler	 JMF
-	</FilesMatch>
+	<Directory /var/www/point-one/www/public_html>
+		RewriteEngine on
+		RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
+		RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
+
+		<FilesMatch "^JMF\.htm$">
+			SetHandler		perl-script
+			PerlHandler	 JMF
+		</FilesMatch>
+
+		<FilesMatch "^upload\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::upload_handler
+		</FilesMatch>
+
+		<Files ~ "\.json$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+
+		<FilesMatch "^jsrs\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::jsrs_handler
+		</FilesMatch>
+	</Directory>
+    <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
+        RewriteEngine On
+        RewriteCond %{HTTP:Accept-Encoding} gzip
+        RewriteCond %{REQUEST_FILENAME}.gz -f
+        RewriteRule (.*\.(js|css))$ $1.gz [PT]
+        RewriteBase /cache
+    </Directory>
+    AddEncoding x-gzip .gz
+
+    <FilesMatch .*\.css.gz>
+        ForceType text/css
+    </FilesMatch>
+
+    <FilesMatch .*\.js.gz>
+        ForceType application/x-javascript
+    </FilesMatch>
+
+
 	<FilesMatch "^barcode\.png$">
 		SetHandler		perl-script
 		PerlHandler	 Barcode
 	</FilesMatch>
-
-	<FilesMatch "^upload\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::upload_handler
-	</FilesMatch>
-
-	<Files ~ "\.json$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-	<Files ~ "\.html$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-
-	<FilesMatch "^jsrs\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::jsrs_handler
-	</FilesMatch>
-
 	Alias /project_files "/media/Storage/Project Files/"
 	PerlSetVar		PageFlipDir	 "/media/PageFlip"
 	Alias	/PageFlip	"/media/PageFlip"
