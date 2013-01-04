@@ -97,7 +97,6 @@
         ForceType application/x-javascript
     </FilesMatch>
 
-
 	<FilesMatch "^barcode\.png$">
 		SetHandler		perl-script
 		PerlHandler	 Barcode
