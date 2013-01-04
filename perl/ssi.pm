@@ -969,7 +969,7 @@ sub hash_link {
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
-			`gzip -c -9 $$script{cache_file} > $$script{cache_file}.gz`;
+			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	#} else {
