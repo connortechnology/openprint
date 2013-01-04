@@ -8,10 +8,6 @@
 
 	LogLevel debug
 	#LogLevel warn
-    RewriteLog "/tmp/modrewrite.log"
-    RewriteLogLevel 9
-
-
 	
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
@@ -42,22 +38,10 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
-		<FilesMatch "^barcode\.png$">
-			SetHandler		perl-script
-			PerlHandler	 Barcode
-		</FilesMatch>
-		<Location /images/maps>
-			SetHandler		perl-script
-			PerlHandler	 MapImage
-		</Location>
     <Directory /var/www/point-one/www/public_html>
 		RewriteEngine on
 		RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
 		RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
-		<DirectoryMatch '^/po'>
-			SetHandler		perl-script
-			PerlHandler	getfile 
-		</DirectoryMatch>
 
 
 		<FilesMatch "^JMF\.htm$">
@@ -83,6 +67,7 @@
 			PerlResponseHandler	 openprint::www
 		</Files>
 	</Directory>
+
    <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
         RewriteEngine On
         RewriteCond %{HTTP:Accept-Encoding} gzip
@@ -90,6 +75,7 @@
         RewriteRule (.*\.(js|css))$ $1.gz [PT]
         RewriteBase /cache
     </Directory>
+
     AddEncoding x-gzip .gz
 
     <FilesMatch .*\.css.gz>
@@ -100,6 +86,18 @@
         ForceType application/x-javascript
     </FilesMatch>
 
+	<FilesMatch "^barcode\.png$">
+		SetHandler		perl-script
+		PerlHandler	 Barcode
+	</FilesMatch>
+	<Location /images/maps>
+		SetHandler		perl-script
+		PerlHandler	 MapImage
+	</Location>
+		<DirectoryMatch '^/po'>
+			SetHandler		perl-script
+			PerlHandler	getfile 
+		</DirectoryMatch>
 	Alias /project_files "/media/Storage/Project Files/"
 	PerlSetVar		PageFlipDir	 "/media/PageFlip"
 	Alias	/PageFlip	"/media/PageFlip"
