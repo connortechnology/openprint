@@ -8,14 +8,10 @@
 
 	LogLevel debug
 	#LogLevel warn
+	RewriteLog "/tmp/modrewrite.log"
+	RewriteLogLevel 9
 
-	RewriteEngine on
-	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);ssl$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);nossl$ http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/employee/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
-	RewriteRule	^/administrator/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
+
 
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
@@ -57,24 +53,47 @@
 		PerlHandler	 Barcode
 	</FilesMatch>
 
-	<FilesMatch "^upload\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::upload_handler
-	</FilesMatch>
+	<Directory /var/www/point-one/www/public_html>
+		RewriteEngine on
+		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^employee/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
+		RewriteRule	^administrator/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
+		<FilesMatch "^upload\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::upload_handler
+		</FilesMatch>
 
-	<FilesMatch "^jsrs\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::jsrs_handler
-	</FilesMatch>
-	<Files ~ "\.json$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
+		<FilesMatch "^jsrs\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::jsrs_handler
+		</FilesMatch>
+		<Files ~ "\.json$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
 
-	<Files ~ "\.html$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+	</Directory>
+    <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
+        RewriteEngine On
+        RewriteCond %{HTTP:Accept-Encoding} gzip
+        RewriteCond %{REQUEST_FILENAME}.gz -f
+        RewriteRule (.*\.(js|css))$ $1.gz [PT]
+        RewriteBase /cache
+    </Directory>
+    AddEncoding x-gzip .gz
+
+    <FilesMatch .*\.css.gz>
+        ForceType text/css
+    </FilesMatch>
+
+    <FilesMatch .*\.js.gz>
+        ForceType application/x-javascript
+    </FilesMatch>
 
 	Alias /project_files "/media/Storage/Project Files/"
 	Alias /pdfs "/media/Storage/PDFS/"

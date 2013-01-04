@@ -53,8 +53,8 @@
 
 	<Directory /var/www/point-one/www/public_html>
 		RewriteEngine on
-		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
-		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
+		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
 
 		<FilesMatch "^JMF\.htm$">
 			SetHandler		perl-script
