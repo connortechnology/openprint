@@ -9,10 +9,6 @@
 	LogLevel debug
 	#LogLevel warn
 
-	RewriteLog "/tmp/modrewrite.log"
-	RewriteLogLevel 9
-
-
 	Alias	/images	"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
 	Alias	/css	"/var/www/point-one/skins/PointOne Graphics Inc/css"
@@ -112,8 +108,6 @@
 	LogLevel debug
 	#LogLevel warn
 
-	RewriteLog "/tmp/modrewrite.log"
-	RewriteLogLevel 9
 	SSLEngine	On
 	SSLCertificateFile	/etc/apache2/ssl.crt/www.point-one.com.crt
 	SSLCertificateKeyFile	/etc/apache2/ssl.key/www.point-one.com.key

@@ -8,8 +8,6 @@
 
 	LogLevel debug
 	#LogLevel warn
-    RewriteLog "/tmp/modrewrite.log"
-    RewriteLogLevel 9 
 
 	ScriptAlias /cgi-bin/ /var/www/point-one/cgi-bin/
 	<Directory "/var/www/point-one/cgi-bin">

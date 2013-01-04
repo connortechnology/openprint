@@ -8,10 +8,6 @@
 
 	LogLevel debug
 	#LogLevel warn
-	RewriteLog "/tmp/modrewrite.log"
-	RewriteLogLevel 9
-
-
 
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
