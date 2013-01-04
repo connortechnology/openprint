@@ -294,11 +294,18 @@ sub edit {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
 		my $Label = new openprint::Label( $param{'label_id'} );
-		$log->debug("Creating PO from label $$Label{id}");
 		my $C = $Me->Company();
+		
+		my $Project = $Label->Project();
+		if ( ! ( $Project and $Project->company_id() ) ) {
+			$variable{error} .= 'No project for label.';
+			return;
+		} # end if
+
 		$variable{'error'} .= $PO->save( {
 				'created_by'	=>	$session{'user_id'}, 
 				'company_id'	=>	$Me->company_id(),
+				supplier_id		=>	$Project->company_id(),
 				'currency_id'		=>	openprint::Currency::get_current()->id(),
 				'created_by'		=>	$Me->id(),
 				'shipto_contact'	=>	$Me->name(),
