@@ -22,8 +22,8 @@
 
 	PerlSetVar		SecureSiteURL	http://www1.internal.point-one.com
 	PerlSetVar		siteURL			http://www1.internal.point-one.com
-	PerlSetVar		ExternalSecureSiteURL	http://www1.point-one.com
-	PerlSetVar		ExternalSiteURL			http://www1.point-one.com
+	PerlSetVar		ExternalSecureSiteURL	http://www.point-one.com
+	PerlSetVar		ExternalSiteURL			http://www.point-one.com
 	PerlSetVar		InternalSecureSiteURL	http://www1.internal.point-one.com
 	PerlSetVar		InternalSiteURL			http://www1.internal.point-one.com
 	PerlSetVar		SiteTitle		"PointOne Graphics Inc"
