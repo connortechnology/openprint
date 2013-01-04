@@ -8,10 +8,8 @@
 
 	LogLevel debug
 	#LogLevel warn
-
-	RewriteEngine on
-	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
+   RewriteLog "/tmp/modrewrite.log"
+    RewriteLogLevel 9
 	
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
@@ -20,14 +18,14 @@
 	Alias	/main/services	"/var/www/point-one/skins/PointOne Graphics Inc/main/services"
 	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
-	Alias	/cache			"/var/www/point-one/skins/PointOne Graphics Inc/cache"
+	Alias	/cache				"/var/www/point-one/skins/PointOne Graphics Inc/cache"
 	Alias	/assets 		"/media/Storage/Assets/"
 	Alias	/thumbnails		"/media/Storage/Assets/thumbnails/"
 
 	PerlSetVar		SecureSiteURL	http://www2.internal.point-one.com
 	PerlSetVar		siteURL			http://www2.internal.point-one.com
-	PerlSetVar		ExternalSecureSiteURL	http://www2.point-one.com
-	PerlSetVar		ExternalSiteURL			http://www2.point-one.com
+	PerlSetVar		ExternalSecureSiteURL	http://www.point-one.com
+	PerlSetVar		ExternalSiteURL			http://www.point-one.com
 	PerlSetVar		InternalSecureSiteURL	http://www2.internal.point-one.com
 	PerlSetVar		InternalSiteURL			http://www2.internal.point-one.com
 	PerlSetVar		SiteTitle		"PointOne Graphics Inc"
@@ -42,43 +40,64 @@
 	PerlSetVar		db_password	 point-one
 	PerlSetVar		db_driver		Pg
 
-	<DirectoryMatch '^/po'>
-		SetHandler		perl-script
-		PerlHandler	getfile 
-	</DirectoryMatch>
+    <Directory /var/www/point-one/www/public_html>
+		RewriteEngine on
+		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
+		<FilesMatch "^JMF\.htm$">
+			SetHandler		perl-script
+			PerlHandler	 JMF
+		</FilesMatch>
 
-	<Location /images/maps>
-		SetHandler		perl-script
-		PerlHandler	 MapImage
-	</Location>
+		<FilesMatch "^upload\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::upload_handler
+		</FilesMatch>
+		<FilesMatch "^jsrs\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::jsrs_handler
+		</FilesMatch>
 
-	<FilesMatch "^JMF\.htm$">
-		SetHandler		perl-script
-		PerlHandler	 JMF
-	</FilesMatch>
+		<Files ~ "\.json$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+	</Directory>
+
+   <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
+        RewriteEngine On
+        RewriteCond %{HTTP:Accept-Encoding} gzip
+        RewriteCond %{REQUEST_FILENAME}.gz -f
+        RewriteRule (.*\.(js|css))$ $1.gz [PT]
+        RewriteBase /cache
+    </Directory>
+
+    AddEncoding x-gzip .gz
+
+    <FilesMatch .*\.css.gz>
+        ForceType text/css
+    </FilesMatch>
+
+    <FilesMatch .*\.js.gz>
+        ForceType application/x-javascript
+    </FilesMatch>
+
 	<FilesMatch "^barcode\.png$">
 		SetHandler		perl-script
 		PerlHandler	 Barcode
 	</FilesMatch>
-
-	<FilesMatch "^upload\.htm$">
+	<Location /images/maps>
 		SetHandler		perl-script
-		PerlResponseHandler	 openprint::upload_handler
-	</FilesMatch>
-	<FilesMatch "^jsrs\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::jsrs_handler
-	</FilesMatch>
-
-	<Files ~ "\.json$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-	<Files ~ "\.html$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
-
+		PerlHandler	 MapImage
+	</Location>
+		<DirectoryMatch '^/po'>
+			SetHandler		perl-script
+			PerlHandler	getfile 
+		</DirectoryMatch>
 	Alias /project_files "/media/Storage/Project Files/"
 	PerlSetVar		PageFlipDir	 "/media/PageFlip"
 	Alias	/PageFlip	"/media/PageFlip"
