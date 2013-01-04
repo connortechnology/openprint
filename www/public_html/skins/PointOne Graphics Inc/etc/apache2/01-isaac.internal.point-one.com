@@ -8,6 +8,8 @@
 
 	LogLevel debug
 	#LogLevel warn
+    RewriteLog "/tmp/modrewrite.log"
+    RewriteLogLevel 9 
 
 	ScriptAlias /cgi-bin/ /var/www/point-one/cgi-bin/
 	<Directory "/var/www/point-one/cgi-bin">
@@ -63,6 +65,7 @@
 		PerlHandler	 MapImage
 	</Location>
 
+
 	<Directory /var/www/point-one/www/public_html>
 		RewriteEngine on
 		RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
@@ -70,10 +73,6 @@
 		<FilesMatch "^JMF\.htm$">
 			SetHandler		perl-script
 			PerlHandler	 JMF
-		</FilesMatch>
-		<FilesMatch "^barcode\.png$">
-			SetHandler		perl-script
-			PerlHandler	 Barcode
 		</FilesMatch>
 
 		<FilesMatch "^upload\.htm$">
@@ -112,4 +111,8 @@
     <FilesMatch .*\.js.gz>
 		ForceType application/x-javascript
     </FilesMatch>
+		<FilesMatch "^barcode\.png$">
+			SetHandler		perl-script
+			PerlHandler	 Barcode
+		</FilesMatch>
 </VirtualHost>
