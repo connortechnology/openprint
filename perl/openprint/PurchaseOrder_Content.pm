@@ -9,7 +9,7 @@ require openprint::PurchaseOrder_ContentType;
 require openprint::PurchaseOrder_Item;
 require openprint::PurchaseOrder_Department;
 
-$debug = 0;
+$debug = 1;
 $table = 'PurchaseOrder_Contents';
 $serial = 'PurchaseOrder_Contents_id_seq';
 

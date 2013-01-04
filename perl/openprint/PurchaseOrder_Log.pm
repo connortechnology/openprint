@@ -5,7 +5,6 @@ require openprint::Object;
 use strict;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
 require openprint::PurchaseOrder;
 require openprint::User;
 
@@ -14,19 +13,19 @@ $table = 'PurchaseOrder_Logs';
 $serial = 'PurchaseOrder_Logs_id_seq';
 
 %fields = (
-	'id'			=>	'id',
-	'po_id'			=>	'po_id',
-	'created_on'	=>	'created_on',
-	'user_id'		=>	'user_id',
-	'reason'		=>	'reason',
+	id			=>	'id',
+	po_id		=>	'po_id',
+	created_on	=>	'created_on',
+	user_id		=>	'user_id',
+	reason		=>	'reason',
 );
 
 %transforms = (
 );
 
 %defaults = (
-	'po_id'			=>	undef,
-	'created_on'	=> q`'NOW()'`,
+	po_id		=>	undef,
+	created_on	=> q`'NOW()'`,
 );
 
 sub PurchaseOrder {

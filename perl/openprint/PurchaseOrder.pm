@@ -25,7 +25,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -101,7 +101,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 sub save {
-	my ( $self, $param ) = @_;
+	my ( $self, $param, $force_insert ) = @_;
 
 	$self->set( $param );
 	# force recalculation
@@ -115,7 +115,7 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$self{'currency_id'} = $Currency->id() if $Currency;
 	} # end if
-	my $error = $self->SUPER::save();
+	my $error = $self->SUPER::save({}, $force_insert );
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {
