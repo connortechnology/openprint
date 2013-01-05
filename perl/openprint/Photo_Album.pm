@@ -6,28 +6,28 @@ package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $serial = 'photo_albums_id_seq';
 $table = 'photo_albums';
 
 %fields = (
-	'id'				=>	'id',
-	'user_id'			=>	'user_id',
-	'name'				=>	'name',
-	'description'		=>	'description',
-	'thumbnail_id'		=>	'thumbnail_id',
-	'created_on'		=>	'created_on',
-	'privacy_mode_id'	=>	'privacy_mode_id',
-	'deleted'			=>	'deleted',
+	id				=>	'id',
+	user_id			=>	'user_id',
+	name			=>	'name',
+	description		=>	'description',
+	thumbnail_id	=>	'thumbnail_id',
+	created_on		=>	'created_on',
+	privacy_mode_id	=>	'privacy_mode_id',
+	deleted			=>	'deleted',
 );
 %find_fields = (
-	'asset_id'	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
+	asset_id	=>	'(SELECT asset_id FROM Photos_in_Albums WHERE album_id=photo_albums.id)',
 );
 
 %defaults = (
-	'created_on'	=> q`'NOW()'`,
-	'thumbnail_id'	=>	undef,
-	'deleted'		=>	0,
+	created_on		=>	q`'NOW()'`,
+	thumbnail_id	=>	undef,
+	deleted			=>	0,
 );
 
 sub created_by {

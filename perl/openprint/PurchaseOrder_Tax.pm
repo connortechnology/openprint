@@ -4,18 +4,18 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-$debug = 0;
+$debug = 1;
 $table = 'purchaseorder_taxes';
 $serial = 'purchaseorder_taxes_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'purchaseorder_id'	=>	'purchaseorder_id',
-	'PurchaseOrder'		=>	undef,
-	'tax_id'			=>	'tax_id',
-	'rate'				=>	'rate',
-	'amount'			=>	'amount',
-	'charge'			=>	'charge',
+	id					=>	'id',
+	purchaseorder_id	=>	'purchaseorder_id',
+	PurchaseOrder		=>	undef,
+	tax_id				=>	'tax_id',
+	rate				=>	'rate',
+	amount				=>	'amount',
+	charge				=>	'charge',
 );
 
 %transforms = (

@@ -956,12 +956,12 @@ sub hash_link {
 
 		my $hash = Digest::MD5::md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
-			src	=>	$src,
-			name => "$base-$hash.$ext",
-			path	=> $path,
-			cache_file => "$config{cache_dir}/$base-$hash.$ext",
-			hash => $hash,
-			timestamp => $timestamp,
+			src			=>	$src,
+			name		=> "$base-$hash.$ext",
+			path		=> $path,
+			cache_file	=> "$config{cache_dir}/$base-$hash.$ext",
+			hash		=> $hash,
+			timestamp	=> $timestamp,
 		};
 		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
@@ -969,6 +969,7 @@ sub hash_link {
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
+			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	#} else {

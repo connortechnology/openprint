@@ -7,6 +7,7 @@ require openprint;
 require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
+require openprint::RMA_Priority;
 require openprint::Email;
 require openprint::RMA_Log;
 require openprint::RMA_Part;
@@ -147,6 +148,17 @@ sub rma {
 				$session{'/employee/support/rma.html?'.$key} = $param{$key};
 			} # end foreach key
 		} # end if	
+	} elsif ( $param{action} eq 'ChangeStatus' ) {
+		if ( $RMA->status_id() != $param{status_id} ) {
+			$RMA->status_id( $param{status_id} );
+			$variable{error} .= $RMA->save();
+			$RMA->add_log( 'Status changed to ' . $RMA->status() );
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/support/rma.html?rma_id='.$RMA->id();
+			} # end nif
+		} else {
+			$variable{warning} .= 'Status was already ' . $RMA->status() . '. Not changed.<br/>';
+		} # end if
 	} else {	
 		if ( ! $RMA->id() ) {
 # Set default
@@ -395,7 +407,7 @@ sub returns {
 sub _returns {
 	my $url = '/employee/support/returns.html';
 	ssi::save_params( $url,
-			'status', 'company_id',
+			'status', 'company_id','supplier_id',
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
@@ -423,8 +435,10 @@ sub _returns {
 			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
 			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
 			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			( $session{$url.'?supplier_id'} ? ( 'supplier_id any'	=> $session{$url.'?supplier_id'} ) : () ),
 			order	=>	'rmanumber,id',
 		);
+		openprint::Company->find(id=>[ map { $_->company_id() } @{$variable{RMAS}} ]) if @{$variable{RMAS}} > 20;
 	} # end if
 } # end sub _returns
 

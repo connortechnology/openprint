@@ -34,26 +34,26 @@ $serial = 'events_id_seq';
 	url			=>	'url',
 );
 %find_fields = (
-	'attending'=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
+	'attending'	=>	'(SELECT user_id FROM event_attendance WHERE event_id=events.id AND attending=true)',
 	#'attending'=>	'(SELECT attending FROM event_attendance WHERE event_id=events.id)',
 	'name+info'	=>	q`name || info`,
 );
 %transforms = (
-	id	=>	[ 's/\D//g' ],
-    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    info		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    url			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	id		=>	[ 's/\D//g' ],
+    name	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    info	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    url		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 %defaults = (
-	'created_on'	=>	q`'NOW()'`,
-	'updated_on'	=>	q`'NOW()'`,
-	'starting_on'	=>	undef,
-	'ending_on'		=>	undef,
-	'location_id'	=>	undef,
-	#'asset_id'		=>	undef,
-	'time_associated'	=> 0,
-	'created_by'		=> q`$openprint::session{'user_id'}`,
-	'deleted'			=> 0,
+	created_on	=>	q`'NOW()'`,
+	updated_on	=>	q`'NOW()'`,
+	starting_on	=>	undef,
+	ending_on	=>	undef,
+	location_id	=>	undef,
+	#'asset_id		=>	undef,
+	time_associated	=> 0,
+	created_by		=> q`$openprint::session{user_id}`,
+	deleted			=> 0,
 );
 
 sub category {
@@ -63,12 +63,12 @@ sub category {
 			my $Category = openprint::Event_Category->find_one('name lc'=>lc $new );
 			if ( ! $Category ) {
 				$Category = new openprint::Event_Category();
-				$Category->save({'name'=>$_[1]})
+				$Category->save({name=>$_[1]})
 			} # end if	
-			$_[0]{'category_id'} = $Category->id();
+			$_[0]{category_id} = $Category->id();
 			return $Category->name();
 		} else {
-			$_[0]{'category_id'} = undef;
+			$_[0]{category_id} = undef;
 		} # end if	
 	} # end if
 	return new openprint::Event_Category( $_[0]{'category_id'} )->name();
@@ -157,6 +157,7 @@ sub can_view {
 	return 1 if $$User{type} eq 'A';
 	return 1 if $_[0]{created_by} == $$User{id};
 	return 0 if openprint::Blocklist::is_blocked( $openprint::session{user_id},$_[0]{created_by});
+	return 0 if $_[0]{deleted};
 	my $Privacy = $_[0]->Privacy();
 	return 1 if ! $$Privacy{id};
 	return $Privacy->can_view($$User{id});

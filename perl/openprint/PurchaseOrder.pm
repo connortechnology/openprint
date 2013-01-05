@@ -25,7 +25,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 0;
+$debug = 1;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -101,7 +101,7 @@ $serial = 'purchaseorders_id_seq';
 );
 
 sub save {
-	my ( $self, $param ) = @_;
+	my ( $self, $param, $force_insert ) = @_;
 
 	$self->set( $param );
 	# force recalculation
@@ -115,7 +115,7 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$self{'currency_id'} = $Currency->id() if $Currency;
 	} # end if
-	my $error = $self->SUPER::save();
+	my $error = $self->SUPER::save({}, $force_insert );
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {
@@ -386,8 +386,8 @@ sub Taxes {
 
 	if ( $country and $state and ! ( $$self{Taxes} and @{$$self{Taxes}} ) ) {
 		foreach my $Tax ( openprint::Tax->find(
-					'period start_null_or_<='	=>	$created_on,
-					'period end_null_or_>='	 =>	$created_on,
+					'period_start null_or_<='	=>	$created_on,
+					'period_end null_or_>='	 =>	$created_on,
 					'country'	=>	$country,
 					'state'	 =>	$state,
 				) ) {
@@ -405,8 +405,8 @@ sub Taxes {
 	} # end if
 	if ( @_ > 1 and $$self{'id'} ) {
 		my @new_taxes = openprint::Tax->find(
-				'period start_null_or_<='	=>	$created_on,
-				'period end_null_or_>='	 	=>	$created_on,
+				'period_start null_or_<='	=>	$created_on,
+				'period_end null_or_>='	 	=>	$created_on,
 				country	=>	$country,
 				state	 =>	$state,
 			);
