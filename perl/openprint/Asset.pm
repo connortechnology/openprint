@@ -58,13 +58,13 @@ $debug = 0;
 	'height'	=>	undef,
 );
 %transforms = (
-	'width'			=>	[ 's/\D//g' ],
-	'height'			=>	[ 's/\D//g' ],
-	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
-	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'attribution'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'license'		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	width			=>	[ 's/\D//g' ],
+	height			=>	[ 's/\D//g' ],
+	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
+	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	license		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 $table = 'assets';
 $serial = 'assets_id_seq';
