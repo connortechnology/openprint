@@ -16,10 +16,10 @@ require openprint::service;
 require openprint::ServiceType;
 require openprint::ProjectType;
 require openprint::ProjectType_Default;
+require openprint::Project_Service;
 require openprint::Project;
 require openprint::Currency;
 require openprint::User;
-require openprint::ServiceType;
 require openprint::logs;
 require openprint::Estimating::MultiPage;
 
@@ -806,6 +806,7 @@ $openprint::log->debug("reusing $project_index");
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
+
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {

@@ -164,13 +164,10 @@ if ( $debug ) {
 	foreach my $k ( keys %$fields ) {
 		$sql{$$fields{$k}} = $$self{$k} if defined $$fields{$k};
 	} # end foreach
-	$sql{$$fields{'updated_by'}} = $openprint::session{'user_id'} if exists $$fields{'updated_by'};
-	$sql{$$fields{'updated_on'}} = 'NOW()' if exists $$fields{'updated_on'};
-	#if ( 0 or $debug or $debug_all ) {
-		#foreach my $k ( keys %sql ) {
-			#$log->debug("Saving $k => $sql{$k}");
-		#} # end foreach
-	#} # end if
+	if ( ! $force_insert ) {
+		$sql{$$fields{updated_by}} = $openprint::session{user_id} if exists $$fields{updated_by};
+		$sql{$$fields{updated_on}} = 'NOW()' if exists $$fields{updated_on};
+	} # end if
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $local_dbh );
 	if ( @identified_by ) {
