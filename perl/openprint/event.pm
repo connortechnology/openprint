@@ -23,12 +23,12 @@ require Email::Valid;
 
 sub history {
 	if ( $param{btnFunction} eq 'Destroy' ) {
-		$param{event_id} =~ s/\D//g;
+		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
 		my $Event = new openprint::Event( $param{event_id} );
 		$variable{error} .= $Event->destroy();
 		%param = ();
 	} elsif ( $param{btnFunction} eq 'Delete' ) {
-		$param{event_id} =~ s/\D//g;
+		$param{event_id} = openprint::Event->transform('id', $param{event_id} );
 		my $Event = new openprint::Event( $param{event_id} );
 		$variable{error} .= $Event->delete();
 		%param = ();
@@ -72,6 +72,7 @@ sub search {
 		$session{'/event/search.html?state_id'} = $State->id() if $State and ! exists $session{'/event/search.html?state_id'};
 	} # end if
 } # end sub search
+
 sub _search {
 	if ( ! $param{btnFunction} ) {
 		ssi::save_params( '/event/search.html', ( 
@@ -86,11 +87,11 @@ sub edit {
 	if ( $param{btnFunction} eq 'Copy' ) {
 		$variable{Event} = $variable{Event}->copy();
 		$variable{error} .= $variable{Event}->save();
-	} elsif ( $param{function} eq 'Destory' ) {
+	} elsif ( $param{function} eq 'Destroy' ) {
 		if ( $Event->can_edit() ) {
 			$variable{error} .= $Event->destroy();
 			if ( ! $variable{error} ) {
-				$variable{information} = 'Event destroy.';
+				$variable{information} = 'Event destroyed.';
 				$variable{ExternalRedirect} = '/event/search.html';
 			} # end if
 		} # end if
@@ -113,8 +114,8 @@ sub edit {
 	} elsif ( $param{function} eq 'Save' ) {
 		if ( $Event->can_edit() ) {
 			$param{company_id} = $session{company_id} if ! $param{company_id};
-			$param{created_by} = $session{'user_id'} if ! $param{created_by};
-			$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
+			$param{created_by} = $session{user_id} if ! $param{created_by};
+			$param{starting_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
 			$param{ending_on} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
 			if ( $param{category_id} ) {
 				delete $param{category};
@@ -128,8 +129,8 @@ sub edit {
 			$variable{error} .= $Location if $Location and ref $Location ne 'openprint::Location';
 
 			if ( ( ! $param{event_id} ) and ( $_ = openprint::Event->find_one(
-							( $Location ? ( 'location_id'=>$Location->id() ) : () ),
-							, 'starting_on'=>$param{'starting_on'}, 'name lc'=> lc openprint::Event->transform('name', $param{name} ) ) ) ) {
+							( $Location ? ( location_id=>$Location->id() ) : () ),
+							, starting_on=>$param{starting_on}, 'name lc'=> lc openprint::Event->transform('name', $param{name} ) ) ) ) {
 				$variable{Event} = $Event = $_;
 				$variable{error} .= 'An event with that name at that place at that time already exists.';
 			} else {
@@ -183,6 +184,7 @@ sub category {
 sub view {
 	if ( ! $param{event_id} ) {
 		$variable{ExternalRedirect} = '/event/search.html';
+		return;
 	} # end if
 	if ( $param{event_id} =~ /^(\d+)\?user_id=(\d+)$/ ) {
 		$param{event_id}=$1;
