@@ -5,6 +5,10 @@
 		$html .= '<fieldset><legend>Files</legend><div id="Files">';
 		$html .= '<table class="List"><tr><th class="filename">Filename</th><th class="buttons">&nbsp;</th></tr>';
 		foreach my $File ( @Files ) {
+			if ( ! -f $File->archive().$File->filename() ) {
+				$log->error("FIle does not exist " . $File->archive().$File->filename() );
+				next;
+			} # end if
 			$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons">%3$s</td></tr><tr><td colspan="2" id="action-%1$d"></td></tr>',
 				$$File{id}, $File->filename(), 
 				ssi::button( 'Dearchive'.$$File{id}, { onclick=>qq`dearchive('$$File{id}');`, text=>'Dearchive' } ),
