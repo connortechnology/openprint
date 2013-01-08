@@ -70,6 +70,10 @@
 			SetHandler		perl-script
 			PerlResponseHandler	 openprint::www
 		</Files>
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
     </Directory>
 
     <Directory "/var/www/point-one/skins/PointOne Graphics Inc">
