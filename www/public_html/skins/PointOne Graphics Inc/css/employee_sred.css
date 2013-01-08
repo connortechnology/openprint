@@ -89,3 +89,8 @@ a.Delete .c, a.Save .c, a.Cancel .c {
 	float: none;
 	width: 100%;
 }
+@media print {
+	#content- {
+		display: none;
+	}
+}
