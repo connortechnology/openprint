@@ -91,13 +91,19 @@ if ($res->is_success) {
 			$log->error("NULL 30d rate for $rate");
 			next;
 		} # end if
+		$rate = openprint::Currency_Conversion->transform( 'rate', $rate );
+		if ( ! $rate ) {
+			$log->error("NULL 30d rate after transform for $rate");
+			next;
+		} # end if
+
 		my $Conversion = openprint::Currency_Conversion->find_one(from_id=>$Currencies{$cur}->id(), to_id=>$$BTC{id}, period_end=>undef);
 		if ( ! $Conversion ) {
 			$Conversion = new openprint::Currency_Conversion();
 			$Conversion->save({
-					from_id=>$Currencies{$cur}->id(), 
-					to_id=>$$BTC{id},
-					rate=>Math::Round::nearest(0.0001,1/$$rates{$cur}{'30d'}),
+					from_id	=>	$Currencies{$cur}->id(), 
+					to_id	=>	$$BTC{id},
+					rate	=>	Math::Round::nearest(0.0001,1/$rate),
 					});
 		} elsif ( Math::Round::nearest(0.01,$Conversion->rate()) != Math::Round::nearest(0.01, 1/$$rates{$cur}{'30d'} ) ) {
 			$Conversion->save({period_end=>'NOW()'});

@@ -88,6 +88,28 @@ sub url {
 }
 
 
+sub is_video {
+	my $extension;
+	if ( ref $_[0] eq 'openprint::Asset' ) {
+		my $filename = $_[0]->on_disk_filename();
+		( $extension ) = $filename =~ /.+\.([^\.]+)$/;
+	} else {
+		$extension = $_[0];
+	} # end if
+	return sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] );
+} # end sub is_video
+
+sub is_photo {
+	my $extension;
+	if ( ref $_[0] eq 'openprint::Asset' ) {
+		my $filename = $_[0]->on_disk_filename();
+		( $extension ) = $filename =~ /.+\.([^\.]+)$/;
+	} else {
+		$extension = $_[0];
+	} # end if
+	return sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] );
+} # end sub is_photo
+
 sub sized_url {
 	my $size = $_[1];
 
@@ -105,7 +127,7 @@ sub sized_url {
 #$openprint::log->debug("Asset:: on_disk_path: $src, Filename: $filename");
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
-	if ( sets::isin( lc $extension, [ 'jpg','jpeg','png','gif','bmp' ] ) ) {
+	if ( is_photo( $extension ) ) {
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $path.$filename;
 			if ( ! -e $dest ) {
@@ -129,8 +151,17 @@ sub sized_url {
 		} # end if
 #$openprint::log->debug("Return /thumbnails/$filename");
 		return '/assets/'.$size.'/'.$filename;
-	} elsif ( sets::isin( lc $extension, [ '3gp', '3g2', 'asf', 'avi', 'dat', 'divx', 'dsm', 'evo', 'flv', 'm1v', 'm2ts', 'm2v', 'm4a', 'mj2', 'mjpg', 'mjpeg', 'mkv', 'mov', 'moov', 'mp4', 'mpg', 'mpeg', 'mpv', 'nut', 'ogg', 'ogm', 'qt', 'swf', 'ts', 'vob', 'wmv', 'xvid' ] ) ) {
+	} elsif ( is_video( $extension ) ) {
+		my $fallback = '/images/icons/'. lc $extension. '.png';
+		if ( ! -e $openprint::config{SkinPath}.$fallback ) {
+			$fallback = '/images/icons/unknown.png';
+		} # end if
 		if ( $openprint::config{'AssetPath'} ) {
+			if ( ! -e $src ) {
+				$openprint::log->error("Src file $src no longer exists! Can't make thumbs");
+				return $fallback;
+			} # end if
+
 			my $dest = $path.$blah.'.jpg';
 			if ( ! -e $dest ) {
 				my $width;
@@ -141,21 +172,39 @@ sub sized_url {
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
-					return '/assets/'.$blah.'.jpg';
+					return $fallback;
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
-				
-				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src`;
-				if ( $! ) {
-					$openprint::log->error("Unable to create medium thumbnail at $dest: $!" );
-					return '/images/icons/image.png';
+				if ( ! -d "/tmp/$filename" ) {
+					mkdir "/tmp/$filename";
+					if ( $! ) {
+						$openprint::log->error("Unable to create tmp directory at /tmp/$filename/ to hold medium thumbnail: $!" );
+						return $fallback;
+					} # end i
 				} else {
-					$openprint::log->debug($_);
+					$openprint::log->debug("Strange, tmp dir /tmp/$filename shouldnt already exist, but it does.");
 				} # end if
-				`mv /tmp/00000001.jpg $dest`;
+
+				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
 				if ( $! ) {
-					$openprint::log->error("Unable to mv image  $dest: $!" );
-					return '/images/icons/image.png';
+					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: $!" );
+					return $fallback;
+				} else {
+					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src : $_ ");
+				} # end if
+				if ( -e "/tmp/$filename/00000001.jpg" ) {
+					$openprint::log->debug("Moving /tmp/$filename/0000001.jpg to $dest");
+					`mv "/tmp/$filename/00000001.jpg" $dest`;
+					if ( $! ) {
+						$openprint::log->error("Unable to mv image  $dest: $!" );
+						return $fallback;
+					} # end if
+					unlink "/tmp/$filename/00000001.jpg";
+					rmdir "/tmp/$filename";
+				} else {
+					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: Wasn't there! $!" );
+					$openprint::log->debug("command was mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp -ss 60 $src : $_ ");
+					return $fallback;
 				} # end if
 			} # end if
 		} # end if
@@ -421,6 +470,33 @@ sub layout {
 	} # end if
 	return $_[0]{'layout'};
 } # end sub layout
+
+sub mp4_url {
+	my $src = $_[0]->on_disk_path();
+	my $path = $openprint::config{'AssetPath'}.'/videos/';
+	if ( $openprint::config{'AssetPath'} ) {
+		if ( ! -e $path ) {
+			mkdir $path;
+			$openprint::log->error("Unable to create path $path: $!" );
+			return '/images/icons/file.png';
+		} # end if
+	} # end if
+	my $filename = $_[0]->on_disk_filename();
+	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	if ( ! is_video( $extension ) ) {
+		$openprint::log->error("Called mp4_url on as asset that is not a video. " . $_[0]->to_string() );
+		return;
+	} # end if
+	my $dest = $path.$base.'.mp4';
+
+	if ( ! -e $dest ) {
+		# Create it
+		`avconv -i $src -vcodec libx264 -vpre ipod640 -b 250k -bt 50k -acodec libfaac -ab 56k -ac 2 -s 480x320 $dest`;
+		#`qt-faststart video_out_file.mp4 video_out_file_quickstart.mp4`;
+	} # end if
+	return '/assets/videos/'.$base.'.mp4';
+} # end sub mp4_url
+
 
 1;
 __END__

@@ -5,7 +5,6 @@ require openprint::Object;
 use strict;
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
 require openprint::PurchaseOrder;
 require openprint::User;
 
