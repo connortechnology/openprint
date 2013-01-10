@@ -1382,8 +1382,8 @@ function input_filter(e,regexp) {
 	return e.value;
 }
 function cardinalize(e) {
-	if ( e.value.match(/\D/g) )
-		e.value = e.value.replace(/\D/g,'');
+	if ( e.value.match(/[^\d]/g) )
+		e.value = e.value.replace(/[^\d]/g,'');
 	return e.value;
 }
 function integerize(e) {
