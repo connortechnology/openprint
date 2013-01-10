@@ -107,6 +107,10 @@ sub find {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'name'};
 	} # end if
+	if ( exists $params{'name lc'} ) {
+		$sql .= q{ AND lower(strName)=?};
+		push @values, $params{'name lc'};
+	} # end if
 	if ( exists $params{'postalcode'} ) {
 		$sql .= q{ AND strPostalCode=?};
 		push @values, $params{'postalcode'};
