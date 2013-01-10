@@ -703,5 +703,35 @@ sub _assets {
 
 sub _items_dropdown {
 } # end sub _items_dropdown
+
+sub authorizations {
+	if ( $param{action} eq 'Save' ) {
+		my @POC_Types = openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)');
+		foreach my $User ( openprint::User->find( company_id=>$param{company_id},
+					( $param{user_id} ? ( id=>$param{user_id} ) : () ) ) ) {
+			my $save = 0;
+			if ( $User->purchasing_limit() != $param{'limit_per_po-'.$$User{id}} ) {
+				$User->purchasing_limit( $param{'limit_per_po-'.$$User{id}} );
+				$save = 1;
+			} # end if
+			if ( $User->purchasing_total_limit() != $param{'limit_total-'.$$User{id}} ) {
+				$User->purchasing_total_limit( $param{'limit_total-'.$$User{id}} );
+				$save = 1;
+			} # end if
+			$User->save() if $save;
+			foreach my $POC_Type ( @POC_Types ) {
+				if ( $User->po_limit( $$POC_Type{id} ) != $param{'limit-'.$$User{id}.'-'.$$POC_Type{id}} ) {
+					$User->po_limit( $$POC_Type{id}, $param{'limit-'.$$User{id}.'-'.$$POC_Type{id}} );
+				} # end if
+			} # end foreach POC_TYPE	
+		} # end foreach User
+	} # end if
+	_authorizations();
+	$session{'/employee/purchase_order/authorizations.html?company_id'} = new openprint::User($session{user_id})->company_id() if ! $session{'/employee/purchase_order/authorizations.html?company_id'};
+} # end sub authorizations
+
+sub _authorizations {
+	ssi::save_params( '/employee/purchase_order/authorizations.html', ( 'company_id','user_id' ) );
+} # end sub _items
 1;
 __END__

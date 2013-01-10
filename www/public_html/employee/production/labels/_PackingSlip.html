@@ -144,7 +144,7 @@ cleanup : true
 			<td style="border: 1px solid black;">DATE: 
 				<span id="date"><? echo ( $$variable{'Label'}->get_data('date'); ) ?></span>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=date',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=date'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=date',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:1}, tinymce_options );
 </script>
 			</td>
 		</tr>
@@ -157,17 +157,21 @@ new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}-
 	<table style="height: 1.75in;">
 		<tr>
 			<td style="border: 1px solid black;">
-				TO:<br/>
+				TO:
+				<? echo ( 
+						require openprint::Address;
+						ssi::select( [ map { $_->id(), $_->to_string() } openprint::Address->find(company_id=>$$variable{Label}->Project()->company_id())], undef, { name=>'to_address_id', id=>'to_address_id' } ); ) ?>
+				<br/>
 				<div id="to" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=to',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=to'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'to', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&action=update&field=to',{okButton:true,cancelControl:'button',submitOnBlur:true}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				FROM:<br/>
 				<div id="from" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('from');) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=from',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=from'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=from',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 		</tr>
@@ -178,14 +182,14 @@ new Ajax.InPlaceRichEditor( 'from', '_label.html?id=<? echo ( $$variable{Label}-
 				DESCRIPTION:<br/>
 				<div id="description" style="height:3.75in;"><? echo ( $$variable{'Label'}->get_data('description'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=description',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=get&amp;field=description'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'description', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=description',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 			<td style="border: 1px solid black;">
 				QUANTITY:<br/>
 				<div id="quantity" style="height: 3.75in;"><? echo ($$variable{'Label'}->get_data('quantity'); ) ?></div>
 <script type="text/javascript">
-new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=quantity',{okButton:true,cancelLink:true,submitOnBlur:true,rows:10,loadTextURL:'_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=getnohtml&amp;field=quantity'}, tinymce_options );
+new Ajax.InPlaceRichEditor( 'quantity', '_label.html?id=<? echo ( $$variable{Label}->id() ) ?>&amp;action=update&amp;field=quantity',{okButton:true,cancelControl:'button',submitOnBlur:true,rows:10}, tinymce_options );
 </script>
 			</td>
 		</tr>
