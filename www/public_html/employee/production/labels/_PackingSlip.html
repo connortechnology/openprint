@@ -158,9 +158,6 @@ new Ajax.InPlaceRichEditor( 'date', '_label.html?id=<? echo ( $$variable{Label}-
 		<tr>
 			<td style="border: 1px solid black;">
 				TO:
-				<? echo ( 
-						require openprint::Address;
-						ssi::select( [ map { $_->id(), $_->to_string() } openprint::Address->find(company_id=>$$variable{Label}->Project()->company_id())], undef, { name=>'to_address_id', id=>'to_address_id' } ); ) ?>
 				<br/>
 				<div id="to" style="height: 1.5in;"><? echo ( $$variable{'Label'}->get_data('to'); ) ?></div>
 <script type="text/javascript">

@@ -28,11 +28,11 @@ $serial = 'Address_Index_seq';
 
 sub to_string {
 	return join( ' ', $_[0]->firstname(), $_[0]->lastname() ) . ' @ ' . join(',', (
-		( $_[0]->address1() ? $_[0]->address1() : () )
-		( $_[0]->address2() ? $_[0]->address2() : () )
-		( $_[0]->city() ? $_[0]->city() : () )
-		( $_[0]->state() ? $_[0]->state() : () )
-		( $_[0]->country() ? $_[0]->country() : () )
+		( $_[0]->address1() ? $_[0]->address1() : () ),
+		( $_[0]->address2() ? $_[0]->address2() : () ),
+		( $_[0]->city() ? $_[0]->city() : () ),
+		( $_[0]->state() ? $_[0]->state() : () ),
+		( $_[0]->country() ? $_[0]->country() : () ),
 		) );
 } # end sub to_string
 
