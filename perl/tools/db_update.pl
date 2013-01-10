@@ -3346,35 +3346,39 @@ if ( ! sets::isin( 'faults_found', \@tables ) ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE faults_found ADD column user_id INTEGER');
 		$dbh->do('ALTER TABLE faults_found ADD FOREIGN KEY (user_id) REFERENCES Users (id)');
-		my @data = sql::execute( undef, undef, 'SELECT id, repairedby FROM RMA' );
-		require openprint::Fault_Found;
-		while ( my ( $rma_id, $repaired_by ) = splice @data,0, 2 ) {
-			next if ! $repaired_by;
-			my $User = openprint::User->find_one('firstname lc'=>lc $repaired_by);
-			if ( ! $User ) {
-				$User = new openprint::User();
-				$_ = $User->save({firstname=>$repaired_by, type=>'E' });
-				die $_ if $_;
-			} # end if
-			sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'user_id', $User->id() );
-		} # end while
-		die $dbh->errstr() if $dbh->errstr();
-		$dbh->do('ALTER TABLE RMA DROP repairedby');
+		if ( exists $$data{repairedby} ) {
+			my @data = sql::execute( undef, undef, 'SELECT id, repairedby FROM RMA' );
+			require openprint::Fault_Found;
+			while ( my ( $rma_id, $repaired_by ) = splice @data,0, 2 ) {
+				next if ! $repaired_by;
+				my $User = openprint::User->find_one('firstname lc'=>lc $repaired_by);
+				if ( ! $User ) {
+					$User = new openprint::User();
+					$_ = $User->save({firstname=>$repaired_by, type=>'E' });
+					die $_ if $_;
+				} # end if
+				sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'user_id', $User->id() );
+			} # end while
+			die $dbh->errstr() if $dbh->errstr();
+			$dbh->do('ALTER TABLE RMA DROP repairedby');
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	if ( ! exists $$data{repaired_on}  ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do('ALTER TABLE Faults_Found ADD COLUMN repaired_on TIMESTAMP WITH TIME ZONE');
-		my @data = sql::execute( undef, undef, 'SELECT id, daterepaired FROM RMA' );
-		require openprint::Fault_Found;
-		while ( my ( $rma_id, $repaired_on ) = splice @data,0, 2 ) {
-			next if ! $repaired_on;
-			sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'repaired_on', $repaired_on );
-		} # end while
-		$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET default NOW()');
-		#$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET not null');
-		$dbh->do('ALTER TABLE RMA DROP daterepaired');
-		die $dbh->errstr() if $dbh->errstr();
+		if ( exists $$data{daterepaired} ) {
+			my @data = sql::execute( undef, undef, 'SELECT id, daterepaired FROM RMA' );
+			require openprint::Fault_Found;
+			while ( my ( $rma_id, $repaired_on ) = splice @data,0, 2 ) {
+				next if ! $repaired_on;
+				sql::update(undef,undef,'faults_found', [ 'rma_id=?', $rma_id ], 'repaired_on', $repaired_on );
+			} # end while
+			$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET default NOW()');
+			#$dbh->do('ALTER TABLE Faults_Found ALTER repaired_on SET not null');
+			$dbh->do('ALTER TABLE RMA DROP daterepaired');
+			die $dbh->errstr() if $dbh->errstr();
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} # end if 
 }
