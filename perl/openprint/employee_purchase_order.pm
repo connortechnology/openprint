@@ -85,33 +85,35 @@ sub save_contents {
 		my $Item;
 		if ( $$p{'item-'.$content_id} ) {
 			$Item = new openprint::PurchaseOrder_Item( $$p{'item_id-'.$content_id} );
-			if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
-				$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
-				$Item = openprint::PurchaseOrder_Item->find_one(
-						'company_id'	=>	$PO->company_id(),
-						'vendor_id'		=>	$$p{'supplier_id'},
-						'type_id'		=>	$$p{'type_id-'.$content_id},
-						'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
-						'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
-						);
-				if ( ! $Item ) {
-					$Item = new openprint::PurchaseOrder_Item();
-					$Item->save({
+			if ( $$p{supplier_id} ) {
+				if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
+					$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
+					$Item = openprint::PurchaseOrder_Item->find_one(
 							'company_id'	=>	$PO->company_id(),
 							'vendor_id'		=>	$$p{'supplier_id'},
 							'type_id'		=>	$$p{'type_id-'.$content_id},
-							'name'			=>	$$p{'item-'.$content_id}, 
-							'price'			=>	$$p{'price-'.$content_id},
-							'product'		=>	$$p{'product-'.$content_id},
-							});
+							'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
+							'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
+							);
+					if ( ! $Item ) {
+						$Item = new openprint::PurchaseOrder_Item();
+						$Item->save({
+								'company_id'	=>	$PO->company_id(),
+								'vendor_id'		=>	$$p{'supplier_id'},
+								'type_id'		=>	$$p{'type_id-'.$content_id},
+								'name'			=>	$$p{'item-'.$content_id}, 
+								'price'			=>	$$p{'price-'.$content_id},
+								'product'		=>	$$p{'product-'.$content_id},
+								});
+					} # end if
+				} else {
+					$log->debug("Item is " . $Item->name() );
 				} # end if
-			} else {
-				$log->debug("Item is " . $Item->name() );
-			} # end if
-			if ( $Item->price() != $$p{'price-'.$content_id} ) {
-# Update the latest price
-				$Item->save({'price'=>$$p{'price-'.$content_id}});
-			} # end if
+				if ( $Item->price() != $$p{'price-'.$content_id} ) {
+	# Update the latest price
+					$Item->save({'price'=>$$p{'price-'.$content_id}});
+				} # end if
+			} # end if PO has supplier_id
 		} else {
 			$log->debug("No item for $content_id");
 		} # end if
@@ -356,7 +358,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
-		$param{contact_id} = save_contact( \%param ) if ! $param{contact_id};
+		$param{contact_id} = save_contact( \%param ) if ( ! $param{contact_id} ) and $param{supplier_id};
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
@@ -391,9 +393,9 @@ if ( 0 ) {
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
-				'user_id'	=>	$session{'user_id'},
+				'user_id'	=>	$session{user_id},
 				'po_id'		=>	$PO->id(),
-				'reason'	=>	$param{'reason'},
+				'reason'	=>	$param{reason},
 				});
 		} # end if
 		my @notifications = $PO->notifications(); # returns user_ids
