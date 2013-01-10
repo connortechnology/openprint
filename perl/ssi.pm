@@ -92,6 +92,10 @@ sub do_new_substitution {
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
 		return $result;
+    } elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+        my $result = hash_link($1);
+        $result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+        return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
