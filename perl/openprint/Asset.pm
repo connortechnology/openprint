@@ -127,6 +127,7 @@ sub sized_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
+$openprint::log->debug("Have photo for $blah");
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $path.$filename;
 			if ( ! -e $dest ) {
@@ -166,23 +167,29 @@ sub sized_url {
 					$width = $openprint::config{'Medium Asset Width'};
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large Asset Width'};
+				} elsif ( ! $size ) {
+					$size = 'full';
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
-					return $fallback;
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
 				if ( ! -d "/tmp/$filename" ) {
-					mkdir "/tmp/$filename";
-					if ( $! ) {
+					if ( ! mkdir "/tmp/$filename" ) {
 						$openprint::log->error("Unable to create tmp directory at /tmp/$filename/ to hold medium thumbnail: $!" );
 						return $fallback;
-					} # end i
+					} # end if
 				} else {
 					$openprint::log->debug("Strange, tmp dir /tmp/$filename shouldnt already exist, but it does.");
 				} # end if
 
-				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				$openprint::log->debug("about to mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src :");
+				if ( $width ) {
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				} else {
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				} # end if
+				#$_ = `ffmpeg  -itsoffset -4  -i $src -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 /tmp/$filename/00000001.jpg`;
 				if ( $! ) {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: $!" );
 					return $fallback;
@@ -441,18 +448,28 @@ sub caption {
 
 sub width {
 	if ( ! $_[0]{'width'} ) {
-require Image::Size;
+		require Image::Size;
+		if ( $_[0]->is_video() ) {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+		} else {
 # get the image size, and print it out
-		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		} # end if
 	} # end if
 	return $_[0]{'width'};
 } # end sub width
 
 sub height {
 	if ( ! $_[0]{'height'} ) {
-require Image::Size;
-# get the image size, and print it out
-		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		require Image::Size;
+		if ( $_[0]->is_video() ) {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+		} else {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		} # end if
 	} # end if
 	return $_[0]{'height'};
 } # end sub height
@@ -469,6 +486,7 @@ sub layout {
 } # end sub layout
 
 sub mp4_url {
+$openprint::log->debug("Calling mp4_url");
 	my $src = $_[0]->on_disk_path();
 	my $path = $openprint::config{'AssetPath'}.'/videos/';
 	if ( $openprint::config{'AssetPath'} ) {
@@ -488,12 +506,42 @@ sub mp4_url {
 
 	if ( ! -e $dest ) {
 		# Create it
-		`avconv -i $src -vcodec libx264 -vpre ipod640 -b 250k -bt 50k -acodec libfaac -ab 56k -ac 2 -s 480x320 $dest`;
-		#`qt-faststart video_out_file.mp4 video_out_file_quickstart.mp4`;
+		my $output = `avconv -i $src $dest`;
+		$openprint::log->debug("avconv -i $src $dest: $output");
+		`avconv -i $src -vcodec libx264 -b 1500k -vpre slow -vpre baseline -g 30 /tmp/$base.mp4`;
+		`qt-faststart /tmp/$base.mp4 $dest`;
 	} # end if
 	return '/assets/videos/'.$base.'.mp4';
 } # end sub mp4_url
 
+sub ogg_url {
+$openprint::log->debug("Calling ogg_url");
+	my $src = $_[0]->on_disk_path();
+	my $path = $openprint::config{AssetPath}.'/videos/';
+	if ( $openprint::config{AssetPath} ) {
+		if ( ! -e $path ) {
+			mkdir $path;
+			$openprint::log->error("Unable to create path $path: $!" );
+			return '/images/icons/file.png';
+		} # end if
+	} # end if
+	my $filename = $_[0]->on_disk_filename();
+	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	if ( ! is_video( $extension ) ) {
+		$openprint::log->error("Called mp4_url on as asset that is not a video. " . $_[0]->to_string() );
+		return;
+	} # end if
+	my $dest = $path.$base.'.ogg';
+
+	if ( ! -e $dest ) {
+		# Create it
+		#`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest`;
+		`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 $dest`;
+$openprint::log->debug("Output from ffmpeg2theora -o $dest $path/$base.mp4");
+		#`qt-faststart video_out_file.mp4 video_out_file_quickstart.mp4`;
+	} # end if
+	return '/assets/videos/'.$base.'.ogg';
+} # end sub ogg_url
 
 1;
 __END__

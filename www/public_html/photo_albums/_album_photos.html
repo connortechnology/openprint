@@ -14,7 +14,9 @@
 
 	foreach my $Photo ( @Portrait, @Landscape ) {
 		$html .= '<div class="Photo">';
+$log->debug("Getting html for " . $Photo->to_string() );
 		$html .= $variable{'photo_size'} eq 'full' ? $Photo->html() : $Photo->medium_html();
+$log->debug("Gotting html for " . $Photo->to_string() );
 		$html .= '<br/>';
 
 		if ( $$variable{Album}->can_edit() ) {
