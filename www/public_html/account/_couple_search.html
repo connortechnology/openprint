@@ -8,10 +8,10 @@
 		@Companies = openprint::Company->find('name ilike'=>$param{'company_name'});
 	} else {
 		foreach my $Company ( openprint::Company->find(
-			ssi::date_filter( '/account/couple_search.html?created_on_start', 'created_on_start' ),
-			ssi::date_filter( '/account/couple_search.html?created_on_end', 'created_on_end' ),
-			ssi::date_filter( '/account/couple_search.html?last_online_start', 'last_online_null_or_>=' ),
-			ssi::date_filter( '/account/couple_search.html?last_online_end', 'last_online_null_or_<=' ),
+			ssi::date_filter( '/account/couple_search.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/account/couple_search.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/account/couple_search.html?last_online_end', 'last_online null_or_<=' ),
+			ssi::date_filter( '/account/couple_search.html?last_online_start', 'last_online null_or_>=' ),
 			'order'	=>	'lower(name)',
 			) ) {
 			my $filtered = 0;

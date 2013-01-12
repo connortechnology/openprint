@@ -50,7 +50,11 @@
 				} # end if
 				$html .= ssi::button( 'Back', { 'href' => "/photo_albums/view.html?album_id=$$Album{'id'}", 'text'=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
-				if ( $Photo->Asset()->filename() =~ /\.(png|gif|jpe?g|bmp)$/i ) {
+
+
+				my $Asset = $Photo->Asset();
+
+				if ( $Asset->is_photo() ) {
 					$html .= sprintf('<img src="%s" id="asset-%d" />', $Photo->url(), $Photo->asset_id() );
 					if ( $Photo->can_edit() ) {
 						$html .= '<fieldset><legend>Edit Options</legend>';
@@ -68,7 +72,7 @@ if ( 0 ) {
 }
 
 						$html .= '<fieldset><legend>Available Opinions</legend><div id="OpinionAvailability">';
-						$$variable{'Object'} = $Photo->Asset();
+						$$variable{'Object'} = $Asset;
 						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/includes/_opinion_availability.html' );
 						$html .= '</div></fieldset>';
 
@@ -77,7 +81,7 @@ if ( 0 ) {
 					#} else {
 						#$html .= '<label>Keywords</label>' . $Photo->keywords() . '<br/>';
 					} # end if
-				} elsif ( $Photo->Asset()->filename() =~ /\.(flv)$/ ) {
+				} elsif ( $Asset->filename() =~ /\.(flv)$/ ) {
 					$html .= sprintf(q`
 <script type="text/javascript">
     var FO = {      movie:"/flvplayer.swf",width:"320",height:"240",majorversion:"7",build:"0",bgcolor:"#FFFFFF",
@@ -85,8 +89,13 @@ if ( 0 ) {
     UFO.create(FO, "Video");
 </script>
 `, $Photo->url() );
+				} elsif ( $Asset->is_video() ) {
+					$html .= '<video width="320" height="240" controls>';
+					$html .= '<source src="'.$Asset->mp4_url().'" type="video/mp4">';
+					$html .= 'Your browser does not support the video tag';
+					$html .= '</video>';
 				} else {
-					$html .= '<a href="'.$Photo->Asset()->url().'">'.$Photo->Asset()->thumbnail_html().'</a>';
+					$html .= '<a href="'.$Asset->url().'">'.$Asset->thumbnail_html().'</a>';
 					$log->error("Not a photo at view_photo : " . $Photo->url() );
 				} # end if
 				return $html;

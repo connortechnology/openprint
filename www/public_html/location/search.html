@@ -17,15 +17,16 @@
 			<div class="content">
 			<div class="leftColumn">
 				<ul>
-<!--
+<? if ( $session{user_type} eq 'A' ) ?>
 					<li><label>Type</label>
 						<select name="type_id" id="type_id">
 							<option value=""> All </option>
 					<? echo ( ssi::make_drop_down( openprint::Location_Type->dropdown(), $session{'/location/search.html?type_id'} ); ) ?>
 						</select>
 					</li>
--->
+<? else ( $session{user_type} eq 'A' ) ?>
 <input type="hidden" name="type_id" value="<? echo ( if( $_ = openprint::Location_Type->find_one(name=>'place') ) { return $_->id(); } ) ?>" />
+<? endif ( $session{user_type} eq 'A' ) ?>
 					<li><label>Search</label><input type="text" name="search" id="search" value="<? echo ( $param{'search'} ) ?>"/></li>
 				</ul>
 			</div>

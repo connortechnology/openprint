@@ -22,8 +22,8 @@
 
 	my @PI = openprint::PaperInventory->find(
 		'paper_id'	=>	$param{'paper_id'},
-		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
-		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+		'updated_on <='	=>	$$variable{'End'} . ' 23:59:59',
+		'updated_on >='	=>	$$variable{'Start'} . ' 00:00:00',
 		'limit'				=>	$session{'/employee/inventory/paper_details.html?limit'},
 		'order'				=>	'updated_on',
 	);
@@ -34,8 +34,8 @@
 			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $y, $m, $d );
 			@PI = openprint::PaperInventory->find(
 				'paper_id'	=>	$param{'paper_id'},
-				'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
-				'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+				'updated_on <='	=>	$$variable{'End'} . ' 23:59:59',
+				'updated_on >='	=>	$$variable{'Start'} . ' 00:00:00',
 				'order'				=>	'updated_on',
 				);
 		} # end if

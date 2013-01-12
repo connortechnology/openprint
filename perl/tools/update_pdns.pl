@@ -3,6 +3,8 @@ use utf8;
 use lib '/var/www/testing/perl';
 use strict;
 use LWP;
+use Getopt::Long;
+use File::Basename qw(basename);
 
 require configuration;
 require sql;
@@ -10,55 +12,40 @@ require openprint::Host;
 require logger;
 require openprint::Log;
 
-use vars qw( $log $dbh %config);
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-$log = logger->new();
-$log->{level} = 'debug';
-
-use Getopt::Long;
-use File::Basename qw(basename);
+$log = logger->new('debug');
 
 my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','record=s', 'command=s', 'debug=s','addr=s',
+	'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','record=s', 'command=s', 'debug=s','addr=s',
 );
 
 if ($opts->{help}) {
-    usage();
-    exit 0;
+	usage();
+	exit 0;
 }
 
-# Get our configuration information
-#if (my $err = ReadCfg('/etc/iq.conf')) {
-    #die $err;
-#}
-
-foreach my $param ( 'db_name','db_user','db_pass' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-	if ( ! $CFG::Config{$param} ) {
-		die "$program: missing required --$param parameter";
-	}
+configuration::merge( $opts );
+foreach my $param ( 'db_name','db_user','db_pass', 'command', 'addr' ) {
+	die "$program: missing required --$param parameter" if ! $config{$param};
 } # end foreach required-param
 
-foreach my $param ( 'db_host', 'log_file', 'log_level' ) {
-	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
-} # end foreach non-required param
+$config{log_level} = 'debug' if ! $config{log_level};
+$log = logger->new( {file=>$config{log_file}, level=>$config{log_level}} );
 
-$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
-
-$log->debug("Connecting to db");	
+$log->debug("Connecting to db");
 $dbh = sql::open_sql( $log,
-		'host'		=> $CFG::Config{'db_host'},
-		'database'	=> $CFG::Config{'db_name'},
-		'driver'	=> 'Pg',
-		'login'		=> $CFG::Config{'db_user'},
-		'password'	=> $CFG::Config{'db_pass'},
-		);
+		host		=> $config{db_host},
+		database	=> $config{db_name},
+		driver		=> 'Pg',
+		login		=> $config{db_user},
+		password	=> $config{db_pass},
+);
 if ( ! $dbh ) {
 	die "Error opening db. $!";
 } # end if
@@ -85,7 +72,11 @@ sub usage {
 
 usage: update_pdns [--help] 
 
-The purpose of this script is to monitor hosts for uptime
+The purpose of this script is to add/remove/update reconds in DNS
+
+Examples:
+./update_pdns --command=add --addr=192.168.1.2 record=www.connortechnology.com
+./update_pdns --command=remove --addr=192.168.1.2 record=www.connortechnology.com
 
 Command-line options:
 

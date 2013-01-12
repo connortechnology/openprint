@@ -1,8 +1,8 @@
 <? eval (
 	$$variable{subtotal} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{Taxes}} = openprint::Tax->find(
-		ssi::date_filter( '/invoice/history.html?created_on_end', 'period_start_null_or_<=' ),
-		ssi::date_filter( '/invoice/history.html?created_on_start', 'period_end_null_or_>=' ),
+		ssi::date_filter( '/invoice/history.html?created_on_end', 'period_start null_or_<=' ),
+		ssi::date_filter( '/invoice/history.html?created_on_start', 'period_end null_or_>=' ),
 		'order'		=>	'period_start,name',
 	);
 	my @Invoices = @{$$variable{'Invoices'}} = ();

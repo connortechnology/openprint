@@ -36,5 +36,5 @@ CREATE TABLE Users (
 	PRIMARY KEY (id)
 );
 CREATE INDEX users_email_idx ON Users (email);
-alter table Users add foreign key (Company_Id) REFERENCES Companies (Id);
-ALTER TABLE Companies add FOREIGN KEY (Salesrep_id) REFERENCES Users (id);
+ALTER TABLE users ADD FOREIGN KEY (company_id) REFERENCES Companies (Id);
+ALTER TABLE Companies ADD FOREIGN KEY (salesrep_id) REFERENCES Users (id);

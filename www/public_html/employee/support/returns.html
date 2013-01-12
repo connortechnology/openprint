@@ -16,11 +16,21 @@
 				<? echo ( button('Go', { onclick=>'load_results();' } ); ) ?>
 			</li>
 		<ul>
+<? if ( $session{user_type} eq 'A' ) ?>
+		<li>
+			<label>Supplier</label>
+			<input type="text" onkeyup="filterDDM(this, f1.supplier_id);" class="filter"/>
+			<select name="supplier_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value=""> All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?supplier_id'}, { supplier=>'Y' } ); ) ?>
+			</select>
+		</li>
+<? endif ( $session{user_type} eq 'A' ) ?>
 		<li>
 			<label>Customers</label>
 			<input type="text" onkeyup="filterDDM(this, f1.company_id);" class="filter"/>
 			<select name="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<option value=""> Select a Customer</option>
+				<option value=""> All</option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/support/returns.html?company_id'} ); ) ?>
 			</select>
 		</li><li>

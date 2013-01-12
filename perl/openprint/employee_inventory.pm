@@ -190,8 +190,8 @@ sub inventory_report {
 	my $count = 0;
 	my $total_weight = 0;
 	foreach my $Skid ( openprint::Skid->find(
-				ssi::date_filter( 'added_on_start', 'created_on_start', \%param ),
-				ssi::date_filter( 'added_on_end', 'created_on_end', \%param ),
+				ssi::date_filter( 'added_on_start', 'created_on >=', \%param ),
+				ssi::date_filter( 'added_on_end', 'created_on <=', \%param ),
 				'quantity >='=>1,'type'=>'Roll') ) {
 		foreach my $C ( $Skid->Contents() ) {
 			next if ! $C;
@@ -1261,8 +1261,8 @@ sub _rfidscanner_log {
 
 	@{$variable{'Entries'}} = openprint::RFIDScannerHistory->find( 
 			'scanner_id'		=>	$param{'rfidscanner_id'},
-			'updated_on_start'  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
-			'updated_on_end'    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
+			'updated_on >='  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
+			'updated_on <='    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
 			'limit'     =>  $param{'limit'},
 			'order'     =>  'updated_on DESC',
 			);
@@ -1677,8 +1677,8 @@ sub _manifest_purchase_orders {
 sub _rfidtag_log {
     @{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
         'rfidtag_id'	=>	$param{'rfidtag_id'},
-        'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
-        'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
+        'updated_on >='  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
+        'updated_on <='    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
         'order'     =>  'updated_on DESC',
         'limit'     =>  $param{'limit'},
         );
@@ -1686,8 +1686,8 @@ sub _rfidtag_log {
 	if ( ! @{$variable{'Entries'}} ) {
 		@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
 				'rfidtag_id'	=>	$param{'rfidtag_id'},
-				'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
-				'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
+				'updated_on >='  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
+				'updated_on <='    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
 				'limit'     =>  $param{'limit'},
 				'order'     =>  'updated_on DESC',
 				);

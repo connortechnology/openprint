@@ -1,5 +1,0 @@
-<? echo (
-	my $User = new openprint::User->find_one( 'id'=>$param{'user_id'}, 'company_id'=>$session{'company_id'} );
-	my $json = JSON->new;
-	return 'var results = new Hash(' . $json->encode( $User ) . ");\n";
-) ?>

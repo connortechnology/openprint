@@ -1,10 +1,10 @@
 <? eval (
 	@{$$variable{'Messages'}} = ();
 	foreach my $Message ( openprint::Message->find( 
-			(Date::Calc::check_date( @session{'/messaging/history.html?created_on_start_year','/messaging/history.html?created_on_start_month','/messaging/history.html?created_on_start_day'} ) ? ( 'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/history.html?created_on_start_year','/messaging/history.html?created_on_start_month','/messaging/history.html?created_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/messaging/history.html?created_on_end_year','/messaging/history.html?created_on_end_month','/messaging/history.html?created_on_end_day'} ) ? ( 'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/history.html?created_on_end_year','/messaging/history.html?created_on_end_month','/messaging/history.html?created_on_end_day'} ) ) : () ),
-			(Date::Calc::check_date( @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ? ( 'sent_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ? ( 'sent_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ) : () ),
+		date_filter( '/messaging/history.html?created_on_end', 'created_on <=' ),
+		date_filter( '/messaging/history.html?created_on_start', 'created_on >=' ),
+		date_filter( '/messaging/history.html?sent_on_end', 'sent_on <=' ),
+		date_filter( '/messaging/history.html?sent_on_start', 'sent_on >=' ),
 		( $session{'/messaging/history.html?from_id'} ? ( 'from_id' => $session{'/messaging/history.html?from_id'} ) : () ),
 		'order'				=> 'sent_on',
 		) ) {
@@ -30,7 +30,7 @@
 			my $rowclass;
 			foreach my $Message ( @{$$variable{'Messages'}} ) {
 				$html .= sprintf(q` 
-					<tr title="%2$s" %5$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<tr title="%2$s" %5$s> 
 						<td class="From"><a href="/messaging/view.html?messaging_id=%1$d">%2$s</a></td>
 						<td class="Category"><a href="/messaging/view.html?messaging_id=%1$d">%3$s</a></td>
 						<td class="DateTime"><a href="/messaging/view.html?messaging_id=%1$d">%4$s</a></td>

@@ -6,7 +6,7 @@
 	<ul>
 <? echo (
 	my $html = '';
-	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to is null'=>1 ) ) {
+	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC', 'reply_to is null'=>1, limit=>10 ) ) {
 		my $Author = $Wall->Author();
 		$html .= sprintf(q`<li id="wall-%1$d" class="wall_post">
 <span class="buttons">%7$s</span>

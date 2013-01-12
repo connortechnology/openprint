@@ -1,5 +1,6 @@
 <? echo (
-	my @Users = openprint::User->find('email like'=> lc $param{'search_email'}.'%','order'=>'lower(firstname),lower(lastname)','deleted'=>[1,0] );
+	$param{search_email} = openprint::User->transform('email', $param{search_email} );
+	my @Users = openprint::User->find('email like'=> lc $param{search_email}.'%', order =>'lower(firstname),lower(lastname)', deleted =>[1,0] );
 	
 	if (! @Users ) {
 		return 'No users found.';

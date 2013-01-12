@@ -39,6 +39,7 @@ $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 configuration::init( $log, $dbh );
+$config{db_name} = $ARGV[0];
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -170,8 +171,8 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Invoice->Invoicee()->country(), 
 					'state'				=>	$Invoice->Invoicee()->state(), 
-					'period_start_null_or_<='	=>	$Invoice->created_on(),
-					'period_end_null_or_>='		=>	$Invoice->created_on(),
+					'period_start null_or_<='	=>	$Invoice->created_on(),
+					'period_end null_or_>='		=>	$Invoice->created_on(),
 			) ) {
 			my $new_amount;
 
@@ -182,7 +183,7 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 				$new_amount = $$data{'statetax'};
 				} # end if
 			} else {
-				$new_amount = sprintf('%.2f', $Invoice->subtotal() * ( $Tax->rate()/100 ) );
+				$new_amount = Math::Round::nearest(0.01, $Invoice->subtotal() * ( $Tax->rate()/100 ) );
 			} # end if
 				
 			my $Invoice_Tax = new openprint::Invoice_Tax();
@@ -209,7 +210,7 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+	$dbh->do('UPDATE orders SET owing=total-paid');
 	if ( ! exists $$data{terms_accepted} ) {
 		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
 	} # end if
@@ -237,8 +238,8 @@ if ( ! openprint::Order_Tax->find_one() ) {
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Order->country(), 
 					'state'				=>	$Order->state(), 
-					'period_start_null_or_<='	=>	$Order->created_on(),
-					'period_end_null_or_>='		=>	$Order->created_on(),
+					'period_start null_or_<='	=>	$Order->created_on(),
+					'period_end null_or_>='		=>	$Order->created_on(),
 			) ) {
 			my $new_amount;
 

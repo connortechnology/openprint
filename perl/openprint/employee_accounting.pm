@@ -366,53 +366,7 @@ sub expenditure {
 } # end sub expenditure
 
 sub expenses {
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
-		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
-		$param{'paid_on'} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
-		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
-		if ( ! $param{'recipient_id'} ) {
-			my $Recipient = openprint::Company->find_one('name_lc'=>lc$param{'recipient'});
-			if ( ! $Recipient ) {
-				$Recipient = new openprint::Company();
-				$variable{'error'} .= $Recipient->save({'name'=>$param{'recipient'}});
-			} # end if ! Recipeint
-			$param{'recipient_id'} = $Recipient->id();
-		} # end if ! recipient_Id
-		delete $param{'recipient'};
-		if ( $param{'category_id'} ) {
-			delete $param{'category'};
-		} else {
-			delete $param{'category_id'};
-		} # end if
-		if ( $param{'account_id'} ) {
-			delete $param{'account'};
-		} else {
-			delete $param{'account_id'};
-		} # end if
-		my $Expense = new openprint::Expense( $param{'expense_id'} );
-		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
-			$variable{'Redirect'} = '/employee/accounting/expense.html';
-			return;	
-		} # end if
-
-		# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
-		foreach my $Tax ( $Expense->Taxes() ) {
-            # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
-				$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()});
-				$Tax->amount(undef);
-				$Tax->save();
-			} # end if
-			ssi::save_params( '/employee/accounting/expense.html', $param{'tax_charge-'.$Tax->tax_id()} ) if $param{'tax_charge-'.$Tax->tax_id()};
-        } # end foreach
-		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 
-				'due_on', 'invoiced_on', 'paid_on', 'recipient_id', 'business_use', 'account_id'
-				);
-
-		$variable{'information'} .= 'Expense saved successfully.<br/>';
-		%param = ();
-	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
 		if ( $variable{'error'} .= $Expenditure->delete() ) {
 			$variable{'Redirect'} = '/employee/accounting/expense.html';
@@ -451,6 +405,56 @@ sub expense {
 	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= $Expense->id() . ' has been copied';
 		$variable{'Expense'} = $Expense = $Expense->copy();
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		if ( $param{amount} =~ /[=\+\-\*\/]/ ) {
+			$param{amount} = eval $param{amount};
+		} # end if
+		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
+		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
+		$param{'paid_on'} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
+		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
+		if ( ! $param{'recipient_id'} ) {
+			my $Recipient = openprint::Company->find_one('name lc'=>lc $param{'recipient'});
+			if ( ! $Recipient ) {
+				$Recipient = new openprint::Company();
+				$variable{'error'} .= $Recipient->save({'name'=>$param{'recipient'}});
+			} # end if ! Recipeint
+			$param{'recipient_id'} = $Recipient->id();
+		} # end if ! recipient_Id
+		delete $param{'recipient'};
+		if ( $param{'category_id'} ) {
+			delete $param{'category'};
+		} else {
+			delete $param{'category_id'};
+		} # end if
+		if ( $param{'account_id'} ) {
+			delete $param{'account'};
+		} else {
+			delete $param{'account_id'};
+		} # end if
+		my $Expense = new openprint::Expense( $param{'expense_id'} );
+		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
+			return;	
+		} # end if
+
+		# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
+		foreach my $Tax ( $Expense->Taxes() ) {
+            # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
+				$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()});
+				$Tax->amount(undef);
+				$Tax->save();
+			} # end if
+			ssi::save_params( '/employee/accounting/expense.html', $param{'tax_charge-'.$Tax->tax_id()} ) if $param{'tax_charge-'.$Tax->tax_id()};
+        } # end foreach
+		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 
+				'due_on', 'invoiced_on', 'paid_on', 'recipient_id', 'business_use', 'account_id'
+				);
+
+		$variable{'information'} .= 'Expense saved successfully.<br/>';
+		$variable{'ExternalRedirect'} = '/employee/accounting/expenses.html';
+		%param = ();
+		return;
 	} # end if
 	$Expense->owner_id( $session{'company_id'} ) if ! $Expense->owner_id();
 	$Expense->invoiced_on( join('-', Date::Calc::Today() ) ) if ! $Expense->invoiced_on();

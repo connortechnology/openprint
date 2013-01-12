@@ -5,29 +5,18 @@
 	if ( ! $$File{id} ) {
 		return '<span class="error">File not found.</span>';
 	} # end if
-	#my $rc = system(qq`/usr/local/bin/mtftar < "$$File{archive}$$File{filename}" | tar x`);
-	#my $rc = `/usr/local/bin/mtftar < "$$File{archive}$$File{filename}" | tar x`;
-	#open(OUTPUT, "/usr/local/bin/mtftar < "$$File{archive}$$File{filename}" | tar x 2>&1 |");
 
 	my $stderr;
 	my $stdout;
-	#run3( q`cd "$$File{archive}"`, undef, $stdout, $stderr );
-	#$log->debug("cd Error code: $?: $$File{archive}/$$File{filename} : $stderr $stdout");
-	#return qq`<span class="error">Error entering archive directory $$File{archive}($stderr). File not dearchived.</span>` if ! $?;
 
-	#run3( qq`/usr/local/bin/mtftar -f "$$File{archive}$$File{filename}" -o "$$File{archive}/DEARCHIVED$$File{filename}.tar"`, undef, $stdout, $stderr );
-	#$log->debug(qq`mtftar Error code: $?: /usr/local/bin/mtftar -f "$$File{archive}$$File{filename}" -o "$$File{archive}/DEARCHIVED$$File{filename}.tar" : $stderr $stdout`);
-	#return qq`<span class="error">Error converting from .bkf to .tar ($stderr). File not dearchived.</span>` if ! $?;
-
-	run3( qq`cd "$$File{archive}" && /usr/local/bin/mtftar < ".$$File{filename}" | tar x`, undef, $stdout, $stderr );
+	if ( ! -e $$File{archive}.'/dearchived' ) {
+		mkdir $$File{archive}.'/dearchived';
+	}
+	run3( qq`cd "$$File{archive}/dearchived" && /usr/local/bin/mtftar < "../$$File{filename}" | tar x --transform=\'s/\\\\//g\'`, undef, \$stdout, \$stderr );
 	$log->debug(qq`mtftar Error code: $?: cd "$$File{archive} && /usr/local/bin/mtftar < "$$File{filename}" | tar x" : $stderr $stdout`);
 
-	#run3( qq`tar x < "$$File{archive}/DEARCHIVED$$File{filename}.tar"`, undef, undef, $stderr );
-	#$log->debug("tar Error code: $?: $$File{archive}/$$File{filename} : $stderr $stdout");
-
-
 	if ( $? ) {
-	$log->error("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
+		$log->error("Error code: $?: $$File{archive}/$$File{filename} : $stderr");
 		return qq`<span class="error">Error: $?.  File not dearchived. Reason: $stderr</span>`;
 	} # end if
 	$log->debug("Error code: $?: $$File{archive}/$$File{filename} : $stderr");

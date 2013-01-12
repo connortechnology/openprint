@@ -31,6 +31,7 @@ $ARGV[2] = $ARGV[0] if ! $ARGV[2];
 
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 configuration::init( $log, $dbh );
+$config{db_name} = $ARGV[0];
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
@@ -976,7 +977,7 @@ $dbh->do( 'update paper_prices set strunits=lower(strunits)');
 foreach my $Company ( openprint::Company->find() ) {
 	my $Country;
 	if ( $Company->country() ) {
-		$Company->country('Canada') if $Company->country() eq 'CANADAq';
+		$Company->country('Canada') if $Company->country() eq 'CANADA';
 		if ( $Company->country() =~ /\./ ) {
 			$_ = $Company->country();
 			$_ =~ s/\.//g;
@@ -1075,9 +1076,9 @@ foreach my $Company ( openprint::Company->find() ) {
 			if ( ! $Address ) {
 				$Address = new openprint::Location();
 				$_ = $Address->save({
-					address=>$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
+					address		=>	$Company->address1() . ( $Company->address2() ? (  ' ' . $Company->address2() ) : () ),
 					postalcode	=>	$Company->postalcode(),
-					type=>'place',
+					type		=>	'place',
 					parent_id	=>	$City->id(),
 				});
 					die $_ if $_;

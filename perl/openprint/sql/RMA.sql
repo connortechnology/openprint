@@ -18,6 +18,7 @@ CREATE TABLE RMA (
 	warranty		text,
 	estimate_required	BOOLEAN,
 	approved 		BOOLEAN NOT NULL DEFAULT False,
+	tester_id		INTEGER, FOREIGN KEY (tester_id) REFERENCES Users (id),
 	PRIMARY KEY (id)
 );
 

@@ -1,11 +1,11 @@
 <? eval (
-	@{$$variable{'PARs'}} = openprint::PAR->find( 
-		ssi::date_filter( '/employee/iso/pars.html?issued_on_start', 'issued_on_start' ),
-		ssi::date_filter( '/employee/iso/pars.html?issued_on_end', 'issued_on_end' ),
+	$$variable{'PARs'} = [ openprint::PAR->find( 
+		ssi::date_filter( '/employee/iso/pars.html?issued_on_end', 'issued_on <=' ),
+		ssi::date_filter( '/employee/iso/pars.html?issued_on_start', 'issued_on >=' ),
 		( $session{'/employee/iso/pars.html/docket'} ? ( 'docket'	=>	$session{'/employee/iso/pars.html/docket'} ) : () ),
-		'order'		=>	'id',
-		'deleted'	=>	0,
-	);
+		order		=>	'id',
+		deleted		=>	0,
+	) ];
 ) ?>
 <? if ( @{$$variable{'PARs'}} ) ?>
 <form id="PARResults" name="PARResults" action="pars.html" method="post">
@@ -15,7 +15,7 @@
 			<th width="30" class="unprintable"><input type="checkbox" name="checkall" onclick="select_all(this.form,'pars',this.checked);" /></th>
 -->
 			<th align="left" width="75">PAR ID</th>
-			<th align="left" width="75">Issued On</th>
+			<th class="DateTime">Issued On</th>
 			<th align="left" width="60">Status</th>
 			<th align="left">Problem</th>
 		</tr>

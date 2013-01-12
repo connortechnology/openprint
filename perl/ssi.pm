@@ -831,11 +831,12 @@ sub input {
 	if ( $options{type} eq 'cardinal' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9]*' if ! $options{pattern};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+		$options{filter} = 'cardinalize(this);' if ! $options{filter};
+		$options{onkeyup} = $options{filter}.$options{onkeyup};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -852,6 +853,14 @@ sub input {
 			$options{type} = 'number';
 		} # end if
 		$options{'onkeyup'} = 'floatize(this);'.$options{'onkeyup'};
+	} elsif ( $options{type} eq 'float_calculator' ) {
+		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
+			$options{type} = 'text';
+			$options{'pattern'} = '[0-9\*\+=\/\.\-]*' if ! $options{'pattern'};
+		} else {
+			$options{type} = 'number';
+		} # end if
+		$options{'onkeyup'} = 'floatize_calculator(this);'.$options{'onkeyup'};
 	} # end if
 	$html .= ' value="'.$options{value}.'"' if $options{value} ne '';
 
@@ -947,12 +956,12 @@ sub hash_link {
 
 		my $hash = Digest::MD5::md5_hex($blob);
 		$hash_cache{$config{SkinPath}}{$path} = $script = {
-			src	=>	$src,
-			name => "$base-$hash.$ext",
-			path	=> $path,
-			cache_file => "$config{cache_dir}/$base-$hash.$ext",
-			hash => $hash,
-			timestamp => $timestamp,
+			src			=>	$src,
+			name		=> "$base-$hash.$ext",
+			path		=> $path,
+			cache_file	=> "$config{cache_dir}/$base-$hash.$ext",
+			hash		=> $hash,
+			timestamp	=> $timestamp,
 		};
 		if (! -f $script->{cache_file}) {
 			mkdir $config{cache_dir};
@@ -960,6 +969,7 @@ sub hash_link {
 				$log->error( "couldn't cache $script->{cache_file}" );
 				return $path;
 			} # end if
+			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
 		}
 	#} else {

@@ -197,8 +197,8 @@ sub pars {
 'Part1 Recipient', 'Part1 Signed On', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On' );
 		my @data;
 		my %params = (
-				'issued_on_start'   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
-				'issued_on_end' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
+				'issued_on >='   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
+				'issued_on <=' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
 		);
 		foreach my $PAR ( openprint::PAR->find(%params) ) {
 			push @data, (

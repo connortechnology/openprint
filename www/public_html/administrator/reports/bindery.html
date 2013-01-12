@@ -34,12 +34,12 @@
 			<select name="ddmEndDay"><?EndDays?></select>
 	</p>
 	<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ); ) ?>
+			<? echo ( ssi::button( 'ShowResults', { onclick=>'f1.submit();', href=>'', text=>'Show Results' } ); ) ?>
+			<? echo ( ssi::button( 'Reset', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ); ) ?>
 	</p>
 </fieldset>
 <? eval ( 
-	@{$$variable{'Projects'}} = openprint::Project->find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+	$$variable{'Projects'} = [ openprint::Project->find( 'ordered_on >='=>"$$variable{'Start'} 00:00:00", 'ordered_on <='=>"$$variable{'End'} 23:59:59" ) ];
 	if ( @{$$variable{'Projects'}} ) {
 		
 		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');

@@ -101,7 +101,7 @@ sub name {
 } # end sub name
 
 sub schedule {
-	return openprint::press_schedule->find( 'starttime_start'=>$_[0]{'starttime'}, 'starttime_end'=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
+	return openprint::press_schedule->find( 'starttime >='=>$_[0]{'starttime'}, 'starttime <='=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
 } # end sub schedule
 
 sub Schedule {

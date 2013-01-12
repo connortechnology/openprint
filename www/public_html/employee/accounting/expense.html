@@ -1,9 +1,8 @@
 <script type="text/javascript">
-<!--
 var tax_ids = [ <? echo ( 
 	my @Taxes = openprint::Tax->find(
-			'period_start_null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
-			'period_end_null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
+			'period_start null_or_<='   =>  $$variable{'Expense'}->invoiced_on(),
+			'period_end null_or_>='     =>  $$variable{'Expense'}->invoiced_on(),
 			'country'   =>  $$variable{'Expense'}->Company()->country(),
 			'state'     =>  $$variable{'Expense'}->Company()->state()
 );
@@ -55,7 +54,13 @@ function update_total( form ) {
 	if ( form.elements['total_locked'].value ) {
 		return calc_amount_from_total( form );
 	} // end if
-    var total = parseFloat( form.amount.value );
+	var total;
+
+	if ( form.amount.value.match(/[\d\-\.\+\*\/]/g) ) {
+		total = eval(form.amount.value);
+	} else {
+		total = parseFloat( form.amount.value );
+	} // end if
     for ( var i = 0; i < tax_ids.length; i+= 1 ) {
         var tax = 0;
         
@@ -70,10 +75,9 @@ function update_total( form ) {
 
     $('total').value = do_decimals( total, 2 );
 } // end function update_total
--->
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" id="f1" action="expenses.html" method="post">
+<? echo ( include( $ENV{DOCUMENT_ROOT} . '/includes/error_reporting.html' ) ) ?>
+<form name="f1" id="f1" action="expense.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="expense_id" value="<? echo ( $$variable{'Expense'}->id() ) ?>" />
 	<fieldset><legend>Editing Expense</legend>
@@ -108,7 +112,7 @@ function update_total( form ) {
 				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>)</label>
 					<? echo ( join("\n",
-						ssi::input(type=>'float', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);' ),
+						ssi::input(type=>'float_calculator', name=>'amount', id=>'amount', value=>$$variable{'Expense'}->amount(), onkeyup=>'update_total(this.form);' ),
 						ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ),
 					); ) ?>
 					<select name="currency_id" id="currency_id">

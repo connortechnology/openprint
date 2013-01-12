@@ -31,6 +31,8 @@
 
 	if ( @Articles == 0 ) {
 		return 'There are no articles which match your search criteria.';
+	} else {
+		openprint::Article_Asset->find( 'article_id' => [ map { $_->id() } @Articles ] );
 	} # end if
 
 	my $html;

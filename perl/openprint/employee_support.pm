@@ -7,6 +7,7 @@ require openprint;
 require openprint::RMA;
 require openprint::RMA_Type;
 require openprint::RMA_Status;
+require openprint::RMA_Priority;
 require openprint::Email;
 require openprint::RMA_Log;
 require openprint::RMA_Part;
@@ -14,6 +15,7 @@ require openprint::Fault_Found;
 require openprint::Fault;
 require openprint::Test;
 require openprint::Test_Result;
+require openprint::Upgrade;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -146,6 +148,17 @@ sub rma {
 				$session{'/employee/support/rma.html?'.$key} = $param{$key};
 			} # end foreach key
 		} # end if	
+	} elsif ( $param{action} eq 'ChangeStatus' ) {
+		if ( $RMA->status_id() != $param{status_id} ) {
+			$RMA->status_id( $param{status_id} );
+			$variable{error} .= $RMA->save();
+			$RMA->add_log( 'Status changed to ' . $RMA->status() );
+			if ( ! $variable{error} ) {
+				$variable{ExternalRedirect} = '/employee/support/rma.html?rma_id='.$RMA->id();
+			} # end nif
+		} else {
+			$variable{warning} .= 'Status was already ' . $RMA->status() . '. Not changed.<br/>';
+		} # end if
 	} else {	
 		if ( ! $RMA->id() ) {
 # Set default
@@ -190,6 +203,47 @@ sub _faults {
 	} # end if
 } # end sub faults
 
+sub _upgrades {
+	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
+	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
+	if ( ! $RMA->id() ) {
+		$variable{error} .= 'Invalid RMA# specified';
+		return;
+	} # end if
+	if ( $param{action} eq 'Add' ) {
+		$param{upgrade_new_version} = openprint::Upgrade->transform('new_version', $param{upgrade_new_version} );
+		if ( ! $param{upgrade_new_version} ) {
+			$variable{error} .= 'New version is a required field.<br/>';
+		} # end if
+		$param{upgrade_type_id} = openprint::Upgrade->transform('new_version', $param{upgrade_type_id} );
+		if ( ! $param{upgrade_type_id} ) {
+			$variable{error} .= 'Upgrade type is a required field.<br/>';
+		} # end if
+		return if $variable{error};
+
+		if ( ( $session{user_type} eq 'A' ) and $param{upgrade_type} ) {
+			my $Type = openprint::Upgrade_Type->find_one('name lc'=>lc $param{upgrade_type});
+			if ( ! $Type ) {
+				$Type = new openprint::Upgrade_Type();
+				$variable{error} .= $Type->save({name=>$param{upgrade_type}});
+			} # end if
+			$param{upgrade_type_id} = $Type->id();
+			delete $param{upgrade_type};
+		} # end if
+
+		my $Upgrade = new openprint::Upgrade();
+		$variable{error} .= $Upgrade->save({
+			rma_id	=>	$RMA->id(),
+			type_id	=>	$param{upgrade_type_id},
+			old_version	=>	$param{upgrade_old_version},
+			new_version	=>	$param{upgrade_new_version},
+		});
+		if ( ! $variable{error} ) {
+			%param = ();
+		} # end if
+	} # end if
+} # end sub _upgrades
+
 sub _tests {
 	$param{rma_id} = openprint::RMA->transform('id', $param{rma_id} );
 	my $RMA = $variable{RMA} = new openprint::RMA( $param{rma_id} );
@@ -203,7 +257,7 @@ sub _tests {
 			my $Test = openprint::Test->find_one('name lc'=>lc $param{test});
 			if ( ! $Test ) {
 				$Test = new openprint::Test();
-				$variable{error} .= $Test->save({name=>$param{fault}});
+				$variable{error} .= $Test->save({name=>$param{test}});
 			} # end if
 			$param{test_id} = $Test->id();
 		} # end if
@@ -353,7 +407,7 @@ sub returns {
 sub _returns {
 	my $url = '/employee/support/returns.html';
 	ssi::save_params( $url,
-			'status', 'company_id',
+			'status', 'company_id','supplier_id',
 			( map { 'created_on_start_'.$_ } ( 'year','month','day' ) ),
 			( map { 'created_on_end_'.$_ } ( 'year','month','day' ) ),
 			( map { 'updated_on_start_'.$_ } ( 'year','month','day' ) ),
@@ -381,8 +435,10 @@ sub _returns {
 			ssi::date_filter( $url.'?updated_on_start', 'updated_on >=' ),
 			ssi::date_filter( $url.'?updated_on_end', 'updated_on <=' ),
 			( $session{$url.'?company_id'} or @company_ids ? ( company_id	=> ( $session{$url.'?company_id'} ? $session{$url.'?company_id'} : \@company_ids ) ) : () ),
+			( $session{$url.'?supplier_id'} ? ( 'supplier_id any'	=> $session{$url.'?supplier_id'} ) : () ),
 			order	=>	'rmanumber,id',
 		);
+		openprint::Company->find(id=>[ map { $_->company_id() } @{$variable{RMAS}} ]) if @{$variable{RMAS}} > 20;
 	} # end if
 } # end sub _returns
 

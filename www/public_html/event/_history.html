@@ -1,8 +1,8 @@
 <? eval (
 	@{$$variable{'Events'}} = ();
 	foreach my $Event ( openprint::Event->find( 
-		ssi::date_filter( '/event/history.html?starting_on_start', 'starting_on_start'),
-		ssi::date_filter( '/event/history.html?starting_on_end', 'starting_on_end'),
+		ssi::date_filter( '/event/history.html?starting_on_end', 'starting_on <='),
+		ssi::date_filter( '/event/history.html?starting_on_start', 'starting_on >='),
 		( $session{'/event/history.html?category_id'} ? ( 'category_id' => $session{'/event/history.html?category_id'} ) : () ),
 		'order'				=> 'starting_on',
 		) ) {

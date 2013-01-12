@@ -5,11 +5,11 @@
 	my @user_ids = sets::exclude([$session{user_id}], [$$variable{'Event'}->invited_user_ids()]);
 	foreach my $User ( map { new openprint::User( $_ ) } @user_ids ) {
 		$html .= sprintf(q`
-			<li class="User"><input type="hidden" name="invitation_user_id" value="%2$d_%1$d"/>%3$s<span class="buttons">%4$s</span></li>`,
+			<li class="User"><input type="hidden" name="invitation_user_id" id="invitation_user_id%2$d_%1$s" value="%2$d_%1$s"/>%3$s<span class="buttons">%4$s</span></li>`,
 			$User->company_id(), $User->id(), $User->thumbnail_html(), 
 			( $$variable{Event}->can_edit()  ?
 			( ssi::button( 'Delete'.$User->id(), { 
-						   onclick=>qq`invitation_remove_user( $$User{id} );`,
+						   onclick=>qq`invitation_remove_user( '$$User{id}_$$User{company_id}', \$('invitation_user_id$$User{id}_$$User{company_id}').form );`,
 						   text=>'X', title=>'Remove'} ) ) : () ),
 
 			);

@@ -46,7 +46,7 @@ done
 
 if [ $CHECK_FILE ] ; then
 	if [ ! -e "$CHECK_FILE" ] ; then
-		echo "Check file missing"
+		echo "Check file missing at ($CHECK_FILE)"
 		exit 1
 	fi;
 fi;	

@@ -71,9 +71,9 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Download' ) {
 		my @Taxes = openprint::Tax->find(
 				( Date::Calc::check_date( @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ?
-				  ( 'period_end_null_or_>=' =>sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ) : () ),
+				  ( 'period_end null_or_>=' =>sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ) ) : () ),
 				( Date::Calc::check_date( @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ?
-				  ( 'period_start_null_or_<='       =>  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
+				  ( 'period_start null_or_<='       =>  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
 				'order'     =>  'period_start,name',
 				);
 
@@ -90,9 +90,9 @@ sub history {
 					( Date::Calc::check_date( @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ? 
 					  ( 'created_on <='    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ) ) : () ),
 					( Date::Calc::check_date( @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ?
-					  ( 'due_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ) : () ),
+					  ( 'due_on >='  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ) ) : () ),
 					( Date::Calc::check_date( @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ? 
-					  ( 'due_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ) : () ),
+					  ( 'due_on <='    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'due_on_end_year','due_on_end_month','due_on_end_day'} ) ) : () ),
 					( $param{'company_id'} ? ( 'invoicee_id'       => $param{'company_id'} ) : () ),
 					'invoicer_id'       => $session{'company_id'},
 					'order'             => 'id',
@@ -224,7 +224,7 @@ sub view {
 			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
 
 			# The point is to calculate howmuch has beenpaidby this point
-			foreach my $P ( openprint::Invoice_Payment->find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on >'=>$last_period, 'received_on_end'=>$date_string )) {
+			foreach my $P ( openprint::Invoice_Payment->find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on >'=>$last_period, 'received_on <='=>$date_string )) {
 				$paid += $P->amount();
 			} # end foreach
 $log->debug("Paid: $paid");

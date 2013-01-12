@@ -90,8 +90,8 @@ sub save_contents {
 						'company_id'	=>	$PO->company_id(),
 						'vendor_id'		=>	$$p{'supplier_id'},
 						'type_id'		=>	$$p{'type_id-'.$content_id},
-						'name_lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
-						'product_lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
+						'name lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
+						'product lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
 						);
 				if ( ! $Item ) {
 					$Item = new openprint::PurchaseOrder_Item();
@@ -293,11 +293,18 @@ sub edit {
 
 	if ( $param{'btnFunction'} eq 'New' ) {
 		my $Label = new openprint::Label( $param{'label_id'} );
-		$log->debug("Creating PO from label $$Label{id}");
 		my $C = $Me->Company();
+		
+		my $Project = $Label->Project();
+		if ( ! ( $Project and $Project->company_id() ) ) {
+			$variable{error} .= 'No project for label.';
+			return;
+		} # end if
+
 		$variable{'error'} .= $PO->save( {
 				'created_by'	=>	$session{'user_id'}, 
 				'company_id'	=>	$Me->company_id(),
+				supplier_id		=>	$Project->company_id(),
 				'currency_id'		=>	openprint::Currency::get_current()->id(),
 				'created_by'		=>	$Me->id(),
 				'shipto_contact'	=>	$Me->name(),

@@ -264,7 +264,11 @@ sub dropdown {
 		if ( $params{'id'} ) {
 			if ( ref $params{'id'} eq 'ARRAY' ) {
 				$sql .= ' AND id IN ( '.join(',', @{$params{'id'}} ).' )';
-			} # en dif
+			} # end if
+		} # end if
+		if ( $params{supplier} ) {
+			$sql .= ' AND ysnsupplier=?';
+			push @values, $params{supplier};
 		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(name)';

@@ -7,10 +7,10 @@
 		);
 	} else {
 		my %sql = (
-			ssi::date_filter( '/main/project/history.html?created_on_start', 'created_on_start' ),
-			ssi::date_filter( '/main/project/history.html?created_on_end', 'created_on_end' ),
-			ssi::date_filter( '/main/project/history.html?updated_on_start', 'updated_on_start' ),
-			ssi::date_filter( '/main/project/history.html?updated_on_end', 'updated_on_end' ),
+			ssi::date_filter( '/main/project/history.html?created_on_end', 'created_on <=' ),
+			ssi::date_filter( '/main/project/history.html?created_on_start', 'created_on >=' ),
+			ssi::date_filter( '/main/project/history.html?updated_on_end', 'updated_on <=' ),
+			ssi::date_filter( '/main/project/history.html?updated_on_start', 'updated_on >=' ),
 
 			( sets::isin( $session{user_type}, [ 'A', 'E' ] ) ? ( 
 				$session{'/main/project/history.html?company_id'} ? ( company_id => $session{'/main/project/history.html?company_id'} ) : ()

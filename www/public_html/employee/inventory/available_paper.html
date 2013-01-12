@@ -65,7 +65,7 @@ Please select a Paper to view/edit.<br>
     my $html;
 
     my %find = (
-			'in_stock_null_or_>'	=>	1,
+			'in_stock null_or_>'	=>	1,
 			( $session{'/employee/inventory/available_paper.html?type'} ? ( 'type' => [ split( ',', $session{'/employee/inventory/available_paper.html?type'} ) ] ) : () ),
     );
 	if ( $session{'/employee/inventory/available_paper.html?owner_id'} ) {

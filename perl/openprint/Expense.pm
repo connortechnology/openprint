@@ -111,7 +111,7 @@ sub category_id {
 
 sub category {
 	if ( @_ > 1 ) {
-		my $Category = openprint::Expense_Category->find_one('name_lc'=>lc$_[1]);
+		my $Category = openprint::Expense_Category->find_one('name lc'=>lc $_[1]);
 		if ( ! $Category ) {
 			$Category = new openprint::Expense_Category();
 			$Category->save({'name'=>$_[1]})
@@ -128,7 +128,7 @@ sub Category {
 
 sub account {
 	if ( @_ > 1 ) {
-		my $Account = openprint::Expense_Account->find_one('name_lc'=>lc$_[1]);
+		my $Account = openprint::Expense_Account->find_one('name lc'=>lc $_[1]);
 		if ( ! $Account ) {
 			$Account = new openprint::Expense_Account();
 			$Account->save({'name'=>$_[1]})
@@ -166,8 +166,8 @@ sub Taxes {
     } # end if
     if ( $self->Company()->country() and $self->Company()->state() and $$self{'invoiced_on'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
-                    'period_start_null_or_<='   =>  $$self{'invoiced_on'},
-                    'period_end_null_or_>='     =>  $$self{'invoiced_on'},
+                    'period_start null_or_<='   =>  $$self{'invoiced_on'},
+                    'period_end null_or_>='     =>  $$self{'invoiced_on'},
                     'country'   =>  $self->Company()->country(),
                     'state'     =>  $self->Company()->state()),
                 ) {
@@ -196,8 +196,8 @@ sub save {
 		my @New_Taxes;
 
 		foreach my $Tax ( openprint::Tax->find(
-					'period_start_null_or_<='   =>  $$self{'invoiced_on'},
-					'period_end_null_or_>='     =>  $$self{'invoiced_on'},
+					'period_start null_or_<='   =>  $$self{'invoiced_on'},
+					'period_end null_or_>='     =>  $$self{'invoiced_on'},
 					'country'   =>  $self->Company()->country(),
 					'state'     =>  $self->Company()->state()),
 				) {
