@@ -12,13 +12,13 @@
 				my $Album = $Photo->Album();
 
 				if ( $Photo->can_edit() ) {
-					if ( $Photo->deleted() ) {
-						$html .= ssi::button( 'Undelete', { 'onclick' => q`f1.elements['action'].value='Undelete';f1.submit();` } );
+					if ( ( $openprint::Photo_in_Album::fields{deleted} ) and ( $Photo->deleted() ) ) {
+						$html .= ssi::button( 'Undelete', { onclick => q`f1.elements['action'].value='Undelete';f1.submit();` } );
 					} else {
-						$html .= ssi::button( 'Delete', { 'onclick' =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
+						$html .= ssi::button( 'Delete', { onclick =>  q`if(confirm('Are you sure?')){f1.elements['action'].value='Delete';f1.submit();}` } );
 					} # end if
 					if ( $Photo->asset_id() != $Album->thumbnail_id() ) {
-						$html .= ssi::button( 'SAT', { 'onclick' => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
+						$html .= ssi::button( 'SAT', { onclick => q`f1.elements['action'].value='set as thumbnail';f1.submit();`, 'text'=>'Set as album thumbnail' } );
 					} # end if isn't thumbnail
 					if ( $Photo->Album()->user_id() == $session{'user_id'} and $Photo->asset_id() != new openprint::User($session{'user_id'})->asset_id() ) {
 						$html .= ssi::button( 'SAPP', { 'onclick' => q`f1.elements['action'].value='set as profile pic';f1.submit();`,
@@ -90,8 +90,16 @@ if ( 0 ) {
 </script>
 `, $Photo->url() );
 				} elsif ( $Asset->is_video() ) {
-					$html .= '<video width="320" height="240" controls>';
-					$html .= '<source src="'.$Asset->mp4_url().'" type="video/mp4">';
+					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>';
+					if ( $_ = $Asset->video_url('mp4') ) {
+						$html .= '<source src="'.$_.'" type="video/mp4">';
+					} # end if
+					if ( $_ = $Asset->video_url('ogg') ) {
+						$html .= '<source src="'.$_.'" type="video/ogg">';
+					} # end if
+					if ( $_ = $Asset->video_url('webm') ) {
+						$html .= '<source src="'.$_.'" type="video/webm">';
+					} # end if
 					$html .= 'Your browser does not support the video tag';
 					$html .= '</video>';
 				} else {

@@ -7,7 +7,7 @@ package openprint::Bitcoin_Address;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'bitcoin_addresses';
 $serial = 'bitcoin_addresses_id_seq';
 %fields = (

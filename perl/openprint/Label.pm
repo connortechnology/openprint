@@ -11,7 +11,7 @@ use vars qw( $log $dbh $debug $table $serial %fields %find_fields %transforms %d
 
 require sql;
 
-$debug = 1;
+$debug = 0;
 $table = 'labels';
 $serial = 'labels_id_seq';
 %fields = (

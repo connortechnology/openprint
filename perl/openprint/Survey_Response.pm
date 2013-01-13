@@ -3,7 +3,7 @@ package openprint::Survey_Response;
 our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %transforms %defaults $serial @identified_by );
-$debug = 1;
+$debug = 0;
 #$serial = 'survey_responses_id_seq';
 $table = 'survey_responses';
 @identified_by = ( 'question_id', 'user_id' );

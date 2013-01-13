@@ -5,7 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::User;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 
 $table = 'usergroups';
 $serial= 'usergroups_id_seq';

@@ -7,7 +7,7 @@ require openprint::Survey_Question;
 require openprint::Survey_Response;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'Surveys';
 $serial = 'survey_id_seq';
 

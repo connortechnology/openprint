@@ -3,7 +3,7 @@ package openprint::Product_Specification;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table %fields %transforms %defaults $serial );
 
-$debug = 1;
+$debug = 0;
 $serial = 'product_specifications_id_seq';
 $table = 'product_specifications';
 

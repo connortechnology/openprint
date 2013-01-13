@@ -12,7 +12,6 @@ use vars qw( %variable %session %param %config $log $dbh $r );
 *r = \$openprint::r;
 
 require openprint::Host;
-require openprint::Blacklist;
 require openprint::RADIUS_Check;
 require openprint::User_Type;
 require openprint::Session;
@@ -170,45 +169,6 @@ sub _cameras_available {
 sub _camera { # .json 
 	$session{'/employee/it/camera_viewer.html?monitor_size-'.$param{'monitor_id'}} = join('x', @param{'width','height'} );
 }
-
-sub blacklist {
-	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
-	if ( $param{'action'} eq 'Delete' ) {
-		$variable{'error'} = $Blacklist->delete();
-		if ( ! $variable{'error'} ) {
-			$variable{'information'} .= 'Blacklist entry deleted.<br/>';
-			%param = ();
-		} # end if error
-	} elsif ( $param{'action'} eq 'Save' ) {
-		$variable{'error'} .= $Blacklist->save(\%param);
-		if ( ! $variable{'error'} ) {
-			$variable{'information'} .= 'Blacklist entry saved.<br/>';
-			%param = ();
-		} # end if error
-	} # end if
-	ssi::save_params( '/employee/it/blacklist.html', 
-			'created_on_start_year', 'created_on_start_month','created_on_start_day',
-			'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
-			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
-	);
-	ssi::setup_date_select( '/employee/it/blacklist.html', 'created_on_start', 0 );
-	ssi::setup_date_select( '/employee/it/blacklist.html', 'created_on_end', 0 );
-	ssi::setup_date_select( '/employee/it/blacklist.html', 'updated_on_start', 0 );
-	ssi::setup_date_select( '/employee/it/blacklist.html', 'updated_on_end', 0 );
-} # end sub blacklist
-sub _blacklist {
-	ssi::save_params( '/employee/it/blacklist.html', 
-			'created_on_start_year', 'created_on_start_month','created_on_start_day',
-			'created_on_end_year', 'created_on_end_month','created_on_end_day',
-			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
-			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
-	);
-} # end sub _blacklist
-
-sub _blacklist_popup {
-	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
-} # end sub _blacklist_popup
 
 sub logs {
 } # end sub logs

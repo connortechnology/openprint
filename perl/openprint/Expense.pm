@@ -7,7 +7,7 @@ package openprint::Expense_Category;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'expense_categories';
 $serial = 'expense_categories_id_seq';
 %fields = (
@@ -23,7 +23,7 @@ package openprint::Expense_Account;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'expense_accounts';
 $serial = 'expense_accounts_id_seq';
 %fields = (
@@ -41,7 +41,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'expenses';
 $serial = 'expenses_id_seq';
 

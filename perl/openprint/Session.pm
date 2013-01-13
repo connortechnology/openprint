@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'sessions';
 @identified_by = ( 'session_id' );
 %fields = (

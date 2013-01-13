@@ -48,17 +48,21 @@ function calc_from_markup( element, precision ) {
 } // end function
 function calc_from_price( element, precision ) {
 	if ( ! precision ) precision = 2;
-	var re = /price-(.*)/
+	var re = /^price-(.*)$/;
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[1];
 
+		if ( ! element.form.elements['cost-'+index] ) {
+			alert("No cost element for " + index);
+			return;
+		} // end if
 		var cost = parseFloat( floatize(element.form.elements['cost-'+index] ) );
-		var price = parseFloat( floatize(element.value) );
+		var price = parseFloat( floatize(element) );
 		if ( cost ) {
 			var quantity = 1;
 			if ( element.form.elements['quantity-'+index] ) {
-				quantity =  parseFloat(1*floatize(element.form.elements['quantity-'+index]));
+				quantity = parseFloat(1*floatize(element.form.elements['quantity-'+index]));
 			} // end if
 			element.form.elements['markup-'+index].value = do_decimals( ((price / (cost*quantity))-1)*100, precision );
 		} // end if

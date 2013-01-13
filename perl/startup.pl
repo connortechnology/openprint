@@ -25,7 +25,7 @@ BEGIN {
 	#use Apache2::SizeLimit;
 	use Apache::DBI ();
 	use URI::Escape ();
-	#use HTML::Strip ();
+	use HTML::Strip ();
 	use HTML::Entities ();
 	use Data::Dumper ();
 
@@ -50,7 +50,7 @@ BEGIN {
 
 	use openprint::www ();
 	use handlers::upload ();
-	use handlers::images ();
+	use handlers::assets ();
 
 	use Date::Calc ();
 	use Date::Format ();

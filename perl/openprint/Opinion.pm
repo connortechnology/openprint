@@ -6,7 +6,7 @@ our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table %fields %find_fields %transforms %defaults @identified_by );
 
-$debug = 1;
+$debug = 0;
 $table = 'opinions';
 %fields = (
 	'user_id'		=>	'user_id',

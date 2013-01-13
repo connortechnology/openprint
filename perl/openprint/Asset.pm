@@ -3,6 +3,7 @@ require openprint;
 require Digest::MD5;
 require openprint::Keyword;
 require IPC::Run3;
+use Fcntl qw( :flock );
 
 
 package openprint::Asset_Type;
@@ -59,13 +60,13 @@ $debug = 0;
 	'height'	=>	undef,
 );
 %transforms = (
-	'width'			=>	[ 's/\D//g' ],
-	'height'			=>	[ 's/\D//g' ],
-	'filename'		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
-	'name'			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'description'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'attribution'	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-	'license'		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	width			=>	[ 's/\D//g' ],
+	height			=>	[ 's/\D//g' ],
+	filename		=>	[ 's/^\s+//', 's/\s+$//', 's/ /_/g' ],
+	name			=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	description	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	attribution	=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+	license		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 $table = 'assets';
 $serial = 'assets_id_seq';
@@ -169,23 +170,29 @@ sub sized_url {
 					$width = $openprint::config{'Medium Asset Width'};
 				} elsif ( $size eq 'large' ) {
 					$width = $openprint::config{'Large Asset Width'};
+				} elsif ( ! $size ) {
+					$size = 'full';
 				} # end if
 				if ( ! $width ) {
 					$openprint::log->error("No asset size in config for $size");
-					return $fallback;
 				} # end if	
 				$openprint::log->debug("Creating $size at ${width}x $src $dest");
 				if ( ! -d "/tmp/$filename" ) {
-					mkdir "/tmp/$filename";
-					if ( $! ) {
+					if ( ! mkdir "/tmp/$filename" ) {
 						$openprint::log->error("Unable to create tmp directory at /tmp/$filename/ to hold medium thumbnail: $!" );
 						return $fallback;
-					} # end i
+					} # end if
 				} else {
 					$openprint::log->debug("Strange, tmp dir /tmp/$filename shouldnt already exist, but it does.");
 				} # end if
 
-				$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				$openprint::log->debug("about to mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir=/tmp/$filename/ -ss 60 $src :");
+				if ( $width ) {
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vf scale=$width:-3 -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				} else {
+					$_ = `mplayer -frames 1 -nosound -quiet -zoom -vo jpeg:outdir="/tmp/$filename/" -ss 60 "$src"`;
+				} # end if
+				#$_ = `ffmpeg  -itsoffset -4  -i $src -vcodec mjpeg -vframes 1 -an -f rawvideo -s 320x240 /tmp/$filename/00000001.jpg`;
 				if ( $! ) {
 					$openprint::log->error("Unable to create medium thumbnail at /tmp/$filename/: $!" );
 					return $fallback;
@@ -444,18 +451,28 @@ sub caption {
 
 sub width {
 	if ( ! $_[0]{'width'} ) {
-require Image::Size;
+		require Image::Size;
+		if ( $_[0]->is_video() ) {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+		} else {
 # get the image size, and print it out
-		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		} # end if
 	} # end if
 	return $_[0]{'width'};
 } # end sub width
 
 sub height {
 	if ( ! $_[0]{'height'} ) {
-require Image::Size;
-# get the image size, and print it out
-		@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		require Image::Size;
+		if ( $_[0]->is_video() ) {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+		} else {
+			# get the image size, and print it out
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
+		} # end if
 	} # end if
 	return $_[0]{'height'};
 } # end sub height
@@ -471,8 +488,9 @@ sub layout {
 	return $_[0]{'layout'};
 } # end sub layout
 
-sub mp4_url {
-	my $src = $_[0]->on_disk_path();
+sub video_url {
+	my ( $self, $type ) = @_;
+$openprint::log->debug("Calling video_url($type)");
 	my $path = $openprint::config{'AssetPath'}.'/videos/';
 	if ( $openprint::config{'AssetPath'} ) {
 		if ( ! -e $path ) {
@@ -484,19 +502,57 @@ sub mp4_url {
 	my $filename = $_[0]->on_disk_filename();
 	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( ! is_video( $extension ) ) {
-		$openprint::log->error("Called mp4_url on as asset that is not a video. " . $_[0]->to_string() );
+		$openprint::log->error("Called video_url on as asset that is not a video. " . $_[0]->to_string() );
 		return;
 	} # end if
-	my $dest = $path.$base.'.mp4';
+	my $dest = $path.$base.'.'.$type;
+	$self->generate_video( $type );
+	return '/assets/videos/'.$base.'.'.$type;
+} # end sub video_url
 
+sub video_path( $$ ) {
+	my ( $self, $type ) = @_;
+	my $filename = $_[0]->on_disk_filename();
+	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
+	if ( ! is_video( $extension ) ) {
+		$openprint::log->error("Called video_path on as asset that is not a video. " . $_[0]->to_string() );
+		return;
+	} # end if
+	return $openprint::config{AssetPath}.'/videos/'.$base.'.'.$type;
+} # end sub video_path
+
+sub generate_video {
+	my ( $self, $type ) = @_;
+	my $dest = $self->video_path($type);
+	my $lock;
+	if ( ! open($lock, "> $dest.lck") ) {
+		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
+	} # end if
+	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
+		$openprint::log->error("Unable to lock semaphore\n");
+	} # end if
 	if ( ! -e $dest ) {
 		# Create it
-		`avconv -i $src -vcodec libx264 -vpre ipod640 -b 250k -bt 50k -acodec libfaac -ab 56k -ac 2 -s 480x320 $dest`;
-		#`qt-faststart video_out_file.mp4 video_out_file_quickstart.mp4`;
-	} # end if
-	return '/assets/videos/'.$base.'.mp4';
-} # end sub mp4_url
-
-
+		my $src  = $_[0]->on_disk_path();
+		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
+		if ( $type eq 'mp4' ) {
+			my $output = `avconv -i $src -vcodec libx264 -b 1500k -vpre slow -vpre baseline -g 30 /tmp/$base.mp4`;
+			$openprint::log->debug("avconv -i $src -vcodec libx264 -b 1500k -vpre slow -g 30 $dest: $output");
+			if ( ! -e "/tmp/$base.mp4" ) {
+				$openprint::log->debug("avconv didn't do it's thing.");
+			} # end if
+			`qt-faststart /tmp/$base.mp4 $dest`;
+		} elsif ( $type eq 'ogg' ) {
+			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 $dest`;
+		} elsif ( $type eq 'webm' ) {
+		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest`;
+		} else {
+			$openprint::log->error("Unknown type in video_url $type");
+		} # end if type
+	} # end if ! -e $dest
+	close($lock);
+	unlink $dest.'.lck';
+	return $dest;
+} # end sub generate_video
 1;
 __END__
