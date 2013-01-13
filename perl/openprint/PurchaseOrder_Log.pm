@@ -8,7 +8,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 require openprint::PurchaseOrder;
 require openprint::User;
 
-$debug = 1;
+$debug = 0;
 $table = 'PurchaseOrder_Logs';
 $serial = 'PurchaseOrder_Logs_id_seq';
 

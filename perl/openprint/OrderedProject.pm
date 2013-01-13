@@ -6,7 +6,7 @@ require openprint::Project;
 
 use vars qw( $debug $table @identified_by %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'order_contents';
 @identified_by = ( 'project_id', 'order_id' );
 

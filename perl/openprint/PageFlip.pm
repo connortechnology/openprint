@@ -5,7 +5,7 @@ our @ISA = qw( openprint::Object );
 require openprint::PageFlip_Page;
 
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'pageflip';
 $serial = 'pageflip_id_seq';
 

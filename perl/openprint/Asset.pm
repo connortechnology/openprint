@@ -2,6 +2,8 @@ use strict;
 require openprint;
 require Digest::MD5;
 require openprint::Keyword;
+use Fcntl qw( :flock );
+
 
 
 package openprint::Asset_Type;
@@ -127,7 +129,6 @@ sub sized_url {
 
 	my ( $blah, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( is_photo( $extension ) ) {
-$openprint::log->debug("Have photo for $blah");
 		if ( $openprint::config{'AssetPath'} ) {
 			my $dest = $path.$filename;
 			if ( ! -e $dest ) {
@@ -485,9 +486,9 @@ sub layout {
 	return $_[0]{'layout'};
 } # end sub layout
 
-sub mp4_url {
-$openprint::log->debug("Calling mp4_url");
-	my $src = $_[0]->on_disk_path();
+sub video_url {
+	my ( $self, $type ) = @_;
+$openprint::log->debug("Calling video_url($type)");
 	my $path = $openprint::config{'AssetPath'}.'/videos/';
 	if ( $openprint::config{'AssetPath'} ) {
 		if ( ! -e $path ) {
@@ -499,49 +500,57 @@ $openprint::log->debug("Calling mp4_url");
 	my $filename = $_[0]->on_disk_filename();
 	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( ! is_video( $extension ) ) {
-		$openprint::log->error("Called mp4_url on as asset that is not a video. " . $_[0]->to_string() );
+		$openprint::log->error("Called video_url on as asset that is not a video. " . $_[0]->to_string() );
 		return;
 	} # end if
-	my $dest = $path.$base.'.mp4';
+	my $dest = $path.$base.'.'.$type;
+	$self->generate_video( $type );
+	return '/assets/videos/'.$base.'.'.$type;
+} # end sub video_url
 
-	if ( ! -e $dest ) {
-		# Create it
-		my $output = `avconv -i $src $dest`;
-		$openprint::log->debug("avconv -i $src $dest: $output");
-		`avconv -i $src -vcodec libx264 -b 1500k -vpre slow -vpre baseline -g 30 /tmp/$base.mp4`;
-		`qt-faststart /tmp/$base.mp4 $dest`;
-	} # end if
-	return '/assets/videos/'.$base.'.mp4';
-} # end sub mp4_url
-
-sub ogg_url {
-$openprint::log->debug("Calling ogg_url");
-	my $src = $_[0]->on_disk_path();
-	my $path = $openprint::config{AssetPath}.'/videos/';
-	if ( $openprint::config{AssetPath} ) {
-		if ( ! -e $path ) {
-			mkdir $path;
-			$openprint::log->error("Unable to create path $path: $!" );
-			return '/images/icons/file.png';
-		} # end if
-	} # end if
+sub video_path( $$ ) {
+	my ( $self, $type ) = @_;
 	my $filename = $_[0]->on_disk_filename();
 	my ( $base, $extension ) = $filename =~ /(.+)\.([^\.]+)$/;
 	if ( ! is_video( $extension ) ) {
-		$openprint::log->error("Called mp4_url on as asset that is not a video. " . $_[0]->to_string() );
+		$openprint::log->error("Called video_path on as asset that is not a video. " . $_[0]->to_string() );
 		return;
 	} # end if
-	my $dest = $path.$base.'.ogg';
+	return $openprint::config{AssetPath}.'/videos/'.$base.'.'.$type;
+} # end sub video_path
 
+sub generate_video {
+	my ( $self, $type ) = @_;
+	my $dest = $self->video_path($type);
+	my $lock;
+	if ( ! open($lock, "> $dest.lck") ) {
+		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
+	} # end if
+	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
+		$openprint::log->error("Unable to lock semaphore\n");
+	} # end if
 	if ( ! -e $dest ) {
 		# Create it
-		#`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest`;
-		`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 $dest`;
-$openprint::log->debug("Output from ffmpeg2theora -o $dest $path/$base.mp4");
-		#`qt-faststart video_out_file.mp4 video_out_file_quickstart.mp4`;
-	} # end if
-	return '/assets/videos/'.$base.'.ogg';
-} # end sub ogg_url
-
+		my $src  = $_[0]->on_disk_path();
+		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
+		if ( $type eq 'mp4' ) {
+			my $output = `avconv -i $src -vcodec libx264 -b 1500k -vpre slow -vpre baseline -g 30 /tmp/$base.mp4`;
+			$openprint::log->debug("avconv -i $src -vcodec libx264 -b 1500k -vpre slow -g 30 $dest: $output");
+			if ( ! -e "/tmp/$base.mp4" ) {
+				$openprint::log->debug("avconv didn't do it's thing.");
+			} # end if
+			`qt-faststart /tmp/$base.mp4 $dest`;
+		} elsif ( $type eq 'ogg' ) {
+			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 $dest`;
+		} elsif ( $type eq 'webm' ) {
+		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest`;
+		} else {
+			$openprint::log->error("Unknown type in video_url $type");
+		} # end if type
+	} # end if ! -e $dest
+	close($lock);
+	unlink $dest.'.lck';
+	return $dest;
+} # end sub generate_video
 1;
 __END__

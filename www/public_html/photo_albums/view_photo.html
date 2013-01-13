@@ -91,11 +91,14 @@ if ( 0 ) {
 `, $Photo->url() );
 				} elsif ( $Asset->is_video() ) {
 					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>';
-					if ( $_ = $Asset->mp4_url() ) {
+					if ( $_ = $Asset->video_url('mp4') ) {
 						$html .= '<source src="'.$_.'" type="video/mp4">';
 					} # end if
-					if ( $_ = $Asset->ogg_url() ) {
+					if ( $_ = $Asset->video_url('ogg') ) {
 						$html .= '<source src="'.$_.'" type="video/ogg">';
+					} # end if
+					if ( $_ = $Asset->video_url('webm') ) {
+						$html .= '<source src="'.$_.'" type="video/webm">';
 					} # end if
 					$html .= 'Your browser does not support the video tag';
 					$html .= '</video>';

@@ -2,7 +2,7 @@ use strict;
 package openprint::InstantGate;
 
 use openprint ();
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;

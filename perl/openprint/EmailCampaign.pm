@@ -13,7 +13,7 @@ require openprint::Log;
 require openprint::EmailTemplate;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'emailcampaigns';
 $serial = 'emailcampaigns_id_seq';
 

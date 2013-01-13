@@ -6,7 +6,7 @@ package openprint::Blocklist;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table @identified_by %fields %find_fields %defaults %transforms %block_cache );
-$debug = 1;
+$debug = 0;
 $table = 'blocklist';
 @identified_by = ( 'blockee', 'blocker' );
 

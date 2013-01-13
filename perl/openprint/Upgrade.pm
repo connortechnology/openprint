@@ -4,7 +4,7 @@ package openprint::Upgrade_Type;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'upgrade_types';
 $serial = 'upgrade_types_id_seq';
 
@@ -23,7 +23,7 @@ package openprint::Upgrade;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'upgrades';
 $serial = 'upgrades_id_seq';
 

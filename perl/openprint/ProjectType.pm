@@ -8,7 +8,7 @@ require openprint::ProjectType_Template;
 require openprint;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'project_types';
 $serial = 'project_types_id_seq';
 

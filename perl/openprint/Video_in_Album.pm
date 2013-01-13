@@ -5,7 +5,7 @@ our @ISA = qw( openprint::Object );
 use openprint ();
 
 use vars qw( $debug $table %fields %transforms %defaults @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'videos_in_albums';
 %fields = (
 	'album_id'	=>	'album_id',

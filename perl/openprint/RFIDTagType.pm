@@ -5,7 +5,7 @@ require openprint::Object;
 
 use vars qw( $debug $serial $table %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'rfidtagtypes';
 $serial = 'rfidtagtypes_id_seq';
 

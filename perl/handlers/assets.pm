@@ -69,7 +69,7 @@ sub handler {
 
 		# The asset filename form is id_title.extension, path is either assets or thumbnails
 		my ( $path, $id, $filename ) = $r->uri() =~ /^\/(.*)\/(\d+)_(.+)$/;
-$log->debug("Path: $path $id uri:" . $r->uri());
+#$log->debug("Path: $path $id uri:" . $r->uri());
 		$path =~ s/^assets\///;
 		if ( $id ) {
 			my $Asset = new openprint::Asset( $id );
@@ -94,7 +94,7 @@ eval {
 						} elsif ( $path eq 'small' ) {
 							$r->sendfile( $Asset->small_path() );
 						} elsif ( $path eq 'videos' ) {
-$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
+#$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
 							$r->sendfile( $config{AssetPath}.'videos/'.$id.'_'.$filename );
 						} else {
 							$r->sendfile( $Asset->on_disk_path() );

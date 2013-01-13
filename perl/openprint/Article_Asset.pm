@@ -5,7 +5,7 @@ require openprint::Article;
 package openprint::Article_Asset;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'article_assets';
 @identified_by = ( 'article_id','asset_id' );
 %fields = (

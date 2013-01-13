@@ -5,7 +5,7 @@ require openprint::Company;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 $table = 'affiliates';
 $serial = 'affiliates_id_seq';
 
@@ -21,9 +21,9 @@ $serial = 'affiliates_id_seq';
 );
 
 %defaults = (
-	supplier_id		=>	undef,
-	'created_on'	=>	q`'NOW()'`,
-	'sort'			=>	undef,
+	supplier_id	=>	undef,
+	created_on	=>	q`'NOW()'`,
+	sort		=>	undef,
 );
 
 sub Supplier {
