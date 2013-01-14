@@ -5,7 +5,6 @@ use strict;
 require sql;
 require logger;
 require openprint::Object;
-require openprint::PaperInventory;
 require openprint::File;
 require openprint::Project;
 

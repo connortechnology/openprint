@@ -1,19 +1,19 @@
-<script type="text/javascript" src="/employee/sred/edit.js?version=1"></script>
+<script type="text/javascript" src="<? hash_link(/employee/sred/edit.js) ?>"></script>
 <script type="text/javascript">
 	var tax_ids = new Array( <? echo ( join(',', map { $_->id() } $$variable{'Project'}->Taxes() ); ) ?> );
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="SRED"><div class="Project">
 	<div class="PageTitle">
-	<h1>SRED Project (<? echo ( $$variable{'Project'}->id() ) ?>)</h1>
+	<h1>SRED Project (<? echo ( $$variable{Project}->id() ) ?>)</h1>
 	</div>
-<form id="f1" name="f1" action="<? echo ( $$variable{'Project'}->Contents() ? 'projects.html' : 'project.html' ) ?>" method="post" enctype="multipart/form-data">
+	<form id="f1" name="f1" action="<? echo ( $$variable{'Project'}->Contents() ? 'projects.html' : 'project.html' ) ?>" method="post" enctype="multipart/form-data">
 		<fieldset><legend></legend>
 			<ul>
-				<li><label>Name</label>
+				<li class="name"><label>Name</label>
 					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Project'}->name() ) ?>" />
 				</li>
-				<li><label>Description<br/>
+				<li class="description"><label>Description<br/>
 					<a href="#" onclick="toggletinymce('description', this);">Hide Editor</a>
 					</label>
 					<textarea name="description" id="description" class="project_description"><? echo ( $$variable{'Project'}->description() ) ?></textarea>
@@ -21,20 +21,17 @@
 			</ul>
 			<p class="buttons">
 				<? echo ( join('',
-					ssi::button( 'Save', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Save';form.submit();`, 'class'=>'Save' } ),
-					ssi::button( 'Delete', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Delete';form.submit();`, 'class'=>'Delete' } ),
-					ssi::button( 'Export', { 'onclick' => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, 'class'=>'Export' } ),
+					ssi::button( 'Save', { onclick => q`var form = $(f1);form.elements['action'].value='Save';form.submit();`, class=>'Save' } ),
+					ssi::button( 'Delete', { onclick => q`var form = $(f1);form.elements['action'].value='Delete';form.submit();`, class=>'Delete' } ),
+					ssi::button( 'Export', { onclick => q`var form = $(f1);form.elements['action'].value='Export';form.submit();`, class=>'Export' } ),
 					); ) ?>
 			</p>
 		</fieldset>
-	<input type="hidden" name="action" />
-	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
-</form>
+		<input type="hidden" name="action" />
+		<input type="hidden" name="project_id" value="<? echo ( $$variable{Project}->id() ) ?>" />
+	</form>
 	<br class="spacer"/>
-	<? if ( $$variable{'Project'}->id() ) ?>
-	<div id="Contents">
-	<!--#include virtual="_contents.html"-->
-	</div>
-	<br class="spacer"/><br/>
-	<? endif ( $$variable{'Project'}->id() ) ?>
+	<? if ( $$variable{Project}->id() ) ?>
+	<div id="Contents"><!--#include virtual="_contents.html"--></div>
+	<? endif ( $$variable{Project}->id() ) ?>
 </div></div><!--SRED-->
