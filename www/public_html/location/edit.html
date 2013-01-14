@@ -15,7 +15,7 @@
 	});
 </script>
 <div class="Location"><div class="Edit">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<form name="f1" id="f1" action="/location/edit.html?location_id=<? echo ( $param{'location_id'} ) ?>" method="post" enctype="multipart/form-data">
 		<fieldset><legend>Editing Location<? echo ( $$variable{'Location'}->id() ? '('.$$variable{'Location'}->id().')' : '' ) ?></legend>
 			<? if ( $$variable{'Location'}->deleted() ) ?>
@@ -53,7 +53,7 @@
 				</div>
 			</fieldset>
 			<fieldset><legend>Where</legend>
-<!--#include virtual="/location/_location_fields.html"-->
+<? echo ( include('/location/_location_fields.html'); ) ?>
 			</fieldset>
 		</fieldset>
 		<input type="hidden" name="action" />

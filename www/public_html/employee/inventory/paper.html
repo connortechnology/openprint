@@ -1,5 +1,5 @@
-<script type="text/javascript" src="/javascripts/barcode.js"></script>
-<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/barcode.js)?>"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 	// override this so we don't refresh paper dropdowns on load
 	function calc( formName ) {
@@ -10,7 +10,7 @@
 		LoadContent( 'Results',  '/employee/inventory/_paper_results.html', f1.serialize() );
 	} // end function calc
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select a Paper to view/edit.<br>
 <form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>

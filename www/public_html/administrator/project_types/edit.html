@@ -27,21 +27,21 @@
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);",'','&lt;&lt;'),
-					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New1','new.gif',"f1.action='edit.html';addCheck(f1);",'','New'),
-					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-					ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);",'','Copy'),
-					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.action='edit.html';f1.reset();",'','Reset'),
+					ssi::button( 'Prev1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'&lt;&lt;' } ),
+					ssi::button( 'Next1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'&gt;&gt;' } ),
+					ssi::button( 'New1', { onclick=>"f1.action='edit.html';addCheck(f1);", href=>'', text=>'New' } ),
+					ssi::button( 'Delete1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+					ssi::button( 'Save1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);", href=>'', text=>'Save' } ),
+					ssi::button( 'Copy1', { onclick=>"f1.action='edit.html';f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);", href=>'', text=>'Copy' } ),
+					ssi::button( 'Reset1', { onclick=>"f1.action='edit.html';f1.reset();", href=>'', text=>'Reset' } ),
 	); ) ?>
 		</p>
 		<p class="buttons">
 			<b>CSV File</b>
 			<input type="file" name="fileImport" />
 <? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();",'','Import'),
-			ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();",'','Export'),
+			ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import';f1.action='edit.html';f1.submit();", href=>'', text=>'Import' } ),
+			ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export';f1.action='edit.html?Download';f1.submit();", href=>'', text=>'Export' } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -102,7 +102,7 @@
 <? if ( $$variable{'ProjectType'}->id() ) ?>
 	<fieldset><legend>Paper Recommendations</legend>
 		<div id="PaperRecommendations">
-			<!--#include virtual="_paper_recommendations.html"-->
+			<? echo ( include('_paper_recommendations.html'); ) ?>
 		</div>	
 	</fieldset>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>

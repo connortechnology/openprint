@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/administrator/managerial/profile.js"></script>
+<script type="text/javascript" src="<?hash_link(/administrator/managerial/profile.js)?>"></script>
 <div class="CompanyProfileFields">
 	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
 		<input type="hidden" name="action" id="action" />
@@ -23,7 +23,7 @@
  					<th class="buttons"><? echo (ssi::button('New',{onclick=>'newField();'});) ?></th>
 				</tr>
 			</thead>
-			<tbody id="fields"><!--#include virtual="_company_fields_tbody.html"--></tbody>
+			<tbody id="fields"><? echo ( include('_company_fields_tbody.html'); ) ?></tbody>
 		</table>
 	</form>
 </div>

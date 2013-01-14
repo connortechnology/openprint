@@ -1,5 +1,5 @@
 <? if ( $$variable{uri} =~ /_paper_allocations/ ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? endif ( $$variable{uri} =~ /_paper_allocations/ ) ?>
 <? eval (
 	return if ! ( $param{'skid_id'} or $variable{Paper} );

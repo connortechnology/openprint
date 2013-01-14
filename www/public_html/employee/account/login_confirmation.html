@@ -1,6 +1,6 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $session{'user_type'} ) ?>
-<!--#include virtual="/includes/_greeting.html"-->
+<? echo ( include('/includes/_greeting.html'); ) ?>
 <? if ( $session{'Destination'} ) ?>
 <br/>
 <br/>
@@ -11,12 +11,12 @@
 <b>Has any of your account information changed?</b><br/>
 To change your password or modify your account, please click <a href="/employee/account/profile.html">here</a>. <br/>
 <br/>
-<!--#include virtual="/employee/index.html"-->
+<? echo ( include('/employee/index.html'); ) ?>
 <? else ( $session{'user_type'} ) ?>
 <p class="error"><b><?error?></b><br/>
   <br/>
   <?details?><br/>
 </p>
-<!--#include virtual="/employee/account/login.html" -->
+<? echo ( include('/employee/account/login.html'); ) ?>
 <? endif ( $session{'user_type'} ) ?>
 

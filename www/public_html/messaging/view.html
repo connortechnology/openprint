@@ -1,5 +1,4 @@
-<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-
+<script type="text/javascript" src="<?hash_link(/javascripts/tiny_mce/tiny_mce.js)?>"></script>
 <script type="text/javascript">
 	tinyMCE.init({
 		mode : "specific_textareas",
@@ -49,7 +48,7 @@
 		new Ajax.Request( '_view.json', { parameters: params } );
 	} // end function reply_to
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Conversation"><div class="View">
 	<form id="f1" name="f1" action="/messaging/view.html?conversation_id=<? echo ( $$variable{'Conversation'}->id() ) ?>" method="post">
 		<input type="hidden" id="last_message_id" value="" />
@@ -62,9 +61,9 @@
 			<? if ( $$variable{'Conversation'}->deleted() ) ?>
 			<span class="warning">This message has been deleted</span>
 			<? endif ( $$variable{'Conversation'}->deleted() ) ?>
-			<div id="Messages"><!--#include virtual="_messages.html"--></div>
+			<div id="Messages"><? echo ( include('_messages.html'); ) ?></div>
 			<div class="Message Reply">
-				<div id="To"><!--#include virtual="_to.html"--></div>
+				<div id="To"><? echo ( include('_to.html'); ) ?></div>
 				<? echo ( new openprint::User( $session{'user_id'} )->icon(); ) ?>
 <? if ( ! $$variable{'Conversation'}->id() ) ?>
 				<div id="Subject">
@@ -75,9 +74,9 @@
 				<span class="buttons">
 				<? echo (
 if ( $$variable{'Conversation'}->id() ) {
-	return ssi::button( 'Reply', { 'onclick'=>q`reply_to( $('f1') );` } );
+	return ssi::button( 'Reply', { onclick=>q`reply_to( $('f1') );` } );
 } else {
-	return ssi::button( 'Send', { 'onclick'=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
+	return ssi::button( 'Send', { onclick=>q`var form = $('f1'); form.elements['action'].value='Send';form.submit();` } );
 } # end if
 ) ?>
 				</span>
@@ -87,7 +86,7 @@ if ( $$variable{'Conversation'}->id() ) {
 				<? echo (
 					return if ! $$variable{'Conversation'}->id();
 					my $html = '';
-					$html .= ssi::button( 'DC', { 'onclick'=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
+					$html .= ssi::button( 'DC', { onclick=>"f1.elements['action'].value='Delete';f1.submit();", 'text'=>'Leave Conversation' } );
 					return $html;
 				) ?>
 			</p>

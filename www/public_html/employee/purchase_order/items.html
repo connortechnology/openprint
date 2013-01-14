@@ -1,15 +1,13 @@
 <script type="text/javascript">
-<!--
 	function page_load( div_id, form ) {
 		var div = $(div_id);
 		if ( div )
 			div.innerHTML = 'Please wait. Loading...';
 		new Ajax.Updater( div_id, '/employee/purchase_order/_items.html', { parameters: form.serialize() } );
 	} // end function load
--->
 </script>
 <div class="PurchaseOrder_Items">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" action="items.html" method="post">
 	<fieldset class="filters"><legend>Select Search Criteria</legend>
 		<ul>

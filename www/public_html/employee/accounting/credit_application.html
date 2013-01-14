@@ -28,7 +28,7 @@
 		} // end if
 	} // end function submit_check( form )
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $$variable{'Application'}->id() ) ?>
 	<div class="CreditApplication">
 		<div class="Header">
@@ -113,10 +113,10 @@
 		</form>
 		<br class="spacer"/>
 		<div class="CompanyInformation">
-			<!--#include virtual="/email_content/_company_information.html"-->
+			<? echo ( include('/email_content/_company_information.html'); ) ?>
 		</div>
 		<div class="OwnershipInformation">
-			<!--#include virtual="/email_content/_business_information.html"-->
+			<? echo ( include('/email_content/_business_information.html'); ) ?>
 		</div>
 		<br class="spacer"/>
 		<div class="TradeReferences">
@@ -152,7 +152,7 @@
 		   </fieldset>
 		</div><!--Tradereferences-->
 		<div class="BankInformation">
-			<!--#include virtual="/email_content/_bank_information.html"-->
+			<? echo ( include('/email_content/_bank_information.html'); ) ?>
 		</div>
 		<div class="Disclaimer">
 		<? echo ( $config{'CreditApplicationDisclaimer'} ) ?>

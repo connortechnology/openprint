@@ -1,5 +1,5 @@
 <script type="text/javascript" src="/javascripts/ufo.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Video">
 	<div class="View">
 		<form id="f1" name="f1" action="view.html" method="post">
@@ -38,6 +38,6 @@
 		</fieldset>
 		</form>
 		<div class="Caption"><? echo ( $$variable{'Video'}->Asset()->description() ) ?></div>
-		<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
+		<div id="Comments"><fieldset><legend>Comments</legend><? echo ( include('_comments.html'); ) ?></fieldset></div>
 	</div><!--View-->
 </div><!--Video-->

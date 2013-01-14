@@ -8,7 +8,7 @@
 ) ?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
 			<li><label># of seals</label>
@@ -20,11 +20,11 @@
 <? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Material->find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
 				</select>
 			</li>
-			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+			<? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">

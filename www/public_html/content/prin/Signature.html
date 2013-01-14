@@ -7,7 +7,7 @@
 
 <? if ( $$variable{'ProjectType'}->id() ) ?>
 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="InstantPricing">
 	<form id="f1" name="f1" method="post" action="/content/prin/Signature.html">
 		<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
@@ -21,12 +21,12 @@
 	<div class="error">Our estimating system is under maintenance.  Please call for pricing.</div>
 <? endif ( ( ! $dbh ) or $$variable{'ProjectType'}->please_call() ) ?>
 <? if ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
-			<!--#include virtual="_project_name.html"-->
+			<? echo ( include('_project_name.html'); ) ?>
 			<div class="ProjectSpecifications">
 				<h1>Project Specifications</h1>
-				<!--#include virtual="_sizes.html"-->
+				<? echo ( include('_sizes.html'); ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
-				<!--#include virtual="/includes/main/proj/banner_printing.html"-->
+				<? echo ( include('/includes/main/proj/banner_printing.html'); ) ?>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
 				<div class="Colours">
@@ -52,9 +52,9 @@
 								</li>
 								<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
-									<!--#include virtual="_aqueous.html"-->
+									<? echo ( include('_aqueous.html'); ) ?>
 									<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-									<!--#include virtual="_uvcoating.html"-->
+									<? echo ( include('_uvcoating.html'); ) ?>
 									<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
 							</ul>
@@ -67,7 +67,7 @@
 				<div class="Stock"><fieldset><legend>Stock</legend>
 					<div class="content">
 						<ul>
-						<!--#include virtual="_paper_dropdowns.html"-->
+						<? echo ( include('_paper_dropdowns.html'); ) ?>
 						</ul>
 					</div>
 					</fieldset>
@@ -80,23 +80,23 @@
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
-							<!--#include virtual="_drilling.html"-->
+							<? echo ( include('_drilling.html'); ) ?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
-							<!--#include virtual="_scoring.html"-->
+							<? echo ( include('_scoring.html'); ) ?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-							<!--#include virtual="_numbering.html"-->
+							<? echo ( include('_numbering.html'); ) ?>
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-							<!--#include virtual="_padding.html"-->
+							<? echo ( include('_padding.html'); ) ?>
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-							<!--#include virtual="_perfing.html"-->
+							<? echo ( include('_perfing.html'); ) ?>
 					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
-							<!--#include virtual="_lamination.html"-->
+							<? echo ( include('_lamination.html'); ) ?>
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
-							<!--#include virtual="_shrinkwrapping.html"-->
-							<!--#include virtual="_bundling.html"-->
+							<? echo ( include('_shrinkwrapping.html'); ) ?>
+							<? echo ( include('_bundling.html'); ) ?>
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 						</ul>
 					</div>
@@ -107,20 +107,20 @@
 					<fieldset><legend>Production</legend>
 						<div class="content">
 							<ul>
-								<!--#include virtual="_design.html"-->
-								<!--#include virtual="_proofs.html"-->
-								<!--#include virtual="_turnaround.html"-->
-								<!--#include virtual="_quantity.html"-->
-								<!--#include virtual="_press_type.html"-->
+								<? echo ( include('_design.html'); ) ?>
+								<? echo ( include('_proofs.html'); ) ?>
+								<? echo ( include('_turnaround.html'); ) ?>
+								<? echo ( include('_quantity.html'); ) ?>
+								<? echo ( include('_press_type.html'); ) ?>
 							</ul>
 						</div>
 					</fieldset>
 				</div>
-				<!--#include virtual="_ups.html"-->
+				<? echo ( include('_ups.html'); ) ?>
 				<div id="AlertDiv" style="display:none;"></div>
 				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
-				<!--#include virtual="_prices.html"-->
+				<? echo ( include('_prices.html'); ) ?>
 <? endif ( $dbh and ( ( ! $$variable{'ProjectType'}->please_call() ) or ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ) ) ?>
 				</div></div><!--Questions-->
 		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
@@ -133,5 +133,5 @@
 ) ?>
 <? endif ( $$variable{'ProjectType'}->id() ) ?>
 </form>
-		<!--#include virtual="_specials.html"-->
+		<? echo ( include('_specials.html'); ) ?>
 	</div><!--InstantPricing-->

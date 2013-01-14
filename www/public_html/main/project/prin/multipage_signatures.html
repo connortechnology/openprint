@@ -15,8 +15,8 @@ function calc( formName, force ) {
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
-			<!--#include virtual="/includes/main/proj/templates/signature_template_select.html"-->
-			<!--#include virtual="/includes/main/proj/templates/signatures.html"-->
+			<? echo ( include('/includes/main/proj/templates/signature_template_select.html'); ) ?>
+			<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
 		<? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 
 		<fieldset><legend><?txtSignatureType?></legend>
@@ -50,20 +50,20 @@ function calc( formName, force ) {
 <? endif ( $$variable{'Group'} == 1 ) ?>
 			<br class="spacer"/>
 
-			<!--#include virtual="/includes/main/proj/screen_type.html"-->
-			<!--#include virtual="/includes/main/proj/colours_coatings.html"-->	
-			<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->	
-			<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
+			<? echo ( include('/includes/main/proj/screen_type.html'); ) ?>
+			<? echo ( include('/includes/main/proj/colours_coatings.html'); ) ?>	
+			<? echo ( include('/includes/main/proj/bleeds_colourbars.html'); ) ?>	
+			<? echo ( include('/includes/main/proj/paper_dropdowns.html'); ) ?>
 		<br class="spacer"/>
 		</fieldset>
 		<!-- End of Input - Start of Results -->
 		<fieldset><legend>Results</legend>
-			<!--#include virtual="/includes/main/proj/printing_results.html"-->
+			<? echo ( include('/includes/main/proj/printing_results.html'); ) ?>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/press_approval.html"-->
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+		<? echo ( include('/includes/main/proj/press_approval.html'); ) ?>
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_printing.html'); ) ?>
 		<input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 	</form>

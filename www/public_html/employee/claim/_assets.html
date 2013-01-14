@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <h3>Attachments</h3>
 <table>
 	<thead>
@@ -35,7 +35,7 @@ return $html;
 		<tr class="unprintable">
 			<td class="Name"><input type="text" id="name" name="name"/></td>
 			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
-			<td><? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?></td>
+			<td><? echo ( ssi::button( 'Upload', { onclick=>"f1.btnFunction.value='Attach';f1.submit();", href=>'', text=>'Upload' } ); ) ?></td>
 		</tr>
 	</tbody>
 </table>

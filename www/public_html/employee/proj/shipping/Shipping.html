@@ -38,10 +38,10 @@ function validate_data(formName) {
 	<form name="f1" method="post" action="/employee/project/view.html">
 		<fieldset><legend>Shipping Services</legend>
 			<div class="leftColumn">
-				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
 			</div>
 			<div class="rightColumn">
-				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
 			</div>
 			<br class="spacer"/>
 			<fieldset>
@@ -56,7 +56,7 @@ function validate_data(formName) {
 					<input type="text" name="txtQuantityUsed" value="<? echo ( $$variable{'txtQuantityUsed'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
 					</span>
 				</p>
-				<!--#include virtual="_shipping_packages.html"-->
+				<? echo ( include('_shipping_packages.html'); ) ?>
 				<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 				<p>
 					<label><b>Price (<? echo ( $$variable{'Project'}->Currency()->symbol() ) ?>)</b></label>
@@ -67,13 +67,13 @@ function validate_data(formName) {
 				</p>
 				<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 				<hr/>
-				<!--#include virtual="/includes/employee/feedback/complete.html"-->
-				<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
+				<? echo ( include('/includes/employee/feedback/complete.html'); ) ?>
+				<? echo ( include('/includes/employee/feedback/complete_date.html'); ) ?>
 			</fieldset>
-				<!--#include virtual="_signatures.html"-->
+				<? echo ( include('_signatures.html'); ) ?>
 			
 		</fieldset>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="qty_index" value="Used" />
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

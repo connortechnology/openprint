@@ -35,7 +35,7 @@
     } // end function del_timetrack(invoice_id)
 </script>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
@@ -106,15 +106,15 @@
 	</fieldset>
 <? if ( $$variable{'Invoice'}->id() ) ?>
 <div id="Timetracks">
-	<!--#include virtual="_timetracks.html"-->
+	<? echo ( include('_timetracks.html'); ) ?>
 </div>
 <div id="InvoicedProducts">
-	<!--#include virtual="_invoiced_products.html"-->
+	<? echo ( include('_invoiced_products.html'); ) ?>
 </div>
-<!--#include virtual="_totals.html"-->
+<? echo ( include('_totals.html'); ) ?>
 <div class="leftColumn">
 	<div id="Interests">
-	<!--#include virtual="_interests.html"-->
+	<? echo ( include('_interests.html'); ) ?>
 	</div>
 	<fieldset><legend>Payments</legend>
 		<table>
@@ -144,7 +144,7 @@
 		</table>
 	</fieldset>
 </div>
-<!--#include virtual="_logs.html"-->
+<? echo ( include('_logs.html'); ) ?>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
 </form>
 </div></div>

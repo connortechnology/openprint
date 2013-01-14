@@ -1,5 +1,5 @@
 <script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript">
 	var answer_drop = function(el){
         new Ajax.Updater( el, '_answers_edit.html', {parameters: { action: 'sort', order: Sortable.serialize(el) }, onSuccess:function(){
@@ -50,7 +50,7 @@
 				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 			</li>
 		</ul>
-		<fieldset><legend>Questions</legend><!--#include virtual="_questions_edit.html"-->
+		<fieldset><legend>Questions</legend><? echo ( include('_questions_edit.html'); ) ?>
 		<script type="text/javascript">Sortable.create('Questions', { onUpdate:question_drop });</script>
 	<p class="buttons">
 	<? echo (

@@ -1,5 +1,5 @@
-<!--#include virtual="/includes/error_reporting.html"-->
-<script type="text/javascript" src="/javascripts/paper.js"></script>
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<script type="text/javascript" src="<?hash_link(/javascripts/paper.js)?>"></script>
 <script type="text/javascript">
 function add_stock_setting( stock_id ) {
 	new Ajax.Updater('Stocks','_stocks.html', {
@@ -67,21 +67,21 @@ function filter_onChange( element, id, selected ) {
 		</ul>
 		<p class="buttons">
 		<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='Previous';fmCheck(f1);",'','Previous'),
-				ssi::writeButton( $log, $dbh, 'NextTop', 'next.gif', "f1.btnFunction.value='Next';fmCheck(f1);",'','Next'),
-				ssi::writeButton( $log, $dbh, 'NewTop', 'new.gif', "addCheck(f2);",'','New'),
-				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'CopyTop', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();",'','Copy'),
-				ssi::writeButton( $log, $dbh, 'ResetTop', 'reset.gif', 'f1.reset();','','Reset'),
+				ssi::button( 'PreviousTop', { onclick=>"f1.btnFunction.value='Previous';fmCheck(f1);", href=>'', text=>'Previous' } ),
+				ssi::button( 'NextTop', { onclick=>"f1.btnFunction.value='Next';fmCheck(f1);", href=>'', text=>'Next' } ),
+				ssi::button( 'NewTop', { onclick=>"addCheck(f2);", href=>'', text=>'New' } ),
+				ssi::button( 'DeleteTop', { onclick=>"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", href=>'', text=>'Delete' } ),
+				ssi::button( 'SaveTop', { onclick=>"document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);", href=>'', text=>'Save' } ),
+				ssi::button( 'CopyTop', { onclick=>"f1.btnFunction.value='Copy';f1.submit();", href=>'', text=>'Copy' } ),
+				ssi::button( 'ResetTop', { onclick=>'f1.reset();', href=>'', text=>'Reset' } ),
 				);
 			) ?>
 		</p>
 		<p class="buttons">
 			<input type="file" name="fileSpecifications"/>
 			<? echo ( join('',
-			ssi::writeButton( $log, $dbh, 'Import','import.gif',"f1.btnFunction.value='Import Specifications';f1.submit();",'','Import' ),
-			ssi::writeButton( $log, $dbh, 'Export','export.gif',"f1.btnFunction.value='Export Specifications';f1.submit();",'','Export' ),
+			ssi::button( 'Import', { onclick=>"f1.btnFunction.value='Import Specifications';f1.submit();", href=>'', text=>'Import' } ),
+			ssi::button( 'Export', { onclick=>"f1.btnFunction.value='Export Specifications';f1.submit();", href=>'', text=>'Export' } ),
 ); ) ?>
 		</p>
 	</fieldset>
@@ -299,10 +299,10 @@ function filter_onChange( element, id, selected ) {
 <form id="stock_settings_form" name="stock_settings_form" action="">
 	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>
-		<div id="StockSettings"><!--#include virtual="_stock_settings.html"--></div>
+		<div id="StockSettings"><? echo ( include('_stock_settings.html'); ) ?></div>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", '', 'Add' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'savestocksetting','save.gif', "new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", '', 'Save' ); ) ?>
+			<? echo ( ssi::button( 'addstocksetting', { onclick=>"popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '500px' } );", href=>'', text=>'Add' } ); ) ?>
+			<? echo ( ssi::button( 'savestocksetting', { onclick=>"new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", href=>'', text=>'Save' } ); ) ?>
 		</p>
 	</fieldset>
 </form>

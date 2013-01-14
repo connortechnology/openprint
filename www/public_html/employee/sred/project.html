@@ -2,7 +2,7 @@
 <script type="text/javascript">
 	var tax_ids = new Array( <? echo ( join(',', map { $_->id() } $$variable{'Project'}->Taxes() ); ) ?> );
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="SRED"><div class="Project">
 	<div class="PageTitle">
 	<h1>SRED Project (<? echo ( $$variable{Project}->id() ) ?>)</h1>
@@ -32,6 +32,6 @@
 	</form>
 	<br class="spacer"/>
 	<? if ( $$variable{Project}->id() ) ?>
-	<div id="Contents"><!--#include virtual="_contents.html"--></div>
+	<div id="Contents"><? echo ( include('_contents.html'); ) ?></div>
 	<? endif ( $$variable{Project}->id() ) ?>
 </div></div><!--SRED-->

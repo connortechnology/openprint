@@ -167,7 +167,7 @@
 		</p>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 		<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
-			<!--#include virtual="_manifest_purchase_orders.html"-->
+			<? echo ( include('_manifest_purchase_orders.html'); ) ?>
 		<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
 		</div>
 		<p>
@@ -218,6 +218,6 @@
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>
-	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><!--#include virtual="_manifest_contents.html"--></div>
+	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><? echo ( include('_manifest_contents.html'); ) ?></div>
 	<br class="spacer"/>
 </fieldset>

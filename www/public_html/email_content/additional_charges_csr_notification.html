@@ -5,7 +5,7 @@
 These charges may need to be approved before production will continue.
 
 <? eval ( openprint::project::get_header( $log, $dbh, $variable, @$variable{'ProjectIndex', 'OrderID'} ); ) ?>
-<!--#include virtual="/includes/project_header.html"-->
+<? echo ( include('/includes/project_header.html'); ) ?>
 <div class="ProjectHeader">
 	<fieldset>
 		<table class="List">

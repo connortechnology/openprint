@@ -75,7 +75,7 @@
 		</div>
 		<div class="content rightColumn">
 			<fieldset><legend>Photos</legend>
-				<div id="assets"><!--#include virtual="_assets.html"--></div>
+				<div id="assets"><? echo ( include('_assets.html'); ) ?></div>
 			</fieldset>
 			<fieldset><legend>Upload a new Asset</legend>
 				<input type="file" name="filename" />
@@ -85,7 +85,7 @@
 				</p>
 			</fieldset>
 			<fieldset><legend>Notifications</legend>
-				<div id="notifications"><!--#include virtual="_notifications.html"--></div>
+				<div id="notifications"><? echo ( include('_notifications.html'); ) ?></div>
 			</fieldset>
 		</div>
 	</fieldset>
@@ -143,7 +143,7 @@ No RADIUS Support
 							} ); ) ?></span>
 			</li>
 		</ul>
-		<div id="Logs"><!--#include virtual="/employee/it/_host_logs.html"--></div>
+		<div id="Logs"><? echo ( include('/employee/it/_host_logs.html'); ) ?></div>
 	</fieldset>
 </form>
 </div></div>

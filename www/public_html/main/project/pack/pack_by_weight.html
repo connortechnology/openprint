@@ -3,14 +3,14 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<ul>
-			<!--#include virtual="/includes/main/proj/finished_dimensions.html"-->
-			<!--#include virtual="/includes/main/proj/finished_calliper.html"-->
-			<!--#include virtual="/includes/main/proj/finished_weight.html"-->
+			<? echo ( include('/includes/main/proj/finished_dimensions.html'); ) ?>
+			<? echo ( include('/includes/main/proj/finished_calliper.html'); ) ?>
+			<? echo ( include('/includes/main/proj/finished_weight.html'); ) ?>
 			</ul>
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-			<!--#include virtual="/includes/main/proj/package_size_weight.html"-->
+			<? echo ( include('/includes/main/proj/package_size_weight.html'); ) ?>
 <? eval (
 	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
 		$$variable{'Columns'} = 'Three';
@@ -18,16 +18,16 @@
 		$$variable{'Columns'} = 'Two';
 	} # end if
 ) ?>
-			<!--#include virtual="/includes/main/proj/_quantities.html"-->
-			<!--#include virtual="/includes/main/proj/package_quantity.html"-->
-			<!--#include virtual="/includes/main/proj/total_weight.html"-->
-			<!--#include virtual="/includes/main/proj/_unit_price.html"-->
-			<!--#include virtual="/includes/main/proj/_service_price.html"-->
-			<!--#include virtual="/includes/main/proj/_breakdown.html"-->
+			<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
+			<? echo ( include('/includes/main/proj/package_quantity.html'); ) ?>
+			<? echo ( include('/includes/main/proj/total_weight.html'); ) ?>
+			<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
+			<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
+			<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>
 			</ul>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeType?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>

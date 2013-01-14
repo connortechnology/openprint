@@ -1,5 +1,5 @@
 <? if ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? endif ( $$variable{uri} =~ /_paper_inventory_entries/ ) ?>
 <form id="f2" name="f2" action="_paper_inventory_entries.html">
 	<table class="List">

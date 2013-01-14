@@ -1,5 +1,4 @@
 <script type="text/javascript">
-<!--
 	var dragged_element;
 	var delta_x = 0;
 	var delta_y = 0;
@@ -56,7 +55,6 @@
 		Image.style.width = input.form.width.value + 'px';
 
 	} // end function update_resolution
--->
 </script>
 <div id="PageFlip" class="PageFlip">
 <div id="debug"></div>
@@ -93,7 +91,7 @@
 		my @pages = $$variable{'PageFlip'}->Pages();
 		$$variable{'Page'} = $pages[0];
 	) ?>
-	<!--#include virtual="_page.html"-->
+	<? echo ( include('_page.html'); ) ?>
 	<? endif ( $$variable{'PageFlip'}->Pages() ) ?>
 	</div>
 </div>

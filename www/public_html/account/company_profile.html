@@ -4,13 +4,13 @@
 <a name="top"></a>
 Your company profile can be modified using the fields below. Use the <b>Save</b> button when finished.<br/>
 <br/>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form name="f1" method="post" onsubmit="return fmCheck();" action="/account/company_profile.html">
 	<div class="CompanyProfile">
 		<fieldset>
 			<p class="buttons">
-				<? echo ( ssi::writeButton($log, $dbh, 'SaveTop','save.gif',"f1.btnFunction.value='Save';fmChange=3;f1.submit();", '', 'Save' ); ) ?>
-				<? echo ( ssi::writeButton($log, $dbh, 'ResetTop','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
+				<? echo ( ssi::button( 'SaveTop', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", href=>'', text=>'Save' } ); ) ?>
+				<? echo ( ssi::button( 'ResetTop', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ); ) ?>
 			</p>
 		</fieldset>
 		<div class="CompanyInformation">
@@ -81,7 +81,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				</ul>
 			</fieldset>
 		</div>
-		<!--#include virtual="_business_information.html"-->
+		<? echo ( include('_business_information.html'); ) ?>
 		<div class="CreditInformation">
 			<fieldset><legend>Credit Information</legend>
 				<ul>
@@ -108,8 +108,8 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				</ul>
 			</fieldset>
 		</div>
-		<!--#include virtual="/account/_bank_information.html"-->
-		<!--#include virtual="/account/_trade_references.html"-->
+		<? echo ( include('/account/_bank_information.html'); ) ?>
+		<? echo ( include('/account/_trade_references.html'); ) ?>
 		<div class="Preferences">
 			<fieldset><legend>Preferences</legend>
 			<ul>
@@ -134,8 +134,8 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</div>
 		<fieldset>
 			<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveBottom','save.gif',"f1.btnFunction.value='Save';fmChange=3;f1.submit();", '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'ResetBottom','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
+			<? echo ( ssi::button( 'SaveBottom', { onclick=>"f1.btnFunction.value='Save';fmChange=3;f1.submit();", href=>'', text=>'Save' } ); ) ?>
+			<? echo ( ssi::button( 'ResetBottom', { onclick=>"f1.reset();", href=>'', text=>'Reset' } ); ) ?>
 			</p>
 		</fieldset>
 	</div><!--CompanyProfile-->

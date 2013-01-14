@@ -8,11 +8,11 @@
         } // end if
     } // end function confirm_delete()
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
-<!--#include virtual="/includes/order_header.html" -->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
+<? echo ( include('/includes/order_header.html'); ) ?>
 <br class="spacer"/>
-<!--#include virtual="/includes/order_project_list.html" -->
-<!--#include virtual="_product_list.html" -->
+<? echo ( include('/includes/order_project_list.html'); ) ?>
+<? echo ( include('_product_list.html'); ) ?>
 <span style="float: left;">
 	<? if ( $$variable{'AdministratorName'} ) ?>
 	<b>Administrator Name</b> <?AdministratorName?><br>
@@ -22,14 +22,14 @@
 	<? endif ( $$variable{'AdministratorComments'} ) ?>
 </span>
 <span style="float:right;">
-	<!--#include virtual="/main/order/_totals.html" -->
+	<? echo ( include('/main/order/_totals.html'); ) ?>
 </span>
 <br class="spacer"/>
 <span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	<form name="f1" action="view.html?order_id=<?OrderID?>" method="post">
 	<br class="spacer"/>
-	<!--#include virtual="/includes/_order_payments.html"-->
+	<? echo ( include('/includes/_order_payments.html'); ) ?>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 <hr/>
-<!--#include virtual="/main/order/_view_log.html"-->
+<? echo ( include('/main/order/_view_log.html'); ) ?>

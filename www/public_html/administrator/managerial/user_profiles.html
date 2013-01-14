@@ -14,7 +14,7 @@ function keepCompany( form ) {
 	form.company_id.selectedIndex = Company;
 }
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select a company or user to obtain login information.<br/>
 <br/>
 <div class="UserProfile">
@@ -312,7 +312,7 @@ Please select a company or user to obtain login information.<br/>
 	</div>
 </div>
 		<? endif ( $$variable{'DoEmail'} ) ?>
-		<!--#include virtual="/account/_user_profile_edit.html"-->
+		<? echo ( include('/account/_user_profile_edit.html'); ) ?>
 		<div class="LoginCredentials">
 			<fieldset><legend>Login Information</legend> 
 				<ul>
@@ -363,7 +363,7 @@ Please select a company or user to obtain login information.<br/>
 		<? if ( openprint::ServiceType->find_one() ) ?>
 		<div class="ServiceDefaults">
 		<fieldset><legend>Service Defaults</legend>
-			<!--#include virtual="_service_defaults.html"-->
+			<? echo ( include('_service_defaults.html'); ) ?>
 		</fieldset>
 		</div>
 		<? endif ( openprint::ServiceType->find_one() ) ?>

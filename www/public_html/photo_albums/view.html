@@ -35,7 +35,7 @@
 					</ul>
 				</div>
 			</fieldset>
-			<!--#include virtual="_album_upload.html"-->
+			<? echo ( include('_album_upload.html'); ) ?>
 		</form>
 <? else ( $$variable{'Album'}->can_view() ) ?>
 	You don't have rights to view this album.

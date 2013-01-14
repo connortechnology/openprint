@@ -28,7 +28,7 @@
 		new Ajax.Updater('EventsList','_search.html', {parameters:Form.serialize(form)});
 	} // end function
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Event"><div class="Search">
 	<form id="f1" name="f1" method="post" action="/event/search.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -82,7 +82,7 @@
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="EventsList"><!--#include virtual="_search.html"--></div>
+		<div id="EventsList"><? echo ( include('_search.html'); ) ?></div>
 	</form>
 	</div>
 </div>

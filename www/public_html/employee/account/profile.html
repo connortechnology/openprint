@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript" src="<? hash_link(/javascripts/passwordmeter.js) ?>"></script>
 <div class="UserProfile">
 	<form id="f1" name="f1" method="post" action="profile.html">
@@ -150,7 +150,7 @@
 					<input type="email" id="email" name="email" value="<?  hecho ( $$variable{'User'}->email() ) ?>" />
 				</li>
 				<li>
-					<!--#include virtual="/includes/password_requirements.html"-->
+					<? echo ( include('/includes/password_requirements.html'); ) ?>
 				</li>
 				<li class="required"> 
 					<label for="password">Password</label>
@@ -168,7 +168,7 @@
 			</ul>
 		</fieldset>
 		<? if ($variable{DoEmail}) ?> 
-		<!--#include virtual="/account/_email_settings.html"-->
+		<? echo ( include('/account/_email_settings.html'); ) ?>
 		<? endif ($variable{DoEmail}) ?> 
 <? if ( $config{'RADIUS Support'} and ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['IT'], $session{'user_id'} ) ) ) ?>
     <fieldset><legend>RADIUS Auth</legend>

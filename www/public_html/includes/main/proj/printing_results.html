@@ -6,7 +6,7 @@
 	} # end if
 ) ?>
 <ul>
-<!--#include virtual="/includes/main/proj/_quantities.html"-->
+<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
 <? if ( $$variable{Project}->Type()->name() ne 'Envelopes' ) ?>
 <li class="stockformat">
 	<label>Stock Format</label>
@@ -497,7 +497,7 @@
 </li>
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 
-<!--#include virtual="/includes/main/proj/_unit_price.html"-->
-<!--#include virtual="/includes/main/proj/_service_price.html"-->
-<!--#include virtual="/includes/main/proj/_breakdown.html"-->
+<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
+<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
+<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>
 </ul>

@@ -5,13 +5,13 @@
     <h2><?ServiceTypeName?></h2>
 </div>
 <div class="Service"><div class="<?ServiceTypeID?>">
-<!--#include virtual="/includes/main/proj/required_fields.html"-->
+<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 <form name="f1" id="f1" method="post" action="/main/project/view.html">
 	<fieldset><legend><?ServiceTypeName?></legend>
-		<!--#include virtual="/includes/main/proj/prepress_hours.html"-->
-		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+		<? echo ( include('/includes/main/proj/prepress_hours.html'); ) ?>
+		<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
 	</fieldset>
-	<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-	<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+	<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+	<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 </form>
 </div></div>

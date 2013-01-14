@@ -1,6 +1,6 @@
 <div class="Feeds">
 	<div class="Edit">
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="edit.html<? echo ( $param{'feed_id'} ? '?feed_id='.$param{'feed_id'} : '' ) ?>">
 		
 	<p class="buttons"> 

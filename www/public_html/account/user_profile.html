@@ -3,7 +3,7 @@
 <h2>User Profile</h2>
 </div>
 <script type="text/javascript" src="/javascripts/passwordmeter.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $session{user_id} ) ?>
 	<form id="f1" name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="Account"><div class="UserProfile">
@@ -50,7 +50,7 @@
 				No profile picture set.
 				<? endif ( $$variable{User}->Asset()->id() ) ?>
 				</div>
-				<!--#include virtual="_statistics.html"-->
+				<? echo ( include('_statistics.html'); ) ?>
 			</div>
 			<div id="UserInformation">
    			<fieldset><legend>User Information</legend>
@@ -142,7 +142,7 @@
 				</div>
    			</fieldset>
 			</div>
-			<!--#include virtual="_user_profile_edit.html"-->
+			<? echo ( include('_user_profile_edit.html'); ) ?>
 			<div id="LoginInformation">
    			<fieldset><legend>Login Information</legend>
 				<div class="content">
@@ -174,7 +174,7 @@
 			</div>
 			<? if ($variable{DoEmail}) ?> 
 			<br class="spacer"/>
-				<!--#include virtual="_email_settings.html"-->
+				<? echo ( include('_email_settings.html'); ) ?>
 			<? endif ($variable{DoEmail}) ?> 
 <? else ( $$variable{User}->can_edit() ) ?>
 You cannot edit this user.

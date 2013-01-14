@@ -180,7 +180,7 @@ function set_description(index) {
 -->
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Claim'}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post">
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<p class="buttons" id="buttons">
 <? echo ( 
 	my $html = '';
@@ -196,7 +196,7 @@ function set_description(index) {
 		<div class="PageTitle">
 		<h1>CLAIM (<? echo ( $$variable{'Claim'}->id() ) ?>)</h1>
 		</div>
-		<!--#include virtual="_vendor.html"-->
+		<? echo ( include('_vendor.html'); ) ?>
 		<div class="rightColumn">
 			<fieldset>
 				<p><label>Filed to vendor:
@@ -225,14 +225,14 @@ function set_description(index) {
 					<span id="cancelled_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
 				</p>
 				<p><label>Docket</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
-				<p><label>Editors</label><span id="editors"><!--#include virtual="_editors.html"--></span></p>
-				<p><label>Also Notify</label><span id="also_notify"><!--#include virtual="_also_notify.html"--></span></p>
+				<p><label>Editors</label><span id="editors"><? echo ( include('_editors.html'); ) ?></span></p>
+				<p><label>Also Notify</label><span id="also_notify"><? echo ( include('_also_notify.html'); ) ?></span></p>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
 		<? if ( $$variable{'Claim'}->id() ) ?>
 		<div id="Contents">
-		<!--#include virtual="_contents.html"-->
+		<? echo ( include('_contents.html'); ) ?>
 		</div>
 <table class="List">
     <tr class="subtotal">

@@ -1,8 +1,8 @@
 <? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 Your quote is empty. 
 <? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
-<!--#include virtual="/includes/quote_header.html" -->
-<!--#include virtual="/includes/quote_information.html" -->
+<? echo ( include('/includes/quote_header.html'); ) ?>
+<? echo ( include('/includes/quote_information.html'); ) ?>
 <br class="spacer"/>
 <form method="post" action="view.html?quote_id=<?quote_id?>" name="f1">
 	<table class="List">

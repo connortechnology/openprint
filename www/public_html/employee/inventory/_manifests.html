@@ -157,7 +157,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<span style="float: right;">
 		<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "ManifestResults.btnFunction.value='Delete';ManifestResults.submit();", '', 'Delete Checked' ),
+					ssi::button( 'Delete', { onclick=>"ManifestResults.btnFunction.value='Delete';ManifestResults.submit();", href=>'', text=>'Delete Checked' } ),
 			); ) ?>
 	</span>
 </form>
