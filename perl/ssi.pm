@@ -841,10 +841,15 @@ sub hash_link {
         $hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
     } # end if
 
-    if ( !($script = $hash_cache{$config{SkinPath}}{$path})
-            || ! -f $script->{cache_file}
-            || ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+    if ( 
+		( !($script = $hash_cache{$config{SkinPath}}{$path}) )
+            || 
+		( ! -f $script->{cache_file} )
+            || 
+		( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
        ) {
+
+		$timestamp = (stat $src)[9] ) if ! $timestamp;
 
         my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
         $ext =~ s/^\.//;
@@ -858,11 +863,11 @@ sub hash_link {
 
         my $hash = md5_hex($blob);
         $hash_cache{$config{SkinPath}}{$path} = $script = {
-			src	=>	$src,
-            name => "$base-$hash.$ext",
-            path    => $path,
+			src		=>	$src,
+            name	=>	"$base-$hash.$ext",
+            path	=>	$path,
             cache_file => "$config{cache_dir}/$base-$hash.$ext",
-            hash => $hash,
+            hash	=> $hash,
             timestamp => $timestamp,
         };
         if (! -f $script->{cache_file}) {
