@@ -99,10 +99,6 @@ sub do_new_substitution {
 #$log->error("tranlsating  of $1: $result");
 		$result .= variable_substitution( $text, $variable ) if $text;
 		return $result;
-    } elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
-        my $result = hash_link($1);
-        $result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
-        return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -132,7 +128,7 @@ sub include {
 		$file = $path . $file;
 	} # end if
 
-	my $content;
+	my $content = '';
 	if ( -f $config{SkinPath}.$file ) {
 		$content = misc::load_file( $log, $config{SkinPath}.$file );
 	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
@@ -144,27 +140,6 @@ sub include {
 	return variable_substitution( \$content, $variable );
 } # end sub include
 
-sub do_include {
-	my ( $text, $variable ) = @_;
-	if ( $$text =~ /(.*?)<!--\s*#include\s+virtual="(.*?)"\s*-->(.*)/ms ) {
-		my ( $before, $file, $after ) = ( $1, $2, $3 );
-		if ( ! ( $file =~ /^\// ) ) {
-# Use a path relative to the current page
-			my $path = $$variable{'uri'};
-			$path =~ s/(.*\/).*/$1/;
-			$file = $path . $file;
-		} # end if
-		my $content;
-		if ( -f $config{'SkinPath'}.$file ) {
-			$content = misc::load_file( $log, $config{'SkinPath'}.$file );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.$file );
-		} # endif
-		return $before . variable_substitution( \$content, $variable ).variable_substitution( \$after, $variable );
-	} # end if
-	return $$text;
-} # end sub do_include
-
 #i'm adding more and more recursion in an attempt to make this faster.
 # this big bottleneck is all the regexp searches through the text.
 # the text is huge, so the more we break it down, the faster these get.
@@ -174,9 +149,9 @@ sub variable_substitution {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
 		$after =~ s/^\s+$//m;
 		$before .= do_new_substitution( \$middle, \$after, $variable );
-		return do_include( \$before, $variable );
+		return $before;
 	} # end if
-	return do_include( $text, $variable );
+	return $$text;
 } # end sub variable_substitution
 
 my %html_replacements = (
@@ -946,7 +921,6 @@ sub hash_link {
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
-		$log->debug("reading config");
 		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
 		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
 	} # end if
