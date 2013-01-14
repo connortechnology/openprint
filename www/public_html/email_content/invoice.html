@@ -144,7 +144,7 @@
         </table>
     </fieldset>
 </div>
-<!--#include virtual="/invoice/_totals.html"-->
+<? echo ( include('/invoice/_totals.html'); ) ?>
 <? if ( $$variable{'Invoice'}->Payments() ) ?>
 <br class="spacer"/>
 <div class="Payments">

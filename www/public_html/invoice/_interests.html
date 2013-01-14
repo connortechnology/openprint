@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? eval ( @{$$variable{'Interests'}} = $$variable{'Invoice'}->Interests(); ) ?>
 <? if ( @{$$variable{'Interests'}} ) ?>
 <fieldset><legend>Interest</legend>

@@ -3,7 +3,6 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_events = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -26,9 +25,8 @@
 		$('EventsList').innerHTML = 'Please wait...';
 		new Ajax.Updater('EventsList','_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Events"><div class="History">
 	<form id="f1" name="f1" method="post" action="/event/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -72,7 +70,7 @@
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="EventsList"><!--#include virtual="_history.html"--></div>
+		<div id="EventsList"><? echo ( include('_history.html'); ) ?></div>
 	</form>
 	</div>
 </div>

@@ -23,7 +23,7 @@
 			<input type="radio" id="BackingNone" name="Backing" value="None" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Backing'} eq 'None' ); ) ?> />
 			<label class="radio" for="BackingNone">None</label>
 		</li>
-		<!--#include virtual="/includes/main/proj/padding.html"-->
+		<? echo ( include('/includes/main/proj/padding.html'); ) ?>
 <? eval ( 
 	@{$$variable{'GlueTypes'}} = openprint::Material->find('category'=>'Padding Glue');
 ) ?>
@@ -43,11 +43,11 @@
 		</fieldset>
 		<fieldset><legend>Results</legend>
 			<ul>
-		<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
+		<? echo ( include('/includes/main/proj/quantities_prices.html'); ) ?>
 			</ul>
 		</fieldset>
 
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>

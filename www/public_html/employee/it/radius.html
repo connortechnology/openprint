@@ -7,7 +7,7 @@ function load_records( form, options ) {
 	new Ajax.Updater( 'Results','/employee/it/_radius.html', { method: 'get', parameters: p } );
 } // end function load
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select a host to view/edit.<br>
 <form id="f1" name="f1" method="post" action="radius.html">
 	<input type="hidden" name="action"/>

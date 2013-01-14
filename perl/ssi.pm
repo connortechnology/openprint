@@ -120,30 +120,25 @@ sub do_new_substitution {
 sub include {
 	my ( $file, $variable ) = @_;
 	$variable = \%variable if ! $variable;
-	my $blah = misc::load_file( $log, $file );
-	return variable_substitution( \$blah, $variable );
-}
 
-sub do_include {
-	my ( $text, $variable ) = @_;
-	if ( $$text =~ /(.*?)<!--\s*#include\s+virtual="(.*?)"\s*-->(.*)/ms ) {
-		my ( $before, $file, $after ) = ( $1, $2, $3 );
-		if ( ! ( $file =~ /^\// ) ) {
-# Use a path relative to the current page
-			my $path = $$variable{'uri'};
-			$path =~ s/(.*\/).*/$1/;
-			$file = $path . $file;
-		} # end if
-		my $content;
-		if ( -f $config{'SkinPath'}.$file ) {
-			$content = misc::load_file( $log, $config{'SkinPath'}.$file );
-		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.$file );
-		} # endif
-		return $before . variable_substitution( \$content, $variable ).variable_substitution( \$after, $variable );
+	if ( ! ( $file =~ /^\// ) ) {
+		# Use a path relative to the current page
+		my $path = $$variable{uri};
+		$path =~ s/(.*\/).*/$1/;
+		$file = $path . $file;
 	} # end if
-	return $$text;
-} # end sub do_include
+
+	my $content = '';
+	if ( -f $config{SkinPath}.$file ) {
+		$content = misc::load_file( $log, $config{SkinPath}.$file );
+	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} else {
+		$content = misc::load_file( $log, $file );
+	} # end if
+
+	return variable_substitution( \$content, $variable );
+} # end sub include
 
 #i'm adding more and more recursion in an attempt to make this faster.
 # this big bottleneck is all the regexp searches through the text.
@@ -154,9 +149,9 @@ sub variable_substitution {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
 		$after =~ s/^\s+$//m;
 		$before .= do_new_substitution( \$middle, \$after, $variable );
-		return do_include( \$before, $variable );
+		return $before;
 	} # end if
-	return do_include( $text, $variable );
+	return $$text;
 } # end sub variable_substitution
 
 my %html_replacements = (
@@ -926,13 +921,12 @@ sub hash_link {
 
 	my $script;
 	if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
-		$log->debug("reading config");
 		$hash_cache{$config{SkinPath}} = JSON::from_json( File::Slurp::read_file($config{cache_dir}.'/config.json') );
 		$hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
 	} # end if
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
-			|| ! -f $script->{cache_file}
+			|| ! -f $$script{cache_file}
 			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
 	   ) {
 
@@ -963,7 +957,7 @@ sub hash_link {
 			hash		=> $hash,
 			timestamp	=> $timestamp,
 		};
-		if (! -f $script->{cache_file}) {
+		if ( ! -f $$script{cache_file} ) {
 			mkdir $config{cache_dir};
 			if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
 				$log->error( "couldn't cache $script->{cache_file}" );
@@ -971,7 +965,7 @@ sub hash_link {
 			} # end if
 			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
-		}
+		} # end if
 	#} else {
 		#my @stat = stat $script->{src};
 

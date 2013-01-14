@@ -49,16 +49,16 @@
 		return 1;
 	} // end function
 </script>
-<!--#include virtual="/main/project/prin/_templates.html"-->
+<? echo ( include('/main/project/prin/_templates.html'); ) ?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ProjectTypeName?></legend>
-		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html" -->
+		<? echo ( include('/includes/main/proj/templates/generic.html'); ) ?>
+		<? echo ( include('/includes/main/proj/dimensions.html'); ) ?>
 <div id="OtherSpecifications">
 <fieldset><legend>Other Specifications</legend>
-		<!--#include virtual="/includes/main/proj/multipage_printing_type.html"-->
-		<!--#include virtual="/includes/main/proj/screen_type.html"-->
+		<? echo ( include('/includes/main/proj/multipage_printing_type.html'); ) ?>
+		<? echo ( include('/includes/main/proj/screen_type.html'); ) ?>
 </fieldset>
 </div>
 			<br class="spacer"/>
@@ -119,7 +119,7 @@
 			) ?>
 			</div>
 		</fieldset>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Save Service"/>

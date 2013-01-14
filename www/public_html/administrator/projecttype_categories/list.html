@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <table class="List">
 	<tr>
 		<th class="name">Name</th>
@@ -23,4 +23,4 @@
 ) ?>
 </table>
 <? eval ( delete $param{'category_id'}; ) ?>
-<!--#include virtual="edit.html"-->
+<? echo ( include('edit.html'); ) ?>

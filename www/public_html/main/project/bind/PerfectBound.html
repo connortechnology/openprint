@@ -89,12 +89,12 @@
 				return $html;
 			) ?>
 		</li>
-        <!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+        <? echo ( include('/includes/main/proj/quantities_equipment_prices.html'); ) ?>
 		</ul>
 		</fieldset>
 		<hr/>
 
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="btnFunction" value="Save Service"/>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>">
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>">

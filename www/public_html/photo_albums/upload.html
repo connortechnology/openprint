@@ -12,7 +12,7 @@
 			</p>
 			<fieldset><legend>Add Photos</legend>
 			<div id="assets" class="droparea qq-upload-drop-area">
-				<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+				<div id="Photos"><? echo ( include('/photo_albums/_album_photos.html'); ) ?></div>
 				<div id="uploadinstructions">
 					To upload a photo,
 					<span id="dragndropuploadmessage" style="display:none;">
@@ -34,7 +34,7 @@
 							<li><label>Name</label><input type="text" name="name" id="name" value="<? echo ( $$variable{'Album'}->name() ) ?>" /></li>
 							<li><label>Description</label><textarea name="description" id="description"><? echo ( $$variable{'Album'}->description() ) ?></textarea></li>
 							<? eval ( $$variable{Privacy} = $variable{Album}->Privacy(); ) ?>
-<!--#include virtual="/includes/_privacy_widget.html"-->
+<? echo ( include('/includes/_privacy_widget.html'); ) ?>
 						</ul>
 					</div>
 				</fieldset>

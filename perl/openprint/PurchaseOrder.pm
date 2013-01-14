@@ -5,8 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;

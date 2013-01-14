@@ -35,7 +35,7 @@
 
 </script>
 <? endif ( $$variable{'Paycheque'}->id() ) ?>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form name="f1" id="f1" action="edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id() ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<fieldset><legend>Editing Paycheque <? echo ( $$variable{'Paycheque'}->id() ) ?></legend>
@@ -88,11 +88,11 @@
 	</fieldset>
 <? if ( $$variable{'Paycheque'}->id() ) ?>
 	<div class="leftColumn" id="Paid">
-		<!--#include virtual="_paid.html"-->
+		<? echo ( include('_paid.html'); ) ?>
 	</fieldset>
 	</div>
 	<div class="rightColumn" id="Unpaid">
-		<!--#include virtual="_unpaid.html"-->
+		<? echo ( include('_unpaid.html'); ) ?>
 	</div>
 <? endif ( $$variable{'Paycheque'}->id() ) ?>
 	<br class="spacer"/>

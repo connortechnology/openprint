@@ -6,7 +6,7 @@
 	<fieldset>
 		<legend>Uploaded Files</legend>
 		<hr class="legendUnderline" />
-		<div id="FileList"> <!--#include virtual="_files.html"--> </div>
+		<div id="FileList"> <? echo ( include('_files.html'); ) ?> </div>
 	</fieldset>
 <? endif ( $session{'user_id'} ) ?>
 	<? eval ( @$variable{'serial'} = sql::execute( $log, $dbh, q{SELECT nextval(uploads_id_seq)} ); ) ?>

@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( @{$$variable{'Orders'}} ) ?>
 <? if ( $session{'/employee/reports/order_performance.html?press_id'} ) ?>
 The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $session{'/employee/reports/order_performance.html?press_id'} )->get('strid','name') ); ) ?><br/><br/>

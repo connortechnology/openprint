@@ -1,7 +1,7 @@
 <form id="f1" name="f1" method="post" action="/main/order/information.html">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $param{'projecttype_id'} ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
@@ -12,7 +12,7 @@
 				<? eval ( $$variable{'TemplateType'} = $$variable{'TemplateType'} ? $$variable{'TemplateType'} : 'SaddleStitching' ) ?>
 				<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
 				<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
-				<!--#include virtual="_project_name.html"-->
+				<? echo ( include('_project_name.html'); ) ?>
 				<div class="ProjectSpecifications">
 					<h1>Project Specifications</h1>
 					<div class="Size">
@@ -35,7 +35,7 @@
 										<option value="Custom">Custom</option>
 									</select>
 								</li>
-								<!--#include virtual="_dimensions.html"-->
+								<? echo ( include('_dimensions.html'); ) ?>
 								<li>
 									<label>Number of pages</label>
 <? if ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
@@ -142,10 +142,10 @@
 						<fieldset><legend>Finishing</legend>
 						<div class="content">
 							<ul>
-							<!--#include virtual="_drilling.html"-->
-							<!--#include virtual="_bundling.html"-->
+							<? echo ( include('_drilling.html'); ) ?>
+							<? echo ( include('_bundling.html'); ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
-							<!--#include virtual="_shrinkwrapping.html"-->
+							<? echo ( include('_shrinkwrapping.html'); ) ?>
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
 							</ul>
 						</div>
@@ -155,20 +155,20 @@
 						<fieldset><legend>Production</legend>
 							<div class="content">
 								<ul>
-								<!--#include virtual="_design.html"-->
-								<!--#include virtual="_turnaround.html"-->
-								<!--#include virtual="_quantity.html"-->
-								<!--#include virtual="_press_type.html"-->
+								<? echo ( include('_design.html'); ) ?>
+								<? echo ( include('_turnaround.html'); ) ?>
+								<? echo ( include('_quantity.html'); ) ?>
+								<? echo ( include('_press_type.html'); ) ?>
 								</ul>
 							</div>
 						</fieldset>
 					</div>
-					<!--#include virtual="_ups.html"-->
+					<? echo ( include('_ups.html'); ) ?>
 					<div id="AlertDiv" style="display:none;"></div>
 					<br class="spacer"/>
 				</div><!--ProjectSpecifications-->
 
-				<!--#include virtual="_prices.html"-->
+				<? echo ( include('_prices.html'); ) ?>
 				</div><!--Questions-->
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
@@ -181,7 +181,7 @@ $log->debug("No content for " . $$variable{'ProjectType'}->name() );
 	} # end if
 	return '';
 ) ?>
-		<!--#include virtual="_specials.html"-->
+		<? echo ( include('_specials.html'); ) ?>
 		<? else ( $param{'projecttype_id'} ) ?>
 		Please select the type of your project.
 		<? endif ( $param{'projecttype_id'} ) ?>

@@ -142,7 +142,7 @@
         </table>
     </fieldset>
 </div>
-<!--#include virtual="_totals.html"-->
+<? echo ( include('_totals.html'); ) ?>
 <? if ( $$variable{Invoice}->owing() ) ?>
 <div class="PaymentOptions">
 <? echo (
@@ -197,5 +197,5 @@
 	</fieldset>
 </div>
 <? endif ( $$variable{'Invoice'}->Payments() ) ?>
-<!--#include virtual="_logs.html"-->
+<? echo ( include('_logs.html'); ) ?>
 </div></div>

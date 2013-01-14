@@ -7,7 +7,7 @@
 		} // end if
 	} //e nd function load_results
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="returns.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<ul>
@@ -63,5 +63,5 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<div id="Results"><!--#include virtual="_returns.html"--></div>
+	<div id="Results"><? echo ( include('_returns.html'); ) ?></div>
 </form>

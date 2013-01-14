@@ -26,8 +26,8 @@ function check_input( form, signature_index ) {
 <div style="float: left; width: 49%;"/>
 	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
 		<fieldset><legend>Production Feedback</legend>
-			<!--#include virtual="/includes/employee/feedback/employee.html"-->
-			<!--#include virtual="/includes/employee/feedback/comments.html"-->
+			<? echo ( include('/includes/employee/feedback/employee.html'); ) ?>
+			<? echo ( include('/includes/employee/feedback/comments.html'); ) ?>
 			<p>
 				<label>Proofs Ready</label>
 				<input type="radio" id="rdbCompleteY" name="rdbComplete" value="Yes" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? 'checked="checked"' : '' ) ?> onclick="$('ClientApproved').show();$('QAApproved').show();" />
@@ -87,14 +87,14 @@ function check_input( form, signature_index ) {
 			<p class="buttons">
 			<? echo (
 					my $html;
-					$html .= ssi::writeButton( $log, $dbh, 'Save','save.gif', "f1.submit();", '', 'Save' );
-					$html .= ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' );
+					$html .= ssi::button( 'Save', { onclick=>"f1.submit();", href=>'', text=>'Save' } );
+					$html .= ssi::button( 'Reset', { onclick=>"f1.reset();", href=>'', text=>'Reset' } );
 					my $body = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/sign-off.html' );
 					$body = ssi::variable_substitution( \$body, $variable );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
 					$$variable{'body'} = $body;
 					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:`.$$variable{'Project'}->Order()->email().q`?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
-					$html .= ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' );
+					$html .= ssi::button( 'UploadPDFs', { onclick=>"open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", href=>'', text=>'Upload PDFs' } );
 					return $html;
 			) ?>
 			</p>
@@ -105,6 +105,6 @@ function check_input( form, signature_index ) {
 	</form>
 </div><!-- Column -->
 <div id="Signatures" style="float: right; width: 49%;"/>
-<!--#include virtual="/employee/proj/prep/_proofs_signatures.html"-->
+<? echo ( include('/employee/proj/prep/_proofs_signatures.html'); ) ?>
 </div><!-- Column -->
 <br class="spacer"/>

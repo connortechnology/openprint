@@ -88,5 +88,5 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 </form>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>
 <? else ( $session{'user_id'} ) ?>
-<!--#include virtual="/employee/account/login.html"-->
+<? echo ( include('/employee/account/login.html'); ) ?>
 <? endif ( $session{'user_id'} ) ?>

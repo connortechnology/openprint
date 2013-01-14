@@ -1,7 +1,7 @@
 <div class="PageTitle">
 <h1>Upload Center</h1>
 </div>
-<script type="text/javascript" src="/javascripts/upload.js?version=1.0"></script>
+<script type="text/javascript" src="<?hash_link(/javascripts/upload.js)?>"></script>
 <script type="text/javascript">
 
 function displayUploadResults(body) {
@@ -51,7 +51,7 @@ function check_input( form ) {
 	<div id="uploadResults"></div>
 	<!--<iframe style="position: absolute; top: 0px; left: 0px; visibility: hidden;" id="UploadFrame" name="UploadFrame" src=""></iframe>-->
 	<div id="UploadForm">
-	<!--#include virtual="_upload_form.html"-->
+	<? echo ( include('_upload_form.html'); ) ?>
 	</div>
 	<div id="progressMeter" style="display: none;">
 		<p><b>Do not close the browser, or navigate to another site until the upload has completed, or it will be cancelled.</b></p>

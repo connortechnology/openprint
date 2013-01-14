@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 Please select an allocation to view/edit.<br>
 <form id="f1" name="f1" method="post" action="packingslips.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
@@ -43,5 +43,5 @@ Please select an allocation to view/edit.<br>
 		</p>
 	</fieldset>
 </form>
-<div id="Results"><!--#include virtual="_packingslips.html"--></div>
+<div id="Results"><? echo ( include('_packingslips.html'); ) ?></div>
 <script type="text/javascript">document.f1.Docket.focus();</script>

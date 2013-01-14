@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $$variable{Event} ) ?>
 <? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
@@ -164,15 +164,15 @@ $log->debug("My location is " . $MyLocation->to_string() );
 		<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
 	</p>
 </fieldset>
-	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><!--#include virtual="_invitation_users.html"--></div></fieldset></div>
+	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><? echo ( include('_invitation_users.html'); ) ?></div></fieldset></div>
 </div>
 	<? endif ( $variable{User}->id() ) ?>
-	<div id="Attendance"><!--#include virtual="_attendance.html"--></div>
+	<div id="Attendance"><? echo ( include('_attendance.html'); ) ?></div>
 
 <? if ( $$variable{Event}->id() ) ?>
 	<? eval ( $$variable{Object} = $$variable{Album} = $$variable{Event};) ?>
-	<!--#include virtual="/photo_albums/_album_upload.html"-->
-	<div id="Comments"><!--#include virtual="/includes/_comments.html"--></div>
+	<? echo ( include('/photo_albums/_album_upload.html'); ) ?>
+	<div id="Comments"><? echo ( include('/includes/_comments.html'); ) ?></div>
 <? endif ( $$variable{Event}->id() ) ?>
 	</fieldset>
 	</form>

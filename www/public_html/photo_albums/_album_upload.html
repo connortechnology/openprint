@@ -1,7 +1,7 @@
 <fieldset><legend>Photos</legend>
 <? if ( $$variable{'Album'}->can_edit() ) ?>
 	<div id="assets" class="droparea qq-upload-drop-area">
-		<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+		<div id="Photos"><? echo ( include('/photo_albums/_album_photos.html'); ) ?></div>
 		<div id="uploadinstructions">
 			To upload files to this album,
 			<span id="dragndropuploadmessage" style="display:none;">
@@ -15,11 +15,11 @@
 		<ul id="asset_search">
 			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '/article/_asset_search_results.html', { parameters: { asset_name: this.value } } ); return false;};return true;"/></li>
 		</ul>
-		<ul id="asset_search_results"><!--#include virtual="/article/_asset_search_results.html"--></ul>
+		<ul id="asset_search_results"><? echo ( include('/article/_asset_search_results.html'); ) ?></ul>
 	</fieldset>
 	<div class="disclaimer"><? echo ( sets::isin( $session{'user_type'}, ['E','A'] ) ? 'Disclaimer hidden.' : $config{'PhotoUploadDisclaimer'} ) ?></div>
 <? else ( $$variable{'Album'}->can_edit() ) ?>
-	<div id="Photos"><!--#include virtual="/photo_albums/_album_photos.html"--></div>
+	<div id="Photos"><? echo ( include('/photo_albums/_album_photos.html'); ) ?></div>
 <? endif ( $$variable{'Album'}->can_edit() ) ?>
 </fieldset>
 <? if ( $$variable{'Album'}->can_edit() ) ?>

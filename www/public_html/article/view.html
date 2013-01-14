@@ -37,7 +37,7 @@ join('',
 	<div class="body"><? echo ( $$variable{'Article'}->body() ) ?></div>
 	<? if ( $session{'user_id'} ) ?>
 		<div id="Opinions"><? echo ( $$variable{'Article'}->opinions() ) ?></div>
-		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><!--#include virtual="_comments.html"--></div>
+		<div id="comments-<? echo ( $$variable{'Article'}->id() ) ?>" class="Comments"><? echo ( include('_comments.html'); ) ?></div>
 	<? endif ( $session{'user_id'} ) ?>
 <? else ( $$variable{'Article'}->can_view() ) ?>
 	You cannot view this article.

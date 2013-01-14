@@ -5,11 +5,11 @@ There is no current project.
 <span style="float: right;">
 <? echo ( ssi::writeButton( $log, $dbh, 'Docket', 'docket.gif', '', "docket.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Docket' ); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' ); ) ?>
+<? echo ( ssi::button( 'Print', { onclick=>'window.print();', href=>'', text=>'Print' } ); ) ?>
 </span>
 <a href="/administrator/reports/reports_projects.html">Back to Projects</a><br/>
 <br class="spacer"/>
-	<!--#include virtual="/includes/project_header.html" -->
+	<? echo ( include('/includes/project_header.html'); ) ?>
 	<table class="List">
 		<tr> 
 			<th align="left">Service</th>
@@ -55,6 +55,6 @@ There is no current project.
 	<span class="Currency">All prices in <?CurrencyName?>.</span>
 <br>
 <br class="spacer"/>
-<!--#include virtual="/main/project/_view_log.html"-->
+<? echo ( include('/main/project/_view_log.html'); ) ?>
 <br/>
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>

@@ -124,7 +124,7 @@ $company_id = $session{company_id} if (!$company_id);
 						</li>
 						
 						<? eval ( $$variable{'Privacy'} = $$variable{Event}->Privacy(); ) ?>
-						<!--#include virtual="/includes/_privacy_widget.html"-->
+						<? echo ( include('/includes/_privacy_widget.html'); ) ?>
 					</ul>
 				</div>
 			</fieldset>

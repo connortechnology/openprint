@@ -1,7 +1,7 @@
 <script type="text/javascript" src="<? echo ( hash_link('/javascripts/service.js') ) ?>"></script>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<? echo ( include('/includes/main/proj/required_fields.html'); ) ?>
 		<fieldset><legend>Cutting Services</legend>
 			<ul>
 <? eval (
@@ -240,15 +240,15 @@
 <? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 <fieldset>
 	<ul>
-	<!--#include virtual="/includes/main/proj/_markup.html"-->
-	<!--#include virtual="/includes/main/proj/_unit_price.html"-->
-	<!--#include virtual="/includes/main/proj/_mprice.html"-->
-	<!--#include virtual="/includes/main/proj/_service_price.html"-->
-	<!--#include virtual="/includes/main/proj/_breakdown.html"-->
+	<? echo ( include('/includes/main/proj/_markup.html'); ) ?>
+	<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
+	<? echo ( include('/includes/main/proj/_mprice.html'); ) ?>
+	<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
+	<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>
 	</ul>
 </fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_all.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
 	</form>
 </div><!--Service-->

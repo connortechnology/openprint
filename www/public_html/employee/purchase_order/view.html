@@ -2,7 +2,7 @@
 <form id="f2" name="f2" action="history.html" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" />
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -202,7 +202,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 </table>
 <form id="f1" name="f1" action="view.html?po_id=<? echo ( $$variable{PurchaseOrder}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
-		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"--></div>
+		<div id="Assets" class="unprintable"><? echo ( include('_assets.html'); ) ?></div>
 </form>
 		<div class="leftColumn">
 			<ol>

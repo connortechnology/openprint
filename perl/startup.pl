@@ -11,7 +11,6 @@ BEGIN {
 	use utf8;
 	#use threads;
 	#use threads::shared;
-	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use Apache2::Connection ();
