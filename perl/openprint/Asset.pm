@@ -534,16 +534,19 @@ sub generate_video {
 		my $src  = $_[0]->on_disk_path();
 		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
 		if ( $type eq 'mp4' ) {
-			my $output = `avconv -i $src -vcodec libx264 -b 1500k -vpre slow -vpre baseline -g 30 /tmp/$base.mp4`;
-			$openprint::log->debug("avconv -i $src -vcodec libx264 -b 1500k -vpre slow -g 30 $dest: $output");
-			if ( ! -e "/tmp/$base.mp4" ) {
+			my $output = `avconv -i $src -vcodec libx264 -b 1500k -pre:v slow -g 30 -f mp4 $dest.part`;
+			$openprint::log->debug("avconv -i $src -vcodec libx264 -b 1500k -vpre slow -g 30 -f mp4 $dest: $output");
+			if ( ! -e "$dest.part" ) {
 				$openprint::log->debug("avconv didn't do it's thing.");
 			} # end if
-			`qt-faststart /tmp/$base.mp4 $dest`;
+			`qt-faststart $dest.part $dest`;
+			unlink "$dest.part";
 		} elsif ( $type eq 'ogg' ) {
-			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 $dest`;
+			`avconv -i $src -vcodec libtheora -b 1500k -acodec libvorbis -ab 160000 -g 30 -f ogg $dest.part`;
+			`mv $dest.part $dest`;
 		} elsif ( $type eq 'webm' ) {
-		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest`;
+		`avconv -i $src -vcodec libvpx -b 1500k -acodec libvorbis -ab 160000 -f webm $dest.part`;
+			`mv $dest.part $dest`;
 		} else {
 			$openprint::log->error("Unknown type in video_url $type");
 		} # end if type
