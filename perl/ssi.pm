@@ -849,7 +849,7 @@ sub hash_link {
 		( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
        ) {
 
-		$timestamp = (stat $src)[9] ) if ! $timestamp;
+		$timestamp = (stat $src)[9] if ! $timestamp;
 
         my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
         $ext =~ s/^\.//;
