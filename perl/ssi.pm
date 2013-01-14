@@ -932,7 +932,7 @@ sub hash_link {
 	} # end if
 
 	if ( !($script = $hash_cache{$config{SkinPath}}{$path})
-			|| ! -f $script->{cache_file}
+			|| ! -f $$script{cache_file}
 			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
 	   ) {
 
@@ -963,7 +963,7 @@ sub hash_link {
 			hash		=> $hash,
 			timestamp	=> $timestamp,
 		};
-		if (! -f $script->{cache_file}) {
+		if ( ! -f $$script{cache_file} ) {
 			mkdir $config{cache_dir};
 			if ( ! File::Slurp::write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
 				$log->error( "couldn't cache $script->{cache_file}" );
@@ -971,7 +971,7 @@ sub hash_link {
 			} # end if
 			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
 			File::Slurp::write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, JSON::to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
-		}
+		} # end if
 	#} else {
 		#my @stat = stat $script->{src};
 
