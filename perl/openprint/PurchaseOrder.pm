@@ -271,31 +271,30 @@ $openprint::log->debug($receipt);
 
 sub subtotal {
 	if ( @_ > 1 ) {
-		$_[0]{'subtotal'} = $_[1];
+		$_[0]{subtotal} = $_[1];
 	} # end if
-	if ( ! defined $_[0]{'subtotal'} ) {
-		$_[0]{'subtotal'} = 0;
+	if ( ! defined $_[0]{subtotal} ) {
+		$_[0]{subtotal} = 0;
 		foreach my $C ( $_[0]->Contents() ) {
-			$_[0]{'subtotal'} += $C->total();
+			$_[0]{subtotal} += $C->total();
 		} # end foreach
-		$_[0]{'subtotal'} = sprintf( '%.2f', $_[0]{'subtotal'} );
+		$_[0]{subtotal} = Math::Round::nearest( 0.01, $_[0]{subtotal} );
 	} # end if
-	return $_[0]{'subtotal'};
+	return $_[0]{subtotal};
 } # end sub subtotal
 
 sub total {
-	my ( $self ) = @_;
 	if ( @_ == 2 ) {
-		$$self{'total'} = $_[1];
+		$_[0]{total} = $_[1];
 	} # end if
-	if ( ! $$self{'total'} ) {
-		$$self{'total'} = $self->subtotal();
-		foreach my $Tax ( $self->Taxes() ) {
-			$$self{'total'} += $Tax->amount();
+	if ( ! $_[0]{total} ) {
+		$_[0]{total} = $_[0]->subtotal();
+		foreach my $Tax ( $_[0]->Taxes() ) {
+			$_[0]{total} += $Tax->amount();
 		} # end foreach Tax
-		$$self{'total'} = sprintf('%.2f', $$self{'total'} );
+		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
 	} # end if
-	return $$self{'total'};
+	return $_[0]{total};
 } # end sub total
 
 sub Company {
@@ -465,6 +464,7 @@ sub can_edit {
 	} # end if
 	return 0;
 } # end sub can_edit
+
 sub can_view {
 	return 1 if ! $_[0]{'id'};
 	if ( 
@@ -478,6 +478,27 @@ sub can_view {
 	} # end if
 	return 0;
 } # end sub can_view
+
+sub can_authorize {
+	my $User = new openprint::User( $openprint::session{user_id} );
+
+	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
+	my %Totals;
+	my %Types;
+	foreach my $C ( $_[0]->Contents() ) {
+		$Totals{$C->type_id()} += $C->price();
+		$Types{$C->type_id()} = $C->Type();
+	} # end foreach C
+		
+	my $authorized = 1;
+	foreach my $T ( values %Types ) {
+		$authorized = 0 if $Totals{$$T{id}} > $User->po_limit( $$T{id} );
+	} # end foreach Content 
+	if ( $authorized and $User->purchasing_total_limit() ) {
+		# Need to check all unauthorized POs FIXME later
+	} # end if
+	return $authorized;
+} # end sub can_authorize
 
 1;
 __END__
