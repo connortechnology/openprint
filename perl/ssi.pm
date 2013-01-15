@@ -930,11 +930,7 @@ sub hash_link {
 			|| ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
 	   ) {
 
-		#my @stat = stat $src;
-		#my $ctime = $stat[10];
-		#my $mtime = $stat[9];
-		#my $atime = $stat[8];
-#$log->debug("HASH UNCACHED $path ($$script{cache_file}) ($timestamp) ($$script{timestamp}) @stat");
+		$timestamp = (stat $src)[9] if ! $timestamp;
 
 		my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
 		$ext =~ s/^\.//;
@@ -978,10 +974,10 @@ sub hash_link {
 
 sub format_date {
 	return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
-}
+} # end sub format_date
 sub format_datetime {
 	return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
-}
+} # end sub format_datetime
 
 1;
 __END__

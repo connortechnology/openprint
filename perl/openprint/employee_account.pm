@@ -74,7 +74,6 @@ sub profile {
 			my ( $user, $domain ) = $User->email() =~ /^([^\@]+)\@(.+)$/;
 			if ( sets::isin( $domain, \@domains ) ) {
 
-
 				if ( $param{'VacationState'} ) {
 					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
 				} else {
@@ -112,13 +111,20 @@ sub profile {
 				} # end foreach
 			} # end if
 
-			sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE User_Id=?}, $User->id() );
+			sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE user_id=?}, $User->id() );
 			if ( $param{'UserGroups'} ) {
 				foreach my $group_id ( ref $param{'UserGroups'} eq 'ARRAY' ? @{$param{'UserGroups'}} : $param{'UserGroups'} ) {
 					sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 				} # end foreach
 			} # end if
 		} # end if
+
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
 
 		$variable{'information'} = 'Record saved successfully.<br/>';
 	} # end if
