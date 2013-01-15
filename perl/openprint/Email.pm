@@ -13,7 +13,7 @@ use vars qw( $dbh $table $serial %fields %transforms %defaults $log %session %co
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-$debug = 1;
+$debug = 0;
 $table = 'mailbox';
 
 %fields = (
