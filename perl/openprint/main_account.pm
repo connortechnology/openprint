@@ -334,8 +334,10 @@ sub user_profile {
 # IF it's empty, then we are adding a new user! Otherwise editing one
     if ( exists $param{'ddmUser'} ) {
         $User = new openprint::User($param{ddmUser});
-    } else {
+    } elsif ( $session{company_id} == $$Me{company_id} ) {
         $User = $Me;
+	} else {
+		$User = new openprint::User();
     } # end if
 
 	if ( $User->can_edit() ) {
@@ -468,6 +470,7 @@ sub login {
 sub logout {
 	openprint::logs::insertLogRecord('3',);
 	delete @openprint::session{'user_id','company_id','email','user_type','OrderID','project_id','quote_id','Pricelist_id','Destination'};
+	sql::update( undef, undef, 'orders', [ 'strsessionid=?', $session{_session_id} ], 'strsessionid', undef );
 	#openprint::order::delete_unfinished_orders( $openprint::log, $openprint::dbh, $openprint::session{_session_id} );
 	#sql::insert( $log, $dbh, 'log', 'action_type', '3', 'user_id', "$user_id", 'date_time', 'NOW()', 'ip_address', $ENV{REMOTE_ADDR},);
 	
