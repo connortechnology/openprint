@@ -334,8 +334,10 @@ sub user_profile {
 # IF it's empty, then we are adding a new user! Otherwise editing one
     if ( exists $param{'ddmUser'} ) {
         $User = new openprint::User($param{ddmUser});
-    } else {
+    } elsif ( $session{company_id} == $$Me{company_id} ) {
         $User = $Me;
+	} else {
+		$User = new openprint::User();
     } # end if
 
 	if ( $User->can_edit() ) {
