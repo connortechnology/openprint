@@ -154,24 +154,39 @@ sub send_approval_required_notification {
 	my $Me = new openprint::User( $session{'user_id'} );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	my %info;
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
+	$info{'ReplacementText'} = ssi::include( $ENV{DOCUMENT_ROOT}.'/email_content/purchase_order_notification.html', \%info );
 
-	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
-		next if $U->id() == $Me->id();
-		next if ! Email::Valid->address($U->email() );
+	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+	my @body = ('', $_, 'text/html', 'quoted-printable');
+	my $mail = new openprint::Email();
 
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP	=> $config{'Mail Server'},
-				FROM	=> sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
-				TO		=> sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+	my $results;
+	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
+		if ( $U->id() == $Me->id() ) {
+			$openprint::log->debug( $U->email() . ' Not mailing me.' );
+			next;
+		} # end if
+		if ( ! Email::Valid->address($U->email()) ) {
+			$openprint::log->debug( $U->email() . ' is not a valid address.' );
+			next;
+		} # end if
+		if ( ! $self->can_authorize( $U ) ) {
+			$openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
+			next;
+		} # end if
+
+		$results .= $mail->send(
+				FROM	=> $Me,
+				TO		=> $U,
 				SUBJECT => 'Purchase Order requiring approval: ' . $self->id(),
+				ATTACHMENTS	=>	\@body,
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end foreach U
+$log->debug("Results: $results");
+	return $results;
 } # end sub send_approval_required_notification
 
 sub send_to_vendor {
@@ -480,7 +495,7 @@ sub can_view {
 } # end sub can_view
 
 sub can_authorize {
-	my $User = new openprint::User( $openprint::session{user_id} );
+	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
 	my %Totals;

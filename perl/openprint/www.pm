@@ -114,6 +114,12 @@ $variable{'uri'} = $page;
     } # end if
 
     if ( $variable{'ExternalRedirect'} ) {
+		foreach my $key ( 'error', 'warning', 'information' ) {
+			if ( $variable{$key} ) {
+				$log->debug("Sacing session $key $variable{$key}");
+				$session{$key} = $variable{$key};
+			} # end if
+		} # end foreach
         $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
         $r->status(Apache2::Const::REDIRECT);
         #$r->send_http_header;
