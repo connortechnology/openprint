@@ -2,7 +2,7 @@
 <form id="f2" name="f2" action="history.html" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="po_id" value="<? echo ( $$variable{PurchaseOrder}->id() ) ?>" />
-	<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -15,6 +15,8 @@
 	} # end if
 	if ( $$variable{PurchaseOrder}->authorized() ) {
 		$html .= ssi::button( 'Email', { onclick=>q`f2.btnFunction.value='Email Vendor';f2.submit();`, text=>'Send Email' } );
+	} else {
+		$html .= 'This PO has not yet been approved.';
 	} # end if
 	if ( $$variable{PurchaseOrder}->can_edit() ) {
 		$html .= ssi::button( 'Edit', { href=>'edit.html?po_id='.$$variable{PurchaseOrder}->id() } );

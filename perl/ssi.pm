@@ -114,8 +114,23 @@ sub do_new_substitution {
 sub include {
 	my ( $file, $variable ) = @_;
 	$variable = \%variable if ! $variable;
-	my $blah = misc::load_file( $log, $file );
-	return variable_substitution( $r, $log, $dbh, \$blah, $variable );
+	if ( ! ( $file =~ /^\// ) ) {
+# Use a path relative to the current page
+		my $path = $$variable{uri};
+		$path =~ s/(.*\/).*/$1/;
+		$file = $path . $file;
+	} # end if
+
+	my $content = '';
+	if ( -f $config{SkinPath}.$file ) {
+		$content = misc::load_file( $log, $config{SkinPath}.$file );
+	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} else {
+		$content = misc::load_file( $log, $file );
+	} # end if
+
+	return variable_substitution( $r, $log, $dbh, \$content, $variable );
 }
 
 sub do_include {

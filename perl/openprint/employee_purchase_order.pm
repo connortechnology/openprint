@@ -255,7 +255,13 @@ sub view {
 						'authorized_by'	=> $session{user_id},
 						});
 			} else {
-				$PO->send_approval_required_notification();
+				$variable{information} .= $PO->send_approval_required_notification();
+				if ( ! $variable{information} ) {
+					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+				} else {
+					$variable{information} =~ s/Sent/send/g;
+					$variable{information} = 'Approval request ' . $variable{information};
+				} # end if
 			} # end if 
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
@@ -375,6 +381,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			#$Tax->amount(undef);
 			#$Tax->save();
 		} # end foreach
+		# Save will recalc taxes as well.
+		$variable{error} .= $PO->save( \%param );
 
 		if ( $PO->total() ) {
 			$param{authorized} = $PO->can_authorize();
@@ -384,7 +392,13 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 					$param{authorized_by} = $session{user_id},
 				} # end if
 			} else {
-				$PO->send_approval_required_notification();
+				$variable{information} .= $PO->send_approval_required_notification();
+				if ( ! $variable{information} ) {
+					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+				} else {
+					$variable{information} =~ s/Sent/send/g;
+					$variable{information} = 'Approval request ' . $variable{information};
+				} # end if
 			} # end if wasn't already authorized
 		} # end if
 
