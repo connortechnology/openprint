@@ -1,0 +1,6 @@
+select {
+	max-width: 100%;
+}
+.status ul, .status li {
+	width: 100%;
+}

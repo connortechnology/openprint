@@ -149,6 +149,14 @@
 			<label>Purchasing Limit (Total)</label>
 			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
+		<? echo (
+			my $html;
+			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
+				
+				$html .= '<p><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{'User'}->po_limit( $PO_Type->id() ) ).'</p>';
+			} # end foreach PO_Type
+			return $html;
+		) ?>
 		<p>
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
@@ -178,6 +186,19 @@
 	<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 
 	</fieldset>
+	       <fieldset><legend>Notifications</legend>
+            <? echo ( 
+                my $html;
+                my $n = $$variable{User}->notifications();
+				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+                    $html .= '<p><label>'.$Type->name().'</label>';
+                    $html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
+                    $html .= '</p>';
+                } # end foreach Type
+                return $html;
+            ) ?>
+        </fieldset>
+
 </div>
 <div class="column">
 	<fieldset><legend>The following information will be used for future logins.</legend>

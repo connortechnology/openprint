@@ -92,6 +92,10 @@ sub do_new_substitution {
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
 		return $result;
+    } elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+        my $result = hash_link($1);
+        $result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+        return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -110,8 +114,23 @@ sub do_new_substitution {
 sub include {
 	my ( $file, $variable ) = @_;
 	$variable = \%variable if ! $variable;
-	my $blah = misc::load_file( $log, $file );
-	return variable_substitution( $r, $log, $dbh, \$blah, $variable );
+	if ( ! ( $file =~ /^\// ) ) {
+# Use a path relative to the current page
+		my $path = $$variable{uri};
+		$path =~ s/(.*\/).*/$1/;
+		$file = $path . $file;
+	} # end if
+
+	my $content = '';
+	if ( -f $config{SkinPath}.$file ) {
+		$content = misc::load_file( $log, $config{SkinPath}.$file );
+	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} else {
+		$content = misc::load_file( $log, $file );
+	} # end if
+
+	return variable_substitution( $r, $log, $dbh, \$content, $variable );
 }
 
 sub do_include {
@@ -837,10 +856,15 @@ sub hash_link {
         $hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
     } # end if
 
-    if ( !($script = $hash_cache{$config{SkinPath}}{$path})
-            || ! -f $script->{cache_file}
-            || ( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+    if ( 
+		( !($script = $hash_cache{$config{SkinPath}}{$path}) )
+            || 
+		( ! -f $script->{cache_file} )
+            || 
+		( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
        ) {
+
+		$timestamp = (stat $src)[9] if ! $timestamp;
 
         my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
         $ext =~ s/^\.//;
@@ -854,11 +878,11 @@ sub hash_link {
 
         my $hash = md5_hex($blob);
         $hash_cache{$config{SkinPath}}{$path} = $script = {
-			src	=>	$src,
-            name => "$base-$hash.$ext",
-            path    => $path,
+			src		=>	$src,
+            name	=>	"$base-$hash.$ext",
+            path	=>	$path,
             cache_file => "$config{cache_dir}/$base-$hash.$ext",
-            hash => $hash,
+            hash	=> $hash,
             timestamp => $timestamp,
         };
         if (! -f $script->{cache_file}) {
@@ -875,6 +899,12 @@ sub hash_link {
 
 } # end sub hash_link
 
+sub format_date {
+    return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+sub format_datetime {
+    return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
 
 1;
 __END__
