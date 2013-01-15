@@ -280,12 +280,11 @@ Please select a company or user to obtain login information.<br/>
 			<? echo ( 
 				my $html;
 				my $n = $$variable{'User'}->notifications();
-				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
-				foreach my $k ( keys %types ) {
-					$html .= '<p><label>'.$types{$k}.':</label>';
-					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+					$html .= '<p><label>'.$Type->name().'</label>';
+					$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 					$html .= '</p>';
-				} # end foreach k
+				} # end foreach Type
 				return $html;
 			) ?>
 		</fieldset>

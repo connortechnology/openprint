@@ -247,16 +247,16 @@ sub view {
 					});
 			$PO = $New;
 		} # end if
-		if ( ! $PO->authorized() ) {
-			if ( sets::isin( $session{'user_type'}, ['A'] ) or ( $PO->total() < $Me->purchasing_limit() ) ) {
-				$variable{'error'} .= $PO->save({
+		if ( $PO->total() ) {
+			if ( $PO->can_authorize() ) {
+				$variable{error} .= $PO->save({
 						'authorized'	=> 1,
 						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
+						'authorized_by'	=> $session{user_id},
 						});
 			} else {
 				$PO->send_approval_required_notification();
-			} # end if
+			} # end if 
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
