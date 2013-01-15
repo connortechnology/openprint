@@ -145,6 +145,7 @@ sub get_current {
 sub format {
 	my ( $price, $precision ) = @_;
 
+	$price = 0 if ! $price;
 	$precision = 2 if ! defined $precision;
 	my $Currency = get_current();
 

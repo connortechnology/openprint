@@ -884,6 +884,12 @@ sub hash_link {
 
 } # end sub hash_link
 
+sub format_date {
+    return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+sub format_datetime {
+    return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
 
 1;
 __END__
