@@ -247,16 +247,16 @@ sub view {
 					});
 			$PO = $New;
 		} # end if
-		if ( ! $PO->authorized() ) {
-			if ( sets::isin( $session{'user_type'}, ['A'] ) or ( $PO->total() < $Me->purchasing_limit() ) ) {
-				$variable{'error'} .= $PO->save({
+		if ( $PO->total() ) {
+			if ( $PO->can_authorize() ) {
+				$variable{error} .= $PO->save({
 						'authorized'	=> 1,
 						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
+						'authorized_by'	=> $session{user_id},
 						});
 			} else {
 				$PO->send_approval_required_notification();
-			} # end if
+			} # end if 
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
@@ -375,21 +375,22 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			#$Tax->amount(undef);
 			#$Tax->save();
 		} # end foreach
-		# Save will recalc taxes as well.
-		$variable{'error'} .= $PO->save( \%param );
-if ( 0 ) {
-		if ( $PO->total() and ! $PO->authorized() ) {
-			if ( $PO->total() < $Me->purchasing_limit() ) {
-				$variable{'error'} .= $PO->save({
-						'authorized'	=> 1,
-						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
-						});
+
+		if ( $PO->total() ) {
+			$param{authorized} = $PO->can_authorize();
+			if ( $param{authorized} ) {
+				if ( ! $PO->authorized() ) {
+					$param{authorized_on} = 'NOW()';
+					$param{authorized_by} = $session{user_id},
+				} # end if
 			} else {
 				$PO->send_approval_required_notification();
-			} # end if
+			} # end if wasn't already authorized
 		} # end if
-}
+
+		# Save will recalc taxes as well.
+		$variable{error} .= $PO->save( \%param );
+
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
@@ -513,13 +514,17 @@ sub history {
 		} # end foreach
 		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
-		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
+		foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
 			next if ! $PO->id();
-			if ( $_ = $PO->authorize() ) {
-				$variable{'error'} .= $_ . '<br/>';
+			if ( $PO->can_authorize() ) {
+				if ( $_ = $PO->authorize() ) {
+					$variable{error} .= $_ . '<br/>';
+				} else {
+					$variable{information} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+				} # end if
 			} else {
-				$variable{'information'} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+				$variable{error} .= 'You are authorized to approve PO ' . $PO->id() . '<br/>';
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};

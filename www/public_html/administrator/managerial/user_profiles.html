@@ -186,12 +186,10 @@ Please select a company or user to obtain login information.<br/>
 			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
 		<? echo (
-			my $html;
-			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
-				
-				$html .= sprintf('<p><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
-			} # end foreach PO_Type
-			return $html;
+			return join("\n",
+				map { 
+				'<p><label>Limit for ' . $_->name() . '</label>'.input( type=>'cardinal', name=>'po_limit-'.$_->id(), value=>$$variable{User}->po_limit( $_->id() ) ).'</p>' } openprint::PurchaseOrder_ContentType->find( order=>'lower(name)')
+				);
 		) ?>
 </div>
 <div class="rightColumn">
@@ -280,12 +278,11 @@ Please select a company or user to obtain login information.<br/>
 			<? echo ( 
 				my $html;
 				my $n = $$variable{'User'}->notifications();
-				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
-				foreach my $k ( keys %types ) {
-					$html .= '<p><label>'.$types{$k}.':</label>';
-					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+				foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+					$html .= '<p><label>'.$Type->name().'</label>';
+					$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
 					$html .= '</p>';
-				} # end foreach k
+				} # end foreach Type
 				return $html;
 			) ?>
 		</fieldset>
