@@ -126,6 +126,7 @@ function dearchive(file_id) {
 	use POSIX qw(ceil);
 	my %totals;
 	my %sheets;
+	my %Stocks;
 	my %prices;
 	my $Project = new openprint::Project( $$variable{'ProjectIndex'} );
 	my $qty_index = $Project->ordered_quantity_index();
@@ -145,8 +146,11 @@ function dearchive(file_id) {
 		} # end if
 
 		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+		$Stocks{$Paper->to_string()} = $Paper;
+
 		if ( $Paper->type() eq 'Roll' ) {
 			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
+			$sheets{$Paper->to_string()} += $impressions;
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			my $sheets = $impressions;
 			if ( $Paper->start_area() and $Paper->area() ) {
@@ -179,17 +183,22 @@ function dearchive(file_id) {
 		} # end foreach string
 	
 		$html .= '</td><td colspan="2"><br/>';
-		foreach my $string ( sort keys %totals ) {
+		foreach my $string ( sort keys %Stocks ) {
+			my $Stock = $Stocks{$string};
+
 			if ( $totals{$string} ) {
-				if ( $sheets{$string} ) {
+				if ( $Stock->type() eq 'Sheet' ) {
 					$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
 				} else {
 					$html .= $totals{$string}.'lbs';
 				} # end if
+				$html .= $prices{$string};
+				if ( $Stock->type() eq 'Roll' ) {
+					$html .= '<br/>'.int($sheets{$string}).'feet';
+				} # end if
 			} else {
 				$html .= 'none';
 			} # end if
-			$html .= $prices{$string};
 			$html .= '<br/>';
 		} # end foreach key
 		$html .= '</td>';
