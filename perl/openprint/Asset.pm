@@ -536,8 +536,8 @@ sub generate_video {
 		my $src  = $_[0]->on_disk_path();
 		my ( $base, $extension ) = $src =~ /\/([^\/]+)\.([^\.]+)$/;
 		if ( $type eq 'mp4' ) {
-			my $output = `avconv -i $src -vcodec libx264 -b 1500k -pre:v slow -g 30 -f mp4 $dest.part`;
-			$openprint::log->debug("avconv -i $src -vcodec libx264 -b 1500k -vpre slow -g 30 -f mp4 $dest: $output");
+			my $output = `avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest.part`;
+			$openprint::log->debug("avconv -i $src -threads 2 -vcodec libx264 -b 1500k -pre:v baseline -g 30 -f mp4 $dest: $output");
 			if ( ! -e "$dest.part" ) {
 				$openprint::log->debug("avconv didn't do it's thing.");
 			} # end if
@@ -557,5 +557,22 @@ sub generate_video {
 	unlink $dest.'.lck';
 	return $dest;
 } # end sub generate_video
+
+sub content_type {
+	my $src = @_ > 1 ? $_[1] : $_[0]->on_disk_path();
+	my ( $base, $extension ) = $src =~ /([^\/]+)\.([^\.]+)$/;
+	if ( $extension eq 'mp4' ) {
+		$openprint::log->error('content type for ' . $src . ' ext:' . $extension);
+		return 'video/mp4';
+	} elsif ( $extension eq 'ogg' ) {
+		return 'video/ogg';
+	} elsif ( $extension eq 'webm' ) {
+		return 'video/webm';
+	} elsif ( $extension eq 'avi' ) {
+		return 'video/avi';
+	} else {
+		$openprint::log->error('unimplemented content type for ' . $src . ' ext:' . $extension);
+	} # end if
+} # end sub content_type
 1;
 __END__

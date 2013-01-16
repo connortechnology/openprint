@@ -84,7 +84,7 @@ sub handler {
 					} # end foreach Album
 					if ( $can_view ) {
 eval {
-						$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
+						#$r->headers_out->set('Last-Modified'=>Date::Format::time2str( '%a, %d %b %Y %H:%M:%S %Z', Date::Parse::str2time( $Asset->updated_on() ) ));
 						if ( $path eq 'thumbnails' ) {
 							$r->sendfile( $Asset->thumbnail_path() );
 						} elsif ( $path eq 'medium' ) {
@@ -94,9 +94,16 @@ eval {
 						} elsif ( $path eq 'small' ) {
 							$r->sendfile( $Asset->small_path() );
 						} elsif ( $path eq 'videos' ) {
-#$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
-							$r->sendfile( $config{AssetPath}.'videos/'.$id.'_'.$filename );
+							if ( -e $config{AssetPath}.'videos/'.$id.'_'.$filename ) {
+							#$r->content_type( $Asset->content_type( $id.'_'.$filename ) );
+							#$r->rflush;
+$log->debug('Sending ' . $config{AssetPath}.'videos/'.$id.'_'.$filename );
+							$return_code = $r->sendfile( $config{AssetPath}.'videos/'.$id.'_'.$filename );
+							} else {
+								$log->error("DOes not exist at: " . $config{AssetPath}.'videos/'.$id.'_'.$filename );
+							} # en dif
 						} else {
+$log->debug("Sending ... " . $Asset->on_disk_path() );
 							$r->sendfile( $Asset->on_disk_path() );
 						} # end if
 };

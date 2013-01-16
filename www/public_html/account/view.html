@@ -15,14 +15,14 @@
 </div>
 <? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $$variable{User}->id() ) ?>
-	<div class="disclaimer"><? echo ( $config{'UserProfileDisclaimer'} ) ?></div>
+	<div class="disclaimer"><? echo ( variable_substitution( \$config{UserProfileDisclaimer}, $variable ); ) ?></div>
 	<div class="UserProfile">
 		<p class="buttons">
 			<? echo ( 
 				my $html;
 				if ( $$variable{User}->can_edit() ) {
-					$html .= ssi::button( 'Delete', { href=>"/account/search.html?action=Delete&amp;user_id=$$variable{User}{'id'}", text=>'Delete Profile' } );
-					$html .= ssi::button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}->id() } );
+					$html .= ssi::button( 'Delete', { href=>'/account/search.html?action=Delete&amp;user_id='.$$variable{User}{id}, text=>'Delete Profile' } );
+					$html .= ssi::button( 'Edit', { href=>'/account/user_profile.html?ddmUser='.$$variable{User}{id} } );
 				} # end if
 				# Can assume if we are viewing this that we are not blocked.
 				if ( $$variable{User}->id() == $session{user_id} ) {
@@ -37,9 +37,9 @@
 				return $html;
 			) ?>
 		</p>
-<? if ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
-<div id="Opinions"><? echo ( $$variable{User}->opinions('Opinions') ) ?></div>
-<? endif ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
+		<? if ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
+		<div id="Opinions"><? echo ( $$variable{User}->opinions('Opinions') ) ?></div>
+		<? endif ( $session{user_id} and ( $session{user_id} != $$variable{User}->id() ) ) ?>
 		
 		<div class="leftColumn">
 		<div id="ProfilePicture">
