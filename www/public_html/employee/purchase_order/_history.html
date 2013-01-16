@@ -1,25 +1,25 @@
 <? eval (
-	if ( $param{'po_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
-			'id'=>$param{'po_id'}, 
-			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
-			'deleted'=>[1,0],
-			'order' => 'id desc');
-	} elsif ( $param{'docket'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
-			'docket any'=>$param{'docket'}, 
-			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
-			'order' => 'id desc');
-	} elsif ( $param{'manifest_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
-			'manifest_id'=>$param{'manifest_id'}, 
-			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
-			'order' => 'id desc');
+	if ( $param{po_id} ) {
+		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+			id			=>	$param{po_id}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			deleted		=>	[1,0],
+			order		=>	'id desc') ];
+	} elsif ( $param{docket} ) {
+		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+			'docket any'=>	$param{docket}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			order		=>	'id desc') ];
+	} elsif ( $param{manifest_id} ) {
+		$$variable{PurchaseOrders} = [ openprint::PurchaseOrder->find( 
+			manifest_id	=>	$param{manifest_id}, 
+			company_id	=>	new openprint::User( $session{user_id} )->company_id(),
+			order		=>	'id desc') ];
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			ssi::date_filter( '/employee/purchase_order/history.html?starting_start', 'created_on >=' ),
 			ssi::date_filter( '/employee/purchase_order/history.html?starting_end', 'created_on <=' ),
+			ssi::date_filter( '/employee/purchase_order/history.html?starting_start', 'created_on >=' ),
 			'order',			'id desc',
 		);
 		$search{'deleted'} = $session{'/employee/purchase_order/history.html?deleted'} if exists $session{'/employee/purchase_order/history.html?deleted'};
@@ -54,11 +54,13 @@
 				} # end foreach
 				next if $next;
 			} # end if
-			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
-			if ( ! @types ) {
-				next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
-			} else {
-				next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
+			if ( $session{'/employee/purchase_order/history.html?types'} ) {
+				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
+				if ( ! @types ) {
+					next if ! sets::isin( ' ', [ split(',',$session{'/employee/purchase_order/history.html?types'} ) ] );
+				} else {
+					next if ! sets::intersection( @types, split(',', $session{'/employee/purchase_order/history.html?types'} ) );
+				} # end if
 			} # end if
 			if ( $session{'/employee/purchase_order/history.html?department_id'} ) {
 				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
@@ -91,7 +93,7 @@
 		my $report_total = 0;
 		my $Currency = openprint::Currency::get_current();
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
-			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $PO->id() );
+			$html .= sprintf(q`<tr id="tr-%1$d" class="%2$s">`, $PO->id(), ( ( ! $PO->authorized ) and $PO->can_authorize() ) ? 'unauthorized' : 'authorized' );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td class="checkbox"><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if
@@ -130,10 +132,10 @@
 	<p class="buttons">
 		<? echo (
 			my $html;
-			if ( $session{'user_type'} eq 'A' ) {
-				$html .= ssi::button( 'Decline', { 'onlick'=>'open_decline_window(f1);', 'text'=>'Decline Selected' } );
-				$html .= ssi::button( 'Authorize', { 'onclick'=>"f1.btnFunction.value='Authorize';f1.submit();", 'text'=>'Authorize Selected' } );
-				$html .= ssi::button( 'Delete', { 'onclick'=>"f1.btnFunction.value='Delete';f1.submit();", 'text'=>'Delete Selected' } );
+			if ( $session{user_type} eq 'A' ) {
+				$html .= ssi::button( 'Decline', { onclick=>'open_decline_window(f1);', text=>'Decline Selected' } );
+				$html .= ssi::button( 'Authorize', { onclick=>"f1.btnFunction.value='Authorize';f1.submit();", text=>'Authorize Selected' } );
+				$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", text=>'Delete Selected' } );
 			} # end if
 			return $html;
 		) ?>

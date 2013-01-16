@@ -1,19 +1,13 @@
+
+
 <VirtualHost *:80>
-	ServerAdmin		iconnor@penultima.org
+	ServerAdmin	 iconnor@penultima.org
 	DocumentRoot	/var/www/point-one/www/public_html
-	ServerName		www2.point-one.com
+	ServerName	www2.point-one.com
 	ErrorLog		/var/log/apache2/point-one.com/www2.log
 
 	LogLevel debug
 	#LogLevel warn
-
-	RewriteEngine on
-	RewriteRule	^/(.*);SSL$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);NOSSL$ http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);ssl$	http://%{SERVER_NAME}/$1 [R,L]
-	RewriteRule	^/(.*);nossl$ http://%{SERVER_NAME}/$1 [R,L]
-	#RewriteRule	^/employee/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
-	#RewriteRule	^/administrator/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
 
 	Alias	/images			"/var/www/point-one/skins/PointOne Graphics Inc/images"
 	Alias	/favicon.ico	"/var/www/point-one/skins/PointOne Graphics Inc/images/favicon.ico"
@@ -23,12 +17,9 @@
 	Alias	/video			"/var/www/point-one/skins/PointOne Graphics Inc/video"
 	Alias	/newsletters	"/var/www/point-one/skins/PointOne Graphics Inc/newsletters"
 	Alias	/cache			"/var/www/point-one/skins/PointOne Graphics Inc/cache"
+	Alias	/PageFlip		"/media/Storage/PageFlip"
 	Alias	/assets 		"/media/Storage/Assets/"
 	Alias	/thumbnails		"/media/Storage/Assets/thumbnails/"
-	Alias	/project_files "/media/Storage/Project Files/"
-	Alias	/pdfs "/media/Storage/PDFS/"
-	PerlSetVar		PageFlipDir	 "/media/PageFlip"
-	Alias	/PageFlip		"/media/PageFlip"
 
 	PerlSetVar		SecureSiteURL	http://www2.point-one.com
 	PerlSetVar		siteURL		http://www2.point-one.com
@@ -44,38 +35,73 @@
 
 	PerlSetVar		db_name		point-one
 	PerlSetVar		db_host		database.internal.point-one.com
-	PerlSetVar		db_user		point-one
-	PerlSetVar		db_password	point-one
-	PerlSetVar		db_driver	Pg
+	PerlSetVar		db_user		 point-one
+	PerlSetVar		db_password	 point-one
+	PerlSetVar		db_driver		Pg
 
 	<Location /images/maps>
 		SetHandler		perl-script
 		PerlHandler	 MapImage
 	</Location>
 
-	<FilesMatch "^jsrs\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::jsrs_handler
-	</FilesMatch>
-
 	<FilesMatch "^barcode\.png$">
 		SetHandler		perl-script
 		PerlHandler	 Barcode
 	</FilesMatch>
 
-	<FilesMatch "^upload\.htm$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::upload_handler
-	</FilesMatch>
+	<Directory /var/www/point-one/www/public_html>
+		RewriteEngine on
+		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^employee/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
+		RewriteRule	^administrator/(.*)$ http://%{SERVER_NAME}/index.html [R,L]
+		<FilesMatch "^upload\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::upload_handler
+		</FilesMatch>
 
-	<Files ~ "\.json$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
+		<FilesMatch "^jsrs\.htm$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::jsrs_handler
+		</FilesMatch>
+		<Files ~ "\.json$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
 
-	<Files ~ "\.html$">
-		SetHandler		perl-script
-		PerlResponseHandler	 openprint::www
-	</Files>
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+	</Directory>
+    <Directory "/var/www/point-one/skins/PointOne Graphics Inc">
+		RewriteEngine on
+		RewriteRule	^(.*);SSL$	http://%{SERVER_NAME}/$1 [NC,R,L]
+		RewriteRule	^(.*);NOSSL$ http://%{SERVER_NAME}/$1 [NC,R,L]
+		<Files ~ "\.html$">
+			SetHandler		perl-script
+			PerlResponseHandler	 openprint::www
+		</Files>
+	</Directory>
+    <Directory "/var/www/point-one/skins/PointOne Graphics Inc/cache">
+        RewriteEngine On
+        RewriteCond %{HTTP:Accept-Encoding} gzip
+        RewriteCond %{REQUEST_FILENAME}.gz -f
+        RewriteRule (.*\.(js|css))$ $1.gz [PT]
+        RewriteBase /cache
+    </Directory>
+    AddEncoding x-gzip .gz
 
+    <FilesMatch .*\.css.gz>
+        ForceType text/css
+    </FilesMatch>
+
+    <FilesMatch .*\.js.gz>
+        ForceType application/x-javascript
+    </FilesMatch>
+
+	Alias /project_files "/media/Storage/Project Files/"
+	Alias /pdfs "/media/Storage/PDFS/"
+	#PerlSetVar		PageFlipDir	 "/media/PageFlip"
+	#Alias	/PageFlip	"/media/PageFlip"
 </VirtualHost>

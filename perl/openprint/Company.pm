@@ -81,9 +81,8 @@ $debug = 1;
 
 # Returns a paper object specified by the parameters
 sub find {
-	if ( $_[0] eq 'openprint::Company' ) {
-		shift;
-	}
+	shift @_ if $_[0] eq 'openprint::Company';
+	shift @_ if ref $_[0] eq 'openprint::Company';
 	my %params = @_;
 
 	my $sql;
@@ -107,6 +106,10 @@ sub find {
 	if ( exists $params{'name'} ) {
 		$sql .= q{ AND strName=?};
 		push @values, $params{'name'};
+	} # end if
+	if ( exists $params{'name lc'} ) {
+		$sql .= q{ AND lower(strName)=?};
+		push @values, $params{'name lc'};
 	} # end if
 	if ( exists $params{'postalcode'} ) {
 		$sql .= q{ AND strPostalCode=?};

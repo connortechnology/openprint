@@ -9,6 +9,7 @@ require openprint::main_account;
 require openprint::service;
 require openprint::ServiceType;
 require openprint::ProjectType;
+require openprint::Project_Service;
 require openprint::Project;
 require openprint::Currency;
 require openprint::User;
@@ -868,6 +869,16 @@ sub reuse_project {
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
+
+	if ( $NewProject->Type()->strid() ne 'MultiPagePublication' ) {
+		my $ServiceType = openprint::ServiceType->find_one(name=>'AdditionalSignature');
+		if ( $ServiceType ) {
+			foreach my $PS ( openprint::Project_Service->find(servicetype_id=>$$ServiceType{id},project_id=>$NewProject->id()) ) {
+				$PS->delete();
+			} # end foreach
+		} # end if
+	} # end if
+
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {

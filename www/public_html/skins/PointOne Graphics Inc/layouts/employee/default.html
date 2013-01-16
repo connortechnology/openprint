@@ -8,8 +8,8 @@
 		<link href="<? echo ( hash_link('/css/menu.css') ) ?>" rel="stylesheet" type="text/css" />
 		<link href="<? echo ( hash_link('/css/button.css') ) ?>" rel="stylesheet" type="text/css" />
 		<link href="<? echo ( hash_link('/css/pwc.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="<? echo ( hash_link('/css/alphacube.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="<? echo ( hash_link('/css/alert.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <? if ( ($$variable{'uri'} =~ /datacollection/) and $ENV{HTTP_USER_AGENT} =~ /ip(hone|ad|od)/i ) ?>
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -162,7 +162,9 @@
 						<li id="ReportsMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/reports/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
 							<ul>
 								<li><a href="/employee/reports/project_history.html;NOSSL">&raquo; Project History</a></li>
+								<li><a href="/employee/reports/project_performance.html;NOSSL">&raquo; Project Performance</a></li>
 								<li><a href="/employee/reports/order_history.html;NOSSL">&raquo; Order History</a></li>
+								<li><a href="/employee/reports/order_performance.html;NOSSL">&raquo; Order Performance</a></li>
 								<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/reports/delivery.html;NOSSL">&raquo; Delivery</a></li>
 								<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
@@ -193,6 +195,9 @@
 <? if ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
 								<li><a href="/employee/purchase_order/items.html;NOSSL">&raquo; Purchase Order Items</a></li>
 <? endif ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/purchase_order/authorizations.html;NOSSL">&raquo; Purchase Order Limits</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>

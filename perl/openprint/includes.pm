@@ -60,5 +60,7 @@ sub _users {
 sub _equipment {
 } # end sub _equipment
 
+sub _company_ddm {
+} # end sub _company_ddm
 1;
 __END__

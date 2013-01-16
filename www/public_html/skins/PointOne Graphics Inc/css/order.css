@@ -34,9 +34,6 @@ div.OrderHeader:after {
     clear: both;
     visibility: hidden;
 }
-/* Hides from IE-mac \*/
-* html div.OrderHeader {height: 1%;}
-* */* End hide from IE-mac */
 
 div.OrderHeader fieldset {
 	border-left: none;
@@ -48,8 +45,13 @@ div.OrderHeader fieldset {
     text-align: left;
 	float: left;
 }
-div.OrderHeader fieldset#OrderedBy {
+div.OrderHeader #OrderInformation {
+float: left;
+	width: 48%;
+}
+div.OrderHeader #OrderedBy {
 float: right;
+	width: 48%;
 }
 
 div.OrderHeader fieldset p {

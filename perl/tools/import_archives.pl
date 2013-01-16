@@ -5,7 +5,6 @@ use strict;
 require sql;
 require logger;
 require openprint::Object;
-require openprint::PaperInventory;
 require openprint::File;
 require openprint::Project;
 
@@ -21,7 +20,7 @@ $log = new logger( 'warn' );
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'database') );
 die "Unable to connect to db." if ! $dbh;
-configuration::init_cache($log,$dbh);
+configuration::init_cache();
 foreach my $archive_dir ( split( ',', $config{'Archive Directories'} ) ) {
 	get_files($archive_dir,'');
 } # end foreach archive_dir
