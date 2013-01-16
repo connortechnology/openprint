@@ -3,41 +3,44 @@
 	<head>
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-<meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
+		<meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/window.js"></script>
-		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css" media="screen, print"/>
-		<link href="/css/button.css" rel="stylesheet" type="text/css" media="screen,print"/>
-		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
-		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
-		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
-		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<? if ( $r->uri() =~ /\/pageflip\/view/ ) ?>
-<script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
-<script type="text/javascript" src="/javascripts/pageflip/swfobject.js"></script>
-<script type="text/javascript" src="/javascripts/pageflip/flippingbook.js"></script>
-<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
-		<? endif ( $r->uri() =~ /\/pageflip\/view/ ) ?>
-		<? if ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
-<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
-		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
 <? echo (
-    my $html;
+	my $html = join("\n",
+		'<link href="'.hash_link('/css/common.css').'" rel="stylesheet" type="text/css"/>',
+		'<link href="'.hash_link('/css/common-print.css').'" rel="stylesheet" type="text/css" media="print"/>',
+		'<link href="'.hash_link('/css/menu.css').'" rel="stylesheet" type="text/css" media="screen, print"/>',
+		'<link href="'.hash_link('/css/button.css').'" rel="stylesheet" type="text/css" media="screen,print"/>',
+		'<link href="'.hash_link('/css/pwc.css').'" rel="stylesheet" type="text/css" media="screen"/>',
+		'<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/fastinit.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/form_utilities.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/window.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/buttons.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/proj/misc_prin.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/popups.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/jsrsClient.js').'"></script>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/tips.js').'"></script>',
+	);
+
+	if ( $r->uri() =~ /\/main\/project/ ) {
+		$html .= '<link href="'.hash_link('/css/project.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/main\/order/ ) {
+		$html .= '<link href="'.hash_link('/css/order.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/main\/quote/ ) {
+		$html .= '<link href="'.hash_link('/css/quote.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $r->uri() =~ /\/pageflip\/view/ ) {
+		$html .= join("\n",
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/liquid.js').'"></script>',
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/swfobject.js').'"></script>',
+			'<script type="text/javascript" src="'.hash_link('/javascripts/pageflip/flippingbook.js').'"></script>',
+			'<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />',
+		);
+	} elsif ( $r->uri() =~ /\/pageflip\/edit/ ) {
+		$html .= '<link href="'.hash_link('/css/pageflip.css').'" rel="stylesheet" type="text/css" />';
+	} # end if
+
     my $css = $$variable{'uri'};
     $css =~ s/^\///;
     $css =~ s/\..+$//;
@@ -46,14 +49,13 @@
     $css = join('_', @parts ) . '.css';
         $log->debug("URI: $$variable{uri} $css");
         if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+            $html .= '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>'."\n";
         }
         pop @parts;
     } # end while
     return $html;
 ) ?>
 
-		<script type="text/javascript" src="/javascripts/tips.js"></script>
     <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
 <script type="text/javascript" src="/javascripts/trustlogo.js"></script>
     <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
@@ -208,7 +210,7 @@
 <? echo (
 	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 		my @ss=split " ",`cat /proc/loadavg`;
-		return '<div class="ServerInfo"><ul><li><label>Server:</label>'.$config{'ServerName'}."</li><li><label>Load:</label>$ss[0]</li></ul></div>";
+		return '<div class="ServerInfo"><ul><li><label>Server:</label>'.Sys::Hostname::hostname."</li><li><label>Load:</label>$ss[0]</li></ul></div>";
 	} # end if
 ) ?>
 			</div>

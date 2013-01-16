@@ -114,6 +114,12 @@ $variable{'uri'} = $page;
     } # end if
 
     if ( $variable{'ExternalRedirect'} ) {
+		foreach my $key ( 'error', 'warning', 'information' ) {
+			if ( $variable{$key} ) {
+				$log->debug("Sacing session $key $variable{$key}");
+				$session{$key} = $variable{$key};
+			} # end if
+		} # end foreach
         $r->headers_out->set(Location=>$variable{'ExternalRedirect'});
         $r->status(Apache2::Const::REDIRECT);
         #$r->send_http_header;
@@ -542,9 +548,14 @@ $variable{'ServiceIndex'} = $service_index;
 			} # end if
 		} # end if
 
-		if ( $first ) {
+		if ( $first eq 'PageFlip' ) {
+		} elsif ( $first ) {
 			my $module = 'openprint::' . lc $first;
-			$module .= '_'.$second if $second;
+			if ( $second ) {
+				$second =~ s/\s/_/g;
+				$module .= '_'.$second;
+			} # end if
+$log->debug("requiire $module");
 			eval( "require $module;" );
 			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;

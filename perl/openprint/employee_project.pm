@@ -694,21 +694,25 @@ sub send_proofs_approved_email {
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
+	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
+	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) ) );
+	my @body = ('', $_, 'text/html', 'quoted-printable');
+	my $Email = new openprint::Email();
+
 	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	if ( $sales_person_email ne '  <>' ) {
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
+	my @Users = map { $_->User() } openprint::User_Notification->find('type'=>'Proofs Approval Notifications','value'=>'Yes' );
+	push @Users, $CSR if ! sets::isin( $CSR->id(), [ map { $_->id() } @Users ] );
+
+	foreach my $User ( @Users ) {
+		next if $User->id() == $session{user_id};
+		
+		$Email->send(
 				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-				TO      => $sales_person_email,
+				TO      => $User,
 				SUBJECT => "Docket $info{'DocketNumber'} $$Order{'company_name'} - Proofs Approved",
+				ATTACHMENTS	=>	\@body,
 				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end if
 } # end sub send_proofs_approved_email
 

@@ -49,31 +49,19 @@ PointOne is located just off the Queensway in Etobicoke, Ontario for quick and d
     </div>
 </fieldset>
 <fieldset><legend>Customer Service</legend>
-	<div class="row">
-		<span class="Name">Blair</span>
-		<span class="Email"><a href="mailto:blair@point-one.com">blair@point-one.com</a></span>
-		<span class="Extension">x229</span>
-	</div>
-	<div class="row">
-		<span class="Name">Doug</span>
-		<span class="Email"><a href="mailto:doug@point-one.com">doug@point-one.com</a></span>
-		<span class="Extension">x243</span>
-	</div>
-	<div class="row">
-		<span class="Name">Matt</span>
-		<span class="Email"><a href="mailto:matt@point-one.com">matt@point-one.com</a></span>
-		<span class="Extension">x226</span>
-	</div>
-	<div class="row">
-		<span class="Name">Steve</span>
-		<span class="Email"><a href="mailto:steveb@point-one.com">steveb@point-one.com</a></span>
-		<span class="Extension">x289</span>
-	</div>
-	<div class="row">
-        <span class="Name">Tanya</span>
-        <span class="Email"><a href="mailto:tanyalow@point-one.com">tanyalow@point-one.com</a></span>
-        <span class="Extension">x221</span>
-    </div>
+<? echo ( my $html;
+	foreach my $User ( openprint::User->find( usergroup=>'Customer Service',order=>'lower(strfirstname)' ) ) {
+		$html .= sprintf('
+<div class="row">
+	<span class="Name">%1$s</span>
+	<span class="Email"><a href="mailto:%2$s">%2$s</a></span>
+	<span class="Extension">%3$s</span>
+</div>', $User->firstname(), $User->email(), 
+( $User->extension() ? 'x'.$User->extension() : '' ),
+);
+	} # end foreach User
+	return $html;
+) ?>
 </fieldset>
 <fieldset><legend>Production</legend>
 	<div class="row">

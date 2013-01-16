@@ -35,3 +35,9 @@ table .plate_units {
 .payment_cycle {
 	text-align: right;
 }
+#value_start, #value_end {
+	width: 100px;
+}
+.filters {
+	display: block;
+}

@@ -383,3 +383,10 @@ table.Pending {
 	table-layout: fixed;
 	width: 100%;
 }
+.csrs {
+	float: left;
+}
+.status {
+	float: left;
+	width: 300px;
+}

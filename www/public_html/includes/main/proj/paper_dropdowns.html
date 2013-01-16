@@ -56,7 +56,7 @@
 				<span id="SpecificStockHeight<?Signature?>" <? echo ( 'style="display: none;"' if $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ) ?>> x <input type="text" id="txtSpecificStockHeight<?Signature?>" name="txtSpecificStockHeight<?Signature?>" size="9" value="<? echo ( $$variable{'txtSpecificStockHeight'.$$variable{'Signature'}} ) ?>" onkeyup="ddmStockWeight_onchange(this,'<?Signature?>');gsm_to_mweight(this.form,'<?Signature?>');" /></span>
 			</p>
 			<p>
-				<label>Price:</label><input type="text" name="CustomStockPrice<?Signature?>" size="9" value="<? echo ( $$variable{'CustomStockPrice'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
+				<label>Price:</label><? echo ( input( type=>'float', id=>'CustomStockPrice'.$$variable{Signature}, name=>'CustomStockPrice'.$$variable{Signature}, value=>$$variable{'CustomStockPrice'.$$variable{Signature}}, onkeyup=>'calc(this.form.name);' ); ) ?>
 				<select name="CustomStockPriceUnits<?Signature?>" onchange="calc(this.form.name);">
 					<? echo (
 						ssi::make_drop_down( [ map { $_, $_ } ( 'Per 100lbs', 'Per M' ) ], $$variable{'CustomStockPriceUnits'.$$variable{'Signature'}} );

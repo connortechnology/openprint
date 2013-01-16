@@ -3,25 +3,10 @@
 	<head>
 		<title><?PageTitle?></title>	
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-<? if ( $$variable{'uri'} =~ /administrator\/quote/ ) ?>
-<link href="/css/quote.css" rel="stylesheet" type="text/css">
-<? endif ( $$variable{'uri'} =~ /administrator\/quote/ ) ?>
-		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
-		<script type="text/javascript" src="/javascripts/tablekit.js"></script>
-		<link rel="shortcut icon" href="/images/favicon.ico"/>
-		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+		<link href="<? echo ( hash_link('/css/common.css') ) ?>" rel="stylesheet" type="text/css"/>
+		<link href="<? echo ( hash_link('/css/menu.css') ) ?>" rel="stylesheet" type="text/css"/>
+		<link href="<? echo ( hash_link('/css/button.css') ) ?>" rel="stylesheet" type="text/css"/>
+		<link href="<? echo ( hash_link('/css/common-print.css') ) ?>" rel="stylesheet" type="text/css" media="print"/>
 <? echo (
     my $html;
     my $css = $$variable{'uri'};
@@ -32,12 +17,26 @@
     $css = join('_', @parts ) . '.css';
         $log->debug("URI: $$variable{uri} $css");
         if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-            $html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+            $html .= '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>'."\n";
         }
         pop @parts;
     } # end while
     return $html;
 ) ?>
+<? if ( $$variable{'uri'} =~ /administrator\/quote/ ) ?>
+<link href="<? echo ( hash_link('/css/quote.css') ) ?>" rel="stylesheet" type="text/css">
+<? endif ( $$variable{'uri'} =~ /administrator\/quote/ ) ?>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/buttons.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/popups.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/jsrsClient.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/form_utilities.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/proj/misc_prin.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/fastinit.js') ) ?>"></script>
+		<script type="text/javascript" src="<? echo ( hash_link('/javascripts/tablekit.js') ) ?>"></script>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">

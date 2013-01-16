@@ -1,4 +1,5 @@
 <? echo (
+	$param{search_email} = openprint::User->transform('email', $param{search_email} );
 	my @Users = openprint::User::find('email_like'=> $param{'search_email'}.'%','order'=>'lower(strfirstname),lower(strlastname)' );
 	
 	if (! @Users ) {

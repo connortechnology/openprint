@@ -791,3 +791,6 @@ table .project_id {
     right: 0;
     bottom: 0;
 }
+table .description {
+	text-align: left;
+}

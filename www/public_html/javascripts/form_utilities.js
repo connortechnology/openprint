@@ -1067,6 +1067,11 @@ function toggletinymce(textarea_id, toggle ) {
 	} // end if
 } // end function toggletinymce
 
+function input_filter(e,regexp) {
+	if ( e.value.match(regexp) )
+		e.value = e.value.replace(regexp,'');
+	return e.value;
+}
 function cardinalize(e) {
 	if ( e.value.match(/\D/g) )
 		e.value = e.value.replace(/\D/g,'');

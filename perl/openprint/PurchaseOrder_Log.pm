@@ -37,6 +37,8 @@ $serial = 'PurchaseOrder_Logs_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::PurchaseOrder_Log';
+	shift @_ if ref $_[0] eq 'openprint::PurchaseOrder_Log';
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -72,9 +74,10 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $l_dbh = $params{dbh} ? $params{dbh} : $dbh;
+	my $data = $l_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug("Error loading PurchaseOrder_Logs SQL($sql)" . DBI->errstr );
+		$log->debug("Error loading PurchaseOrder_Logs SQL($sql)" . $l_dbh->errstr );
 	} elsif ( ! @$data ) {
 		$log->debug('No PurchaseOrder_Logs loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {

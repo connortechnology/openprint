@@ -1,9 +1,9 @@
+use strict;
 package openprint::Project;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 # This is the object-oriented version of the project module
 
-use strict;
 use openprint ();
 use vars qw( $log $dbh );
 *log = \$openprint::log;
@@ -557,6 +557,15 @@ sub find {
 			push @values, $params{'user_id'};
 		} # end if
 	} # end if
+	if ( $params{'user_id not in'} ) {
+		if ( ref $params{'user_id not in'} eq 'ARRAY' ) {
+			$sql .= ' AND ( userindex NOT IN ('.join(',', map {'?'} @{$params{'user_id not in'}} ).') )';
+			push @values, @{$params{'user_id not in'}};
+		} else {
+			$sql .= q{ AND (UserIndex!=?)};
+			push @values, $params{'user_id not in'};
+		} # end if
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= q{ AND (dtmcreationdate BETWEEN ? AND ?)};
 		push @values, @params{'created_on_start','created_on_end'};
@@ -577,6 +586,14 @@ sub find {
 		$sql .= q{ AND (dtmlastmodified <= ?)};
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( $params{'created_on::time >='} ) {
+		$sql .= q{ AND (dtmcreationdate::time  >= ?)};
+		push @values, $params{'created_on::time >='};
+	} # end if
+	if ( $params{'created_on::time <='} ) {
+		$sql .= q{ AND (dtmcreationdate::time <= ?)};
+		push @values, $params{'created_on::time <='};
+	} # end if
 	if ( $params{'updated_on_>='} ) {
 		$sql .= q{ AND (dtmlastmodified >= ?)};
 		push @values, $params{'updated_on_>='};
@@ -586,20 +603,47 @@ sub find {
 		push @values, $params{'updated_on_<='};
 	} # end if
 
+	my $approved_on = q`(SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=Index AND description IN ('Marked Approved','Marked Proofs QA Approved'))`;
+	if ( $params{'approved_on >='} ) {
+		$sql .= qq{ AND ($approved_on >= ?)};
+		push @values, $params{'approved_on >='};
+	} # end if
+	if ( $params{'approved_on <='} ) {
+		$sql .= qq{ AND ($approved_on <= ?)};
+		push @values, $params{'approved_on <='};
+	} # end if
+
 	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) BETWEEN ? AND ?)};
 		push @values, @params{'ordered_on_start','ordered_on_end'};
 	} elsif ( $params{'ordered_on_start'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) >= ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) >= ?)};
 		push @values, $params{'ordered_on_start'};
 	} elsif ( $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) <= ?)};
+		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE orders.Index=order_id) <= ?)};
 		push @values, $params{'ordered_on_end'};
 	} # end if
 
+	if ( $params{'salesrep_id <@'} ) {
+		$sql .= q{ AND ( (SELECT lngsaleserson FROM company WHERE company.Index=companyindex) <@ ? )};
+		push @values, $params{'salesrep_id <@'};
+	} # end if
+	if ( $params{'salesrep_id in'} ) {
+		if ( @{$params{'salesrep_id in'}} ) {
+			$sql .= q{ AND ( (SELECT lngsalespreson FROM company WHERE company.Index=companyindex) IN (} . join(',', map {'?'} @{$params{'salesrep_id in'}}). ') )';
+			push @values, @{$params{'salesrep_id in'}};
+		} # end if
+	} # end if
 	if ( $params{'salesrep_id'} ) {
-		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
-		push @values, $params{'salesrep_id'};
+		if ( ref $params{salesrep_id} eq 'ARRAY' ) {
+			if ( @{$params{salesrep_id}} ) {
+				$sql .= q{ AND ( (SELECT lngsalesperson FROM company WHERE company.index=companyindex) IN (} . join(',', map {'?'} @{$params{'salesrep_id'}}). ') )';
+				push @values, @{$params{'salesrep_id'}};
+			} # end if
+		} else {
+			$sql .= ' AND (SELECT lngsalesperson FROM company WHERE company.Index=companyindex)=?';
+			push @values, $params{'salesrep_id'};
+		} # end if
 	} # end if
 	if ( $params{'csr_id'} ) {
 		$sql .= ' AND ( companyindex IN (SELECT index FROM Company WHERE lngsalesperson=?) )';
@@ -698,6 +742,14 @@ $openprint::log->debug("No presses in used_press_name");
 		$sql .= ' AND lngdocketnumber=?';
 		push @values, $params{'docket'};
 	} # end if
+	if ( $params{'docket >'} ) {
+		$sql .= ' AND lngdocketnumber > ?';
+		push @values, $params{'docket >'};
+	} # end if
+	if ( $params{'docket <'} ) {
+		$sql .= ' AND lngdocketnumber < ?';
+		push @values, $params{'docket <'};
+	} # end if
 	$sql .= $params{'misc'} if $params{'misc'};
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
@@ -749,6 +801,8 @@ sub save {
 				'rush',					$$self{'rush'},
 				'reprint',				$$self{'reprint'},
 				'reprint_reason',		$$self{'reprint_reason'},
+				'priority',				$$self{priority},
+				'production_comments',	$$self{production_comments},
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -857,6 +911,7 @@ sub copy {
 	} # end foreach
 	delete $$new{'id'};
 	delete $$new{'created_on'};
+	delete $$new{production_comments};
 	$new->save();
 
 	my @dont_copy = (
@@ -912,11 +967,11 @@ sub load {
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason priority production_comments/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason priority production_comments/};
 	} else {	
-	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/} =
-		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason/};
+		@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority production_comments/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 due_date predefined rush reprint reprint_reason priority production_comments/};
 	} # endif
 	return;
 } # end sub load

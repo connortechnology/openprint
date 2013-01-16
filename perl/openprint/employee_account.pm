@@ -94,6 +94,13 @@ sub profile {
 				} # end if
 			} # end if
 
+			my %notifications;
+			my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+			foreach my $k ( keys %types ) {
+				$notifications{$types{$k}} = $param{"notification_$k"};
+			} # end foreach
+			$User->notifications( \%notifications );
+
 			$variable{'information'} = 'Record saved successfully.<br/>';
 		} # end if
 	} # end if

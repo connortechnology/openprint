@@ -1,3 +1,10 @@
 .PO .buttons {
 	margin: 0;
 }
+.Authorizations .limit input {
+	width: 100%;
+}
+
+tr.unauthorized {
+	background-color: yellow;
+}

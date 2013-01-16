@@ -3,12 +3,11 @@
 	<head>
 		<title><?PageTitle?> - Employee</title>
 		<meta charset="utf-8" />
-		<link href="/css/common.css" rel="stylesheet" type="text/css" />
-		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
-		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/menu.css" rel="stylesheet" type="text/css" />
-		<link href="/css/button.css" rel="stylesheet" type="text/css" />
-		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="<? echo ( hash_link('/css/common.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/common-print.css') ) ?>" rel="stylesheet" type="text/css" media="print"/>
+		<link href="<? echo ( hash_link('/css/menu.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/button.css') ) ?>" rel="stylesheet" type="text/css" />
+		<link href="<? echo ( hash_link('/css/pwc.css') ) ?>" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -24,25 +23,25 @@
 	$css =~ s/\..+$//;
 	my @parts = split '/', $css;
 	while ( @parts ) {
-	$css = join('_', @parts ) . '.css';
-		$log->debug("URI: $$variable{uri} $css");
+		$css = join('_', @parts ) . '.css';
 		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
-			push @html, '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>';
+			push @html, '<link type="text/css" rel="stylesheet" href="'.hash_link('/css/'.$css).'"/>';
 		}
 		pop @parts;
 	} # end while
 	@html = reverse @html;
 	if ( $$variable{'uri'} =~ /claim/ ) {
-		push @html, '<link href="/css/claim.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/claim.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /credit_application/ ) {
-		push @html, '<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/credit_application.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 	if ( $$variable{'uri'} =~ /print_overview/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
-	} # end if
-	if ( $$variable{'uri'} =~ /operator_schedule/ ) {
-		push @html, '<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>';
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /operator_schedule/ ) {
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
+	} elsif ( $$variable{'uri'} =~ /jobs_by_csr/ ) {
+		push @html, '<link href="'.hash_link('/css/press_schedule.css').'" rel="stylesheet" type="text/css"/>';
 	} # end if
 
 	return join("\n", @html );
@@ -63,19 +62,24 @@
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-		<script type="text/javascript" src="/javascripts/popups.js"></script>
-		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
-		<script type="text/javascript" src="/javascripts/tablekit.js"></script>
-		<script type="text/javascript" src="/javascripts/window.js"></script>
-		<script type="text/javascript" src="/javascripts/barcode.js"></script>
-		<script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
-		<script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
-		<script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
-		<script src="/javascripts/ipre/src/inplacericheditor.js" type="text/javascript"></script>
+<? echo (
+    return join("\n", (
+
+    '<script type="text/javascript" src="'.hash_link("/javascripts/fastinit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/form_utilities.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/window.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/buttons.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/proj/misc_prin.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/popups.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jsrsClient.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/tablekit.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/barcode.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/lang/calendar-en.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/jscalendar/calendar-setup.js").'"></script>',
+    '<script type="text/javascript" src="'.hash_link("/javascripts/ipre/src/inplacericheditor.js").'"></script>',
+	) );
+) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 	</head>
@@ -126,6 +130,7 @@
 								<li><a href="/employee/production/prepress_overview.html;NOSSL">&raquo; PrePress Overview</a></li>
 								<li><a href="/employee/production/prepress_schedule.html;NOSSL">&raquo; PrePress Schedule</a></li>
 								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Production Schedule</a></li>
+								<li><a href="/employee/production/jobs_by_csr.html;NOSSL">&raquo; Jobs By CSR</a></li>
 								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
 								<li><a href="/employee/production/operator_schedule.html;NOSSL">&raquo; Operator Schedule</a></li>
 <!--
@@ -157,7 +162,9 @@
 						<li id="ReportsMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/reports/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
 							<ul>
 								<li><a href="/employee/reports/project_history.html;NOSSL">&raquo; Project History</a></li>
+								<li><a href="/employee/reports/project_performance.html;NOSSL">&raquo; Project Performance</a></li>
 								<li><a href="/employee/reports/order_history.html;NOSSL">&raquo; Order History</a></li>
+								<li><a href="/employee/reports/order_performance.html;NOSSL">&raquo; Order Performance</a></li>
 								<? if ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/reports/delivery.html;NOSSL">&raquo; Delivery</a></li>
 								<li><a href="/employee/reports/turnaround.html;NOSSL">&raquo; Turnaround</a></li>
@@ -188,6 +195,9 @@
 <? if ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
 								<li><a href="/employee/purchase_order/items.html;NOSSL">&raquo; Purchase Order Items</a></li>
 <? endif ( sets::isin( new openprint::User( $session{'user_id'} )->email(), [ 'iconnor@point-one.com','rick@point-one.com' ] ); ) ?>
+<? if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
+								<li><a href="/employee/purchase_order/authorizations.html;NOSSL">&raquo; Purchase Order Limits</a></li>
+<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>

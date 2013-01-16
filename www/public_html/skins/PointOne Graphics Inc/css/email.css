@@ -152,3 +152,6 @@ td.DateTime, th.DateTime {
 	width: 150px;
 	text-align: left;
 }
+table .Reference {
+	text-align: left;
+}

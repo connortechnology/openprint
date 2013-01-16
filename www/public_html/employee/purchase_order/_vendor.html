@@ -7,7 +7,7 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
 			</select>
 		</p>
-		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ) ?>:</label>
+		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts:</label>
  
 			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('/employee/purchase_order/_po_select_contact.json', { parameters: { contact_id: this.value } } );">
 				<option value="">select</option>

@@ -8,8 +8,17 @@ use provinces;
 use Date::Calc qw(Days_in_Month Month_to_Text);
 use HTML::Entities qw(encode_entities);
 
+# For Hash stuff
+use List::Util qw(max);
+use Digest::MD5 qw(md5_hex);
+use File::Basename;
+use File::Slurp qw(read_file write_file);
+use JSON qw(to_json from_json);
+
 require sets;
 require sql;
+require JavaScript::Minifier::XS;
+require CSS::Minifier;
 
 use openprint ();
 use vars qw( $r $log $dbh %config %session %param %variable );
@@ -83,6 +92,10 @@ sub do_new_substitution {
 		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
 		$result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
 		return $result;
+    } elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+        my $result = hash_link($1);
+        $result .= variable_substitution( $r, $log, $dbh, $text, $variable ) if $text;
+        return $result;
 	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
 		my $result = eval $1;
 		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
@@ -101,8 +114,23 @@ sub do_new_substitution {
 sub include {
 	my ( $file, $variable ) = @_;
 	$variable = \%variable if ! $variable;
-	my $blah = misc::load_file( $log, $file );
-	return variable_substitution( $r, $log, $dbh, \$blah, $variable );
+	if ( ! ( $file =~ /^\// ) ) {
+# Use a path relative to the current page
+		my $path = $$variable{uri};
+		$path =~ s/(.*\/).*/$1/;
+		$file = $path . $file;
+	} # end if
+
+	my $content = '';
+	if ( -f $config{SkinPath}.$file ) {
+		$content = misc::load_file( $log, $config{SkinPath}.$file );
+	} elsif ( -f $ENV{DOCUMENT_ROOT}.$file ) {
+		$content = misc::load_file( $log, $ENV{DOCUMENT_ROOT}.$file );
+	} else {
+		$content = misc::load_file( $log, $file );
+	} # end if
+
+	return variable_substitution( $r, $log, $dbh, \$content, $variable );
 }
 
 sub do_include {
@@ -193,7 +221,7 @@ sub encode_html {
 } # end sub encode_html
 
 sub make_drop_down {
-	my ( $search_data, $checkval, $length ) = @_;
+	my ( $search_data, $checkval, $options ) = @_;
 	my $check_array;
 	if ( ref $checkval eq 'ARRAY' ) {
 		$check_array = $checkval;
@@ -202,11 +230,19 @@ sub make_drop_down {
 	} # end if
 
 	my $temp = '';
+	if ( $$options{prepend} ) {
+		for ( my $n = 0; $n < @{$$options{prepend}}; $n += 2) {
+			$temp .= sprintf('<option value="%s"%s>%s</option>',
+					HTML::Entities::encode_entities(Encode::encode('utf-8',$$options{prepend}[$n])),
+					( sets::isin( $$options{prepend}[$n], $check_array ) ? ' selected="selected"' : '' ),
+					HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$options{prepend}[$n + 1],0, $$options{length}) : $$options{prepend}[$n + 1] ) ) );
+		} # end for
+	} # end if
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
 		$temp .= sprintf('<option value="%s"%s>%s</option>',
 			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])),
 			( sets::isin( $$search_data[$n], $check_array ) ? ' selected="selected"' : '' ),
-			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
+			HTML::Entities::encode_entities( Encode::encode('utf-8',$$options{length} ? substr($$search_data[$n + 1],0, $$options{length}) : $$search_data[$n + 1] ) ) );
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -746,11 +782,12 @@ sub input {
 	if ( $options{type} eq 'cardinal' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
-			$options{'pattern'} = '[0-9]*' if ! $options{'pattern'};
+			$options{pattern} = '[0-9]*' if ! $options{pattern};
 		} else {
 			$options{type} = 'number';
 		} # end if
-		$options{'onkeyup'} = 'cardinalize(this);'.$options{'onkeyup'};
+		$options{filter} = 'cardinalize(this);' if ! $options{filter};
+		$options{onkeyup} = $options{filter}.$options{onkeyup};
 	} elsif ( $options{type} eq 'integer' ) {
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 			$options{type} = 'text';
@@ -781,17 +818,93 @@ sub input {
 	$html .= '/>';
 	return $html;
 } # end sub input
+
 sub select( $$$ ) {
 	my ( $data, $selected, $options ) = @_;
 	my $html = '<select';
 	$html .= ' name="'.$$options{name}.'"' if $$options{name};
 	$html .= ' id="'.$$options{id}.'"' if $$options{id};
 	$html .= ' onchange="'.$$options{onchange}.'"' if $$options{onchange};
+	$html .= ' size="'.$$options{size}.'"' if $$options{size};
+	$html .= ' multiple="multiple"' if $$options{multiple};
 	$html .= '>';
-	$html .= make_drop_down( $data, $selected );
+	$html .= make_drop_down( $data, $selected, $options );
 	$html .= '</select>';
 }
 
+my %hash_cache;
+
+# If there is any problem, return the original path, so that the original file can be sent.
+sub hash_link {
+	my ( $path ) = @_;
+
+	my $src;
+	if ( -e $config{SkinPath}.$path ) {
+		$src = $config{SkinPath}.$path;
+	} elsif ( -e $ENV{DOCUMENT_ROOT}.$path ) {
+		$src = $ENV{DOCUMENT_ROOT}.$path;
+	} else {
+		return $path;
+	} # end if
+
+    $config{cache_dir} = $config{SkinPath}.'/cache' if ! $config{cache_dir};
+
+    my $script;
+    if ( ( ! $hash_cache{$config{SkinPath}} ) and -f $config{cache_dir}.'/config.json' ) {
+        $log->debug("reading config");
+        $hash_cache{$config{SkinPath}} = from_json( read_file($config{cache_dir}.'/config.json') );
+        $hash_cache{$config{SkinPath}} = {} if ! $hash_cache{$config{SkinPath}};
+    } # end if
+
+    if ( 
+		( !($script = $hash_cache{$config{SkinPath}}{$path}) )
+            || 
+		( ! -f $script->{cache_file} )
+            || 
+		( ( my $timestamp = (stat $src)[9] ) > $script->{timestamp} )
+       ) {
+
+		$timestamp = (stat $src)[9] if ! $timestamp;
+
+        my ($base, $dir, $ext) = fileparse $src, qr/\.[^.]+/;
+        $ext =~ s/^\.//;
+        my $blob = read_file($src);
+
+        if ( $ext eq 'js' ) {
+            $blob = &JavaScript::Minifier::XS::minify( $blob );
+        } elsif ( $ext eq 'css' ) {
+            $blob = &CSS::Minifier::minify( input=>$blob );
+        } # end if
+
+        my $hash = md5_hex($blob);
+        $hash_cache{$config{SkinPath}}{$path} = $script = {
+			src		=>	$src,
+            name	=>	"$base-$hash.$ext",
+            path	=>	$path,
+            cache_file => "$config{cache_dir}/$base-$hash.$ext",
+            hash	=> $hash,
+            timestamp => $timestamp,
+        };
+        if (! -f $script->{cache_file}) {
+            mkdir $config{cache_dir};
+            if ( ! write_file($script->{cache_file},       { atomic => 1, err_mode=>'carp' }, \$blob) ) {
+                $log->error( "couldn't cache $script->{cache_file}" );
+                return $path;
+            } # end if
+			`gzip -c -9 "$$script{cache_file}" > "$$script{cache_file}.gz"`;
+            write_file($config{cache_dir}.'/config.json', { atomic => 1, err_mode=>'carp' }, to_json($hash_cache{$config{SkinPath}}, {pretty => 1})) or warn "Couldn't save cache control file";
+        }   
+    }
+    ($config{cache_path}?$config{cache_path}:'/cache').'/'.$script->{name};
+
+} # end sub hash_link
+
+sub format_date {
+    return $_[0] ? Date::Format::time2str( $config{DateFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
+sub format_datetime {
+    return $_[0] ? Date::Format::time2str( $config{DateTimeFormat}, Date::Parse::str2time( $_[0] ) ) : '';
+}
 
 1;
 __END__

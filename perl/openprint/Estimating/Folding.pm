@@ -82,6 +82,7 @@ sub no_outputs {
 	'8PageSignatureFold', '8PageSignatureFold',
 	'12PageSignatureFold', '12PageSignatureFold',
 	'16PageSignatureFold', '16PageSignatureFold',
+	'18PageSignatureFold', '18PageSignatureFold',
 	'20PageSignatureFold', '20PageSignatureFold',
 	'24PageSignatureFold', '24PageSignatureFold',
 	'28PageSignatureFold', '28PageSignatureFold',

@@ -133,7 +133,7 @@ sub email_template {
 		$variable{'Results'} = $Template->send();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Template = $Template->copy();
-		$variable{'error'} .= $Template->save( );
+		$variable{'error'} .= $Template->save( { name => 'Copy of ' . $Template->name() } );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Template->save( \%param );
 	} # end if
