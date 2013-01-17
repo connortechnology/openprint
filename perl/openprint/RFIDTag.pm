@@ -9,7 +9,6 @@ use vars qw($debug $log $dbh %find_fields %fields %transforms %defaults $table $
 *dbh = \$openprint::dbh;
 
 require sql;
-
 require openprint::RFIDTagType;
 require openprint::Location;
 
@@ -41,6 +40,9 @@ $serial = 'rfidtags_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	shift @_ if $_[0] eq 'openprint::RFIDTag';
+	shift @_ if ref $_[0] eq 'openprint::RFIDTag';
+
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

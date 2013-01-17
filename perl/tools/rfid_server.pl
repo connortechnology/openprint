@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::RFIDScanner;
 require openprint::RFIDScannerHistory;
 require openprint::RFIDTag;
+require openprint::RFIDTagHistory;
 require openprint::Skid;
 require logger;
 require sets;
@@ -42,7 +43,8 @@ sub Checkout_Skid {
 		$CheckedOutSkids{$Skid->id()} = 1;
 		$context->log(1, sprintf('%s : %s : success Skid is in checkout location skidid: %s', $date, $context->{server}->{peeraddr}, $Skid->id() ));
 
-		sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$Tag->id(),'location_id'=>$Tag->location_id(), 'scanner_id'=>$Scanner->id()} );
+		$_ = (new openprint::RFIDTagHistory)->save({ rfidtag_id=>$Tag->id(), location_id=>$Tag->location_id(), scanner_id=>$Scanner->id()} );
+		$context->log(1, $_ ) if $_;
 	} # end if
 } # end sub Checkout_Skid
 
@@ -55,21 +57,19 @@ sub process_request {
 
 	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 
-	my @checkout_tags = openprint::RFIDTag::find('type'=>'Checkout');
+	my @checkout_tags = openprint::RFIDTag->find('type'=>'Checkout');
 
 	$self->get_client_info();
-	%Scanners = map { $_->ipaddr(), $_ } openprint::RFIDScanner::find();
+	%Scanners = map { $_->ipaddr(), $_ } openprint::RFIDScanner->find();
 	my $ip_addr = $self->{server}->{peeraddr};
 	$ip_addr =~ s/^::ffff://;
 	my $Scanner = $Scanners{$ip_addr};
 	if ( ! $Scanner ) {
-		my @Scanners = openprint::RFIDScanner::find('ipaddr'=>$ip_addr);
-		if ( ! @Scanners ) {
+		$Scanner = openprint::RFIDScanner->find_one('ipaddr'=>$ip_addr);
+		if ( ! $Scanner ) {
 			# Have a new one, add it
 			$Scanner = new openprint::RFIDScanner();
 			$Scanner->save( {'ipaddr'=>$ip_addr} );
-		} else {
-			$Scanner = $Scanners[0];
 		} # end if
 		$Scanners{$ip_addr} = $Scanner;
 	} # end if
@@ -80,7 +80,7 @@ sub process_request {
 
 	my @last_seen;
 
-	if ( my $User = openprint::User::find_one('email'=>'rfid') ) {
+	if ( my $User = openprint::User->find_one('email'=>'rfid') ) {
 		$openprint::session{'user_id'} = $User->id();
 		$openprint::session{'company_id'} = $User->company_id();
 	} else {
@@ -161,7 +161,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>$location_cache_size) if ! @last_seen;
 						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $ip_addr,$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
@@ -201,7 +201,7 @@ sub process_request {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
 #$self->log(1, sprintf('%s : %s : getting histyo', $date, $ip_addr ));
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
 						if ( ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 #$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $ip_addr, $Tag->id(), $Tag->Location()->name() ));
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
