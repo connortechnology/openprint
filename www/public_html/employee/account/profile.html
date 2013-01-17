@@ -216,6 +216,13 @@
 				<label>Purchasing Limit (Total)</label>
 				<? echo ( ssi::input( type=>'float', name=>'purchasing_total_limit', value=>$$variable{User}->purchasing_total_limit() ); ) ?>
 			</li>
+		<? echo (
+			my $html;
+			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
+				$html .= '<li><label>Limit for '.$PO_Type->name().'</label>'.input(type=>'cardinal', name=>'po_limit-'.$PO_Type->id(), value=>$$variable{'User'}->po_limit( $PO_Type->id() ) ).'</li>';
+			} # end foreach PO_Type
+			return $html;
+		) ?>
 			<li>
 				<label>Assistant to</label>
 				<select name="csr_ids" size="4" multiple="multiple">
@@ -251,6 +258,20 @@
 			</ul>
 		</fieldset>
 	</div>
+		<div class="Notifications">
+			   <fieldset><legend>Notifications</legend>
+				<? echo ( 
+					my $html;
+					my $n = $$variable{User}->notifications();
+					foreach my $Type ( openprint::User_Notification_Type->find( order=>'sort,lower(name)' ) ) {
+						$html .= '<p><label>'.$Type->name().'</label>';
+						$html .= ssi::radio( 'notification_'.$Type->id(), [ 'Yes', 'On', '', 'Off' ], $$n{$Type->name()} );
+						$html .= '</p>';
+					} # end foreach Type
+					return $html;
+				) ?>
+			</fieldset>
+		</div>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 </div>

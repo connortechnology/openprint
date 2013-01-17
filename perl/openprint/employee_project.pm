@@ -695,21 +695,28 @@ sub send_proofs_approved_email {
 	my $Order = new openprint::Order( $order_id );
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
 
-	my $User = new openprint::User( $session{'user_id'} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
+	my $Me = new openprint::User( $session{user_id} );
+	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = $Me->get(qw(firstname lastname email extension) );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 
-	my $CSR = new openprint::User( $Order->salesrep_id() );
-	if ( $CSR->id() ) {
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		new openprint::Email()->send(
-				FROM    => $User,
-				TO      => $CSR,
+	$info{'ReplacementText'} = ssi::include( '/email_content/proofs_approved-sales_rep.html', \%info );
+	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) ) );
+	my @body = ('', $_, 'text/html', 'quoted-printable');
+	my $Email = new openprint::Email();
+
+	my @Users = map { $_->User() } openprint::User_Notification->find( type =>'Proofs Approval Notifications', value =>'Yes' );
+	push @Users, new openprint::User( $Order->salesrep_id() ) if $Order->salesrep_id() and ! sets::isin( $Order->salesrep_id(), [ map { $_->id() } @Users ] );
+
+	foreach my $User ( @Users ) {
+		next if $User->id() == $session{user_id};
+		
+		$Email->send(
+				FROM    => $Me,
+				TO      => $User,
 				SUBJECT => "Docket $info{'DocketNumber'} $$Order{'company_name'} - Proofs Approved",
-				ATTACHMENTS	=>	['', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) ), 'text/html', 'quoted-printable'],
+				ATTACHMENTS	=>	\@body,
 				);
 	} # end if
 } # end sub send_proofs_approved_email

@@ -2821,20 +2821,29 @@ if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@table
 	die if $dbh->errstr();
 } # end if
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
-if ( ! exists $$data{'id'} ) {
-	$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
-	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
-	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
-} # end if
-
 @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+if ( sets::isin( 'equipment_shifts', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
+	} # end if
+} # end if
 
 if ( ! sets::isin('shifts',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/Shifts.sql}) );
 	die if $dbh->errstr();
 } # end if
 
+if ( ! sets::isin('user_notification_types',\@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notification_Types.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='user_notification_types'", 'column_name');
+	if ( ! exists $$data{sort} ) {
+		$dbh->do('ALTER TABLE user_notification_types ADD sort INTEGER');
+	} # end if
+} # end if
 if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/User_Notifications.sql}) );
 } # end if

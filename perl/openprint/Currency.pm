@@ -144,7 +144,8 @@ sub format {
 		$Currency = get_current();
 	} # end if
 
-    $precision = 2 if ! defined $precision;
+	$price = 0 if ! $price;
+	$precision = 2 if ! defined $precision;
 
     my $Formatter = new Number::Format(
             -decimal_digits     =>  $precision,

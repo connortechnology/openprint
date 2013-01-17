@@ -7,8 +7,9 @@ $debug = 0;
 $table = 'user_notification_types';
 $serial = 'user_notification_types_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
+	id		=>	'id',
+	name	=>	'name',
+	sort	=>	sort,
 );
 
 package openprint::User_Notification;
@@ -20,12 +21,12 @@ $table = 'user_notifications';
 @identified_by = ( 'user_id', 'type_id' );
 
 %fields = (
-	'user_id'	=>	'user_id',
-	'type_id'	=>	'type_id',
-	'value'		=>	'value',
+	user_id	=>	'user_id',
+	type_id	=>	'type_id',
+	value	=>	'value',
 );
 %find_fields = (
-	'type'		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
+	type		=>	'(SELECT name from user_notification_types WHERE id=type_id)',
 );
 
 sub User {
