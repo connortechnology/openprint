@@ -8,8 +8,8 @@ use File::Basename;
 
 require sets;
 require sql;
-
 require openprint;
+
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -27,95 +27,6 @@ my %Glossary;
 
 # Used for translations
 my %Lexicon;
-
-sub do_new_substitution {
-	my ( $command, $text, $variable ) = @_;
-	if ( $$command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
-		my $dataname = $1;
-		if ( $$text =~ /(.*?)<\?\s*endwhile\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
-			my $middle = $1;
-			my $end = $2;
-			my $replacement_text = '';
-			while ( 1 ) {
-				$_ = eval $dataname;
-				$log->error( "Eval error of ($dataname), Reason: " . $@ ) if $@;
-				last if ! $_;
-				$replacement_text .= variable_substitution( \$middle, $variable );
-			} # end while
-			return $replacement_text . variable_substitution( \$end, $variable );
-		} else {
-			$log->error("Unable to find terminating while ($$command)");
-			return variable_substitution( $text, $variable );
-		} # end if
-	} elsif ( $$command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
-		my $dataname = $1;
-		if ( $$text =~ /(.*?)<\?\s*endif\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
-			my $middle = $1;
-			my $end = $2;
-			if ( $end =~ /^\n\r?$/ ) {
-				$end = '';
-			} elsif ( $end =~ /^\r?\n$/ ) {
-				$end = '';
-			} # end if
-			#$middle =~ s/^\s*(.*)\s*$//;
-			my $replacement_text = '';
-			my $elsetext = '';
-
-			if ( $middle =~ /(.*?)<\?\s*else\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
-				$middle = $1;
-				$elsetext = $2;
-			} # end if
-
-			$_ = eval $dataname;
-			$log->error( "Eval error of if ($dataname), Reason:" . $@ ) if $@;
-			if ( $_ ) {
-				$replacement_text .= variable_substitution( \$middle, $variable );
-			} elsif ( $elsetext ne '' ) {
-				$replacement_text .= variable_substitution( \$elsetext, $variable );
-			} # end if
-			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
-			return $replacement_text;
-		} else {
-			$log->error("Unable to find terminating if ( $$command ) in $$text");
-			return variable_substitution( $text, $variable );
-		} # end if
-	} elsif ( $$command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
-		$_ = eval $1;
-		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		return variable_substitution( $text, $variable );
-	} elsif ( $$command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
-		my $result = eval($1);
-#$log->warn("eval of $1: $! $@");
-		$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
-		$result .= variable_substitution( $text, $variable ) if $text;
-		return $result;
-	} elsif ( $$command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
-		my $result = translate($1);
-#$log->error("tranlsating  of $1: $result");
-		$result .= variable_substitution( $text, $variable ) if $text;
-		return $result;
-	} elsif ( $$command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
-		my $result = hash_link($1);
-#$log->error("tranlsating  of $1: $result");
-		$result .= variable_substitution( $text, $variable ) if $text;
-		return $result;
-	} elsif ( $$command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
-		my $result = eval $1;
-		$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
-		$result = html_escape($result);
-		$result .= variable_substitution( $text, $variable ) if $text;
-		return $result;
-	} elsif ( $$command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
-		my $result = checked( eval $1 );
-		$result .= variable_substitution( $text, $variable ) if $text;
-		return $result;
-	} else {
-		my $replacement = $$variable{$$command};
-#$log->debug("Replacement: $command : $replacement");
-		return $replacement . variable_substitution( $text, $variable );
-	} # end if
-
-} # end sub do_new_substitution
 
 sub include {
 	my ( $file, $variable ) = @_;
@@ -146,13 +57,78 @@ $log->debug(" using relative path ($path) ($file) ");
 # the text is huge, so the more we break it down, the faster these get.
 sub variable_substitution {
 	my ( $text, $variable ) = @_;
-	if ( $$text =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
-		my ( $before, $middle, $after ) = ( $1, $2, $3 );
-		$after =~ s/^\s+$//m;
-		$before .= do_new_substitution( \$middle, \$after, $variable );
-		return $before;
-	} # end if
-	return $$text;
+
+	my $result = '';
+	my $after = $$text;
+
+	while ( $after ) {
+		if ( $after =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
+			$result .= $1;
+			(my $command, $after ) = ( $2, $3 );
+			$after =~ s/^\s+$//m;
+
+			if ( $command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
+				my $dataname = $1;
+				if ( $after =~ /(.*?)<\?\s*endwhile\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
+					( my $middle, $after ) = ( $1, $2 );
+					while ( eval $dataname ) {
+						$text .= variable_substitution( \$middle, $variable );
+					} # end while
+					$log->error( "Eval error of ($dataname), Reason: " . $@ ) if $@;
+				} else {
+					$log->error("Unable to find terminating while ($command)");
+				} # end if
+			} elsif ( $command =~ /^if\s*\(\s*(.*)\s*\)/ ) {
+				my $dataname = $1;
+				if ( $after =~ /(.*?)<\?\s*endif\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
+					( my $middle, $after ) = ( $1, $2 );
+					if ( $after =~ /^\n\r?$/ ) {
+						$after = '';
+					} elsif ( $after =~ /^\r?\n$/ ) {
+						$after = '';
+					} # end if
+
+					my $elsetext = '';
+
+					if ( $middle =~ /(.*?)<\?\s*else\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
+						( $middle, $elsetext ) = ( $1, $2 );
+					} # end if
+
+					$_ = eval $dataname;
+					$log->error( "Eval error of if ($dataname), Reason:" . $@ ) if $@;
+					if ( $_ ) {
+						$result .= variable_substitution( \$middle, $variable );
+					} elsif ( $elsetext ne '' ) {
+						$result .= variable_substitution( \$elsetext, $variable );
+					} # end if
+				} else {
+					$log->error("Unable to find terminating if ( $command ) in $after");
+				} # end if
+			} elsif ( $command =~ /^eval\s*\(\s*(.*)\s*\)/ms ) {
+				$_ = eval $1;
+				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+			} elsif ( $command =~ /^echo\s*\(\s*(.*)\s*\)/ms ) {
+				$_ = eval $1;
+				$result .= $_;
+				$log->error( "Eval error ($@) of ($1), Reason: " . $@ ) if $@;
+			} elsif ( $command =~ /^translate\s*\(\s*([\S]+)\s*\)/ms ) {
+				$result .= translate($1);
+			} elsif ( $command =~ /^hash_link\s*\(\s*([\S]+)\s*\)/ms ) {
+				$result .= hash_link($1);
+			} elsif ( $command =~ /^hecho\s*\(\s*(.*)\s*\)/ms ) {
+				$_ = eval $1;
+				$result .= html_escape($_);
+				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
+			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
+				$result .= checked( eval $1 );
+			} else {
+				$result .= $$variable{$command};
+			} # end if
+		} else {
+			return $result.$after;
+		} # end if have a command
+	} # end while after
+	return $result;
 } # end sub variable_substitution
 
 my %html_replacements = (
