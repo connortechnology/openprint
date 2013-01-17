@@ -1,7 +1,6 @@
 use strict;
 package openprint::RFIDScannerHistory;
 our @ISA = qw(openprint::Object);
-require openprint::Object;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
@@ -28,7 +27,6 @@ sub Location {
 } # end sub Location
 
 sub Scanner {
-	my ( $self ) = @_;
 	return new openprint::RFIDScanner( $_[0]{'scanner_id'} );
 } # end sub Scanner
 	
