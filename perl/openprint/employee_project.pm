@@ -803,7 +803,7 @@ sub _stock_checkout {
 		} elsif ( $param{'rfidtag_id'} ) {
 			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 			if ( ! $RFIDTag->id() ) {
-				my @Tags = openprint::RFIDTag::find( 'id_like'=>'%'.$param{'rfidtag_id'} );
+				my @Tags = openprint::RFIDTag->find( 'id_like'=>'%'.$param{'rfidtag_id'} );
 				if ( @Tags == 1 ) {
 					$RFIDTag = $Tags[0];
 				} # end if
