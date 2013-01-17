@@ -47,7 +47,7 @@
 				<th class="Rate">Rate</th>	
 				<th class="Price">Price</th>
 			</tr>';
-				while ( ( $count < 40 ) and ( my $Timetrack = shift @Timetracks ) ) {
+				while ( ( $count < 35 ) and ( my $Timetrack = shift @Timetracks ) ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', ssi::format_date( $Timetrack->starting() ) );
 					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
