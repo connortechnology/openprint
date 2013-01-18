@@ -251,7 +251,7 @@ sub alias {
 	#if ( $_[0]{'company_id'} == $openprint::session{'company_id'} ) {
 		#return $_[0]{'firstname'};
 	#} elsif ( $_[0]->Company()->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) {
-	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ' ' . $_[0]{'lastname'}) ) ) {
+	if ( $_[0]{company_id} and ( $Company->name() ne ($_[0]{'firstname'} . ( $_[0]{lastname} ? ( ' ' . $_[0]{'lastname'} ) : () ) ) ) ) {
 		return $Company->name() . ($_[0]{'firstname'} ? ' (' . $_[0]{'firstname'} . ')' : '' );
 	} elsif ( $_[0]->firstname() or $_[0]->lastname() ) {
 		return $_[0]->name();
@@ -262,12 +262,11 @@ sub alias {
 
 sub name {
 	if ( $_[0]{'firstname'} and $_[0]{'lastname'} ) {
-		my $self = $_[0];
-		return join(' ', @$self{'firstname','lastname'} );
-	} elsif ( $_[0]{'firstname'} ) {
-		return $_[0]{'firstname'};
-	} elsif ( $_[0]{'lastname'} ) {
-		return $_[0]{'lastname'};
+		return join(' ', @{$_[0]}{'firstname','lastname'} );
+	} elsif ( $_[0]{firstname} ) {
+		return $_[0]{firstname};
+	} elsif ( $_[0]{lastname} ) {
+		return $_[0]{lastname};
 	} # end if
 }
 
