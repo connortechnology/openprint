@@ -685,13 +685,13 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				#$param{'skid_id'} = $skid_ids[0];
@@ -1176,7 +1176,7 @@ sub rfidtag_details {
 		if ( $param{'rfidtag_id'} =~ /^\s*\((.*)\)\s*$/ ) {
 			$param{'rfidtag_id'} = hex( $1 );
 		} # end if
-		my @Tags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'} );
+		my @Tags = openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'} );
 		if ( ! @Tags ) {
 			$variable{'error'} .= 'Tag ID not found.';
 		} elsif ( @Tags > 1 ) {
@@ -1252,7 +1252,7 @@ sub _rfidscanner_log {
 	@param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today() if ! $param{'StartYear'};
 	$param{'limit'} = 10 if ! $param{'limit'};
 
-	@{$variable{'Entries'}} = openprint::RFIDScannerHistory::find( 
+	@{$variable{'Entries'}} = openprint::RFIDScannerHistory->find( 
 			'scanner_id'		=>	$param{'rfidscanner_id'},
 			'updated_on_start'  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
 			'updated_on_end'    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
@@ -1664,7 +1664,7 @@ sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
 sub _rfidtag_log {
-    @{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
+    @{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
         'rfidtag_id'	=>	$param{'rfidtag_id'},
         'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
         'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
@@ -1673,7 +1673,7 @@ sub _rfidtag_log {
         );
 
 	if ( ! @{$variable{'Entries'}} ) {
-		@{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
+		@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
 				'rfidtag_id'	=>	$param{'rfidtag_id'},
 				'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
 				'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
