@@ -79,8 +79,6 @@ function dearchive(file_id) {
 	my $qty_index = $Project->ordered_quantity_index();
     my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-
-
     foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
         if ( $ServiceCategory->name() eq 'Printing' ) {
 			$html .= "<tr$rowclass>\n";

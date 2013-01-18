@@ -109,7 +109,12 @@ sub profile {
 						$sth->execute( $cat, $User->id() ) or $log->error( DBI->errstr );
 					} # end if
 				} # end foreach
+
 			} # end if
+
+			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
+			} # end foreach Type
 
 			sql::execute( $log, $dbh, q{DELETE FROM Users_in_UserGroups WHERE user_id=?}, $User->id() );
 			if ( $param{'UserGroups'} ) {
