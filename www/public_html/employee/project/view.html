@@ -194,7 +194,7 @@ function dearchive(file_id) {
 				} # end if
 				$html .= $prices{$string};
 				if ( $Stock->type() eq 'Roll' ) {
-					$html .= '<br/>'.int($sheets{$string}).'feet';
+					$html .= '<br/>'.int((($totals{$string}/$Stock->wpsi())/$Stock->width())/12).'feet';
 				} # end if
 			} else {
 				$html .= 'none';
