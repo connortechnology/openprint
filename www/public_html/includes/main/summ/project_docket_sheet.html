@@ -306,7 +306,7 @@ $inkCoverage{$colour} = 100;
 			$html .= '</td><td class="docketText">';
 			foreach my $f ( $form .. ($form+$signatures-1) ) {
 				if ( $Paper->type() eq 'Roll' ) {
-				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $gross_impressions * $Paper->height(), $f );
+				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs %dfeet F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), ($gross_impressions * $Paper->height())/12, $f );
 				} else {
 				$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/><br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $f );
 				} # end if
