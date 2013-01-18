@@ -92,6 +92,10 @@ sub profile {
 						sql::insert( $log, $dbh, 'Users_in_UserGroups', ['usergroup_id', $group_id, 'user_id', $User->id() ] );
 					} # end foreach
 				} # end if
+				foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
+					$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
+				} # end foreach Type
+
 			} # end if
 
 			my %notifications;

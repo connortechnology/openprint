@@ -260,7 +260,7 @@ if ( $config{'RFID'} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
-	my @Hs = openprint::RFIDScannerHistory::find(
+	my @Hs = openprint::RFIDScannerHistory->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
@@ -268,7 +268,7 @@ if ( $config{'RFID'} ) {
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
-	@Hs = openprint::RFIDTagHistory::find(
+	@Hs = openprint::RFIDTagHistory->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
@@ -276,7 +276,7 @@ if ( $config{'RFID'} ) {
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
-	my @old_unassigned_tags = openprint::RFIDTag::find(
+	my @old_unassigned_tags = openprint::RFIDTag->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -360 ) ),
 			'skid_id exists'=>	0,
 			'type'			=>	'Skid',
