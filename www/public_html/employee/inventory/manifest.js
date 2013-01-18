@@ -6,13 +6,15 @@ function from_lbs( e, type_id, c_id ) {
 	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
 		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value) / 703064.5;
 		var width = parseFloat(1*form.elements['width-'+type_id].value);
-		form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		if ( wpsi && width ) {
+			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		} // end if
 	} // end if
 
 } // end function from_lbs
 function from_kg( e, type_id, c_id ) {
 	var form = e.form;
-	var kgs = parseFloat(1*form.elements['kgs_lbs-'+type_id+'-'+c_id].value);
+	var kgs = parseFloat(1*form.elements['qty_kgs-'+type_id+'-'+c_id].value);
 	var lbs = kgs * 2.2046;
 
 	form.elements['qty_lbs-'+type_id+'-'+c_id].value = do_decimals( lbs, 0 );
@@ -20,10 +22,13 @@ function from_kg( e, type_id, c_id ) {
 	if ( get_value( form.elements['type-'+type_id] ) == 'Roll' ) {
 		var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
 		var width = parseFloat(1*form.elements['width-'+type_id].value);
-		form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		if ( wpsi && width ) {
+			form.elements['qty_feet-'+type_id+'-'+c_id].value = do_decimals(((lbs/wpsi)/width)/12,0);
+		} 
 	} // end if
 } // end function from_kg
 function from_feet( e, type_id, c_id ) {
+	return;
 	var form = e.form;
 	var feet = parseFloat(1*form.elements['qty_feet-'+type_id+'-'+c_id].value);
 	var wpsi = parseFloat(1*form.elements['gsm-'+type_id].value)/ 703064.5;
