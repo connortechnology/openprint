@@ -3,7 +3,7 @@
 <? if ( $$variable{Event}->id() ) ?>
 <script type="text/javascript">
 	function invite_by_email(input) {
-		new Ajax.Updater('invitation_users', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
+		new Ajax.Updater('Invited', '/event/_invitation_users.html', { parameters: { email: input.value, event_id: <? echo ( $$variable{Event}->id() ) ?> } } );
 	} // end function invite_by_email
 
 	// li.id is actually company_id _ user_id
@@ -58,7 +58,7 @@
 						} # end if
 						$html .= ssi::button( 'Copy', { href=>'view.html?function=Copy&amp;event_id='.$$variable{Event}->id() } );
 						$html .= ssi::button( 'Edit', { href=>'edit.html?event_id='.$$variable{Event}->id() } );
-						$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
+						#$html .= ssi::button( 'Invite', { onclick=>qq`popup_window('_invitation_popup.html?event_id=$$variable{Event}{id}');` } );
 						$html .= ssi::button( 'Send', { onclick=>qq`popup_window('_email_popup.html?event_id=$$variable{Event}{id}');` } );
 					} # end if
 					$html .= '<span class="GooglePlusOne"><g:plusone></g:plusone></span>';
@@ -166,7 +166,7 @@ $log->debug("My location is " . $MyLocation->to_string() );
 <? endif ( sets::isin( $session{user_type}, ['E','A'] ) ) ?>
 	</ul>
 	<p class="buttons">
-		<? echo ( ssi::button('AddByEmail', { onclick=>q`invite_by_email($('email'));`,text=>'Add' } ); ) ?>
+		<? echo ( ssi::button('AddByEmail', { onclick=>q`if($('email').value){invite_by_email($('email'));}`,text=>'Add' } ); ) ?>
 	</p>
 </fieldset>
 	<div class="Invited"><fieldset><legend>Invited</legend><div id="Invited"><? echo ( include('_invitation_users.html'); ) ?></div></fieldset></div>

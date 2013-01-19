@@ -272,7 +272,7 @@ sub _invitation_users {
 	my $Privacy = $Event->Privacy();
 	my $privacy_users = $Privacy->user_id();
 	if ( $param{action} eq 'set' ) {
-		my %old = map { $_->user_id().'_'.$_->company_id(), $_ } $Event->Invitations();
+		my %old = map { $_->user_id().'_'.$_->User()->company_id(), $_ } $Event->Invitations();
 		my @user_ids;
 		foreach my $id ( ref $param{user_id} eq 'ARRAY' ? @{$param{user_id}} : $param{user_id} ) {
 			my ( $user_id, $company_id ) = $id =~ /^(\d*)_(\d*)$/;

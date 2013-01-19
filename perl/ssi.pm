@@ -37,7 +37,6 @@ sub include {
 		my $path = $$variable{uri};
 		$path =~ s/(.*\/).*/$1/;
 		$file = $path . $file;
-$log->debug(" using relative path ($path) ($file) ");
 	} # end if
 
 	my $content = '';

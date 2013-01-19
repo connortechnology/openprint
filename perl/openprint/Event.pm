@@ -293,6 +293,7 @@ sub Invitations {
 	return openprint::Event_Invitation->find('event_id'=>$_[0]{'id'});
 } # end sub Invitations
 
+# Should only ever email people once, and maybe only if it's by email only
 sub send_invitations {
 	my ( $self ) = @_;
 
@@ -300,17 +301,14 @@ sub send_invitations {
 	$data{Event} = $self;
 	$data{uri} = 'event';
 	$data{User} = new openprint::User($openprint::session{user_id});
-	my $email_template = misc::load_file( $openprint::log, $openprint::config{SkinPath}.'/email_template.html' );
-	my @attachments;
-	$data{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{DOCUMENT_ROOT}.'/email_content/event_invitation_body.html' );
-	$data{'ReplacementText'} = ssi::variable_substitution( \$data{ReplacementText}, \%data );
+	$data{'ReplacementText'} = ssi::include( '/email_content/event_invitation_body.html', \%data );
 
 	my $Email = new openprint::Email();
-	$Email->html_body( ssi::variable_substitution( \$email_template, \%data ) );
+	$Email->html_body( ssi::include( '/email_template.html', \%data ) );
 	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, 'sent_on is null'=>1);
 	my $results = $Email->send(
 		BCC			=>	new openprint::User( $openprint::session{user_id} ),
-		#'TO'			=>	new openprint::User( $openprint::session{user_id} ),
+		#TO			=>	new openprint::User( $openprint::session{user_id} ),
 		TO			=>	[map { $_->User() } @To ],
 		FROM		=>	$self->Created_By(),
 		SUBJECT		=>	'You are invited to an event:'. $$self{name},
