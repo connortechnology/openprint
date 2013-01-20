@@ -295,17 +295,18 @@ sub Invitations {
 
 # Should only ever email people once, and maybe only if it's by email only
 sub send_invitations {
-	my ( $self ) = @_;
+	my ( $self, $message ) = @_;
 
 	my %data;
 	$data{Event} = $self;
 	$data{uri} = 'event';
+	$data{message} = $message;
 	$data{User} = new openprint::User($openprint::session{user_id});
 	$data{'ReplacementText'} = ssi::include( '/email_content/event_invitation_body.html', \%data );
 
 	my $Email = new openprint::Email();
 	$Email->html_body( ssi::include( '/email_template.html', \%data ) );
-	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, 'sent_on is null'=>1);
+	my @To = openprint::Event_Invitation->find(event_id=>$$self{id}, ( $message ? () : ( 'sent_on is null'=>1) ) );
 	my $results = $Email->send(
 		BCC			=>	new openprint::User( $openprint::session{user_id} ),
 		#TO			=>	new openprint::User( $openprint::session{user_id} ),
