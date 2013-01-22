@@ -146,7 +146,6 @@ function dearchive(file_id) {
 		} # end if
 
 		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-		$Stocks{$Paper->to_string()} = $Paper;
 
 		if ( $Paper->type() eq 'Roll' ) {
 			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
@@ -162,7 +161,10 @@ function dearchive(file_id) {
 			} # end if
 			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
 			$sheets{$Paper->to_string()} += $sheets;
+		} else {
+			$log->error("Unknown type of Stock " . $Paper->to_string() );
 		} # end if
+		$Stocks{$Paper->to_string()} = $Paper;
 		if ( ! $Paper->supplied() ) {
 			if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
 				my %price = $Paper->get_price( $totals{$Paper->to_string()} );
@@ -178,7 +180,7 @@ function dearchive(file_id) {
 			$html .= '<td class="checkbox unprintable">&nbsp;</td>';
 		} # end if
 		$html .= '<td class="service"><b>Stock:</b><br/>';
-		foreach my $string ( sort keys %totals ) {
+		foreach my $string ( sort keys %Stocks ) {
 			$html .= $string . '<br/>';
 		} # end foreach string
 	
