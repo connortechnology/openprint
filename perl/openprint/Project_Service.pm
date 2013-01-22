@@ -51,31 +51,41 @@ sub ServiceType {
 sub Equipment {
 	my ( $self, $qty_index ) = @_;
 
-	if ( ! $qty_index ) { 
-		# Want ordered quantity
-		$qty_index = $self->Project()->ordered_quantity_index();
-	} # end if
-	my $specs = $self->specs();
-	if ( $self->ServiceType()->name() eq 'Cutting' ) {
-		return openprint::Equipment::find_one(
-				'use_in_scheduling'=>1,
-				'Specifications'=>{'Cutting Capable'=>'Y'},
-				);
-	} elsif ( $self->ServiceType()->name() eq 'Folding' ) {
-		return openprint::Equipment::find_one(
-				'use_in_scheduling'=>1,
-				'Specifications'=>{'Folding Capable'=>'Y'},
-				);
-	} elsif ( $self->ServiceType()->name() eq 'Stitching' ) {
-		if ( $$specs{'ddmEquipment'.$qty_index} ) {
-			return new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
-		} else {
-		return openprint::Equipment::find_one(
-				'use_in_scheduling'=>1,
-				'Specifications'=>{'Stitching Capable'=>'Y'},
-				);
+	if ( ! $$self{Equipment} ) {
+
+		if ( ! $qty_index ) { 
+			# Want ordered quantity
+			$qty_index = $self->Project()->ordered_quantity_index();
 		} # end if
-	} # end if
+		
+		my $specs = $self->specs();
+		my $ServiceType = $self->ServiceType();
+
+		if ( $ServiceType->name() eq 'Cutting' ) {
+			$$self{Equipment} = openprint::Equipment::find_one(
+					'use_in_scheduling'=>1,
+					'Specifications'=>{'Cutting Capable'=>'Y'},
+					);
+		} elsif ( $ServiceType->name() eq 'Folding' ) {
+			$$self{Equipment} = openprint::Equipment::find_one(
+					'use_in_scheduling'=>1,
+					'Specifications'=>{'Folding Capable'=>'Y'},
+					);
+		} elsif ( $ServiceType->name() eq 'Stitching' ) {
+			if ( $$specs{'ddmEquipment'.$qty_index} ) {
+				$$self{Equipment} =  new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
+			} else {
+			$$self{Equipment} = openprint::Equipment::find_one(
+					'use_in_scheduling'=>1,
+					'Specifications'=>{'Stitching Capable'=>'Y'},
+					);
+			} # end if
+		} elsif ( ( $ServiceType->name() eq '' ) or $ServiceType->name() eq 'AdditionalSignature' ) {
+			$$self{Equipment} = openprint::Equipment::find_one( strid=>$$specs{'UsePress'} );
+		} # end if
+	} # end if $$self{Equipment}
+	return new openprint::Equipment() if ! $$self{Equipment};
+	return $$self{Equipment};
 } # end sub Equipment
 
 sub runtime {

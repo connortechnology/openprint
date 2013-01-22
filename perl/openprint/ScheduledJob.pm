@@ -211,8 +211,8 @@ sub find {
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$log->debug("Error loading ScheduledJobs SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No ScheduledJobs loaded (' . $sql . ") (@values)" );
+	#} elsif ( ( ! @$data ) and $debug ) {
+		#$log->debug('No ScheduledJobs loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded ScheduledJobs ($sql) (@values) records:" . @$data );
 	} # end if
