@@ -29,7 +29,7 @@
 	}
 }
 @media only screen and (max-device-width: 768px) {
-	a.buttonImageOff .c {
+.rightColumn a.buttonImageOff .c {
 	font-size: 60px;
 }
 	#Button1, #Button2, #Button3,
@@ -45,14 +45,13 @@
 	#Button4 .c, #Button5 .c, #Button6 .c,
 	#Button7 .c, #Button8 .c, #Button9 .c,
 	#Button0 .c, #ButtonRefresh .c, #ButtonD .c {
-	font-size: 60px;
 
 	}
 	.leftColumn {
 		width: 468px;
 	font-size: 30px;
 	}
-	.leftColumn input, .leftColumn textarea {
+	input, textarea {
 	width: 100%;
 box-sizing: border-box;
 -moz-box-sizing: border-box;
@@ -72,6 +71,12 @@ box-sizing: border-box;
 	fieldset p label, fieldset ul li label {
 		width: 150px;
 		margin-left: -150px;
+	}
+	#ButtonEntireProject {
+		vertical-align: top;
+	}
+	#EntireProjectc {
+	font-size: x-large;
 	}
 }
 .sigPad {
@@ -106,4 +111,7 @@ label:after {
 }
 .Focused {
 	background-color: yellow;
+}
+#quantity_start, #quantity_end {
+	width: 75px;
 }

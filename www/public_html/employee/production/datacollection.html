@@ -42,7 +42,8 @@ function category_onchange(ddm) {
 
 	var current_input;
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html' ); ) ?>
+<div class="DataCollection">
 <form id="f1" name="f1" class="sigPad" action="/employee/production/datacollection.html" method="post">
 	<input type="hidden" name="action"/>
 
@@ -75,7 +76,7 @@ $session{'/employee/production/datacollection.html?user_id'} ? $session{'/employ
 			</li>
 			<li><label>Form</label>
 				<? echo ( ssi::input(type=>'cardinal', name=>'form', id=>'form', onfocus=>'switch_inputs(this);', value=>$param{form} ); ) ?>
-				<? echo ( ssi::button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'Entire Project' } ); ) ?>
+				<? echo ( ssi::button( 'EntireProject', { onclick=>q`$('form').value='Entire Project';`, text=>'All' } ); ) ?>
 			</li>
 			<li><label>Version</label>
 				<? echo ( ssi::input(type=>'text', name=>'version', id=>'version', onfocus=>'switch_inputs(this);', value=>$param{version} ); ) ?></li>
@@ -179,6 +180,7 @@ $ipoo = 0;
 	<div id="Log"></div>
 </fieldset>
 </form>
+</div>
 <script type="text/javascript"> document.f1.docket.focus(); 
 	Event.observe($('signature'),'touchmove', function(event) { event.preventDefault() }); // turns off
 	new Ajax.Updater( 'Log', '/employee/production/_datacollection.html' );
