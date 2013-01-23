@@ -380,9 +380,9 @@ sub _comments {
 } # end sub _comments
 
 sub _assets {
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
-	if ( $param{'func'} eq 'delete' ) {
-		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
+	if ( $param{func} eq 'delete' ) {
+		my $Asset = new openprint::Article_Asset({article_id=>$param{article_id}, asset_id=>$param{asset_id}});
 		$variable{'error'} .= $Asset->delete();
 	} elsif ( $param{'func'} eq 'add' ) {
 		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
