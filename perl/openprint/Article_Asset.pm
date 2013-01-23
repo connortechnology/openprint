@@ -9,8 +9,8 @@ $debug = 0;
 $table = 'article_assets';
 @identified_by = ( 'article_id','asset_id' );
 %fields = (
-	'article_id'	=>	'article_id',
-	'asset_id'	=>	'asset_id',
+	article_id	=>	'article_id',
+	asset_id	=>	'asset_id',
 );
 
 sub Asset {
