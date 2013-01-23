@@ -35,6 +35,7 @@
 		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
+		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
@@ -68,6 +69,7 @@
 
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>
