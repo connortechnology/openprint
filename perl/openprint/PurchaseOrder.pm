@@ -101,6 +101,9 @@ sub save {
 	my ( $self, $param, $force_insert ) = @_;
 
 	$self->set( $param );
+
+	my $ac = sql::start_transaction( $openprint::dbh );
+	$dbh->do( "LOCK TABLE $openprint::PurchaseOrder_Tax::table IN EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes(1) ) {
@@ -118,6 +121,7 @@ sub save {
 	foreach my $T ( $self->Taxes() ) {
 		$error .= $T->save({'purchaseorder_id'=>$$self{'id'}, 'PurchaseOrder'=>$self});
 	} # end foreach
+	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $error;
 } # end sub save
@@ -410,8 +414,8 @@ sub Taxes {
 		foreach my $Tax ( openprint::Tax->find(
 					#'period_start_null_or_<='	=>	$$self{'created_on'},
 					#'period_end_null_or_>='	 =>	$$self{'created_on'},
-					'country'	=>	$country,
-					'state'	 =>	$state,
+					country	=>	$country,
+					state	=>	$state,
 				) ) {
 			my $T = new openprint::PurchaseOrder_Tax();
 			$T->set({
@@ -430,7 +434,7 @@ sub Taxes {
 				#'period_start_null_or_<='	=>	$$self{'created_on'},
 				#'period_end_null_or_>='	 =>	$$self{'created_on'},
 				country	=>	$country,
-				state	 =>	$state,
+				state	=>	$state,
 			);
 
 		# Clear out any no longer valid taxes
