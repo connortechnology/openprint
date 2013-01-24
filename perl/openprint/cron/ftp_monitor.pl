@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/var/www/p1/perl';
+use lib '/var/www/point-one/perl';
 use strict;
 
 require configuration;
@@ -49,7 +49,6 @@ if ($opts->{help}) {
 }
 
 $log = new logger('level'=>'debug');
-$log->debug("Help");
 # Get our configuration information
 if (my $err = ReadCfg('/etc/ftp_monitor.conf')) {
     die $err;
@@ -80,7 +79,7 @@ $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
 
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
+$CFG::Config{'sleep'} = 2.0 if ! $CFG::Config{'sleep'};
 
 if ( $CFG::Config{'pid_file'} ) {
 	my $pidh;
@@ -198,7 +197,7 @@ if (open($fifoh, "< $config{fifo}")) {
 				$log->error("Unparsed line $line");
 			} # end if
 
-			$log->debug("$line\n");
+			#$log->debug("$line\n");
 			$line = undef;
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.
