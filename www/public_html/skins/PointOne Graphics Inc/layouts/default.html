@@ -3,8 +3,6 @@
 	<head>
 		<title><?PageTitle?></title>	
 		<meta name="google-site-verification" content="FzfxqEK9UqM3xRZ5GrHfKh0LQt7gqsjPxB_3aaDx29k" />
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 <? echo (
 	my $html = join("\n",
 		'<link href="'.hash_link('/css/common.css').'" rel="stylesheet" type="text/css"/>',
@@ -54,6 +52,8 @@
     } # end while
     return $html;
 ) ?>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 
     <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
 <script type="text/javascript" src="/javascripts/trustlogo.js"></script>

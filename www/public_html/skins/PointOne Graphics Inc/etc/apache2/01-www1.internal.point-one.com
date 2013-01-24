@@ -74,6 +74,7 @@
         RewriteCond %{REQUEST_FILENAME}.gz -f
         RewriteRule (.*\.(js|css))$ $1.gz [PT]
         RewriteBase /cache
+		Header append Vary: Accept-Encoding
     </Directory>
 
     AddEncoding x-gzip .gz
