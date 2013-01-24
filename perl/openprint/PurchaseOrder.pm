@@ -501,6 +501,7 @@ sub can_view {
 sub can_authorize {
 	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
 
+	return 1 if ! $_[0]->total();
 	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
 	my %Totals;
 	my %Types;
