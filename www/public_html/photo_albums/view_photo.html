@@ -41,14 +41,14 @@
 				my $index = 0;
 				for ( $index = 0; $index < @Photos and $Photos[$index]->id() != $Photo->id(); $index += 1 ) {};
 				if ( $index ) {
-					$html .= ssi::button( 'Previous', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } );
+					$html .= ssi::button( 'Previous', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index-1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
 					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index-1]->sized_url('large').'";</script>';
 				} # end if
 				if ( ( $index + 1 ) < @Photos ) {
-					$html .= ssi::button( 'Next', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{'asset_id'}&amp;album_id=$$Photo{'album_id'}" } );
+					$html .= ssi::button( 'Next', { href => "/photo_albums/view_photo.html?asset_id=$Photos[$index+1]{asset_id}&amp;album_id=$$Photo{album_id}" } );
 					$html .= '<script type="text/javascript">var i=new Image();i.src="'.$Photos[$index+1]->sized_url('large').'";</script>';
 				} # end if
-				$html .= ssi::button( 'Back', { href => "/photo_albums/view.html?album_id=$$Album{'id'}", 'text'=>'Back to Album' } );
+				$html .= ssi::button( 'Back', { href=>"/photo_albums/view.html?album_id=$$Album{id}", text=>'Back to Album' } );
 				$html = '<p class="buttons">'.$html.'</p>' if $html;
 
 
@@ -90,20 +90,20 @@ if ( 0 ) {
 </script>
 `, $Photo->url() );
 				} elsif ( $Asset->is_video() ) {
-					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>';
+					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>'."\n";
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 					if ( $_ = $Asset->video_url('mp4') ) {
-						$html .= '<source src="'.$_.'" type="video/mp4">';
+						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/mp4">'."\n";
 					} # end if
 		} else {
 					if ( $_ = $Asset->video_url('mp4') ) {
-						$html .= '<source src="'.$_.'" type="video/mp4">';
+						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/mp4">'."\n";
 					} # end if
 					if ( $_ = $Asset->video_url('ogg') ) {
-						$html .= '<source src="'.$_.'" type="video/ogg">';
+						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/ogg">'."\n";
 					} # end if
 					if ( $_ = $Asset->video_url('webm') ) {
-						$html .= '<source src="'.$_.'" type="video/webm">';
+						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/webm">'."\n";
 					} # end if
 		} # end if
 					$html .= 'Your browser does not support the video tag';

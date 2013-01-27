@@ -222,6 +222,7 @@ sub sized_url {
 		} # end if
 	} # end if
 $openprint::log->error("unknown externsion or somerthitng.  Install icons!! for ($extension)") if $extension;
+	return '';
 }  # end sub
 
 sub medium_url {
@@ -450,17 +451,26 @@ sub caption {
 } # end sub caption
 
 sub width {
-	if ( ! $_[0]{'width'} ) {
+	if ( ! $_[0]{width} ) {
 		require Image::Size;
 		if ( $_[0]->is_video() ) {
 			# get the image size, and print it out
-			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+			my $url = $_[0]->sized_url('full');
+			$url =~ s/^\/assets//;
+			my ( $w, $h, $e ) = Image::Size::imgsize( $openprint::config{AssetPath}.$url );
+			if ( ! ( $w and $h ) ) {
+				$openprint::log->error("imagesize aerrror $e ");
+			} else {
+			@{$_[0]}{'width','height'} = ( $w, $h );
+			} # end if
+$openprint::log->debug("Getting size for video: " . $_[0]->sized_url('full') . " got $_[0]{width}x$_[0]{height}");
+
 		} else {
 # get the image size, and print it out
 			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
 		} # end if
 	} # end if
-	return $_[0]{'width'};
+	return $_[0]{width};
 } # end sub width
 
 sub height {
@@ -468,7 +478,7 @@ sub height {
 		require Image::Size;
 		if ( $_[0]->is_video() ) {
 			# get the image size, and print it out
-			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->get_sized_url('full') );
+			@{$_[0]}{'width','height'} = Image::Size::imgsize( $openprint::config{AssetPath}.$_[0]->sized_url('full') );
 		} else {
 			# get the image size, and print it out
 			@{$_[0]}{'width','height'} = Image::Size::imgsize( $_[0]->on_disk_path() );
