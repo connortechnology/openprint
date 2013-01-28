@@ -65,7 +65,7 @@ sub handler {
 	$log	= $r->log;
 	$request->push_handlers(PerlCleanupHandler => \&cleanup);
 	my $page = $r->uri();
-	$log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $page );
+	$log->debug( "Beginning of Request: Page: " . $page );
 
 	%param = ();
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
@@ -151,8 +151,8 @@ $log->debug("No good, need login");
 				#$r->headers_out->set(Location=>'/error/error_login.html');
 				#$r->status(Apache2::Const::REDIRECT);
 			} # end if
-		} else {
-$log->debug("No pagesetting?");
+		#} else {
+#$log->debug("No pagesetting?");
 		} # end if
 		$variable{'PageSetting'} = $page_settings{$config{db_name}}{$page} ? $page_settings{$config{db_name}}{$page} : new openprint::Page_Setting();
 
@@ -160,7 +160,7 @@ $log->debug("No pagesetting?");
 			('openprint::'.$o)->init_cache();
 		} # end foreach
 
-		$openprint::log->debug("Page: $page");
+		#$openprint::log->debug("Page: $page");
 
 		# Just does timeout
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable );

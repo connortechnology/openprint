@@ -120,6 +120,8 @@ sub variable_substitution {
 				$log->error( "Eval error of ($1), Reason: " . $@ ) if $@;
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
+			} elsif ( $command =~ /^include\s*\(\s*'?(.*)'?\s*\)/ms ) {
+				$result .= include( $1 );
 			} else {
 				$result .= $$variable{$command};
 			} # end if
