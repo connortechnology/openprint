@@ -1,6 +1,6 @@
 <? eval (
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'width','height','digital' );
+		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction', 'width','height','digital','setup_prices' );
 	} # end if
 
 	@{$$variable{'Stocks'}} = ();
@@ -24,6 +24,11 @@
 		) ) {
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
 		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
+		if ( $session{'/administrator/stock/list.html?setup_prices'} eq '1' ) {
+			next if ! openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+		} elsif ( $session{'/administrator/stock/list.html?setup_prices'} eq '0' ) {
+			next if openprint::PaperPrice->find_one(paper_id=>$$Stock{id}, service=>'Setup');
+		} # end if
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup::find();
@@ -76,9 +81,13 @@
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package().'/'.$$variable{'Stock'}->minimum_order() ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
-my $Price = openprint::PaperPrice::find_one('stock_id'=>$$variable{'Stock'}->id(), 'service'=>'Material', 'order'=>$openprint::PaperPrice::fields{'pricelist_id'} );
-return sprintf('%.0f*%.0f%=%.0f', @$Price{'cost','markup','price'} ) if $Price;
-return 'No price';
+join('<br/>', map { sprintf('%s %s %s $%.0f*%.0f%=$%.0f', $_->Pricelist()->name(), $_->service(), 
+join(' ', 
+( $_->min() ? '>'.$_->min() : '' ),
+( $_->max() ? '<'.$_->max() : '' ),
+),
+$_->cost(), $_->markup(), $_->price() ) } 
+openprint::PaperPrice::find(paper_id=>$$variable{Stock}->id(), 'order'=>$openprint::PaperPrice::fields{'pricelist_id'}.',service' ) );
  ) ?></a></td>
 	</tr>
 <? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>

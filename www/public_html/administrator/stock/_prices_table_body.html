@@ -3,7 +3,7 @@
 	my $Pricelist = $$variable{'Pricelist'};
 	my $service = $$variable{'service'};
 
-	my @Prices = openprint::PaperPrice::find('stock_id'=>$$variable{'Stock'}->id(), 'service'=>$service, 'pricelist_id'=>$Pricelist->id(),'order'=>'equipment_id,lngmin,lngmax' );
+	my @Prices = openprint::PaperPrice::find('stock_id'=>$$variable{'Stock'}->id(), 'service'=>$service, 'pricelist_id'=>$Pricelist->id(),'order'=>'equipment_id,lngmin NULLS FIRST,lngmax NULLS FIRST' );
 	foreach my $Price ( @Prices ) {
 		$variable{'Price'} = $Price;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/stock/_price_tr.html', $variable );

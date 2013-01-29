@@ -218,6 +218,10 @@
 			<label>Digital:</label>
 			<? echo ( ssi::radio( 'digital', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?digital'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
 		</p>
+		<p>
+			<label>Has Setup Prices:</label>
+			<? echo ( ssi::radio( 'setup_prices', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?setup_prices'}, { onclick=>'calc(this.form.name);' } ); ) ?>
+		</p>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',

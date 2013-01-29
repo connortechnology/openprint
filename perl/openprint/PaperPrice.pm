@@ -43,12 +43,16 @@ require sql;
 );
 
 sub find_one {
+	shift @_ if $_[0] eq 'openprint::PaperPrice';
+	shift @_ if ref $_[0] eq 'openprint::PaperPrice';
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = find(%params);
 	return $Results[0] if @Results;
 } # end sub find_one
 sub find {
+	shift @_ if $_[0] eq 'openprint::PaperPrice';
+	shift @_ if ref $_[0] eq 'openprint::PaperPrice';
 	my %params = @_;
 
 	my $sql = q{SELECT * FROM Paper_Prices WHERE 1>0};
