@@ -155,7 +155,7 @@ qq.getByClass = function(element, className){
 	var len = candidates.length;
 
 	for (var i = 0; i < len; i++){
-		if (hasClassName(candidates[i], className)){
+		if (candidates[i].hasClassName(className)){
 			result.push(candidates[i]);
 		}
 	}
@@ -665,7 +665,7 @@ qq.extend(qq.FileUploader.prototype, {
 			e = e || window.event;
 			var target = e.target || e.srcElement;
 		
-			if (hasClassName(target, self._classes.cancel)){			
+			if (target.hasClassName(self._classes.cancel)){			
 				qq.preventDefault(e);
 			
 				var item = target.parentNode;
