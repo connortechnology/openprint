@@ -2,7 +2,7 @@ use strict;
 package openprint::PaperPrice;
 our @ISA = qw(openprint::Object);
 
-require Math::Round::nearest;
+require Math::Round;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
 $debug = 0;
