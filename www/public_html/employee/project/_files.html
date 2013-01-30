@@ -9,7 +9,7 @@
 				if ( -f $config{ProjectFilesPath}.$File->filename() ) {
 					$html .= sprintf('<tr><td class="filename">%2$s</td><td class="buttons"></td></tr>', $$File{id}, $File->filename() );
 				} else {
-				$log->error("FIle does not exist " . $config{ProjectFilesPath}.$File->filename() );
+					$File->delete();
 				} # end if
 			} elsif ( -f $File->archive().$File->filename() ) {
 				$log->error("FIle does not exist " . $File->archive().$File->filename() );

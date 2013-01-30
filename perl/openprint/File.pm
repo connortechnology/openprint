@@ -3,10 +3,7 @@ package openprint::File;
 our @ISA = qw( openprint::Object );
 
 use openprint ();
-use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
-
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
 $table = 'project_files';
