@@ -92,11 +92,11 @@
 		PerlHandler	 Barcode
 	</FilesMatch>
 	<Location /images/maps>
-		SetHandler		perl-script
-		PerlHandler	 MapImage
+		SetHandler	perl-script
+		PerlHandler	MapImage
 	</Location>
 		<DirectoryMatch '^/po'>
-			SetHandler		perl-script
+			SetHandler	perl-script
 			PerlHandler	getfile 
 		</DirectoryMatch>
 	Alias /project_files "/media/Storage/Project Files/"
