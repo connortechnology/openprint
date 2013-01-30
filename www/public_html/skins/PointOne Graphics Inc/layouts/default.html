@@ -11,6 +11,8 @@
 		'<link href="'.hash_link('/css/button.css').'" rel="stylesheet" type="text/css" media="screen,print"/>',
 		'<link href="'.hash_link('/css/pwc.css').'" rel="stylesheet" type="text/css" media="screen"/>',
 		'<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>',
+		'<script type="text/javascript" src="'.hash_link('/javascripts/scriptaculous/prototype.js').'"></script>',
+		'<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>',
 		'<script type="text/javascript" src="'.hash_link('/javascripts/fastinit.js').'"></script>',
 		'<script type="text/javascript" src="'.hash_link('/javascripts/form_utilities.js').'"></script>',
 		'<script type="text/javascript" src="'.hash_link('/javascripts/window.js').'"></script>',
@@ -52,8 +54,6 @@
     } # end while
     return $html;
 ) ?>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
 
     <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
 <script type="text/javascript" src="/javascripts/trustlogo.js"></script>

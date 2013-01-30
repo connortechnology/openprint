@@ -268,6 +268,7 @@ sub send_email {
 	my $Company;
 	my $User;
 
+	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 	$openprint::dbh = sql::open_sql( $log, 
 		'host'		=> $CFG::Config{'db_host'},
 		'database'	=> $CFG::Config{'db_name'},
@@ -275,7 +276,11 @@ sub send_email {
 		'login'		=> $CFG::Config{'db_user'},
 		'password'	=> $CFG::Config{'db_pass'},
 	);
-	if ( $openprint::dbh and $$upload{'company_name'} ) {
+		$log->error("Unable to connect to database. sleeping.");
+		sleep(1);
+	} # enw hwhile no db connection
+
+	if ( $$upload{'company_name'} ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company::find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
