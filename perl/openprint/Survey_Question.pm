@@ -5,7 +5,7 @@ our @ISA = qw( openprint::Object );
 require openprint::Survey_Question_Available_Answer;
 
 use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'survey_questions';
 $serial = 'survey_questions_id_seq';
 

@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Survey"><div class="View">
 	<? if ( $$variable{'Survey'}->created_by() ) ?>
 	<div class="CreatedBy"><? echo ( my $User = new openprint::User( $$variable{'Survey'}->created_by() )->thumbnail_html(); ) ?></div>
@@ -98,7 +98,7 @@
 		</p>
 	</form>
 <? if ( $session{'user_id'} ) ?>
-<div id="Comments"><fieldset><legend>Comments</legend><!--#include virtual="_comments.html"--></fieldset></div>
+<div id="Comments"><fieldset><legend>Comments</legend><? echo ( include('_comments.html'); ) ?></fieldset></div>
 <? endif ( $session{'user_id'} ) ?>
 </div>
 </div>

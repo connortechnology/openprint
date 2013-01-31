@@ -1,6 +1,6 @@
 <fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
 <? if ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
-	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
+	<? echo ( include('/includes/main/proj/templates/signatures.html'); ) ?>
 <? endif ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 
 	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>

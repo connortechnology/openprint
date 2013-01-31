@@ -84,33 +84,35 @@ sub save_contents {
 		my $Item;
 		if ( $$p{'item-'.$content_id} ) {
 			$Item = new openprint::PurchaseOrder_Item( $$p{'item_id-'.$content_id} );
-			if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
-				$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
-				$Item = openprint::PurchaseOrder_Item->find_one(
-						'company_id'	=>	$PO->company_id(),
-						'vendor_id'		=>	$$p{'supplier_id'},
-						'type_id'		=>	$$p{'type_id-'.$content_id},
-						'name lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
-						'product lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
-						);
-				if ( ! $Item ) {
-					$Item = new openprint::PurchaseOrder_Item();
-					$Item->save({
+			if ( $$p{supplier_id} ) {
+				if ( ( ! $Item->id() ) or ( lc $Item->name() ne lc openprint::PurchaseOrder_Item->transform('name', $$p{'item-'.$content_id}) ) ) {
+					$log->debug("Looking up (" . $$p{'item-'.$content_id}.') (' . $Item->name() );
+					$Item = openprint::PurchaseOrder_Item->find_one(
 							'company_id'	=>	$PO->company_id(),
 							'vendor_id'		=>	$$p{'supplier_id'},
 							'type_id'		=>	$$p{'type_id-'.$content_id},
-							'name'			=>	$$p{'item-'.$content_id}, 
-							'price'			=>	$$p{'price-'.$content_id},
-							'product'		=>	$$p{'product-'.$content_id},
-							});
+							'name lc'		=>	lc openprint::PurchaseOrder_Item->transform('name',$$p{'item-'.$content_id}),
+							'product lc'	=>	lc openprint::PurchaseOrder_Item->transform('product',$$p{'product-'.$content_id}),
+							);
+					if ( ! $Item ) {
+						$Item = new openprint::PurchaseOrder_Item();
+						$Item->save({
+								'company_id'	=>	$PO->company_id(),
+								'vendor_id'		=>	$$p{'supplier_id'},
+								'type_id'		=>	$$p{'type_id-'.$content_id},
+								'name'			=>	$$p{'item-'.$content_id}, 
+								'price'			=>	$$p{'price-'.$content_id},
+								'product'		=>	$$p{'product-'.$content_id},
+								});
+					} # end if
+				} else {
+					$log->debug("Item is " . $Item->name() );
 				} # end if
-			} else {
-				$log->debug("Item is " . $Item->name() );
-			} # end if
-			if ( $Item->price() != $$p{'price-'.$content_id} ) {
-# Update the latest price
-				$Item->save({'price'=>$$p{'price-'.$content_id}});
-			} # end if
+				if ( $Item->price() != $$p{'price-'.$content_id} ) {
+	# Update the latest price
+					$Item->save({'price'=>$$p{'price-'.$content_id}});
+				} # end if
+			} # end if PO has supplier_id
 		} else {
 			$log->debug("No item for $content_id");
 		} # end if
@@ -244,16 +246,22 @@ sub view {
 					});
 			$PO = $New;
 		} # end if
-		if ( ! $PO->authorized() ) {
-			if ( sets::isin( $session{'user_type'}, ['A'] ) or ( $PO->total() < $Me->purchasing_limit() ) ) {
-				$variable{'error'} .= $PO->save({
+		if ( $PO->total() ) {
+			if ( $PO->can_authorize() ) {
+				$variable{error} .= $PO->save({
 						'authorized'	=> 1,
 						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
+						'authorized_by'	=> $session{user_id},
 						});
 			} else {
-				$PO->send_approval_required_notification();
-			} # end if
+				$variable{information} .= $PO->send_approval_required_notification();
+				if ( ! $variable{information} ) {
+					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+				} else {
+					$variable{information} =~ s/Sent/send/g;
+					$variable{information} = 'Approval request ' . $variable{information};
+				} # end if
+			} # end if 
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
 		my $Asset = new openprint::Asset();
@@ -339,13 +347,11 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 		} # end if
 
 		$param{supplier_id} = save_supplier( \%param ) if ( ! $param{supplier_id} ) and $param{vendor_name};
-		$param{contact_id} = save_contact( \%param ) if $param{supplier_id} and ( ! $param{contact_id} ) and $param{contact_name};
 		if ( $param{supplier_id} and $param{vendor_name} ) {
 			my $Supplier = openprint::Company->find_one( id=>$param{supplier_id} );
 			if ( ! $Supplier ) {
 				$log->error("SUpplier not found!");
 			} else {
-				
 				if ( ! $Supplier->name() ) {
 					$Supplier->name($param{vendor_name});
 					foreach ( 'country', 'state', 'address1', 'address2', 'city', 'postalcode', 'phone', 'fax' ) {	
@@ -356,6 +362,7 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			} # end if
 		} # end if
 		
+		$param{contact_id} = save_contact( \%param ) if $param{supplier_id} and ( ! $param{contact_id} ) and $param{contact_name};
 		my %types = save_contents( $PO, \%param );
 
 		if ( $param{'delivered_on_switch'} eq 'DATE' ) {
@@ -373,26 +380,35 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 			#$Tax->save();
 		} # end foreach
 		# Save will recalc taxes as well.
-		$variable{'error'} .= $PO->save( \%param );
-if ( 0 ) {
-		if ( $PO->total() and ! $PO->authorized() ) {
-			if ( $PO->total() < $Me->purchasing_limit() ) {
-				$variable{'error'} .= $PO->save({
-						'authorized'	=> 1,
-						'authorized_on'	=> 'NOW()',
-						'authorized_by'	=> $session{'user_id'},
-						});
+		$variable{error} .= $PO->save( \%param );
+
+		if ( $PO->total() ) {
+			$param{authorized} = $PO->can_authorize();
+			if ( $param{authorized} ) {
+				if ( ! $PO->authorized() ) {
+					$param{authorized_on} = 'NOW()';
+					$param{authorized_by} = $session{user_id},
+				} # end if
 			} else {
-				$PO->send_approval_required_notification();
-			} # end if
+				$variable{information} .= $PO->send_approval_required_notification();
+				if ( ! $variable{information} ) {
+					$variable{warning} .= 'This PO needs approval but no one could be found to do it.';
+				} else {
+					$variable{information} =~ s/Sent/send/g;
+					$variable{information} = 'Approval request ' . $variable{information};
+				} # end if
+			} # end if wasn't already authorized
 		} # end if
-}
+
+		# Save will recalc taxes as well.
+		$variable{error} .= $PO->save( \%param );
+
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
-				'user_id'	=>	$session{'user_id'},
+				'user_id'	=>	$session{user_id},
 				'po_id'		=>	$PO->id(),
-				'reason'	=>	$param{'reason'},
+				'reason'	=>	$param{reason},
 				});
 		} # end if
 		my @notifications = $PO->notifications(); # returns user_ids
@@ -510,13 +526,17 @@ sub history {
 		} # end foreach
 		delete $param{'po_id'};
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
-		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
+		foreach my $po_id ( ref $param{po_id} eq 'ARRAY' ? @{$param{po_id}} : $param{po_id} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
 			next if ! $PO->id();
-			if ( $_ = $PO->authorize() ) {
-				$variable{'error'} .= $_ . '<br/>';
+			if ( $PO->can_authorize() ) {
+				if ( $_ = $PO->authorize() ) {
+					$variable{error} .= $_ . '<br/>';
+				} else {
+					$variable{information} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+				} # end if
 			} else {
-				$variable{'information'} .= 'PO ' . $po_id . ' has been authorized.<br/>';
+				$variable{error} .= 'You are authorized to approve PO ' . $PO->id() . '<br/>';
 			} # end if
 		} # end foreach po_id
 		delete $param{'po_id'};
@@ -702,5 +722,35 @@ sub _assets {
 
 sub _items_dropdown {
 } # end sub _items_dropdown
+
+sub authorizations {
+	if ( $param{action} eq 'Save' ) {
+		my @POC_Types = openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)');
+		foreach my $User ( openprint::User->find( company_id=>$param{company_id},
+					( $param{user_id} ? ( id=>$param{user_id} ) : () ) ) ) {
+			my $save = 0;
+			if ( $User->purchasing_limit() != $param{'limit_per_po-'.$$User{id}} ) {
+				$User->purchasing_limit( $param{'limit_per_po-'.$$User{id}} );
+				$save = 1;
+			} # end if
+			if ( $User->purchasing_total_limit() != $param{'limit_total-'.$$User{id}} ) {
+				$User->purchasing_total_limit( $param{'limit_total-'.$$User{id}} );
+				$save = 1;
+			} # end if
+			$User->save() if $save;
+			foreach my $POC_Type ( @POC_Types ) {
+				if ( $User->po_limit( $$POC_Type{id} ) != $param{'limit-'.$$User{id}.'-'.$$POC_Type{id}} ) {
+					$User->po_limit( $$POC_Type{id}, $param{'limit-'.$$User{id}.'-'.$$POC_Type{id}} );
+				} # end if
+			} # end foreach POC_TYPE	
+		} # end foreach User
+	} # end if
+	_authorizations();
+	$session{'/employee/purchase_order/authorizations.html?company_id'} = new openprint::User($session{user_id})->company_id() if ! $session{'/employee/purchase_order/authorizations.html?company_id'};
+} # end sub authorizations
+
+sub _authorizations {
+	ssi::save_params( '/employee/purchase_order/authorizations.html', ( 'company_id','user_id' ) );
+} # end sub _items
 1;
 __END__

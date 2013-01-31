@@ -4,7 +4,7 @@ require openprint::User;
 package openprint::User_Relationship_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'user_relationship_types';
 $serial = 'user_relationship_types_id_seq';
 %fields = (
@@ -23,7 +23,7 @@ package openprint::User_Relationship;
 our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table @identified_by %fields %find_fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 $table = 'user_relationships';
 @identified_by = ( 'user_id1', 'type_id', 'user_id2' );
 

@@ -3,7 +3,7 @@ package openprint::Bookmark;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'bookmarks';
 $serial = 'bookmarks_id_seq';
 %fields = (

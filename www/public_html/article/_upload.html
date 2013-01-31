@@ -1,6 +1,6 @@
 <fieldset><legend>Photos</legend>
 	<div id="asset_droparea" class="droparea qq-upload-drop-area">
-		<ul id="Assets"><!--#include virtual="/article/_assets.html"--></ul>
+		<ul id="Assets"><? echo ( include('/article/_assets.html'); ) ?></ul>
 		<div id="uploadinstructions">
 			To upload files,
 			<span id="dragndropuploadmessage" style="display:none;">
@@ -14,7 +14,7 @@
 		<ul id="asset_search">
 			<li><label>Name</label><input type="text" name="asset_name_search" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'asset_search_results', '_asset_search_results.html', { parameters: { asset_name: this.value } } ); };"/></li>
 		</ul>
-		<ul id="asset_search_results"><!--#include virtual="/article/_asset_search_results.html"--></ul>
+		<ul id="asset_search_results"><? echo ( include('/article/_asset_search_results.html'); ) ?></ul>
 	</fieldset>
 </fieldset>
 <script type="text/javascript">

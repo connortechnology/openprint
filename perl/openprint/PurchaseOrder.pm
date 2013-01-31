@@ -5,8 +5,7 @@ our @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use openprint ();
-use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $debug $log $dbh %config %session $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -25,7 +24,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'purchaseorders';
 $serial = 'purchaseorders_id_seq';
@@ -157,23 +156,39 @@ sub send_approval_required_notification {
 	my $Me = new openprint::User( $session{'user_id'} );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	my %info;
-	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
+	$info{'ReplacementText'} = ssi::include( $ENV{DOCUMENT_ROOT}.'/email_content/purchase_order_notification.html', \%info );
+
+	my @notification_types = map { 'PO ' . (new openprint::PurchaseOrder_ContentType( $_ )->name()) . ' Approvals' } sets::union( map { $_->type_id() } $self->Contents() );
 	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
+	my $mail = new openprint::Email();
 
-	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit >='=>$self->total() ) ) {
-		next if $U->id() == $Me->id();
-		next if ! Email::Valid->address($U->email() );
+	my $results;
+	foreach my $U ( map { $_->User() } openprint::User_Notification->find(type=>\@notification_types,'value'=>'Yes' ) ) {
+		if ( $U->id() == $Me->id() ) {
+			$openprint::log->debug( $U->email() . ' Not mailing me.' );
+			next;
+		} # end if
+		if ( ! Email::Valid->address($U->email()) ) {
+			$openprint::log->debug( $U->email() . ' is not a valid address.' );
+			next;
+		} # end if
+		if ( ! $self->can_authorize( $U ) ) {
+			$openprint::log->debug( $U->name() . ' cannot authorize this PO.' );
+			next;
+		} # end if
 
-		new openprint::Email()->send(
-				FROM    => $Me,
-				TO      => $U,
-				SUBJECT => 'Purchase Order requiring approval: ' . $self->id(),
-				ATTACHMENTS	=>	 \@body,
+		$results .= $mail->send(
+				FROM		=>	$Me,
+				TO			=>	$U,
+				SUBJECT		=>	'Purchase Order requiring approval: ' . $self->id(),
+				ATTACHMENTS	=>	\@body,
 				);
 	} # end foreach U
+$log->debug("Results: $results");
+	return $results;
 } # end sub send_approval_required_notification
 
 sub send_to_vendor {
@@ -266,31 +281,30 @@ $openprint::log->debug($receipt);
 
 sub subtotal {
 	if ( @_ > 1 ) {
-		$_[0]{'subtotal'} = $_[1];
+		$_[0]{subtotal} = $_[1];
 	} # end if
-	if ( ! defined $_[0]{'subtotal'} ) {
-		$_[0]{'subtotal'} = 0;
+	if ( ! defined $_[0]{subtotal} ) {
+		$_[0]{subtotal} = 0;
 		foreach my $C ( $_[0]->Contents() ) {
-			$_[0]{'subtotal'} += $C->total();
+			$_[0]{subtotal} += $C->total();
 		} # end foreach
-		$_[0]{'subtotal'} = Math::Round::nearest( 0.01, $_[0]{'subtotal'} );
+		$_[0]{subtotal} = Math::Round::nearest( 0.01, $_[0]{subtotal} );
 	} # end if
-	return $_[0]{'subtotal'};
+	return $_[0]{subtotal};
 } # end sub subtotal
 
 sub total {
-	my ( $self ) = @_;
 	if ( @_ == 2 ) {
-		$$self{total} = $_[1];
+		$_[0]{total} = $_[1];
 	} # end if
-	if ( ! $$self{total} ) {
-		$$self{total} = $self->subtotal();
-		foreach my $Tax ( $self->Taxes() ) {
-			$$self{total} += $Tax->amount();
+	if ( ! $_[0]{total} ) {
+		$_[0]{total} = $_[0]->subtotal();
+		foreach my $Tax ( $_[0]->Taxes() ) {
+			$_[0]{total} += $Tax->amount();
 		} # end foreach Tax
-		$$self{total} = Math::Round::nearest( 0.01, $$self{total} );
+		$_[0]{total} = Math::Round::nearest( 0.01, $_[0]{total} );
 	} # end if
-	return $$self{total};
+	return $_[0]{total};
 } # end sub total
 
 sub authorize {
@@ -457,6 +471,7 @@ sub can_edit {
 	} # end if
 	return 0;
 } # end sub can_edit
+
 sub can_view {
 	return 1 if ! $_[0]{'id'};
 	if ( 
@@ -478,6 +493,26 @@ sub num {
 	return $_[0]{id} if ! $_[0]{num};
 	return $_[0]{num};
 } # end sub num
+sub can_authorize {
+	my $User = @_ > 1 ? $_[1] : new openprint::User( $openprint::session{user_id} );
+
+	return 1 if $User->purchasing_limit() and ( $_[0]->total() < $User->purchasing_limit() );
+	my %Totals;
+	my %Types;
+	foreach my $C ( $_[0]->Contents() ) {
+		$Totals{$C->type_id()} += $C->price();
+		$Types{$C->type_id()} = $C->Type();
+	} # end foreach C
+		
+	my $authorized = 1;
+	foreach my $T ( values %Types ) {
+		$authorized = 0 if $Totals{$$T{id}} > $User->po_limit( $$T{id} );
+	} # end foreach Content 
+	if ( $authorized and $User->purchasing_total_limit() ) {
+		# Need to check all unauthorized POs FIXME later
+	} # end if
+	return $authorized;
+} # end sub can_authorize
 
 1;
 __END__

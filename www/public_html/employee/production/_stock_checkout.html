@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{'Project'}->docket() ) ?>" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />

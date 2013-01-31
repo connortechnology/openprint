@@ -1,6 +1,6 @@
 <a name="top"></a>
 <div class="CompanyProfiles">
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="/administrator/managerial/company_profiles.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search</legend>
@@ -212,7 +212,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 			</li>
 			<li>
 				<label>Accounting Contacts</label>
-				<span id="AccountingContacts"><!--#include virtual="_company_accounting_contacts.html"--></span>
+				<span id="AccountingContacts"><? echo ( include('_company_accounting_contacts.html'); ) ?></span>
 			</li>
 		<? endif ( $$variable{'CustomerIndex'} ) ?>
 			</ul>
@@ -285,7 +285,7 @@ ssi::button( 'merge'.$C->id(), { 'href'=>'/administrator/managerial/company_prof
 		</ul>
 	</fieldset>
 </div>
-<!--#include virtual="/account/_company_profile_edit.html"-->
+<? echo ( include('/account/_company_profile_edit.html'); ) ?>
 <div class="BusinessInformation">
 	<fieldset><legend>Business Information</legend>
 		<ul>

@@ -3,7 +3,6 @@
 <h2>History</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function delete_confirm(form) {
 		var number_of_deleted_surveys = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -26,7 +25,6 @@
 		$('SurveyList').innerHTML = 'Please wait...';
 		new Ajax.Updater('SurveyList','_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
--->
 </script>	 
 <div class="Survey"><div class="History">
 	<form id="f1" name="f1" method="post" action="/survey/history.html">
@@ -71,7 +69,7 @@ onchange=>q`load_surveys($('f1'));`,
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="SurveyList"><!--#include virtual="_history.html"--></div>
+		<div id="SurveyList"><? echo ( include('_history.html'); ) ?></div>
 	</form>
 	</div>
 </div>

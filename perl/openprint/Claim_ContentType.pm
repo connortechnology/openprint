@@ -1,20 +1,10 @@
-package openprint::Claim_ContentType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+package openprint::Claim_ContentType;
+our @ISA = qw(openprint::Object);
 
-require sql;
-require ssi;
-require misc;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 0;
 
 $table = 'Claim_ContentTypes';
 $serial = 'Claim_ContentTypes_id';

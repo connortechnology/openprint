@@ -23,7 +23,7 @@
 					<th class="buttons"><? echo ( ssi::button( 'New', { 'onclick'=>"newField( );" } ); ) ?></th>
 				</tr>
 			</thead>
-			<tbody id="fields"><!--#include virtual="_user_fields_tbody.html"--></tbody>
+			<tbody id="fields"><? echo ( include('_user_fields_tbody.html'); ) ?></tbody>
 		</table>
 	</form>
 </div>

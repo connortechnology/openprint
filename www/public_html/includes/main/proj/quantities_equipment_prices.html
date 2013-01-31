@@ -1,4 +1,4 @@
-<!--#include virtual="/includes/main/proj/_quantities.html"-->
+<? echo ( include('/includes/main/proj/_quantities.html'); ) ?>
 <li class="equipment">
 	<label>Equipment</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -27,8 +27,8 @@
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </li>
-<!--#include virtual="/includes/main/proj/_unit_price.html"-->
-<!--#include virtual="/includes/main/proj/_mprice.html"-->
-<!--#include virtual="/includes/main/proj/_markup.html"-->
-<!--#include virtual="/includes/main/proj/_service_price.html"-->
-<!--#include virtual="/includes/main/proj/_breakdown.html"-->
+<? echo ( include('/includes/main/proj/_unit_price.html'); ) ?>
+<? echo ( include('/includes/main/proj/_mprice.html'); ) ?>
+<? echo ( include('/includes/main/proj/_markup.html'); ) ?>
+<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
+<? echo ( include('/includes/main/proj/_breakdown.html'); ) ?>

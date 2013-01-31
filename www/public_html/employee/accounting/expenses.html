@@ -28,7 +28,7 @@
 	} // end function
 -->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -119,5 +119,5 @@
 				); ) ?>
 		</p>
 	</fieldset>
-	<div id="ExpenseList"><!--#include virtual="_expenses.html"--></div>
+	<div id="ExpenseList"><? echo ( include('_expenses.html'); ) ?></div>
 </form>

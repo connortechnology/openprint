@@ -1,5 +1,5 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Product">
 	<form name="f1" id="f1" method="post" enctype="multipart/form-data" action="edit.html">
 			<p class="buttons">
@@ -62,12 +62,12 @@
 <div class="Photos">
 <fieldset><legend>Photos</legend>
 <? eval ( $$variable{'Album'} = $$variable{'Product'} ) ?>
-<!--#include virtual="/photo_albums/_album_photos.html"-->
+<? echo ( include('/photo_albums/_album_photos.html'); ) ?>
 </div>
 		<br class="spacer"/>
 <div class="Prices">
 		<fieldset><legend>Prices</legend>
-			<div id="Prices"><!--#include virtual="_prices_view.html"-->
+			<div id="Prices"><? echo ( include('_prices_view.html'); ) ?>
 			</div>
 		</fieldset>
 </div>

@@ -8,6 +8,7 @@ require openprint::Object;
 require openprint::RFIDScanner;
 require openprint::RFIDScannerHistory;
 require openprint::RFIDTag;
+require openprint::RFIDTagHistory;
 require openprint::Skid;
 require logger;
 require sets;
@@ -42,7 +43,8 @@ sub Checkout_Skid {
 		$CheckedOutSkids{$Skid->id()} = 1;
 		$context->log(1, sprintf('%s : %s : success Skid is in checkout location skidid: %s', $date, $context->{server}->{peeraddr}, $Skid->id() ));
 
-		sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$Tag->id(),'location_id'=>$Tag->location_id(), 'scanner_id'=>$Scanner->id()} );
+		$_ = (new openprint::RFIDTagHistory)->save({ rfidtag_id=>$Tag->id(), location_id=>$Tag->location_id(), scanner_id=>$Scanner->id()} );
+		$context->log(1, $_ ) if $_;
 	} # end if
 } # end sub Checkout_Skid
 
@@ -156,8 +158,7 @@ sub process_request {
 			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
-						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
-						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory->find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>$location_cache_size) if ! @last_seen;
 						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 							shift @last_seen if @last_seen > $location_cache_size;

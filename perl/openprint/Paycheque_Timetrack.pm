@@ -6,7 +6,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table @identified_by %fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'paycheques_timetracks';
 @identified_by = ( 'timetrack_id', 'paycheque_id' );

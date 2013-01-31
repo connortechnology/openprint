@@ -1,6 +1,4 @@
 use strict;
-use openprint ();
-
 require openprint::Performance_Report;
 require openprint::Performance_Point;
 
@@ -8,7 +6,7 @@ require openprint::Performance_Point;
 package openprint::Performance_Record;
 our @ISA = qw( openprint::Object );
 use vars qw( $debug $table %fields %find_fields %transforms %defaults @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'performance_records';
 @identified_by = ( 'report_id', 'type_id', 'docket' );
 

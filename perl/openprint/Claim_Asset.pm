@@ -5,7 +5,7 @@ require openprint::Claim;
 package openprint::Claim_Asset;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %transforms %defaults $table @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'claim_assets';
 @identified_by = ( 'claim_id','asset_id' );
 %fields = (

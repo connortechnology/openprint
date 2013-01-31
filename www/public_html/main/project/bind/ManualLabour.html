@@ -19,7 +19,7 @@
 				<label>Base Price</label>
 				<input name="BasePrice" value="<?BasePrice?>" type="number" onkeyup="calc(this.form.name);" />
 			</li>
-			<!--#include virtual="/includes/main/proj/_1000_price.html"-->
+			<? echo ( include('/includes/main/proj/_1000_price.html'); ) ?>
 			<li>
 				<label>Total Price (<?CurrencySymbol?>)</label>
 				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -36,7 +36,7 @@
 			</ul>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_all.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
 	</form>
 </div>

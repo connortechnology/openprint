@@ -1,8 +1,9 @@
-package openprint::Address;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::Address;
+our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'addresses';
 $serial = 'addresses_id_seq';
 
@@ -17,12 +18,12 @@ $serial = 'addresses_id_seq';
 );
 
 %transforms = (
-	id		=>	[ 's/\D//g' ],
-	location_id		=>	[ 's/\D//g' ],
-	company_id		=>	[ 's/\D//g' ],
+	id			=>	[ 's/\D//g' ],
+	location_id	=>	[ 's/\D//g' ],
+	company_id	=>	[ 's/\D//g' ],
 	user_id		=>	[ 's/\D//g' ],
-    name => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
-    notes => [ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    name		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
+    notes		=>	[ 's/^\s+//', 's/\s+$//', 's/\s\s+/ /g' ],
 );
 
 %defaults = (

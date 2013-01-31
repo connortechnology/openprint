@@ -26,7 +26,7 @@
 	} // end function load_quotes
 -->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Quote"><div class="History">
 	<form id="f1" name="f1" method="post" action="history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria</legend>
@@ -67,6 +67,6 @@
 			</p>
 		</fieldset>
 	</form>
-<div id="QuoteList"><!--#include virtual="_history.html"--></div>
+<div id="QuoteList"><? echo ( include('_history.html'); ) ?></div>
 	</div>
 </div>

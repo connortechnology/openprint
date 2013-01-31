@@ -1,15 +1,10 @@
-package openprint::PAR_Reason;
-@ISA = qw(openprint::Object);
-
-my $debug = 1;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms $log $dbh );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+package openprint::PAR_Reason;
+our @ISA = qw(openprint::Object);
 
-require sql;
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
+$debug = 0;
 $table = 'par_reasons';
 $serial = 'par_reasons_id_seq';
 

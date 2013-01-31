@@ -8,11 +8,11 @@
 			<label>CD quantity</label>
 			<? echo ( input( name=>'txtQuantity', value=>$$variable{txtQuantity}, type=>'cardinal', onkeyup=>'calc(this.form.name);' ); ) ?>
 		</li>
-		<!--#include virtual="/includes/main/proj/prices_prepress.html"-->
+		<? echo ( include('/includes/main/proj/prices_prepress.html'); ) ?>
 		</ul>
 	</fieldset>
 	<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_prepress.html'); ) ?>
 	</form>
 </div>

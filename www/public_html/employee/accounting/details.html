@@ -8,7 +8,7 @@
 	} // end function confirm_delete()
 </script>
 <link href="/css/order.css" rel="stylesheet" type="text/css"/>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <form name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
 	<p class="buttons">
 	<? echo ( my $html;
@@ -26,7 +26,7 @@
 		<span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
 		<? echo ( ssi::button( 'Invoice', { onclick=>"f1.btnFunction.value='Invoice';f1.submit();", href=>'', text=>'Mark Invoiced' } ); ) ?>
 	</p><br class="spacer"/>
-	<!--#include virtual="/includes/order_header.html" -->
+	<? echo ( include('/includes/order_header.html'); ) ?>
 	<br class="spacer"/>
 	<table class="List">
 		<tr>
@@ -59,13 +59,13 @@
 ) ?>
 	</table>
 	<div style="float: right; width: 250px;">
-		<!--#include virtual="/main/order/_totals.html" -->
+		<? echo ( include('/main/order/_totals.html'); ) ?>
 		<br/>
 		<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	</div>
 	<br class="spacer"/>
 	<div id="Payments">
-	<!--#include virtual="/employee/accounting/_payments.html" -->
+	<? echo ( include('/employee/accounting/_payments.html'); ) ?>
 	</div>
 	<input type="hidden" name="PaymentIndex"/>
 	<input type="hidden" name="btnFunction"/>

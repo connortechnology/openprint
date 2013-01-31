@@ -5,7 +5,7 @@ require openprint::logs;
 
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 my $table = 'JMF_Messages';
 

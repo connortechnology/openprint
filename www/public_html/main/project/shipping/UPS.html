@@ -50,10 +50,10 @@ function validate_data(formName) {
 			</p>
 			<? else ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<div class="leftColumn">
-				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_from_address.html'); ) ?>
 			</div>
 			<div class="rightColumn">
-				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+				<? echo ( include('/includes/main/proj/shipping_to_address.html'); ) ?>
 			</div>
 			<? endif ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p>
@@ -87,7 +87,7 @@ function validate_data(formName) {
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 			</p>
-			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
+			<? echo ( include('/includes/main/proj/shipping_packages.html'); ) ?>
 			<p>
 				<label><b>Price: ($)</b></label>
 				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -102,7 +102,7 @@ function validate_data(formName) {
 			</p>
 		</fieldset>
 		<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>

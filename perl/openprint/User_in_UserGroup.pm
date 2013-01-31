@@ -6,7 +6,7 @@ require openprint::User;
 require openprint::UserGroup;
 
 use vars qw( $debug $table @identified_by %fields %find_fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 
 $table = 'users_in_usergroups';
 @identified_by = ('user_id', 'usergroup_id');

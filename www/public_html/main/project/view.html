@@ -71,7 +71,7 @@
 		</div>
 	</div>
 	<br class="spacer"/>
-	<!--#include virtual="_view.html" -->
+	<? echo ( include('_view.html'); ) ?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{Project}->docket() ) or ( $$variable{Project}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table>
 		<tr class="totals unprintable">

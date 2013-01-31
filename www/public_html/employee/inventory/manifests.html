@@ -1,5 +1,5 @@
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Manifests">
 	Please select a Manifest to view/edit.<br>
 	<form id="f1" name="f1" method="post" action="manifest.html">
@@ -59,5 +59,5 @@
 		</fieldset>
 	</form>
 	<script type="text/javascript">document.f1.manifest_name.focus();</script>
-	<div id="Results"><!--#include virtual="_manifests.html"--></div>
+	<div id="Results"><? echo ( include('_manifests.html'); ) ?></div>
 </div>

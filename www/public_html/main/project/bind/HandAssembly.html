@@ -13,11 +13,11 @@
 		<li><label># of hours</label>
 			<? echo ( input( type=>'cardinal', name=>'txtQuantity', value=>$$variable{txtQuantity}, onkeyup=>'calc(this.form.name);' ); ) ?>
 		</li>
-		<!--#include virtual="/includes/main/proj/_service_price.html"-->
+		<? echo ( include('/includes/main/proj/_service_price.html'); ) ?>
 		</ul>
 	</fieldset>
 	<hr/>
-		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
-		<!--#include virtual="/includes/main/proj/hdn_fields_all.html"-->
+		<? echo ( include('/includes/main/proj/add_to_project.html'); ) ?>
+		<? echo ( include('/includes/main/proj/hdn_fields_all.html'); ) ?>
 	</form>
 </div>

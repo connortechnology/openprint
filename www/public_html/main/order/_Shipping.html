@@ -16,9 +16,9 @@
 	<div class="ShippingQuantity">
 		<div class="content">
 			<ul> 
-			<!--#include virtual="_project_shipping_quantity.html"-->
+			<? echo ( include('_project_shipping_quantity.html'); ) ?>
 			</ul>
 		</div>
 	</div>
-	<div class="ShippingAddress"><!--#include virtual="_project_shipping_address.html"--></div>
+	<div class="ShippingAddress"><? echo ( include('_project_shipping_address.html'); ) ?></div>
 </fieldset>

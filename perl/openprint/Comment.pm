@@ -4,7 +4,7 @@ package openprint::Comment;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
 
-$debug = 1;
+$debug = 0;
 $table = 'comments';
 $serial = 'comments_id_seq';
 %fields = (

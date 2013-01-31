@@ -380,29 +380,33 @@ sub _comments {
 } # end sub _comments
 
 sub _assets {
-	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
-	if ( $param{'func'} eq 'delete' ) {
-		my $Asset = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$param{'asset_id'}});
-		$variable{'error'} .= $Asset->delete();
-	} elsif ( $param{'func'} eq 'add' ) {
-		my ( $id, $filename ) = $param{'filename'} =~ /^(\d+)_(.+)$/; 
-			
-		my $Asset = openprint::Asset->find_one('id'=>$id, 'filename'=>$filename );
-		if ( $Asset ) {
-			my $AA = new openprint::Article_Asset({'article_id'=>$param{'article_id'}, 'asset_id'=>$$Asset{'id'}});
-			if ( ! $$AA{'asset_id'} ) {
-				$variable{'error'} .= $AA->save({
-					'asset_id'	=>	$$Asset{'id'},
-					'article_id'	=>	$param{'article_id'},
-				});
+	my $Article = $variable{Article} = new openprint::Article( $param{article_id} );
+	if ( $Article->can_edit() ) {
+		if ( $param{func} eq 'delete' ) {
+			my $Asset = new openprint::Article_Asset({article_id=>$param{article_id}, asset_id=>$param{asset_id}});
+			$variable{'error'} .= $Asset->delete();
+		} elsif ( $param{'func'} eq 'add' ) {
+			my ( $id, $filename ) = $param{filename} =~ /^(\d+)_(.+)$/; 
+				
+			my $Asset = openprint::Asset->find_one(id=>$id, filename=>$filename );
+			if ( $Asset ) {
+				my $AA = new openprint::Article_Asset({article_id=>$param{article_id}, asset_id=>$$Asset{id}});
+				if ( ! $$AA{asset_id} ) {
+					$variable{error} .= $AA->save({
+						asset_id	=>	$$Asset{id},
+						article_id	=>	$param{article_id},
+					});
+				} else {
+					$variable{error} .= 'Asset already in article.';
+				} # end if
 			} else {
-				$variable{'error'} .= 'Asset already in article.';
+				$variable{error} .= 'Asset not found.';
 			} # end if
-		} else {
-			$variable{'error'} .= 'Asset not found.';
+		} elsif ( $param{func} ) {
+			$log->error("article/_assets: Uknown function $param{func}");
 		} # end if
-	} elsif ( $param{'func'} ) {
-		$log->error("article/_assets: Uknown function $param{'func'}");
+	} else {
+		$variable{error} .= 'You do not have rights to change this article.';
 	} # end if
 } # end sub _assets
 

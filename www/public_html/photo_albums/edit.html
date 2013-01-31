@@ -1,6 +1,6 @@
 <script type="text/javascript" src="<? hash_link(/javascripts/fileuploader.js) ?>"></script>
 <link type="text/css" rel="<? hash_link(/css/fileuploader.css) ?>"/>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="PhotoAlbum">
 	<div class="Edit">
 <? if ( $$variable{'Album'}->can_edit() ) ?>
@@ -34,12 +34,12 @@
 							</select>
 						</li>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-						<!--#include virtual="/includes/_privacy_widget.html"-->
+						<? echo ( include('/includes/_privacy_widget.html'); ) ?>
 					</ul>
 				</div>
 			</fieldset>
 			<? if ( $$variable{'Album'}->id() ) ?>
-			<!--#include virtual="_album_upload.html"-->
+			<? echo ( include('_album_upload.html'); ) ?>
 			<? endif ( $$variable{'Album'}->id() ) ?>
 			</fieldset>
 		</form>

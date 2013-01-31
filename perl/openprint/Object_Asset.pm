@@ -6,7 +6,7 @@ require openprint::Object_Type;
 package openprint::Object_Asset;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug %fields %find_fields %transforms %defaults $table @identified_by );
-$debug = 1;
+$debug = 0;
 $table = 'object_assets';
 @identified_by = ( 'object_id','object_type_id','asset_id' );
 %fields = (

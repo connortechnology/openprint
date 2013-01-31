@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use vars qw( $debug $table $serial %fields %transforms %defaults %find_fields );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'projecttype_defaults';
 $serial = 'projecttype_defaults_id_seq';

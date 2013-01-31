@@ -14,7 +14,7 @@ use vars qw( %param %variable %config %session $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 
 require sql;
 require openprint::Currency;

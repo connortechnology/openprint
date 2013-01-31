@@ -3,7 +3,6 @@
 <h2>Inbox</h2>
 </div>
 <script type="text/javascript">
-<!--
 	function load_messages( form ) {
 		$('MessageList').innerHTML = 'Please wait...';
 		new Ajax.Updater('MessageList','_list.html', {method:'get',parameters:Form.serialize(form)});
@@ -11,9 +10,8 @@
 	function delete_conversation( conversation_id ) {
 		new Ajax.Updater( 'MessageList', '_list.html', { parameters: { action: 'delete', conversation_id: conversation_id, user_id: '<? echo ( $session{user_id} ) ?>' } } );
 	} // end function delete_message
--->
 </script>	 
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <? if ( $session{'user_id'} ) ?>
 <div class="Messaging"><div class="<? echo ( $session{'/messaging/list.html?folder'} ) ?>">
 	<form id="f1" name="f1" method="post" action="/messaging/list.html">
@@ -44,7 +42,7 @@
 						); ) ?>
 				</p>
 			</fieldset>
-			<div id="MessageList"><!--#include virtual="/messaging/_list.html"--></div>
+			<div id="MessageList"><? echo ( include('/messaging/_list.html'); ) ?></div>
 		</fieldset>
 	</form>
 	</div>

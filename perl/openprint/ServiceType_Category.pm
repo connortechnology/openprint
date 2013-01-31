@@ -1,12 +1,10 @@
-package openprint::ServiceType_Category;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+package openprint::ServiceType_Category;
+our @ISA = qw(openprint::Object);
 
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
+$debug = 0;
 $table = 'ServiceType_Categories';
 $serial = 'ServiceType_Categories_id_seq';
 
@@ -21,7 +19,6 @@ $serial = 'ServiceType_Categories_id_seq';
 	'sorting'	=>	undef,
 );
 
-my $debug = 1;
 
 1;
 __END__

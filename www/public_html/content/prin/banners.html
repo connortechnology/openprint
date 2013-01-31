@@ -1,18 +1,18 @@
 <form id="f1" name="f1" method="post" action="">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
-	<!--#include virtual="/includes/error_reporting.html"-->
+	<? echo ( include('/includes/error_reporting.html'); ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
 						
 				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
-					<!--#include virtual="_project_name.html"-->
+					<? echo ( include('_project_name.html'); ) ?>
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
 						<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
-						<!--#include virtual="_sizes.html"-->
+						<? echo ( include('_sizes.html'); ) ?>
 						<div class="Colours">
 							<fieldset><legend>Colours</legend>
 								<div class="content">
@@ -32,7 +32,7 @@
 						<div class="Stock">
 							<fieldset><legend>Stock</legend>
 								<div class="content">
-									<!--#include virtual="_paper_dropdowns.html"-->
+									<? echo ( include('_paper_dropdowns.html'); ) ?>
 								</div>
 							</fieldset>
 						</div>
@@ -41,20 +41,20 @@
                         <div class="content">
                             <ul>
 
-						<!--#include virtual="_design.html"-->
-						<!--#include virtual="_proofs.html"-->
-						<!--#include virtual="_drilling.html"-->
-						<!--#include virtual="_scoring.html"-->
-						<!--#include virtual="_perfing.html"-->
-						<!--#include virtual="_turnaround.html"-->
-						<!--#include virtual="_quantity.html"-->
-						<!--#include virtual="_press_type.html"-->
+						<? echo ( include('_design.html'); ) ?>
+						<? echo ( include('_proofs.html'); ) ?>
+						<? echo ( include('_drilling.html'); ) ?>
+						<? echo ( include('_scoring.html'); ) ?>
+						<? echo ( include('_perfing.html'); ) ?>
+						<? echo ( include('_turnaround.html'); ) ?>
+						<? echo ( include('_quantity.html'); ) ?>
+						<? echo ( include('_press_type.html'); ) ?>
 							</ul>
 						</div>
 					</fieldset>
 				</div>
 						<br class="spacer"/>
-						<!--#include virtual="_prices.html"-->
+						<? echo ( include('_prices.html'); ) ?>
 					</div><!--Questions-->
 					<br class="spacer"/>
 				</div>
@@ -68,6 +68,6 @@
 	} # end if
 	return '';
 ) ?>
-		<!--#include virtual="_specials.html"-->
+		<? echo ( include('_specials.html'); ) ?>
 	</div><!--InstantPricing-->
 </form>

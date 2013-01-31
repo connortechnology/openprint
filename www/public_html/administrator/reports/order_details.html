@@ -7,23 +7,23 @@
         } // end if
     } // end function confirm_delete()
 </script>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <div class="Order"><div class="View">
 	<form name="f1" action="order_details.html?order_id=<?OrderID?>" method="post">
 	<p class="buttons">
 		<? echo ( my $html = '';
-			$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';f1.submit();",'','Delete');
+			$html .= ssi::button( 'Delete', { onclick=>"f1.btnFunction.value='Delete';f1.submit();", href=>'', text=>'Delete' } );
 			if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.btnFunction.value='Cancel';f1.submit();",'','Cancel');
-				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif',"f1.btnFunction.value='Resend';f1.submit();",'','Resend');
+				$html .= ssi::button( 'Cancel', { onclick=>"f1.btnFunction.value='Cancel';f1.submit();", href=>'', text=>'Cancel' } );
+				$html .= ssi::button( 'Resend', { onclick=>"f1.btnFunction.value='Resend';f1.submit();", href=>'', text=>'Resend' } );
 			} # end if
 			return $html;
 		) ?>
 	</p>
-	<!--#include virtual="/includes/order_header.html" -->
+	<? echo ( include('/includes/order_header.html'); ) ?>
 	<br class="spacer"/>
-	<!--#include virtual="/includes/order_project_list.html" -->
-	<!--#include virtual="/main/order/_product_list.html" -->
+	<? echo ( include('/includes/order_project_list.html'); ) ?>
+	<? echo ( include('/main/order/_product_list.html'); ) ?>
 	<span style="float: left;">
 		<? if ( $$variable{'AdministratorName'} ) ?>
 		<b>Administrator Name</b> <?AdministratorName?><br>
@@ -32,16 +32,16 @@
 		<b>Administrator Comments</b> <?AdministratorComments?><br>
 		<? endif ( $$variable{'AdministratorComments'} ) ?>
 	</span>
-	<!--#include virtual="/main/order/_totals.html" -->
+	<? echo ( include('/main/order/_totals.html'); ) ?>
 	<br class="spacer"/>
 	<select name="company_id">
 	<? echo ( openprint::Company::get_dropdown( $$variable{'Order'}->company_id() ); ) ?>
 	</select>
-	<? echo ( ssi::writeButton( $log, $dbh, 'Save','save.gif',"f1.btnFunction.value='Save';f1.submit();",'','Change Company'); ) ?>
+	<? echo ( ssi::button( 'Save', { onclick=>"f1.btnFunction.value='Save';f1.submit();", href=>'', text=>'Change Company' } ); ) ?>
 	<br class="spacer"/>
-	<!--#include virtual="/includes/_order_payments.html"-->
+	<? echo ( include('/includes/_order_payments.html'); ) ?>
 		<input type="hidden" name="btnFunction"/>
 	</form>
 	<hr/>
-	<!--#include virtual="/main/order/_view_log.html"-->
+	<? echo ( include('/main/order/_view_log.html'); ) ?>
 </div></div>

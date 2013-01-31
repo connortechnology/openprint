@@ -40,15 +40,15 @@
 				<td class="Description">
 					<select id="product-category-id-" name="product-category-id-" onchange="new Ajax.Updater( 'product-id-', '/includes/_products_ddm.html', { parameters: { category_id: this.value } } );">
 					<option value="">all</option>
-					<? echo ( ssi::make_drop_down( openprint::Product_Category->dropdown('order'=>'lower(name)') ); ) ?>
+					<? echo ( ssi::make_drop_down( openprint::Product_Category->dropdown( order =>'lower(name)'), $param{'product-category-id-'} ); ) ?>
 					</select>
 					<select id="product-id-" name="product-id-">
-					<? echo ( ssi::make_drop_down( openprint::Product->dropdown('order'=>'lower(name)') ); ) ?>
+					<? echo ( ssi::make_drop_down( openprint::Product->dropdown( order =>'lower(name)'), $param{'product-id-'} ); ) ?>
 					</select>
 				</td>
 				<td class="po"><input type="text" id="product-po-" name="product-po-" value="" onkeyup=""/></td>
 				<td class="Price"></td>
-				<td class="Quantity"><input type="text" id="product-quantity-" name="product-quantity-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
+				<td class="Quantity"><? echo ( input( type=>'float', id=>'product-quantity-', name=>'product-quantity-' ); ) ?></td>
 				<td class="Price"></td>
 				<td class="buttons">
 <? echo ( ssi::button( 'AddNewProduct', { onclick=>qq`new Ajax.Updater('InvoicedProducts','_invoiced_products.html?action=add', { method: 'post', parameters: \$('f1').serialize()} );`, text=>'+' } ); ) ?>

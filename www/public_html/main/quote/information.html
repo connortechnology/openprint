@@ -370,7 +370,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<? if ( openprint::Product->find_one() ) ?>
 		<div class="Products">
 		<fieldset><legend>Products</legend>
-			<div id="Products"><!--#include virtual="_products.html"--></div>
+			<div id="Products"><? echo ( include('_products.html'); ) ?></div>
 		</fieldset>
 		</div>
 		<? endif ( openprint::Product->find_one() ) ?>

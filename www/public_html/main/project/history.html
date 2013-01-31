@@ -2,7 +2,7 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
-<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( include('/includes/error_reporting.html'); ) ?>
 <script type="text/javascript">
 <!--
 	function delete_confirm(form) {
@@ -125,7 +125,7 @@
 				); ) ?>
 			</p>
 		</fieldset>
-		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
+		<div id="ProjectList"><? echo ( include('_history.html'); ) ?></div>
 	</div>
 	</div>
 	<input type="hidden" name="btnFunction" />
