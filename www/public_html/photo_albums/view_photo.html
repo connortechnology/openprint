@@ -93,17 +93,17 @@ if ( 0 ) {
 					$html .= '<video width="'.$Asset->width().'" height="'.$Asset->height().'" controls>'."\n";
 		if ( $ENV{HTTP_USER_AGENT} =~ /ip(ad|od|hone)/i ) {
 					if ( $_ = $Asset->video_url('mp4') ) {
-						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/mp4">'."\n";
+						$html .= '<source src="'.$config{siteURL}.$_.'?_session_id='.$session{_session_id}.'" type="video/mp4">'."\n";
 					} # end if
 		} else {
 					if ( $_ = $Asset->video_url('mp4') ) {
-						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/mp4">'."\n";
+						$html .= '<source src="'.$config{siteURL}.$_.'?_session_id='.$session{_session_id}.'" type="video/mp4">'."\n";
 					} # end if
 					if ( $_ = $Asset->video_url('ogg') ) {
-						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/ogg">'."\n";
+						$html .= '<source src="'.$config{siteURL}.$_.'?_session_id='.$session{_session_id}.'" type="video/ogg">'."\n";
 					} # end if
 					if ( $_ = $Asset->video_url('webm') ) {
-						$html .= '<source src="'.$config{siteURL}.$_.'" type="video/webm">'."\n";
+						$html .= '<source src="'.$config{siteURL}.$_.'?_session_id='.$session{_session_id}.'" type="video/webm">'."\n";
 					} # end if
 		} # end if
 					$html .= 'Your browser does not support the video tag';

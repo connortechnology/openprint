@@ -54,7 +54,9 @@ sub handler {
 	configuration::init( $r->dir_config() );
 	if ( $dbh ) {
 		# Need session, have to know who we are!
+$log->debug("Session is: $session{_session_id}");
 		openprint::session_init();
+$log->debug("Session is: $session{_session_id} $session{user_id} $session{company_id}");
 		# If the session was created, then we want to tell it when, otherwise
 		# don't update it so that we don't incur another db update
 		# Do it up here cuz if the browser kills the connection, we will die during sending and won't do this line

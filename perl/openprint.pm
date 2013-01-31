@@ -6,14 +6,28 @@ sub session_init {
 	require Apache2::Cookie;
 	require Apache::Session::Postgres;
 	my $cookies = Apache2::Cookie->fetch( $r );
-	my $cookie = $$cookies{'_session_id'};
-	$cookie = $cookie->value if $cookie;
+	my $cookie;
+	if ( $$cookies{'_session_id'} ) {
+		$cookie = $$cookies{'_session_id'};
+		$cookie = $cookie->value if $cookie;
+	} else {
+		if ( $r->param('_session_id') ) {
+			$cookie = $r->param('_session_id');
+		} # end if
+	} # end if
 
 	if ( $dbh ) {
 		if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
 			$log->debug("Error fetching Session: $cookie: $@");
 			if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
 				$log->debug("Error creating Session: ");
+			} # end if
+			if ( $r->param('_session_id') ) {
+				if ( $session{ip} ne $ENV{REMOTE_ADDR} ) {
+					$log->error("Change of session ip");
+					untie %session;
+					%session = ();
+				} # end if
 			} # end if
 			# Store this, will be useful
 			$session{'ip'} = $ENV{'REMOTE_ADDR'};
