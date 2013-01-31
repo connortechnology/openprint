@@ -211,7 +211,13 @@ $log->debug("No pagesetting?");
 	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
-			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+			if ( -e ($_ = join('/', $config{'SkinPath'}, 'html', $page )) ) {
+				$content = misc::load_file( $log, $_ );
+				if ( ! $content ) {
+					$log->error("Found no content at $_");
+				} # end if
+			} elsif ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
+$log->error("Deprecated SkinPath layout! $config{SkinPath}");
 				$content = misc::load_file( $log, $_ );
 				if ( ! $content ) {
 					$log->error("Found no content at $_");
