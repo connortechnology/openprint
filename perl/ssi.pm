@@ -67,13 +67,13 @@ sub variable_substitution {
 			$after =~ s/^\s+$//m;
 
 			if ( $command =~ /^while\s*\(\s*(.*)\s*\)/ ) {
-				my $dataname = $1;
-				if ( $after =~ /(.*?)<\?\s*endwhile\s*\(\s*\Q$dataname\E\s*\)\s*\?>(.*)/si ) {
+				my $condition = $1;
+				if ( $after =~ /(.*?)<\?\s*endwhile\s*\(\s*\Q$condition\E\s*\)\s*\?>(.*)/si ) {
 					( my $middle, $after ) = ( $1, $2 );
-					while ( eval $dataname ) {
-						$text .= variable_substitution( \$middle, $variable );
+					while ( eval $condition ) {
+						$result .= variable_substitution( \$middle, $variable );
 					} # end while
-					$log->error( "Eval error of ($dataname), Reason: " . $@ ) if $@;
+					$log->error( "Eval error of ($condition), Reason: " . $@ ) if $@;
 				} else {
 					$log->error("Unable to find terminating while ($command)");
 				} # end if
@@ -121,7 +121,7 @@ sub variable_substitution {
 			} elsif ( $command =~ /^checked\s*\(\s*(.*)\s*\)/ms ) {
 				$result .= checked( eval $1 );
 			} elsif ( $command =~ /^include\s*\(\s*'?(.*)'?\s*\)/ms ) {
-				$result .= include( $1 );
+				$result .= include( $1, $variable );
 			} else {
 				$result .= $$variable{$command};
 			} # end if
