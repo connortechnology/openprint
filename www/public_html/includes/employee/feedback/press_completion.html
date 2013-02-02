@@ -24,10 +24,14 @@
 				} # end if
 			} # end foreach
 			
-			my $Service = $$variable{'Project'}->Service( $sig_id );
-			$$variable{'Operator'} = $Service->Operator();
+			my $Service = $$variable{Project}->Service( $sig_id );
+			$$variable{Operator} = $Service->Operator();
+			my $Equipment = $Service->Equipment();
+
 			if ( openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $session{'user_id'}) ) {
-				return '<select name="operator_id-'.$$variable{'SignatureIndex'}.'">'. ssi::make_drop_down( [ '','select', map {$_->id(), $_->name()} openprint::User::find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $Service->operator_id() ).'</select>';
+				return '<select name="operator_id-'.$$variable{'SignatureIndex'}.'">'. 
+				ssi::make_drop_down( [ '','select', map {$_->id(), $_->name()} openprint::User->find(
+'usergroup'=>$Equipment->categories(), order=>'lower(strfirstname),lower(strlastname)') ], $Service->operator_id() ).'</select>';
 			} else {
 				my $html = $$variable{'Operator'}->name();
 				if ( $Service->operator_id() and ( $Service->operator_id() != $session{'user_id'} ) ) {

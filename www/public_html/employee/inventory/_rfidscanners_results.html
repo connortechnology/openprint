@@ -1,40 +1,19 @@
 <? eval (
 	require openprint::RFIDScanner;
 
-	ssi::save_params( '/employee/inventory/rfidscanners.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','assigned','notassigned','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day' ) );
+	ssi::save_params( '/employee/inventory/rfidscanners.html', ( 
+			'created_on_start_year','created_on_start_month','created_on_start_day',
+			'created_on_end_year','created_on_end_month','created_on_end_day',
+			'updated_on_start_year','updated_on_start_month','updated_on_start_day',
+			'updated_on_end_year','updated_on_end_month','updated_on_end_day' ) );
 
-	@{$$variable{'RFIDScanners'}} = openprint::RFIDScanner::find( 
-		'owner_id'	=>	( defined $session{'/employee/inventory/rfidscanners.html?Owner'} ? $session{'/employee/inventory/rfidscanners.html?Owner'} : undef ),
-		'created_on_start'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/rfidscanners.html?created_on_start_year',
-			'/employee/inventory/rfidscanners.html?created_on_start_month',
-			'/employee/inventory/rfidscanners.html?created_on_start_day'} ) ?  sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-			'/employee/inventory/rfidscanners.html?created_on_start_year',
-			'/employee/inventory/rfidscanners.html?created_on_start_month',
-			'/employee/inventory/rfidscanners.html?created_on_start_day'} ) : undef,
-		'created_on_end'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/rfidscanners.html?created_on_end_year',
-			'/employee/inventory/rfidscanners.html?created_on_end_month',
-			'/employee/inventory/rfidscanners.html?created_on_end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-			'/employee/inventory/rfidscanners.html?created_on_end_year',
-			'/employee/inventory/rfidscanners.html?created_on_end_month',
-			'/employee/inventory/rfidscanners.html?created_on_end_day'} ) : undef,
-		'updated_on_start'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/rfidscanners.html?updated_on_start_year',
-			'/employee/inventory/rfidscanners.html?updated_on_start_month',
-			'/employee/inventory/rfidscanners.html?updated_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-			'/employee/inventory/rfidscanners.html?updated_on_start_year',
-			'/employee/inventory/rfidscanners.html?updated_on_start_month',
-			'/employee/inventory/rfidscanners.html?updated_on_start_day'} ) : undef,
-		'updated_on_end'	=>	Date::Calc::check_date( @session{
-			'/employee/inventory/rfidscanners.html?updated_on_end_year',
-			'/employee/inventory/rfidscanners.html?updated_on_end_month',
-			'/employee/inventory/rfidscanners.html?updated_on_end_day'} ) ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-			'/employee/inventory/rfidscanners.html?updated_on_end_year',
-			'/employee/inventory/rfidscanners.html?updated_on_end_month',
-			'/employee/inventory/rfidscanners.html?updated_on_end_day'} ) : undef,
-		'order'		=>	'id',
-		);
+	$$variable{RFIDScanners} = [ openprint::RFIDScanner->find( 
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_start', 'created_on_start' ),
+		date_filter( '/employee/inventory/rfidscanners.html?created_on_end', 'created_on_end' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_start', 'updated_on_start' ),
+		date_filter( '/employee/inventory/rfidscanners.html?updated_on_end', 'updated_on_end' ),
+		order		=>	'id',
+		) ];
 ) ?>
 <? if ( @{$$variable{'RFIDScanners'}} ) ?>
 <form id="RFIDScannerResults" name="RFIDScannerResults" action="rfidscanners.html" method="post">

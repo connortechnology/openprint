@@ -74,6 +74,7 @@
         RewriteCond %{REQUEST_FILENAME}.gz -f
         RewriteRule (.*\.(js|css))$ $1.gz [PT]
         RewriteBase /cache
+		Header append Vary: Accept-Encoding
     </Directory>
 
     AddEncoding x-gzip .gz
@@ -91,11 +92,11 @@
 		PerlHandler	 Barcode
 	</FilesMatch>
 	<Location /images/maps>
-		SetHandler		perl-script
-		PerlHandler	 MapImage
+		SetHandler	perl-script
+		PerlHandler	MapImage
 	</Location>
 		<DirectoryMatch '^/po'>
-			SetHandler		perl-script
+			SetHandler	perl-script
 			PerlHandler	getfile 
 		</DirectoryMatch>
 	Alias /project_files "/media/Storage/Project Files/"

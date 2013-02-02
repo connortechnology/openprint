@@ -35,7 +35,14 @@
 		$search{'item_id in'} = $session{'/employee/purchase_order/history.html?item_id'} if $session{'/employee/purchase_order/history.html?item_id'};
 
 		@{$$variable{'PurchaseOrders'}} = ();
+		my $ac = sql::start_transaction( $dbh );
 		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {
+
+			if ( ( ! $PO->authorized() ) and ( $PO->created_by() == $session{user_id} ) and ( $PO->can_authorize() ) ) {
+				$PO->save({authorized=>1,authorized_on=>'NOW()',authorized_by=>$session{user_id}});
+			} # end if
+
+
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/purchase_order/history.html?authorized'} eq 'U' and $PO->authorized() ne '';
@@ -66,8 +73,11 @@
 				next if ! sets::isin( $session{'/employee/purchase_order/history.html?department_id'}, [ map { $_->department_id() } $PO->Contents() ] );
 			} # end if
 
+		
+
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} == 0 ) ?>

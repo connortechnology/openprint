@@ -10,6 +10,20 @@
 	#menubar li a {
 		font-size:medium;
 	}
+	a.buttonImageOff .c,
+	a.buttonImageOn .c {
+		padding: 4px 6px 4px 6px;
+		font-size: large;
+	}
+	select {
+		font-size: large;
+	}
+	input[type="radio"] {
+		width: 20px;
+	}
+	label {
+		font-size: large;
+	}
 }
 @media screen and (min-device-width: 481px) {
        body {

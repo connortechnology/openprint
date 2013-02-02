@@ -50,6 +50,7 @@ configuration::init_cache( $log, $dbh, {
 		'ExternalSiteURL'	=> 'http://www.point-one.com',
 		'ExternalSecureSiteURL'	=> 'https://www.point-one.com',
 		'SiteTitle'	=>'PointOne Graphics Inc',
+		'SkinPath'	=>	'/var/www/point-one/www/public_html/skins/PointOne Graphics Inc',
 		}
 		);
 my $site_admin_email = 'iconnor@point-one.com';

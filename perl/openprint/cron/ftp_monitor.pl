@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/point-one/perl';
 use strict;
 
 require configuration;
@@ -49,7 +49,6 @@ if ($opts->{help}) {
 }
 
 $log = new logger('level'=>'debug');
-$log->debug("Help");
 # Get our configuration information
 if (my $err = ReadCfg('/etc/ftp_monitor.conf')) {
     die $err;
@@ -80,7 +79,7 @@ $CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
 
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
-$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
+$CFG::Config{'sleep'} = 2.0 if ! $CFG::Config{'sleep'};
 
 if ( $CFG::Config{'pid_file'} ) {
 	my $pidh;
@@ -198,7 +197,7 @@ if (open($fifoh, "< $config{fifo}")) {
 				$log->error("Unparsed line $line");
 			} # end if
 
-			$log->debug("$line\n");
+			#$log->debug("$line\n");
 			$line = undef;
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.
@@ -269,6 +268,7 @@ sub send_email {
 	my $Company;
 	my $User;
 
+	while ( ! ( $openprint::dbh and $openprint::dbh->ping() ) ) {
 	$openprint::dbh = sql::open_sql( $log, 
 		'host'		=> $CFG::Config{'db_host'},
 		'database'	=> $CFG::Config{'db_name'},
@@ -276,7 +276,11 @@ sub send_email {
 		'login'		=> $CFG::Config{'db_user'},
 		'password'	=> $CFG::Config{'db_pass'},
 	);
-	if ( $openprint::dbh and $$upload{'company_name'} ) {
+		$log->error("Unable to connect to database. sleeping.");
+		sleep(1);
+	} # enw hwhile no db connection
+
+	if ( $$upload{'company_name'} ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company::find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
@@ -571,20 +575,22 @@ sub get_scoreboard {
 	my $header = "L L l L L L L L";
 	my $template = "L L L A32 L A80 A32 A16 A80 A32 A80 A5 A79 L L L L L L";
 	my $recordsize = length(pack($template,(  )));
-	open(SCORE,$score_file) or die "Unable' to open $score_file:$!\n";
-	my $headersize = length(pack($header));
-	read(SCORE, $record, $headersize );
-	while (read(SCORE,$record,$recordsize)) {
-		my %score;
-		@score{'pid','uid','gid','user','server_port','server_addr',
-			'server_label','client_addr','client_name','class','cwd','cmd','cmd_arg','begin_idle','begin_session',
-			'xfer_size','xfer_done','xfer_len','xfer_elapsed'} = unpack($template,$record);
-		if ($score{'pid'} != 0) {
-			push @scoreboard, \%score;
-		} # end if
-		$log->debug(Dumper(\%score));
-	} # end while
-	close(SCORE);
+	if ( open(SCORE,$score_file) ) {
+		my $headersize = length(pack($header));
+		read(SCORE, $record, $headersize );
+		while (read(SCORE,$record,$recordsize)) {
+			my %score;
+			@score{'sce_pid','sce_uid','sce_gid','sce_user','sce_server_port','sce_server_addr',
+				'sce_server_label','sce_client_addr','sce_client_name','sce_class','sce_cwd','sce_cmd','sce_cmd_arg','sce_begin_idle','sce_begin_session',
+				'sce_xfer_size','sce_xfer_done','sce_xfer_len','sce_xfer_elapsed'} = unpack($template,$record);
+			if ($score{'sce_pid'} != 0) {
+				push @scoreboard, \%score;
+			} # end if
+		} # end while
+		close(SCORE);
+	} else {
+		$log->warn( "Unable' to open $score_file:$!\n" );
+	} # end if
 	return \@scoreboard;
 } # end sub get_scoreboard
 

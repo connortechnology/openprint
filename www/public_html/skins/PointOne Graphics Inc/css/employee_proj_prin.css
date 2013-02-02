@@ -1,0 +1,29 @@
+.Service .Signature {
+	width: auto;
+}
+.Service .Signature .summary {
+	padding: 0;
+}
+@media only screen and (max-device-width: 768px) {
+	.Service .Signature .leftColumn,
+	.Service .Signature .rightColumn {
+		width: 100%;
+		float: none;
+	}
+	.Service .Signature p {
+	}
+	.Service .Signature p select,
+	.Service .Signature p textarea {
+box-sizing: border-box;
+-moz-box-sizing: border-box;
+-webkit-box-sizing: border-box;
+
+		width: 100%;
+	}
+	.Service .Signature .DateSelector {
+		width: 100%;
+	}
+	.Service .Signature .DateSelector select {
+		width: auto;
+	} 
+}
