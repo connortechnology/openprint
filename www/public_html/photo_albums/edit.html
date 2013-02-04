@@ -1,6 +1,6 @@
 <script type="text/javascript" src="<? hash_link(/javascripts/fileuploader.js) ?>"></script>
 <link type="text/css" rel="<? hash_link(/css/fileuploader.css) ?>"/>
-<? echo ( include('/includes/error_reporting.html'); ) ?>
+<?include(/includes/error_reporting.html)?>
 <div class="PhotoAlbum">
 	<div class="Edit">
 <? if ( $$variable{'Album'}->can_edit() ) ?>
@@ -23,14 +23,18 @@
 						<li><label>Company</label>
 							<select name="company_id" id="company_id" onchange="new Ajax.Updater('user_id', '/includes/_users.html', { parameters: { company_id: this.getValue() } } );">
 								<option value="">no one</option>
-								<? echo ( ssi::make_drop_down( openprint::Company->dropdown($$variable{'Album'}->User()->company_id()) ); ) ?>
+								<? echo ( ssi::make_drop_down( openprint::Company->dropdown( $$variable{Album}->id() ? $$variable{Album}->User()->company_id() : $session{company_id} ) ); ) ?>
 							</select>
 							
 						</li>
 						<li><label>Owner</label>
 							<select name="user_id" id="user_id">
 <option value="">no one</option>
-<? echo ( ssi::make_drop_down( openprint::User->dropdown('company_id'=>$param{'company_id'} ? $param{'company_id'} : $$variable{'Album'}->User()->company_id(),'order'=>'lower(firstname),lower(lastname)'), $param{'company_id'} ? '' : $$variable{'Album'}->user_id() ); ) ?>
+<? echo ( ssi::make_drop_down( openprint::User->dropdown(
+				( company_id => $param{'company_id'} ? $param{'company_id'} : $$variable{'Album'}->User()->company_id() ),
+				order=>'lower(firstname),lower(lastname)'),
+			$param{user_id} ? $param{user_id} : ( $$variable{'Album'}->id() ? $$variable{Album}->user_id() : $session{user_id} ) );
+ ) ?>
 							</select>
 						</li>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
@@ -48,26 +52,3 @@
 <? endif ( $$variable{'Album'}->can_edit() ) ?>
 	</div>
 </div>
-<? if ( $$variable{'Album'}->id() ) ?>
-<script type="text/javascript">
-if ( 1 ) {
-var uploader = new qq.FileUploader({
-    // pass the dom node (ex. $(selector)[0] for jQuery users)
-    element: $('file_uploader'),
-    // path to server-side upload script
-    action: '/upload.htm',
-	limit: 5,
-	allowedExtensions: ['jpg', 'jpeg', 'png', 'gif'],
-	sizeLimit: 2147483647,
-	params: {
-		id: <? echo ( $$variable{'Album'}->id() ) ?>,
-		UploadType: 'Photo_Album'
-	},
-	onComplete: function(id, fileName){
-		Ajax.Updater( 'Photos', '_album_photos.html', { parameters: { album_id: <? echo ( $$variable{'Album'}->id() ) ?> } } );
-	}
-
-});
-}
-</script>
-<? endif ( $$variable{'Album'}->id() ) ?>
