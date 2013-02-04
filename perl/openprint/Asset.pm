@@ -537,6 +537,7 @@ sub generate_video {
 	my $lock;
 	if ( ! open($lock, "> $dest.lck") ) {
 		$openprint::log->error("Unable to open semaphore at $dest.lck\n");
+		return;
 	} # end if
 	if ( ! flock($lock, Fcntl::LOCK_EX) ) {
 		$openprint::log->error("Unable to lock semaphore\n");
