@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl -w
 use lib '/var/www/testing/perl';
 use strict;
 use warnings;
@@ -21,7 +21,7 @@ use vars qw($log $dbh %config %session);
 my $program = 'video_assets.pl';
 $log = logger->new('warn');
 my $opts = {};
-GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','debug=s');
+GetOptions($opts, 'help', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','debug=s','daemon','AssetPath=s');
 
 if ($opts->{help}) {
     usage();
@@ -48,25 +48,42 @@ $dbh = sql::open_sql( $log,
 
 die 'Error opening db' if ! $dbh;
 configuration::init();
+configuration::merge($opts);
 
-foreach my $Asset ( openprint::Asset->find( ) ) {
-	next if ! $Asset->is_video();
+scan();
 
-	foreach my $type ( 'mp4','ogg','webm' ) {
-		my $path = $Asset->video_path($type);
+if ( $$opts{daemon} ) {
+	use Linux::Inotify2;
+	my $notifier = Linux::Inotify2->new();
+	my $watch = $notifier->watch($config{AssetPath}, IN_CLOSE, \&event );
 
-		# Next if already generating
-		next if -e $path.'.part';
-		# If video exists, will not generate
-		$Asset->generate_video($type);
-		if ( ! -e $path ) {
-			$log->error("Was unsuccessful in generating video at $path");
-		} # en dif
-	} # end foreach $type
-} # end foreach Asset
-
+	1 while $notifier->poll;
+} # end if
 $dbh->disconnect();
 
+sub event {
+	my ( $e ) = shift;
+	$log->debug( $e->print() );
+	scan();
+}
+
+sub scan {
+	foreach my $Asset ( openprint::Asset->find( ) ) {
+		next if ! $Asset->is_video();
+
+		foreach my $type ( 'mp4','ogg','webm' ) {
+			my $path = $Asset->video_path($type);
+
+			# Next if already generating
+			next if -e $path.'.part';
+			# If video exists, will not generate
+			$Asset->generate_video($type);
+			if ( ! -e $path ) {
+				$log->error("Was unsuccessful in generating video at $path");
+			} # en dif
+		} # end foreach $type
+	} # end foreach Asset
+} # end sub scan
 
 sub usage {
 	print <<EOH;
