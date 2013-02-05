@@ -43,6 +43,7 @@ while getopts hvc: OPT; do
             ;;
     esac
 done
+shift $((OPTIND-1))
 
 if [ $CHECK_FILE ] ; then
 	if [ ! -e "$CHECK_FILE" ] ; then
@@ -50,44 +51,48 @@ if [ $CHECK_FILE ] ; then
 		exit 1
 	fi;
 fi;	
+	SOURCE=$1
+	DEST=$2
+
+echo "Backing up from $SOURCE to $DEST"
 
 # ------------- the script itself --------------------------------------
 
 # rotating snapshots of /home (fixme: this should be more general)
 
 # step 1: delete the oldest snapshot, if it exists:
-if [ -d "$2.3" ] ; then                     \
-	$CHMOD a+wr -R "$2.3"
-	$RM -rf "$2.3" ;                            \
+if [ -d "$DEST.3" ] ; then                     \
+	$CHMOD a+wr -R "$DEST.3"
+	$RM -rf "$DEST.3" ;                            \
 else
-	echo "No $2.3 to delete"
+	echo "No $DEST.3 to delete"
 fi ;
 
 # step 2: shift the middle snapshots(s) back by one, if they exist
-if [ -d "$2.2" ] ; then
-	$MV "$2.2" "$2.3"
+if [ -d "$DEST.2" ] ; then
+	$MV "$DEST.2" "$DEST.3"
 fi;
-if [ -d "$2.1" ] ; then
-	$MV "$2.1" "$2.2"
+if [ -d "$DEST.1" ] ; then
+	$MV "$DEST.1" "$DEST.2"
 fi;
 
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
-if [ -d "$2.0" ] ; then \
-	#echo "$CP -al $2.0 $2.1"
-	$CP -al "$2.0" "$2.1"
+if [ -d "$DEST.0" ] ; then \
+	#echo "$CP -al $DEST.0 $DEST.1"
+	$CP -al "$DEST.0" "$DEST.1"
 else
-	#echo "Making $2.0"
-	$MKDIR -p "$2.0"
+	#echo "Making $DEST.0"
+	$MKDIR -p "$DEST.0"
 fi;
 
 # step 4: rsync from the system into the latest snapshot (notice that
 # rsync behaves like cp --remove-destination by default, so the destination
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
-#echo "$RSYNC \"$1\" \"$2\""
-$RSYNC -a --exclude .gvfs --delete --delete-excluded "$1" "$2.0"
+#echo "$RSYNC \"$1\" \"$DEST\""
+$RSYNC -a --exclude .gvfs --delete --delete-excluded "$SOURCE" "$DEST.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
-$TOUCH "$2.0"
+$TOUCH "$DEST.0"
 
