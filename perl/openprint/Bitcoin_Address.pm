@@ -1,13 +1,14 @@
 use strict;
-require JSON::RPC::Client;
-require Data::Dumper;
+use Data::Dumper;
 
 require openprint::Object_Type;
 package openprint::Bitcoin_Address;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %find_fields %defaults %transforms );
+use Finance::Bitcoin::API;
+use Finance::Bitcoin::Wallet;
 
-$debug = 0;
+$debug = 1;
 $table = 'bitcoin_addresses';
 $serial = 'bitcoin_addresses_id_seq';
 %fields = (
@@ -26,7 +27,10 @@ $serial = 'bitcoin_addresses_id_seq';
 	approved	=>	0,
 	user_id		=>	q`$session{user_id}`,
 	approved	=>	0,
+	address		=>	undef,
 );
+
+ 
 
 sub generate {
 
@@ -34,56 +38,36 @@ sub generate {
 	$openprint::dbh->do( "LOCK TABLE $table IN ACCESS EXCLUSIVE MODE" ) or $openprint::log->error( DBI->errstr );
 	my $New = openprint::Bitcoin_Address->find_one('object_id is null'=>1);
 	if ( ! $New ) {
-		my $client = new JSON::RPC::Client;
+			my $uri     = "http://$openprint::config{bitcoin_user}:$openprint::config{bitcoin_password}\@$openprint::config{bitcoin_server}:$openprint::config{bitcoin_port}/";
 
-		$client->ua->credentials(
-				($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
-				($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332'),
-				'jsonrpc',
-				$openprint::config{bitcoin_user} => $openprint::config{bitcoin_password} 
-				);
+			my $api     = Finance::Bitcoin::API->new( endpoint => $uri );
+ my $balance = $api->call('getbalance');
+ print $balance;
 
-		my $uri = 'http://'.($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
-                ($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332').'/';
+			my $label = (ref $_[1]) . ' ' . $_[1]->id();
+			$openprint::log->debug( "URI: $uri label: $label");
 
-		# First, get list of accounts
-		my $getaccounts = { method	=>	'listaccounts' };
-		my $res = $client->call( $uri, $getaccounts );
-		if ( $res ) {
-			if ( $res->is_error ) {
-				$openprint::log->error( "Error : ", $res->error_message );
-			} else {
-				my %accounts = %{$res->result};
-				if ( ! $accounts{'bitcoin_account'} ) {
-					# Must creat account
-				} # end if
-				$openprint::log->debug( Data::Dumper::Dumper($res->result) );
-			}
+
+			my $wallet = Finance::Bitcoin::Wallet->new($api);
+			$_ = Data::Dumper::Dumper($wallet);
+			$openprint::log->debug($_);
+
+			my $address = $wallet->create_address( $label );
+		if ( $address and $address->address ) {
+
+		$New = new openprint::Bitcoin_Address();
+		$New->save({address=>$address->address(),object_type=>ref $_[1], object_id=>$_[1]{id}});
 		} else {
-			$openprint::log->debug( $client->status_line );
-		}
+			$openprint::log->error('Error generating an address: ('.$address.') ('.$address->address.')');
+			$_ = Data::Dumper::Dumper($address);
+		$openprint::log->debug($_);
 
-		my $obj = {
-			method  => 'getnewaddress',
-			params  => {
-				account	=>	$openprint::config{bitcoin_account},
-			},
-		};
-$openprint::log->debug("Asking bitcon for a new addres user: $openprint::config{bitcoin_user} pass: $openprint::config{bitcoin_password} at $uri");
-
-		my $res = $client->call( $uri, $obj );
-
-		if ( $res ) {
-			if ( $res->is_error ) {
-				$openprint::log->error( "Error : ", $res->error_message );
-			} else {
-				$openprint::log->debug( Data::Dumper::Dumper($res->result) );
-			}
-		} else {
-			$openprint::log->debug( $client->status_line );
-		}
-	} # end if
+		} # end if
+	} else {
+		$New->save({object_type=>ref $_[1], object_id=>$_[1]{id}});
+	} # end if ! New
 	sql::end_transaction( $openprint::dbh, $ac );
+	return $New;
 } # end sub generate
 1;
 __END__
