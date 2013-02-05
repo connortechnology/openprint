@@ -39,18 +39,37 @@ sub generate {
 		$client->ua->credentials(
 				($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
 				($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332'),
-				, $openprint::config{bitcoin_user}, $openprint::config{bitcoin_password} 
+				'jsonrpc',
+				$openprint::config{bitcoin_user} => $openprint::config{bitcoin_password} 
 				);
 
 		my $uri = 'http://'.($openprint::config{bitcoin_server} ? $openprint::config{bitcoin_server} : 'localhost').':'.
                 ($openprint::config{bitcoin_port} ? $openprint::config{bitcoin_port} : '8332').'/';
+
+		# First, get list of accounts
+		my $getaccounts = { method	=>	'listaccounts' };
+		my $res = $client->call( $uri, $getaccounts );
+		if ( $res ) {
+			if ( $res->is_error ) {
+				$openprint::log->error( "Error : ", $res->error_message );
+			} else {
+				my %accounts = %{$res->result};
+				if ( ! $accounts{'bitcoin_account'} ) {
+					# Must creat account
+				} # end if
+				$openprint::log->debug( Data::Dumper::Dumper($res->result) );
+			}
+		} else {
+			$openprint::log->debug( $client->status_line );
+		}
+
 		my $obj = {
 			method  => 'getnewaddress',
 			params  => {
 				account	=>	$openprint::config{bitcoin_account},
 			},
 		};
-$openprint::log->debug("Asking bitcon for a new addres user: $openprint::config{bitcoin_user} pass: $openprint::config{bitcoin_pass} at $uri");
+$openprint::log->debug("Asking bitcon for a new addres user: $openprint::config{bitcoin_user} pass: $openprint::config{bitcoin_password} at $uri");
 
 		my $res = $client->call( $uri, $obj );
 
